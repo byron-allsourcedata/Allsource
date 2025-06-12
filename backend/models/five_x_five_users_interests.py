@@ -1,16 +1,24 @@
-from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, BigInteger, Sequence, String
+from sqlalchemy import (
+    Column,
+    Integer,
+    VARCHAR,
+    ForeignKey,
+    BigInteger,
+    Sequence,
+    String,
+)
 
 from .base import Base
 
 
 class FiveXFiveUserInterest(Base):
-    __tablename__ = '5x5_users_interests'
+    __tablename__ = "5x5_users_interests"
 
     id = Column(
         BigInteger,
-        Sequence('5x5_users_interests_id_seq'),
+        Sequence("5x5_users_interests_id_seq"),
         primary_key=True,
-        nullable=False
+        nullable=False,
     )
     hem = Column(String(64), nullable=True)
     up_id = Column(String(64), nullable=True)

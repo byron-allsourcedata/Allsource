@@ -12,6 +12,7 @@ from typing_extensions import Annotated
 
 logger = logging.getLogger(__name__)
 
+
 def get_dependency(annotated_class) -> Depends:
     return Depends(get_args(annotated_class)[1].dependency)
 
@@ -19,8 +20,8 @@ def get_dependency(annotated_class) -> Depends:
 def extract_args(func) -> dict:
     d = {}
 
-    for (k, v) in func.__annotations__.items():
-        if k != 'return':
+    for k, v in func.__annotations__.items():
+        if k != "return":
             d[k] = v
 
     return d
@@ -45,7 +46,8 @@ class InjectionError(Exception):
         return f"error while resolving '{self.dependency}', '{self.wrong_annotation}' is not annotated (Provide Annotated[...] dependency provider or @injectable decorator)"
 
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class Resolver:
     def __init__(self):
@@ -109,6 +111,7 @@ class Resolver:
 
         self._cleanup_stack.clear()
 
+
 def dep_constructor(cls) -> Callable:
     """
     Return fast api dependency constructor, that matches provided class's constructor
@@ -126,7 +129,7 @@ def dep_constructor(cls) -> Callable:
     constructor.__signature__ = factory_sig
 
     constructor.__annotations__ = cls.__init__.__annotations__
-    constructor.__annotations__['return'] = cls
+    constructor.__annotations__["return"] = cls
     return constructor
 
 

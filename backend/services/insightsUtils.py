@@ -9,7 +9,9 @@ from db_dependencies import Db
 from enums import BusinessType
 from persistence.audience_lookalike_persons import AudienceLookalikesPersonPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
-from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
+from persistence.audience_sources_matched_persons import (
+    AudienceSourcesMatchedPersonsPersistence,
+)
 from persistence.enrichment.postgres import EnrichmentPostgresPersistence
 from resolver import injectable
 from schemas.insights import InsightsByCategory
@@ -23,7 +25,7 @@ class InsightsUtils:
         enrichment: EnrichmentPostgresPersistence,
         sources: AudienceSourcesPersistence,
         matched_persons: AudienceSourcesMatchedPersonsPersistence,
-        audience_persons: AudienceLookalikesPersonPersistence
+        audience_persons: AudienceLookalikesPersonPersistence,
     ):
         self.db = db
         self.sources = sources
@@ -31,13 +33,12 @@ class InsightsUtils:
         self.matched_persons = matched_persons
         self.audience_persons = audience_persons
 
-
     @staticmethod
     def bucket_age(age_range: Optional[str]) -> str:
         low = None
 
         if low is None and isinstance(age_range, str):
-            m = re.search(r'(\d+)', age_range)
+            m = re.search(r"(\d+)", age_range)
             if m:
                 low = int(m.group(1))
 
@@ -55,20 +56,27 @@ class InsightsUtils:
             return "46-65"
         return "Other"
 
-
-
-    def process_insights_for_asids(self, insights, asids: List[UUID], audience_type: BusinessType):
+    def process_insights_for_asids(
+        self, insights, asids: List[UUID], audience_type: BusinessType
+    ):
         is_invalid = lambda val: (
-                val is None
-                or str(val).upper() in ('UNKNOWN', 'U', '2', '', '-')
+            val is None or str(val).upper() in ("UNKNOWN", "U", "2", "", "-")
         )
         if audience_type == BusinessType.B2C or audience_type == BusinessType.ALL:
             # 3) PERSONAL
             personal_fields = [
-                "gender", "state", "religion", "homeowner",
-                "age", "ethnicity", "languages",
-                "marital_status", "have_children",
-                "education_level", "children_ages", "pets"
+                "gender",
+                "state",
+                "religion",
+                "homeowner",
+                "age",
+                "ethnicity",
+                "languages",
+                "marital_status",
+                "have_children",
+                "education_level",
+                "children_ages",
+                "pets",
             ]
             personal_cts: defaultdict[str, Counter] = defaultdict(Counter)
             rows = self.enrichment.personal(asids)
@@ -87,11 +95,18 @@ class InsightsUtils:
 
             # 4) FINANCIAL
             financial_fields = [
-                'income_range', 'net_worth_range', 'credit_score_range',
-                'credit_cards', 'bank_card', 'credit_card_premium',
-                'credit_card_new_issue', 'number_of_credit_lines',
-                'credit_range_of_new_credit', 'donor', 'investor',
-                'mail_order_donor'
+                "income_range",
+                "net_worth_range",
+                "credit_score_range",
+                "credit_cards",
+                "bank_card",
+                "credit_card_premium",
+                "credit_card_new_issue",
+                "number_of_credit_lines",
+                "credit_range_of_new_credit",
+                "donor",
+                "investor",
+                "mail_order_donor",
             ]
             fin_cts: defaultdict[str, Counter] = defaultdict(Counter)
             rows = self.enrichment.financial(asids)
@@ -120,12 +135,21 @@ class InsightsUtils:
 
             # 5) LIFESTYLE
             lifestyle_fields = [
-                'own_pets', 'cooking_interest', 'travel_interest',
-                'mail_order_buyer', 'online_purchaser', 'book_reader',
-                'health_and_beauty_interest', 'fitness_interest',
-                'outdoor_interest', 'tech_interest', 'diy_interest',
-                'automotive', 'smoker', 'golf_interest',
-                'beauty_cosmetic_interest'
+                "own_pets",
+                "cooking_interest",
+                "travel_interest",
+                "mail_order_buyer",
+                "online_purchaser",
+                "book_reader",
+                "health_and_beauty_interest",
+                "fitness_interest",
+                "outdoor_interest",
+                "tech_interest",
+                "diy_interest",
+                "automotive",
+                "smoker",
+                "golf_interest",
+                "beauty_cosmetic_interest",
             ]
             life_cts: defaultdict[str, Counter] = defaultdict(Counter)
             rows = self.enrichment.lifestyles(asids)
@@ -143,7 +167,11 @@ class InsightsUtils:
                 setattr(insights.lifestyle, field, dict(life_cts[field]))
 
             # 6) VOTER
-            voter_fields = ['congressional_district', 'voting_propensity', 'political_party']
+            voter_fields = [
+                "congressional_district",
+                "voting_propensity",
+                "political_party",
+            ]
             voter_cts: defaultdict[str, Counter] = defaultdict(Counter)
             rows = self.enrichment.voter(asids)
 
@@ -162,9 +190,16 @@ class InsightsUtils:
         if audience_type == BusinessType.B2B or audience_type == BusinessType.ALL:
             # 7) PROFESSIONAL PROFILE
             prof_fields = [
-                "current_job_title", "current_company_name", "job_start_date",
-                "job_duration", "job_location", "job_level", "department",
-                "company_size", "primary_industry", "annual_sales"
+                "current_job_title",
+                "current_company_name",
+                "job_start_date",
+                "job_duration",
+                "job_location",
+                "job_level",
+                "department",
+                "company_size",
+                "primary_industry",
+                "annual_sales",
             ]
             prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
             prof_rows = self.enrichment.professional(asids)
@@ -183,8 +218,13 @@ class InsightsUtils:
 
             # 8) EMPLOYMENT HISTORY
             emp_fields = [
-                "job_title", "company_name", "start_date",
-                "end_date", "is_current", "location", "job_description"
+                "job_title",
+                "company_name",
+                "start_date",
+                "end_date",
+                "is_current",
+                "location",
+                "job_description",
             ]
             emp_cts: defaultdict[str, Counter] = defaultdict(Counter)
             emp_rows = self.enrichment.employment(asids)
@@ -202,7 +242,6 @@ class InsightsUtils:
                 setattr(insights.employment_history, field, dict(emp_cts[field]))
 
         return insights
-
 
     def process_insights(
         self,
@@ -233,31 +272,32 @@ class InsightsUtils:
             )
 
             merged = InsightsUtils.merge_insights_json(
-                existing=source_row.insights,
-                new_insights=new_insights
+                existing=source_row.insights, new_insights=new_insights
             )
             source_row.insights = merged
             source_row.matched_records_status = "complete"
         return new_insights
-
 
     def compute_insights_for_lookalike(
         self,
         lookalike_id: UUID,
     ) -> InsightsByCategory:
         insights = InsightsByCategory()
-        user_ids = [uid for (uid,) in self.audience_persons.by_lookalike_id(lookalike_id)]
+        user_ids = [
+            uid for (uid,) in self.audience_persons.by_lookalike_id(lookalike_id)
+        ]
         if not user_ids:
             return insights
 
-        asids = [asid for (asid,) in self.enrichment.users(user_ids) ]
+        asids = [asid for (asid,) in self.enrichment.users(user_ids)]
 
-        return self.process_insights_for_asids(insights, asids, audience_type=BusinessType.ALL)
+        return self.process_insights_for_asids(
+            insights, asids, audience_type=BusinessType.ALL
+        )
 
     @staticmethod
     def merge_insights_json(
-        existing: Optional[Dict[str, Any]],
-        new_insights: "InsightsByCategory"
+        existing: Optional[Dict[str, Any]], new_insights: "InsightsByCategory"
     ) -> Dict[str, Any]:
         existing_data = existing or {}
         new_data: Dict[str, Any] = new_insights.dict()

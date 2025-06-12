@@ -7,15 +7,12 @@ import logging
 
 from pydantic import BaseModel
 
-from config.util import (
-    getenv,
-    get_int_env
-)
+from config.util import getenv, get_int_env
 from schemas.scripts.audience_source import MessageBody
 
 logger = logging.getLogger(__name__)
 
-aio_pika_logger = logging.getLogger('aio_pika')
+aio_pika_logger = logging.getLogger("aio_pika")
 aio_pika_logger.setLevel(logging.WARNING)
 
 
@@ -25,11 +22,11 @@ class RabbitMQConnection:
 
     async def connect(self):
         self._connection = await connect(
-            host=getenv('RABBITMQ_HOST'),
-            port=get_int_env('RABBITMQ_PORT'),
-            virtualhost=getenv('RABBITMQ_VIRTUALHOST'),
-            login=getenv('RABBITMQ_LOGIN'),
-            password=getenv('RABBITMQ_PASSWORD'),
+            host=getenv("RABBITMQ_HOST"),
+            port=get_int_env("RABBITMQ_PORT"),
+            virtualhost=getenv("RABBITMQ_VIRTUALHOST"),
+            login=getenv("RABBITMQ_LOGIN"),
+            password=getenv("RABBITMQ_PASSWORD"),
             timeout=5000,
         )
         return self._connection
@@ -39,7 +36,9 @@ class RabbitMQConnection:
             await self._connection.close()
 
 
-async def publish_rabbitmq_message(connection, queue_name: str, message_body: Union[MessageBody, dict]):
+async def publish_rabbitmq_message(
+    connection, queue_name: str, message_body: Union[MessageBody, dict]
+):
     channel = await connection.channel()
 
     try:
@@ -55,8 +54,11 @@ async def publish_rabbitmq_message(connection, queue_name: str, message_body: Un
         await channel.close()
     finally:
         await channel.close()
-        
-async def publish_rabbitmq_message_with_channel(channel, queue_name: str, message_body: Union[MessageBody, dict]):
+
+
+async def publish_rabbitmq_message_with_channel(
+    channel, queue_name: str, message_body: Union[MessageBody, dict]
+):
     try:
         if isinstance(message_body, BaseModel):
             json_data = json.dumps(message_body.model_dump()).encode("utf-8")
@@ -67,4 +69,3 @@ async def publish_rabbitmq_message_with_channel(channel, queue_name: str, messag
         await channel.default_exchange.publish(message, routing_key=queue_name)
     except Exception as e:
         logger.error(e)
-        

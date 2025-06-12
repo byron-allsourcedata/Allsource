@@ -12,7 +12,9 @@ from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
 from services.similar_audiences.column_selector import AudienceColumnSelector
-from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService
+from services.similar_audiences.similar_audience_scores import (
+    SimilarAudiencesScoresService,
+)
 
 
 @injectable
@@ -26,7 +28,7 @@ class LookalikeFillerService:
         column_selector: AudienceColumnSelector,
         enrichment_users: EnrichmentUsersPersistence,
         similar_audience_service: SimilarAudienceService,
-        profile_fetcher: ProfileFetcher
+        profile_fetcher: ProfileFetcher,
     ):
         self.db = db
         self.clickhouse = clickhouse
@@ -38,11 +40,10 @@ class LookalikeFillerService:
         self.similar_audience_service = similar_audience_service
 
     def get_enrichment_users(
-        self,
-        significant_fields: Dict
+        self, significant_fields: Dict
     ) -> Tuple[StreamContext, List[str]]:
         """
-            Returns a stream of blocks of enrichment users and a list of column names
+        Returns a stream of blocks of enrichment users and a list of column names
         """
 
         column_names = self.column_selector.clickhouse_columns(significant_fields)
@@ -56,15 +57,16 @@ class LookalikeFillerService:
 
         return rows_stream, column_names
 
-    def process_lookalike_pipeline(
-        self,
-        audience_lookalike: AudienceLookalikes
-    ):
+    def process_lookalike_pipeline(self, audience_lookalike: AudienceLookalikes):
         sig = audience_lookalike.significant_fields or {}
         config = self.audiences_scores.get_config(sig)
-        profiles = self.profile_fetcher.fetch_profiles_from_lookalike(audience_lookalike)
+        profiles = self.profile_fetcher.fetch_profiles_from_lookalike(
+            audience_lookalike
+        )
 
-        model = self.train_and_save_model(lookalike_id=audience_lookalike.id, user_profiles=profiles, config=config)
+        model = self.train_and_save_model(
+            lookalike_id=audience_lookalike.id, user_profiles=profiles, config=config
+        )
 
         self.calculate_and_store_scores(
             model=model,
@@ -81,11 +83,12 @@ class LookalikeFillerService:
             {k: str(v) if v is not None else "None" for k, v in profile.items()}
             for profile in user_profiles
         ]
-        trained = self.similar_audience_service.get_trained_model(dict_enrichment, config)
+        trained = self.similar_audience_service.get_trained_model(
+            dict_enrichment, config
+        )
         model = trained[0] if isinstance(trained, (tuple, list)) else trained
         self.audiences_scores.save_enrichment_model(
-            lookalike_id=lookalike_id,
-            model=model
+            lookalike_id=lookalike_id, model=model
         )
         return model
 
@@ -105,7 +108,9 @@ class LookalikeFillerService:
             for batch in rows_stream:
                 dict_batch = [dict(zip(column_names, row)) for row in batch]
                 asids = [doc["asid"] for doc in dict_batch]
-                enrichment_user_ids = self.enrichment_users.fetch_enrichment_user_ids(asids)
+                enrichment_user_ids = self.enrichment_users.fetch_enrichment_user_ids(
+                    asids
+                )
 
                 self.audiences_scores.calculate_batch_scores(
                     model=model,

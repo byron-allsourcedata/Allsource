@@ -2,7 +2,12 @@ from typing import Optional
 from uuid import UUID
 
 from db_dependencies import Db
-from models import EnrichmentUserContact, EnrichmentPostal, EnrichmentPersonalProfiles, EnrichmentProfessionalProfile
+from models import (
+    EnrichmentUserContact,
+    EnrichmentPostal,
+    EnrichmentPersonalProfiles,
+    EnrichmentProfessionalProfile,
+)
 from resolver import injectable
 from pydantic import BaseModel
 from services.integrations.commonIntegration import (
@@ -14,7 +19,7 @@ from services.integrations.commonIntegration import (
 )
 
 
-class IntegrationContext(BaseModel):
+class IntegrationContext:
     main_phone: Optional[EnrichmentPostal]
     professional_profiles: Optional[EnrichmentProfessionalProfile]
     postal: Optional[EnrichmentPostal]
@@ -34,40 +39,27 @@ class IntegrationContext(BaseModel):
 
 @injectable
 class CommonIntegrationPersistence:
-    def __init__(
-        self,
-        db: Db
-    ):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_contacts_by_user(self, asid: UUID) -> Optional[EnrichmentUserContact]:
-        return (
-            self.db
-            .query(EnrichmentUserContact)
-            .filter_by(asid=asid)
-            .one_or_none()
-        )
+        return self.db.query(EnrichmentUserContact).filter_by(asid=asid).one_or_none()
 
     def get_postal_by_user(self, asid: UUID) -> Optional[EnrichmentPostal]:
+        return self.db.query(EnrichmentPostal).filter_by(asid=asid).one_or_none()
+
+    def get_personal_profiles_by_user(
+        self, asid: UUID
+    ) -> Optional[EnrichmentPersonalProfiles]:
         return (
-            self.db
-            .query(EnrichmentPostal)
-            .filter_by(asid=asid)
-            .one_or_none()
+            self.db.query(EnrichmentPersonalProfiles).filter_by(asid=asid).one_or_none()
         )
 
-    def get_personal_profiles_by_user(self, asid: UUID) -> Optional[EnrichmentPersonalProfiles]:
+    def get_professional_profiles_by_user(
+        self, asid: UUID
+    ) -> Optional[EnrichmentProfessionalProfile]:
         return (
-            self.db
-            .query(EnrichmentPersonalProfiles)
-            .filter_by(asid=asid)
-            .one_or_none()
-        )
-
-    def get_professional_profiles_by_user(self, asid: UUID) -> Optional[EnrichmentProfessionalProfile]:
-        return (
-            self.db
-            .query(EnrichmentProfessionalProfile)
+            self.db.query(EnrichmentProfessionalProfile)
             .filter_by(asid=asid)
             .one_or_none()
         )
@@ -78,24 +70,18 @@ class CommonIntegrationPersistence:
         personal_model = self.get_personal_profiles_by_user(user_asid)
         professional_model = self.get_professional_profiles_by_user(user_asid)
 
-        contacts = (
-            UserContacts.from_orm(contact_model)
-            if contact_model else None
-        )
+        contacts = UserContacts.from_orm(contact_model) if contact_model else None
 
-        postal = (
-            UserPostalInfo.from_orm(postal_model)
-            if postal_model else None
-        )
+        postal = UserPostalInfo.from_orm(postal_model) if postal_model else None
 
         personal_profiles: Optional[PersonalProfiles] = (
-            PersonalProfiles.from_orm(personal_model)
-            if personal_model else None
+            PersonalProfiles.from_orm(personal_model) if personal_model else None
         )
 
         professional_profiles: Optional[ProfessionalProfile] = (
             ProfessionalProfile.from_orm(professional_model)
-            if professional_model else None
+            if professional_model
+            else None
         )
 
         return User(
@@ -124,16 +110,12 @@ class CommonIntegrationPersistence:
             personal_profiles=pers_prof,
             business_email=business_email,
             personal_email=personal_email,
-
             country_code=postal,
             state=postal,
             city=postal,
-
             gender=pers_prof,
             zip_code=pers_prof,
-
             company=prof_prof,
-
             business_email_last_seen_date=contacts,
             personal_email_last_seen=contacts,
             linkedin_url=contacts,

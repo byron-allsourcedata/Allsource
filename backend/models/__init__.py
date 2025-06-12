@@ -23,9 +23,20 @@ from .audience_sources import AudienceSource
 from .audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from .base import Base
 from .data_sync_imported_leads import DataSyncImportedLead
-from .enrichment import (EnrichmentEmploymentHistory, EnrichmentFinancialRecord,
-                         EnrichmentLifestyle, EnrichmentLookalikeScore, EnrichmentModels, EnrichmentUserContact,
-                         EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails, EnrichmentPostal)
+from .enrichment import (
+    EnrichmentEmploymentHistory,
+    EnrichmentFinancialRecord,
+    EnrichmentLifestyle,
+    EnrichmentLookalikeScore,
+    EnrichmentModels,
+    EnrichmentUserContact,
+    EnrichmentUser,
+    EnrichmentVoterRecord,
+    EnrichmentUsersEmails,
+    EnrichmentPersonalProfiles,
+    EnrichmentEmails,
+    EnrichmentPostal,
+)
 
 
 from .audience_phones_verification import AudiencePhoneVerification
@@ -155,9 +166,8 @@ __all__ = [
     "UserDomains",
     "UsersUnlockedFiveXFiveUser",
     "EnrichmentUsersEmails",
-    "EnrichmentPersonalProfiles"
-    "PersonalProfiles",
+    "EnrichmentPersonalProfilesPersonalProfiles",
     "AudienceLinkedinVerification",
     "AudiencePostalVerification",
-    "EnrichmentPersonalProfiles"
+    "EnrichmentPersonalProfiles",
 ]

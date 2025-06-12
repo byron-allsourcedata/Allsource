@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class SseEventsService:
-
     def __init__(self, user_persistence_service: UserPersistence):
         self.user_persistence_service = user_persistence_service
 
@@ -18,27 +17,21 @@ class SseEventsService:
         try:
             data = decode_jwt_data(token)
         except:
-            return {'status': VerifyToken.INCORRECT_TOKEN}
-        user = self.user_persistence_service.get_user_by_id(data.get('id'))
+            return {"status": VerifyToken.INCORRECT_TOKEN}
+        user = self.user_persistence_service.get_user_by_id(data.get("id"))
         if user:
-            return {
-                'status': VerifyToken.SUCCESS,
-                'user_id': user['id']
-            }
+            return {"status": VerifyToken.SUCCESS, "user_id": user["id"]}
 
-        return {'status': VerifyToken.INCORRECT_TOKEN}
+        return {"status": VerifyToken.INCORRECT_TOKEN}
 
     async def init_sse_events(self, token):
         result = self.verify_token(token)
-        if result['status'] == VerifyToken.SUCCESS:
-            queue_name = f'sse_events_{str(result["user_id"])}'
+        if result["status"] == VerifyToken.SUCCESS:
+            queue_name = f"sse_events_{str(result['user_id'])}"
             rmq_connection = RabbitMQConnection()
             connection = await rmq_connection.connect()
             channel = await connection.channel()
-            queue = await channel.declare_queue(
-                name=queue_name,
-                auto_delete=True
-            )
+            queue = await channel.declare_queue(name=queue_name, auto_delete=True)
 
             try:
                 async with queue.iterator() as queue_iter:
@@ -47,7 +40,7 @@ class SseEventsService:
                         await message.ack()
                         yield message_json
             except Exception as err:
-                logger.debug('SSE Exception:', err)
+                logger.debug("SSE Exception:", err)
             finally:
-                logger.debug('SSE finally')
+                logger.debug("SSE finally")
                 await rmq_connection.close()

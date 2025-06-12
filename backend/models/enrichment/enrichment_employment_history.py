@@ -1,44 +1,32 @@
-from sqlalchemy import (
-    Column,
-    Date,
-    Boolean,
-    String,
-    Text,
-    ForeignKey,
-    text, Index
-)
+from sqlalchemy import Column, Date, Boolean, String, Text, ForeignKey, text, Index
 from sqlalchemy.dialects.postgresql import UUID
 from models.base import Base
 
 
 class EnrichmentEmploymentHistory(Base):
-    __tablename__ = 'enrichment_employment_history'
+    __tablename__ = "enrichment_employment_history"
     __table_args__ = (
         Index(
-            'idx_emphistory_asid_current',
-            'asid',
-            postgresql_where=text('is_current = TRUE')
+            "idx_emphistory_asid_current",
+            "asid",
+            postgresql_where=text("is_current = TRUE"),
         ),
     )
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
         nullable=False,
-        server_default=text('gen_random_uuid()')
+        server_default=text("gen_random_uuid()"),
     )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey(
-            'enrichment_users.asid',
-            ondelete='CASCADE',
-            onupdate='CASCADE'
-        ),
-        nullable=False
+        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
     )
     job_title = Column(String(100), nullable=True)
     company_name = Column(String(100), nullable=True)
     start_date = Column(Date, nullable=True)
     end_date = Column(Date, nullable=True)
     is_current = Column(Boolean, nullable=False)
-    location = Column('location', String(100), nullable=True)
+    location = Column("location", String(100), nullable=True)
     job_description = Column(Text, nullable=True)

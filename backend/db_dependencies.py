@@ -15,7 +15,9 @@ def get_db():
     finally:
         db.close()
 
+
 Db = Annotated[Session, Depends(get_db)]
+
 
 def get_clickhouse_db():
     ch = ClickhouseConfig.get_client()
@@ -23,5 +25,6 @@ def get_clickhouse_db():
         yield ch
     finally:
         ch.close()
+
 
 Clickhouse = Annotated[clickhouse_connect.driver.Client, Depends(get_clickhouse_db)]

@@ -7,5 +7,7 @@ from .interface import AudienceLookalikesPersistenceInterface
 from .postgres import AudienceLookalikesPostgresPersistence
 
 # Provide for FastAPI default implementation for ProfileFetcher
-AudienceLookalikesPersistence = Annotated[AudienceLookalikesPersistenceInterface, get_dependency(AudienceLookalikesPostgresPersistence)]
-
+AudienceLookalikesPersistence = Annotated[
+    AudienceLookalikesPersistenceInterface,
+    get_dependency(AudienceLookalikesPostgresPersistence),
+]

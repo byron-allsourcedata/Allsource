@@ -8,7 +8,13 @@ from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistenc
 from persistence.audience_lookalikes.dto import LookalikeInfo
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
-from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse, ValidationHistory
+from schemas.audience import (
+    SmartsAudienceObjectResponse,
+    DataSourcesFormat,
+    DataSourcesResponse,
+    SmartsResponse,
+    ValidationHistory,
+)
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -19,32 +25,35 @@ from enums import AudienceSmartStatuses
 
 logger = logging.getLogger(__name__)
 
+
 class AudienceSmartsService:
     VALID_DAYS = {30, 60, 90}
     GENDER_MAPPDING = {0: "male", 1: "female", 2: "unknown"}
 
-    def __init__(self, audience_smarts_persistence: AudienceSmartsPersistence,
-                 lookalikes_persistence_service: AudienceLookalikesPostgresPersistence,
-                 audience_sources_persistence: AudienceSourcesPersistence,
-                 audience_settings_persistence: AudienceSettingPersistence,
-                 ):
+    def __init__(
+        self,
+        audience_smarts_persistence: AudienceSmartsPersistence,
+        lookalikes_persistence_service: AudienceLookalikesPostgresPersistence,
+        audience_sources_persistence: AudienceSourcesPersistence,
+        audience_settings_persistence: AudienceSettingPersistence,
+    ):
         self.audience_smarts_persistence = audience_smarts_persistence
         self.lookalikes_persistence_service = lookalikes_persistence_service
         self.audience_sources_persistence = audience_sources_persistence
         self.audience_settings_persistence = audience_settings_persistence
 
     def get_audience_smarts(
-            self,
-            user: User,
-            page: int,
-            per_page: int,
-            sort_by: Optional[str] = None,
-            sort_order: Optional[str] = None,
-            from_date: Optional[str] = None,
-            to_date: Optional[str] = None,
-            search_query: Optional[str] = None,
-            statuses: Optional[List[str]] = None, 
-            use_cases:Optional[List[str]] = None, 
+        self,
+        user: User,
+        page: int,
+        per_page: int,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+        from_date: Optional[str] = None,
+        to_date: Optional[str] = None,
+        search_query: Optional[str] = None,
+        statuses: Optional[List[str]] = None,
+        use_cases: Optional[List[str]] = None,
     ) -> SmartsAudienceObjectResponse:
         audience_smarts, count = self.audience_smarts_persistence.get_audience_smarts(
             user_id=user.get("id"),
@@ -56,50 +65,51 @@ class AudienceSmartsService:
             to_date=to_date,
             search_query=search_query,
             statuses=statuses,
-            use_cases=use_cases
+            use_cases=use_cases,
         )
 
         audience_smarts_list = []
         for item in audience_smarts:
             integrations = json.loads(item[9]) if item[9] else []
-            audience_smarts_list.append({
-                'id': item[0],
-                'name': item[1],
-                'use_case_alias': item[2],
-                'created_by': item[3],
-                'created_at': item[4],
-                'total_records': item[5],
-                'validated_records': item[6],
-                'active_segment_records': item[7],
-                'status': item[8],
-                'integrations': integrations,
-                'processed_active_segment_records': item[10],
-            })
+            audience_smarts_list.append(
+                {
+                    "id": item[0],
+                    "name": item[1],
+                    "use_case_alias": item[2],
+                    "created_by": item[3],
+                    "created_at": item[4],
+                    "total_records": item[5],
+                    "validated_records": item[6],
+                    "active_segment_records": item[7],
+                    "status": item[8],
+                    "integrations": integrations,
+                    "processed_active_segment_records": item[10],
+                }
+            )
 
         return audience_smarts_list, count
-    
 
     def search_audience_smart(self, start_letter: str, user: User):
         smarts = self.audience_smarts_persistence.search_audience_smart(
-            user_id=user.get('id'),
-            start_letter=start_letter
+            user_id=user.get("id"), start_letter=start_letter
         )
         results = set()
         for smart_audience_name, creator_name in smarts:
-                if start_letter.lower() in smart_audience_name.lower():
-                    results.add(smart_audience_name)
-                if start_letter.lower() in creator_name.lower():
-                    results.add(creator_name)
+            if start_letter.lower() in smart_audience_name.lower():
+                results.add(smart_audience_name)
+            if start_letter.lower() in creator_name.lower():
+                results.add(creator_name)
 
         limited_results = list(results)[:10]
         return limited_results
-
 
     def delete_audience_smart(self, id: UUID) -> bool:
         count_deleted = self.audience_smarts_persistence.delete_audience_smart(id)
         return count_deleted > 0
 
-    def estimates_predictable_validation(self, validations: List[str]) -> Dict[str, float]:
+    def estimates_predictable_validation(
+        self, validations: List[str]
+    ) -> Dict[str, float]:
         stats = self.audience_settings_persistence.get_average_success_validations()
         product = 1.0
         for key in validations:
@@ -108,83 +118,87 @@ class AudienceSmartsService:
         return product
 
     def update_audience_smart(self, id: UUID, new_name: str) -> bool:
-        count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
+        count_updated = self.audience_smarts_persistence.update_audience_smart(
+            id, new_name
+        )
         return count_updated > 0
 
     def set_data_syncing_status(self, id: UUID) -> bool:
-        count_updated = self.audience_smarts_persistence.set_data_syncing_status(id, AudienceSmartStatuses.DATA_SYNCING.value)
+        count_updated = self.audience_smarts_persistence.set_data_syncing_status(
+            id, AudienceSmartStatuses.DATA_SYNCING.value
+        )
         return count_updated > 0
-    
 
     def transform_datasource(self, raw_data: dict) -> DataSourcesFormat:
         data_sources = {
             "lookalike_ids": {"include": [], "exclude": []},
             "source_ids": {"include": [], "exclude": []},
-            "use_case": None
+            "use_case": None,
         }
 
         for item in raw_data:
-            key = "lookalike_ids" if item["sourceLookalike"] == "Lookalike" else "source_ids"
-            include_exclude = "include" if item["includeExclude"] == "include" else "exclude"
-            data_sources['use_case'] = item["useCase"].lower()
+            key = (
+                "lookalike_ids"
+                if item["sourceLookalike"] == "Lookalike"
+                else "source_ids"
+            )
+            include_exclude = (
+                "include" if item["includeExclude"] == "include" else "exclude"
+            )
+            data_sources["use_case"] = item["useCase"].lower()
             data_sources[key][include_exclude].append(item["selectedSourceId"])
 
         return data_sources
 
-    
-    async def start_scripts_for_matching(self, 
-            aud_smart_id: UUID, 
-            user_id: int, 
-            need_validate: bool, 
-            data_sources: dict, 
-            active_segment_records: int,
-            validation_params: dict
-        ):
-
+    async def start_scripts_for_matching(
+        self,
+        aud_smart_id: UUID,
+        user_id: int,
+        need_validate: bool,
+        data_sources: dict,
+        active_segment_records: int,
+        validation_params: dict,
+    ):
         queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         data = {
-            'aud_smart_id': str(aud_smart_id),
-            'user_id': user_id,
-            'need_validate': need_validate,
-            'data_sources': self.transform_datasource(data_sources),
+            "aud_smart_id": str(aud_smart_id),
+            "user_id": user_id,
+            "need_validate": need_validate,
+            "data_sources": self.transform_datasource(data_sources),
             "active_segment": active_segment_records,
-            "validation_params": validation_params
+            "validation_params": validation_params,
         }
-            
+
         try:
-            message_body = {'data': data}
+            message_body = {"data": data}
             await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body=message_body
+                connection=connection, queue_name=queue_name, message_body=message_body
             )
         except Exception as e:
             logger.error(f"Failed to publish message to {queue_name}. Error: {e}")
         finally:
             await rabbitmq_connection.close()
-    
+
     def validate_recency_days(self, days: int):
         if days not in self.VALID_DAYS:
             raise ValueError(f"Invalid recency days: {days}.")
 
-
     async def create_audience_smart(
-            self,
-            name: str,
-            user: dict,
-            created_by_user_id: int,
-            use_case_alias: str,
-            data_sources: List[dict],
-            validation_params: Optional[dict],
-            active_segment_records: int,
-            total_records: int,
-            target_schema: str,
-            is_validate_skip: Optional[bool] = None,
-            contacts_to_validate: Optional[int] = None,
+        self,
+        name: str,
+        user: dict,
+        created_by_user_id: int,
+        use_case_alias: str,
+        data_sources: List[dict],
+        validation_params: Optional[dict],
+        active_segment_records: int,
+        total_records: int,
+        target_schema: str,
+        is_validate_skip: Optional[bool] = None,
+        contacts_to_validate: Optional[int] = None,
     ) -> SmartsResponse:
-
         need_validate = False
         if is_validate_skip:
             status = AudienceSmartStatuses.UNVALIDATED.value
@@ -194,7 +208,7 @@ class AudienceSmartsService:
             need_validate = True
             status = AudienceSmartStatuses.VALIDATING.value
 
-        if validation_params:            
+        if validation_params:
             for key in validation_params.keys():
                 for item in validation_params[key]:
                     if "recency" in item:
@@ -206,7 +220,7 @@ class AudienceSmartsService:
 
         created_data = self.audience_smarts_persistence.create_audience_smart(
             name=name,
-            user_id=user.get('id'),
+            user_id=user.get("id"),
             created_by_user_id=created_by_user_id,
             use_case_alias=use_case_alias,
             validation_params=json.dumps(validation_params),
@@ -214,24 +228,41 @@ class AudienceSmartsService:
             active_segment_records=active_segment_records,
             total_records=total_records,
             target_schema=target_schema,
-            status=status
+            status=status,
         )
-        await self.start_scripts_for_matching(created_data.id, user.get("id"), need_validate, data_sources, active_segment_records, validation_params)
+        await self.start_scripts_for_matching(
+            created_data.id,
+            user.get("id"),
+            need_validate,
+            data_sources,
+            active_segment_records,
+            validation_params,
+        )
 
         return SmartsResponse(
-            id=created_data.id, name=created_data.name, use_case_alias=use_case_alias, created_by=user.get('full_name'),
-            created_at=created_data.created_at, total_records=created_data.total_records,
-            validated_records=created_data.validated_records, active_segment_records=created_data.active_segment_records,
-            processed_active_segment_records=created_data.processed_active_segment_records, status=created_data.status, integrations=None
+            id=created_data.id,
+            name=created_data.name,
+            use_case_alias=use_case_alias,
+            created_by=user.get("full_name"),
+            created_at=created_data.created_at,
+            total_records=created_data.total_records,
+            validated_records=created_data.validated_records,
+            active_segment_records=created_data.active_segment_records,
+            processed_active_segment_records=created_data.processed_active_segment_records,
+            status=created_data.status,
+            integrations=None,
         )
-
 
     def calculate_smart_audience(self, raw_data_sources: dict) -> int:
         transformed_data_source = self.transform_datasource(raw_data_sources)
-        return self.audience_smarts_persistence.calculate_smart_audience(transformed_data_source)
-    
+        return self.audience_smarts_persistence.calculate_smart_audience(
+            transformed_data_source
+        )
+
     def get_datasources_by_aud_smart_id(self, id: UUID) -> DataSourcesResponse:
-        data_sources = self.audience_smarts_persistence.get_datasources_by_aud_smart_id(id)
+        data_sources = self.audience_smarts_persistence.get_datasources_by_aud_smart_id(
+            id
+        )
         includes = []
         excludes = []
 
@@ -239,7 +270,9 @@ class AudienceSmartsService:
             source_data = {
                 "name": data_source.lookalike_name or data_source.source_name,
                 "source_type": data_source.source_type,
-                "size": data_source.lookalike_size if data_source.lookalike_name else data_source.matched_records
+                "size": data_source.lookalike_size
+                if data_source.lookalike_name
+                else data_source.matched_records,
             }
 
             if data_source.data_type == AudienceSmartDataSource.INCLUDE.value:
@@ -249,47 +282,61 @@ class AudienceSmartsService:
 
         return {"includes": includes, "excludes": excludes}
 
-    def get_validations_by_aud_smart_id(self, id: UUID) -> List[Dict[str, ValidationHistory]]:
-        raw_validations_obj = self.audience_smarts_persistence.get_validations_by_aud_smart_id(id)
-        validation_priority = self.audience_settings_persistence.get_validation_priority()
+    def get_validations_by_aud_smart_id(
+        self, id: UUID
+    ) -> List[Dict[str, ValidationHistory]]:
+        raw_validations_obj = (
+            self.audience_smarts_persistence.get_validations_by_aud_smart_id(id)
+        )
+        validation_priority = (
+            self.audience_settings_persistence.get_validation_priority()
+        )
 
         priority_order = validation_priority.split(",") if validation_priority else []
-    
+
         parsed_validations = json.loads(raw_validations_obj.validations)
-        
+
         result = []
-        
+
         for key, value in parsed_validations.items():
             if len(value):
-                
                 for item in value:
                     for subkey in item.keys():
                         count_submited = item[subkey].get("count_submited", 0)
                         count_validated = item[subkey].get("count_validated", 0)
 
                         if subkey == "recency":
-                            subkey_with_param = "recency " + str(item[subkey].get("days")) + " days"
+                            subkey_with_param = (
+                                "recency " + str(item[subkey].get("days")) + " days"
+                            )
                         else:
                             subkey_with_param = subkey
 
-                        result.append({
-                            "key": f"{key}-{subkey}",
-                            "validation": {
-                                "type_validation": subkey_with_param,
-                                "count_submited": count_submited,
-                                "count_validated": count_validated,
-                                "count_cost": 0,
+                        result.append(
+                            {
+                                "key": f"{key}-{subkey}",
+                                "validation": {
+                                    "type_validation": subkey_with_param,
+                                    "count_submited": count_submited,
+                                    "count_validated": count_validated,
+                                    "count_cost": 0,
+                                },
                             }
-                        })
+                        )
 
-        result.sort(key=lambda x: priority_order.index(x["key"]) if x["key"] in priority_order else len(priority_order))
-        
+        result.sort(
+            key=lambda x: priority_order.index(x["key"])
+            if x["key"] in priority_order
+            else len(priority_order)
+        )
+
         return [{item["key"]: item["validation"]} for item in result]
 
-
     def get_datasource(self, user: dict) -> dict:
-        lookalikes, count, max_page, _ = self.lookalikes_persistence_service.get_lookalikes(
-            user_id=user.get('id'), page=1, per_page=50
+        lookalikes, count, max_page, _ = (
+            self.lookalikes_persistence_service.get_lookalikes(
+                user_id=user.get("id"), page=1, per_page=50
+            )
         )
 
         sources, count = self.audience_sources_persistence.get_sources(
@@ -298,59 +345,66 @@ class AudienceSmartsService:
 
         lookalike_list = []
         for lookalike_info in lookalikes:
-            lookalike_list.append({
-                **lookalike_info.lookalike.__dict__,
-                "source": lookalike_info.name,
-                "source_type": lookalike_info.source_type,
-                "created_by": lookalike_info.full_name,
-                "source_origin": lookalike_info.source_origin,
-                "domain": lookalike_info.domain,
-                "target_schema": lookalike_info.target_schema
-            })
+            lookalike_list.append(
+                {
+                    **lookalike_info.lookalike.__dict__,
+                    "source": lookalike_info.name,
+                    "source_type": lookalike_info.source_type,
+                    "created_by": lookalike_info.full_name,
+                    "source_origin": lookalike_info.source_origin,
+                    "domain": lookalike_info.domain,
+                    "target_schema": lookalike_info.target_schema,
+                }
+            )
 
         source_list = [
             {
-                'id': s[0],
-                'name': s[1],
-                'source_type': s[3],
-                'source_origin': s[4],
-                'domain': s[7],
-                'matched_records': s[9],
+                "id": s[0],
+                "name": s[1],
+                "source_type": s[3],
+                "source_origin": s[4],
+                "domain": s[7],
+                "matched_records": s[9],
             }
             for s in sources
         ]
 
         return {"lookalikes": lookalike_list, "sources": source_list}
 
-
     def download_persons(self, smart_audience_id, sent_contacts, data_map):
         types = [contact.type for contact in data_map]
         values = [contact.value for contact in data_map]
-        leads = self.audience_smarts_persistence.get_persons_by_smart_aud_id(smart_audience_id, sent_contacts, types)
+        leads = self.audience_smarts_persistence.get_persons_by_smart_aud_id(
+            smart_audience_id, sent_contacts, types
+        )
 
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(values)
-        
+
         for lead in leads:
             relevant_data = [
-                self.GENDER_MAPPDING.get(getattr(lead, field, ""), getattr(lead, field, ""))
-                if field == "gender" else getattr(lead, field, "")
+                self.GENDER_MAPPDING.get(
+                    getattr(lead, field, ""), getattr(lead, field, "")
+                )
+                if field == "gender"
+                else getattr(lead, field, "")
                 for field in types
             ]
             writer.writerow(relevant_data)
 
         output.seek(0)
         return output
-    
 
     def download_synced_persons(self, data_sync_id):
         exclude_fields = {"id", "asid", "up_id", "rsid", "name_prefix", "name_suffix"}
-        
+
         fields = EnrichmentUserContact.get_fields(exclude_fields=exclude_fields)
         headers = EnrichmentUserContact.get_headers(exclude_fields=exclude_fields)
-        
-        persons = self.audience_smarts_persistence.get_synced_persons_by_smart_aud_id(data_sync_id, fields)
+
+        persons = self.audience_smarts_persistence.get_synced_persons_by_smart_aud_id(
+            data_sync_id, fields
+        )
 
         fields.insert(-1, "state")
         headers.insert(-1, "State")
@@ -360,11 +414,14 @@ class AudienceSmartsService:
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(headers)
-        
+
         for lead in persons:
             relevant_data = [
-                self.GENDER_MAPPDING.get(getattr(lead, field, ""), getattr(lead, field, ""))
-                if field == "gender" else getattr(lead, field, "")
+                self.GENDER_MAPPDING.get(
+                    getattr(lead, field, ""), getattr(lead, field, "")
+                )
+                if field == "gender"
+                else getattr(lead, field, "")
                 for field in fields
             ]
             writer.writerow(relevant_data)
@@ -372,16 +429,23 @@ class AudienceSmartsService:
         output.seek(0)
         return output
 
-
     def get_processing_source(self, id: str) -> Optional[SmartsResponse]:
         smart_source = self.audience_smarts_persistence.get_processing_sources(id)
         if not smart_source:
             return None
 
-        (source_id, name, use_case_alias, created_by, created_at,
-         total_records, validated_records,
-         active_segment_records, processed_active_segment_records,
-         status) = smart_source
+        (
+            source_id,
+            name,
+            use_case_alias,
+            created_by,
+            created_at,
+            total_records,
+            validated_records,
+            active_segment_records,
+            processed_active_segment_records,
+            status,
+        ) = smart_source
 
         return SmartsResponse(
             id=source_id,
@@ -394,5 +458,5 @@ class AudienceSmartsService:
             active_segment_records=active_segment_records,
             processed_active_segment_records=processed_active_segment_records,
             status=status,
-            integrations=None
+            integrations=None,
         )

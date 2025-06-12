@@ -3,21 +3,27 @@ from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from schemas.users import UpdateUserRequest, UpdateUserResponse
+
 router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 
 @router.get("/confirm_customer")
-async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
-                       mail: str = Query(...), free_trial: bool = Query(...)):
+async def verify_token(
+    admin_customers_service: AdminCustomersService = Depends(
+        get_admin_customers_service
+    ),
+    mail: str = Query(...),
+    free_trial: bool = Query(...),
+):
     user = admin_customers_service.confirmation_customer(mail, free_trial)
-    queue_name = f'sse_events_{str(user.id)}'
+    queue_name = f"sse_events_{str(user.id)}"
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     try:
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=queue_name,
-            message_body={'status': "BOOK_CALL_PASSED", 'percent': 50}
+            message_body={"status": "BOOK_CALL_PASSED", "percent": 50},
         )
     except:
         await rabbitmq_connection.close()
@@ -25,14 +31,26 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await rabbitmq_connection.close()
     return "OK"
 
-@router.get('/users')
+
+@router.get("/users")
 async def get_users(
-        page: int = Query(1, alias="page", ge=1, description="Page number"),
-        per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
-        admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+    page: int = Query(1, alias="page", ge=1, description="Page number"),
+    per_page: int = Query(
+        9, alias="per_page", ge=1, le=500, description="Items per page"
+    ),
+    admin_customers_service: AdminCustomersService = Depends(
+        get_admin_customers_service
+    ),
+):
     users = admin_customers_service.get_users(page, per_page)
     return users
 
-@router.put('/user')
-def update_user(update_data: UpdateUserRequest, admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+
+@router.put("/user")
+def update_user(
+    update_data: UpdateUserRequest,
+    admin_customers_service: AdminCustomersService = Depends(
+        get_admin_customers_service
+    ),
+):
     return admin_customers_service.update_user(update_data)

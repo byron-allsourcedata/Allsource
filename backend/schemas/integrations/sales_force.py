@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr
 import typing as tp
-    
+
+
 class SalesForceProfile(BaseModel):
     FirstName: tp.Optional[str] = None
     LastName: tp.Optional[str] = None
@@ -18,4 +19,3 @@ class SalesForceProfile(BaseModel):
     NumberOfEmployees: tp.Optional[str] = None
     AnnualRevenue: tp.Optional[str] = None
     Description: tp.Optional[str] = None
-    

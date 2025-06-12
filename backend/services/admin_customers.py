@@ -20,10 +20,16 @@ logger = logging.getLogger(__name__)
 
 
 class AdminCustomersService:
-
-    def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
-                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth, send_grid_persistence: SendgridPersistence,
-                 partners_persistence: PartnersPersistence):
+    def __init__(
+        self,
+        db: Session,
+        subscription_service: SubscriptionService,
+        user_persistence: UserPersistence,
+        plans_persistence: PlansPersistence,
+        users_auth_service: UsersAuth,
+        send_grid_persistence: SendgridPersistence,
+        partners_persistence: PartnersPersistence,
+    ):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
@@ -33,89 +39,124 @@ class AdminCustomersService:
         self.partners_persistence = partners_persistence
 
     def get_users(self, page, per_page):
-        users_dict, total_count = self.user_persistence.get_not_partner_users(page, per_page)
+        users_dict, total_count = self.user_persistence.get_not_partner_users(
+            page, per_page
+        )
         result = []
         for user in users_dict:
-
-            payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(user)
+            payment_status = (
+                self.users_auth_service.get_user_authorization_status_without_pixel(
+                    user
+                )
+            )
             if payment_status == UserAuthorizationStatus.SUCCESS:
-                user_plan = self.db.query(
-                    UserSubscriptions.is_trial,
-                    UserSubscriptions.plan_end
-                ).filter(
-                    UserSubscriptions.user_id == user.get('id'),
-                    UserSubscriptions.status.in_(('active', 'canceled'))
-                ).order_by(
-                    UserSubscriptions.status,
-                    UserSubscriptions.plan_end.desc()
-                ).first()
+                user_plan = (
+                    self.db.query(
+                        UserSubscriptions.is_trial, UserSubscriptions.plan_end
+                    )
+                    .filter(
+                        UserSubscriptions.user_id == user.get("id"),
+                        UserSubscriptions.status.in_(("active", "canceled")),
+                    )
+                    .order_by(
+                        UserSubscriptions.status, UserSubscriptions.plan_end.desc()
+                    )
+                    .first()
+                )
                 if user_plan:
                     if user_plan.is_trial:
-                        payment_status = 'TRIAL_ACTIVE'
+                        payment_status = "TRIAL_ACTIVE"
                     else:
-                        payment_status = 'SUBSCRIPTION_ACTIVE'
-                
-            result.append({
-                "id": user.get('id'),
-                "email": user.get('email'),
-                "full_name": user.get('full_name'),
-                "created_at": user.get('created_at'),
-                'payment_status': payment_status,
-                "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id'))
-            })
-        return {
-            'users': result,
-            'count': total_count
-        }
+                        payment_status = "SUBSCRIPTION_ACTIVE"
+
+            result.append(
+                {
+                    "id": user.get("id"),
+                    "email": user.get("email"),
+                    "full_name": user.get("full_name"),
+                    "created_at": user.get("created_at"),
+                    "payment_status": payment_status,
+                    "is_trial": self.plans_persistence.get_trial_status_by_user_id(
+                        user.get("id")
+                    ),
+                }
+            )
+        return {"users": result, "count": total_count}
 
     def get_user_by_email(self, email):
-        user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
+        user_object = (
+            self.db.query(Users)
+            .filter(func.lower(Users.email) == func.lower(email))
+            .first()
+        )
         return user_object
-    
+
     def create_subscription_for_partner(self, user: Users):
         if not user.current_subscription_id:
-                    self.subscription_service.create_subscription_from_partners(user_id=user.id)
+            self.subscription_service.create_subscription_from_partners(user_id=user.id)
         else:
-            user_subscription = self.subscription_service.get_user_subscription(user_id=user.id)
-            if user_subscription.is_trial or user_subscription.plan_end.replace(tzinfo=timezone.utc) < get_utc_aware_date():
-                self.subscription_service.create_subscription_from_partners(user_id=user.id)
+            user_subscription = self.subscription_service.get_user_subscription(
+                user_id=user.id
+            )
+            if (
+                user_subscription.is_trial
+                or user_subscription.plan_end.replace(tzinfo=timezone.utc)
+                < get_utc_aware_date()
+            ):
+                self.subscription_service.create_subscription_from_partners(
+                    user_id=user.id
+                )
 
     def update_user(self, update_data: UpdateUserRequest):
         user = self.db.query(Users).filter(Users.id == update_data.user_id).first()
         if not user:
             return UpdateUserStatus.USER_NOT_FOUND
-        
+
         if update_data.is_partner:
             if update_data.is_partner == True:
                 self.create_subscription_for_partner(user=user)
-                commission = 70 if update_data.commission >= 70 else update_data.commission
+                commission = (
+                    70 if update_data.commission >= 70 else update_data.commission
+                )
                 creating_data = {
-                    'user_id': user.id,
-                    'join_date': datetime.now(timezone.utc),
+                    "user_id": user.id,
+                    "join_date": datetime.now(timezone.utc),
                     "name": user.full_name,
                     "email": user.email,
                     "company_name": user.company_name,
                     "commission": commission,
                     "token": get_md5_hash(user.email),
                     "is_master": True if update_data.is_master else False,
-                    'status': 'signup'
+                    "status": "signup",
                 }
                 self.partners_persistence.create_partner(creating_data)
             user.is_partner = update_data.is_partner
             self.db.commit()
-        
+
         return UpdateUserStatus.SUCCESS
 
     def get_user_subscription(self, user_id):
-        user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
+        user_subscription = (
+            self.db.query(UserSubscriptions)
+            .filter(UserSubscriptions.user_id == user_id)
+            .first()
+        )
         return user_subscription
 
     def get_free_trial_plan(self):
-        free_trial_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
+        free_trial_plan = (
+            self.db.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.is_free_trial == True)
+            .first()
+        )
         return free_trial_plan
 
     def get_default_plan(self):
-        default_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_default == True).first()
+        default_plan = (
+            self.db.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.is_default == True)
+            .first()
+        )
         return default_plan
 
     def set_user_subscription(self, user_id, plan_start, plan_end):
@@ -123,7 +164,10 @@ class AdminCustomersService:
             self.db.query(UserSubscriptions)
             .filter(Users.id == user_id)
             .update(
-                {UserSubscriptions.plan_start: plan_start, UserSubscriptions.plan_end: plan_end},
+                {
+                    UserSubscriptions.plan_start: plan_start,
+                    UserSubscriptions.plan_end: plan_end,
+                },
                 synchronize_session=False,
             )
         )
@@ -132,9 +176,10 @@ class AdminCustomersService:
     def confirmation_customer(self, email, free_trial=None):
         user_data = self.get_user_by_email(email)
         if free_trial:
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
+            self.subscription_service.create_subscription_from_free_trial(
+                user_id=user_data.id
+            )
         else:
             self.subscription_service.remove_trial(user_data.id)
-        
+
         return user_data
-    

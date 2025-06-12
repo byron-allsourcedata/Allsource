@@ -35,8 +35,13 @@ def decode_jwt_data(token: str) -> Union[Mapping, Dict]:
         token = token.replace("Bearer ", "")
     except AttributeError:
         raise TokenError
-    jwt_data = jwt.decode(token, AuthConfig.secret_key, options={"verify_signature": False}, audience="Filed-Client-Apps",
-                          algorithms=["HS256"])
+    jwt_data = jwt.decode(
+        token,
+        AuthConfig.secret_key,
+        options={"verify_signature": False},
+        audience="Filed-Client-Apps",
+        algorithms=["HS256"],
+    )
     return jwt_data
 
 

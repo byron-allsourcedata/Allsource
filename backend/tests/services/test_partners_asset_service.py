@@ -8,14 +8,15 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 parent_parent_dir = os.path.abspath(os.path.join(parent_dir, os.pardir))
 sys.path.append(parent_parent_dir)
 
-from services.partners_assets import PartnersAssetService 
-from services.aws import AWSService 
-from models.partners_asset import PartnersAsset 
+from services.partners_assets import PartnersAssetService
+from services.aws import AWSService
+from models.partners_asset import PartnersAsset
 
 
 @pytest.fixture
 def mock_persistence():
     return MagicMock()
+
 
 @pytest.fixture
 def mock_aws_service():
@@ -24,7 +25,9 @@ def mock_aws_service():
 
 @pytest.fixture
 def service(mock_persistence, mock_aws_service):
-    return PartnersAssetService(partners_asset_persistence=mock_persistence, aws_service=mock_aws_service)
+    return PartnersAssetService(
+        partners_asset_persistence=mock_persistence, aws_service=mock_aws_service
+    )
 
 
 def test_get_assets(service, mock_persistence):
@@ -34,14 +37,14 @@ def test_get_assets(service, mock_persistence):
             title="Asset 1",
             type="Image",
             preview_url="http://example.com/preview1.png",
-            file_url="http://example.com/file1.png"
+            file_url="http://example.com/file1.png",
         ),
         PartnersAsset(
             id=2,
             title="Asset 2",
             type="Video",
             preview_url="http://example.com/preview2.png",
-            file_url="http://example.com/file2.mp4"
+            file_url="http://example.com/file2.mp4",
         ),
     ]
     mock_persistence.get_assets.return_value = mock_assets
@@ -65,9 +68,9 @@ def test_get_file_size_success(mocker, service):
 
     file_url = "https://images.hdqwalls.com/download/sunset-tree-red-ocean-sky-7w-3840x2160.jpg"
     file_size = service.get_file_size(file_url)
-    
+
     assert file_size == "0.87 MB"
-    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5) 
+    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5)
 
 
 def test_get_file_size_failure(mocker, service):
@@ -84,13 +87,17 @@ def test_get_file_size_failure(mocker, service):
 def test_get_file_size_fail_response(mocker, service):
     mock_response = mocker.patch("requests.head")
     mock_response.return_value.status_code = 303
-    mock_response.return_value.headers = {"Date": "Wed, 11 Dec 2024 06:37:42 GMT", "Content-Type": "image/jpeg", "Content-Length": "912261"}
+    mock_response.return_value.headers = {
+        "Date": "Wed, 11 Dec 2024 06:37:42 GMT",
+        "Content-Type": "image/jpeg",
+        "Content-Length": "912261",
+    }
 
     file_url = "https://images.hdqwalls.com/download/sunset-tree-red-ocean-sky-7w-3840x2160.jpg"
     file_size = service.get_file_size(file_url)
-    
+
     assert file_size == "0.00 MB"
-    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5) 
+    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5)
 
 
 def test_get_file_extension_valid(service):
@@ -112,7 +119,12 @@ def test_get_file_extension_no_valid_type(service):
 
 
 def test_get_video_duration_success(mocker, service):
-    mocker.patch("requests.get", return_value=MagicMock(status_code=200, iter_content=lambda chunk_size: [b"data"]))
+    mocker.patch(
+        "requests.get",
+        return_value=MagicMock(
+            status_code=200, iter_content=lambda chunk_size: [b"data"]
+        ),
+    )
     mocker.patch("ffmpeg.probe", return_value={"format": {"duration": "120.0"}})
     mocker.patch("os.remove")
 
@@ -137,12 +149,10 @@ def test_domain_mapped_with_unknown_extension_and_size(service):
         title="Asset 1",
         type="Image",
         preview_url="http://example.com/preview.png",
-        file_url="http://example.com/file"
+        file_url="http://example.com/file",
     )
 
     mapped_asset = service.domain_mapped(mock_asset)
 
     assert mapped_asset["file_extension"] == "Unknown"
     assert mapped_asset["file_size"] == "0.00 MB"
-
-    

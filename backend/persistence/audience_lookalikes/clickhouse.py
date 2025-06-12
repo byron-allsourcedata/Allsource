@@ -12,12 +12,19 @@ from schemas.similar_audiences import AudienceFeatureImportance
 
 @injectable
 class ClickhousePersistence:
-    def __init__(self, db: Db, client: Clickhouse, postgres: AudienceLookalikesPostgresPersistence):
+    def __init__(
+        self,
+        db: Db,
+        client: Clickhouse,
+        postgres: AudienceLookalikesPostgresPersistence,
+    ):
         self.db = db
         self.client = client
         self.postgres = postgres
 
-    def calculate_lookalikes(self, user_id: int, source_uuid: UUID, lookalike_size: str) -> List[Dict]:
+    def calculate_lookalikes(
+        self, user_id: int, source_uuid: UUID, lookalike_size: str
+    ) -> List[Dict]:
         return self.postgres.calculate_lookalikes(user_id, source_uuid, lookalike_size)
 
     def retrieve_source_insights(
@@ -31,7 +38,7 @@ class ClickhousePersistence:
             .select_from(AudienceSourcesMatchedPerson)
             .join(
                 EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id,
             )
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         )
@@ -114,14 +121,11 @@ class ClickhousePersistence:
 
         asids = [row[0] for row in rows]
 
-
         columns = ", ".join(enrichment_columns)
         client = ClickhouseConfig.get_client()
         result = client.query(
             f"SELECT {columns} FROM {ClickhouseConfig.users_table()} WHERE asid IN %(ids)s",
-            parameters={
-                "ids": asids
-            }
+            parameters={"ids": asids},
         )
 
         names: list[str] = result.column_names
@@ -138,7 +142,9 @@ class ClickhousePersistence:
         return self.postgres.search_lookalikes(start_letter, user_id)
 
     def update_lookalike(self, uuid_of_lookalike, name_of_lookalike, user_id):
-        return self.postgres.update_lookalike(uuid_of_lookalike, name_of_lookalike, user_id)
+        return self.postgres.update_lookalike(
+            uuid_of_lookalike, name_of_lookalike, user_id
+        )
 
     def delete_lookalike(self, uuid_of_lookalike, user_id):
         return self.postgres.delete_lookalike(uuid_of_lookalike, user_id)
@@ -150,7 +156,7 @@ class ClickhousePersistence:
         lookalike_size,
         lookalike_name,
         created_by_user_id,
-        audience_feature_importance: AudienceFeatureImportance
+        audience_feature_importance: AudienceFeatureImportance,
     ):
         return self.postgres.create_lookalike(
             uuid_of_source,
@@ -158,5 +164,5 @@ class ClickhousePersistence:
             lookalike_size,
             lookalike_name,
             created_by_user_id,
-            audience_feature_importance
+            audience_feature_importance,
         )

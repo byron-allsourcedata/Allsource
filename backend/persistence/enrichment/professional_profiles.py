@@ -2,7 +2,11 @@ from typing import List
 from uuid import UUID
 
 from db_dependencies import Db
-from models import AudienceSourcesMatchedPerson, EnrichmentProfessionalProfile, EnrichmentUser
+from models import (
+    AudienceSourcesMatchedPerson,
+    EnrichmentProfessionalProfile,
+    EnrichmentUser,
+)
 from resolver import injectable
 
 
@@ -10,7 +14,6 @@ from resolver import injectable
 class ProfessionalProfilesPersistence:
     def __init__(self, db: Db):
         self.db = db
-
 
     def fetch(self, matched_ids: List[UUID]):
         return (
@@ -20,10 +23,14 @@ class ProfessionalProfilesPersistence:
                 EnrichmentProfessionalProfile.department,
                 EnrichmentProfessionalProfile.company_size,
             )
-            .join(EnrichmentUser,
-                  AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id)
-            .join(EnrichmentProfessionalProfile,
-                  EnrichmentProfessionalProfile.asid == EnrichmentUser.asid)
+            .join(
+                EnrichmentUser,
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id,
+            )
+            .join(
+                EnrichmentProfessionalProfile,
+                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid,
+            )
             .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
             .all()
         )

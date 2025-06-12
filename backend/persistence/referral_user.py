@@ -9,37 +9,41 @@ from models.referral_users import ReferralUser
 from datetime import datetime
 import pytz
 
+
 class ReferralUserPersistence:
     def __init__(self, db: Session):
         self.db = db
-        
-    def get_referral_users(self, user_id, search_term, start_date, end_date, offset, limit, order_by, order):
+
+    def get_referral_users(
+        self, user_id, search_term, start_date, end_date, offset, limit, order_by, order
+    ):
         order_column = getattr(Users, order_by, Users.id)
         order_direction = asc(order_column) if order == "asc" else desc(order_column)
 
-        query = self.db.query(
-            Users.id,
-            Users.full_name,
-            Users.email,
-            ReferralUser.created_at.label('join_date'),
-            ReferralPayouts.created_at.label('last_payment_date'),
-            ReferralPayouts.paid_at.label('reward_payout_date'),
-            ReferralPayouts.status.label('reward_status'),
-            ReferralPayouts.plan_amount,
-            UserSubscriptions.status.label('subscription_status'),
-        )\
-            .outerjoin(Users, ReferralUser.user_id == Users.id)\
-            .outerjoin(Partner, Partner.user_id == Users.id)\
-            .outerjoin(ReferralPayouts, ReferralPayouts.user_id == Users.id)\
-            .outerjoin(UserSubscriptions, UserSubscriptions.id == Users.current_subscription_id)\
+        query = (
+            self.db.query(
+                Users.id,
+                Users.full_name,
+                Users.email,
+                ReferralUser.created_at.label("join_date"),
+                ReferralPayouts.created_at.label("last_payment_date"),
+                ReferralPayouts.paid_at.label("reward_payout_date"),
+                ReferralPayouts.status.label("reward_status"),
+                ReferralPayouts.plan_amount,
+                UserSubscriptions.status.label("subscription_status"),
+            )
+            .outerjoin(Users, ReferralUser.user_id == Users.id)
+            .outerjoin(Partner, Partner.user_id == Users.id)
+            .outerjoin(ReferralPayouts, ReferralPayouts.user_id == Users.id)
+            .outerjoin(
+                UserSubscriptions, UserSubscriptions.id == Users.current_subscription_id
+            )
             .filter(ReferralUser.parent_user_id == user_id)
-        
+        )
+
         if search_term:
             query = query.filter(
-                or_(
-                    Users.full_name.ilike(search_term),
-                    Users.email.ilike(search_term)
-                )
+                or_(Users.full_name.ilike(search_term), Users.email.ilike(search_term))
             )
 
         if start_date:
@@ -47,11 +51,11 @@ class ReferralUserPersistence:
         if end_date:
             end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(ReferralUser.created_at <= end_date)
-        
+
         query = query.order_by(order_direction)
-        
+
         accounts = query.offset(offset).limit(limit).all()
-    
+
         return [
             {
                 "id": account[0],
@@ -68,7 +72,12 @@ class ReferralUserPersistence:
         ], query.count()
 
     def verify_user_relationship(self, parent_id: int, user_id: int) -> bool:
-        return self.db.query(ReferralUser).filter(
-            ReferralUser.parent_user_id == parent_id,
-            ReferralUser.user_id == user_id
-        ).first() is not None
+        return (
+            self.db.query(ReferralUser)
+            .filter(
+                ReferralUser.parent_user_id == parent_id,
+                ReferralUser.user_id == user_id,
+            )
+            .first()
+            is not None
+        )

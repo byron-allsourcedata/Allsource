@@ -1,16 +1,28 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, BigInteger, text, Boolean, Sequence
+from sqlalchemy import (
+    Column,
+    event,
+    Integer,
+    TIMESTAMP,
+    BOOLEAN,
+    VARCHAR,
+    Index,
+    BigInteger,
+    text,
+    Boolean,
+    Sequence,
+)
 from .base import Base
 
 
 class LeadEmailsVerification(Base):
     __tablename__ = "leads_emails_verifications"
     __table_args__ = (
-        Index('leads_emails_verification_email_idx', 'email', unique=True),
+        Index("leads_emails_verification_email_idx", "email", unique=True),
     )
 
     id = Column(
         BigInteger,
-        Sequence('million_verifier_email_id_seq', metadata=Base.metadata),
+        Sequence("million_verifier_email_id_seq", metadata=Base.metadata),
         primary_key=True,
         nullable=False,
     )

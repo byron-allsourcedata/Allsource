@@ -4,18 +4,18 @@ from models.base import Base
 
 
 class EnrichmentLifestyle(Base):
-    __tablename__ = 'enrichment_lifestyles'
-    
+    __tablename__ = "enrichment_lifestyles"
+
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
         nullable=False,
-        server_default=text('gen_random_uuid()')
+        server_default=text("gen_random_uuid()"),
     )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey('enrichment_users.asid', ondelete='CASCADE', onupdate='CASCADE'),
-        nullable=False
+        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
     )
     pets = Column(String(8), nullable=False)
     cooking_enthusiast = Column(String(8), nullable=False)
@@ -33,7 +33,5 @@ class EnrichmentLifestyle(Base):
     golf_enthusiasts = Column(String(8), nullable=False)
     beauty_cosmetics = Column(String(8), nullable=False)
     smoker = Column(String(8), nullable=False)
-    
-    __table_args__ = (
-        Index("ix_lifestyle_asid", asid),
-    )
+
+    __table_args__ = (Index("ix_lifestyle_asid", asid),)

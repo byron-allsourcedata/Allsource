@@ -4,15 +4,12 @@ from .base import Base
 
 
 class Kajabi(Base):
-    __tablename__ = 'kajabi'
+    __tablename__ = "kajabi"
 
     id = Column(
         BigInteger,
-        Sequence('kajabi_id_seq', metadata=Base.metadata),
+        Sequence("kajabi_id_seq", metadata=Base.metadata),
         primary_key=True,
         nullable=False,
     )
-    text = Column(
-        JSON,
-        nullable=True
-    )
+    text = Column(JSON, nullable=True)

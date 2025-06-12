@@ -1,7 +1,14 @@
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator
-from schemas.mapping.audience_insights_mapping import ETHNICITY_MAP, LANGUAGE_MAP, RELIGION_MAP,\
-    YES_NO_UNKNOWN_MAPS, NET_WORTH_RANGE_MAP, CREDIT_SCORE_RANGE_MAP, INCOME_RANGE
+from schemas.mapping.audience_insights_mapping import (
+    ETHNICITY_MAP,
+    LANGUAGE_MAP,
+    RELIGION_MAP,
+    YES_NO_UNKNOWN_MAPS,
+    NET_WORTH_RANGE_MAP,
+    CREDIT_SCORE_RANGE_MAP,
+    INCOME_RANGE,
+)
 
 
 class PersonalProfiles(BaseModel):
@@ -25,11 +32,19 @@ class PersonalProfiles(BaseModel):
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
         def is_unknown(key: str) -> bool:
             lowered = key.lower()
-            return (
-                    "unknown" in lowered
-                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
-                                   "undisclosed"}
-            )
+            return "unknown" in lowered or lowered in {
+                "u",
+                "ux",
+                "u1",
+                "u2",
+                "u9",
+                "u0",
+                "uv",
+                "um",
+                "unspecified",
+                "undeclared",
+                "undisclosed",
+            }
 
         # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
         filtered_data = data.copy()
@@ -50,16 +65,22 @@ class PersonalProfiles(BaseModel):
                 mapped = {YES_NO_UNKNOWN_MAPS[key].get(k, k): v for k, v in val.items()}
                 filtered = {k: v for k, v in mapped.items() if k != "Unknown"}
                 total = sum(filtered.values())
-                setattr(self, key,
-                        {k: round(v / total * 100, 2) for k, v in filtered.items()} if total else {k: 0.0 for k in
-                                                                                                   filtered})
+                setattr(
+                    self,
+                    key,
+                    {k: round(v / total * 100, 2) for k, v in filtered.items()}
+                    if total
+                    else {k: 0.0 for k in filtered},
+                )
             elif key == "gender":
                 filtered = {k: v for k, v in val.items() if k != "2"}
                 total = sum(filtered.values())
                 if total == 0:
                     setattr(self, key, {k: 0.0 for k in filtered})
                 else:
-                    percent = {k: round(v / total * 100, 2) for k, v in filtered.items()}
+                    percent = {
+                        k: round(v / total * 100, 2) for k, v in filtered.items()
+                    }
                     setattr(self, key, percent)
             else:
                 if key == "ethnicity":
@@ -92,11 +113,19 @@ class FinancialProfiles(BaseModel):
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
         def is_unknown(key: str) -> bool:
             lowered = key.lower()
-            return (
-                    "unknown" in lowered
-                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
-                                   "undisclosed"}
-            )
+            return "unknown" in lowered or lowered in {
+                "u",
+                "ux",
+                "u1",
+                "u2",
+                "u9",
+                "u0",
+                "uv",
+                "um",
+                "unspecified",
+                "undeclared",
+                "undisclosed",
+            }
 
         # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
         filtered_data = data.copy()
@@ -152,11 +181,19 @@ class LifestyleProfiles(BaseModel):
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
         def is_unknown(key: str) -> bool:
             lowered = key.lower()
-            return (
-                    "unknown" in lowered
-                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
-                                   "undisclosed"}
-            )
+            return "unknown" in lowered or lowered in {
+                "u",
+                "ux",
+                "u1",
+                "u2",
+                "u9",
+                "u0",
+                "uv",
+                "um",
+                "unspecified",
+                "undeclared",
+                "undisclosed",
+            }
 
         # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
         filtered_data = data.copy()
@@ -183,11 +220,19 @@ class VoterProfiles(BaseModel):
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
         def is_unknown(key: str) -> bool:
             lowered = key.lower()
-            return (
-                    "unknown" in lowered
-                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
-                                   "undisclosed"}
-            )
+            return "unknown" in lowered or lowered in {
+                "u",
+                "ux",
+                "u1",
+                "u2",
+                "u9",
+                "u0",
+                "uv",
+                "um",
+                "unspecified",
+                "undeclared",
+                "undisclosed",
+            }
 
         # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
         filtered_data = data.copy()
@@ -228,11 +273,19 @@ class ProfessionalProfiles(BaseModel):
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
         def is_unknown(key: str) -> bool:
             lowered = key.lower()
-            return (
-                    "unknown" in lowered
-                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
-                                   "undisclosed"}
-            )
+            return "unknown" in lowered or lowered in {
+                "u",
+                "ux",
+                "u1",
+                "u2",
+                "u9",
+                "u0",
+                "uv",
+                "um",
+                "unspecified",
+                "undeclared",
+                "undisclosed",
+            }
 
         # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
         filtered_data = data.copy()
@@ -261,11 +314,19 @@ class EmploymentHistory(BaseModel):
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
         def is_unknown(key: str) -> bool:
             lowered = key.lower()
-            return (
-                    "unknown" in lowered
-                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
-                                   "undisclosed"}
-            )
+            return "unknown" in lowered or lowered in {
+                "u",
+                "ux",
+                "u1",
+                "u2",
+                "u9",
+                "u0",
+                "uv",
+                "um",
+                "unspecified",
+                "undeclared",
+                "undisclosed",
+            }
 
         # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
         filtered_data = data.copy()
@@ -341,6 +402,7 @@ class Lifestyle(BaseModel):
     golf_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
     beauty_cosmetic_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
 
+
 class Voter(BaseModel):
     congressional_district: Optional[Dict[str, int]] = Field(default_factory=dict)
     voting_propensity: Optional[Dict[str, int]] = Field(default_factory=dict)
@@ -348,30 +410,36 @@ class Voter(BaseModel):
 
 
 class EmploymentHistory(BaseModel):
-    job_title:          Optional[Dict[str, int]] = Field(default_factory=dict)
-    company_name:       Optional[Dict[str, int]] = Field(default_factory=dict)
-    start_date:         Optional[Dict[str, int]] = Field(default_factory=dict)
-    end_date:           Optional[Dict[str, int]] = Field(default_factory=dict)
-    is_current:         Optional[Dict[str, int]] = Field(default_factory=dict)
-    location:           Optional[Dict[str, int]] = Field(default_factory=dict)
-    job_description:    Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_title: Optional[Dict[str, int]] = Field(default_factory=dict)
+    company_name: Optional[Dict[str, int]] = Field(default_factory=dict)
+    start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
+    end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
+    is_current: Optional[Dict[str, int]] = Field(default_factory=dict)
+    location: Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_description: Optional[Dict[str, int]] = Field(default_factory=dict)
+
 
 class ProfessionalProfile(BaseModel):
-    current_job_title:       Optional[Dict[str, int]] = Field(default_factory=dict)
-    current_company_name:    Optional[Dict[str, int]] = Field(default_factory=dict)
-    job_start_date:          Optional[Dict[str, int]] = Field(default_factory=dict)
-    job_duration:            Optional[Dict[str, int]] = Field(default_factory=dict)
-    job_location:            Optional[Dict[str, int]] = Field(default_factory=dict)
-    job_level:               Optional[Dict[str, int]] = Field(default_factory=dict)
-    department:              Optional[Dict[str, int]] = Field(default_factory=dict)
-    company_size:            Optional[Dict[str, int]] = Field(default_factory=dict)
-    primary_industry:        Optional[Dict[str, int]] = Field(default_factory=dict)
-    annual_sales:            Optional[Dict[str, int]] = Field(default_factory=dict)
+    current_job_title: Optional[Dict[str, int]] = Field(default_factory=dict)
+    current_company_name: Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_duration: Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_location: Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_level: Optional[Dict[str, int]] = Field(default_factory=dict)
+    department: Optional[Dict[str, int]] = Field(default_factory=dict)
+    company_size: Optional[Dict[str, int]] = Field(default_factory=dict)
+    primary_industry: Optional[Dict[str, int]] = Field(default_factory=dict)
+    annual_sales: Optional[Dict[str, int]] = Field(default_factory=dict)
+
 
 class InsightsByCategory(BaseModel):
     personal_profile: Optional[Personal] = Field(default_factory=Personal)
     financial: Optional[Financial] = Field(default_factory=Financial)
     lifestyle: Optional[Lifestyle] = Field(default_factory=Lifestyle)
     voter: Optional[Voter] = Field(default_factory=Voter)
-    employment_history: Optional[EmploymentHistory] = Field(default_factory=EmploymentHistory)
-    professional_profile: Optional[ProfessionalProfile] = Field(default_factory=ProfessionalProfile)
+    employment_history: Optional[EmploymentHistory] = Field(
+        default_factory=EmploymentHistory
+    )
+    professional_profile: Optional[ProfessionalProfile] = Field(
+        default_factory=ProfessionalProfile
+    )

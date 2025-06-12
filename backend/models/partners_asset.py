@@ -3,40 +3,20 @@ from .base import Base, create_timestamps, update_timestamps
 
 
 class PartnersAsset(Base):
-    __tablename__ = 'partners_assets'
+    __tablename__ = "partners_assets"
 
     id = Column(
         Integer,
-        Sequence('partners_assets_id_seq', metadata=Base.metadata),
+        Sequence("partners_assets_id_seq", metadata=Base.metadata),
         primary_key=True,
         nullable=False,
     )
-    title = Column(
-        VARCHAR(32),
-        nullable=False
-    )
-    type = Column(
-        VARCHAR(16),
-        nullable=False
-    )
-    file_url = Column(
-        TEXT,
-        nullable=False
-    )
-    preview_url = Column(
-        TEXT,
-        nullable=True
-    )
-    created_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=text('now()')
-    )
-    updated_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=text('now()')
-    )
+    title = Column(VARCHAR(32), nullable=False)
+    type = Column(VARCHAR(16), nullable=False)
+    file_url = Column(TEXT, nullable=False)
+    preview_url = Column(TEXT, nullable=True)
+    created_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
+    updated_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
 
 
 event.listen(PartnersAsset, "before_insert", create_timestamps)

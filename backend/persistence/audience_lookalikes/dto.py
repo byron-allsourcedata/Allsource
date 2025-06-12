@@ -25,6 +25,7 @@ class SourceInfo(BaseModel):
 class Lookalike(BaseModel):
     pass
 
+
 class LookalikeInfo(BaseModel):
     lookalike: Dict
     name: str

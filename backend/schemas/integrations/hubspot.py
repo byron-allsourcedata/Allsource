@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr
 
 
 class HubspotProfile(BaseModel):
-    email:  tp.Optional[EmailStr] = None
+    email: tp.Optional[EmailStr] = None
     firstname: tp.Optional[str] = None
     lastname: tp.Optional[str] = None
     phone: tp.Optional[str] = None
@@ -21,5 +21,3 @@ class HubspotProfile(BaseModel):
     address: tp.Optional[str] = None
     state: tp.Optional[str] = None
     zip: tp.Optional[str] = None
-
-

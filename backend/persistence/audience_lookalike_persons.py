@@ -12,8 +12,7 @@ class AudienceLookalikesPersonPersistence:
 
     def by_lookalike_id(self, lookalike_id: UUID):
         return (
-            self.db
-            .query(AudienceLookalikesPerson.enrichment_user_id)
+            self.db.query(AudienceLookalikesPerson.enrichment_user_id)
             .filter(AudienceLookalikesPerson.lookalike_id == lookalike_id)
             .all()
         )

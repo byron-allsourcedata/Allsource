@@ -22,10 +22,12 @@ logging.basicConfig(level=logging.INFO)
 
 
 def convert_to_none(value):
-    return value if value not in (None, '', 'None') else None
+    return value if value not in (None, "", "None") else None
 
 
-def save_city_and_state_to_user(session, personal_city, personal_state, five_x_five_user_id, states_dict):
+def save_city_and_state_to_user(
+    session, personal_city, personal_state, five_x_five_user_id, states_dict
+):
     city = convert_to_none(personal_city)
     state = convert_to_none(personal_state)
     state_id = None
@@ -37,30 +39,29 @@ def save_city_and_state_to_user(session, personal_city, personal_state, five_x_f
         state = state.lower()
         state_id = states_dict.get(state)
         if state_id is None:
-            state_data = States(
-                state_code=state
-            )
+            state_data = States(state_code=state)
             session.add(state_data)
             session.flush()
             state_id = state_data.id
-    location = session.query(FiveXFiveLocations).filter(
-        FiveXFiveLocations.country == 'us',
-        FiveXFiveLocations.city == city,
-        FiveXFiveLocations.state_id == state_id
-    ).first()
-    if not location:
-        location = FiveXFiveLocations(
-            country='us',
-            city=city,
-            state_id=state_id
+    location = (
+        session.query(FiveXFiveLocations)
+        .filter(
+            FiveXFiveLocations.country == "us",
+            FiveXFiveLocations.city == city,
+            FiveXFiveLocations.state_id == state_id,
         )
+        .first()
+    )
+    if not location:
+        location = FiveXFiveLocations(country="us", city=city, state_id=state_id)
         session.add(location)
         session.flush()
 
-    leads_locations = insert(FiveXFiveUsersLocations).values(
-        five_x_five_user_id=five_x_five_user_id,
-        location_id=location.id
-    ).on_conflict_do_nothing()
+    leads_locations = (
+        insert(FiveXFiveUsersLocations)
+        .values(five_x_five_user_id=five_x_five_user_id, location_id=location.id)
+        .on_conflict_do_nothing()
+    )
     session.execute(leads_locations)
     session.flush()
 
@@ -73,12 +74,15 @@ async def process_users(session):
     current_id = min_id - 1
 
     while current_id < max_id:
-        five_x_five_users = session.query(FiveXFiveUser).filter(
-            and_(
-                FiveXFiveUser.id > current_id,
-                FiveXFiveUser.id <= current_id + 1000
+        five_x_five_users = (
+            session.query(FiveXFiveUser)
+            .filter(
+                and_(
+                    FiveXFiveUser.id > current_id, FiveXFiveUser.id <= current_id + 1000
+                )
             )
-        ).all()
+            .all()
+        )
         for five_x_five_user in five_x_five_users:
             if five_x_five_user.personal_city and five_x_five_user.personal_state:
                 save_city_and_state_to_user(
@@ -86,7 +90,7 @@ async def process_users(session):
                     personal_city=five_x_five_user.personal_city,
                     personal_state=five_x_five_user.personal_state,
                     five_x_five_user_id=five_x_five_user.id,
-                    states_dict=states_dict
+                    states_dict=states_dict,
                 )
                 session.commit()
 
@@ -106,7 +110,7 @@ async def main():
         await process_users(db_session)
 
     except Exception as err:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
     finally:
         if db_session:
             logging.info("Closing the database session...")

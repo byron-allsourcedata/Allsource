@@ -21,34 +21,34 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_SMARTS_AGENT = 'aud_smarts_agent'
-AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
+AUDIENCE_SMARTS_AGENT = "aud_smarts_agent"
+AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
 AUDIENCE_SMARTS_PROGRESS = "AUDIENCE_SMARTS_PROGRESS"
+
 
 def setup_logging(level):
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
-    
+
 
 async def send_sse(connection, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
             connection=connection,
-            queue_name=f'sse_events_{str(user_id)}',
-            message_body={
-                "status": AUDIENCE_SMARTS_PROGRESS,
-                "data": data
-            }
+            queue_name=f"sse_events_{str(user_id)}",
+            message_body={"status": AUDIENCE_SMARTS_PROGRESS, "data": data},
         )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
 
-async def aud_smarts_matching(message: IncomingMessage, db_session: Session, connection):
+async def aud_smarts_matching(
+    message: IncomingMessage, db_session: Session, connection
+):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -61,47 +61,62 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
 
         try:
             bulk_data = [
-                {"smart_audience_id": str(aud_smart_id), "enrichment_user_id": enrichment_user_id}
+                {
+                    "smart_audience_id": str(aud_smart_id),
+                    "enrichment_user_id": enrichment_user_id,
+                }
                 for enrichment_user_id in enrichment_users_ids
             ]
 
             db_session.bulk_insert_mappings(AudienceSmartPerson, bulk_data)
-            db_session.flush() 
+            db_session.flush()
 
-            logging.info(f"inserted {len(enrichment_users_ids)} persons") 
+            logging.info(f"inserted {len(enrichment_users_ids)} persons")
 
             processed_records = db_session.execute(
                 update(AudienceSmart)
                 .where(AudienceSmart.id == str(aud_smart_id))
                 .values(
-                    processed_active_segment_records=(AudienceSmart.processed_active_segment_records + len(enrichment_users_ids))
+                    processed_active_segment_records=(
+                        AudienceSmart.processed_active_segment_records
+                        + len(enrichment_users_ids)
+                    )
                 )
                 .returning(AudienceSmart.processed_active_segment_records)
             ).fetchone()
-                        
+
             db_session.commit()
-                
+
             processed_records_value = processed_records[0] if processed_records else 0
 
-            await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "processed": processed_records_value})
+            await send_sse(
+                connection,
+                user_id,
+                {
+                    "smart_audience_id": aud_smart_id,
+                    "processed": processed_records_value,
+                },
+            )
             logging.info(f"sent {len(enrichment_users_ids)} persons")
 
             if count_iterations == count and need_validate:
                 message_body = {
-                    'aud_smart_id': str(aud_smart_id),
-                    'user_id': user_id,
-                    'validation_params': validation_params
+                    "aud_smart_id": str(aud_smart_id),
+                    "user_id": user_id,
+                    "validation_params": validation_params,
                 }
                 await publish_rabbitmq_message(
                     connection=connection,
                     queue_name=AUDIENCE_VALIDATION_FILLER,
-                    message_body=message_body
+                    message_body=message_body,
                 )
 
             await message.ack()
-    
+
         except IntegrityError as e:
-            logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
+            logging.warning(
+                f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
+            )
             db_session.rollback()
             await message.ack()
 
@@ -114,16 +129,16 @@ async def main():
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
-        if arg == 'DEBUG':
+        if arg == "DEBUG":
             log_level = logging.DEBUG
-        elif arg != 'INFO':
+        elif arg != "INFO":
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
-    
+
     setup_logging(log_level)
-    db_username = os.getenv('DB_USERNAME')
-    db_password = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
+    db_username = os.getenv("DB_USERNAME")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_name = os.getenv("DB_NAME")
 
     try:
         logging.info("Starting processing...")
@@ -133,7 +148,8 @@ async def main():
         await channel.set_qos(prefetch_count=1)
 
         engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
+            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+            pool_pre_ping=True,
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
@@ -143,13 +159,15 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_smarts_matching, connection=connection, db_session=db_session)
+            functools.partial(
+                aud_smarts_matching, connection=connection, db_session=db_session
             )
+        )
 
         await asyncio.Future()
 
     except Exception:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
 
     finally:
         if db_session:
@@ -159,6 +177,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

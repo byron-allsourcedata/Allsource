@@ -19,27 +19,26 @@ from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
+
 @injectable
-class AudienceSourcesPersistence:    
+class AudienceSourcesPersistence:
     def __init__(self, db: Db):
         self.db = db
 
-
     def get_sources(
-            self,
-            user_id: int,
-            page: int,
-            per_page: int,
-            sort_by: Optional[str] = None,
-            sort_order: Optional[str] = None,
-            name: Optional[str] = None,
-            source_origin: Optional[str] = None,
-            source_type: Optional[str] = None,
-            domain_name: Optional[str] = None,
-            created_date_start: Optional[datetime] = None,
-            created_date_end: Optional[datetime] = None
+        self,
+        user_id: int,
+        page: int,
+        per_page: int,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+        name: Optional[str] = None,
+        source_origin: Optional[str] = None,
+        source_type: Optional[str] = None,
+        domain_name: Optional[str] = None,
+        created_date_start: Optional[datetime] = None,
+        created_date_end: Optional[datetime] = None,
     ) -> Tuple[List[Row], int]:
-
         query = (
             self.db.query(
                 AudienceSource.id,
@@ -55,14 +54,14 @@ class AudienceSourcesPersistence:
                 AudienceSource.matched_records_status,
                 AudienceSource.processed_records,
             )
-                .join(Users, Users.id == AudienceSource.created_by_user_id)
-                .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
-                .filter(AudienceSource.user_id == user_id)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .filter(AudienceSource.user_id == user_id)
         )
 
-        source_type_list = source_type.split(',') if source_type else []
-        source_origin_list = source_origin.split(',') if source_origin else []
-        domain_name_list = domain_name.split(',') if domain_name else []
+        source_type_list = source_type.split(",") if source_type else []
+        source_origin_list = source_origin.split(",") if source_origin else []
+        domain_name_list = domain_name.split(",") if domain_name else []
 
         query = apply_filters(
             query,
@@ -71,36 +70,36 @@ class AudienceSourcesPersistence:
             source_origin_list=source_origin_list,
             domain_name_list=domain_name_list,
             created_date_start=created_date_start,
-            created_date_end=created_date_end
+            created_date_end=created_date_end,
         )
 
         sort_options = {
-            'number_of_customers': AudienceSource.total_records,
-            'created_date': AudienceSource.created_at,
-            'matched_records': AudienceSource.matched_records,
+            "number_of_customers": AudienceSource.total_records,
+            "created_date": AudienceSource.created_at,
+            "matched_records": AudienceSource.matched_records,
         }
         if sort_by in sort_options:
             sort_column = sort_options[sort_by]
             query = query.order_by(
-                asc(sort_column) if sort_order == 'asc' else desc(sort_column),
+                asc(sort_column) if sort_order == "asc" else desc(sort_column),
             )
         else:
-            query = query.order_by(AudienceSource.created_at.desc()) 
+            query = query.order_by(AudienceSource.created_at.desc())
 
         offset = (page - 1) * per_page
         sources = query.limit(per_page).offset(offset).all()
         count = query.count()
-        
+
         return sources, count
-    
+
     def get_source_by_id(self, source_id) -> Optional[AudienceSource]:
-        return self.db.query(AudienceSource).filter(AudienceSource.id == source_id).first()
+        return (
+            self.db.query(AudienceSource).filter(AudienceSource.id == source_id).first()
+        )
 
     def get_by_id_for_update(self, source_id: UUID) -> AudienceSource:
         source: AudienceSource = self.db.execute(
-            select(
-                AudienceSource
-            )
+            select(AudienceSource)
             .where(AudienceSource.id == source_id)
             .with_for_update()
         ).scalar_one()
@@ -110,7 +109,7 @@ class AudienceSourcesPersistence:
     def create_source(self, **creating_data) -> Optional[AudienceSource]:
         source_type = creating_data.get("source_type")
         if not source_type:
-            source_type = 'viewed_product,visitor,abandoned_cart,converted_sales'
+            source_type = "viewed_product,visitor,abandoned_cart,converted_sales"
 
         source = AudienceSource(
             user_id=creating_data.get("user_id"),
@@ -131,9 +130,11 @@ class AudienceSourcesPersistence:
         return source
 
     def delete_source(self, source_id: int) -> int:
-        deleted_count = self.db.query(AudienceSource).filter(
-            AudienceSource.id == source_id
-        ).delete()
+        deleted_count = (
+            self.db.query(AudienceSource)
+            .filter(AudienceSource.id == source_id)
+            .delete()
+        )
         self.db.commit()
         return deleted_count
 
@@ -161,8 +162,7 @@ class AudienceSourcesPersistence:
 
     def get_processing_sources(self, source_id: UUID):
         return (
-            self.db
-            .query(
+            self.db.query(
                 AudienceSource.id,
                 AudienceSource.name,
                 AudienceSource.target_schema,

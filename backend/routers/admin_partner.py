@@ -1,15 +1,25 @@
-from fastapi import APIRouter, HTTPException, Depends, Query 
+from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import date
 from services.payouts import PayoutsService
-from schemas.partners import PartnerCreateRequest, PartnerUpdateRequest, PartnersResponse, OpportunityStatus
-from dependencies import get_partners_service, get_payouts_service, check_user_admin, PartnersService
+from schemas.partners import (
+    PartnerCreateRequest,
+    PartnerUpdateRequest,
+    PartnersResponse,
+    OpportunityStatus,
+)
+from dependencies import (
+    get_partners_service,
+    get_payouts_service,
+    check_user_admin,
+    PartnersService,
+)
 
 router = APIRouter(dependencies=[Depends(check_user_admin)])
 
 
-@router.get('')
-@router.get('/')
+@router.get("")
+@router.get("/")
 def get_partners(
     isMaster: Optional[bool] = Query(False),
     search: Optional[str] = Query(None),
@@ -17,15 +27,17 @@ def get_partners(
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
     rows_per_page: int = Query(10),
-    get_partners_service: PartnersService = Depends(get_partners_service)):
-    
-    result = get_partners_service.get_partners(isMaster, search, start_date, end_date, page, rows_per_page)
-     
-    return result.get('data') 
+    get_partners_service: PartnersService = Depends(get_partners_service),
+):
+    result = get_partners_service.get_partners(
+        isMaster, search, start_date, end_date, page, rows_per_page
+    )
+
+    return result.get("data")
 
 
-@router.get('{id}')
-@router.get('/{id}/')
+@router.get("{id}")
+@router.get("/{id}/")
 def get_partners_by_partner_id(
     id: int,
     search: Optional[str] = Query(None),
@@ -33,21 +45,23 @@ def get_partners_by_partner_id(
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
     rows_per_page: int = Query(10),
-    get_partners_service: PartnersService = Depends(get_partners_service)):
-    
-    partner = get_partners_service.partners_by_partner_id(id, search, start_date, end_date, page, rows_per_page)
-     
-    return partner.get('data') 
+    get_partners_service: PartnersService = Depends(get_partners_service),
+):
+    partner = get_partners_service.partners_by_partner_id(
+        id, search, start_date, end_date, page, rows_per_page
+    )
+
+    return partner.get("data")
 
 
 @router.post("")
 @router.post("/")
 async def create_partner(
     new_partner: PartnerCreateRequest,
-    get_partners_service: PartnersService = Depends(get_partners_service)):
-    
+    get_partners_service: PartnersService = Depends(get_partners_service),
+):
     result = await get_partners_service.create_partner(new_partner)
-     
+
     return result
 
 
@@ -56,10 +70,10 @@ async def create_partner(
 async def delete_partner(
     id: int,
     message: str = Query(...),
-    get_partners_service: PartnersService = Depends(get_partners_service)):
-    
+    get_partners_service: PartnersService = Depends(get_partners_service),
+):
     result = get_partners_service.delete_partner(id, message)
-     
+
     return result
 
 
@@ -70,7 +84,6 @@ async def update_opportunity_partner(
     payload: OpportunityStatus,
     get_partners_service: PartnersService = Depends(get_partners_service),
 ):
-
     result = await get_partners_service.update_opportunity_partner(partner_id, payload)
 
     return result
@@ -83,40 +96,51 @@ async def update_partner(
     partnerNewData: PartnerUpdateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service),
 ):
-
     result = await get_partners_service.update_partner(partner_id, partnerNewData)
-    
+
     return result
 
-@router.get('/rewards-history')
-@router.get('/rewards-history/')
+
+@router.get("/rewards-history")
+@router.get("/rewards-history/")
 def get_payouts_partners(
-    referral_service: PayoutsService = Depends(get_payouts_service), 
+    referral_service: PayoutsService = Depends(get_payouts_service),
     year: Optional[int] = Query(None),
     month: Optional[int] = Query(None),
     partner_id: Optional[int] = Query(None),
     is_master: Optional[bool] = Query(default=False),
-    reward_type: Optional[str] = Query(default='partner'),
-    search_query: str = Query(None, description="Search for email, first name")):
-    
-    return referral_service.get_total_payouts(year=year, month=month, partner_id=partner_id, reward_type=reward_type)
+    reward_type: Optional[str] = Query(default="partner"),
+    search_query: str = Query(None, description="Search for email, first name"),
+):
+    return referral_service.get_total_payouts(
+        year=year, month=month, partner_id=partner_id, reward_type=reward_type
+    )
 
-@router.get('/rewards')
-@router.get('/rewards/')
+
+@router.get("/rewards")
+@router.get("/rewards/")
 def get_payouts_partners(
-    referral_service: PayoutsService = Depends(get_payouts_service), 
+    referral_service: PayoutsService = Depends(get_payouts_service),
     year: Optional[int] = Query(None),
     month: Optional[int] = Query(None),
     partner_id: Optional[int] = Query(None),
     is_master: Optional[bool] = Query(default=False),
     from_date: int = Query(None, description="Start date in integer format"),
     to_date: int = Query(None, description="End date in integer format"),
-    reward_type: Optional[str] = Query(default='partner'),
+    reward_type: Optional[str] = Query(default="partner"),
     search_query: str = Query(None, description="Search for email, first name"),
     sort_by: str = Query(None, description="Field"),
-    sort_order: str = Query('desc', description="Field to sort by: 'asc' or 'desc'")):
-
-    return referral_service.get_payouts_partners(year=year, month=month, partner_id=partner_id,
-                                                 search_query=search_query, is_master=is_master,
-                                                 reward_type=reward_type, from_date=from_date, to_date=to_date,
-                                                 sort_by=sort_by, sort_order=sort_order)
+    sort_order: str = Query("desc", description="Field to sort by: 'asc' or 'desc'"),
+):
+    return referral_service.get_payouts_partners(
+        year=year,
+        month=month,
+        partner_id=partner_id,
+        search_query=search_query,
+        is_master=is_master,
+        reward_type=reward_type,
+        from_date=from_date,
+        to_date=to_date,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )

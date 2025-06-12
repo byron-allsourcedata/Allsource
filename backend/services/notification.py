@@ -6,41 +6,58 @@ from services.subscriptions import SubscriptionService
 
 
 class Notification:
-    def __init__(self, notification_persistence: NotificationPersistence, subscription_service: SubscriptionService,
-                 plan_persistence: PlansPersistence, leads_persistence: LeadsPersistence):
+    def __init__(
+        self,
+        notification_persistence: NotificationPersistence,
+        subscription_service: SubscriptionService,
+        plan_persistence: PlansPersistence,
+        leads_persistence: LeadsPersistence,
+    ):
         self.notification_persistence = notification_persistence
         self.subscription_service = subscription_service
         self.plan_persistence = plan_persistence
         self.leads_persistence = leads_persistence
 
     def get_notification(self, user: dict):
-        notifications = self.notification_persistence.get_notifications_by_user_id(user_id=user.get('id'))
+        notifications = self.notification_persistence.get_notifications_by_user_id(
+            user_id=user.get("id")
+        )
 
         result = []
         for notification in notifications:
-            params = notification.params.split(', ') if notification.params else []
+            params = notification.params.split(", ") if notification.params else []
 
             try:
-                converted_params = [float(param) if '.' in param else int(param) for param in params]
+                converted_params = [
+                    float(param) if "." in param else int(param) for param in params
+                ]
             except ValueError:
                 converted_params = [str(param) for param in params]
 
-            text = notification.text.format(*converted_params) if converted_params else notification.text
+            text = (
+                notification.text.format(*converted_params)
+                if converted_params
+                else notification.text
+            )
 
-            result.append({
-                'id': notification.id,
-                'sub_title': notification.sub_title,
-                'text': text,
-                'is_checked': notification.is_checked,
-                'created_at': int(notification.created_at.timestamp())
-            })
+            result.append(
+                {
+                    "id": notification.id,
+                    "sub_title": notification.sub_title,
+                    "text": text,
+                    "is_checked": notification.is_checked,
+                    "created_at": int(notification.created_at.timestamp()),
+                }
+            )
 
         return result
 
     def delete_notification(self, request, user: dict):
-        self.notification_persistence.delete_notification_by_id(request.notification_id, user_id=user.get('id'))
+        self.notification_persistence.delete_notification_by_id(
+            request.notification_id, user_id=user.get("id")
+        )
         return "SUCCESS"
 
     def dismiss(self, request, user):
-        self.notification_persistence.dismiss(request=request, user_id=user.get('id'))
-        return 'SUCCESS'
+        self.notification_persistence.dismiss(request=request, user_id=user.get("id"))
+        return "SUCCESS"

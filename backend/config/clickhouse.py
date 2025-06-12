@@ -17,9 +17,8 @@ class ClickhouseConfig:
             port=cls.port,
             user=cls.user,
             password=cls.password,
-            database=cls.database
+            database=cls.database,
         )
-
 
     @classmethod
     def users_table(cls):

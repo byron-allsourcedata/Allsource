@@ -6,10 +6,14 @@ from models.base import Base
 
 
 class EnrichmentPostal(Base):
-    __tablename__ = 'enrichment_postals'
-    
+    __tablename__ = "enrichment_postals"
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
-    asid = Column(UUID(as_uuid=True), ForeignKey('enrichment_users.asid', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    asid = Column(
+        UUID(as_uuid=True),
+        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
+    )
     home_address_line1 = Column(VARCHAR(256), nullable=True)
     home_address_line2 = Column(VARCHAR(256), nullable=True)
     home_city = Column(VARCHAR(128), nullable=True)
@@ -30,15 +34,13 @@ class EnrichmentPostal(Base):
     raw_url_date = Column(TIMESTAMP, nullable=True)
     raw_last_updated = Column(TIMESTAMP, nullable=True)
     created_date = Column(TIMESTAMP, nullable=False)
-       
-    __table_args__ = (
-        Index("enrichment_postals_asid_idx", asid),
-    )
-    
+
+    __table_args__ = (Index("enrichment_postals_asid_idx", asid),)
+
     enrichment_user = relationship(
         "EnrichmentUser",
-        back_populates='postal',
+        back_populates="postal",
         foreign_keys=[asid],
         uselist=False,
-        lazy="select"
+        lazy="select",
     )

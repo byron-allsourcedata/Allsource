@@ -24,51 +24,63 @@ from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_postals_verification import AudiencePostalVerification
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 
 load_dotenv()
 
-AUDIENCE_VALIDATION_AGENT_POSTAL = 'aud_validation_agent_postal'
-AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
-AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
-EXPERIANAPERTURE_API_KEY = os.getenv('EXPERIANAPERTURE_API_KEY')
+AUDIENCE_VALIDATION_AGENT_POSTAL = "aud_validation_agent_postal"
+AUDIENCE_VALIDATION_PROGRESS = "AUDIENCE_VALIDATION_PROGRESS"
+AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
+EXPERIANAPERTURE_API_KEY = os.getenv("EXPERIANAPERTURE_API_KEY")
 
 COLUMN_MAPPING = {
-    'cas_home_address': 'cas_home_address',
-    'cas_office_address': 'cas_office_address',
+    "cas_home_address": "cas_home_address",
+    "cas_office_address": "cas_office_address",
 }
+
 
 def setup_logging(level):
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+
 def tokenize_address(text: str) -> set[str]:
-    tokens = re.findall(r'\w+', text.lower())
-    filtered = {tok for tok in tokens if not re.fullmatch(r'\d{5}(?:-\d{4})?', tok)}
+    tokens = re.findall(r"\w+", text.lower())
+    filtered = {tok for tok in tokens if not re.fullmatch(r"\d{5}(?:-\d{4})?", tok)}
     return filtered
+
 
 def compare_addresses(normalized_address: str, normalized_addr_text: str) -> bool:
     tokens_req = tokenize_address(normalized_address)
     tokens_text = tokenize_address(normalized_addr_text)
     return tokens_req.issubset(tokens_text)
 
+
 def verify_address(addresses, address, city, state_name):
-    normalized_address = re.sub(r'\s+', ' ', address.lower().strip())
+    normalized_address = re.sub(r"\s+", " ", address.lower().strip())
     normalized_city = city.lower().strip()
     normalized_state = state_name.lower().strip()
     is_verified = False
 
     for addr in addresses:
-        addr_text = addr.get('text', '').lower()
-        normalized_addr_text = re.sub(r'\s+', ' ', addr_text.strip())
-        if (compare_addresses(normalized_address, normalized_addr_text) and normalized_city in normalized_addr_text and normalized_state in normalized_addr_text):
+        addr_text = addr.get("text", "").lower()
+        normalized_addr_text = re.sub(r"\s+", " ", addr_text.strip())
+        if (
+            compare_addresses(normalized_address, normalized_addr_text)
+            and normalized_city in normalized_addr_text
+            and normalized_state in normalized_addr_text
+        ):
             is_verified = True
             break
 
     return is_verified
+
 
 async def process_rmq_message(message: IncomingMessage, db_session: Session, channel):
     try:
@@ -76,7 +88,9 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         batch = message_body.get("batch")
-        count_persons_before_validation = message_body.get("count_persons_before_validation")
+        count_persons_before_validation = message_body.get(
+            "count_persons_before_validation"
+        )
         validation_type = message_body.get("validation_type")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
@@ -84,37 +98,36 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         verifications = []
 
         for record in batch:
-            person_id = record.get("audience_smart_person_id")            
-            postal_code =  record.get("postal_code")
+            person_id = record.get("audience_smart_person_id")
+            postal_code = record.get("postal_code")
             country = record.get("country")
             city = record.get("city")
             state_name = record.get("state_name")
             address = record.get("address")
-            
+
             if not postal_code or not city or not state_name:
                 failed_ids.append(person_id)
                 continue
-            
-            existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.postal_code == postal_code).first()
+
+            existing_verification = (
+                db_session.query(AudiencePostalVerification)
+                .filter(AudiencePostalVerification.postal_code == postal_code)
+                .first()
+            )
 
             if not existing_verification:
                 response = requests.post(
-                    'https://api.experianaperture.io/address/lookup/v2',
+                    "https://api.experianaperture.io/address/lookup/v2",
                     json={
-                        "country_iso": country or 'USA',
-                        "datasets": [
-                            "us-address"
-                        ],
-                        "key": {
-                            "type": "postal_code",
-                            "value": postal_code
-                        }
+                        "country_iso": country or "USA",
+                        "datasets": ["us-address"],
+                        "key": {"type": "postal_code", "value": postal_code},
                     },
                     headers={
                         "Auth-Token": EXPERIANAPERTURE_API_KEY,
                         "Content-Type": "application/json",
-                        "Add-Addresses": "true"
-                    }
+                        "Add-Addresses": "true",
+                    },
                 )
                 response_data = response.json()
                 logging.debug(f"response: {response.status_code}")
@@ -127,42 +140,39 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                     logging.debug(f"response: {response_data}")
                     failed_ids.append(person_id)
 
-                addresses = response_data.get('result', {}).get('addresses', [])
+                addresses = response_data.get("result", {}).get("addresses", [])
                 is_verified = verify_address(addresses, address, city, state_name)
-                verifications.append({
-                    "postal_code": postal_code,
-                    "is_verified": is_verified
-                })
+                verifications.append(
+                    {"postal_code": postal_code, "is_verified": is_verified}
+                )
 
-            else: 
+            else:
                 logging.debug("There is such a Postal in our database")
                 is_verified = existing_verification.is_verified
-            
 
             if not is_verified:
                 failed_ids.append(person_id)
 
-        
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
-        
+
         logging.info(f"success_ids len: {len(success_ids)}")
-        
+
         if verifications:
             stmt = insert(AudiencePostalVerification).values(verifications)
             stmt = stmt.on_conflict_do_update(
                 index_elements=["postal_code"],
-                set_={"is_verified": stmt.excluded.is_verified}
+                set_={"is_verified": stmt.excluded.is_verified},
             )
 
             db_session.execute(stmt)
             db_session.commit()
-            
+
         logging.info(f"failed_ids len: {len(failed_ids)}")
-        
+
         if failed_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
@@ -172,17 +182,14 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                 ],
             )
             db_session.flush()
-            
+
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [
-                    {"id": pid, "is_validation_processed": False}
-                    for pid in success_ids
-                ],
+                [{"id": pid, "is_validation_processed": False} for pid in success_ids],
             )
             db_session.flush()
-            
+
         db_session.commit()
         total_validated = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
@@ -196,10 +203,12 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                 AudienceSmartPerson.is_validation_processed.is_(False),
             )
         )
-        total_count = db_session.query(AudienceSmartPerson).filter(
-            AudienceSmartPerson.smart_audience_id == aud_smart_id
-        ).count()
-        
+        total_count = (
+            db_session.query(AudienceSmartPerson)
+            .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
+            .count()
+        )
+
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
@@ -211,7 +220,9 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                         if key in rule:
                             rule[key]["processed"] = True
                             rule[key]["count_validated"] = total_validated
-                            rule[key]["count_submited"] = count_persons_before_validation
+                            rule[key]["count_submited"] = (
+                                count_persons_before_validation
+                            )
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -226,32 +237,35 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         await send_sse(
             channel=channel,
             user_id=user_id,
-            data={"smart_audience_id": aud_smart_id, "total_validated": total_validated},
+            data={
+                "smart_audience_id": aud_smart_id,
+                "total_validated": total_validated,
+            },
         )
         logging.info("sent sse with total count")
 
         await message.ack()
-            
+
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
         await message.reject(requeue=True)
-        return 
+        return
 
 
 async def main():
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
-        if arg == 'DEBUG':
+        if arg == "DEBUG":
             log_level = logging.DEBUG
-        elif arg != 'INFO':
+        elif arg != "INFO":
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
-    
+
     setup_logging(log_level)
-    db_username = os.getenv('DB_USERNAME')
-    db_password = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
+    db_username = os.getenv("DB_USERNAME")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_name = os.getenv("DB_NAME")
 
     try:
         logging.info("Starting processing...")
@@ -261,7 +275,8 @@ async def main():
         await channel.set_qos(prefetch_count=1)
 
         engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
+            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+            pool_pre_ping=True,
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
@@ -271,13 +286,15 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session)
+            functools.partial(
+                process_rmq_message, channel=channel, db_session=db_session
             )
+        )
 
         await asyncio.Future()
 
     except Exception:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()
@@ -285,6 +302,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

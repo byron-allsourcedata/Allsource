@@ -21,29 +21,30 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-BUCKET_NAME = 'trovo-coop-shakespeare'
-QUEUE_USERS_USERS_ROWS = '5x5_users_interests_rows'
+BUCKET_NAME = "trovo-coop-shakespeare"
+QUEUE_USERS_USERS_ROWS = "5x5_users_interests_rows"
 
 
 def convert_to_none(value):
-    if pd.isna(value) or value is None or value == 'nan':
+    if pd.isna(value) or value is None or value == "nan":
         return None
     return value
+
 
 async def on_message_received(message, session):
     try:
         message_json = json.loads(message.body)
-        interest_json = message_json['interest']
-        hem = convert_to_none(str(interest_json.get('_COL_0')))
-        up_id = convert_to_none(str(interest_json.get('_COL_1')))
-        topic_id = convert_to_none(str(interest_json.get('_COL_2')))
+        interest_json = message_json["interest"]
+        hem = convert_to_none(str(interest_json.get("_COL_0")))
+        up_id = convert_to_none(str(interest_json.get("_COL_1")))
+        topic_id = convert_to_none(str(interest_json.get("_COL_2")))
         if topic_id:
             topic_id = f"b2c_{topic_id}"
-        five_x_five_user_phone = insert(FiveXFiveUserInterest).values(
-                hem=hem,
-                up_id=up_id,
-                topic_id=topic_id
-            ).on_conflict_do_nothing()
+        five_x_five_user_phone = (
+            insert(FiveXFiveUserInterest)
+            .values(hem=hem, up_id=up_id, topic_id=topic_id)
+            .on_conflict_do_nothing()
+        )
         session.execute(five_x_five_user_phone)
         session.commit()
         await message.ack()
@@ -67,8 +68,8 @@ async def main():
             name=QUEUE_USERS_USERS_ROWS,
             durable=True,
             arguments={
-                'x-consumer-timeout': 3600000,
-            }
+                "x-consumer-timeout": 3600000,
+            },
         )
 
         engine = create_engine(
@@ -76,12 +77,10 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        await queue.consume(
-            functools.partial(on_message_received, session=db_session)
-        )
+        await queue.consume(functools.partial(on_message_received, session=db_session))
         await asyncio.Future()
     except Exception as err:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
     finally:
         if db_session:
             logging.info("Closing the database session...")

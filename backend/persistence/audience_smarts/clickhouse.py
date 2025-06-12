@@ -3,7 +3,11 @@ from uuid import UUID
 
 from dependencies import Clickhouse
 from persistence.audience_smarts import AudienceSmartsPostgresPersistence
-from persistence.audience_smarts.dto import AudienceSmartDTO, PersonRecord, SyncedPersonRecord
+from persistence.audience_smarts.dto import (
+    AudienceSmartDTO,
+    PersonRecord,
+    SyncedPersonRecord,
+)
 from persistence.audience_smarts.interface import AudienceSmartsPersistenceInterface
 from resolver import injectable
 from schemas.audience import DataSourcesFormat
@@ -20,26 +24,26 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         return self.postgres.get_use_case_id_by_alias(use_case_alias)
 
     def create_audience_smarts_data_sources(
-            self,
-            smart_audience_id: UUID,
-            data_sources: List[dict],
+        self,
+        smart_audience_id: UUID,
+        data_sources: List[dict],
     ) -> None:
         return self.postgres.create_audience_smarts_data_sources(
             str(smart_audience_id), data_sources
         )
 
     def create_audience_smart(
-            self,
-            name: str,
-            user_id: int,
-            created_by_user_id: int,
-            use_case_alias: str,
-            data_sources: List[dict],
-            total_records: int,
-            status: str,
-            target_schema: str,
-            validation_params: dict | None,
-            active_segment_records: int,
+        self,
+        name: str,
+        user_id: int,
+        created_by_user_id: int,
+        use_case_alias: str,
+        data_sources: List[dict],
+        total_records: int,
+        status: str,
+        target_schema: str,
+        validation_params: dict | None,
+        active_segment_records: int,
     ) -> AudienceSmartDTO:
         return self.postgres.create_audience_smart(
             name,
@@ -55,17 +59,17 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         )
 
     def get_audience_smarts(
-            self,
-            user_id: int,
-            page: int,
-            per_page: int,
-            from_date: int | None = None,
-            to_date: int | None = None,
-            sort_by: str | None = None,
-            sort_order: str | None = None,
-            search_query: str | None = None,
-            statuses: list[str] | None = None,
-            use_cases: list[str] | None = None,
+        self,
+        user_id: int,
+        page: int,
+        per_page: int,
+        from_date: int | None = None,
+        to_date: int | None = None,
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+        search_query: str | None = None,
+        statuses: list[str] | None = None,
+        use_cases: list[str] | None = None,
     ) -> tuple[list[Row], int]:
         return self.postgres.get_audience_smarts(
             user_id,
@@ -87,7 +91,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         return self.postgres.get_validations_by_aud_smart_id(id)
 
     def search_audience_smart(
-            self, start_letter: str, user_id: int
+        self, start_letter: str, user_id: int
     ) -> list[Row[tuple]]:
         return self.postgres.search_audience_smart(start_letter, user_id)
 
@@ -106,7 +110,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_persons_by_smart_aud_id(
         self, smart_audience_id: UUID, sent_contacts: int, fields: List[str]
     ) -> List[PersonRecord]:
-        ids = self.postgres.get_person_ids_by_smart_aud_id(smart_audience_id, sent_contacts)
+        ids = self.postgres.get_person_ids_by_smart_aud_id(
+            smart_audience_id, sent_contacts
+        )
         if not ids:
             return []
 

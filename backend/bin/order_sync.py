@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -16,25 +17,36 @@ from aio_pika import connect, IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from services.integrations.base import IntegrationService
-from dependencies import (IntegrationsPresistence, LeadsPersistence, AudiencePersistence, 
-                          LeadOrdersPersistence, IntegrationsUserSyncPersistence, 
-                          AWSService, UserDomainsPersistence, SuppressionPersistence, ExternalAppsInstallationsPersistence, UserPersistence, MillionVerifierPersistence)
+from dependencies import (
+    IntegrationsPresistence,
+    LeadsPersistence,
+    AudiencePersistence,
+    LeadOrdersPersistence,
+    IntegrationsUserSyncPersistence,
+    AWSService,
+    UserDomainsPersistence,
+    SuppressionPersistence,
+    ExternalAppsInstallationsPersistence,
+    UserPersistence,
+    MillionVerifierPersistence,
+)
 from dotenv import load_dotenv
 import time
+
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-PLATFORMS = ['big_commerce', 'shopify']
+PLATFORMS = ["big_commerce", "shopify"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
     )
     Session = sessionmaker(bind=engine)
-    
+
     rmq_connection = RabbitMQConnection()
-    
+
     with Session() as session:
         million_verifier_persistence = MillionVerifierPersistence(session)
         integration_service = IntegrationService(
@@ -49,15 +61,21 @@ if __name__ == '__main__':
             suppression_persistence=SuppressionPersistence(session),
             epi_persistence=ExternalAppsInstallationsPersistence(session),
             user_persistence=UserPersistence(session),
-            million_verifier_integrations=MillionVerifierIntegrationsService(million_verifier_persistence)
+            million_verifier_integrations=MillionVerifierIntegrationsService(
+                million_verifier_persistence
+            ),
         )
         while True:
             with integration_service as service:
                 for platform in PLATFORMS:
-                    if platform == 'big_commerce':
-                        integrations = service.integration_persistence.get_all_integrations_filter_by(service_name=platform, domain_id=783)
-                        platform = 'bigcommerce'
+                    if platform == "big_commerce":
+                        integrations = service.integration_persistence.get_all_integrations_filter_by(
+                            service_name=platform, domain_id=783
+                        )
+                        platform = "bigcommerce"
                         for integration in integrations:
-                            integration_platform = getattr(integration_service, platform.lower())
+                            integration_platform = getattr(
+                                integration_service, platform.lower()
+                            )
                             integration_platform.order_sync(integration.domain_id)
-            time.sleep(60*60*2)
+            time.sleep(60 * 60 * 2)

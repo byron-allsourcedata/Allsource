@@ -3,8 +3,19 @@ from typing_extensions import TypedDict
 
 from pydantic import BaseModel, Field
 
-from enums import SignUpStatus, LoginStatus, BaseEnum, VerificationEmail, UpdatePasswordStatus, ResetPasswordEnum, \
-    VerifyToken, CompanyInfoEnum, PixelStatus, StripeConnectStatus, UpdateUserStatus
+from enums import (
+    SignUpStatus,
+    LoginStatus,
+    BaseEnum,
+    VerificationEmail,
+    UpdatePasswordStatus,
+    ResetPasswordEnum,
+    VerifyToken,
+    CompanyInfoEnum,
+    PixelStatus,
+    StripeConnectStatus,
+    UpdateUserStatus,
+)
 
 
 class ShopifyPayloadModel(BaseModel):
@@ -15,6 +26,7 @@ class ShopifyPayloadModel(BaseModel):
     state: Optional[str] = None
     timestamp: Optional[str] = None
 
+
 class UtmParams(BaseModel):
     utm_source: Optional[str] = None
     utm_medium: Optional[str] = None
@@ -22,6 +34,7 @@ class UtmParams(BaseModel):
     utm_content: Optional[str] = None
     utm_term: Optional[str] = None
     awc: Optional[str] = None
+
 
 class UserSignUpForm(BaseModel):
     full_name: str = Field(...)
@@ -40,7 +53,7 @@ class UserSignUpForm(BaseModel):
     referral: Optional[str] = None
     shop_hash: Optional[str] = None
     utm_params: Optional[UtmParams] = None
-    source_platform:Optional[str] = None
+    source_platform: Optional[str] = None
 
 
 class DismissNotificationsRequest(BaseModel):
@@ -114,6 +127,7 @@ class CompanyInfoResponse(BaseModel):
     stripe_payment_url: Optional[str] = None
     domain_url: Optional[str] = None
 
+
 class CheckVerificationStatusResponse(BaseModel):
     status: VerificationEmail
 
@@ -147,6 +161,6 @@ class UpdateUserRequest(BaseModel):
     commission: Optional[int] = None
     is_master: Optional[bool] = None
 
+
 class UpdateUserResponse(BaseModel):
     status: UpdateUserStatus
-    
