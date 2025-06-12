@@ -121,22 +121,12 @@ def update_users_integrations(
     service_name,
     user_domain_integration_id=None,
 ):
-    if status == ProccessDataSyncResult.LIST_NOT_EXISTS.value:
-        logging.info(
-            f"List not exists for  integration_data_sync_id {integration_data_sync_id}"
-        )
-        session.query(IntegrationUserSync).filter(
-            IntegrationUserSync.id == integration_data_sync_id
-        ).update({"sync_status": False})
-        session.commit()
-
-    if status == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
-        session.query(IntegrationUserSync).filter(
-            IntegrationUserSync.id == integration_data_sync_id
-        ).update({"sync_status": False})
-        session.commit()
-
-    if status == ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
+    if status in (
+        ProccessDataSyncResult.LIST_NOT_EXISTS.value,
+        ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
+        ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
+        ProccessDataSyncResult.PAYMENT_REQUIRED.value,
+    ):
         session.query(IntegrationUserSync).filter(
             IntegrationUserSync.id == integration_data_sync_id
         ).update({"sync_status": False})
@@ -343,6 +333,20 @@ async def ensure_integration(
                         service_name,
                         notification_persistence,
                         NotificationTitles.QUOTA_EXHAUSTED.value,
+                    )
+                case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
+                    logging.debug(f"Quota exhausted: {service_name}")
+                    update_users_integrations(
+                        session=session,
+                        status=ProccessDataSyncResult.PAYMENT_REQUIRED.value,
+                        integration_data_sync_id=integration_data_sync.id,
+                        service_name=service_name,
+                    )
+                    await send_error_msg(
+                        users_id,
+                        service_name,
+                        notification_persistence,
+                        NotificationTitles.PAYMENT_REQUIRED.value,
                     )
 
                 case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
