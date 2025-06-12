@@ -117,7 +117,7 @@ const marks = [
 export const SettingsSubscription: React.FC = () => {
 	const [tabValue, setTabValue] = useState(1);
 	const [visiblePlans, planAlias] = usePlans(tabValue === 0 ? "month" : "year");
-	const [plans, setPlans] = useState<Plan[]>(visiblePlans);
+	let [plans, setPlans] = useState<Plan[]>(visiblePlans);
 	const [allPlans, setAllPlans] = useState<any[]>([]);
 	const [credits, setCredits] = useState<number>(50000);
 	const [selectedPlan, setSelectedPlan] = useState<any>(null);
@@ -138,9 +138,7 @@ export const SettingsSubscription: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
-	useEffect(() => {
-		setPlans(visiblePlans);
-	}, [visiblePlans]);
+	plans = visiblePlans;
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
