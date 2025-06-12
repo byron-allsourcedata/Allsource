@@ -68,8 +68,7 @@ class PlansPersistence:
             .filter(SubscriptionPlan.alias == alias)
             .first()
         )
-        if plan:
-            return plan
+        return plan
 
     def get_plan_by_title_price(self, plan_name: str, payment_amount: str):
         plan = (
