@@ -265,6 +265,7 @@ async def send_overage_leads_notification(
         },
     )
 
+
 async def send_inactive_leads_notification(
     user: Users, notification_persistence: NotificationPersistence
 ):
@@ -567,6 +568,7 @@ def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
         .first()
     )
 
+
 def get_subscription_plan_info(session, plan_id):
     ContactCredits = aliased(SubscriptionPlan)
     return (
@@ -582,7 +584,6 @@ def get_subscription_plan_info(session, plan_id):
         .filter(SubscriptionPlan.id == plan_id)
         .first()
     )
-
 
 
 async def process_user_data(
@@ -802,7 +803,9 @@ async def process_user_data(
 
         user_subscription = subscription_service.get_user_subscription(user.id)
         if user_subscription:
-            overage_enabled, plan_leads_credits, contact_credit_price = get_subscription_plan_info(session, user_subscription.plan_id)
+            overage_enabled, plan_leads_credits, contact_credit_price = (
+                get_subscription_plan_info(session, user_subscription.plan_id)
+            )
             await process_payment_unlocked_five_x_five_user(
                 session=session,
                 five_x_five_user_up_id=five_x_five_user.up_id,
