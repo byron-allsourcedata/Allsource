@@ -1071,9 +1071,7 @@ const Sources: React.FC = () => {
 																		"Manually upload CSV file containing your existing customer data. ",
 																	imageSrc: "/audience.svg",
 																	onClick: () =>
-																		router.push(
-																			"/sources/builder?type=csv",
-																		),
+																		router.push("/sources/builder?type=csv"),
 																	showRecommended: false,
 																},
 															]}
