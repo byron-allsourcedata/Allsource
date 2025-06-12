@@ -31,6 +31,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface OnmisendDataSyncProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data?: any;
 	isEdit?: boolean;
 	boxShadow?: string;
@@ -39,6 +40,7 @@ interface OnmisendDataSyncProps {
 const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data = null,
 	isEdit,
 	boxShadow,
@@ -206,6 +208,10 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);
@@ -377,7 +383,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		},
 		{
 			id: "unique-id-3",
-			text: "Click Create Private API Key Name to Maximiz.",
+			text: "Click Create Private API Key Name to Allsource.",
 		},
 		{
 			id: "unique-id-4",
@@ -386,12 +392,12 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		{ id: "unique-id-5", text: "Click Create." },
 		{
 			id: "unique-id-6",
-			text: "Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.",
+			text: "Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.",
 		},
 		{ id: "unique-id-7", text: "Click Connect." },
 		{
 			id: "unique-id-8",
-			text: "Select the existing list or create a new one to integrate with Maximiz.",
+			text: "Select the existing list or create a new one to integrate with Allsource.",
 		},
 		{ id: "unique-id-9", text: "Click Export." },
 	];
@@ -432,8 +438,16 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -484,8 +498,16 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -645,9 +667,8 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 				onClose={handlePopupClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						boxShadow: boxShadow
@@ -700,7 +721,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-omnisend"
 							className="main-text"
 							target="_blank"
 							rel="noopener referrer"
@@ -788,7 +809,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 										}}
 									>
 										<Typography variant="subtitle1" className="paragraph">
-											Synchronise all data in real-time from this moment forward
+											Synchronize all data in real-time from this moment forward
 											for seamless integration and continuous updates.
 										</Typography>
 										<FormControl sx={{ gap: "16px" }} error={tab2Error}>
@@ -1117,7 +1138,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 															sx: {
 																"&.MuiOutlinedInput-root": {
 																	height: "36px",
-																	width: "200px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "Roboto",
@@ -1212,7 +1232,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 															sx: {
 																"&.MuiOutlinedInput-root": {
 																	height: "36px",
-																	width: "200px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "Roboto",
@@ -1405,7 +1424,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 															sx: {
 																"&.MuiOutlinedInput-root": {
 																	height: "36px",
-																	width: "200px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "Roboto",
@@ -1580,7 +1598,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 							right: 0,
 							background: "#fff",
 							zIndex: "1",
-							width: "620px",
+							width: "40%",
 							"@media (max-width: 600px)": {
 								width: "100%",
 							},

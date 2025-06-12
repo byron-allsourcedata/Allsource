@@ -156,10 +156,10 @@ const OmnisendConnect = ({
 	const instructions: any[] = [
 		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
 		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to AllSource.' },
+		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
 		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
 		// { id: 'unique-id-5', text: 'Click Create.' },
-		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in AllSource Klaviyo section.' },
+		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.' },
 		// { id: 'unique-id-7', text: 'Click Connect.' },
 	];
 
@@ -356,9 +356,8 @@ const OmnisendConnect = ({
 				onClose={handleClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						boxShadow: boxShadow
 							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
@@ -369,7 +368,7 @@ const OmnisendConnect = ({
 						"&::-webkit-scrollbar": {
 							display: "none",
 						},
-						"@media (max-width: 600px)": {
+						"@media (max-width: 900px)": {
 							width: "100%",
 						},
 					},
@@ -413,7 +412,7 @@ const OmnisendConnect = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-omnisend"
 							target="_blank"
 							rel="noopener referrer"
 							sx={{

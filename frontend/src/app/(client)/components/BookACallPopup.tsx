@@ -1,5 +1,6 @@
 "use client";
-import React from "react";
+import type React from "react";
+import type { FC, ReactNode } from "react";
 import { Box, Button, Typography, Drawer, Backdrop } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
@@ -7,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { CustomButton } from "@/components/ui";
 import { useBookingUrl } from "@/services/booking";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { useIsFreeTrial } from "@/utils/plans";
 
 export interface LeftMenuItem {
 	Icon: React.ElementType;
@@ -45,10 +47,12 @@ export const BookACallPopup: React.FC<Props> = ({
 		window.open(bookingUrl, "_blank");
 	};
 
-	const handleInstallUpgrade = () => {
+	const handleInstantUpgrade = () => {
 		handleClose();
 		router.push("/settings?section=subscription");
 	};
+
+	const isFreeTrial = useIsFreeTrial();
 
 	if (!open) return null;
 	return (
@@ -316,31 +320,11 @@ export const BookACallPopup: React.FC<Props> = ({
 										))}
 									</Box>
 
-									<Box
-										sx={{ display: "flex", textAlign: "left", mb: 2, gap: 2 }}
-									>
-										<CustomButton
-											onClick={handleInstallUpgrade}
-											variant="outlined"
-											sx={{
-												width: "50%",
-												py: 1.5,
-											}}
-										>
-											Instant Upgrade
-										</CustomButton>
-										<CustomButton
-											onClick={handleBookACall}
-											variant="contained"
-											sx={{
-												width: "50%",
-												py: 1.5,
-											}}
-										>
-											Book a consultations
-										</CustomButton>
-									</Box>
-
+									<ActionButtons
+										isFreeTrial={isFreeTrial}
+										handleBookACall={handleBookACall}
+										handleInstantUpgrade={handleInstantUpgrade}
+									/>
 									<Typography
 										variant="subtitle1"
 										sx={{
@@ -362,5 +346,65 @@ export const BookACallPopup: React.FC<Props> = ({
 				</Box>
 			</Drawer>
 		</>
+	);
+};
+
+type ActionButtonsProps = {
+	isFreeTrial: boolean;
+	handleInstantUpgrade: () => void;
+	handleBookACall: () => void;
+};
+
+const ActionButtons: FC<ActionButtonsProps> = ({
+	isFreeTrial,
+	handleBookACall,
+	handleInstantUpgrade,
+}) => {
+	let buttons: ReactNode;
+
+	if (isFreeTrial) {
+		buttons = (
+			<>
+				<CustomButton
+					onClick={handleInstantUpgrade}
+					variant="outlined"
+					sx={{
+						width: "50%",
+						py: 1.5,
+					}}
+				>
+					Instant Upgrade
+				</CustomButton>
+				<CustomButton
+					onClick={handleBookACall}
+					variant="contained"
+					sx={{
+						width: "50%",
+						py: 1.5,
+					}}
+				>
+					Book a consultation
+				</CustomButton>
+			</>
+		);
+	} else {
+		buttons = (
+			<CustomButton
+				onClick={handleBookACall}
+				variant="contained"
+				sx={{
+					width: "100%",
+					py: 1.5,
+				}}
+			>
+				Book a consultation
+			</CustomButton>
+		);
+	}
+
+	return (
+		<Box sx={{ display: "flex", textAlign: "left", mb: 2, gap: 2 }}>
+			{buttons}
+		</Box>
 	);
 };

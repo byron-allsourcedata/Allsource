@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import type React from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
 	Box,
 	Typography,
@@ -7,11 +8,8 @@ import {
 	Tabs,
 	Tab,
 	TextField,
-	Slider,
 	IconButton,
 	Drawer,
-	Divider,
-	Chip,
 	Link,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -26,8 +24,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import axios from "axios";
-import { getCalendlyPopupUrl } from "@/services/booking";
-import { plans as defaultPlans, monthlyPlans, type Plan } from "./plans";
+import { usePlans, type Plan } from "./plans";
 import { fetchUserData } from "@/services/meService";
 import { BookACallPopup } from "../../components/BookACallPopup";
 
@@ -53,6 +50,7 @@ const subscriptionStyles = {
 	formWrapper: {
 		display: "flex",
 		alignItems: "end",
+		justifyContent: "center",
 		"@media (min-width: 901px)": {
 			width: "100%",
 		},
@@ -117,11 +115,13 @@ const marks = [
 ];
 
 export const SettingsSubscription: React.FC = () => {
-	const [plans, setPlans] = useState<Plan[]>([]);
+	const [tabValue, setTabValue] = useState(1);
+	const [visiblePlans, planAlias] = usePlans(tabValue === 0 ? "month" : "year");
+	let [plans, setPlans] = useState<Plan[]>(visiblePlans);
 	const [allPlans, setAllPlans] = useState<any[]>([]);
 	const [credits, setCredits] = useState<number>(50000);
 	const [selectedPlan, setSelectedPlan] = useState<any>(null);
-	const [tabValue, setTabValue] = useState(1);
+
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
 	const [cancelSubscriptionPlanPopupOpen, setCancelSubscriptionPlanPopupOpen] =
@@ -137,6 +137,8 @@ export const SettingsSubscription: React.FC = () => {
 	const [activePlan, setActivePlan] = useState<any>(null);
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
+
+	plans = visiblePlans;
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
@@ -165,7 +167,7 @@ export const SettingsSubscription: React.FC = () => {
 		const period_plans = allPlans.filter(
 			(plan: any) => plan.interval === period,
 		);
-		setPlans(newValue === 0 ? monthlyPlans : defaultPlans);
+		setPlans(visiblePlans);
 		// setPlans(period_plans);
 	};
 
@@ -237,7 +239,7 @@ export const SettingsSubscription: React.FC = () => {
 				const period_plans = response.data.stripe_plans.filter(
 					(plan: any) => plan.interval === interval,
 				);
-				setPlans(defaultPlans);
+				setPlans(visiblePlans);
 			} catch (error) {
 			} finally {
 				setIsLoading(false);
@@ -271,10 +273,6 @@ export const SettingsSubscription: React.FC = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	};
-
-	const handleBuyCredits = () => {
-		// Логика для покупки кредитов
 	};
 
 	const fetchPrefillData = async () => {
@@ -346,7 +344,7 @@ export const SettingsSubscription: React.FC = () => {
 						const period_plans = response.data.stripe_plans.filter(
 							(plan: any) => plan.interval === interval,
 						);
-						setPlans(period_plans);
+						setPlans(visiblePlans);
 					} catch (error) {
 					} finally {
 						setIsLoading(false);
@@ -467,7 +465,15 @@ export const SettingsSubscription: React.FC = () => {
 			}}
 		>
 			{/* Plans Section */}
-			<Box sx={{ marginBottom: 4 }}>
+			<Box
+				sx={{
+					marginBottom: 4,
+					display: "flex",
+					flexDirection: "column",
+					width: "100%",
+					justifyContent: "center",
+				}}
+			>
 				<Box
 					sx={{
 						display: "flex",
@@ -583,8 +589,19 @@ export const SettingsSubscription: React.FC = () => {
 								}
 							}
 
+							if (plan.isActive) {
+								buttonText = "Current Plan";
+								disabled = true;
+							}
+
 							return (
-								<Box key={plan.title} sx={subscriptionStyles.formWrapper}>
+								<Box
+									key={plan.title}
+									sx={{
+										...subscriptionStyles.formWrapper,
+										pt: filteredPlans.length === 1 ? 1 : undefined,
+									}}
+								>
 									<PlanCard
 										plan={plan}
 										activePlanTitle={activePlan?.title || ""}

@@ -162,7 +162,7 @@ const KlaviyoIntegrationPopup = ({
 		},
 		{
 			id: "unique-id-3",
-			text: "Click Create Private API Key Name to AllSource.",
+			text: "Click Create Private API Key Name to Allsource.",
 		},
 		{
 			id: "unique-id-4",
@@ -171,7 +171,7 @@ const KlaviyoIntegrationPopup = ({
 		{ id: "unique-id-5", text: "Click Create." },
 		{
 			id: "unique-id-6",
-			text: "Copy the API key in the next screen and paste to API Key field located in AllSource Klaviyo section.",
+			text: "Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.",
 		},
 		{ id: "unique-id-7", text: "Click Connect." },
 	];
@@ -233,8 +233,13 @@ const KlaviyoIntegrationPopup = ({
 				showToast("Integration Klaviyo Successfully");
 				triggerSync();
 				handleClose();
+			} else {
+				showErrorToast("Invalid API Key");
+				setApiKeyError(true);
 			}
 		} catch (error) {
+			showErrorToast("Invalid API Key");
+			setApiKeyError(true);
 		} finally {
 			setDisableButton(false);
 		}
@@ -374,9 +379,8 @@ const KlaviyoIntegrationPopup = ({
 				onClose={handleClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						boxShadow: boxShadow
@@ -387,7 +391,7 @@ const KlaviyoIntegrationPopup = ({
 						"&::-webkit-scrollbar": {
 							display: "none",
 						},
-						"@media (max-width: 600px)": {
+						"@media (max-width: 900px)": {
 							width: "100%",
 						},
 					},
@@ -431,7 +435,7 @@ const KlaviyoIntegrationPopup = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-klaviyo"
 							target="_blank"
 							rel="noopener noreferrer"
 							sx={{

@@ -89,12 +89,15 @@ class Users(Base):
     )
     leads_credits = Column(Integer, nullable=False, server_default=text("0"))
     prospect_credits = Column(Integer, nullable=False, server_default=text("0"))
+    overage_leads_count = Column(
+        Integer, nullable=False, server_default=text("0")
+    )
     validation_funds = Column(
         DECIMAL(10, 2), nullable=False, server_default=text("0")
     )
     change_email_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
     is_leads_auto_charging = Column(
-        Boolean, nullable=False, server_default=text("false")
+        Boolean, nullable=False, server_default=text("true")
     )
     last_signed_in = Column(TIMESTAMP(precision=7), nullable=True)
     team_access_level = Column(VARCHAR(32), nullable=True)

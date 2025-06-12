@@ -37,6 +37,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectWebhookPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }
@@ -48,6 +49,7 @@ type WebhookList = {
 const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -116,11 +118,6 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 		{ type: "time_on_site", value: "time_on_site" },
 		{ type: "url_visited", value: "url_visited" },
 		{ type: "business_email", value: "business_email" },
-		{ type: "urls_visited", value: "urls_visited" },
-		{
-			type: "urls_visited_with_parameters",
-			value: "urls_visited_with_parameters",
-		},
 		{ type: "linkedin_url", value: "linkedin_url" },
 	]);
 	useEffect(() => {
@@ -337,6 +334,10 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 					triggerSync();
 				}
 			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -434,8 +435,16 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -460,8 +469,16 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -486,8 +503,16 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -605,9 +630,8 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 				onClose={handlePopupClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						msOverflowStyle: "none",
@@ -656,13 +680,20 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 							"@media (max-width: 600px)": { gap: "8px" },
 						}}
 					>
-						{/* <Link href="#" className="main-text" sx={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: 'rgba(56, 152, 252, 1)',
-                            textDecorationColor: 'rgba(56, 152, 252, 1)'
-                        }}>Tutorial</Link> */}
+						<Link
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-webhook"
+							target="_blank"
+							className="main-text"
+							sx={{
+								fontSize: "14px",
+								fontWeight: "600",
+								lineHeight: "20px",
+								color: "rgba(56, 152, 252, 1)",
+								textDecorationColor: "rgba(56, 152, 252, 1)",
+							}}
+						>
+							Tutorial
+						</Link>
 						<IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
 							<CloseIcon sx={{ width: "20px", height: "20px" }} />
 						</IconButton>
@@ -743,7 +774,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 										}}
 									>
 										<Typography variant="subtitle1" className="paragraph">
-											Synchronise all data in real-time from this moment forward
+											Synchronize all data in real-time from this moment forward
 											for seamless integration and continuous updates.
 										</Typography>
 										<FormControl sx={{ gap: "16px" }} error={tab2Error}>

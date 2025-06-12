@@ -638,3 +638,8 @@ class UserPersistence:
         # return False
 
         user.validation_funds -= amount
+
+    def by_email(self, email: str) -> Optional[Users]:
+        return self.db.execute(
+            select(Users).where(Users.email == email)
+        ).scalar()

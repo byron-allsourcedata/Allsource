@@ -65,6 +65,7 @@ class IntegrationLimit(Enum):
     HUBSPOT = 100
     S3 = 10000
     KLAVIYO = 1000
+    LINKEDIN = 100
 
 
 class BusinessType(Enum):
@@ -132,17 +133,6 @@ class SourcePlatformEnum(Enum):
     BING_ADS = "bing_ads"
     S3 = "s3"
     LINKEDIN = "linkedin"
-
-
-class IntegrationLimit(Enum):
-    MAILCHIMP = 10000
-    SALESFORCE = 10000
-    BING_ADS = 100000
-    GOOGLE_ADS = 5000
-    META = 5000
-    HUBSPOT = 100
-    S3 = 10000
-    LINKEDIN = 100
 
 
 class UserPaymentStatusEnum(Enum):
@@ -337,6 +327,7 @@ class DomainStatus(Enum):
 
 
 class NotificationTitles(Enum):
+    OVERAGE_LEADS = "overage_leads"
     PLAN_LIMIT_EXCEEDED = "plan_limit_exceeded"
     AUTHENTICATION_INTEGRATION_FAILED = "authentication_integration_failed"
     PAYMENT_INTEGRATION_REQUIRED = "payment_integration_required"
@@ -349,6 +340,7 @@ class NotificationTitles(Enum):
     NO_CREDITS = "no_credits"
     TOO_MANY_REQUESTS = "too_many_requests"
     QUOTA_EXHAUSTED = "quota_exhausted"
+    PAYMENT_REQUIRED = "payment_required"
 
 
 class CreditsStatus(Enum):

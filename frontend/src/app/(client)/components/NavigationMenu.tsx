@@ -498,7 +498,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 								<ListItemIcon>
 									<CategoryIcon />
 								</ListItemIcon>
-								<ListItemText primary="Data Sync" />
+								<ListItemText primary="Pixel Sync" />
 							</ListItem>
 						</List>
 					</Collapse>
@@ -580,7 +580,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						<ListItemIcon>
 							<CategoryIcon />
 						</ListItemIcon>
-						<ListItemText primary="Data Sync" />
+						<ListItemText primary="Pixel Sync" />
 					</ListItem>
 					{/* <ListItem button onClick={() => handleNavigation('/prospect')}
           sx={{

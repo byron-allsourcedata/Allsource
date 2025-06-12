@@ -64,6 +64,9 @@ import { useDataSyncHints } from "../context/dataSyncHintsContext";
 import { useNotification } from "@/context/NotificationContext";
 import { SmartCell } from "@/components/table";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
+import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -148,6 +151,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setOrder(isAsc ? "desc" : "asc");
 		setOrderBy(property);
 	};
+	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
 	const { hints, cards, changeDataSyncHint, resetDataSyncHints } =
 		useDataSyncHints();
@@ -211,40 +215,44 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		}
 	};
 
+	const toSnakeCase = (service: string) => {
+		return service.split(" ").join("_").toLowerCase();
+	};
+
 	useEffect(() => {
 		if (allData.length !== 0) {
 			if (filters) {
 				const filterData = () => {
-					const typeMapping: Record<string, string> = {
-						"All Contacts": "allContats",
-						"View Product": "viewed_product",
-						"Abandoned cart": "abandoned_cart",
-						Visitor: "visitor",
-					};
 					return Object.values(allData).filter((item) => {
-						const lastSync = new Date(item.lastSync).getTime() / 1000;
+						const createDate = new Date(item.createdDate).getTime() / 1000;
 						const dateMatch =
 							filters.from_date === null ||
 							filters.to_date === null ||
-							(lastSync >= filters.from_date && lastSync <= filters.to_date);
-						const platformMatch =
+							(createDate >= filters.from_date &&
+								createDate <= filters.to_date);
+
+						const statusMatch =
 							filters.selected_status.length === 0 ||
 							filters.selected_status
 								.map((funnel: string) => funnel.toLowerCase())
-								.includes(item.platform.toLowerCase());
+								.includes(item.status.toLowerCase());
 
-						const itemType = item.type ? item.type.toLowerCase() : null;
+						const searchMatch =
+							filters.searchQuery.length === 0 ||
+							item.createdBy
+								.toLowerCase()
+								.includes(filters.searchQuery.toLowerCase()) ||
+							item.name
+								?.toLowerCase()
+								.includes(filters.searchQuery.toLowerCase());
 
-						const listTypeMatch =
+						const platformMatch =
 							filters.selected_destination.length === 0 ||
 							filters.selected_destination
-								.map(
-									(funnel: any) =>
-										typeMapping[funnel]?.toLowerCase() || funnel.toLowerCase(),
-								)
-								.includes(itemType);
+								.map((service: string) => toSnakeCase(service))
+								.includes(item.platform.toLowerCase());
 
-						return dateMatch && platformMatch && listTypeMatch;
+						return searchMatch && dateMatch && statusMatch && platformMatch;
 					});
 				};
 				setData(filterData());
@@ -350,7 +358,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleChangeRowsPerPage = (
 		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
+		setRowsPerPage(Number.parseInt(event.target.value, 10));
 		setPage(0);
 	};
 
@@ -574,6 +582,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setIsConfirmOpen(true);
 	};
 
+	const handleOpenConfirmDialog = () => {
+		setOpenConfirmDialog(true);
+	};
+
+	const handleCloseConfirmDialog = () => {
+		setOpenConfirmDialog(false);
+	};
+
 	const handleDelete = async () => {
 		try {
 			setIsLoading(true);
@@ -593,6 +609,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setData((prevData) =>
 							prevData.filter((item) => item.id !== selectedId),
 						);
+						handleIntegrationsSync();
 						break;
 					case "FAILED":
 						showErrorToast("Integrations sync delete failed");
@@ -613,6 +630,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			setIsLoading(false);
 			setSelectedId(null);
 			handleClose();
+			handleCloseConfirmDialog();
 		}
 	};
 
@@ -650,7 +668,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookConnect(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenWebhookConnect(true);
+						setOpenHubspotIconPopup(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setOpenSalesForceConnect(true);
 					}
@@ -675,7 +693,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookIconPopup(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenWebhookConnect(true);
+						setOpenHubspotIconPopup(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setSalesForceIconPopupOpen(true);
 					}
@@ -698,11 +716,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		if (row.syncStatus === false) {
 			return "Failed";
 		}
-		if (row.is_progress === true) {
-			return "In Progress";
-		}
-		if (row.is_progress === false) {
-			return "Synced";
+		if (row.dataSync === true) {
+			return "Syncing";
 		}
 		return "--";
 	};
@@ -712,24 +727,28 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			return {
 				background: "rgba(219, 219, 219, 1)",
 				color: "rgba(74, 74, 74, 1) !important",
+				toolTipText: "Pixel sync is disabled",
 			};
 		}
 		if (row.syncStatus === false) {
 			return {
 				background: "rgba(252, 205, 200, 1)",
 				color: "rgba(200, 62, 46, 1) !important",
+				toolTipText: "You have an error, ",
 			};
 		}
-		if (row.is_progress) {
-			return {
-				background: "rgba(0, 129, 251, 0.2)",
-				color: "rgba(0, 129, 251, 1)!important",
-			};
-		}
-		if (row.is_progress === false) {
+		if (row.dataSync) {
 			return {
 				background: "rgba(234, 248, 221, 1)",
-				color: "rgba(43, 91, 0, 1) !important",
+				color: "rgba(43, 91, 0, 1)",
+				toolTipText: "Your contacts are being synced every 10 minutes",
+			};
+		}
+		if (row.dataSync) {
+			return {
+				background: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1)",
+				toolTipText: "All your contacts have been synced",
 			};
 		}
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
@@ -791,14 +810,19 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "10vw", minWidth: "155px", maxWidth: "20vw" },
 		},
 		{
+			key: "list_name",
+			label: "List Name",
+			widths: { width: "14vw", minWidth: "14vw", maxWidth: "14vw" },
+		},
+		{
 			key: "platform",
-			label: "Sync",
+			label: "Destination",
 			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
 			key: "created",
 			label: "Created",
-			sortable: true,
+			sortable: false,
 			widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
 		},
 		{
@@ -812,11 +836,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
 		},
 		{
-			key: "list_name",
-			label: "List Name",
-			widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
-		},
-		{
 			key: "sync_status",
 			label: "Status",
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
@@ -828,14 +847,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 	];
 
-	const formatListName = (name: string) => {
-		if (!name) return "--";
-
-		return name
-			.replace(/([a-z])([A-Z])/g, "$1 $2")
-			.replace(/^./, (str) => str.toUpperCase());
-	};
-
+	function toCamelCase(platform: string): string {
+		return platform
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(" ");
+	}
 	return (
 		<>
 			{isLoading && <CustomizedProgressBar />}
@@ -1012,12 +1029,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 															}
 														/>
 													)}
-													{sortable && orderBy === key && (
-														<IconButton size="small" sx={{ ml: 1 }}>
-															{order === "asc" ? (
-																<ArrowUpwardIcon fontSize="inherit" />
+													{sortable && (
+														<IconButton size="small">
+															{orderBy === key ? (
+																order === "asc" ? (
+																	<ArrowUpwardRoundedIcon fontSize="inherit" />
+																) : (
+																	<ArrowDownwardRoundedIcon fontSize="inherit" />
+																)
 															) : (
-																<ArrowDownwardIcon fontSize="inherit" />
+																<SwapVertIcon fontSize="inherit" />
 															)}
 														</IconButton>
 													)}
@@ -1039,7 +1060,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												paddingBottom: "18px",
 											}}
 										>
-											No data synchronization available
+											No pixel synchronization available
 										</TableCell>
 									</TableRow>
 								) : (
@@ -1069,9 +1090,22 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													},
 													hideDivider: isScrolledX,
 												}}
-												tooltipOptions={{ content: row.type || "--" }}
+												tooltipOptions={{ content: listType(row.type) || "--" }}
 											>
-												{formatListName(row.type) || "--"}
+												{listType(row.type) || "--"}
+											</SmartCell>
+
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
+													},
+												}}
+												tooltipOptions={{
+													content: row.list_name ?? "--",
+												}}
+											>
+												{row.list_name ?? "--"}
 											</SmartCell>
 
 											<SmartCell
@@ -1088,7 +1122,48 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														justifyContent: "center",
 													}}
 												>
-													{platformIcon(row.platform) || "--"}
+													<Tooltip
+														title={
+															<Box
+																sx={{
+																	backgroundColor: "#fff",
+																	margin: 0,
+																	padding: 0,
+																	display: "flex",
+																	flexDirection: "row",
+																	alignItems: "center",
+																}}
+															>
+																<Typography
+																	className="table-data"
+																	component="div"
+																	sx={{ fontSize: "12px !important" }}
+																>
+																	{toCamelCase(row.platform) || "--"}
+																</Typography>
+															</Box>
+														}
+														componentsProps={{
+															tooltip: {
+																sx: {
+																	backgroundColor: "#fff",
+																	color: "#000",
+																	boxShadow:
+																		"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																	border: "0.5px solid rgba(225, 225, 225, 1)",
+																	borderRadius: "4px",
+																	maxHeight: "100%",
+																	maxWidth: "500px",
+																	padding: "11px 10px",
+																	marginLeft: "0.5rem !important",
+																},
+															},
+														}}
+														enterDelay={100}
+													>
+														{platformIcon(row.platform) ?? <span>--</span>}
+													</Tooltip>
+													{/* {platformIcon(row.platform) || "--"} */}
 												</Box>
 											</SmartCell>
 
@@ -1159,20 +1234,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												cellOptions={{
 													sx: {
 														position: "relative",
-													},
-												}}
-												tooltipOptions={{
-													content: new Intl.NumberFormat("en-US").format(
-														row.records_synced,
-													),
-												}}
-											>
-												{row.list_name ?? "--"}
-											</SmartCell>
-											<SmartCell
-												cellOptions={{
-													sx: {
-														position: "relative",
 														padding: 0,
 														textAlign: "center",
 													},
@@ -1194,27 +1255,87 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														}}
 													>
 														{(() => {
-															const { color, background } = getStatusStyle(row);
+															const { color, background, toolTipText } =
+																getStatusStyle(row);
 															return (
-																<Typography
-																	className="paragraph"
-																	sx={{
-																		fontFamily: "Roboto",
-																		fontSize: "12px",
-																		color: color,
-																		backgroundColor: background,
-																		padding: "3px 12px",
-																		height: "24px",
-																		display: "flex",
-																		alignItems: "center",
-																		justifyContent: "center",
-																		width: "100%",
-																		boxSizing: "border-box",
-																		borderRadius: "2px",
+																<Tooltip
+																	title={
+																		<Box
+																			sx={{
+																				backgroundColor: "#fff",
+																				margin: 0,
+																				padding: 0,
+																				display: "flex",
+																				flexDirection: "row",
+																				alignItems: "center",
+																			}}
+																		>
+																			<Typography
+																				className="table-data"
+																				component="div"
+																				sx={{ fontSize: "12px !important" }}
+																			>
+																				{toolTipText}
+																				{!row.syncStatus && (
+																					<Box
+																						component="span"
+																						onClick={handleRepairSync}
+																						style={{
+																							textTransform: "none",
+																							background: "none",
+																							border: "none",
+																							color: "rgba(56, 152, 252, 1)",
+																							textDecoration: "underline",
+																							cursor: "pointer",
+																							padding: 0,
+																							fontSize: "inherit",
+																						}}
+																					>
+																						repair
+																					</Box>
+																				)}
+																			</Typography>
+																		</Box>
+																	}
+																	componentsProps={{
+																		tooltip: {
+																			sx: {
+																				backgroundColor: "#fff",
+																				color: "#000",
+																				boxShadow:
+																					"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																				border:
+																					"0.5px solid rgba(225, 225, 225, 1)",
+																				borderRadius: "4px",
+																				maxHeight: "100%",
+																				maxWidth: "500px",
+																				padding: "11px 10px",
+																				marginLeft: "0.5rem !important",
+																			},
+																		},
 																	}}
+																	enterDelay={100}
 																>
-																	{formatStatusText(row)}
-																</Typography>
+																	<Typography
+																		className="paragraph"
+																		sx={{
+																			fontFamily: "Roboto",
+																			fontSize: "12px",
+																			color: color,
+																			backgroundColor: background,
+																			padding: "3px 12px",
+																			height: "24px",
+																			display: "flex",
+																			alignItems: "center",
+																			justifyContent: "center",
+																			width: "100%",
+																			boxSizing: "border-box",
+																			borderRadius: "2px",
+																		}}
+																	>
+																		{formatStatusText(row)}
+																	</Typography>
+																</Tooltip>
 															);
 														})()}
 													</Box>
@@ -1346,7 +1467,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 										backgroundColor: "background: rgba(80, 82, 178, 0.1)",
 									},
 								}}
-								onClick={handleDelete}
+								onClick={() => {
+									handleOpenConfirmDialog();
+								}}
 							>
 								Delete
 							</Button>
@@ -1372,6 +1495,88 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 								</Button>
 							)}
 						</Box>
+						<Popover
+							open={openConfirmDialog}
+							onClose={handleCloseConfirmDialog}
+							anchorEl={anchorEl}
+							anchorOrigin={{
+								vertical: "bottom",
+								horizontal: "right",
+							}}
+							transformOrigin={{
+								vertical: "top",
+								horizontal: "center",
+							}}
+							slotProps={{
+								paper: {
+									sx: {
+										padding: "0.125rem",
+										width: "15.875rem",
+										boxShadow: 0,
+										borderRadius: "8px",
+										border: "0.5px solid rgba(175, 175, 175, 1)",
+									},
+								},
+							}}
+						>
+							<Typography
+								className="first-sub-title"
+								sx={{
+									paddingLeft: 2,
+									pt: 1,
+									pb: 0,
+								}}
+							>
+								Confirm Deletion
+							</Typography>
+							<DialogContent sx={{ padding: 2 }}>
+								<DialogContentText className="table-data">
+									Are you sure you want to delete this pixel sync?
+								</DialogContentText>
+							</DialogContent>
+							<DialogActions>
+								<Button
+									className="second-sub-title"
+									onClick={handleCloseConfirmDialog}
+									sx={{
+										backgroundColor: "#fff",
+										color: "rgba(56, 152, 252, 1) !important",
+										fontSize: "14px",
+										textTransform: "none",
+										padding: "0.75em 1em",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										maxWidth: "50px",
+										maxHeight: "30px",
+										"&:hover": {
+											backgroundColor: "#fff",
+											boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+										},
+									}}
+								>
+									Cancel
+								</Button>
+								<Button
+									className="second-sub-title"
+									onClick={handleDelete}
+									sx={{
+										backgroundColor: "rgba(56, 152, 252, 1)",
+										color: "#fff !important",
+										fontSize: "14px",
+										textTransform: "none",
+										padding: "0.75em 1em",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										maxWidth: "60px",
+										maxHeight: "30px",
+										"&:hover": {
+											backgroundColor: "rgba(56, 152, 252, 1)",
+											boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+										},
+									}}
+								>
+									Delete
+								</Button>
+							</DialogActions>
+						</Popover>
 					</Popover>
 					{totalRows && totalRows > 10 ? (
 						<Box
