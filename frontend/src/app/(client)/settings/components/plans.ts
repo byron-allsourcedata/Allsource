@@ -66,7 +66,7 @@ export const basicPlan: Plan = {
 		value: "$0,08",
 		y: "record",
 	},
-	isRecommended: false,
+	isRecommended: true,
 	permanentLimits: [
 		{
 			good: true,
@@ -108,7 +108,7 @@ export const smartAudienceYearly: Plan = {
 		value: "$5,000",
 		y: "month",
 	},
-	isRecommended: true,
+	isRecommended: false,
 	permanentLimits: [
 		{
 			good: true,
