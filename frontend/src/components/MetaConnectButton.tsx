@@ -318,7 +318,7 @@ const MetaConnectButton = ({
 					padding: "16px 24px 24px 24px",
 					position: "relative",
 				}}
-				>
+			>
 				<TabContext value={value}>
 					<Box sx={{ pb: 4 }}>
 						<TabList
@@ -351,24 +351,13 @@ const MetaConnectButton = ({
 						</TabList>
 					</Box>
 					<TabPanel value="1" sx={{ p: 0 }}>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							justifyContent: "space-between",
-							alignItems: "center",
-							height: "100%",
-							"@media (max-width: 480px)": {
-								height: "auto",
-							},
-						}}
-					>
 						<Box
 							sx={{
-								width: "100%",
-								position: "relative",
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "space-between",
+								alignItems: "center",
 								height: "100%",
-								marginBottom: "100px",
 								"@media (max-width: 480px)": {
 									height: "auto",
 								},
@@ -376,84 +365,96 @@ const MetaConnectButton = ({
 						>
 							<Box
 								sx={{
-									display: "flex",
-									flexDirection: "column",
-									gap: "12px",
-									p: 2,
-									border: "1px solid #f0f0f0",
-									borderRadius: "4px",
-									boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+									width: "100%",
+									position: "relative",
+									height: "100%",
+									marginBottom: "100px",
+									"@media (max-width: 480px)": {
+										height: "auto",
+									},
 								}}
 							>
-								<Image
-									src="/meta-icon.svg"
-									alt="meta-icon"
-									height={24}
-									width={36}
-								/>
-								<Typography
-									variant="h6"
+								<Box
 									sx={{
-										fontFamily: "Nunito Sans",
-										fontSize: "16px",
-										fontWeight: "600",
-										color: "#202124",
-										marginTop: "12px",
-										lineHeight: "normal",
+										display: "flex",
+										flexDirection: "column",
+										gap: "12px",
+										p: 2,
+										border: "1px solid #f0f0f0",
+										borderRadius: "4px",
+										boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 									}}
 								>
-									Login to your Facebook
-								</Typography>
-								<Box>
-									<Button
-										fullWidth
-										onClick={handleLogin}
-										variant="contained"
-										startIcon={
-											<Image
-												src="/facebook-icon.svg"
-												alt="facebook"
-												height={24}
-												width={24}
-											/>
-										}
-										sx={{
-											backgroundColor: "#0066ff",
-											fontFamily: "Nunito Sans",
-											fontSize: "14px",
-											fontWeight: "600",
-											lineHeight: "17px",
-											letterSpacing: "0.25px",
-											color: "#fff",
-											textTransform: "none",
-											padding: "14.5px 24px",
-											"&:hover": {
-												backgroundColor: "#0066ff",
-											},
-											borderRadius: "6px",
-											border: "1px solid #0066ff",
-										}}
-									>
-										Connect to Facebook
-									</Button>
-								</Box>
-								{invalid_api_key && (
+									<Image
+										src="/meta-icon.svg"
+										alt="meta-icon"
+										height={24}
+										width={36}
+									/>
 									<Typography
-										color="error"
+										variant="h6"
 										sx={{
 											fontFamily: "Nunito Sans",
-											fontSize: "14px",
+											fontSize: "16px",
 											fontWeight: "600",
-											lineHeight: "21.82px",
-											marginTop: "10px",
+											color: "#202124",
+											marginTop: "12px",
+											lineHeight: "normal",
 										}}
 									>
-										Invalid API Key detected. Please reconnect to Meta and try again
+										Login to your Facebook
 									</Typography>
-								)}
+									<Box>
+										<Button
+											fullWidth
+											onClick={handleLogin}
+											variant="contained"
+											startIcon={
+												<Image
+													src="/facebook-icon.svg"
+													alt="facebook"
+													height={24}
+													width={24}
+												/>
+											}
+											sx={{
+												backgroundColor: "#0066ff",
+												fontFamily: "Nunito Sans",
+												fontSize: "14px",
+												fontWeight: "600",
+												lineHeight: "17px",
+												letterSpacing: "0.25px",
+												color: "#fff",
+												textTransform: "none",
+												padding: "14.5px 24px",
+												"&:hover": {
+													backgroundColor: "#0066ff",
+												},
+												borderRadius: "6px",
+												border: "1px solid #0066ff",
+											}}
+										>
+											Connect to Facebook
+										</Button>
+									</Box>
+									{invalid_api_key && (
+										<Typography
+											color="error"
+											sx={{
+												fontFamily: "Nunito Sans",
+												fontSize: "14px",
+												fontWeight: "600",
+												lineHeight: "21.82px",
+												marginTop: "10px",
+											}}
+										>
+											Invalid API Key detected. Please reconnect to Meta and try
+											again
+										</Typography>
+									)}
+								</Box>
 							</Box>
 						</Box>
-					</Box>
 					</TabPanel>
 				</TabContext>
 			</Box>

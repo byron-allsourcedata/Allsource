@@ -483,7 +483,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			)
 			.join("");
 		return updatedName;
-	}
+	};
 
 	const integrationsImage = [
 		{ image: "csv-icon.svg", service_name: "CSV" },
@@ -625,73 +625,85 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 					}}
 				>
 					<Box sx={{ p: 0, width: "100%" }}>
-						<Box sx={{ px: 3, py: 2, display: "flex", flexDirection: "column", gap: 3, width: "100%" }}>
+						<Box
+							sx={{
+								px: 3,
+								py: 2,
+								display: "flex",
+								flexDirection: "column",
+								gap: 3,
+								width: "100%",
+							}}
+						>
 							<Typography variant="h6" className="first-sub-title">
 								Choose from integrated platform
 							</Typography>
 							<List
-								sx={{ display: "flex", gap: 2, p: 0, border: "none", flexWrap: "wrap" }}
+								sx={{
+									display: "flex",
+									gap: 2,
+									p: 0,
+									border: "none",
+									flexWrap: "wrap",
+								}}
 							>
-								{integrations.sort((a, b) => {
-										const isIntegratedA =
-											integratedServices.includes(a.service_name)
-										const isIntegratedB =
-											integratedServices.includes(b.service_name)
+								{integrations
+									.sort((a, b) => {
+										const isIntegratedA = integratedServices.includes(
+											a.service_name,
+										);
+										const isIntegratedB = integratedServices.includes(
+											b.service_name,
+										);
 
 										if (isIntegratedA && !isIntegratedB) return -1;
 										if (!isIntegratedA && isIntegratedB) return 1;
 										return 0;
-									}).map((integration) => {
-									const integrationCred = integrationsCredentials.find(
-										(cred) =>
-											cred.service_name === integration.service_name,
-									);
-									let isIntegrated = integratedServices.includes(
-										integration.service_name,
-									);
+									})
+									.map((integration) => {
+										const integrationCred = integrationsCredentials.find(
+											(cred) => cred.service_name === integration.service_name,
+										);
+										let isIntegrated = integratedServices.includes(
+											integration.service_name,
+										);
 
-									const activeService =
-										integration.service_name.toLowerCase();
+										const activeService =
+											integration.service_name.toLowerCase();
 
-									return (
-										<Box
-											key={integration.service_name}
-											onClick={() =>
-												!isIntegrated
-												? (
-													handleAddIntegration(integration.service_name)
-												)
-												: ( 
-													integrationCred?.is_failed 
-													? integrationsHandlers[integration.service_name as keyof ServiceHandlers]()
-													: (
-														// handleSaveSettings(integration.service_name)
-														syncHandlers[integration.service_name as keyof ServiceHandlers]()
-													)
-												)
-											}
-											sx={{
-												width: `calc((100% - (${integrations.length} - 1) * 16px) / ${integrations.length})`,
-												minWidth: "135px",
-											}}
-										>
-											<IntegrationBox
-												image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
-												serviceName={toCamelCase(
-													integration.service_name,
-												)}
-												active={
-													activeService === integration.service_name
+										return (
+											<Box
+												key={integration.service_name}
+												onClick={() =>
+													!isIntegrated
+														? handleAddIntegration(integration.service_name)
+														: integrationCred?.is_failed
+															? integrationsHandlers[
+																	integration.service_name as keyof ServiceHandlers
+																]()
+															: // handleSaveSettings(integration.service_name)
+																syncHandlers[
+																	integration.service_name as keyof ServiceHandlers
+																]()
 												}
-												isAvalible={
-													isIntegrated || integrationCred?.is_failed
-												}
-												isFailed={integrationCred?.is_failed}
-												isIntegrated={isIntegrated}
-											/>
-										</Box>
-									);
-								})}
+												sx={{
+													width: `calc((100% - (${integrations.length} - 1) * 16px) / ${integrations.length})`,
+													minWidth: "135px",
+												}}
+											>
+												<IntegrationBox
+													image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
+													serviceName={toCamelCase(integration.service_name)}
+													active={activeService === integration.service_name}
+													isAvalible={
+														isIntegrated || integrationCred?.is_failed
+													}
+													isFailed={integrationCred?.is_failed}
+													isIntegrated={isIntegrated}
+												/>
+											</Box>
+										);
+									})}
 
 								{/* <IntegrationBox
 									image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}

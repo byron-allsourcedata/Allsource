@@ -609,7 +609,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setData((prevData) =>
 							prevData.filter((item) => item.id !== selectedId),
 						);
-						handleIntegrationsSync()
+						handleIntegrationsSync();
 						break;
 					case "FAILED":
 						showErrorToast("Integrations sync delete failed");
