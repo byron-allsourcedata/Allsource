@@ -290,9 +290,7 @@ class HubspotIntegrationsService:
         if not profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        return self.__create_profiles(
-            user_integration.access_token, profiles
-        )
+        return self.__create_profiles(user_integration.access_token, profiles)
 
     def __create_profiles(self, access_token, profiles_list):
         emails = [p.get("email") for p in profiles_list if p.get("email")]

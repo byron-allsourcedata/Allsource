@@ -121,7 +121,12 @@ def update_users_integrations(
     service_name,
     user_domain_integration_id=None,
 ):
-    if status in (ProccessDataSyncResult.LIST_NOT_EXISTS.value , ProccessDataSyncResult.TOO_MANY_REQUESTS.value, ProccessDataSyncResult.QUOTA_EXHAUSTED.value, ProccessDataSyncResult.PAYMENT_REQUIRED.value):
+    if status in (
+        ProccessDataSyncResult.LIST_NOT_EXISTS.value,
+        ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
+        ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
+        ProccessDataSyncResult.PAYMENT_REQUIRED.value,
+    ):
         session.query(IntegrationUserSync).filter(
             IntegrationUserSync.id == integration_data_sync_id
         ).update({"sync_status": False})
