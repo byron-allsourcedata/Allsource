@@ -8,7 +8,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/navigation";
 import { insightsStyle } from "./insightsStyles";
 import { useNotification } from "@/context/NotificationContext";
-import { dashboardStyles } from "../../../dashboard/dashboardStyles";
+import { dashboardStyles } from "../../../analytics/dashboardStyles";
 import { TabPanel } from "@/components/TabPanel";
 import StaticticsTab from "./components/StaticticsTab";
 import CustomTooltip from "@/components/customToolTip";

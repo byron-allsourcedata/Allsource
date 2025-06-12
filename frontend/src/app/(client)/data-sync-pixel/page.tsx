@@ -11,7 +11,7 @@ import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
-import { EmptyAnalyticsPlaceholder } from "../dashboard/components/placeholders/EmptyPlaceholder";
+import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/EmptyPlaceholder";
 
 const centerContainerStyles = {
 	display: "flex",
