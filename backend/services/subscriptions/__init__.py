@@ -241,7 +241,7 @@ class SubscriptionService:
         user_subscription = result["subscription"]
         if not user_subscription:
             return False
-        if not is_active and user_subscription.status == "inactive":
+        if not is_active or user_subscription.status == "inactive":
             billing_date = user_subscription.plan_end.astimezone(timezone.utc)
             if billing_date + relativedelta(months=1) <= datetime.now(
                 timezone.utc
