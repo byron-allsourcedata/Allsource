@@ -494,8 +494,16 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -520,8 +528,16 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -681,9 +697,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 				onClose={handlePopupClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						boxShadow: isEdit
 							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
@@ -1570,7 +1585,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 															sx: {
 																"&.MuiOutlinedInput-root": {
 																	height: "36px",
-																	width: "200px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "Roboto",
@@ -1862,7 +1876,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 															sx: {
 																"&.MuiOutlinedInput-root": {
 																	height: "36px",
-																	width: "200px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "Roboto",
@@ -2038,7 +2051,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 							right: 0,
 							background: "#fff",
 							zIndex: "1",
-							width: "620px",
+							width: "40%",
 							"@media (max-width: 600px)": {
 								width: "100%",
 							},

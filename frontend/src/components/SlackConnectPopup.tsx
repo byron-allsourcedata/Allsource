@@ -10,6 +10,7 @@ import {
 	Tab,
 	TextField,
 	Typography,
+	LinearProgress
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
@@ -121,26 +122,43 @@ const SlackConnectPopup = ({
 		return;
 	}
 
-	if (loading) {
-		return <CustomizedProgressBar />;
-	}
-
 	return (
+		<>
+		{loading && (
+				<Box
+					sx={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						background: "rgba(0, 0, 0, 0.2)",
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center",
+						zIndex: 1400,
+						overflow: "hidden",
+					}}
+				>
+					<Box sx={{ width: "100%", top: 0, height: "100vh" }}>
+						<LinearProgress />
+					</Box>
+				</Box>
+			)}
 		<Drawer
 			anchor="right"
 			open={open}
 			onClose={handlePopupClose}
 			PaperProps={{
 				sx: {
-					width: "620px",
+					width: "40%",
 					position: "fixed",
-					zIndex: 1301,
 					top: 0,
 					boxShadow: boxShadow
 						? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
 						: "none",
 					bottom: 0,
-					"@media (max-width: 600px)": {
+					"@media (max-width: 900px)": {
 						width: "100%",
 					},
 				},
@@ -465,7 +483,7 @@ const SlackConnectPopup = ({
 						</TabPanel>
 					</TabContext>
 				</Box>
-				<Box
+				{/* <Box
 					sx={{ px: 2, py: 2, width: "100%", borderTop: "1px solid #e4e4e4" }}
 				>
 					<Box
@@ -494,9 +512,10 @@ const SlackConnectPopup = ({
 							Close
 						</Button>
 					</Box>
-				</Box>
+				</Box> */}
 			</Box>
 		</Drawer>
+		</>
 	);
 };
 
