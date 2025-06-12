@@ -240,7 +240,6 @@ async def handle_payment_notification(
         )
 
 
-
 async def send_overage_leads_notification(
     user: Users, notification_persistence: NotificationPersistence
 ):
@@ -272,7 +271,6 @@ async def send_overage_leads_notification(
             "notification_id": save_account_notification.id,
         },
     )
-
 
 
 async def send_inactive_leads_notification(
@@ -361,7 +359,6 @@ async def process_payment_unlocked_five_x_five_user(
 
     if user.leads_credits - AMOUNT_CREDITS < 0:
         if overage_enabled:
-
             await send_overage_leads_notification(
                 user=user, notification_persistence=notification_persistence
             )
@@ -372,7 +369,6 @@ async def process_payment_unlocked_five_x_five_user(
             user.overage_leads_count += 1
             session.flush()
             return
-
 
         await send_inactive_leads_notification(
             user=user, notification_persistence=notification_persistence
@@ -815,7 +811,6 @@ async def process_user_data(
 
         user_subscription = subscription_service.get_user_subscription(user.id)
         if user_subscription:
-
             overage_enabled, plan_leads_credits, contact_credit_price = (
                 get_subscription_plan_info(session, user_subscription.plan_id)
             )
