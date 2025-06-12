@@ -19,8 +19,7 @@ const PageWithLoader: React.FC = () => {
 	const pathname = usePathname();
 
 	const pixelPages = [
-		// "/analytics",
-		"/dashboard", // CHANGE TO analytics
+		"/analytics",
 		"/leads",
 		"/company",
 		"/suppressions",

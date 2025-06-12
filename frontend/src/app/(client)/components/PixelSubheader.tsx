@@ -1,15 +1,9 @@
 "use client";
-import {
-	Box,
-	Typography,
-	Button,
-	Menu,
-	MenuItem,
-	IconButton,
-} from "@mui/material";
-import Image from "next/image";
-import React from "react";
+import { Box, Skeleton } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import DomainButton from "./DomainsButton";
+import DomainStatusLabels from "./DomainStatusLabels";
+import { usePathname } from "next/navigation";
 
 const subheaderStyles = {
 	headers: {
@@ -31,14 +25,45 @@ const subheaderStyles = {
 	},
 };
 
-interface SubHeaderProps {}
+const PixelSubheader: React.FC = () => {
+	const pathname = usePathname();
+	const [domain, setDomain] = useState<any | null>(null);
+	const [loading, setLoading] = useState(true);
 
-const PixelSubheader: React.FC<SubHeaderProps> = ({}) => {
-	const meItem =
-		typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
-	const meData = meItem ? JSON.parse(meItem) : { full_name: "", email: "" };
-	const full_name = meData.full_name;
-	const email = meData.email;
+	const pixelPages = [
+		"/analytics",
+		"/leads",
+		"/company",
+		"/suppressions",
+		"/data-sync-pixel",
+	];
+
+	const hasSubheader =
+		(pathname.startsWith("/management") && pathname !== "/management") ||
+		pixelPages.includes(pathname);
+
+	useEffect(() => {
+		if (!hasSubheader) return;
+
+		const meItem = sessionStorage.getItem("me");
+		const currentDomain = sessionStorage.getItem("current_domain");
+
+		if (!meItem || !currentDomain) {
+			setDomain(null);
+			setLoading(false);
+			return;
+		}
+
+		const meData = JSON.parse(meItem);
+		const domains = meData?.domains || [];
+
+		const foundDomain =
+			domains.find((d: any) => d.domain === currentDomain) || null;
+		setDomain(foundDomain);
+		setLoading(false);
+	}, [hasSubheader]);
+
+	if (!hasSubheader) return null;
 
 	return (
 		<Box sx={{ display: "flex", width: "100%", flexDirection: "column" }}>
@@ -50,45 +75,21 @@ const PixelSubheader: React.FC<SubHeaderProps> = ({}) => {
 					}}
 				>
 					<Box sx={{ display: "flex", alignItems: "center", gap: "24px" }}>
-						{/* Domain Selector */}
 						<DomainButton />
-
-						{/* Colorful Labels */}
-						<Box display="flex" gap="8px">
-							<Box
-								sx={{
-									backgroundColor: "rgba(56, 152, 252, 0.1)",
-									borderRadius: "4px",
-									padding: "4px 8px",
-								}}
-							>
-								<Typography variant="body2" color="primary">
-									Label 1
-								</Typography>
-							</Box>
-							<Box
-								sx={{
-									backgroundColor: "rgba(244, 87, 69, 0.1)",
-									borderRadius: "4px",
-									padding: "4px 8px",
-								}}
-							>
-								<Typography variant="body2" color="error">
-									Label 2
-								</Typography>
-							</Box>
-							<Box
-								sx={{
-									backgroundColor: "rgba(46, 204, 113, 0.1)",
-									borderRadius: "4px",
-									padding: "4px 8px",
-								}}
-							>
-								<Typography variant="body2" sx={{ color: "#2ECC71" }}>
-									Label 3
-								</Typography>
-							</Box>
-						</Box>
+						{loading ? (
+							<>
+								<Skeleton variant="rectangular" width={100} height={24} />
+								<Skeleton variant="rectangular" width={100} height={24} />
+								<Skeleton variant="rectangular" width={100} height={24} />
+							</>
+						) : domain ? (
+							<DomainStatusLabels
+								isPixelInstalled={domain.is_pixel_installed}
+								contactsResolving={domain.contacts_resolving}
+								dataSynced={domain.data_synced}
+								dataSyncFailed={domain.data_sync_failed}
+							/>
+						) : null}
 					</Box>
 				</Box>
 			</Box>

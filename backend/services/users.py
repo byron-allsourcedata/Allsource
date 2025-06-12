@@ -90,7 +90,13 @@ class UsersService:
         }
 
     def add_percent_to_domain(
-        self, domain: UserDomains, activate_percent, is_current_subscription_id
+            self,
+            domain: UserDomains,
+            activate_percent,
+            is_current_subscription_id,
+            contacts_resolving: bool,
+            data_synced: bool,
+            data_sync_failed: bool,
     ):
         domain_percent = 0
         if domain.is_pixel_installed:
@@ -103,31 +109,39 @@ class UsersService:
 
         domain_data = self.domain_mapped(domain)
         domain_data["activate_percent"] = domain_percent
+        domain_data["contacts_resolving"] = contacts_resolving
+        domain_data["data_synced"] = data_synced
+        domain_data["data_sync_failed"] = data_sync_failed
         return domain_data
 
     def get_domains(self):
-        domains = self.domain_persistence.get_domains_by_user(
-            self.user.get("id")
-        )
-        enabled_domains = [domain for domain in domains if domain.is_enable]
-        disabled_domains = [
-            domain for domain in domains if not domain.is_enable
-        ]
-        enabled_domains_sorted = sorted(
-            enabled_domains, key=lambda x: (x.created_at, x.id)
-        )
-        disabled_domains_sorted = sorted(
-            disabled_domains, key=lambda x: (x.created_at, x.id)
-        )
-        sorted_domains = enabled_domains_sorted + disabled_domains_sorted
-        return [
-            self.add_percent_to_domain(
+        user_id = self.user.get("id")
+
+        domain_rows = self.domain_persistence.get_domains_with_flags(user_id)
+
+        enabled_domains = []
+        disabled_domains = []
+
+        for row in domain_rows:
+            domain = row["domain"]
+            data = self.add_percent_to_domain(
                 domain,
                 self.user.get("activate_steps_percent"),
                 self.user.get("current_subscription_id"),
+                row["contacts_resolving"],
+                row["data_synced"],
+                row["data_sync_failed"],
             )
-            for domain in sorted_domains
-        ]
+            data["created_at"] = domain.created_at
+            data["id"] = domain.id
+
+            if domain.is_enable:
+                enabled_domains.append(data)
+            else:
+                disabled_domains.append(data)
+
+        return sorted(enabled_domains, key=lambda x: (x["created_at"], x["id"])) + \
+               sorted(disabled_domains, key=lambda x: (x["created_at"], x["id"]))
 
     def domain_mapped(self, domain: UserDomains):
         return DomainResponse(

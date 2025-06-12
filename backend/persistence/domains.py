@@ -8,10 +8,14 @@ from models.leads_users import LeadUser
 from models.users import Users
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
+from enums import DataSyncType
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func, case, and_, or_, distinct
 from fastapi import HTTPException
 import re
+
 
 from resolver import injectable
 
@@ -34,6 +38,95 @@ class UserDomainsPersistence:
         result = query.first()
 
         return result.domain if result else None
+
+    def get_domains_with_contacts_resolving(self, user_id: int) -> set[int]:
+        domain_ids = (
+            self.db.query(LeadUser.domain_id)
+                .join(UserDomains, LeadUser.domain_id == UserDomains.id)
+                .filter(UserDomains.user_id == user_id)
+                .distinct()
+                .all()
+        )
+        return {row.domain_id for row in domain_ids}
+
+    def get_domains_with_data_synced(self, user_id: int) -> set[int]:
+        domain_ids = (
+            self.db.query(IntegrationUserSync.domain_id)
+                .join(UserDomains, IntegrationUserSync.domain_id == UserDomains.id)
+                .filter(
+                UserDomains.user_id == user_id,
+                IntegrationUserSync.sync_type == "pixel",
+            ).distinct().all()
+        )
+        return {row.domain_id for row in domain_ids}
+
+    def get_domains_with_failed_data_sync(self, user_id: int) -> set[int]:
+        failed_syncs = (
+            self.db.query(IntegrationUserSync.domain_id)
+                .join(UserDomains, UserDomains.id == IntegrationUserSync.domain_id)
+                .filter(
+                UserDomains.user_id == user_id,
+                IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
+                IntegrationUserSync.sync_status.is_(False),
+            )
+                .distinct()
+                .all()
+        )
+
+        return {row.domain_id for row in failed_syncs}
+
+    def get_domains_with_flags(self, user_id: int) -> list[dict]:
+        LeadUserAlias = aliased(LeadUser)
+        PixelSyncAlias = aliased(IntegrationUserSync)
+        ContactSyncAlias = aliased(IntegrationUserSync)
+
+        query = (
+            self.db.query(
+                UserDomains,
+                func.count(distinct(LeadUserAlias.id)).label("has_leads"),
+                func.count(distinct(PixelSyncAlias.id)).label("has_pixel_sync"),
+                func.count(
+                    distinct(
+                        case(
+                            (and_(
+                                ContactSyncAlias.sync_status == False,
+                                ContactSyncAlias.sync_type == "pixel"
+                            ), ContactSyncAlias.id),
+                        )
+                    )
+                ).label("has_failed_contact_sync"),
+            )
+                .filter(UserDomains.user_id == user_id)
+                .outerjoin(LeadUserAlias, LeadUserAlias.domain_id == UserDomains.id)
+                .outerjoin(
+                PixelSyncAlias,
+                and_(
+                    PixelSyncAlias.domain_id == UserDomains.id,
+                    PixelSyncAlias.sync_type == "pixel",
+                ),
+            )
+                .outerjoin(
+                ContactSyncAlias,
+                and_(
+                    ContactSyncAlias.domain_id == UserDomains.id,
+                    ContactSyncAlias.sync_type == "pixel",
+                    ContactSyncAlias.sync_status == False,
+                ),
+            )
+                .group_by(UserDomains.id)
+        )
+
+        result = []
+        for row in query:
+            domain: UserDomains = row[0]
+            result.append({
+                "domain": domain,
+                "contacts_resolving": row.has_leads > 0,
+                "data_synced": row.has_pixel_sync > 0,
+                "data_sync_failed": row.has_failed_contact_sync > 0,
+            })
+
+        return result
 
     def get_domains_with_leads(self, user_id: int):
         added_to_cart = aliased(LeadsUsersAddedToCart)
@@ -115,7 +208,7 @@ class UserDomainsPersistence:
         )
 
         total_count = (
-            converted_sales + viewed_product + visitor + abandoned_cart
+                converted_sales + viewed_product + visitor + abandoned_cart
         )
 
         query = (
@@ -129,14 +222,14 @@ class UserDomainsPersistence:
                 abandoned_cart.label("abandoned_cart"),
                 total_count.label("total_count"),
             )
-            .outerjoin(LeadUser, UserDomains.id == LeadUser.domain_id)
-            .outerjoin(
+                .outerjoin(LeadUser, UserDomains.id == LeadUser.domain_id)
+                .outerjoin(
                 FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
             )
-            .outerjoin(added_to_cart, added_to_cart.lead_user_id == LeadUser.id)
-            .outerjoin(ordered, ordered.lead_user_id == LeadUser.id)
-            .filter(UserDomains.user_id == user_id)
-            .group_by(
+                .outerjoin(added_to_cart, added_to_cart.lead_user_id == LeadUser.id)
+                .outerjoin(ordered, ordered.lead_user_id == LeadUser.id)
+                .filter(UserDomains.user_id == user_id)
+                .group_by(
                 UserDomains.id,
                 UserDomains.domain,
                 UserDomains.is_pixel_installed,
@@ -157,13 +250,13 @@ class UserDomainsPersistence:
         normalized_domain = self.normalize_domain(data.get("domain"))
         existing_domains = (
             self.db.query(UserDomains)
-            .filter(UserDomains.user_id == user_id)
-            .all()
+                .filter(UserDomains.user_id == user_id)
+                .all()
         )
         for existing_domain in existing_domains:
             if (
-                self.normalize_domain(existing_domain.domain)
-                == normalized_domain
+                    self.normalize_domain(existing_domain.domain)
+                    == normalized_domain
             ):
                 raise HTTPException(
                     status_code=409, detail={"status": "Domain already exists"}
@@ -190,16 +283,16 @@ class UserDomainsPersistence:
     def get_user_by_email(self, email: str):
         user_object = (
             self.db.query(Users)
-            .filter(func.lower(Users.email) == func.lower(email))
-            .first()
+                .filter(func.lower(Users.email) == func.lower(email))
+                .first()
         )
         return user_object
 
     def count_domain(self, user_id: int):
         return (
             self.db.query(func.count(UserDomains.id))
-            .filter_by(user_id=user_id)
-            .scalar()
+                .filter_by(user_id=user_id)
+                .scalar()
         )
 
     def update_domain_name(self, domain_id: int, domain_name: str):
@@ -211,8 +304,8 @@ class UserDomainsPersistence:
     def update_first_domain_by_user_id(self, user_id: int, new_domain):
         domain_query = (
             self.db.query(UserDomains)
-            .filter(UserDomains.user_id == user_id)
-            .first()
+                .filter(UserDomains.user_id == user_id)
+                .first()
         )
 
         if domain_query:
@@ -222,8 +315,8 @@ class UserDomainsPersistence:
     def delete_domain(self, user_id: int, domain: int):
         domain = (
             self.db.query(UserDomains)
-            .filter(UserDomains.user_id == user_id, UserDomains.id == domain)
-            .first()
+                .filter(UserDomains.user_id == user_id, UserDomains.id == domain)
+                .first()
         )
         if not domain:
             raise HTTPException(status_code=404, detail={"status": "NOT_FOUND"})
@@ -239,7 +332,7 @@ class UserDomainsPersistence:
     def get_verify_domains(self) -> List[UserDomains]:
         domains = (
             self.db.query(UserDomains)
-            .filter(UserDomains.is_pixel_installed)
-            .all()
+                .filter(UserDomains.is_pixel_installed)
+                .all()
         )
         return domains
