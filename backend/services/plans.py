@@ -1,7 +1,10 @@
 import logging
+from typing import Optional
 
 from enums import UserAuthorizationStatus
+from models import SubscriptionPlan
 from persistence.plans_persistence import PlansPersistence
+from resolver import injectable
 from services.subscriptions import SubscriptionService
 from enums import SourcePlatformEnum
 
@@ -10,6 +13,7 @@ TRIAL_STUB_PLAN_ID = 17
 WITHOUT_CARD_PLAN_ID = 15
 
 
+@injectable
 class PlansService:
     def __init__(
         self,
@@ -106,3 +110,6 @@ class PlansService:
 
     def get_plan_price(self, price_id):
         return self.plans_persistence.get_plan_by_price_id(price_id=price_id)
+
+    def by_plan_alias(self, alias: str) -> Optional[SubscriptionPlan]:
+        return self.plans_persistence.get_plan_by_alias(alias=alias)

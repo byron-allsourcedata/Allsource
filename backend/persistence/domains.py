@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
+from db_dependencies import Db
 from models.five_x_five_users import FiveXFiveUser
 from models.users_domains import UserDomains
 from models.leads_users import LeadUser
@@ -12,9 +13,12 @@ from sqlalchemy import func, case, and_, or_, distinct
 from fastapi import HTTPException
 import re
 
+from resolver import injectable
 
+
+@injectable
 class UserDomainsPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_domains_by_user(self, user_id: int, domain_substr: str = None):
