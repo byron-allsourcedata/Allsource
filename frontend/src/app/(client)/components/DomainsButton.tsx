@@ -24,6 +24,7 @@ import { fetchUserData } from "@/services/meService";
 import WysiwygIcon from "@mui/icons-material/Wysiwyg";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { display } from "@mui/system";
+import { useRouter } from "next/navigation";
 
 interface Domain {
 	id: number;
@@ -253,6 +254,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 };
 
 const DomainButton: React.FC = () => {
+	const router = useRouter();
 	const [domains, setDomains] = useState<Domain[]>([]);
 	const [currentDomain, setCurrentDomain] = useState("");
 	const [showDomainPopup, setDomainPopup] = useState(false);
@@ -499,6 +501,47 @@ const DomainButton: React.FC = () => {
 						</Box>
 					</MenuItem>
 				))}
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "flex-end",
+						width: "100%",
+					}}
+				>
+					<span
+						style={{
+							border: "0.5px solid #CDCDCD",
+							width: "100%",
+						}}
+					></span>
+				</Box>
+				<Box>
+					<MenuItem
+						onClick={() => router.push("/management")}
+						sx={{ borderBottom: "0.5px solid #CDCDCD" }}
+					>
+						<Typography
+							className="second-sub-title"
+							sx={{
+								color: "rgba(56, 152, 252, 1) !important",
+								textAlign: "center",
+								width: "100%",
+								textDecoration: "underline",
+								"&:hover": {
+									textDecoration: "none",
+								},
+							}}
+						>
+							{" "}
+							Go to all domains
+						</Typography>
+					</MenuItem>
+					<AddDomainPopup
+						open={showDomainPopup}
+						handleClose={() => setDomainPopup(false)}
+						handleSave={handleSave}
+					/>
+				</Box>
 			</Menu>
 			{loading && (
 				<Box
