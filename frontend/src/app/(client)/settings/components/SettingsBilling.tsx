@@ -187,7 +187,6 @@ export const SettingsBilling: React.FC = () => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
-			console.log("Billing response:", response.data);
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
@@ -227,7 +226,6 @@ export const SettingsBilling: React.FC = () => {
 					},
 				},
 			);
-			console.log(response.data);
 			if (response.data == "hide") {
 				setHide(true);
 			} else {
@@ -1505,7 +1503,7 @@ export const SettingsBilling: React.FC = () => {
 												className="paragraph"
 												sx={{ color: "#787878 !important", opacity: 0.6 }}
 											>
-												{validationFundsCollected ===
+												{validationLimitFundsCollected - validationFundsCollected ===
 												validationLimitFundsCollected
 													? "Validation funds exhausted"
 													: validationFundsCollected &&
