@@ -1697,7 +1697,7 @@ const Leads: React.FC = () => {
 											},
 										}}
 									>
-										<PaginatorTable
+										<Table
 											stickyHeader
 											aria-label="leads table"
 											sx={{
@@ -1706,7 +1706,6 @@ const Leads: React.FC = () => {
 												borderBottomLeftRadius: "0px",
 												borderBottomRightRadius: "0px",
 											}}
-											paginator={paginationProps}
 										>
 											<TableHead>
 												<TableRow>
@@ -2139,8 +2138,9 @@ const Leads: React.FC = () => {
 													</TableRow>
 												))}
 											</TableBody>
-										</PaginatorTable>
+										</Table>
 									</TableContainer>
+									<Paginator tableMode {...paginationProps} />
 								</Grid>
 							</Grid>
 						)}

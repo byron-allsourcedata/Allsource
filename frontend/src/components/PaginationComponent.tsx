@@ -132,12 +132,7 @@ export const PaginatorTable: FC<PaginatorTableProps> = ({
 	const grayBorder = `1px solid ${gray}`;
 
 	return (
-		<Paper
-			elevation={0}
-			sx={{
-				borderBottom: grayBorder,
-			}}
-		>
+		<>
 			<Table
 				sx={{
 					tableLayout: "fixed",
@@ -151,7 +146,6 @@ export const PaginatorTable: FC<PaginatorTableProps> = ({
 			>
 				{children}
 			</Table>
-			<Paginator tableMode {...paginator} />
-		</Paper>
+		</>
 	);
 };
