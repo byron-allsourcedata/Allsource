@@ -1,6 +1,6 @@
 import logging
 import math
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select
@@ -554,13 +554,18 @@ class LeadsPersistence:
         return query.all()
 
     def get_leads_count_by_day(self, domain_id: int):
+        one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).date()
+
         return (
             self.db.query(
                 LeadsVisits.start_date.label("date"),
                 func.count(LeadUser.id).label("lead_count"),
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .filter(LeadUser.domain_id == domain_id)
+            .filter(
+                LeadUser.domain_id == domain_id,
+                LeadsVisits.start_date >= one_week_ago,
+            )
             .group_by(LeadsVisits.start_date)
             .order_by(LeadsVisits.start_date)
             .all()
