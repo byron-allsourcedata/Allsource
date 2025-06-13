@@ -41,9 +41,11 @@ interface UserData {
 	is_trial?: boolean;
 	last_login: string;
 	invited_by_email?: string;
+	subscription_plan?: string;
 	role: string[];
 	pixel_installed_count?: number;
 	sources_count?: number;
+	contacts_count?: number;
 	lookalikes_count?: number;
 	credits_count?: number;
 	type?: string;
@@ -81,9 +83,23 @@ const TableHeader: React.FC<{
 							textAlign: "center",
 							position: "relative",
 							...(key === "account_name" && {
-								position: "sticky",
+								width: "180px",
+								maxWidth: "100px",
+								minWidth: "120px",
 								left: 0,
 								zIndex: 1,
+							}),
+							...(key === "status" && {
+								width: "180px",
+								maxWidth: "100px",
+								minWidth: "120px",
+								left: 0,
+								zIndex: 1,
+							}),
+							...(key === "email" && {
+								width: "200px",
+								maxWidth: "200px",
+								minWidth: "150px",
 							}),
 							...(key === "actions" && {
 								"::after": {
@@ -105,7 +121,7 @@ const TableHeader: React.FC<{
 								{label}
 							</Typography>
 							{sortable && (
-								<IconButton size="small" sx={{ ml: 1 }}>
+								<IconButton size="small">
 									{sortField === key ? (
 										sortOrder === "asc" ? (
 											<ArrowUpwardIcon fontSize="inherit" />
@@ -205,22 +221,12 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	};
 	const getStatusStyle = (behavior_type: string) => {
 		switch (behavior_type) {
-			case "TRIAL_ACTIVE":
-				return {
-					background: "rgba(235, 243, 254, 1)",
-					color: "rgba(20, 110, 246, 1) !important",
-				};
-			case "PIXEL_INSTALLED":
+			case "PIXEL_VERIFIED":
 				return {
 					background: "rgba(234, 248, 221, 1)",
 					color: "rgba(43, 91, 0, 1) !important",
 				};
-			case "FILL_COMPANY_DETAILS":
-				return {
-					background: "rgba(254, 243, 205, 1)",
-					color: "rgba(101, 79, 0, 1) !important",
-				};
-			case "SUBSCRIPTION_ACTIVE":
+			case "USER_AUTHENTICATED":
 				return {
 					background: "rgba(234, 248, 221, 1)",
 					color: "rgba(43, 91, 0, 1) !important",
@@ -229,16 +235,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				return {
 					background: "rgba(241, 241, 249, 1)",
 					color: "rgba(56, 152, 252, 1) !important",
-				};
-			case "NEED_CHOOSE_PLAN":
-				return {
-					background: "rgba(254, 238, 236, 1)",
-					color: "rgba(244, 87, 69, 1) !important",
-				};
-			case "NEED_BOOK_CALL":
-				return {
-					background: "rgba(254, 238, 236, 1)",
-					color: "rgba(244, 87, 69, 1) !important",
 				};
 			default:
 				return {
@@ -250,28 +246,22 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 
 	const formatFunnelText = (text: string) => {
 		if (text === "NEED_CHOOSE_PLAN") {
-			return "Need choose Plan";
-		}
-		if (text === "FILL_COMPANY_DETAILS") {
-			return "Fill company details";
+			return "---";
 		}
 		if (text === "TRIAL_ACTIVE") {
-			return "Trial Active";
+			return "---";
 		}
-		if (text === "SUBSCRIPTION_ACTIVE") {
-			return "Subscription Active";
+		if (text === "USER_AUTHENTICATED") {
+			return "User authenticated";
 		}
 		if (text === "NEED_CONFIRM_EMAIL") {
 			return "Need confirm email";
 		}
-		if (text === "NEED_BOOK_CALL") {
-			return "Need book call";
-		}
 		if (text === "PAYMENT_NEEDED") {
 			return "Payment needed";
 		}
-		if (text === "PIXEL_INSTALLED") {
-			return "Pixel installed";
+		if (text === "PIXEL_VERIFIED") {
+			return "Pixel verified";
 		}
 	};
 
@@ -427,6 +417,8 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				return row.sources_count || "0";
 			case "lookalikes_count":
 				return row.lookalikes_count || "0";
+			case "contacts_count":
+				return row.contacts_count || "0";
 			case "credits_count":
 				return formatCreditsCount(row.credits_count || 0);
 			case "status":
@@ -452,6 +444,15 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 						{formatFunnelText(row.payment_status ?? "") || "--"}
 					</Typography>
 				);
+			case "subscription_plan":
+				return (
+					<Box
+						sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+					>
+						{row.subscription_plan || "--"}
+					</Box>
+				);
+
 			case "actions":
 				if (currentPage === 0) {
 					return (
@@ -662,10 +663,16 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "join_date", label: "Join date", sortable: true },
 				{ key: "last_login_date", label: "Last Login Date", sortable: true },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
+				{ key: "contacts_count", label: "Contacts", sortable: false },
 				{ key: "sources_count", label: "Sources", sortable: false },
 				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
 				{ key: "credits_count", label: "Credits count", sortable: false },
 				{ key: "status", label: "Status", sortable: false },
+				{
+					key: "subscription_plan",
+					label: "Subscription plan",
+					sortable: false,
+				},
 				{ key: "actions", label: "Actions", sortable: false },
 			];
 

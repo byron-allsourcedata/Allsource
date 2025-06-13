@@ -11,7 +11,12 @@ from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
 from enums import TeamsInvitationStatus, SignUpStatus
-from models import AudienceLookalikes
+from models import (
+    AudienceLookalikes,
+    LeadUser,
+    SubscriptionPlan,
+    UserSubscriptions,
+)
 from models.partner import Partner
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
@@ -360,25 +365,42 @@ class UserPersistence:
                 Users.is_email_confirmed,
                 Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
+                SubscriptionPlan.title.label("subscription_plan"),
                 func.count(
-                    case((UserDomains.is_pixel_installed == True, 1))
-                ).label("pixel_installed_count"),
-                func.count(
-                    case((func.coalesce(AudienceSource.id, None) != None, 1))
-                ).label("sources_count"),
-                func.count(
-                    case(
-                        (func.coalesce(AudienceLookalikes.id, None) != None, 1)
+                    func.distinct(
+                        case(
+                            (
+                                UserDomains.is_pixel_installed == True,
+                                UserDomains.id,
+                            ),
+                            else_=None,
+                        )
                     )
-                ).label("lookalikes_count"),
+                ).label("pixel_installed_count"),
+                func.count(func.distinct(LeadUser.id)).label("contacts_count"),
+                func.count(func.distinct(AudienceSource.id)).label(
+                    "sources_count"
+                ),
+                func.count(func.distinct(AudienceLookalikes.id)).label(
+                    "lookalikes_count"
+                ),
+            )
+            .outerjoin(
+                UserSubscriptions,
+                UserSubscriptions.id == Users.current_subscription_id,
+            )
+            .outerjoin(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
             .outerjoin(
                 AudienceLookalikes, AudienceLookalikes.user_id == Users.id
             )
             .outerjoin(AudienceSource, AudienceSource.user_id == Users.id)
             .outerjoin(UserDomains, UserDomains.user_id == Users.id)
+            .outerjoin(LeadUser, LeadUser.user_id == Users.id)
             .filter(Users.role.any("customer"))
-            .group_by(Users.id)
+            .group_by(Users.id, SubscriptionPlan.title)
         )
 
         if last_login_date_start:
