@@ -13,6 +13,14 @@ import {
 	Box,
 	Popover,
 } from "@mui/material";
+import {
+	LineChart,
+	Line,
+	XAxis,
+	YAxis,
+	Tooltip as RechartsTooltip,
+	ResponsiveContainer,
+} from "recharts";
 import { useSSE } from "@/context/SSEContext";
 import { MenuIconButton } from "@/components/table";
 import { MoreVert } from "@/icon";
@@ -90,17 +98,31 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 				</TableHead>
 				<TableBody>
 					{tableData?.map((row, index) => {
+						const rawAdditionalPixel = row.additional_pixel;
+
 						const additional_pixel =
-							Array.isArray(row.additional_pixel) &&
-							row.additional_pixel.length > 0
-								? row.additional_pixel[0]
+							typeof rawAdditionalPixel === "object" &&
+							rawAdditionalPixel !== null
+								? {
+										is_add_to_cart_installed:
+											rawAdditionalPixel?.is_add_to_cart_installed || false,
+										is_converted_sales_installed:
+											rawAdditionalPixel?.is_converted_sales_installed || false,
+										is_view_product_installed:
+											row?.pixel_status === true ? true : false,
+									}
 								: {
-										is_view_product_installed: false,
 										is_add_to_cart_installed: false,
 										is_converted_sales_installed: false,
+										is_view_product_installed:
+											row?.pixel_status === true ? true : false,
 									};
 
 						const flags = [
+							{
+								key: "is_view_product_installed",
+								label: "View Product Installed",
+							},
 							{
 								key: "is_add_to_cart_installed",
 								label: "Add to Cart Installed",
@@ -140,7 +162,31 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 										<span style={{ cursor: "help" }}>{trueCount}/3</span>
 									</Tooltip>
 								</TableCell>
-								<TableCell>{/* render resulutions here */}</TableCell>
+								<TableCell sx={{ width: 120, height: 40 }}>
+									{Array.isArray(row.resulutions) &&
+									row.resulutions.length > 0 ? (
+										<ResponsiveContainer width="100%" height={40}>
+											<LineChart data={row.resulutions}>
+												<Line
+													type="monotone"
+													dataKey="lead_count"
+													stroke="#3B82F6" // синий цвет
+													strokeWidth={2}
+													dot={false}
+												/>
+												<XAxis dataKey="date" hide />
+												<YAxis hide />
+												<RechartsTooltip
+													contentStyle={{ fontSize: "0.75rem" }}
+													formatter={(value: any) => [`Leads: ${value}`]}
+												/>
+											</LineChart>
+										</ResponsiveContainer>
+									) : (
+										"--"
+									)}
+								</TableCell>
+
 								<TableCell>{/* render data_sync here */}</TableCell>
 								<TableCell>{/* Actions */}</TableCell>
 							</TableRow>
