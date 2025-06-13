@@ -90,14 +90,15 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 				</TableHead>
 				<TableBody>
 					{tableData?.map((row, index) => {
-						const additional_pixel = Array.isArray(row.additional_pixel) && row.additional_pixel.length > 0
-                        ? row.additional_pixel[0]
-                        : {
-                            is_view_product_installed: false,
-                            is_add_to_cart_installed: false,
-                            is_converted_sales_installed: false,
-                          };
-                      
+						const additional_pixel =
+							Array.isArray(row.additional_pixel) &&
+							row.additional_pixel.length > 0
+								? row.additional_pixel[0]
+								: {
+										is_view_product_installed: false,
+										is_add_to_cart_installed: false,
+										is_converted_sales_installed: false,
+									};
 
 						const flags = [
 							{
