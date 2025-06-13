@@ -102,10 +102,6 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 
 						const flags = [
 							{
-								key: "is_view_product_installed",
-								label: "View Product Installed",
-							},
-							{
 								key: "is_add_to_cart_installed",
 								label: "Add to Cart Installed",
 							},

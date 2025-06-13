@@ -1,7 +1,12 @@
+import hashlib
 import logging
+import os
 from typing import List
 
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from fastapi import HTTPException
+from starlette import status
+
+from enums import DomainStatus
 from persistence.leads_persistence import LeadsPersistence
 from schemas.pixel_management import ManagementResult
 from services.domains import UserDomainsService
@@ -64,3 +69,32 @@ class PixelManagementService:
                 }
             )
         return result
+
+    def get_pixel_script(self, action: str, domain_id: int):
+        domain = self.user_domains_service.get_domain_by_id(domain_id=domain_id)
+        if not domain:
+            return {"status": DomainStatus.DOMAIN_NOT_FOUND}
+
+        client_id = domain.data_provider_id
+        if client_id is None:
+            client_id = hashlib.sha256(
+                (str(domain.id) + os.getenv("SECRET_SALT", "")).encode()
+            ).hexdigest()
+            self.user_domains_service.update_data_provider_id(
+                domain_id=domain_id, data_provider_id=client_id
+            )
+
+        base_path = os.path.join(
+            os.path.dirname(__file__), "data", "additional_pixels"
+        )
+        script_path = os.path.join(base_path, f"{action}.js")
+
+        if not os.path.isfile(script_path):
+            return {"status": "script_not_found"}
+
+        with open(script_path, "r", encoding="utf-8") as f:
+            script_template = f.read()
+
+        script = script_template.replace("{{client_id}}", client_id)
+
+        return script
