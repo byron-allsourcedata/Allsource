@@ -409,7 +409,6 @@ async def on_message_received(message, session):
             existing_user.personal_emails_last_seen = (
                 five_x_five_user.personal_emails_last_seen
             )
-
             existing_user.company_last_updated = (
                 five_x_five_user.company_last_updated
             )

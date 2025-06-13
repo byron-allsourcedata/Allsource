@@ -1,8 +1,9 @@
 from typing import Annotated
 
 import clickhouse_connect
-from fastapi import Depends
+
 from sqlalchemy.orm import Session
+from fastapi import Depends
 
 from config import ClickhouseConfig
 from config.database import SessionLocal

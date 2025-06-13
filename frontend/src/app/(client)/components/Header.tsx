@@ -244,8 +244,8 @@ const Header: React.FC<HeaderProps> = ({
 							</Button>
 						)}
 						{/* <Box sx={{ display: "flex", ml: 1 }}>
-              {!pathname.includes("audience-dashboard") &&
-                (pathname.includes("dashboard") ||
+              {!pathname.includes("dashboard") &&
+                (pathname.includes("analytics") ||
                   pathname.includes("leads") ||
                   pathname.includes("company") ||
                   pathname.includes("suppressions"))}

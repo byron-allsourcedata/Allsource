@@ -36,10 +36,9 @@ class NotificationPersistence:
                 UserAccountNotification.user_id == user_id,
                 UserAccountNotification.notification_id
                 == account_notification_id,
-                UserAccountNotification.is_checked == False,
             )
             .order_by(desc(UserAccountNotification.id))
-            .limit(10)
+            .limit(5)
             .all()
         )
 

@@ -33,7 +33,7 @@ const Signin: React.FC = () => {
 		if (typeof window !== "undefined") {
 			const token = localStorage.getItem("token");
 			if (token) {
-				router.push("/audience-dashboard");
+				router.push("/dashboard");
 			}
 		}
 	}, [router]);
@@ -147,7 +147,7 @@ const Signin: React.FC = () => {
 					switch (responseData.status) {
 						case "SUCCESS":
 							await fetchUserData();
-							router.push("/audience-dashboard");
+							router.push("/dashboard");
 							break;
 
 						case "SUCCESS_ADMIN":
@@ -176,7 +176,7 @@ const Signin: React.FC = () => {
 
 						case "NEED_BOOK_CALL":
 							await fetchUserData();
-							router.push("/audience-dashboard");
+							router.push("/dashboard");
 							break;
 
 						case "PAYMENT_NEEDED":
@@ -194,7 +194,7 @@ const Signin: React.FC = () => {
 							const { is_pixel_installed, is_source_imported } =
 								data?.get_started;
 							if (is_pixel_installed && is_source_imported) {
-								router.push("/audience-dashboard");
+								router.push("/dashboard");
 							} else {
 								router.push("/get-started");
 							}
@@ -202,7 +202,7 @@ const Signin: React.FC = () => {
 
 						default:
 							await fetchUserData();
-							router.push("/audience-dashboard");
+							router.push("/dashboard");
 							break;
 					}
 				} else {
@@ -280,7 +280,7 @@ const Signin: React.FC = () => {
 								}
 								switch (response.data.status) {
 									case "SUCCESS":
-										router.push("/audience-dashboard");
+										router.push("/dashboard");
 										break;
 									case "SUCCESS_ADMIN":
 										await fetchUserData();
@@ -295,7 +295,7 @@ const Signin: React.FC = () => {
 										break;
 									case "NEED_BOOK_CALL":
 										sessionStorage.setItem("is_slider_opened", "true");
-										router.push("/audience-dashboard");
+										router.push("/dashboard");
 										break;
 									case "PAYMENT_NEEDED":
 										router.push(`${response.data.stripe_payment_url}`);
@@ -304,20 +304,20 @@ const Signin: React.FC = () => {
 										showErrorToast("User with this email does not exist");
 										break;
 									case "PIXEL_INSTALLATION_NEEDED":
-										router.push("/audience-dashboard");
+										router.push("/dashboard");
 										break;
 									case "FILL_COMPANY_DETAILS":
 										let data = await fetchUserData();
 										const { is_pixel_installed, is_source_imported } =
 											data?.get_started;
 										if (is_pixel_installed && is_source_imported) {
-											router.push("/audience-dashboard");
+											router.push("/dashboard");
 										} else {
 											router.push("/get-started");
 										}
 										break;
 									default:
-										router.push("/audience-dashboard");
+										router.push("/dashboard");
 								}
 							} catch (error) {
 								console.error("Error during Google login:", error);

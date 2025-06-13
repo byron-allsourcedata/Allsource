@@ -9,7 +9,7 @@ import GettingStartedSection from "@/components/GettingStartedSection";
 import { SliderProvider } from "@/context/SliderContext";
 import SourcesImport from "@/app/(client)/sources/builder/page";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
-import WelcomePopup from "@/app/(client)/dashboard/components/WelcomePopup";
+import WelcomePopup from "@/app/(client)/analytics/components/WelcomePopup";
 import {
 	CardsSection,
 	FirstTimeScreenCommonVariant1,
@@ -76,7 +76,7 @@ const GetStarted: React.FC = () => {
 			setPixelInstalled(Boolean(is_pixel_installed));
 			setSourceImported(Boolean(is_source_imported));
 			if (Boolean(is_pixel_installed) && Boolean(is_source_imported)) {
-				router.push("/audience-dashboard");
+				router.push("/dashboard");
 			}
 		} catch (error) {
 			console.error(error);

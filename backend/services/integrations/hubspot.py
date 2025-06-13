@@ -295,6 +295,25 @@ class HubspotIntegrationsService:
         )
         return list_response
 
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        lead_users: List[FiveXFiveUser],
+    ):
+        profiles = []
+        for lead_user in lead_users:
+            profile = self.__mapped_profile_lead(
+                lead_user, integration_data_sync.data_map
+            )
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        return self.__create_profiles(user_integration.access_token, profiles)
+
     def __create_profiles(self, access_token, profiles_list):
         emails = [p.get("email") for p in profiles_list if p.get("email")]
         search_payload = {

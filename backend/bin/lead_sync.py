@@ -7,23 +7,34 @@ import sys
 import time
 import traceback
 import urllib.parse
-import regex
 
 import pytz
+import regex
 from dateutil.relativedelta import relativedelta
+
+from sqlalchemy import create_engine, desc
+from sqlalchemy.orm import sessionmaker, Session, aliased
+
+from dotenv import load_dotenv
+from sqlalchemy.dialects.postgresql import insert
+from datetime import datetime, timedelta, timezone
+
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+
 from utils import normalize_url, get_url_params_list, check_certain_urls
 from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
-from models.plans import SubscriptionPlan
+
 from utils import create_company_alias
-from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from urllib.parse import urlparse, parse_qs
+
+from models.plans import SubscriptionPlan
+from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
 from models.suppression_rule import SuppressionRule
@@ -38,23 +49,20 @@ from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from models.integrations.suppressed_contact import SuppressedContact
-from sqlalchemy import create_engine, desc
-from sqlalchemy.orm import sessionmaker, Session, aliased
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
 from models.leads_orders import LeadOrders
 from models.integrations.leads_suppresions import LeadsSupperssion
-from dotenv import load_dotenv
-from sqlalchemy.dialects.postgresql import insert
-from datetime import datetime, timedelta, timezone
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from models.integrations.users_domains_integrations import UserIntegration
+
+from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from services.referral import ReferralService
 from dependencies import (
     SubscriptionService,
     UserPersistence,
     PlansPersistence,
-    ReferralService,
+
     PartnersPersistence,
     ReferralDiscountCodesPersistence,
     StripeService,
@@ -75,9 +83,9 @@ def setup_logging(level):
 
 LAST_PROCESSED_FILE_PATH = "tmp/last_processed_leads_sync.txt"
 AMOUNT_CREDITS = 1
+UNLIMITED = -1
 QUEUE_CREDITS_CHARGING = "credits_charging"
 EMAIL_NOTIFICATIONS = "email_notifications"
-UNLIMITED = -1
 
 ROOT_BOT_CLIENT_EMAIL = "master-demo@maximiz.ai"
 ROOT_BOT_CLIENT_DOMAIN = "demo.com"
@@ -203,6 +211,12 @@ async def handle_payment_notification(
                 NotificationTitles.CONTACT_LIMIT_APPROACHING.value
             )
         )
+        find_notification = notification_persistence.find_account_notifications(
+            user_id=user.id, account_notification_id=account_notification.id
+        )
+        if find_notification:
+            logging.debug("Notification already sent")
+            return
         notification_text = account_notification.text.format(
             int(credit_usage_percentage), contact_credit_price
         )
@@ -228,38 +242,70 @@ async def handle_payment_notification(
         )
 
 
-async def handle_inactive_leads_notification(
-    user, leads_persistence, notification_persistence
+async def send_overage_leads_notification(
+    user: Users, notification_persistence: NotificationPersistence
 ):
-    inactive_leads_user = leads_persistence.get_inactive_leads_user(
-        user_id=user.id
+    account_notification = (
+        notification_persistence.get_account_notification_by_title(
+            NotificationTitles.OVERAGE_LEADS.value
+        )
     )
-    if len(inactive_leads_user) > 0 and len(inactive_leads_user) % 10 == 0:
-        account_notification = (
-            notification_persistence.get_account_notification_by_title(
-                NotificationTitles.PLAN_LIMIT_EXCEEDED.value
-            )
-        )
-        notification_text = account_notification.text.format(
-            len(inactive_leads_user)
-        )
+    find_notification = notification_persistence.find_account_notifications(
+        user_id=user.id, account_notification_id=account_notification.id
+    )
+    if find_notification:
+        logging.debug("Notification already sent")
+        return
 
-        queue_name = f"sse_events_{str(user.id)}"
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        save_account_notification = (
-            notification_persistence.save_account_notification(
-                user.id, account_notification.id, len(inactive_leads_user)
-            )
+    queue_name = f"sse_events_{str(user.id)}"
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
+    save_account_notification = (
+        notification_persistence.save_account_notification(
+            user.id, account_notification.id
         )
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=queue_name,
-            message_body={
-                "notification_text": notification_text,
-                "notification_id": save_account_notification.id,
-            },
+    )
+    await publish_rabbitmq_message(
+        connection=connection,
+        queue_name=queue_name,
+        message_body={
+            "notification_text": account_notification.text,
+            "notification_id": save_account_notification.id,
+        },
+    )
+
+
+async def send_inactive_leads_notification(
+    user: Users, notification_persistence: NotificationPersistence
+):
+    account_notification = (
+        notification_persistence.get_account_notification_by_title(
+            NotificationTitles.PLAN_LIMIT_EXCEEDED.value
         )
+    )
+    find_notification = notification_persistence.find_account_notifications(
+        user_id=user.id, account_notification_id=account_notification.id
+    )
+    if find_notification:
+        logging.debug("Notification already sent")
+        return
+
+    queue_name = f"sse_events_{str(user.id)}"
+    rabbitmq_connection = RabbitMQConnection()
+    connection = await rabbitmq_connection.connect()
+    save_account_notification = (
+        notification_persistence.save_account_notification(
+            user.id, account_notification.id
+        )
+    )
+    await publish_rabbitmq_message(
+        connection=connection,
+        queue_name=queue_name,
+        message_body={
+            "notification_text": account_notification.text,
+            "notification_id": save_account_notification.id,
+        },
+    )
 
 
 async def notify_missing_plan(notification_persistence, user):
@@ -288,15 +334,15 @@ async def notify_missing_plan(notification_persistence, user):
 
 
 async def process_payment_unlocked_five_x_five_user(
-    session,
-    five_x_five_user_up_id,
-    user_domain_id,
-    user,
-    lead_user,
-    leads_persistence,
-    notification_persistence,
-    plan_leads_credits,
-    contact_credit_price,
+    session: Session,
+    five_x_five_user_up_id: str,
+    user_domain_id: int,
+    user: Users,
+    lead_user: LeadUser,
+    notification_persistence: NotificationPersistence,
+    overage_enabled: bool,
+    plan_leads_credits: int,
+    contact_credit_price: int,
 ):
     users_unlocked_five_x_five_user = (
         session.query(UsersUnlockedFiveXFiveUser)
@@ -314,15 +360,27 @@ async def process_payment_unlocked_five_x_five_user(
         return
 
     if (
-        plan_leads_credits != UNLIMITED
+        user.leads_credits > UNLIMITED
         and user.leads_credits - AMOUNT_CREDITS < 0
     ):
-        if user.is_leads_auto_charging is False:
-            # await handle_inactive_leads_notification(
-            #     user, leads_persistence, notification_persistence
-            # )
-            logging.debug(f"User leads_auto_charging is False")
+        if overage_enabled:
+            await send_overage_leads_notification(
+                user=user, notification_persistence=notification_persistence
+            )
+            logging.debug(
+                "The message about exceeding the limits has been sent"
+            )
+            lead_user.is_active = True
+            user.overage_leads_count += 1
+            session.flush()
+            return
+
+        await send_inactive_leads_notification(
+            user=user, notification_persistence=notification_persistence
+        )
         lead_user.is_active = False
+        logging.debug("A user with a trial subscription sent a message.")
+        session.flush()
         return
 
     users_unlocked_five_x_five_user = UsersUnlockedFiveXFiveUser(
@@ -333,7 +391,7 @@ async def process_payment_unlocked_five_x_five_user(
     )
 
     session.add(users_unlocked_five_x_five_user)
-    if plan_leads_credits != UNLIMITED:
+    if user.leads_credits > UNLIMITED:
         user.leads_credits -= AMOUNT_CREDITS
         await handle_payment_notification(
             user,
@@ -343,6 +401,7 @@ async def process_payment_unlocked_five_x_five_user(
             contact_credit_price,
         )
     session.flush()
+    return
 
 
 def check_activate_based_urls(page, suppression_rule):
@@ -520,6 +579,22 @@ def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
         .filter(
             LeadUser.domain_id == domain_id, LeadUser.company_id == company_id
         )
+        .first()
+    )
+
+def get_subscription_plan_info(session, plan_id):
+    ContactCredits = aliased(SubscriptionPlan)
+    return (
+        session.query(
+            SubscriptionPlan.overage_enabled,
+            SubscriptionPlan.leads_credits,
+            ContactCredits.price,
+        )
+        .outerjoin(
+            ContactCredits,
+            SubscriptionPlan.contact_credit_plan_id == ContactCredits.id,
+        )
+        .filter(SubscriptionPlan.id == plan_id)
         .first()
     )
 
@@ -741,38 +816,22 @@ async def process_user_data(
 
         user_subscription = subscription_service.get_user_subscription(user.id)
         if user_subscription:
-            ContactCredits = aliased(SubscriptionPlan)
-            result_query = (
-                session.query(SubscriptionPlan, ContactCredits.price)
-                .outerjoin(
-                    ContactCredits,
-                    SubscriptionPlan.contact_credit_plan_id
-                    == ContactCredits.id,
-                )
-                .filter(SubscriptionPlan.id == user_subscription.plan_id)
-                .first()
+            overage_enabled, plan_leads_credits, contact_credit_price = (
+                get_subscription_plan_info(session, user_subscription.plan_id)
             )
-            subscription_plan, contact_credit_price = result_query
 
             await process_payment_unlocked_five_x_five_user(
-                session,
-                five_x_five_user.up_id,
-                user_domain_id,
-                user,
-                lead_user,
-                leads_persistence,
-                notification_persistence,
-                subscription_plan.leads_credits,
-                contact_credit_price,
+                session=session,
+                five_x_five_user_up_id=five_x_five_user.up_id,
+                user_domain_id=user_domain_id,
+                user=user,
+                lead_user=lead_user,
+                notification_persistence=notification_persistence,
+                overage_enabled=overage_enabled,
+                plan_leads_credits=plan_leads_credits,
+                contact_credit_price=contact_credit_price,
             )
 
-            if not lead_user.is_active and user.is_leads_auto_charging:
-                await dispatch_leads_to_rabbitmq(
-                    session=session,
-                    user=user,
-                    rabbitmq_connection=rabbitmq_connection,
-                    plan_id=user_subscription.plan_id,
-                )
         else:
             lead_user.is_active = False
 
@@ -787,7 +846,6 @@ async def process_user_data(
         )
         .first()
     )
-    leads_requests = None
     if current_visit_request:
         visit_id = current_visit_request[0]
         leads_result = (
