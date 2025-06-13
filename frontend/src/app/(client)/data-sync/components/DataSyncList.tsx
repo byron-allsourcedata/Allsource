@@ -64,6 +64,8 @@ import { useDataSyncHints } from "../context/dataSyncHintsContext";
 import { useNotification } from "@/context/NotificationContext";
 import { SmartCell } from "@/components/table";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import { usePagination } from "@/hooks/usePagination";
+import { Paginator } from "@/components/PaginationComponent";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -93,8 +95,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false);
 	const [omnisendIconPopupOpen, setOmnisendIconPopupOpen] = useState(false);
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [totalRows, setTotalRows] = useState(0);
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
@@ -130,6 +130,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openZapierConnect, setOPenZapierComnect] = useState(false);
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
 	const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
+
+	const paginationProps = usePagination(totalRows ?? 0);
 	const handleCloseIntegrate = () => {
 		setOpenMetaConnect(false);
 		setOpenKlaviyoConnect(false);
@@ -342,19 +344,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			default:
 				return null;
 		}
-	};
-	const handleChangePage = (
-		_: React.MouseEvent<HTMLButtonElement> | null,
-		newPage: number,
-	) => {
-		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0);
 	};
 
 	// Action
@@ -889,7 +878,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<TableContainer
 						ref={tableContainerRef}
 						sx={{
-							height: "70vh",
 							overflowX: "scroll",
 							maxHeight:
 								data.length > 0 ? (hasNotification ? "63vh" : "70vh") : "70vh",
@@ -1255,6 +1243,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							</TableBody>
 						</Table>
 					</TableContainer>
+					<Paginator tableMode {...paginationProps} />
 					<Popover
 						id={id}
 						open={open}
@@ -1354,53 +1343,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							)}
 						</Box>
 					</Popover>
-					{totalRows && totalRows > 10 ? (
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "flex-end",
-								padding: "24px 0 0",
-								"@media (max-width: 600px)": {
-									padding: "12px 0 0",
-								},
-							}}
-						>
-							<CustomTablePagination
-								count={totalRows ?? 0}
-								page={page}
-								rowsPerPage={rowsPerPage}
-								onPageChange={handleChangePage}
-								onRowsPerPageChange={handleChangeRowsPerPage}
-								rowsPerPageOptions={rowsPerPageOptions}
-							/>
-						</Box>
-					) : (
-						<Box
-							display="flex"
-							justifyContent="flex-end"
-							alignItems="center"
-							sx={{
-								padding: "16px",
-								backgroundColor: "#fff",
-								borderRadius: "4px",
-								"@media (max-width: 600px)": {
-									padding: "12px",
-								},
-							}}
-						>
-							<Typography
-								sx={{
-									fontFamily: "Nunito Sans",
-									fontWeight: "400",
-									fontSize: "12px",
-									lineHeight: "16px",
-									marginRight: "16px",
-								}}
-							>
-								{`1 - ${totalRows} of ${totalRows}`}
-							</Typography>
-						</Box>
-					)}
 				</Box>
 				{klaviyoIconPopupOpen && isEdit === true && (
 					<>
