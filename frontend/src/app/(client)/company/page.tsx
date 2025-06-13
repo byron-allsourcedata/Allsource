@@ -44,7 +44,10 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
 import CalendarPopup from "@/components/CustomCalendar";
-import PaginationComponent from "@/components/PaginationComponent";
+import PaginationComponent, {
+	Paginator,
+	PaginatorTable,
+} from "@/components/PaginationComponent";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast } from "@/components/ToastNotification";
@@ -61,6 +64,7 @@ import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/
 import { CalendarButton } from "./CalendarButton";
 import { FilterButton } from "./FilterButton";
 import { SelectedFilter } from "./schemas";
+import { usePagination } from "@/hooks/usePagination";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -87,8 +91,6 @@ const Leads: React.FC = () => {
 	const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
 	const dropdownOpen = Boolean(dropdownEl);
 	const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [activeFilter, setActiveFilter] = useState<string>("");
 	const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
 		null,
@@ -122,6 +124,9 @@ const Leads: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
+
+	const paginationProps = usePagination(count_companies ?? 0);
+	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
 
 	const handleOpenPopover = (
 		event: React.MouseEvent<HTMLElement>,
@@ -230,13 +235,6 @@ const Leads: React.FC = () => {
 
 	const installPixel = () => {
 		router.push("/dashboard");
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
 	};
 
 	const fetchData = async ({
@@ -642,10 +640,6 @@ const Leads: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
-
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
 	};
 
 	const truncateText = (text: string, maxLength: number) => {
@@ -1761,14 +1755,8 @@ const Leads: React.FC = () => {
 												</TableBody>
 											</Table>
 										</TableContainer>
-										<PaginationComponent
-											countRows={count_companies ?? 0}
-											page={page}
-											rowsPerPage={rowsPerPage}
-											onPageChange={handleChangePage}
-											onRowsPerPageChange={handleChangeRowsPerPage}
-											rowsPerPageOptions={rowsPerPageOptions}
-										/>
+
+										<Paginator tableMode {...paginationProps} />
 									</Grid>
 								</Grid>
 							)}
