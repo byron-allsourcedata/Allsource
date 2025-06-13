@@ -23,6 +23,7 @@ import CustomizedProgressBar from "../../../components/FirstLevelLoader";
 import { fetchUserData } from "@/services/meService";
 import WysiwygIcon from "@mui/icons-material/Wysiwyg";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import { display } from "@mui/system";
 
 interface Domain {
 	id: number;
@@ -387,38 +388,41 @@ const DomainButton: React.FC = () => {
 				anchorEl={dropdownEl}
 				open={dropdownOpen}
 				onClose={handleDropdownClose}
-				sx={{ "& .MuiMenu-list": { padding: "2px" } }}
+				sx={{ "& .MuiMenu-list": { pt: 0, pr: 0, pl: 0, pb: 0 } }}
 			>
-				{sourcePlatform !== "shopify" && (
-					<Box>
-						<MenuItem onClick={() => setDomainPopup(true)}>
-							<Typography
-								className="second-sub-title"
-								sx={{ color: "rgba(56, 152, 252, 1) " }}
-							>
-								{" "}
-								+ Add new domain
-							</Typography>
-						</MenuItem>
-						<AddDomainPopup
-							open={showDomainPopup}
-							handleClose={() => setDomainPopup(false)}
-							handleSave={handleSave}
-						/>
-					</Box>
-				)}
+				<Box>
+					<MenuItem
+						onClick={() => setDomainPopup(true)}
+						sx={{ borderBottom: "0.5px solid #CDCDCD" }}
+					>
+						<Typography
+							className="second-sub-title"
+							sx={{
+								color: "rgba(56, 152, 252, 1) ",
+								textAlign: "center",
+								width: "100%",
+							}}
+						>
+							{" "}
+							+ Add new domain
+						</Typography>
+					</MenuItem>
+					<AddDomainPopup
+						open={showDomainPopup}
+						handleClose={() => setDomainPopup(false)}
+						handleSave={handleSave}
+					/>
+				</Box>
 				<Box
 					sx={{
 						display: "flex",
 						justifyContent: "flex-end",
 						width: "100%",
-						marginTop: "0.5rem",
 					}}
 				>
 					<span
 						style={{
-							border: "1px solid #CDCDCD",
-							marginBottom: "0.5rem",
+							border: "0.5px solid #CDCDCD",
 							width: "100%",
 						}}
 					></span>
@@ -459,14 +463,39 @@ const DomainButton: React.FC = () => {
 							>
 								{domain.domain.replace("https://", "")}
 							</Typography>
-							{domains.length > 1 && (
-								<HoverableImage
-									srcDefault="/trash-03.svg"
-									srcHover="/trash-03-active.svg"
-									alt="Remove"
-									onClick={() => handleShowDelete(domain)}
-								/>
-							)}
+							<Box sx={{ display: "flex", gap: 1 }}>
+								{domain.is_pixel_installed == true && (
+									<Box
+										sx={{
+											backgroundColor: "rgba(234, 248, 221, 1)",
+											borderRadius: "200px",
+											padding: "4px 8px",
+											justifyContent: "flex-end",
+											display: "flex",
+										}}
+									>
+										<Typography
+											variant="body2"
+											sx={{
+												color: "rgba(43, 91, 0, 1)",
+												fontFamily: "Roboto",
+												fontWeight: "400",
+												fontSize: "12px",
+											}}
+										>
+											Pixel Installed
+										</Typography>
+									</Box>
+								)}
+								{domains.length > 1 && (
+									<HoverableImage
+										srcDefault="/trash-03.svg"
+										srcHover="/trash-03-active.svg"
+										alt="Remove"
+										onClick={() => handleShowDelete(domain)}
+									/>
+								)}
+							</Box>
 						</Box>
 					</MenuItem>
 				))}
