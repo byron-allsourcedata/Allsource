@@ -93,12 +93,12 @@ count = 0
 
 
 def normalize_domain(domain):
-    if domain.startswith("www."):
-        domain = domain[4:]
     if domain.startswith("https://"):
         domain = domain[8:]
     elif domain.startswith("http://"):
         domain = domain[7:]
+    if domain.startswith("www."):
+        domain = domain[4:]
     return domain.lower()
 
 
