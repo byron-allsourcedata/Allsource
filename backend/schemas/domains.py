@@ -17,6 +17,13 @@ class DomainResponse(BaseModel):
     is_converted_sales_installed: bool
 
 
+class DomainWithStats(DomainResponse):
+    activate_percent: int
+    contacts_resolving: bool
+    data_synced: bool
+    data_sync_failed: bool
+
+
 class UpdateDomain(BaseModel):
     new_domain: str
 

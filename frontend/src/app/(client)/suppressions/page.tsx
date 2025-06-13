@@ -15,7 +15,6 @@ import { showErrorToast } from "@/components/ToastNotification";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
-import DomainButtonSelect from "../components/NavigationDomainButton";
 
 const centerContainerStyles = {
 	display: "flex",
@@ -194,7 +193,6 @@ const Suppressions: React.FC = () => {
 										linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/company"
 									/>
 								</Box>
-								<DomainButtonSelect />
 							</Box>
 						</Box>
 						<Box

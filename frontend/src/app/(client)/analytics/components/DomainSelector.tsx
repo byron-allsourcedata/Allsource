@@ -19,7 +19,7 @@ import { useGetStartedHints } from "./context/PixelInstallHintsContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
-interface Domain {
+export interface Domain {
 	id: number;
 	user_id: number;
 	domain: string;
