@@ -112,7 +112,6 @@ const TableHeader: React.FC<{
 									content: "none",
 								},
 							}),
-							
 						}}
 						onClick={sortable ? () => onSort(key) : undefined}
 					>
