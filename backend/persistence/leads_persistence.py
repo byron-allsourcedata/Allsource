@@ -553,6 +553,19 @@ class LeadsPersistence:
         )
         return query.all()
 
+    def get_leads_count_by_day(self, domain_id: int):
+        return (
+            self.db.query(
+                LeadsVisits.start_date.label('date'),
+                func.count(LeadUser.id).label("lead_count"),
+            )
+            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+            .filter(LeadUser.domain_id == domain_id)
+            .group_by(LeadsVisits.start_date)
+            .order_by(LeadsVisits.start_date)
+            .all()
+        )
+
     def get_returning_visitors_per_day(self, domain_id, start_date, end_date):
         active_users_subquery = (
             select(LeadsVisits.lead_id)

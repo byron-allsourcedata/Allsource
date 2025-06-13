@@ -724,12 +724,14 @@ def get_leads_service(
 
 
 def get_pixel_management_service(
+    lead_persistence: LeadsPersistence,
     user_domains_service: UserDomainsService = Depends(get_domain_service),
     integration_service: IntegrationService = Depends(get_integration_service),
 ):
     return PixelManagementService(
         user_domains_service=user_domains_service,
         integration_service=integration_service,
+        lead_persistence=lead_persistence
     )
 
 

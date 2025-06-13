@@ -14,25 +14,17 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import ManagementTable from "./components/ManagementTable";
 
+interface PixelManagementItem {
+	id: number;
+	domain_name: string;
+	pixel_status: boolean;
+	additional_pixel: number;
+	resulutions: dict;
+	data_sync: number;
+  }
+
 const Management: React.FC = () => {
-	const tableData = [
-		{
-			id: 123,
-			domain_name: "domain.com",
-			pixel_status: true,
-			additional_pixel: 3,
-			resulutions: "Source 1",
-			data_sync: 1,
-		},
-		{
-			id: 321,
-			domain_name: "someverylongdomainname",
-			pixel_status: false,
-			additional_pixel: 0,
-			resulutions: "Source 2",
-			data_sync: 0,
-		},
-	];
+	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState("");
@@ -55,8 +47,24 @@ const Management: React.FC = () => {
 			setLoading(false);
 		}
 	};
+
+	const fetchData = async () => {
+		try {
+			setLoading(true);
+			const response = await axiosInstance.get("/pixel-management");
+			if (response.status === 200) {
+				setPixelData(response.data);
+			}
+		} catch (error) {
+			showErrorToast(`Error fetching data:${error}`);
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		checkPixel();
+		fetchData();
 	}, []);
 
 	if (loading) {
