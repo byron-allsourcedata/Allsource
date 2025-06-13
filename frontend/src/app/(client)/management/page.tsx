@@ -14,11 +14,23 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import ManagementTable from "./components/ManagementTable";
 
-interface PixelManagementItem {
+export type PixelKey =
+	| "is_view_product_installed"
+	| "is_add_to_cart_installed"
+	| "is_converted_sales_installed";
+
+export interface AdditionalPixel {
+	is_add_to_cart_installed: boolean;
+	is_converted_sales_installed: boolean;
+	is_view_product_installed: boolean;
+	[key: string]: boolean;
+}
+
+export interface PixelManagementItem {
 	id: number;
 	domain_name: string;
 	pixel_status: boolean;
-	additional_pixel: number;
+	additional_pixel: AdditionalPixel;
 	resulutions: any;
 	data_sync: number;
 }
@@ -133,6 +145,7 @@ const Management: React.FC = () => {
 								flexDirection: "row",
 								alignItems: "center",
 								gap: 1,
+								pt: 0.75,
 							}}
 						>
 							<Typography
@@ -149,7 +162,6 @@ const Management: React.FC = () => {
 								linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/management"
 							/>
 						</Box>
-						<DomainButtonSelect />
 					</Box>
 				</Box>
 				<Box
@@ -170,53 +182,10 @@ const Management: React.FC = () => {
 					}}
 				/>
 			</Box>
-			{status === "PIXEL_INSTALLATION_NEEDED" ? (
-				<Box sx={{ mr: 2, width: "100%", px: 1 }}>
-					<FirstTimeScreenCommonVariant2
-						Header={{
-							TextTitle: "Install Pixel",
-						}}
-						InfoNotification={{
-							Text: "Supressions page will be available after pixel installation",
-						}}
-						HelpCard={{
-							headline: "Need Help with Pixel Setup?",
-							description:
-								"Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
-							helpPoints: [
-								{
-									title: "Quick Setup Walkthrough",
-									description: "Step-by-step pixel installation help",
-								},
-								{
-									title: "Troubleshooting Session",
-									description: "Fix errors and verify your pixel",
-								},
-								{
-									title: "Platform Demo",
-									description: "See how everything works in action",
-								},
-							],
-						}}
-						Content={<GettingStartedSection />}
-						ContentStyleSX={{
-							display: "flex",
-							flexDirection: "column",
-							justifyContent: "center",
-							alignItems: "center",
-							width: "100%",
-							pb: 2,
-							mt: 2,
-						}}
-					/>
-				</Box>
-			) : (
-				<>
-					<Box>
-						<ManagementTable tableData={pixelData} />
-					</Box>
-				</>
-			)}
+
+			<Box sx={{ width: "100%" }}>
+				<ManagementTable tableData={pixelData} />
+			</Box>
 		</Box>
 	);
 };

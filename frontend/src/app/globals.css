@@ -334,6 +334,14 @@ body {
 	color: rgba(140, 139, 139, 1);
 }
 
+.management-table-header {
+	font-family: Roboto;
+	font-size: 14px;
+	line-height: 140%;
+	font-weight: 500;
+	color: #202124;
+}
+
 .MuiInputLabel.MuiInputLabel-outlined {
 	color: rgba(17, 17, 19, 0.6);
 	font-family: "Nunito Sans";
