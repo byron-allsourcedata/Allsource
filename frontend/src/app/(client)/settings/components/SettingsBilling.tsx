@@ -21,7 +21,7 @@ import {
 	LinearProgress,
 	TextField,
 	Chip,
-	Tooltip
+	Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { Elements } from "@stripe/react-stripe-js";
@@ -37,8 +37,8 @@ import TelegramIcon from "@mui/icons-material/Telegram";
 import CustomTablePagination from "@/components/CustomTablePagination";
 import BlurBilling from "./BlurBilling";
 import { MoreVert } from "@mui/icons-material";
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import PaymentIcon from '@mui/icons-material/Payment';
+import DateRangeIcon from "@mui/icons-material/DateRange";
+import PaymentIcon from "@mui/icons-material/Payment";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
@@ -135,7 +135,8 @@ export const SettingsBilling: React.FC = () => {
 	const [contactsCollected, setContactsCollected] = useState(0);
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
-	const [validationLimitFundsCollected, setValidationFundsLimitedData] = useState(0);
+	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
+		useState(0);
 	const [cardDetails, setCardDetails] = useState<any[]>([]);
 	const [billingDetails, setBillingDetails] = useState<any>({});
 	const [billingHistory, setBillingHistory] = useState<any[]>([]);
@@ -190,13 +191,19 @@ export const SettingsBilling: React.FC = () => {
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
-				setCardDetails([...response.data.card_details, ...response.data.card_details, ...response.data.card_details]);
+				setCardDetails([
+					...response.data.card_details,
+					...response.data.card_details,
+					...response.data.card_details,
+				]);
 				setContactsCollected(response.data.usages_credits.leads_credits);
 				setPlanContactsCollected(
 					response.data.usages_credits.plan_leads_credits,
 				);
 				setValidationFundsData(response.data.usages_credits.validation_funds);
-				setValidationFundsLimitedData(response.data.usages_credits.validation_funds_limit);
+				setValidationFundsLimitedData(
+					response.data.usages_credits.validation_funds_limit,
+				);
 			}
 			setChecked(response.data.billing_details.is_leads_auto_charging);
 			setBillingDetails(response.data.billing_details.subscription_details);
@@ -220,7 +227,7 @@ export const SettingsBilling: React.FC = () => {
 					},
 				},
 			);
-			console.log(response.data)
+			console.log(response.data);
 			if (response.data == "hide") {
 				setHide(true);
 			} else {
@@ -729,176 +736,180 @@ export const SettingsBilling: React.FC = () => {
 								)}
 
 								<Grid container spacing={2}>
-								{cardDetails.length > 0 &&
-									cardDetails.map((card) => (
-										<Grid item xs={12} md={6} key={card.id}>
-											<Box
-												key={card.id}
-												sx={{
-													display: "flex",
-													justifyContent: "space-between",
-													alignItems: "center",
-													mb: 2,
-													"@media (max-width: 600px)": {
-														alignItems: "flex-end",
-													},
-												}}
-											>
-												<Box sx={{ display: "flex", gap: 2 }}>
-													<Box
-														sx={{
-															width: "62px",
-															height: "62px",
-															borderRadius: "4px",
-															border: "1px solid #f0f0f0",
-															display: "flex",
-															justifyContent: "center",
-															alignItems: "center",
-														}}
-													>
-														<Image
-															src={
-																cardBrandImages[card.brand as CardBrand] ||
-																"/default-card-icon.svg"
-															} // Default icon if brand not found
-															alt={`${card.brand}-icon`}
-															height={54}
-															width={54} // Adjust the size as needed
-														/>
-													</Box>
-													<Box
-														sx={{
-															display: "flex",
-															flexDirection: "column",
-															gap: "8px",
-															justifyContent: "center",
-														}}
-													>
-														<Box sx={{ display: "flex", gap: 1 }}>
-															<Typography
-																className="first-sub-title"
-																sx={{
-																	"@media (max-width: 600px)": {
-																		fontSize: "12px !important",
-																	},
-																}}
-															>
-																{`${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** ${card.last4})`}
-															</Typography>
-															{card.is_default && (
-																<Typography
-																	className="main-text"
-																	sx={{
-																		borderRadius: "4px",
-																		background: "#eaf8dd",
-																		color: "#2b5b00",
-																		fontSize: "12px",
-																		fontWeight: "600",
-																		padding: "2px 12px",
-																	}}
-																>
-																	Default
-																</Typography>
-															)}
-														</Box>
-														<Typography
-															className="second-text"
-															sx={{
-																fontSize: "12px",
-																fontWeight: "400",
-																lineHeight: "normal",
-																color: "#787878",
-																letterSpacing: "0.06px",
-															}}
-														>
-															Expire date:{" "}
-															{`${card.exp_month < 10 ? "0" : ""}${card.exp_month}/${card.exp_year}`}
-														</Typography>
-													</Box>
-												</Box>
-												<Box>
-													{!card.is_default && (
-														<IconButton
-															onClick={(event) => handleClickOpen(event, card.id)}
-														>
-															<MoreVert
-																sx={{
-																	color: "rgba(32, 33, 36, 1)",
-																}}
-															/>
-														</IconButton>
-													)}
-													<Popover
-														id={deleteId}
-														open={deleteOpen}
-														anchorEl={deleteAnchorEl}
-														onClose={handleDeleteClose}
-														anchorOrigin={{
-															vertical: "bottom",
-															horizontal: "center",
-														}}
-														transformOrigin={{
-															vertical: "top",
-															horizontal: "right",
-														}}
-													>
+									{cardDetails.length > 0 &&
+										cardDetails.map((card) => (
+											<Grid item xs={12} md={6} key={card.id}>
+												<Box
+													key={card.id}
+													sx={{
+														display: "flex",
+														justifyContent: "space-between",
+														alignItems: "center",
+														mb: 2,
+														"@media (max-width: 600px)": {
+															alignItems: "flex-end",
+														},
+													}}
+												>
+													<Box sx={{ display: "flex", gap: 2 }}>
 														<Box
 															sx={{
-																minWidth: "230px",
+																width: "62px",
+																height: "62px",
+																borderRadius: "4px",
+																border: "1px solid #f0f0f0",
+																display: "flex",
+																justifyContent: "center",
+																alignItems: "center",
 															}}
 														>
-															<Box sx={{ my: 2 }}>
-																<Button
-																	className="hyperlink-red"
-																	onClick={handleRemovePopupOpen}
-																	sx={{
-																		border: "none",
-																		boxShadow: "none",
-																		color: "#202124 !important",
-																		lineHeight: "normal !important",
-																		textTransform: "none",
-																		minWidth: "auto",
-																		width: "100%",
-																		padding: "4px 0 4px 16px",
-																		textAlign: "left",
-																		display: "block",
-																		borderRadius: "0",
-																		"&:hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.10)",
-																		},
-																	}}
-																>
-																	Remove
-																</Button>
-																<Button
-																	className="hyperlink-red"
-																	onClick={handleSetDefault}
-																	sx={{
-																		border: "none",
-																		boxShadow: "none",
-																		color: "#202124 !important",
-																		lineHeight: "normal !important",
-																		textTransform: "none",
-																		minWidth: "auto",
-																		width: "100%",
-																		padding: "4px 0 4px 16px",
-																		textAlign: "left",
-																		display: "block",
-																		borderRadius: "0",
-																		"&:hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.10)",
-																		},
-																	}}
-																>
-																	Set as default
-																</Button>
-															</Box>
+															<Image
+																src={
+																	cardBrandImages[card.brand as CardBrand] ||
+																	"/default-card-icon.svg"
+																} // Default icon if brand not found
+																alt={`${card.brand}-icon`}
+																height={54}
+																width={54} // Adjust the size as needed
+															/>
 														</Box>
-													</Popover>
+														<Box
+															sx={{
+																display: "flex",
+																flexDirection: "column",
+																gap: "8px",
+																justifyContent: "center",
+															}}
+														>
+															<Box sx={{ display: "flex", gap: 1 }}>
+																<Typography
+																	className="first-sub-title"
+																	sx={{
+																		"@media (max-width: 600px)": {
+																			fontSize: "12px !important",
+																		},
+																	}}
+																>
+																	{`${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** ${card.last4})`}
+																</Typography>
+																{card.is_default && (
+																	<Typography
+																		className="main-text"
+																		sx={{
+																			borderRadius: "4px",
+																			background: "#eaf8dd",
+																			color: "#2b5b00",
+																			fontSize: "12px",
+																			fontWeight: "600",
+																			padding: "2px 12px",
+																		}}
+																	>
+																		Default
+																	</Typography>
+																)}
+															</Box>
+															<Typography
+																className="second-text"
+																sx={{
+																	fontSize: "12px",
+																	fontWeight: "400",
+																	lineHeight: "normal",
+																	color: "#787878",
+																	letterSpacing: "0.06px",
+																}}
+															>
+																Expire date:{" "}
+																{`${card.exp_month < 10 ? "0" : ""}${card.exp_month}/${card.exp_year}`}
+															</Typography>
+														</Box>
+													</Box>
+													<Box>
+														{!card.is_default && (
+															<IconButton
+																onClick={(event) =>
+																	handleClickOpen(event, card.id)
+																}
+															>
+																<MoreVert
+																	sx={{
+																		color: "rgba(32, 33, 36, 1)",
+																	}}
+																/>
+															</IconButton>
+														)}
+														<Popover
+															id={deleteId}
+															open={deleteOpen}
+															anchorEl={deleteAnchorEl}
+															onClose={handleDeleteClose}
+															anchorOrigin={{
+																vertical: "bottom",
+																horizontal: "center",
+															}}
+															transformOrigin={{
+																vertical: "top",
+																horizontal: "right",
+															}}
+														>
+															<Box
+																sx={{
+																	minWidth: "230px",
+																}}
+															>
+																<Box sx={{ my: 2 }}>
+																	<Button
+																		className="hyperlink-red"
+																		onClick={handleRemovePopupOpen}
+																		sx={{
+																			border: "none",
+																			boxShadow: "none",
+																			color: "#202124 !important",
+																			lineHeight: "normal !important",
+																			textTransform: "none",
+																			minWidth: "auto",
+																			width: "100%",
+																			padding: "4px 0 4px 16px",
+																			textAlign: "left",
+																			display: "block",
+																			borderRadius: "0",
+																			"&:hover": {
+																				backgroundColor:
+																					"rgba(80, 82, 178, 0.10)",
+																			},
+																		}}
+																	>
+																		Remove
+																	</Button>
+																	<Button
+																		className="hyperlink-red"
+																		onClick={handleSetDefault}
+																		sx={{
+																			border: "none",
+																			boxShadow: "none",
+																			color: "#202124 !important",
+																			lineHeight: "normal !important",
+																			textTransform: "none",
+																			minWidth: "auto",
+																			width: "100%",
+																			padding: "4px 0 4px 16px",
+																			textAlign: "left",
+																			display: "block",
+																			borderRadius: "0",
+																			"&:hover": {
+																				backgroundColor:
+																					"rgba(80, 82, 178, 0.10)",
+																			},
+																		}}
+																	>
+																		Set as default
+																	</Button>
+																</Box>
+															</Box>
+														</Popover>
+													</Box>
 												</Box>
-											</Box>
-										</Grid>
-									))}
+											</Grid>
+										))}
 								</Grid>
 
 								<Modal open={open} onClose={handleClose}>
@@ -921,7 +932,6 @@ export const SettingsBilling: React.FC = () => {
 								</Modal>
 							</Box>
 						</Grid>
-
 
 						<Grid item xs={12} md={8} sx={{ padding: "0px" }}>
 							<Box
@@ -1077,27 +1087,25 @@ export const SettingsBilling: React.FC = () => {
 										{billingDetails &&
 											Object.entries(billingDetails).map(
 												([key, value], index) => {
-
 													if (key === "next_billing_date" && value) {
 														return (
 															<Grid
-																item xs={12}
+																item
+																xs={12}
 																key={index}
 																sx={{
 																	display: "flex",
 																	// justifyContent: "space-between",
 																	// flexDirection: "row",
 																	alignItems: "center",
-																	gap: "16px",	
+																	gap: "16px",
 																	"@media (max-width: 600px)": {
 																		gap: "12px",
 																	},
 																}}
 															>
 																{/* Next Billing Date */}
-																<Grid
-																	item xs={5.95} md={5.95}
-																>
+																<Grid item xs={5.95} md={5.95}>
 																	<Box
 																		sx={{
 																			display: "flex",
@@ -1115,7 +1123,7 @@ export const SettingsBilling: React.FC = () => {
 																			},
 																		}}
 																	>
-																		<DateRangeIcon/>
+																		<DateRangeIcon />
 																		<Box>
 																			<Typography
 																				className="main-text"
@@ -1165,7 +1173,7 @@ export const SettingsBilling: React.FC = () => {
 																							key={nextIndex}
 																							sx={{
 																								display: "flex",
-																								justifyContent: 'center',
+																								justifyContent: "center",
 																								gap: "16px",
 																								alignItems: "center",
 																								margin: "0 5%",
@@ -1173,7 +1181,7 @@ export const SettingsBilling: React.FC = () => {
 																								padding: "8px 16px",
 																							}}
 																						>
-																							<PaymentIcon/>
+																							<PaymentIcon />
 																							<Box>
 																								<Typography
 																									className="main-text"
@@ -1186,9 +1194,7 @@ export const SettingsBilling: React.FC = () => {
 																								>
 																									Monthly Total
 																								</Typography>
-																								<Typography
-																									className="first-sub-title"
-																								>
+																								<Typography className="first-sub-title">
 																									{renderValue(nextValue)}
 																								</Typography>
 																							</Box>
@@ -1201,7 +1207,7 @@ export const SettingsBilling: React.FC = () => {
 																							key={nextIndex}
 																							sx={{
 																								display: "flex",
-																								justifyContent: 'center',
+																								justifyContent: "center",
 																								gap: "16px",
 																								alignItems: "center",
 																								margin: "0 5%",
@@ -1209,24 +1215,22 @@ export const SettingsBilling: React.FC = () => {
 																								padding: "8px 16px",
 																							}}
 																						>
-																							<PaymentIcon/>
+																							<PaymentIcon />
 																							<Box>
-																							<Typography
-																								className="main-text"
-																								sx={{
-																									fontSize: "12px",
-																									fontWeight: "600",
-																									lineHeight: "16px",
-																									color: "#4a4a4a",
-																								}}
-																							>
-																								Yearly Total
-																							</Typography>
-																							<Typography
-																								className="first-sub-title"
-																							>
-																								{renderValue(nextValue)}
-																							</Typography>
+																								<Typography
+																									className="main-text"
+																									sx={{
+																										fontSize: "12px",
+																										fontWeight: "600",
+																										lineHeight: "16px",
+																										color: "#4a4a4a",
+																									}}
+																								>
+																									Yearly Total
+																								</Typography>
+																								<Typography className="first-sub-title">
+																									{renderValue(nextValue)}
+																								</Typography>
 																							</Box>
 																						</Box>
 																					);
@@ -1248,11 +1252,12 @@ export const SettingsBilling: React.FC = () => {
 														return null;
 													}
 
-
 													// Default layout for other billing details
 													return (
 														<Grid
-															item xs={12} md={key === "billing_cycle" ? 12 : 6}
+															item
+															xs={12}
+															md={key === "billing_cycle" ? 12 : 6}
 															key={index}
 															sx={{
 																display: "flex",
@@ -1284,20 +1289,20 @@ export const SettingsBilling: React.FC = () => {
 																}}
 															>
 																{renderValue(value).includes("-1")
-																	? renderValue(value).replace("-1", "unlimited")
+																	? renderValue(value).replace(
+																			"-1",
+																			"unlimited",
+																		)
 																	: renderValue(value)}
 															</Typography>
 														</Grid>
-													)
-												}
-											)
-										}
+													);
+												},
+											)}
 									</Grid>
 								</Box>
 							</Box>
 						</Grid>
-
-
 
 						<Grid item xs={12} md={4} sx={{ padding: "0px" }}>
 							<Box
@@ -1317,35 +1322,33 @@ export const SettingsBilling: React.FC = () => {
 										flexDirection: "row",
 										justifyContent: "space-between",
 										alignItems: "start",
-										mb: 4
+										mb: 4,
 									}}
 								>
-									<Typography className="first-sub-title">
-										Usages
-									</Typography>
+									<Typography className="first-sub-title">Usages</Typography>
 									<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-									<Tooltip title="Coming Soon" arrow>
-										<Box sx={{ display: "inline-block" }}>
-											<Button
-												className="hyperlink-red"
-												disabled={true}
-												sx={{
-													background: "rgba(56, 152, 252, 1)",
-													borderRadius: "4px",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-													color: "#fff !important",
-													textTransform: "none",
-													padding: "10px 24px",
-													"&:hover": {
-														color: "rgba(56, 152, 252, 1) !important",
-													},
-												}}
-											>
-												Add Funds
-											</Button>
-										</Box>
-									</Tooltip>
+										<Tooltip title="Coming Soon" arrow>
+											<Box sx={{ display: "inline-block" }}>
+												<Button
+													className="hyperlink-red"
+													disabled={true}
+													sx={{
+														background: "rgba(56, 152, 252, 1)",
+														borderRadius: "4px",
+														border: "1px solid rgba(56, 152, 252, 1)",
+														boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+														color: "#fff !important",
+														textTransform: "none",
+														padding: "10px 24px",
+														"&:hover": {
+															color: "rgba(56, 152, 252, 1) !important",
+														},
+													}}
+												>
+													Add Funds
+												</Button>
+											</Box>
+										</Tooltip>
 									</Box>
 								</Box>
 								<Box
@@ -1362,7 +1365,7 @@ export const SettingsBilling: React.FC = () => {
 									}}
 								>
 									{!hide && (
-										<Box sx={{ width: "100%"}}>
+										<Box sx={{ width: "100%" }}>
 											<Box
 												sx={{
 													display: "flex",
@@ -1405,7 +1408,7 @@ export const SettingsBilling: React.FC = () => {
 									)}
 
 									{!hide && (
-										<Box sx={{ width: "100%"}}>
+										<Box sx={{ width: "100%" }}>
 											<Box
 												sx={{
 													display: "flex",
@@ -1446,9 +1449,9 @@ export const SettingsBilling: React.FC = () => {
 											</Typography>
 										</Box>
 									)}
-									
+
 									{!hide && (
-										<Box sx={{ width: "100%"}}>
+										<Box sx={{ width: "100%" }}>
 											<Box
 												sx={{
 													display: "flex",
@@ -1461,20 +1464,21 @@ export const SettingsBilling: React.FC = () => {
 												>
 													Validation funds
 												</Typography>
-												{validationFundsCollected === validationLimitFundsCollected ?
-												<Box/>
-												:
-												<Typography
-													className="second-sub-title"
-													sx={{ lineHeight: "20px !important", mb: "12px" }}
-												>
-													{validationLimitFundsCollected === -1
-														? "Unlimited"
-														: validationFundsCollected
-															? `${Math.floor(((validationLimitFundsCollected - validationFundsCollected) / validationLimitFundsCollected) * 100)}% Used`
-															: 0}
-												</Typography>
-												}
+												{validationFundsCollected ===
+												validationLimitFundsCollected ? (
+													<Box />
+												) : (
+													<Typography
+														className="second-sub-title"
+														sx={{ lineHeight: "20px !important", mb: "12px" }}
+													>
+														{validationLimitFundsCollected === -1
+															? "Unlimited"
+															: validationFundsCollected
+																? `${Math.floor(((validationLimitFundsCollected - validationFundsCollected) / validationLimitFundsCollected) * 100)}% Used`
+																: 0}
+													</Typography>
+												)}
 											</Box>
 
 											<LinearProgress
@@ -1483,8 +1487,9 @@ export const SettingsBilling: React.FC = () => {
 													validationLimitFundsCollected === -1
 														? 0
 														: Math.round(
-																((validationLimitFundsCollected - validationFundsCollected) /
-																validationLimitFundsCollected) *
+																((validationLimitFundsCollected -
+																	validationFundsCollected) /
+																	validationLimitFundsCollected) *
 																	100,
 															)
 												}
@@ -1500,19 +1505,19 @@ export const SettingsBilling: React.FC = () => {
 												className="paragraph"
 												sx={{ color: "#787878 !important", opacity: 0.6 }}
 											>
-												{validationFundsCollected === validationLimitFundsCollected ?
-													"Validation funds exhausted" 
-												:
-													validationFundsCollected && validationLimitFundsCollected
+												{validationFundsCollected ===
+												validationLimitFundsCollected
+													? "Validation funds exhausted"
+													: validationFundsCollected &&
+															validationLimitFundsCollected
 														? `${Math.max(0, validationLimitFundsCollected - validationFundsCollected)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
-														: ""
-												}
+														: ""}
 											</Typography>
 										</Box>
 									)}
 
 									{!hide && (
-										<Box sx={{ width: "100%"}}>
+										<Box sx={{ width: "100%" }}>
 											<Box
 												sx={{
 													display: "flex",
@@ -1556,7 +1561,6 @@ export const SettingsBilling: React.FC = () => {
 								</Box>
 							</Box>
 						</Grid>
-
 					</Grid>
 
 					<Divider
