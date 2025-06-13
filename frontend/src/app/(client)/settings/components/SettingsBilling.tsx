@@ -367,49 +367,54 @@ export const SettingsBilling: React.FC = () => {
 		setselectedInvoiceId(null);
 	};
 
-	const renderSection = (title: string, percentageUsed = 0, valueText = "", showValue = true) => (
+	const renderSection = (
+		title: string,
+		percentageUsed = 0,
+		valueText = "",
+		showValue = true,
+	) => (
 		<Box sx={{ width: "100%" }}>
-		  <Box
-			sx={{
-			  display: "flex",
-			  justifyContent: "space-between",
-			  opacity: !showValue ? 1 : 0.6
-			}}
-		  >
-			<Typography
-			  className="second-sub-title"
-			  sx={{ lineHeight: "20px !important", mb: "12px" }}
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "space-between",
+					opacity: !showValue ? 1 : 0.6,
+				}}
 			>
-			  {title}
+				<Typography
+					className="second-sub-title"
+					sx={{ lineHeight: "20px !important", mb: "12px" }}
+				>
+					{title}
+				</Typography>
+				{showValue && (
+					<Typography
+						className="second-sub-title"
+						sx={{ lineHeight: "20px !important", mb: "12px" }}
+					>
+						{percentageUsed}% Used
+					</Typography>
+				)}
+			</Box>
+			<LinearProgress
+				variant="determinate"
+				value={percentageUsed}
+				sx={{
+					height: "8px",
+					borderRadius: "4px",
+					backgroundColor: "#dbdbdb",
+					mb: 1,
+					opacity: percentageUsed ? 1 : 0.6,
+				}}
+			/>
+			<Typography
+				className="paragraph"
+				sx={{ color: "#787878 !important", opacity: !showValue ? 1 : 0.6 }}
+			>
+				{valueText}
 			</Typography>
-			{showValue && (
-			  <Typography
-				className="second-sub-title"
-				sx={{ lineHeight: "20px !important", mb: "12px" }}
-			  >
-				{percentageUsed}% Used
-			  </Typography>
-			)}
-		  </Box>
-		  <LinearProgress
-			variant="determinate"
-			value={percentageUsed}
-			sx={{
-			  height: "8px",
-			  borderRadius: "4px",
-			  backgroundColor: "#dbdbdb",
-			  mb: 1,
-			  opacity: percentageUsed ? 1 : 0.6,
-			}}
-		  />
-		  <Typography
-			className="paragraph"
-			sx={{ color: "#787878 !important", opacity: !showValue ? 1 : 0.6}}
-		  >
-			{valueText}
-		  </Typography>
 		</Box>
-	  );
+	);
 
 	const fetchSaveBillingHistory = async (invoice_id: string) => {
 		try {
@@ -584,9 +589,7 @@ export const SettingsBilling: React.FC = () => {
 									pb: 2,
 								}}
 							>
-								<Box
-									sx={{ display: "flex", alignItems: "center", gap: "8px" }}
-								>
+								<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
 									<Typography className="first-sub-title">
 										Card Details
 									</Typography>
@@ -712,9 +715,7 @@ export const SettingsBilling: React.FC = () => {
 											<Box>
 												{!card.is_default && (
 													<IconButton
-														onClick={(event) =>
-															handleClickOpen(event, card.id)
-														}
+														onClick={(event) => handleClickOpen(event, card.id)}
 													>
 														<MoreVert
 															sx={{
@@ -759,8 +760,7 @@ export const SettingsBilling: React.FC = () => {
 																	display: "block",
 																	borderRadius: "0",
 																	"&:hover": {
-																		backgroundColor:
-																			"rgba(80, 82, 178, 0.10)",
+																		backgroundColor: "rgba(80, 82, 178, 0.10)",
 																	},
 																}}
 															>
@@ -782,8 +782,7 @@ export const SettingsBilling: React.FC = () => {
 																	display: "block",
 																	borderRadius: "0",
 																	"&:hover": {
-																		backgroundColor:
-																			"rgba(80, 82, 178, 0.10)",
+																		backgroundColor: "rgba(80, 82, 178, 0.10)",
 																	},
 																}}
 															>
@@ -971,185 +970,185 @@ export const SettingsBilling: React.FC = () => {
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 							<Grid container spacing={2}>
 								{billingDetails &&
-									Object.entries(billingDetails).map(
-										([key, value], index) => {
-											if (key === "next_billing_date" && value) {
-												return (
-													<Grid
-														item
-														xs={12}
-														key={index}
-														sx={{
-															display: "flex",
-															alignItems: "center",
-															gap: "16px",
-															"@media (max-width: 600px)": {
-																gap: "12px",
-															},
-														}}
-													>
-														{/* Next Billing Date */}
-														<Grid item xs={5.95} md={5.95}>
-															<Box
-																sx={{
-																	display: "flex",
-																	alignItems: "center",
-																	justifyContent: "center",
-																	background: "#fafaf6",
-																	borderRadius: "4px",
-																	margin: "0 5%",
-																	border: "1px solid #F0F0F0",
-																	padding: "8px 16px",
-																	gap: "16px",
-																	"@media (max-width: 600px)": {
-																		padding: "8px 10px",
-																		gap: "8px",
-																	},
-																}}
-															>
-																<DateRangeIcon />
-																<Box>
-																	<Typography
-																		className="main-text"
-																		sx={{
-																			fontSize: "12px",
-																			fontWeight: "600",
-																			lineHeight: "16px",
-																			color: "#4a4a4a",
-																		}}
-																	>
-																		{canceled_at
-																			? `Cancellation Date`
-																			: "Next Billing Date"}
-																	</Typography>
-																	<Typography
-																		className="first-sub-title"
-																		sx={{
-																			"@media (max-width: 600px)": {
-																				fontSize: "12px !important",
-																			},
-																		}}
-																	>
-																		On {renderValue(value)}
-																	</Typography>
-																</Box>
-															</Box>
-														</Grid>
-
-														{/* Divider */}
-														<Grid item xs={0.01} md={0.01}>
-															<Divider
-																orientation="vertical"
-																flexItem
-																sx={{ height: "32px", alignSelf: "center" }}
-															/>
-														</Grid>
-
-														{/* Monthly Total - find it in the next iteration */}
-														<Grid item xs={5.95} md={5.95}>
-															{billingDetails &&
-																typeof billingDetails === "object" &&
-																Object.entries(billingDetails).map(
-																	([nextKey, nextValue], nextIndex) => {
-																		if (nextKey === "monthly_total" || nextKey === "yearly_total") {
-																			return (
-																				<Box
-																					key={nextIndex}
-																					sx={{
-																						display: "flex",
-																						justifyContent: "center",
-																						gap: "16px",
-																						alignItems: "center",
-																						margin: "0 5%",
-																						border: "1px solid #F0F0F0",
-																						padding: "8px 16px",
-																					}}
-																				>
-																					<PaymentIcon />
-																					<Box>
-																						<Typography
-																							className="main-text"
-																							sx={{
-																								fontSize: "12px",
-																								fontWeight: "600",
-																								lineHeight: "16px",
-																								color: "#4a4a4a",
-																							}}
-																						>
-																							{nextKey === "monthly_total" && "Monthly Total"}
-																							{nextKey === "yearly_total" && "Yearly Total"}
-																						</Typography>
-																						<Typography className="first-sub-title">
-																							{renderValue(nextValue)}
-																						</Typography>
-																					</Box>
-																				</Box>
-																			);
-																		}
-																		return null;
-																	},
-																)}
-														</Grid>
-													</Grid>
-												);
-											}
-
-											// Skip rendering 'Monthly Total' in its own row, since it's already handled
-											if (
-												key === "monthly_total" ||
-												key === "active" ||
-												key === "yearly_total"
-											) {
-												return null;
-											}
-
-											// Default layout for other billing details
+									Object.entries(billingDetails).map(([key, value], index) => {
+										if (key === "next_billing_date" && value) {
 											return (
 												<Grid
 													item
 													xs={12}
-													md={key === "billing_cycle" ? 12 : 6}
 													key={index}
 													sx={{
 														display: "flex",
-														flexDirection: "row",
-														gap: "26px",
+														alignItems: "center",
+														gap: "16px",
 														"@media (max-width: 600px)": {
 															gap: "12px",
 														},
 													}}
 												>
-													<Typography
-														className="first-sub-title"
-														sx={{
-															width: "140px",
-															fontSize: "12px !important",
-															lineHeight: "16px !important",
-															"@media (max-width: 600px)": {
-																width: "110px",
-															},
-														}}
-													>
-														{formatKey(key)}
-													</Typography>
-													<Typography
-														className="paragraph"
-														sx={{
-															lineHeight: "16px !important",
-															color: "#5f6368 !important",
-														}}
-													>
-														{renderValue(value).includes("-1")
-															? renderValue(value).replace(
-																	"-1",
-																	"unlimited",
-																)
-															: renderValue(value)}
-													</Typography>
+													{/* Next Billing Date */}
+													<Grid item xs={5.95} md={5.95}>
+														<Box
+															sx={{
+																display: "flex",
+																alignItems: "center",
+																justifyContent: "center",
+																background: "#fafaf6",
+																borderRadius: "4px",
+																margin: "0 5%",
+																border: "1px solid #F0F0F0",
+																padding: "8px 16px",
+																gap: "16px",
+																"@media (max-width: 600px)": {
+																	padding: "8px 10px",
+																	gap: "8px",
+																},
+															}}
+														>
+															<DateRangeIcon />
+															<Box>
+																<Typography
+																	className="main-text"
+																	sx={{
+																		fontSize: "12px",
+																		fontWeight: "600",
+																		lineHeight: "16px",
+																		color: "#4a4a4a",
+																	}}
+																>
+																	{canceled_at
+																		? `Cancellation Date`
+																		: "Next Billing Date"}
+																</Typography>
+																<Typography
+																	className="first-sub-title"
+																	sx={{
+																		"@media (max-width: 600px)": {
+																			fontSize: "12px !important",
+																		},
+																	}}
+																>
+																	On {renderValue(value)}
+																</Typography>
+															</Box>
+														</Box>
+													</Grid>
+
+													{/* Divider */}
+													<Grid item xs={0.01} md={0.01}>
+														<Divider
+															orientation="vertical"
+															flexItem
+															sx={{ height: "32px", alignSelf: "center" }}
+														/>
+													</Grid>
+
+													{/* Monthly Total - find it in the next iteration */}
+													<Grid item xs={5.95} md={5.95}>
+														{billingDetails &&
+															typeof billingDetails === "object" &&
+															Object.entries(billingDetails).map(
+																([nextKey, nextValue], nextIndex) => {
+																	if (
+																		nextKey === "monthly_total" ||
+																		nextKey === "yearly_total"
+																	) {
+																		return (
+																			<Box
+																				key={nextIndex}
+																				sx={{
+																					display: "flex",
+																					justifyContent: "center",
+																					gap: "16px",
+																					alignItems: "center",
+																					margin: "0 5%",
+																					border: "1px solid #F0F0F0",
+																					padding: "8px 16px",
+																				}}
+																			>
+																				<PaymentIcon />
+																				<Box>
+																					<Typography
+																						className="main-text"
+																						sx={{
+																							fontSize: "12px",
+																							fontWeight: "600",
+																							lineHeight: "16px",
+																							color: "#4a4a4a",
+																						}}
+																					>
+																						{nextKey === "monthly_total" &&
+																							"Monthly Total"}
+																						{nextKey === "yearly_total" &&
+																							"Yearly Total"}
+																					</Typography>
+																					<Typography className="first-sub-title">
+																						{renderValue(nextValue)}
+																					</Typography>
+																				</Box>
+																			</Box>
+																		);
+																	}
+																	return null;
+																},
+															)}
+													</Grid>
 												</Grid>
 											);
-										},
-									)}
+										}
+
+										// Skip rendering 'Monthly Total' in its own row, since it's already handled
+										if (
+											key === "monthly_total" ||
+											key === "active" ||
+											key === "yearly_total"
+										) {
+											return null;
+										}
+
+										// Default layout for other billing details
+										return (
+											<Grid
+												item
+												xs={12}
+												md={key === "billing_cycle" ? 12 : 6}
+												key={index}
+												sx={{
+													display: "flex",
+													flexDirection: "row",
+													gap: "26px",
+													"@media (max-width: 600px)": {
+														gap: "12px",
+													},
+												}}
+											>
+												<Typography
+													className="first-sub-title"
+													sx={{
+														width: "140px",
+														fontSize: "12px !important",
+														lineHeight: "16px !important",
+														"@media (max-width: 600px)": {
+															width: "110px",
+														},
+													}}
+												>
+													{formatKey(key)}
+												</Typography>
+												<Typography
+													className="paragraph"
+													sx={{
+														lineHeight: "16px !important",
+														color: "#5f6368 !important",
+													}}
+												>
+													{renderValue(value).includes("-1")
+														? renderValue(value).replace("-1", "unlimited")
+														: renderValue(value)}
+												</Typography>
+											</Grid>
+										);
+									})}
 							</Grid>
 						</Box>
 					</Box>
@@ -1215,33 +1214,36 @@ export const SettingsBilling: React.FC = () => {
 								},
 							}}
 						>
-							  {!hide && (
-									<>
+							{!hide && (
+								<>
 									{renderSection("Contacts Downloaded", 0, "0")}
 									{renderSection("Smart Audience", 0, "0")}
 									{renderSection(
 										"Validation funds",
 										validationLimitFundsCollected === -1
-										? 0
-										: Math.round(
-											((validationLimitFundsCollected - validationFundsCollected) /
-												validationLimitFundsCollected) *
-												100
-											),
+											? 0
+											: Math.round(
+													((validationLimitFundsCollected -
+														validationFundsCollected) /
+														validationLimitFundsCollected) *
+														100,
+												),
 										validationLimitFundsCollected - validationFundsCollected ===
-										validationLimitFundsCollected
-										? "Validation funds exhausted"
-										: validationFundsCollected && validationLimitFundsCollected
-										? `${Math.max(
-											0,
-											validationLimitFundsCollected - validationFundsCollected
-											)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
-										: "",
-										validationFundsCollected !== validationLimitFundsCollected
+											validationLimitFundsCollected
+											? "Validation funds exhausted"
+											: validationFundsCollected &&
+													validationLimitFundsCollected
+												? `${Math.max(
+														0,
+														validationLimitFundsCollected -
+															validationFundsCollected,
+													)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
+												: "",
+										validationFundsCollected !== validationLimitFundsCollected,
 									)}
 									{renderSection("Premium Source funds", 0, "0")}
-									</>
-								)}
+								</>
+							)}
 						</Box>
 					</Box>
 				</Grid>
@@ -1258,9 +1260,7 @@ export const SettingsBilling: React.FC = () => {
 				}}
 			/>
 			<Box sx={{ marginTop: "30px" }}>
-				<Box
-					sx={{ display: "flex", alignItems: "center", gap: "8px", mb: 3 }}
-				>
+				<Box sx={{ display: "flex", alignItems: "center", gap: "8px", mb: 3 }}>
 					<Typography
 						variant="h6"
 						className="first-sub-title"
@@ -1497,10 +1497,10 @@ export const SettingsBilling: React.FC = () => {
 
 			<RemoveCardPopup
 				removePopupOpen={removePopupOpen}
-				setIsLoading={ setIsLoading }
-				handleRemovePopupClose={ handleRemovePopupClose }
-				selectedCardId={ selectedCardId ?? "" }
-				setCardDetails={ setCardDetails }
+				setIsLoading={setIsLoading}
+				handleRemovePopupClose={handleRemovePopupClose}
+				selectedCardId={selectedCardId ?? ""}
+				setCardDetails={setCardDetails}
 			/>
 		</Box>
 	);
