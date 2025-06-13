@@ -45,6 +45,7 @@ import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
 import CalendarPopup from "@/components/CustomCalendar";
 import PaginationComponent, {
+	Paginator,
 	PaginatorTable,
 } from "@/components/PaginationComponent";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -1305,14 +1306,13 @@ const Leads: React.FC = () => {
 												},
 											}}
 										>
-											<PaginatorTable
+											<Table
 												stickyHeader
 												component={Paper}
 												aria-label="leads table"
 												sx={{
 													tableLayout: "fixed",
 												}}
-												paginator={paginationProps}
 											>
 												<TableHead sx={{ position: "relative" }}>
 													<TableRow>
@@ -1753,8 +1753,10 @@ const Leads: React.FC = () => {
 														</TableRow>
 													))}
 												</TableBody>
-											</PaginatorTable>
+											</Table>
 										</TableContainer>
+
+										<Paginator tableMode {...paginationProps} />
 									</Grid>
 								</Grid>
 							)}
