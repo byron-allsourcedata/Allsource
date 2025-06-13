@@ -15,7 +15,7 @@ class PixelManagementService:
         self,
         user_domains_service: UserDomainsService,
         integration_service: IntegrationService,
-        lead_persistence: LeadsPersistence
+        lead_persistence: LeadsPersistence,
     ):
         self.user_domains_service = user_domains_service
         self.integration_service = integration_service
@@ -25,7 +25,7 @@ class PixelManagementService:
         result = []
         domains = self.user_domains_service.get_domains(user_id=user_id)
         for domain in domains:
-            syncs = self.integration_service.get_sync_domain(domain['id'])
+            syncs = self.integration_service.get_sync_domain(domain["id"])
             filtered_syncs = [
                 {
                     "createdDate": sync["createdDate"],
@@ -41,18 +41,27 @@ class PixelManagementService:
             ]
             result.append(
                 {
-                    "id": domain['id'],
-                    "domain_name": domain['domain'],
-                    "pixel_status": domain['is_pixel_installed'],
+                    "id": domain["id"],
+                    "domain_name": domain["domain"],
+                    "pixel_status": domain["is_pixel_installed"],
                     "additional_pixel": [
                         {
-                            "is_view_product_installed": domain['is_view_product_installed'],
-                            "is_add_to_cart_installed": domain['is_add_to_cart_installed'],
-                            "is_converted_sales_installed": domain['is_converted_sales_installed'],
+                            "is_view_product_installed": domain[
+                                "is_view_product_installed"
+                            ],
+                            "is_add_to_cart_installed": domain[
+                                "is_add_to_cart_installed"
+                            ],
+                            "is_converted_sales_installed": domain[
+                                "is_converted_sales_installed"
+                            ],
                         }
                     ],
                     "resulutions": [
-                        {"date": d, "lead_count": c} for d, c in self.leads_persistence.get_leads_count_by_day(domain_id=domain['id'])
+                        {"date": d, "lead_count": c}
+                        for d, c in self.leads_persistence.get_leads_count_by_day(
+                            domain_id=domain["id"]
+                        )
                     ],
                     "data_syncs": filtered_syncs,
                 }

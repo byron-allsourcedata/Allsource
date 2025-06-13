@@ -21,7 +21,7 @@ interface PixelManagementItem {
 	additional_pixel: number;
 	resulutions: dict;
 	data_sync: number;
-  }
+}
 
 const Management: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);

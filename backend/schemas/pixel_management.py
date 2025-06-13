@@ -8,6 +8,7 @@ class AdditionalPixel(BaseModel):
     is_add_to_cart_installed: bool
     is_converted_sales_installed: bool
 
+
 class SyncDict(BaseModel):
     createdDate: Optional[str]
     list_name: Optional[str]
@@ -18,9 +19,11 @@ class SyncDict(BaseModel):
     status: Optional[str]
     syncStatus: Optional[bool]
 
+
 class DailyLeadStat(BaseModel):
     date: date
     lead_count: int
+
 
 class ManagementResult(BaseModel):
     id: int

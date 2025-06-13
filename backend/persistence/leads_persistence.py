@@ -556,7 +556,7 @@ class LeadsPersistence:
     def get_leads_count_by_day(self, domain_id: int):
         return (
             self.db.query(
-                LeadsVisits.start_date.label('date'),
+                LeadsVisits.start_date.label("date"),
                 func.count(LeadUser.id).label("lead_count"),
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
