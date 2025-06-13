@@ -91,6 +91,7 @@ ROOT_BOT_CLIENT_DOMAIN = "demo.com"
 ROOT_DOMAINS = ["maximiz.ai", "lolly.com", "allforce.io"]
 count = 0
 
+
 def normalize_domain(domain):
     if domain.startswith("www."):
         domain = domain[4:]
@@ -99,6 +100,7 @@ def normalize_domain(domain):
     elif domain.startswith("http://"):
         domain = domain[7:]
     return domain.lower()
+
 
 def group_requests_by_date(request_row, groupped_requests):
     key = f"{request_row.event_date}_{request_row.ip}"
