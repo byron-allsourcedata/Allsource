@@ -191,9 +191,7 @@ class UserDomainsPersistence:
         return self.db.query(UserDomains).filter_by(**filter_by).all()
 
     def update_data_provider_id(self, domain_id: int, data_provider_id: str):
-        self.db.query(UserDomains).filter(
-            UserDomains.id == domain_id
-        ).update(
+        self.db.query(UserDomains).filter(UserDomains.id == domain_id).update(
             {UserDomains.data_provider_id: data_provider_id},
             synchronize_session=False,
         )
