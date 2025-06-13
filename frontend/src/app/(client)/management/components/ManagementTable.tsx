@@ -26,18 +26,26 @@ import {
 import { useSSE } from "@/context/SSEContext";
 import { MenuIconButton } from "@/components/table";
 import { useRouter } from "next/navigation";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { MoreVert } from "@/icon";
 import { AdditionalPixel, PixelKey, PixelManagementItem } from "../page";
 import { style } from "./TableManagement";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface TableContainerProps {
 	tableData?: PixelManagementItem[];
+	onDelete: (item: PixelManagementItem) => void;
 }
 
-const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
+const ManagementTable: React.FC<TableContainerProps> = ({
+	tableData,
+	onDelete,
+}) => {
 	const router = useRouter();
 	const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 	const [activeRow, setActiveRow] = useState<number | null>(null);
+	const [loading, setLoading] = useState(false);
 
 	const handleOpenMenu = (
 		event: React.MouseEvent<HTMLElement>,
@@ -52,6 +60,15 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 		router.push("/analytics");
 	};
 
+	const handleDataSyncClick = (domain: string) => {
+		sessionStorage.setItem("current_domain", domain);
+		router.push("/data-sync-pixel");
+	};
+
+	const handleAdditionalPixelClick = () => {
+		router.push("/management/add-additional-script");
+	};
+
 	return (
 		<TableContainer
 			component={Paper}
@@ -63,6 +80,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 				overflowX: "auto",
 			}}
 		>
+			{loading && <CustomizedProgressBar />}
 			<Table
 				sx={{
 					borderCollapse: "separate",
@@ -128,6 +146,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 				</TableHead>
 				<TableBody>
 					{tableData?.map((row, index) => {
+						const isLastRow = index === tableData.length - 1;
 						const rawAdditionalPixel = row.additional_pixel;
 
 						const additional_pixel: AdditionalPixel = {
@@ -158,21 +177,17 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 							0,
 						);
 
-						const tooltipText = flags
-							.map(
-								(f) =>
-									`${f.label}: ${additional_pixel[f.key] ? "true" : "false"}`,
-							)
-							.join("\n");
-
 						return (
 							<TableRow
 								key={index}
 								sx={{
 									height: "48px",
 									"& .MuiTableCell-root": {
-										padding: "6px 12px", // уменьшить внутренние отступы
+										padding: "4px 8px",
 										verticalAlign: "middle",
+										borderBottom: isLastRow
+											? "none"
+											: "1px solid rgba(228, 228, 228, 1)",
 									},
 								}}
 							>
@@ -186,11 +201,11 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 								>
 									<Box
 										sx={{
+											display: "inline-block",
+											maxWidth: "100%",
 											overflow: "hidden",
 											textOverflow: "ellipsis",
 											whiteSpace: "nowrap",
-											pointerEvents: "auto",
-											width: "100%",
 										}}
 									>
 										<Typography
@@ -226,8 +241,8 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 											lineHeight: "140%",
 											letterSpacing: 0,
 											color: row.pixel_status
-												? "rgba(74, 158, 79, 1)" // зелёный
-												: "rgba(205, 40, 43, 1)", // красный
+												? "rgba(74, 158, 79, 1)"
+												: "rgba(205, 40, 43, 1)",
 											display: "flex",
 											alignItems: "center",
 											gap: "4px",
@@ -237,21 +252,29 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 									</Typography>
 								</TableCell>
 								<TableCell>
-									<Typography
+									<Box
 										sx={{
-											color: "rgba(56, 152, 252, 1)",
-											fontFamily: "Roboto",
-											fontSize: "14px",
-											fontWeight: 400,
-											lineHeight: "140%",
-											textDecoration: "underline",
-											"&:hover": {
-												textDecoration: "none",
-											},
+											display: "inline-block",
+											maxWidth: "100%",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
 										}}
 									>
-										{trueCount}/3
-									</Typography>
+										<Typography
+											onClick={() => handleAdditionalPixelClick()}
+											sx={{
+												color: "rgba(56, 152, 252, 1)",
+												fontFamily: "Roboto",
+												fontSize: "14px",
+												fontWeight: 400,
+												lineHeight: "140%",
+												cursor: "pointer",
+											}}
+										>
+											{trueCount}/3
+										</Typography>
+									</Box>
 								</TableCell>
 								<TableCell sx={{ width: 120, height: 40 }}>
 									{Array.isArray(row.resulutions) &&
@@ -267,10 +290,6 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 												/>
 												<XAxis dataKey="date" hide />
 												<YAxis hide />
-												<RechartsTooltip
-													contentStyle={{ fontSize: "0.75rem" }}
-													formatter={(value: any) => [`Leads: ${value}`]}
-												/>
 											</LineChart>
 										</ResponsiveContainer>
 									) : (
@@ -278,7 +297,31 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 									)}
 								</TableCell>
 
-								<TableCell>{/* render data_sync here */}</TableCell>
+								<TableCell>
+									<Box
+										sx={{
+											display: "inline-block",
+											maxWidth: "100%",
+											overflow: "hidden",
+											textOverflow: "ellipsis",
+											whiteSpace: "nowrap",
+										}}
+									>
+										<Typography
+											sx={{
+												cursor: "pointer",
+												color: "rgba(56, 152, 252, 1)",
+												fontFamily: "Roboto",
+												fontSize: "14px",
+												fontWeight: 400,
+												lineHeight: "140%",
+											}}
+											onClick={() => handleDataSyncClick(row.domain_name)}
+										>
+											{row.data_syncs?.length ?? 0}
+										</Typography>
+									</Box>
+								</TableCell>
 								<TableCell sx={{ width: 20, height: 20 }}>
 									<IconButton
 										onClick={(e) => handleOpenMenu(e, row.id)}
@@ -307,7 +350,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 												boxShadow: 2,
 												borderRadius: 1,
 												maxWidth: 240,
-												width: "auto", // адаптивно под содержимое
+												width: "auto",
 											},
 										}}
 									>
@@ -324,10 +367,18 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 													<Button sx={style.actionButtonText}>
 														Reinstall Pixel
 													</Button>
-													<Button sx={style.actionButtonText}>
+													<Button
+														sx={style.actionButtonText}
+														onClick={() => handleAdditionalPixelClick()}
+													>
 														Add Additional Pixel Script
 													</Button>
-													<Button sx={style.actionButtonText}>Delete</Button>
+													<Button
+														sx={style.actionButtonText}
+														onClick={() => onDelete(row)}
+													>
+														Delete
+													</Button>
 												</Box>
 											) : (
 												<Box
@@ -338,7 +389,12 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 													<Button sx={style.actionButtonText}>
 														Install Pixel
 													</Button>
-													<Button sx={style.actionButtonText}>Delete</Button>
+													<Button
+														sx={style.actionButtonText}
+														onClick={() => onDelete(row)}
+													>
+														Delete
+													</Button>
 												</Box>
 											)}
 										</Box>

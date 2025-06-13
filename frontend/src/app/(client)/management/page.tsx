@@ -7,7 +7,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
@@ -26,13 +26,24 @@ export interface AdditionalPixel {
 	[key: string]: boolean;
 }
 
+export interface PixelDataSync {
+	createdDate: string;
+	list_name: string | null;
+	lastSync: string | null;
+	platform: string;
+	contacts: number;
+	createdBy: string;
+	status: string;
+	syncStatus: boolean;
+}
+
 export interface PixelManagementItem {
 	id: number;
 	domain_name: string;
 	pixel_status: boolean;
 	additional_pixel: AdditionalPixel;
 	resulutions: any;
-	data_sync: number;
+	data_syncs: PixelDataSync[];
 }
 
 const Management: React.FC = () => {
@@ -74,6 +85,34 @@ const Management: React.FC = () => {
 		}
 	};
 
+	const handleDelete = async (toDelete: PixelManagementItem) => {
+		try {
+			setLoading(true);
+
+			const currentDomain = sessionStorage.getItem("current_domain");
+
+			await axiosInstance.delete(`/domains/${toDelete.id}`, {
+				data: { domain: toDelete.domain_name },
+			});
+			showToast("Successfully removed domain");
+
+			await fetchData();
+
+			const updatedDomains: PixelManagementItem[] = JSON.parse(
+				sessionStorage.getItem("me") || "{}",
+			)?.domains;
+
+			if (currentDomain === toDelete.domain_name && updatedDomains?.length) {
+				const newDomain = updatedDomains[0].domain_name;
+				sessionStorage.setItem("current_domain", newDomain);
+			}
+		} catch (error) {
+			showErrorToast("Failed to delete domain. Please try again.");
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		checkPixel();
 		fetchData();
@@ -93,7 +132,6 @@ const Management: React.FC = () => {
 					position: "sticky",
 					top: 0,
 					pl: "0.5rem",
-					zIndex: 10000,
 					pt: 1.5,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",
@@ -184,7 +222,7 @@ const Management: React.FC = () => {
 			</Box>
 
 			<Box sx={{ width: "100%" }}>
-				<ManagementTable tableData={pixelData} />
+				<ManagementTable tableData={pixelData} onDelete={handleDelete} />
 			</Box>
 		</Box>
 	);
