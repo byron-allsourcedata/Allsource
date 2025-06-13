@@ -4,6 +4,14 @@ import React, { useEffect, useState } from "react";
 import DomainButton from "./DomainsButton";
 import DomainStatusLabels from "./DomainStatusLabels";
 import { useHasSubheader } from "@/hooks/useHasSubheader";
+import { Domain } from "../analytics/components/DomainSelector";
+
+export type DomainWithStat = {
+	activate_percent: number;
+	contacts_resolving: boolean;
+	data_sync_failed: boolean;
+	data_synced: boolean;
+} & Domain;
 
 const subheaderStyles = {
 	headers: {
@@ -27,7 +35,7 @@ const subheaderStyles = {
 
 const PixelSubheader: React.FC = () => {
 	const hasSubheader = useHasSubheader();
-	const [domain, setDomain] = useState<any | null>(null);
+	const [domain, setDomain] = useState<DomainWithStat | null>(null);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
