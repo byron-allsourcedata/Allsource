@@ -374,7 +374,7 @@ class SettingsService:
             plan_id=user_subscription.contact_credit_plan_id
         )
         if subscription is None and user_subscription:
-            if user_subscription.plan_start:
+            if user_subscription.plan_start and hasattr(user_subscription.plan_start, 'strftime'):
                 billing_cycle = f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}"
             else:
                 billing_cycle = "Free trial"
@@ -402,8 +402,8 @@ class SettingsService:
         elif subscription and user_subscription:
             billing_cycle = (
                 f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}"
-                if user_subscription.plan_start
-                else None
+                if user_subscription.plan_start and hasattr(user_subscription.plan_start, 'strftime')
+                else "Free trial"
             )
             plan = subscription["items"]["data"][0]["plan"]
             is_active = (
