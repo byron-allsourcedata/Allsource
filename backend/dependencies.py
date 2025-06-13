@@ -722,11 +722,15 @@ def get_leads_service(
         domain=domain, leads_persistence_service=leads_persistence_service
     )
 
+
 def get_pixel_management_service(
-user_domains_service: UserDomainsService = Depends(get_domain_service),
-integration_service: IntegrationService = Depends(get_integration_service)
+    user_domains_service: UserDomainsService = Depends(get_domain_service),
+    integration_service: IntegrationService = Depends(get_integration_service),
 ):
-    return PixelManagementService(user_domains_service=user_domains_service, integration_service=integration_service)
+    return PixelManagementService(
+        user_domains_service=user_domains_service,
+        integration_service=integration_service,
+    )
 
 
 def get_companies_service(

@@ -7,16 +7,14 @@ import {
 	TableHead,
 	TableRow,
 	Paper,
-    Button,
+	Button,
 	TableContainer,
 	Box,
-    Popover,
+	Popover,
 } from "@mui/material";
 import { useSSE } from "@/context/SSEContext";
 import { MenuIconButton } from "@/components/table";
-import {
-	MoreVert,
-} from "@/icon";
+import { MoreVert } from "@/icon";
 
 interface TableData {
 	id: number;
@@ -33,18 +31,18 @@ interface TableContainerProps {
 
 const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 	const { smartLookaLikeProgress } = useSSE();
-    const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-    const [activeRow, setActiveRow] = useState<number | null>(null);
+	const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+	const [activeRow, setActiveRow] = useState<number | null>(null);
 
-    const handleOpenMenu = (
-        event: React.MouseEvent<HTMLElement>,
-        rowId: number,
-    ) => {
-        setMenuAnchor(event.currentTarget);
-        setActiveRow(rowId);
-    };
+	const handleOpenMenu = (
+		event: React.MouseEvent<HTMLElement>,
+		rowId: number,
+	) => {
+		setMenuAnchor(event.currentTarget);
+		setActiveRow(rowId);
+	};
 
-    const handleCloseMenu = () => {
+	const handleCloseMenu = () => {
 		setMenuAnchor(null);
 		setActiveRow(null);
 	};
@@ -117,9 +115,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 							<TableCell>{row.additional_pixel}</TableCell>
 							<TableCell>{row.resulutions}</TableCell>
 							<TableCell>{row.data_sync}</TableCell>
-							<TableCell
-								className="table-data"
-							>
+							<TableCell className="table-data">
 								<Box
 									sx={{
 										display: "flex",

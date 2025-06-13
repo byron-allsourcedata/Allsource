@@ -1,12 +1,12 @@
 "use client";
 import type React from "react";
-import {type 
-	Dispatch,type 
-	SetStateAction,
+import {
+	type Dispatch,
+	type SetStateAction,
 	useEffect,
 	useRef,
 	useState,
-} from "react"
+} from "react";
 import {
 	Box,
 	List,

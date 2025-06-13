@@ -115,7 +115,7 @@ class UserDomainsService:
             enable=domain.is_enable,
             is_view_product_installed=domain.is_view_product_installed,
             is_add_to_cart_installed=domain.is_add_to_cart_installed,
-            is_converted_sales_installed=domain.is_converted_sales_installed
+            is_converted_sales_installed=domain.is_converted_sales_installed,
         ).model_dump()
 
     def delete_domain(self, user_id: int, domain_id: int):

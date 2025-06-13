@@ -14,7 +14,6 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import ManagementTable from "./components/ManagementTable";
 
-
 const Management: React.FC = () => {
 	const tableData = [
 		{
@@ -33,7 +32,7 @@ const Management: React.FC = () => {
 			resulutions: "Source 2",
 			data_sync: 0,
 		},
-	]
+	];
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState("");
@@ -206,7 +205,7 @@ const Management: React.FC = () => {
 			) : (
 				<>
 					<Box>
-						<ManagementTable tableData = {tableData}/>
+						<ManagementTable tableData={tableData} />
 					</Box>
 				</>
 			)}

@@ -11,9 +11,16 @@ router = APIRouter()
 
 
 @router.get("")
-async def get_pixel_management_data(pixel_management_service: PixelManagementService = Depends(get_pixel_management_service),
-                                    user: dict = Depends(check_user_authorization_without_pixel)):
-    return pixel_management_service.get_pixel_management_data(user_id=user.get('id'))
+async def get_pixel_management_data(
+    pixel_management_service: PixelManagementService = Depends(
+        get_pixel_management_service
+    ),
+    user: dict = Depends(check_user_authorization_without_pixel),
+):
+    return pixel_management_service.get_pixel_management_data(
+        user_id=user.get("id")
+    )
+
 
 # @router.get("/pixel-contacts/{domain_id}")
 # def get_contacts_for_pixel_contacts_by_domain_id(
