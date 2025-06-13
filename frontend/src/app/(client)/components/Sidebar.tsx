@@ -147,7 +147,7 @@ const sidebarStyles = {
 	},
 };
 
-const containerStyles = (hasNotification: boolean) => ({
+const containerStyles = (hasNotification: boolean, hasSubheader: boolean) => ({
 	container: {
 		width: "100%",
 		flexShrink: 0,
@@ -157,16 +157,26 @@ const containerStyles = (hasNotification: boolean) => ({
 		fontWeight: "400",
 		backgroundColor: "rgba(255, 255, 255, 1)",
 		borderRight: ".0625rem solid rgba(228, 228, 228, 1)",
-		height: hasNotification ? "calc(100vh - 109.6px)" : "calc(100vh - 68px)",
+		height: computeHeight(hasNotification, hasSubheader),
 		maxWidth: "10.9375rem",
 		display: "flex",
-		overflow: "hidden",
 		overflowY: "auto",
+		overflowX: "hidden",
 		flexDirection: "column",
 		justifyContent: "start",
 		position: "relative",
 	},
 });
+
+const computeHeight = (
+	hasNotification: boolean,
+	hasSubheader: boolean,
+): string => {
+	if (hasNotification && hasSubheader) return "calc(100vh - 10.85rem)";
+	if (hasSubheader) return "calc(100vh - 8rem)";
+	if (hasNotification) return "calc(100vh - 7.125rem)";
+	return "calc(100vh - 4.25rem)";
+};
 
 interface ProgressSectionProps {
 	percent_steps: number;
@@ -231,6 +241,7 @@ interface SidebarProps {
 	hasNotification: boolean;
 	isGetStartedPage: boolean;
 	loading: boolean;
+	hasSubheader: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -239,6 +250,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 	hasNotification,
 	isGetStartedPage,
 	loading,
+	hasSubheader,
 }) => {
 	const { domains, partner, backButton } = useUser();
 	const { installedResources } = useSidebar();
@@ -352,7 +364,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 		isActive("/leads") ||
 		isActive("/company") ||
 		isActive("/suppressions") ||
-		isActive("/dashboard") ||
+		isActive("/analytics") ||
 		isActive("/data-sync-pixel");
 	const handleClick = () => {
 		setOpen(!open);
@@ -361,7 +373,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 	return (
 		<Box
 			sx={{
-				...containerStyles(hasNotification).container,
+				...containerStyles(hasNotification, hasSubheader).container,
 				display: "flex",
 				flexDirection: "column",
 				overflow: "hidden",
@@ -407,12 +419,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 						<ListItemText primary="Get Started" />
 					</ListItem>
 				)}
-				{/* Audience-dashboard */}
+				{/* Dashboard */}
 				<ListItem
 					button
-					onClick={() => handleNavigation("/audience-dashboard")}
+					onClick={() => handleNavigation("/dashboard")}
 					sx={
-						isActive("/audience-dashboard")
+						isActive("/dashboard")
 							? sidebarStyles.activeItem
 							: sidebarStyles.ListItem
 					}
@@ -456,9 +468,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 									{/* Insights */}
 									<ListItem
 										button
-										onClick={() => handleNavigation("/dashboard")}
+										onClick={() => handleNavigation("/analytics")}
 										sx={
-											isActive("/dashboard")
+											isActive("/analytics")
 												? { ...sidebarStyles.activeItem, pl: 4 }
 												: { ...sidebarStyles.ListItem, pl: 4 }
 										}

@@ -7,7 +7,6 @@ import {
 	TextField,
 	IconButton,
 	InputAdornment,
-	colors,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import React, { useEffect, useState, useMemo } from "react";
@@ -22,6 +21,8 @@ import Image from "next/image";
 import ConfirmDeleteDomain from "./DeleteDomain";
 import CustomizedProgressBar from "../../../components/FirstLevelLoader";
 import { fetchUserData } from "@/services/meService";
+import WysiwygIcon from "@mui/icons-material/Wysiwyg";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 
 interface Domain {
 	id: number;
@@ -337,7 +338,7 @@ const DomainButton: React.FC = () => {
 		setDeleteDomainPopup(false);
 	};
 
-	if (domains.length === 0) return null;
+	//if (domains.length === 0) return null;
 
 	return (
 		<>
@@ -353,28 +354,32 @@ const DomainButton: React.FC = () => {
 				onClick={handleDropdownClick}
 				sx={{
 					textTransform: "none",
-					color: "rgba(128, 128, 128, 1)",
-					border: "1px solid rgba(184, 184, 184, 1)",
-					borderRadius: "3.27px",
-					padding: "7px",
+					color: "#000",
+					borderRadius: "4px",
+					padding: "6px 4px",
+					display: "flex",
+					alignItems: "center",
+					gap: "8px",
+					minWidth: "170px",
+					justifyContent: "space-between",
+					"&:hover": {
+						backgroundColor: "transparent",
+					},
 				}}
 			>
-				<Typography
-					className="second-sub-title"
-					sx={{
-						marginRight: "0.5em",
-						letterSpacing: "-0.02em",
-						textAlign: "left",
-						color: "rgba(98, 98, 98, 1) !important",
-					}}
-				>
-					{currentDomain !== ""
-						? currentDomain
-						: domains.length > 0
-							? domains[0].domain
-							: "Loading..."}
-				</Typography>
-				<ExpandMoreIcon sx={{ width: "20px", height: "20px" }} />
+				<Box display="flex" alignItems="center" gap="8px" ml={1.125}>
+					<WysiwygIcon sx={{ color: "#666", minWidth: "1.5rem" }} />
+					<Typography variant="body2">
+						{currentDomain !== ""
+							? currentDomain.replace("https://", "")
+							: domains.length > 0
+								? domains[0].domain.replace("https://", "")
+								: "Loading..."}
+					</Typography>
+				</Box>
+				<Box display="flex" flexDirection="column" pr={0}>
+					<UnfoldMoreIcon sx={{ fontSize: "22px", color: "#666" }} />
+				</Box>
 			</Button>
 			<Menu
 				id="account-dropdown"

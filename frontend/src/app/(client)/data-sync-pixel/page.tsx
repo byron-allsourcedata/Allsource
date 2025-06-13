@@ -11,7 +11,7 @@ import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
-import { EmptyAnalyticsPlaceholder } from "../dashboard/components/placeholders/EmptyPlaceholder";
+import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/EmptyPlaceholder";
 
 const centerContainerStyles = {
 	display: "flex",
@@ -40,7 +40,6 @@ import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
-import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
@@ -137,45 +136,40 @@ const DataSync = () => {
 							},
 						}}
 					>
-						<Box
-							sx={{
-								flexShrink: 0,
-								display: "flex",
-								flexDirection: "row",
-								alignItems: "center",
-								pl: "0.5rem",
-								mt: 2.05,
-								gap: 1,
-								"@media (max-width: 900px)": { mb: 2 },
-							}}
-						>
-							<Typography
-								className="first-sub-title"
-								sx={{
-									fontFamily: "Nunito Sans",
-									fontSize: "16px",
-									lineHeight: "normal",
-									fontWeight: 600,
-									color: "#202124",
-								}}
-							>
-								Pixel Sync
-							</Typography>
-							<CustomTooltip
-								title={
-									"How data sync works and to customise your sync settings."
-								}
-								linkText="Learn more"
-								linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync-contacts"
-							/>
+						{hasContacts && hasDataSync && (
 							<Box
 								sx={{
-									pl: 1,
+									flexShrink: 0,
+									display: "flex",
+									flexDirection: "row",
+									alignItems: "center",
+									pl: "0.5rem",
+									mt: 2.05,
+									gap: 1,
+									"@media (max-width: 900px)": { mb: 2 },
 								}}
 							>
-								<DomainButtonSelect />
+								<Typography
+									className="first-sub-title"
+									sx={{
+										fontFamily: "Nunito Sans",
+										fontSize: "16px",
+										lineHeight: "normal",
+										fontWeight: 600,
+										color: "#202124",
+									}}
+								>
+									Pixel Sync
+								</Typography>
+								<CustomTooltip
+									title={
+										"How data sync works and to customise your sync settings."
+									}
+									linkText="Learn more"
+									linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync-contacts"
+								/>
 							</Box>
-						</Box>
+						)}
 						{hasContacts && hasDataSync && (
 							<Box
 								sx={{
@@ -260,7 +254,7 @@ const DataSync = () => {
 						sx={{
 							width: "100%",
 							pl: 0.5,
-							pt: 0,
+							pt: !hasContacts && !hasDataSync ? 5 : 0,
 							pr: 1,
 							"@media (max-width: 440px)": { pt: 3 },
 						}}

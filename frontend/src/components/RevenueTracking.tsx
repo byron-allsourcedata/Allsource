@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ExpandMore";
 import { useState } from "react";
-import ManualPopup from "../app/(client)/dashboard/components/ManualPopup";
+import ManualPopup from "../app/(client)/analytics/components/ManualPopup";
 import CustomTooltip from "./customToolTip";
 
 const buttonStyles = {

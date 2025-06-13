@@ -15,6 +15,8 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { HintsProvider } from "@/context/HintsContext";
 import { useSidebar } from "@/context/SidebarContext";
 import { fetchUserData } from "@/services/meService";
+import PixelSubheader from "./components/PixelSubheader";
+import { useHasSubheader } from "@/hooks/useHasSubheader";
 
 interface ClientLayoutProps {
 	children: ReactNode;
@@ -111,6 +113,16 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
 	const shouldShowGetStarted = isGetStartedPage === false;
 
+	const hasSubheader = useHasSubheader();
+
+	const computeTop = () => {
+		if ((latestNotification || newNotification) && hasSubheader)
+			return "10.85rem";
+		if (hasSubheader) return "8.25rem";
+		if (latestNotification || newNotification) return "7.125rem";
+		return "4.25rem";
+	};
+
 	return (
 		<>
 			{!isAuthenticated ? (
@@ -126,6 +138,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						NotificationData={latestNotification}
 						onDismissNotification={handleDismissNotification}
 					/>
+					<PixelSubheader />
 					<Grid
 						container
 						className="page-container"
@@ -166,10 +179,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 								minWidth: "170px",
 								maxWidth: "170px",
 								position: "fixed",
-								top:
-									latestNotification || newNotification
-										? "calc(7.125rem)"
-										: "4.25rem",
+								top: computeTop(),
 							}}
 						>
 							<SliderProvider>
@@ -181,6 +191,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 									hasNotification={Boolean(
 										latestNotification || newNotification,
 									)}
+									hasSubheader={hasSubheader}
 								/>
 							</SliderProvider>
 						</Grid>

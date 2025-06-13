@@ -82,6 +82,7 @@ def setup_logging(level):
 
 LAST_PROCESSED_FILE_PATH = "tmp/last_processed_leads_sync.txt"
 AMOUNT_CREDITS = 1
+UNLIMITED = -1
 QUEUE_CREDITS_CHARGING = "credits_charging"
 EMAIL_NOTIFICATIONS = "email_notifications"
 
@@ -240,7 +241,6 @@ async def handle_payment_notification(
         )
 
 
-
 async def send_overage_leads_notification(
     user: Users, notification_persistence: NotificationPersistence
 ):
@@ -272,7 +272,6 @@ async def send_overage_leads_notification(
             "notification_id": save_account_notification.id,
         },
     )
-
 
 
 async def send_inactive_leads_notification(
@@ -359,9 +358,11 @@ async def process_payment_unlocked_five_x_five_user(
         )
         return
 
-    if user.leads_credits - AMOUNT_CREDITS < 0:
+    if (
+        user.leads_credits > UNLIMITED
+        and user.leads_credits - AMOUNT_CREDITS < 0
+    ):
         if overage_enabled:
-
             await send_overage_leads_notification(
                 user=user, notification_persistence=notification_persistence
             )
@@ -372,7 +373,6 @@ async def process_payment_unlocked_five_x_five_user(
             user.overage_leads_count += 1
             session.flush()
             return
-
 
         await send_inactive_leads_notification(
             user=user, notification_persistence=notification_persistence
@@ -390,14 +390,15 @@ async def process_payment_unlocked_five_x_five_user(
     )
 
     session.add(users_unlocked_five_x_five_user)
-    user.leads_credits -= AMOUNT_CREDITS
-    await handle_payment_notification(
-        user,
-        notification_persistence,
-        plan_leads_credits,
-        user.leads_credits,
-        contact_credit_price,
-    )
+    if user.leads_credits > UNLIMITED:
+        user.leads_credits -= AMOUNT_CREDITS
+        await handle_payment_notification(
+            user,
+            notification_persistence,
+            plan_leads_credits,
+            user.leads_credits,
+            contact_credit_price,
+        )
     session.flush()
     return
 
@@ -815,7 +816,6 @@ async def process_user_data(
 
         user_subscription = subscription_service.get_user_subscription(user.id)
         if user_subscription:
-
             overage_enabled, plan_leads_credits, contact_credit_price = (
                 get_subscription_plan_info(session, user_subscription.plan_id)
             )

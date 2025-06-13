@@ -8,10 +8,14 @@ from models.leads_users import LeadUser
 from models.users import Users
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
+from enums import DataSyncType
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy import func, case, and_, or_, distinct
 from fastapi import HTTPException
 import re
+
 
 from resolver import injectable
 
@@ -34,6 +38,44 @@ class UserDomainsPersistence:
         result = query.first()
 
         return result.domain if result else None
+
+    def get_domains_with_contacts_resolving(self, user_id: int) -> set[int]:
+        domain_ids = (
+            self.db.query(LeadUser.domain_id)
+            .join(UserDomains, LeadUser.domain_id == UserDomains.id)
+            .filter(UserDomains.user_id == user_id)
+            .distinct()
+            .all()
+        )
+        return {row.domain_id for row in domain_ids}
+
+    def get_domains_with_data_synced(self, user_id: int) -> set[int]:
+        domain_ids = (
+            self.db.query(IntegrationUserSync.domain_id)
+            .join(UserDomains, IntegrationUserSync.domain_id == UserDomains.id)
+            .filter(
+                UserDomains.user_id == user_id,
+                IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
+            )
+            .distinct()
+            .all()
+        )
+        return {row.domain_id for row in domain_ids}
+
+    def get_domains_with_failed_data_sync(self, user_id: int) -> set[int]:
+        failed_syncs = (
+            self.db.query(IntegrationUserSync.domain_id)
+            .join(UserDomains, UserDomains.id == IntegrationUserSync.domain_id)
+            .filter(
+                UserDomains.user_id == user_id,
+                IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
+                IntegrationUserSync.sync_status.is_(False),
+            )
+            .distinct()
+            .all()
+        )
+
+        return {row.domain_id for row in failed_syncs}
 
     def get_domains_with_leads(self, user_id: int):
         added_to_cart = aliased(LeadsUsersAddedToCart)

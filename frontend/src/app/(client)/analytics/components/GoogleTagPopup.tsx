@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
 	Box,
 	Button,
@@ -76,6 +76,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 	const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
 	const [userInfo, setUserInfo] = useState<GoogleUser | null>(null);
 	const [isInstallComplete, setInstallCompleted] = useState(false);
+	const selectRef = useRef<HTMLDivElement | null>(null);
 	const [lastTagContext, setLastTagContext] = useState<{
 		accessToken: string;
 		accountId: string;
@@ -281,6 +282,10 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 		fetchWorkspaces();
 	}, [selectedAccount, selectedContainer, session?.token]);
 
+	const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
+		ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+	};
+
 	const fetchAccounts = async (accessToken: string) => {
 		try {
 			setIsLoading(true);
@@ -291,6 +296,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 				},
 			);
 			setAccounts(response.data.account || []);
+			setTimeout(() => scrollToRef(selectRef), 100);
 		} catch (e) {
 			if (axios.isAxiosError(e)) {
 				showErrorToast(e.message);
@@ -1042,6 +1048,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 									<Select
 										labelId="select-container"
 										label="Select Container"
+										ref={selectRef}
 										value={selectedContainer}
 										onChange={(e) =>
 											setSelectedContainer(e.target.value as string)

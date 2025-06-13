@@ -226,6 +226,8 @@ class AdminCustomersService:
                 lookalikes_count=user.lookalikes_count,
                 credits_count=user.credits_count,
                 is_email_confirmed=user.is_email_confirmed,
+                subscription_plan=user.subscription_plan,
+                contacts_count=user.contacts_count,
                 is_book_call_passed=user.is_book_call_passed,
             )
             for user in users
@@ -250,16 +252,13 @@ class AdminCustomersService:
                     .first()
                 )
                 if user_plan:
-                    if user_plan.is_trial:
-                        if (
-                            user.get("pixel_installed_count")
-                            and user.get("pixel_installed_count") >= 1
-                        ):
-                            payment_status = "PIXEL_INSTALLED"
-                        else:
-                            payment_status = "TRIAL_ACTIVE"
+                    if (
+                        user.get("pixel_installed_count")
+                        and user.get("pixel_installed_count") >= 1
+                    ):
+                        payment_status = "PIXEL_VERIFIED"
                     else:
-                        payment_status = "SUBSCRIPTION_ACTIVE"
+                        payment_status = "USER_AUTHENTICATED"
 
             result.append(
                 {
@@ -275,6 +274,8 @@ class AdminCustomersService:
                     "role": user.get("role"),
                     "pixel_installed_count": user.get("pixel_installed_count"),
                     "sources_count": user.get("sources_count"),
+                    "contacts_count": user.get("contacts_count"),
+                    "subscription_plan": user.get("subscription_plan"),
                     "lookalikes_count": user.get("lookalikes_count"),
                     "type": "user",
                     "credits_count": user.get("credits_count"),

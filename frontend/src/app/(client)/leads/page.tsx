@@ -45,9 +45,8 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import HintCard from "../components/HintCard";
 import { useLeadsHints } from "./context/LeadsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
-import DomainButtonSelect from "../components/NavigationDomainButton";
 import PixelPopup from "@/components/PixelPopup";
-import { EmptyAnalyticsPlaceholder } from "../dashboard/components/placeholders/EmptyPlaceholder";
+import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/EmptyPlaceholder";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -1513,7 +1512,6 @@ const Leads: React.FC = () => {
 											linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/resolved-contacts"
 										/>
 									</Box>
-									<DomainButtonSelect />
 								</Box>
 								<Box
 									sx={{

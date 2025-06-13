@@ -14,6 +14,13 @@ class DomainResponse(BaseModel):
     enable: bool
 
 
+class DomainWithStats(DomainResponse):
+    activate_percent: int
+    contacts_resolving: bool
+    data_synced: bool
+    data_sync_failed: bool
+
+
 class UpdateDomain(BaseModel):
     new_domain: str
 
