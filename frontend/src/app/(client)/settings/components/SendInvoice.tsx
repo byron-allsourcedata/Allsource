@@ -18,7 +18,7 @@ interface ConnectMailChimpPopupProps {
 	sendInvoicePopupOpen: boolean;
 	setIsLoading: (state: boolean) => void;
 	handleSendInvoicePopupClose: () => void;
-	selectedInvoiceId: any;
+	selectedInvoiceId: string;
 }
 
 export const SendInvoicePopup: React.FC<ConnectMailChimpPopupProps> = ({
