@@ -81,7 +81,7 @@ export const basicPlan: Plan = {
 			value: "1,000 - 65,000",
 		},
 		{
-			good: true,
+			good: false,
 			name: "Smart Audience:",
 			value: "0",
 		},
