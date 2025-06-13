@@ -1332,12 +1332,12 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 						</Box>
 					</Drawer>
 
-					<Box sx={accontDetailsStyles.orDivider}>
+					{/* <Box sx={accontDetailsStyles.orDivider}>
 						<Box sx={{ borderBottom: "1px solid #e4e4e4", flexGrow: 1 }} />
-					</Box>
+					</Box> */}
 
 					{/* Business Info Section */}
-					<Box sx={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+					{/* <Box sx={{ display: "flex", flexDirection: "column", gap: "32px" }}>
 						<Typography
 							variant="h6"
 							className="first-sub-title"
@@ -1397,7 +1397,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 									sx: accontDetailsStyles.formInput,
 									endAdornment: (
 										<>
-											{/* Show write icon when not editable, hidden by default */}
 											{!isOrganizationNameEditable && (
 												<InputAdornment position="end">
 													<IconButton
@@ -1422,7 +1421,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 												</InputAdornment>
 											)}
 
-											{/* Show close icon if user starts typing */}
 											{showCloseIcon(
 												isOrganizationNameTyping,
 												organizationName,
@@ -1541,7 +1539,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 									sx: accontDetailsStyles.formInput,
 									endAdornment: (
 										<>
-											{/* Show write icon when not editable, hidden by default */}
 											{!isCompanyWebsiteEditable && (
 												<InputAdornment position="end">
 													<IconButton
@@ -1566,7 +1563,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 												</InputAdornment>
 											)}
 
-											{/* Show close icon if user starts typing */}
 											{showCloseIcon(
 												isCompanyWebsiteTyping,
 												companyWebsite,
@@ -1685,7 +1681,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 									sx: accontDetailsStyles.formInput,
 									endAdornment: (
 										<>
-											{/* Show write icon when not editable, hidden by default */}
 											{!isMonthlyVisitsEditable && (
 												<InputAdornment position="end">
 													<IconButton
@@ -1710,7 +1705,6 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 												</InputAdornment>
 											)}
 
-											{/* Show close icon if user starts typing */}
 											{showCloseIcon(
 												isMonthlyVisitsTyping,
 												monthlyVisits,
@@ -1781,7 +1775,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 								Save
 							</Button>
 						</Box>
-					</Box>
+					</Box> */}
 				</Box>
 			</Box>
 		</Box>
