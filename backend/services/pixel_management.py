@@ -46,9 +46,6 @@ class PixelManagementService:
                     "pixel_status": domain["is_pixel_installed"],
                     "additional_pixel": [
                         {
-                            "is_view_product_installed": domain[
-                                "is_view_product_installed"
-                            ],
                             "is_add_to_cart_installed": domain[
                                 "is_add_to_cart_installed"
                             ],

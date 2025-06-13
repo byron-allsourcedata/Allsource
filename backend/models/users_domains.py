@@ -56,7 +56,3 @@ class UserDomains(Base):
     is_add_to_cart_installed = Column(
         Boolean, nullable=True, server_default=text("false")
     )
-
-    is_view_product_installed = Column(
-        Boolean, nullable=True, server_default=text("false")
-    )

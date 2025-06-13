@@ -19,7 +19,7 @@ interface PixelManagementItem {
 	domain_name: string;
 	pixel_status: boolean;
 	additional_pixel: number;
-	resulutions: dict;
+	resulutions: any;
 	data_sync: number;
 }
 
@@ -213,7 +213,7 @@ const Management: React.FC = () => {
 			) : (
 				<>
 					<Box>
-						<ManagementTable tableData={tableData} />
+						<ManagementTable tableData={pixelData} />
 					</Box>
 				</>
 			)}

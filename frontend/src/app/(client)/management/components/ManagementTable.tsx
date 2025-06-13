@@ -8,6 +8,7 @@ import {
 	TableRow,
 	Paper,
 	Button,
+	Tooltip,
 	TableContainer,
 	Box,
 	Popover,
@@ -21,7 +22,7 @@ interface TableData {
 	domain_name: string;
 	pixel_status: boolean;
 	additional_pixel: number;
-	resulutions: string;
+	resulutions: any;
 	data_sync: number;
 }
 
@@ -42,12 +43,6 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 		setActiveRow(rowId);
 	};
 
-	const handleCloseMenu = () => {
-		setMenuAnchor(null);
-		setActiveRow(null);
-	};
-
-	const [lookalikeSize, setLookalikeSize] = useState(0);
 	return (
 		<TableContainer
 			component={Paper}
@@ -93,89 +88,67 @@ const ManagementTable: React.FC<TableContainerProps> = ({ tableData }) => {
 						<TableCell>Actions</TableCell>
 					</TableRow>
 				</TableHead>
-				<TableBody
-					sx={{
-						"& .MuiTableCell-root": {
-							fontFamily: "Roboto",
-							fontWeight: 400,
-							fontSize: ".75rem",
-							lineHeight: "1.05rem",
-							color: "#5F6368",
-							border: "none",
-							padding: ".5rem",
-						},
-					}}
-				>
-					{tableData?.map((row, index) => (
-						<TableRow key={index}>
-							<TableCell>{row.domain_name}</TableCell>
-							<TableCell>
-								{row.pixel_status === true ? "Installed" : "Not Installed"}
-							</TableCell>
-							<TableCell>{row.additional_pixel}</TableCell>
-							<TableCell>{row.resulutions}</TableCell>
-							<TableCell>{row.data_sync}</TableCell>
-							<TableCell className="table-data">
-								<Box
-									sx={{
-										display: "flex",
-										alignItems: "center",
-										gap: 2,
-									}}
-								>
-									<MenuIconButton
-										buttonProps={{
-											onClick: (event) => handleOpenMenu(event, row.id),
-										}}
-										iconProps={{
-											icon: <MoreVert />,
-										}}
-									/>
-									<Popover
-										open={Boolean(menuAnchor) && activeRow === row.id}
-										anchorEl={menuAnchor}
-										onClose={handleCloseMenu}
-										anchorOrigin={{
-											vertical: "bottom",
-											horizontal: "center",
-										}}
+				<TableBody>
+					{tableData?.map((row, index) => {
+						const additional_pixel = Array.isArray(row.additional_pixel) && row.additional_pixel.length > 0
+                        ? row.additional_pixel[0]
+                        : {
+                            is_view_product_installed: false,
+                            is_add_to_cart_installed: false,
+                            is_converted_sales_installed: false,
+                          };
+                      
+
+						const flags = [
+							{
+								key: "is_view_product_installed",
+								label: "View Product Installed",
+							},
+							{
+								key: "is_add_to_cart_installed",
+								label: "Add to Cart Installed",
+							},
+							{
+								key: "is_converted_sales_installed",
+								label: "Converted Sales Installed",
+							},
+						];
+
+						const trueCount = flags.reduce(
+							(count, f) => (additional_pixel[f.key] ? count + 1 : count),
+							0,
+						);
+
+						const tooltipText = flags
+							.map(
+								(f) =>
+									`${f.label}: ${additional_pixel[f.key] ? "true" : "false"}`,
+							)
+							.join("\n");
+
+						return (
+							<TableRow key={index}>
+								<TableCell>{row.domain_name}</TableCell>
+								<TableCell>
+									{row.pixel_status === true ? "Installed" : "Not Installed"}
+								</TableCell>
+								<TableCell>
+									<Tooltip
+										title={
+											<pre style={{ whiteSpace: "pre-wrap" }}>
+												{tooltipText}
+											</pre>
+										}
 									>
-										<Box
-											sx={{
-												p: 1,
-												display: "flex",
-												flexDirection: "column",
-												alignItems: "flex-start",
-												width: "100%",
-												maxWidth: "160px",
-											}}
-										>
-											<Button
-												sx={{
-													justifyContent: "flex-start",
-													width: "100%",
-													textTransform: "none",
-													fontFamily: "Nunito Sans",
-													fontSize: "14px",
-													color: "rgba(32, 33, 36, 1)",
-													fontWeight: 600,
-													":hover": {
-														color: "rgba(56, 152, 252, 1)",
-														backgroundColor: "rgba(80, 82, 178, 0.1)",
-													},
-												}}
-												onClick={() => {
-													console.log("Customer: View Orders clicked");
-												}}
-											>
-												View Orders
-											</Button>
-										</Box>
-									</Popover>
-								</Box>
-							</TableCell>
-						</TableRow>
-					))}
+										<span style={{ cursor: "help" }}>{trueCount}/3</span>
+									</Tooltip>
+								</TableCell>
+								<TableCell>{/* render resulutions here */}</TableCell>
+								<TableCell>{/* render data_sync here */}</TableCell>
+								<TableCell>{/* Actions */}</TableCell>
+							</TableRow>
+						);
+					})}
 				</TableBody>
 			</Table>
 		</TableContainer>
