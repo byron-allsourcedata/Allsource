@@ -72,6 +72,7 @@ const PixelSubheader: React.FC = () => {
 				>
 					<Box sx={{ display: "flex", alignItems: "center", gap: "24px" }}>
 						<DomainButton />
+
 						{loading ? (
 							<>
 								<Skeleton
