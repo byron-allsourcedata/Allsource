@@ -354,6 +354,43 @@ class UserPersistence:
         join_date_start=None,
         join_date_end=None,
     ):
+        pixel_installed_subq = (
+            self.db.query(
+                UserDomains.user_id,
+                func.count(UserDomains.id).label("pixel_installed_count"),
+            )
+            .filter(UserDomains.is_pixel_installed == True)
+            .group_by(UserDomains.user_id)
+            .subquery()
+        )
+
+        contacts_subq = (
+            self.db.query(
+                LeadUser.user_id,
+                func.count(LeadUser.id).label("contacts_count"),
+            )
+            .group_by(LeadUser.user_id)
+            .subquery()
+        )
+
+        sources_subq = (
+            self.db.query(
+                AudienceSource.user_id,
+                func.count(AudienceSource.id).label("sources_count"),
+            )
+            .group_by(AudienceSource.user_id)
+            .subquery()
+        )
+
+        lookalikes_subq = (
+            self.db.query(
+                AudienceLookalikes.user_id,
+                func.count(AudienceLookalikes.id).label("lookalikes_count"),
+            )
+            .group_by(AudienceLookalikes.user_id)
+            .subquery()
+        )
+
         query = (
             self.db.query(
                 Users.id,
@@ -366,22 +403,16 @@ class UserPersistence:
                 Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
                 SubscriptionPlan.title.label("subscription_plan"),
-                func.count(
-                    func.distinct(
-                        case(
-                            (
-                                UserDomains.is_pixel_installed == True,
-                                UserDomains.id,
-                            ),
-                            else_=None,
-                        )
-                    )
+                func.coalesce(
+                    pixel_installed_subq.c.pixel_installed_count, 0
                 ).label("pixel_installed_count"),
-                func.count(func.distinct(LeadUser.id)).label("contacts_count"),
-                func.count(func.distinct(AudienceSource.id)).label(
+                func.coalesce(contacts_subq.c.contacts_count, 0).label(
+                    "contacts_count"
+                ),
+                func.coalesce(sources_subq.c.sources_count, 0).label(
                     "sources_count"
                 ),
-                func.count(func.distinct(AudienceLookalikes.id)).label(
+                func.coalesce(lookalikes_subq.c.lookalikes_count, 0).label(
                     "lookalikes_count"
                 ),
             )
@@ -394,13 +425,12 @@ class UserPersistence:
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
             .outerjoin(
-                AudienceLookalikes, AudienceLookalikes.user_id == Users.id
+                pixel_installed_subq, pixel_installed_subq.c.user_id == Users.id
             )
-            .outerjoin(AudienceSource, AudienceSource.user_id == Users.id)
-            .outerjoin(UserDomains, UserDomains.user_id == Users.id)
-            .outerjoin(LeadUser, LeadUser.user_id == Users.id)
+            .outerjoin(contacts_subq, contacts_subq.c.user_id == Users.id)
+            .outerjoin(sources_subq, sources_subq.c.user_id == Users.id)
+            .outerjoin(lookalikes_subq, lookalikes_subq.c.user_id == Users.id)
             .filter(Users.role.any("customer"))
-            .group_by(Users.id, SubscriptionPlan.title)
         )
 
         if last_login_date_start:
@@ -449,7 +479,6 @@ class UserPersistence:
             )
         else:
             query = query.order_by(desc(Users.created_at))
-
         users = query.limit(per_page).offset(offset).all()
         return users, total_count
 

@@ -82,10 +82,13 @@ const TableHeader: React.FC<{
 							textWrap: "wrap",
 							textAlign: "center",
 							position: "relative",
-							...(key === "account_name" && {
-								width: "180px",
-								maxWidth: "100px",
-								minWidth: "120px",
+							whiteSpace: "nowrap",
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							...(key === "name" && {
+								width: "100px",
+								maxWidth: "200px",
+								minWidth: "100px",
 								left: 0,
 								zIndex: 1,
 							}),
@@ -223,19 +226,21 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 		switch (behavior_type) {
 			case "PIXEL_VERIFIED":
 				return {
-					background: "rgba(234, 248, 221, 1)",
-					color: "rgba(43, 91, 0, 1) !important",
+					background: "rgba(221, 248, 234, 1)",
+					color: "rgba(0, 91, 43, 1) !important",
 				};
+
 			case "USER_AUTHENTICATED":
 				return {
-					background: "rgba(234, 248, 221, 1)",
-					color: "rgba(43, 91, 0, 1) !important",
+					background: "rgba(210, 230, 255, 0.8)",
+					color: "rgba(30, 90, 200, 1) !important",
 				};
 			case "NEED_CONFIRM_EMAIL":
 				return {
-					background: "rgba(241, 241, 249, 1)",
-					color: "rgba(56, 152, 252, 1) !important",
+					background: "rgba(255, 165, 0, 0.3)",
+					color: "#FF8C00 !important",
 				};
+
 			default:
 				return {
 					background: "transparent",
@@ -670,7 +675,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "status", label: "Status", sortable: false },
 				{
 					key: "subscription_plan",
-					label: "Subscription plan",
+					label: "Plan",
 					sortable: false,
 				},
 				{ key: "actions", label: "Actions", sortable: false },

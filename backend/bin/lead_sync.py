@@ -88,9 +88,17 @@ EMAIL_NOTIFICATIONS = "email_notifications"
 
 ROOT_BOT_CLIENT_EMAIL = "master-demo@maximiz.ai"
 ROOT_BOT_CLIENT_DOMAIN = "demo.com"
-
+ROOT_DOMAINS = ["maximiz.ai", "lolly.com", "allforce.io"]
 count = 0
 
+def normalize_domain(domain):
+    if domain.startswith("www."):
+        domain = domain[4:]
+    if domain.startswith("https://"):
+        domain = domain[8:]
+    elif domain.startswith("http://"):
+        domain = domain[7:]
+    return domain.lower()
 
 def group_requests_by_date(request_row, groupped_requests):
     key = f"{request_row.event_date}_{request_row.ip}"
@@ -638,6 +646,8 @@ async def process_user_data(
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain = result
+    if root_user and normalize_domain(user_domain) not in ROOT_DOMAINS:
+        return
     if not user_domain.is_enable and not root_user:
         logging.info(f"Domain is not enabled: {user_domain.id}")
         return
