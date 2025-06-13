@@ -1,3 +1,6 @@
+from sqlalchemy.sql.functions import count, coalesce
+
+from models import DataSyncImportedLead
 from models.audience_smarts import AudienceSmart
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import Integration
@@ -11,7 +14,7 @@ from models.audience_data_sync_imported_persons import (
 )
 from models.audience_smarts_validations import AudienceSmartValidation
 from models.audience_smarts_persons import AudienceSmartPerson
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, select
 from models.integrations.users_domains_integrations import UserIntegration
 
 
@@ -134,7 +137,65 @@ class IntegrationsUserSyncPersistence:
         service_name: str = None,
         integrations_users_sync_id: str = None,
     ):
-        query = (
+        success_synced_persons_query = (
+            select(
+                count(DataSyncImportedLead.id).label("successful"),
+                IntegrationUserSync.id,
+            )
+            .select_from(DataSyncImportedLead)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.id
+                == DataSyncImportedLead.data_sync_id,
+            )
+            .where(DataSyncImportedLead.status == "success")
+            .group_by(IntegrationUserSync.id)
+        ).subquery()
+
+        queued_synced_persons_query = (
+            select(
+                count(DataSyncImportedLead.id).label("queued"),
+                IntegrationUserSync.id,
+            )
+            .select_from(DataSyncImportedLead)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.id
+                == DataSyncImportedLead.data_sync_id,
+            )
+            .where(DataSyncImportedLead.status == "sent")
+        ).subquery()
+
+        failed_synced_persons_query = (
+            select(
+                count(DataSyncImportedLead.id).label("failed"),
+                IntegrationUserSync.id,
+            )
+            .select_from(DataSyncImportedLead)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.id
+                == DataSyncImportedLead.data_sync_id,
+            )
+            .where(DataSyncImportedLead.status == "failed")
+            .group_by(IntegrationUserSync.id)
+        ).subquery()
+
+        all_synced_persons_query = (
+            select(
+                count(DataSyncImportedLead.id).label("all_contacts"),
+                IntegrationUserSync.id,
+            )
+            .select_from(DataSyncImportedLead)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.id
+                == DataSyncImportedLead.data_sync_id,
+            )
+            .group_by(IntegrationUserSync.id)
+        ).subquery()
+
+        success_synced_persons_query = (
             self.db.query(
                 IntegrationUserSync.id,
                 IntegrationUserSync.created_at,
@@ -153,6 +214,15 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync.campaign_name,
                 IntegrationUserSync.hook_url,
                 IntegrationUserSync.method,
+                coalesce(success_synced_persons_query.c.successful, 0).label(
+                    "successful"
+                ),
+                coalesce(failed_synced_persons_query.c.failed, 0).label(
+                    "failed"
+                ),
+                coalesce(all_synced_persons_query.c.all_contacts, 0).label(
+                    "all_contacts"
+                ),
                 UserIntegration.service_name,
                 UserIntegration.is_with_suppression,
                 UserIntegration.platform_user_id,
@@ -163,6 +233,18 @@ class IntegrationsUserSyncPersistence:
                 UserIntegration,
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
+            .outerjoin(
+                success_synced_persons_query,
+                IntegrationUserSync.id == success_synced_persons_query.c.id,
+            )
+            .outerjoin(
+                failed_synced_persons_query,
+                IntegrationUserSync.id == failed_synced_persons_query.c.id,
+            )
+            .outerjoin(
+                all_synced_persons_query,
+                IntegrationUserSync.id == all_synced_persons_query.c.id,
+            )
             .filter(
                 IntegrationUserSync.domain_id == domain_id,
                 IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
@@ -170,9 +252,11 @@ class IntegrationsUserSyncPersistence:
         )
 
         if service_name:
-            query = query.filter(UserIntegration.service_name == service_name)
+            success_synced_persons_query = success_synced_persons_query.filter(
+                UserIntegration.service_name == service_name
+            )
         if integrations_users_sync_id:
-            sync = query.filter(
+            sync = success_synced_persons_query.filter(
                 IntegrationUserSync.id == integrations_users_sync_id
             ).first()
             if sync:
@@ -190,7 +274,9 @@ class IntegrationsUserSyncPersistence:
                     "integration_id": sync.integration_id,
                     "dataSync": sync.is_active,
                     "suppression": sync.is_with_suppression,
-                    "contacts": sync.no_of_contacts,
+                    "contacts": sync.all_contacts,
+                    "successful_contacts": sync.successful,
+                    "processed_contacts": sync.failed + sync.successful,
                     "createdBy": sync.created_by,
                     "accountId": sync.platform_user_id,
                     "data_map": sync.data_map,
@@ -206,7 +292,9 @@ class IntegrationsUserSyncPersistence:
                     "hook_url": sync.hook_url,
                     "method": sync.method,
                 }
-        syncs = query.order_by(desc(IntegrationUserSync.created_at)).all()
+        syncs = success_synced_persons_query.order_by(
+            desc(IntegrationUserSync.created_at)
+        ).all()
         return [
             {
                 "id": sync.id,
@@ -222,7 +310,9 @@ class IntegrationsUserSyncPersistence:
                 "integration_id": sync.integration_id,
                 "dataSync": sync.is_active,
                 "suppression": sync.is_with_suppression,
-                "contacts": sync.no_of_contacts,
+                "contacts": sync.all_contacts,
+                "successful_contacts": sync.successful,
+                "processed_contacts": sync.failed + sync.successful,
                 "createdBy": sync.created_by,
                 "status": "Syncing",
                 "accountId": sync.platform_user_id,

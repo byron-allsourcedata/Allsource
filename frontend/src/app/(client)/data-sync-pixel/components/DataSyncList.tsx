@@ -69,6 +69,7 @@ import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
+import { width } from "@mui/system";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -709,9 +710,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		if (row.syncStatus === false) {
 			return "Failed";
 		}
+		if (row.contacts === row.processed_contacts) {
+			return "Synced";
+		}
+
 		if (row.dataSync === true) {
 			return "Syncing";
 		}
+
 		return "--";
 	};
 
@@ -730,6 +736,13 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				toolTipText: "You have an error, ",
 			};
 		}
+		if (row.contacts === row.processed_contacts) {
+			return {
+				background: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1)",
+				toolTipText: "All your contacts have been synced",
+			};
+		}
 		if (row.dataSync) {
 			return {
 				background: "rgba(234, 248, 221, 1)",
@@ -737,13 +750,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				toolTipText: "Your contacts are being synced every 10 minutes",
 			};
 		}
-		if (row.dataSync) {
-			return {
-				background: "rgba(234, 248, 221, 1)",
-				color: "rgba(43, 91, 0, 1)",
-				toolTipText: "All your contacts have been synced",
-			};
-		}
+
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
 	};
 
@@ -824,10 +831,29 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
+			key: "successful_contacts",
+			label: "Successful contacts",
+			widths: {
+				width: "6vw",
+				minWidth: "60px",
+				maxWidth: "6vw",
+			},
+		},
+		{
+			key: "processed_contacts",
+			label: "Processed contacts",
+			widths: {
+				width: "6vw",
+				minWidth: "60px",
+				maxWidth: "6vw",
+			},
+		},
+		{
 			key: "data_sync",
 			label: "No. of Contacts",
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
 		},
+
 		{
 			key: "sync_status",
 			label: "Status",
@@ -1219,9 +1245,42 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
+												{row.successful_contacts}
+											</SmartCell>
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
+													},
+												}}
+												tooltipOptions={{
+													content:
+														row.active_segments === -1
+															? "unlimit"
+															: new Intl.NumberFormat("en-US").format(
+																	row.active_segments,
+																) || "--",
+												}}
+											>
+												{row.processed_contacts}
+											</SmartCell>
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
+													},
+												}}
+												tooltipOptions={{
+													content:
+														row.active_segments === -1
+															? "unlimit"
+															: new Intl.NumberFormat("en-US").format(
+																	row.active_segments,
+																) || "--",
+												}}
+											>
 												{row.contacts}
 											</SmartCell>
-
 											<SmartCell
 												cellOptions={{
 													sx: {
