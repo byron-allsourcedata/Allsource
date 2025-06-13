@@ -39,6 +39,7 @@ import BlurBilling from "./BlurBilling";
 import { MoreVert } from "@mui/icons-material";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import PaymentIcon from "@mui/icons-material/Payment";
+import { SendInvoicePopup } from "./SendInvoice";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
@@ -50,7 +51,7 @@ const cardBrandImages: Record<CardBrand, string> = {
 	unionpay: "/unionpay-icon.svg",
 };
 
-const billingStyles = {
+export const billingStyles = {
 	tableColumn: {
 		lineHeight: "16px !important",
 		position: "relative",
@@ -191,8 +192,6 @@ export const SettingsBilling: React.FC = () => {
 				setHide(true);
 			} else {
 				setCardDetails([
-					...response.data.card_details,
-					...response.data.card_details,
 					...response.data.card_details,
 				]);
 				setContactsCollected(response.data.usages_credits.leads_credits);
@@ -1503,7 +1502,8 @@ export const SettingsBilling: React.FC = () => {
 												className="paragraph"
 												sx={{ color: "#787878 !important", opacity: 0.6 }}
 											>
-												{validationLimitFundsCollected - validationFundsCollected ===
+												{validationLimitFundsCollected -
+													validationFundsCollected ===
 												validationLimitFundsCollected
 													? "Validation funds exhausted"
 													: validationFundsCollected &&
@@ -1949,169 +1949,14 @@ export const SettingsBilling: React.FC = () => {
 						</Box>
 					</Drawer>
 
-					<Drawer
-						anchor="right"
-						open={sendInvoicePopupOpen}
-						onClose={handleSendInvoicePopupClose}
-						PaperProps={{
-							sx: {
-								width: "620px",
-								position: "fixed",
-								zIndex: 1301,
-								top: 0,
-								bottom: 0,
-								"@media (max-width: 600px)": {
-									width: "100%",
-								},
-							},
-						}}
-					>
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-								py: 3.5,
-								px: 2,
-								borderBottom: "1px solid #e4e4e4",
-								position: "sticky",
-								top: 0,
-								zIndex: "9",
-								backgroundColor: "#fff",
-							}}
-						>
-							<Typography
-								variant="h6"
-								className="first-sub-title"
-								sx={{ textAlign: "center" }}
-							>
-								Send Invoice
-							</Typography>
-							<IconButton onClick={handleSendInvoicePopupClose} sx={{ p: 0 }}>
-								<CloseIcon sx={{ width: "20px", height: "20px" }} />
-							</IconButton>
-						</Box>
-
-						<Box
-							sx={{
-								display: "flex",
-								flexDirection: "column",
-								justifyContent: "space-between",
-								alignItems: "center",
-								gap: 5,
-								height: "100%",
-							}}
-						>
-							<Box
-								sx={{
-									display: "flex",
-									flexDirection: "column",
-									justifyContent: "space-between",
-									alignItems: "center",
-									p: 4,
-								}}
-							>
-								<Typography
-									className="second-sub-title"
-									sx={{
-										fontWeight: "600 !important",
-										color: "#4a4a4a !important",
-										marginBottom: "38px",
-									}}
-								>
-									Invoice with {selectedInvoiceId} ID will be shared to the
-									email inbox directly. Please kindly check your mail inbox.
-								</Typography>
-								<TextField
-									sx={billingStyles.formField}
-									label="Enter Email ID"
-									fullWidth
-									margin="normal"
-									InputLabelProps={{
-										className: "form-input-label",
-										focused: false,
-									}}
-									InputProps={{
-										className: "form-input",
-										sx: billingStyles.formInput,
-									}}
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-								/>
-							</Box>
-
-							<Box sx={{ position: "relative", height: "100%" }}>
-								<Box
-									sx={{
-										px: 2,
-										py: 3.5,
-										border: "1px solid #e4e4e4",
-										position: "fixed",
-										bottom: 0,
-										right: 0,
-										background: "#fff",
-										width: "620px",
-										"@media (max-width: 600px)": {
-											width: "100%",
-										},
-									}}
-								>
-									<Box display="flex" justifyContent="flex-end" mt={2}>
-										<Button
-											className="hyperlink-red"
-											onClick={handleSendInvoicePopupClose}
-											sx={{
-												borderRadius: "4px",
-												border: "1px solid rgba(56, 152, 252, 1)",
-												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-												color: "rgba(56, 152, 252, 1) !important",
-												marginRight: "16px",
-												textTransform: "none",
-												padding: "10px 24px",
-											}}
-										>
-											Cancel
-										</Button>
-										<Button
-											className="hyperlink-red"
-											disabled={!isFormValidThird()}
-											onClick={handleSendInvoice}
-											sx={{
-												background: isFormValidThird()
-													? "rgba(56, 152, 252, 1)"
-													: "#D3D3D3",
-												borderRadius: "4px",
-												border: "1px solid",
-												borderColor: isFormValidThird()
-													? "rgba(56, 152, 252, 1)"
-													: "#D3D3D3",
-												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-												color: isFormValidThird()
-													? "#fff !important"
-													: "#A9A9A9",
-												textTransform: "none",
-												padding: "10px 24px",
-												"&:hover": {
-													color: isFormValidThird()
-														? "rgba(56, 152, 252, 1) !important"
-														: "#A9A9A9",
-												},
-											}}
-										>
-											Send
-										</Button>
-									</Box>
-								</Box>
-							</Box>
-						</Box>
-					</Drawer>
+					<SendInvoicePopup
+						sendInvoicePopupOpen={sendInvoicePopupOpen}
+						handleSendInvoicePopupClose={handleSendInvoicePopupClose}
+						setIsLoading={setIsLoading}
+						selectedInvoiceId={selectedInvoiceId}
+					/>
 				</Box>
 			)}
-			{/* {true && (
-				<Box sx={{ pr: 2, pt: 1 }}>
-					<BlurBilling />
-				</Box>
-			)} */}
 		</>
 	);
 };
