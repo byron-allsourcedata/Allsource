@@ -191,9 +191,7 @@ export const SettingsBilling: React.FC = () => {
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
-				setCardDetails([
-					...response.data.card_details,
-				]);
+				setCardDetails([...response.data.card_details]);
 				setContactsCollected(response.data.usages_credits.leads_credits);
 				setPlanContactsCollected(
 					response.data.usages_credits.plan_leads_credits,
