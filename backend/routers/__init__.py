@@ -28,6 +28,7 @@ from routers import (
     lookalikes,
     dashboard_audience,
     insights,
+    pixel_management,
 )
 
 main_router = APIRouter()
@@ -56,6 +57,11 @@ main_router.include_router(
 )
 main_router.include_router(
     data_sync.router, prefix="/data-sync", tags=["DataSync"]
+)
+main_router.include_router(
+    pixel_management.router,
+    prefix="/pixel-management",
+    tags=["PixelManagement"],
 )
 main_router.include_router(settings.router, prefix="/settings")
 main_router.include_router(domains.router, prefix="/domains", tags=["Domains"])

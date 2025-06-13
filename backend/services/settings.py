@@ -349,7 +349,7 @@ class SettingsService:
 
     def extract_subscription_details(self, user):
         customer_id = user.get("customer_id")
-        prospect_credits = user.get("prospect_credits")
+        validation_funds = user.get("validation_funds")
         user_id = user.get("id")
         subscription = get_billing_details_by_userid(customer_id)
         user_subscription = self.subscription_service.get_user_subscription(
@@ -357,8 +357,9 @@ class SettingsService:
         )
         current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
         plan_limit_domain = (
-            user_subscription.domains_limit if user_subscription else 0
+            current_plan.domains_limit if current_plan.domains_limit else 0
         )
+        validation_funds_limit = current_plan.validation_funds
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
         subscription_details = None
         total_key = (
@@ -387,9 +388,11 @@ class SettingsService:
             subscription_details = {
                 "billing_cycle": billing_cycle,
                 "plan_name": plan_name,
-                "domains": f"{user_limit_domain}/{plan_limit_domain}",
-                "prospect_credits": "Coming soon",
-                "overage": "free" if credit_price == -1 else credit_price,
+                "domains": f"{user_limit_domain}/{plan_limit_domain} Domains",
+                "contacts_downloads": "Coming soon",
+                "smart_audience": "Coming soon",
+                "validation_funds": validation_funds,
+                "premium_sources_funds": "Coming soon",
                 "next_billing_date": next_billing_date,
                 total_key: total_sum,
                 "active": True
@@ -447,9 +450,11 @@ class SettingsService:
             subscription_details = {
                 "billing_cycle": billing_cycle,
                 "plan_name": plan_name,
-                "domains": f"{user_limit_domain}/{plan_limit_domain}",
-                "prospect_credits": "Coming soon",
-                "overage": "free" if credit_price == -1 else credit_price,
+                "domains": f"{user_limit_domain}/{plan_limit_domain} Domains",
+                "contacts_downloads": "Coming soon",
+                "smart_audience": "Coming soon",
+                "validation_funds": f"${validation_funds}/${validation_funds_limit}",
+                "premium_sources_funds": "Coming soon",
                 "next_billing_date": self.timestamp_to_date(
                     subscription["items"]["data"][0]["current_period_end"]
                 ).strftime("%b %d, %Y"),
@@ -493,10 +498,8 @@ class SettingsService:
         )
         result["usages_credits"] = {
             "leads_credits": user.get("leads_credits"),
-            "plan_leads_credits": current_plan.leads_credits
-            if current_plan
-            else 0,
-            "prospect_credits": user.get("prospect_credits"),
+            "validation_funds": user.get("validation_funds"),
+            "validation_funds_limit": current_plan.validation_funds,
         }
         return result
 
@@ -509,8 +512,6 @@ class SettingsService:
         for billing_data in billing_history:
             billing_hash = {}
             if isinstance(billing_data, stripe.Invoice):
-                if billing_data.total <= 0:
-                    continue
                 line_items = billing_data.lines.data
                 billing_hash["date"] = self.timestamp_to_date(
                     line_items[0].period.start

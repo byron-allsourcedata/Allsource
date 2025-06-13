@@ -190,6 +190,13 @@ class UserDomainsPersistence:
     def get_domain_by_filter(self, **filter_by):
         return self.db.query(UserDomains).filter_by(**filter_by).all()
 
+    def update_data_provider_id(self, domain_id: int, data_provider_id: str):
+        self.db.query(UserDomains).filter(UserDomains.id == domain_id).update(
+            {UserDomains.data_provider_id: data_provider_id},
+            synchronize_session=False,
+        )
+        self.db.commit()
+
     def normalize_domain(self, domain: str) -> str:
         domain = re.sub(r"^https?:\/\/", "", domain)
         domain = re.sub(r"^www\.", "", domain)

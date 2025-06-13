@@ -163,6 +163,8 @@ class UsersService:
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
             enable=domain.is_enable,
+            is_add_to_cart_installed=domain.is_add_to_cart_installed,
+            is_converted_sales_installed=domain.is_converted_sales_installed,
         )
 
     def get_meeting_info(self) -> MeetingData:

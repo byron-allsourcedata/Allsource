@@ -47,6 +47,10 @@ import { QrCodeScannerOutlined } from "@mui/icons-material";
 import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import HintCard from "../../components/HintCard";
 import SmartCell from "@/components/table/SmartCell";
+import {
+	Paginator,
+	type PaginatorProps,
+} from "@/components/PaginationComponent";
 
 interface TableRowData {
 	id: string;
@@ -72,6 +76,7 @@ interface LookalikeTableProps {
 	onSort: (column: keyof TableRowData) => void;
 	refreshData: () => void;
 	loader_for_table: boolean;
+	paginationProps: PaginatorProps;
 }
 
 const audienceSize = [
@@ -164,9 +169,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	onSort,
 	refreshData,
 	loader_for_table,
+	paginationProps,
 }) => {
 	const {
-		lookalikesTableHints: lookalikesTableHints,
+		lookalikesTableHints,
 		cardsLookalikeTable,
 		changeLookalikesTableHint,
 		resetLookalikesTableHints,
@@ -1230,6 +1236,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 					})}
 				</TableBody>
 			</Table>
+			<Paginator tableMode {...paginationProps} />
 		</TableContainer>
 	);
 };
