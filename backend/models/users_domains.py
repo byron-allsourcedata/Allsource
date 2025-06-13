@@ -50,3 +50,13 @@ class UserDomains(Base):
     )
     api_key = Column(VARCHAR, nullable=True)
     viewed_product_part_url = Column(VARCHAR, nullable=True)
+    is_converted_sales_installed = Column(
+        Boolean, nullable=True, server_default=text("false")
+    )
+    is_add_to_cart_installed = Column(
+        Boolean, nullable=True, server_default=text("false")
+    )
+
+    is_view_product_installed = Column(
+        Boolean, nullable=True, server_default=text("false")
+    )

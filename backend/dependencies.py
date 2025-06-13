@@ -84,6 +84,7 @@ from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from services.payouts import PayoutsService
 from services.pixel_installation import PixelInstallationService
+from services.pixel_management import PixelManagementService
 from services.plans import PlansService
 from services.settings import SettingsService
 from services.similar_audiences import SimilarAudienceService
@@ -720,6 +721,12 @@ def get_leads_service(
     return LeadsService(
         domain=domain, leads_persistence_service=leads_persistence_service
     )
+
+def get_pixel_management_service(
+user_domains_service: UserDomainsService = Depends(get_domain_service),
+integration_service: IntegrationService = Depends(get_integration_service)
+):
+    return PixelManagementService(user_domains_service=user_domains_service, integration_service=integration_service)
 
 
 def get_companies_service(

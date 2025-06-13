@@ -113,6 +113,9 @@ class UserDomainsService:
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
             enable=domain.is_enable,
+            is_view_product_installed=domain.is_view_product_installed,
+            is_add_to_cart_installed=domain.is_add_to_cart_installed,
+            is_converted_sales_installed=domain.is_converted_sales_installed
         ).model_dump()
 
     def delete_domain(self, user_id: int, domain_id: int):

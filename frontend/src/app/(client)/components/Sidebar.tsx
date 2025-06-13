@@ -1,11 +1,12 @@
 "use client";
-import React, {
-	Dispatch,
+import type React from "react";
+import {type 
+	Dispatch,type 
 	SetStateAction,
 	useEffect,
 	useRef,
 	useState,
-} from "react";
+} from "react"
 import {
 	Box,
 	List,
@@ -30,7 +31,7 @@ import IntegrationsIcon from "@mui/icons-material/IntegrationInstructions";
 import BusinessIcon from "@mui/icons-material/Business";
 import FeaturedPlayListIcon from "@mui/icons-material/FeaturedPlayList";
 import SettingsIcon from "@mui/icons-material/Settings";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import SettingsInputCompositeIcon from "@mui/icons-material/SettingsInputComposite";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import Image from "next/image";
 import { AxiosError } from "axios";
@@ -353,6 +354,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 		isActive("/company") ||
 		isActive("/suppressions") ||
 		isActive("/analytics") ||
+		isActive("/management") ||
 		isActive("/data-sync-pixel");
 	const handleClick = () => {
 		setOpen(!open);
@@ -468,7 +470,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 										</ListItemIcon>
 										<ListItemText primary="Analytics" />
 									</ListItem>
-
 									{/* Contacts */}
 									<ListItem
 										button
@@ -484,7 +485,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 										</ListItemIcon>
 										<ListItemText primary="Contacts" />
 									</ListItem>
-
 									{/* Company */}
 									<ListItem
 										button
@@ -500,7 +500,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 										</ListItemIcon>
 										<ListItemText primary="Company" />
 									</ListItem>
-
+									{/* Management */}
+									<ListItem
+										button
+										onClick={() => handleNavigation("/management")}
+										sx={
+											isActive("/management")
+												? { ...sidebarStyles.activeItem, pl: 4 }
+												: { ...sidebarStyles.ListItem, pl: 4 }
+										}
+									>
+										<ListItemIcon sx={sidebarStyles.listItemIcon}>
+											<SettingsInputCompositeIcon />
+										</ListItemIcon>
+										<ListItemText primary="Management" />
+									</ListItem>
 									{/* Suppressions */}
 									<ListItem
 										button
@@ -516,7 +530,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 										</ListItemIcon>
 										<ListItemText primary="Suppressions" />
 									</ListItem>
-
 									{/* Data sync */}
 									<ListItem
 										button
