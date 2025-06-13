@@ -104,21 +104,21 @@ const TableHeader: React.FC<{
 								maxWidth: "200px",
 								minWidth: "150px",
 							}),
-							...(key === "actions" && {
-								width: "100px",
-								maxWidth: "100px",
-								minWidth: "60px",
-								"::after": {
-									content: "none",
-								},
-							}),
+							// ...(key === "actions" && {
+							// 	width: "100px",
+							// 	maxWidth: "100px",
+							// 	minWidth: "60px",
+							// 	"::after": {
+							// 		content: "none",
+							// 	},
+							// }),
 						}}
 						onClick={sortable ? () => onSort(key) : undefined}
 					>
 						<Box
 							sx={{ display: "flex", alignItems: "center" }}
 							style={
-								key === "email" || key === "status" || key === "actions"
+								key === "email" || key === "status"
 									? { justifyContent: "left" }
 									: {}
 							}
@@ -462,62 +462,62 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 					</Box>
 				);
 
-			case "actions":
-				if (currentPage === 0) {
-					return (
-						<>
-							<MenuIconButton
-								buttonProps={{
-									onClick: (event) => handleOpenMenu(event, row.id),
-								}}
-								iconProps={{
-									icon: <MoreVert />,
-								}}
-							/>
-							<Popover
-								open={Boolean(menuAnchor) && activeRow === row.id}
-								anchorEl={menuAnchor}
-								onClose={handleCloseMenu}
-								anchorOrigin={{
-									vertical: "bottom",
-									horizontal: "center",
-								}}
-							>
-								<Box
-									sx={{
-										p: 1,
-										display: "flex",
-										flexDirection: "column",
-										alignItems: "flex-start",
-										width: "100%",
-										maxWidth: "160px",
-									}}
-								>
-									<Button
-										sx={{
-											justifyContent: "flex-start",
-											width: "100%",
-											textTransform: "none",
-											fontFamily: "Nunito Sans",
-											fontSize: "14px",
-											color: "rgba(32, 33, 36, 1)",
-											fontWeight: 600,
-											":hover": {
-												color: "rgba(56, 152, 252, 1)",
-												backgroundColor: "rgba(80, 82, 178, 0.1)",
-											},
-										}}
-										onClick={() => {
-											console.log("Customer: View Orders clicked");
-										}}
-									>
-										View Orders
-									</Button>
-								</Box>
-							</Popover>
-						</>
-					);
-				}
+			// case "actions":
+			// 	if (currentPage === 0) {
+			// 		return (
+			// 			<>
+			// 				<MenuIconButton
+			// 					buttonProps={{
+			// 						onClick: (event) => handleOpenMenu(event, row.id),
+			// 					}}
+			// 					iconProps={{
+			// 						icon: <MoreVert />,
+			// 					}}
+			// 				/>
+			// 				<Popover
+			// 					open={Boolean(menuAnchor) && activeRow === row.id}
+			// 					anchorEl={menuAnchor}
+			// 					onClose={handleCloseMenu}
+			// 					anchorOrigin={{
+			// 						vertical: "bottom",
+			// 						horizontal: "center",
+			// 					}}
+			// 				>
+			// 					<Box
+			// 						sx={{
+			// 							p: 1,
+			// 							display: "flex",
+			// 							flexDirection: "column",
+			// 							alignItems: "flex-start",
+			// 							width: "100%",
+			// 							maxWidth: "160px",
+			// 						}}
+			// 					>
+			// 						<Button
+			// 							sx={{
+			// 								justifyContent: "flex-start",
+			// 								width: "100%",
+			// 								textTransform: "none",
+			// 								fontFamily: "Nunito Sans",
+			// 								fontSize: "14px",
+			// 								color: "rgba(32, 33, 36, 1)",
+			// 								fontWeight: 600,
+			// 								":hover": {
+			// 									color: "rgba(56, 152, 252, 1)",
+			// 									backgroundColor: "rgba(80, 82, 178, 0.1)",
+			// 								},
+			// 							}}
+			// 							onClick={() => {
+			// 								console.log("Customer: View Orders clicked");
+			// 							}}
+			// 						>
+			// 							View Orders
+			// 						</Button>
+			// 					</Box>
+			// 				</Popover>
+			// 			</>
+			// 		);
+			// 	}
 				if (currentPage === 1) {
 					return (
 						<>
@@ -593,7 +593,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							key={key}
 							sx={{
 								...leadsStyles.table_array,
-								textAlign: key === "actions" ? "center" : "left",
+								textAlign: "left",
 								position: "relative",
 								padding: "8px",
 							}}
@@ -664,7 +664,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "invited_by", label: "Invited by", sortable: false },
 				{ key: "access_level", label: "Access level", sortable: false },
-				{ key: "actions", label: "Actions", sortable: false },
+				// { key: "actions", label: "Actions", sortable: false },
 			]
 		: [
 				{ key: "name", label: "Account name", sortable: false },
@@ -682,7 +682,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					label: "Plan",
 					sortable: false,
 				},
-				{ key: "actions", label: "Actions", sortable: false },
+				// { key: "actions", label: "Actions", sortable: false },
 			];
 
 	const handlePageChange = (
