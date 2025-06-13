@@ -55,7 +55,6 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { companyTableCards } from "./context/hintsCardsContent";
-import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
 import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/EmptyPlaceholder";
@@ -1156,7 +1155,6 @@ const Leads: React.FC = () => {
 												linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/company"
 											/>
 										</Box>
-										<DomainButtonSelect />
 									</Box>
 
 									{!noContactsYet && ButtonGroup}

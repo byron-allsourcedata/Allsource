@@ -52,7 +52,6 @@ class TypeOfSourceOrigin(Enum):
 
 class DataSyncType(Enum):
     AUDIENCE = "audience"
-    PIXEL = "pixel"
     CONTACT = "contact"
 
 

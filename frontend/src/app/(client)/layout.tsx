@@ -15,6 +15,7 @@ import { NotificationProvider } from "@/context/NotificationContext";
 import { HintsProvider } from "@/context/HintsContext";
 import { useSidebar } from "@/context/SidebarContext";
 import { fetchUserData } from "@/services/meService";
+import PixelSubheader from "./components/PixelSubheader";
 
 interface ClientLayoutProps {
 	children: ReactNode;
@@ -126,6 +127,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						NotificationData={latestNotification}
 						onDismissNotification={handleDismissNotification}
 					/>
+					<PixelSubheader />
 					<Grid
 						container
 						className="page-container"

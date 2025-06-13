@@ -81,7 +81,7 @@ class IntegrationsPresistence:
 
         if type == DataSyncType.AUDIENCE.value:
             query = query.filter(Integration.for_audience == True)
-        elif type == DataSyncType.PIXEL.value:
+        elif type == DataSyncType.CONTACT.value:
             query = query.filter(Integration.for_pixel == True)
 
         if domain_id:

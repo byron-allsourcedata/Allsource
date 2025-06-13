@@ -40,7 +40,6 @@ import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
-import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
@@ -168,13 +167,6 @@ const DataSync = () => {
 								linkText="Learn more"
 								linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync-contacts"
 							/>
-							<Box
-								sx={{
-									pl: 1,
-								}}
-							>
-								<DomainButtonSelect />
-							</Box>
 						</Box>
 						{hasContacts && hasDataSync && (
 							<Box
