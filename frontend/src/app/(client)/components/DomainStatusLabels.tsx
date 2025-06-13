@@ -8,9 +8,8 @@ interface DomainStatusLabelsProps {
 	dataSyncFailed: boolean;
 }
 
-const statusConfig = [
-	{
-		key: "pixel",
+const statusConfig = {
+	pixel: {
 		success: {
 			label: "Pixel Installed",
 			bg: "rgba(234, 248, 221, 1)",
@@ -22,8 +21,7 @@ const statusConfig = [
 			color: "rgba(244, 87, 69, 1)",
 		},
 	},
-	{
-		key: "contacts",
+	contacts: {
 		success: {
 			label: "Contacts Resolving",
 			bg: "rgba(254, 243, 205, 1)",
@@ -35,8 +33,7 @@ const statusConfig = [
 			color: "rgba(244, 87, 69, 1)",
 		},
 	},
-	{
-		key: "sync",
+	sync: {
 		success: {
 			label: "Data Synced",
 			bg: "rgba(204, 230, 254, 1)",
@@ -48,7 +45,9 @@ const statusConfig = [
 			color: "rgba(244, 87, 69, 1)",
 		},
 	},
-];
+} as const;
+
+type StatusKey = keyof typeof statusConfig;
 
 const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 	isPixelInstalled,
@@ -56,28 +55,31 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 	dataSynced,
 	dataSyncFailed,
 }) => {
-	const getLabelProps = (key: string) => {
+	const getLabelProps = (key: StatusKey) => {
 		switch (key) {
 			case "pixel":
 				return isPixelInstalled
-					? statusConfig[0].success
-					: statusConfig[0].error;
+					? statusConfig.pixel.success
+					: statusConfig.pixel.error;
 			case "contacts":
 				return contactsResolving
-					? statusConfig[1].success
-					: statusConfig[1].error;
+					? statusConfig.contacts.success
+					: statusConfig.contacts.error;
 			case "sync":
-				if (dataSyncFailed) return statusConfig[2].error;
-				if (dataSynced) return statusConfig[2].success;
+				if (dataSyncFailed) return statusConfig.sync.error;
+				if (dataSynced) return statusConfig.sync.success;
 				return null;
 			default:
 				return null;
 		}
 	};
 
-	const statuses = ["pixel", "contacts", "sync"]
-		.map(getLabelProps)
-		.filter(Boolean) as { label: string; bg: string; color: string }[];
+	const keys: StatusKey[] = ["pixel", "contacts", "sync"];
+	const statuses = keys.map(getLabelProps).filter(Boolean) as {
+		label: string;
+		bg: string;
+		color: string;
+	}[];
 
 	return (
 		<Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
