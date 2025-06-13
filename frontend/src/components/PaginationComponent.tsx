@@ -1,6 +1,15 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
+import type React from "react";
+import type { FC } from "react";
+import {
+	Box,
+	Paper,
+	Table,
+	Typography,
+	type SxProps,
+	type TableProps,
+} from "@mui/material";
 import CustomTablePagination from "@/components/CustomTablePagination";
+import { borderBottom } from "@mui/system";
 
 interface PaginationComponentProps {
 	countRows: number;
@@ -12,6 +21,8 @@ interface PaginationComponentProps {
 	) => void;
 	onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 	rowsPerPageOptions?: number[];
+	radiusTop?: string;
+	tableMode?: boolean;
 }
 
 const PaginationComponent: React.FC<PaginationComponentProps> = ({
@@ -21,28 +32,55 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
 	onPageChange: handleChangePage,
 	onRowsPerPageChange: handleChangeRowsPerPage,
 	rowsPerPageOptions,
+	radiusTop,
+	tableMode,
 }) => {
-	return countRows && countRows > 10 ? (
-		<Box
-			sx={{
-				display: "flex",
-				justifyContent: "flex-end",
-				padding: "24px 0 0",
-				"@media (max-width: 600px)": {
-					padding: "12px 0 0",
-				},
-			}}
-		>
-			<CustomTablePagination
-				count={countRows ?? 0}
-				page={page}
-				rowsPerPage={rowsPerPage}
-				onPageChange={handleChangePage}
-				onRowsPerPageChange={handleChangeRowsPerPage}
-				rowsPerPageOptions={rowsPerPageOptions}
-			/>
-		</Box>
-	) : (
+	const radius = {
+		borderRadius: "4px",
+		borderTopLeftRadius: radiusTop,
+		borderTopRightRadius: radiusTop,
+	};
+
+	const gray = "rgba(235, 235, 235, 1)";
+	const grayBorder = `1px solid ${gray}`;
+	const bordersSx = {
+		borderLeft: grayBorder,
+		borderRight: grayBorder,
+		borderBottom: grayBorder,
+	};
+
+	// return null;
+
+	// return <Box>dd</Box>;
+
+	if (countRows && countRows > 10) {
+		return (
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "flex-end",
+					padding: "6px 0 0",
+					backgroundColor: "#fff",
+					...radius,
+					...(tableMode && bordersSx),
+					"@media (max-width: 600px)": {
+						padding: "12px 0 0",
+					},
+				}}
+			>
+				<CustomTablePagination
+					count={countRows ?? 0}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={handleChangePage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+					rowsPerPageOptions={rowsPerPageOptions}
+				/>
+			</Box>
+		);
+	}
+
+	return (
 		<Box
 			display="flex"
 			justifyContent="flex-end"
@@ -50,7 +88,8 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
 			sx={{
 				padding: "16px",
 				backgroundColor: "#fff",
-				borderRadius: "4px",
+				...radius,
+				...(tableMode && bordersSx),
 				"@media (max-width: 600px)": {
 					padding: "12px",
 				},
@@ -72,3 +111,47 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
 };
 
 export default PaginationComponent;
+
+export type PaginatorProps = PaginationComponentProps;
+
+export const Paginator: FC<PaginatorProps> = (props) => {
+	return <PaginationComponent {...props} radiusTop="0px" />;
+};
+
+export type PaginatorTableProps = {
+	paginator: PaginatorProps;
+} & TableProps;
+
+export const PaginatorTable: FC<PaginatorTableProps> = ({
+	paginator,
+	children,
+	sx,
+	...props
+}) => {
+	const gray = "rgba(235, 235, 235, 1)";
+	const grayBorder = `1px solid ${gray}`;
+
+	return (
+		<Paper
+			elevation={0}
+			sx={{
+				borderBottom: grayBorder,
+			}}
+		>
+			<Table
+				sx={{
+					tableLayout: "fixed",
+					border: "1px solid rgba(235, 235, 235, 1)",
+					borderBottomLeftRadius: "0px",
+					borderBottomRightRadius: "0px",
+					borderBottom: "0px",
+					...sx,
+				}}
+				{...props}
+			>
+				{children}
+			</Table>
+			<Paginator tableMode {...paginator} />
+		</Paper>
+	);
+};
