@@ -453,7 +453,22 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 	}
 
 	return (
-		<>
+		<Box
+			sx={{
+				height: "100%",
+				overflow: "auto",
+				paddingLeft: ".5rem",
+				paddingRight: "1.5rem",
+				"@media (min-width: 1600px)": {
+					paddingLeft: "4.25rem",
+					paddingRight: "4.25rem",
+				},
+				"@media (max-width: 600px)": {
+					paddingLeft: "0",
+					paddingRight: "0",
+				},
+			}}
+		>
 			<Box
 				sx={{
 					width: "100%",
@@ -464,8 +479,8 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 			>
 				<StatsCard values={values} typeBusiness={typeBusiness} />
 			</Box>
-			<Card variant="outlined" sx={{ width: "100%" }}>
-				<CardContent sx={{ paddingLeft: 0 }}>
+			<Card variant="outlined" sx={{ width: "100%", height: "86%" }}>
+				<CardContent sx={{ paddingLeft: 0, pb: 0 }}>
 					<Stack
 						sx={{
 							justifyContent: "space-between",
@@ -706,7 +721,6 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 								justifyContent: "center",
 								alignItems: "center",
 								zIndex: 1000,
-								overflow: "hidden",
 							}}
 						>
 							<Box
@@ -811,7 +825,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 				</CardContent>
 			</Card>
 			{loading && <CustomizedProgressBar />}
-		</>
+		</Box>
 	);
 };
 
