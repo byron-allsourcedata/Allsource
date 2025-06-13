@@ -105,10 +105,14 @@ const TableHeader: React.FC<{
 								minWidth: "150px",
 							}),
 							...(key === "actions" && {
+								width: "100px",
+								maxWidth: "100px",
+								minWidth: "60px",
 								"::after": {
 									content: "none",
 								},
 							}),
+							
 						}}
 						onClick={sortable ? () => onSort(key) : undefined}
 					>
@@ -342,8 +346,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 										sx={{
 											textOverflow: "ellipsis",
 											whiteSpace: "nowrap",
-											minWidth: 0,
 											flexShrink: 1,
+											minWidth: 0,
+											overflow: "hidden",
 											pr: "10px",
 										}}
 									>
@@ -657,7 +662,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "name", label: "Account name", sortable: false },
 				{ key: "email", label: "Email", sortable: false },
 				{ key: "join_date", label: "Join date", sortable: true },
-				{ key: "last_login_date", label: "Last Login Date", sortable: true },
+				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "invited_by", label: "Invited by", sortable: false },
 				{ key: "access_level", label: "Access level", sortable: false },
 				{ key: "actions", label: "Actions", sortable: false },
@@ -666,12 +671,12 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "name", label: "Account name", sortable: false },
 				{ key: "email", label: "Email", sortable: false },
 				{ key: "join_date", label: "Join date", sortable: true },
-				{ key: "last_login_date", label: "Last Login Date", sortable: true },
+				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
 				{ key: "contacts_count", label: "Contacts", sortable: false },
 				{ key: "sources_count", label: "Sources", sortable: false },
 				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
-				{ key: "credits_count", label: "Credits count", sortable: false },
+				{ key: "credits_count", label: "Credits", sortable: false },
 				{ key: "status", label: "Status", sortable: false },
 				{
 					key: "subscription_plan",

@@ -370,20 +370,30 @@ class UserPersistence:
         )
 
         if filters.get("last_login_date_start"):
+            last_login_date_start = datetime.fromtimestamp(filters["last_login_date_start"], tz=pytz.UTC).date()
             query = query.filter(
-                func.DATE(Users.last_login) >= filters["last_login_date_start"]
+                func.DATE(Users.last_login) >= last_login_date_start
             )
         if filters.get("last_login_date_end"):
+            last_login_date_end = datetime.fromtimestamp(
+                filters["last_login_date_end"], tz=pytz.UTC
+            ).date()
             query = query.filter(
-                func.DATE(Users.last_login) <= filters["last_login_date_end"]
+                func.DATE(Users.last_login) <= last_login_date_end
             )
         if filters.get("join_date_start"):
+            join_date_start = datetime.fromtimestamp(
+                filters["join_date_start"], tz=pytz.UTC
+            ).date()
             query = query.filter(
-                func.DATE(Users.created_at) >= filters["join_date_start"]
+                func.DATE(Users.created_at) >= join_date_start
             )
         if filters.get("join_date_end"):
+            join_date_end = datetime.fromtimestamp(
+                filters["join_date_end"], tz=pytz.UTC
+            ).date()
             query = query.filter(
-                func.DATE(Users.created_at) <= filters["join_date_end"]
+                func.DATE(Users.created_at) <= join_date_end
             )
         if search_query:
             query = query.filter(
