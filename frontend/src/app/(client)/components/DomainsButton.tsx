@@ -367,8 +367,8 @@ const DomainButton: React.FC = () => {
 					},
 				}}
 			>
-				<Box display="flex" alignItems="center" gap="8px">
-					<WysiwygIcon sx={{ color: "#666", fontSize: "20px" }} />
+				<Box display="flex" alignItems="center" gap="8px" ml={1.125}>
+					<WysiwygIcon sx={{ color: "#666", minWidth: "1.5rem" }} />
 					<Typography variant="body2">
 						{currentDomain !== ""
 							? currentDomain.replace("https://", "")
