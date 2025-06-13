@@ -136,38 +136,40 @@ const DataSync = () => {
 							},
 						}}
 					>
-						<Box
-							sx={{
-								flexShrink: 0,
-								display: "flex",
-								flexDirection: "row",
-								alignItems: "center",
-								pl: "0.5rem",
-								mt: 2.05,
-								gap: 1,
-								"@media (max-width: 900px)": { mb: 2 },
-							}}
-						>
-							<Typography
-								className="first-sub-title"
+						{hasContacts && hasDataSync && (
+							<Box
 								sx={{
-									fontFamily: "Nunito Sans",
-									fontSize: "16px",
-									lineHeight: "normal",
-									fontWeight: 600,
-									color: "#202124",
+									flexShrink: 0,
+									display: "flex",
+									flexDirection: "row",
+									alignItems: "center",
+									pl: "0.5rem",
+									mt: 2.05,
+									gap: 1,
+									"@media (max-width: 900px)": { mb: 2 },
 								}}
 							>
-								Pixel Sync
-							</Typography>
-							<CustomTooltip
-								title={
-									"How data sync works and to customise your sync settings."
-								}
-								linkText="Learn more"
-								linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync-contacts"
-							/>
-						</Box>
+								<Typography
+									className="first-sub-title"
+									sx={{
+										fontFamily: "Nunito Sans",
+										fontSize: "16px",
+										lineHeight: "normal",
+										fontWeight: 600,
+										color: "#202124",
+									}}
+								>
+									Pixel Sync
+								</Typography>
+								<CustomTooltip
+									title={
+										"How data sync works and to customise your sync settings."
+									}
+									linkText="Learn more"
+									linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync-contacts"
+								/>
+							</Box>
+						)}
 						{hasContacts && hasDataSync && (
 							<Box
 								sx={{
@@ -252,7 +254,7 @@ const DataSync = () => {
 						sx={{
 							width: "100%",
 							pl: 0.5,
-							pt: 0,
+							pt: !hasContacts && !hasDataSync ? 5 : 0,
 							pr: 1,
 							"@media (max-width: 440px)": { pt: 3 },
 						}}
