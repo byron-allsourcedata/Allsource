@@ -3,7 +3,7 @@ import { Box, Skeleton } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import DomainButton from "./DomainsButton";
 import DomainStatusLabels from "./DomainStatusLabels";
-import { usePathname } from "next/navigation";
+import { useHasSubheader } from "@/hooks/useHasSubheader";
 
 const subheaderStyles = {
 	headers: {
@@ -26,21 +26,9 @@ const subheaderStyles = {
 };
 
 const PixelSubheader: React.FC = () => {
-	const pathname = usePathname();
+	const hasSubheader = useHasSubheader();
 	const [domain, setDomain] = useState<any | null>(null);
 	const [loading, setLoading] = useState(true);
-
-	const pixelPages = [
-		"/analytics",
-		"/leads",
-		"/company",
-		"/suppressions",
-		"/data-sync-pixel",
-	];
-
-	const hasSubheader =
-		(pathname.startsWith("/management") && pathname !== "/management") ||
-		pixelPages.includes(pathname);
 
 	useEffect(() => {
 		if (!hasSubheader) return;

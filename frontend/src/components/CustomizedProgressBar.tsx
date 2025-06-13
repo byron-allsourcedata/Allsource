@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Backdrop, LinearProgress } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNotification } from "../context/NotificationContext";
-import { usePathname } from "next/navigation";
+import { useHasSubheader } from "@/hooks/useHasSubheader";
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 	height: 4,
@@ -16,19 +16,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const PageWithLoader: React.FC = () => {
 	const { hasNotification } = useNotification();
-	const pathname = usePathname();
-
-	const pixelPages = [
-		"/analytics",
-		"/leads",
-		"/company",
-		"/suppressions",
-		"/data-sync-pixel",
-	];
-
-	const hasSubheader =
-		(pathname.startsWith("/management") && pathname !== "/management") ||
-		pixelPages.includes(pathname);
+	const hasSubheader = useHasSubheader();
 
 	const computeTop = () => {
 		if (hasNotification && hasSubheader) return "10.85rem";
