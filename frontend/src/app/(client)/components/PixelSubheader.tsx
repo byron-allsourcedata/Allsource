@@ -78,9 +78,24 @@ const PixelSubheader: React.FC = () => {
 						<DomainButton />
 						{loading ? (
 							<>
-								<Skeleton variant="rectangular" width={100} height={24} />
-								<Skeleton variant="rectangular" width={100} height={24} />
-								<Skeleton variant="rectangular" width={100} height={24} />
+								<Skeleton
+									variant="rectangular"
+									width={100}
+									height={24}
+									sx={{ borderRadius: "200px" }}
+								/>
+								<Skeleton
+									variant="rectangular"
+									width={100}
+									height={24}
+									sx={{ borderRadius: "200px" }}
+								/>
+								<Skeleton
+									variant="rectangular"
+									width={100}
+									height={24}
+									sx={{ borderRadius: "200px" }}
+								/>
 							</>
 						) : domain ? (
 							<DomainStatusLabels

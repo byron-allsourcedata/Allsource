@@ -77,7 +77,6 @@ class UserDomainsPersistence:
 
         return {row.domain_id for row in failed_syncs}
 
-
     def get_domains_with_leads(self, user_id: int):
         added_to_cart = aliased(LeadsUsersAddedToCart)
         ordered = aliased(LeadsUsersOrdered)
