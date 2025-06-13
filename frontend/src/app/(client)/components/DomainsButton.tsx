@@ -338,7 +338,7 @@ const DomainButton: React.FC = () => {
 		setDeleteDomainPopup(false);
 	};
 
-	if (domains.length === 0) return null;
+	//if (domains.length === 0) return null;
 
 	return (
 		<>

@@ -21,7 +21,7 @@ from models.base import Base
 from models.enrichment.enrichment_users import EnrichmentUser
 
 data_sync_type = ENUM(
-    "pixel", "audience", "contact", name="data_sync_type", create_type=True
+    "audience", "contact", name="data_sync_type", create_type=True
 )
 
 
@@ -50,7 +50,7 @@ class IntegrationUserSync(Base):
     sync_type = Column(
         data_sync_type,
         nullable=False,
-        server_default=text("'pixel'::data_sync_type"),
+        server_default=text("'contact'::data_sync_type"),
     )
     is_active = Column(Boolean, nullable=False, server_default=text("true"))
     created_at = Column(

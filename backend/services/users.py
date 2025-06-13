@@ -90,13 +90,13 @@ class UsersService:
         }
 
     def add_percent_to_domain(
-        self,
-        domain: UserDomains,
-        activate_percent,
-        is_current_subscription_id,
-        contacts_resolving: bool,
-        data_synced: bool,
-        data_sync_failed: bool,
+            self,
+            domain: UserDomains,
+            activate_percent,
+            is_current_subscription_id,
+            contacts_resolving_ids: set[int],
+            data_synced_ids: set[int],
+            data_sync_failed_ids: set[int],
     ):
         domain_percent = 0
         if domain.is_pixel_installed:
@@ -109,40 +109,42 @@ class UsersService:
 
         domain_data = self.domain_mapped(domain)
         domain_data["activate_percent"] = domain_percent
-        domain_data["contacts_resolving"] = contacts_resolving
-        domain_data["data_synced"] = data_synced
-        domain_data["data_sync_failed"] = data_sync_failed
+        domain_data["contacts_resolving"] = domain.id in contacts_resolving_ids
+        domain_data["data_synced"] = domain.id in data_synced_ids
+        domain_data["data_sync_failed"] = domain.id in data_sync_failed_ids
         return domain_data
 
     def get_domains(self):
         user_id = self.user.get("id")
+        domains = self.domain_persistence.get_domains_by_user(
+            user_id
+        )
 
-        domain_rows = self.domain_persistence.get_domains_with_flags(user_id)
+        contacts_resolving_ids = self.domain_persistence.get_domains_with_contacts_resolving(user_id)
+        data_synced_ids = self.domain_persistence.get_domains_with_data_synced(user_id)
+        data_sync_failed_ids = self.domain_persistence.get_domains_with_failed_data_sync(user_id)
 
-        enabled_domains = []
-        disabled_domains = []
+        enabled_domains = [domain for domain in domains if domain.is_enable]
+        disabled_domains = [
+            domain for domain in domains if not domain.is_enable
+        ]
 
-        for row in domain_rows:
-            domain = row["domain"]
-            data = self.add_percent_to_domain(
+        enabled_domains_sorted = sorted(enabled_domains, key=lambda x: (x.created_at, x.id))
+        disabled_domains_sorted = sorted(disabled_domains, key=lambda x: (x.created_at, x.id))
+        sorted_domains = enabled_domains_sorted + disabled_domains_sorted
+
+        return [
+            self.add_percent_to_domain(
                 domain,
                 self.user.get("activate_steps_percent"),
                 self.user.get("current_subscription_id"),
-                row["contacts_resolving"],
-                row["data_synced"],
-                row["data_sync_failed"],
+                contacts_resolving_ids,
+                data_synced_ids,
+                data_sync_failed_ids,
             )
-            data["created_at"] = domain.created_at
-            data["id"] = domain.id
+            for domain in sorted_domains
+        ]
 
-            if domain.is_enable:
-                enabled_domains.append(data)
-            else:
-                disabled_domains.append(data)
-
-        return sorted(
-            enabled_domains, key=lambda x: (x["created_at"], x["id"])
-        ) + sorted(disabled_domains, key=lambda x: (x["created_at"], x["id"]))
 
     def domain_mapped(self, domain: UserDomains):
         return DomainResponse(

@@ -55,7 +55,7 @@ class UserDomainsPersistence:
             .join(UserDomains, IntegrationUserSync.domain_id == UserDomains.id)
             .filter(
                 UserDomains.user_id == user_id,
-                IntegrationUserSync.sync_type == "pixel",
+                IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
             )
             .distinct()
             .all()
@@ -77,63 +77,6 @@ class UserDomainsPersistence:
 
         return {row.domain_id for row in failed_syncs}
 
-    def get_domains_with_flags(self, user_id: int) -> list[dict]:
-        LeadUserAlias = aliased(LeadUser)
-        PixelSyncAlias = aliased(IntegrationUserSync)
-        ContactSyncAlias = aliased(IntegrationUserSync)
-
-        query = (
-            self.db.query(
-                UserDomains,
-                func.count(distinct(LeadUserAlias.id)).label("has_leads"),
-                func.count(distinct(PixelSyncAlias.id)).label("has_pixel_sync"),
-                func.count(
-                    distinct(
-                        case(
-                            (
-                                and_(
-                                    ContactSyncAlias.sync_status == False,
-                                    ContactSyncAlias.sync_type == "pixel",
-                                ),
-                                ContactSyncAlias.id,
-                            ),
-                        )
-                    )
-                ).label("has_failed_contact_sync"),
-            )
-            .filter(UserDomains.user_id == user_id)
-            .outerjoin(LeadUserAlias, LeadUserAlias.domain_id == UserDomains.id)
-            .outerjoin(
-                PixelSyncAlias,
-                and_(
-                    PixelSyncAlias.domain_id == UserDomains.id,
-                    PixelSyncAlias.sync_type == "pixel",
-                ),
-            )
-            .outerjoin(
-                ContactSyncAlias,
-                and_(
-                    ContactSyncAlias.domain_id == UserDomains.id,
-                    ContactSyncAlias.sync_type == "pixel",
-                    ContactSyncAlias.sync_status == False,
-                ),
-            )
-            .group_by(UserDomains.id)
-        )
-
-        result = []
-        for row in query:
-            domain: UserDomains = row[0]
-            result.append(
-                {
-                    "domain": domain,
-                    "contacts_resolving": row.has_leads > 0,
-                    "data_synced": row.has_pixel_sync > 0,
-                    "data_sync_failed": row.has_failed_contact_sync > 0,
-                }
-            )
-
-        return result
 
     def get_domains_with_leads(self, user_id: int):
         added_to_cart = aliased(LeadsUsersAddedToCart)

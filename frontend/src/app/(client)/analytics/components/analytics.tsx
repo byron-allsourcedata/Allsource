@@ -13,7 +13,6 @@ import CalendarPopup from "@/components/CustomCalendar";
 import WelcomePopup from "./WelcomePopup";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
-import DomainButtonSelect from "../../components/NavigationDomainButton";
 import { TabPanel } from "./analytics/TabPanel";
 
 type Props = {
@@ -287,9 +286,6 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
 										linkText="Learn more"
 										linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/analytics-dashboard"
 									/>
-								</Box>
-								<Box maxHeight={"40px"}>
-									<DomainButtonSelect />
 								</Box>
 							</Box>
 						</Box>
