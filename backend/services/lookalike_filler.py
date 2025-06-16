@@ -109,8 +109,10 @@ class LookalikeFillerService:
         significant_fields = lookalike.significant_fields
 
         users_count = self.enrichment_users.count()
-        
-        self.lookalikes.update_dataset_size(lookalike_id=lookalike_id, dataset_size=users_count)
+
+        self.lookalikes.update_dataset_size(
+            lookalike_id=lookalike_id, dataset_size=users_count
+        )
 
         rows_stream, column_names = self.get_enrichment_users(
             significant_fields=significant_fields
@@ -130,20 +132,23 @@ class LookalikeFillerService:
 
                 asids = [doc["asid"] for doc in batch_buffer]
 
-                enrichment_user_ids, duration = measure(lambda _: (
-                    self.enrichment_users.fetch_enrichment_user_ids(asids)
-                ))
+                enrichment_user_ids, duration = measure(
+                    lambda _: (
+                        self.enrichment_users.fetch_enrichment_user_ids(asids)
+                    )
+                )
 
                 print(f"enrichment user fetch time: {duration:.3f}")
 
                 user_ids_buffer.extend(enrichment_user_ids)
 
-                _, duration = measure(lambda _: self.audiences_scores.calculate_batch_scores(
-                    model=model,
-                    enrichment_user_ids=user_ids_buffer,
-                    lookalike_id=lookalike_id,
-                    batch=batch_buffer,
-                )
+                _, duration = measure(
+                    lambda _: self.audiences_scores.calculate_batch_scores(
+                        model=model,
+                        enrichment_user_ids=user_ids_buffer,
+                        lookalike_id=lookalike_id,
+                        batch=batch_buffer,
+                    )
                 )
                 print(f"lookalike calculation time: {duration:.3f}")
 

@@ -110,10 +110,9 @@ async def create_lookalike(
 
 @router.delete("/delete-lookalike")
 async def delete_lookalike(
-lookalike_service: AudienceLookalikesService,
+    lookalike_service: AudienceLookalikesService,
     user: dict = Depends(check_user_authorization_without_pixel),
     uuid_of_lookalike: str = Query(None, description="UUID of source"),
-
 ):
     return lookalike_service.delete_lookalike(uuid_of_lookalike, user=user)
 

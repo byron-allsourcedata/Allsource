@@ -1,11 +1,17 @@
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 from uuid import UUID
 
 from config import ClickhouseConfig
 from db_dependencies import Clickhouse, Db
 from enums import BusinessType
-from models import AudienceSourcesMatchedPerson, EnrichmentUser
-from persistence.audience_lookalikes import (
+from models import (
+    AudienceSourcesMatchedPerson,
+    EnrichmentUser,
+    AudienceLookalikes,
+)
+from .dto import LookalikeInfo, SourceInfo
+from .interface import AudienceLookalikesPersistenceInterface
+from .postgres import (
     AudienceLookalikesPostgresPersistence,
 )
 from resolver import injectable
@@ -13,7 +19,7 @@ from schemas.similar_audiences import AudienceFeatureImportance
 
 
 @injectable
-class ClickhousePersistence:
+class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
     def __init__(
         self,
         db: Db,
@@ -23,6 +29,43 @@ class ClickhousePersistence:
         self.db = db
         self.client = client
         self.postgres = postgres
+
+    def get_source_info(self, uuid_of_source, user_id) -> Optional[SourceInfo]:
+        return self.get_source_info(
+            uuid_of_source=uuid_of_source, user_id=user_id
+        )
+
+    def get_lookalikes(
+        self,
+        user_id: int,
+        page: Optional[int] = None,
+        per_page: Optional[int] = None,
+        from_date: Optional[int] = None,
+        to_date: Optional[int] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+        lookalike_size: Optional[str] = None,
+        lookalike_type: Optional[str] = None,
+        search_query: Optional[str] = None,
+    ) -> Tuple[List[LookalikeInfo], int, int, int]:
+        return self.postgres.get_lookalikes(
+            user_id=user_id,
+            page=page,
+            per_page=per_page,
+            from_date=from_date,
+            to_date=to_date,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            lookalike_size=lookalike_size,
+            lookalike_type=lookalike_type,
+            search_query=search_query,
+        )
+
+    def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
+        return self.postgres.get_lookalike(lookalike_id)
+
+    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        self.postgres.update_dataset_size(lookalike_id, dataset_size)
 
     def calculate_lookalikes(
         self, user_id: int, source_uuid: UUID, lookalike_size: str

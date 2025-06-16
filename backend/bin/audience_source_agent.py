@@ -1287,7 +1287,6 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
 
-
         db_session = await resolver.resolve(Db)
 
         queue = await channel.declare_queue(
@@ -1298,7 +1297,9 @@ async def main():
             audience_data_normalization_service=AudienceDataNormalizationService()
         )
 
-        audience_lookalikes_service = await resolver.resolve(AudienceLookalikesService)
+        audience_lookalikes_service = await resolver.resolve(
+            AudienceLookalikesService
+        )
         await queue.consume(
             functools.partial(
                 aud_sources_matching,

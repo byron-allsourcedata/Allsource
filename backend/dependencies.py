@@ -925,5 +925,3 @@ def check_api_key(
         status_code=401,
         detail={"status": UserAuthorizationStatus.INVALID_API_KEY.value},
     )
-
-

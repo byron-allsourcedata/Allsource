@@ -11,6 +11,7 @@ from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
+
 @injectable
 class EnrichmentLookalikeScoresPersistence:
     def __init__(self, db: Db, ch: Clickhouse):
@@ -38,14 +39,14 @@ class EnrichmentLookalikeScoresPersistence:
         #     ]
         # )
 
-    def clickhouse_bulk_insert(self, lookalike_id: UUID, scores: list[tuple[UUID, float]]):
+    def clickhouse_bulk_insert(
+        self, lookalike_id: UUID, scores: list[tuple[UUID, float]]
+    ):
         rows = [(lookalike_id, user_id, score) for user_id, score in scores]
         query_result = self.ch.insert("enrichment_lookalike_scores", rows)
         logger.debug(f"Written rows to scores: {query_result.written_rows}")
 
-    def commit(
-        self
-        ):
+    def commit(self):
         self.db.commit()
 
 

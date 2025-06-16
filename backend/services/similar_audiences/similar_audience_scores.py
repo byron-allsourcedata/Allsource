@@ -12,24 +12,20 @@ from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
 
 
-
 from config.database import SqlConfigBase
 from db_dependencies import Db
 from models import AudienceLookalikes, EnrichmentUser
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
-
 )
 from persistence.enrichment_models import (
     EnrichmentModelsPersistence,
-
 )
 from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
 from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
-
 )
 from services.similar_audiences.column_selector import AudienceColumnSelector
 
@@ -216,7 +212,6 @@ class SimilarAudiencesScoresService:
             lookalike_id, list(zip(enrichment_user_ids, scores))
         )
 
-
     def get_config(self, significant_fields: dict):
         column_names = self.column_selector.clickhouse_columns(
             significant_fields
@@ -230,5 +225,6 @@ class SimilarAudiencesScoresService:
             numerical_features=[],
             unordered_features=column_names,
         )
+
 
 SimilarAudiencesServiceDep = SimilarAudiencesScoresService

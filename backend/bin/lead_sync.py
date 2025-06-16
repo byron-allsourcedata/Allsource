@@ -62,7 +62,6 @@ from dependencies import (
     SubscriptionService,
     UserPersistence,
     PlansPersistence,
-
     PartnersPersistence,
     ReferralDiscountCodesPersistence,
     StripeService,
@@ -581,6 +580,7 @@ def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
         )
         .first()
     )
+
 
 def get_subscription_plan_info(session, plan_id):
     ContactCredits = aliased(SubscriptionPlan)

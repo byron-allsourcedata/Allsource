@@ -128,7 +128,13 @@ class AudienceDataNormalizationService:
 
     def slice_zipcodes(self, df: DataFrame):
         if "zip_code5" in df.columns:
-            df["zip_code5"] = df["zip_code5"].fillna(0).astype(int).astype(str).replace("0", "00000")
+            df["zip_code5"] = (
+                df["zip_code5"]
+                .fillna(0)
+                .astype(int)
+                .astype(str)
+                .replace("0", "00000")
+            )
             df["zip_code3"] = df["zip_code5"].str[:3]
             df["zip_code4"] = df["zip_code5"].str[:4]
 

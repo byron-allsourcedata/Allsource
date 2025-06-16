@@ -463,8 +463,9 @@ async def aud_sources_reader(
         lookalike_id = message_body.get("lookalike_id")
 
         audience_lookalike = db_session.execute(
-            select(AudienceLookalikes)
-            .filter(AudienceLookalikes.id == lookalike_id)
+            select(AudienceLookalikes).filter(
+                AudienceLookalikes.id == lookalike_id
+            )
         ).scalar()
 
         if not audience_lookalike:
@@ -474,9 +475,7 @@ async def aud_sources_reader(
 
         total_rows = get_max_size(audience_lookalike.lookalike_size)
 
-        filler.process_lookalike_pipeline(
-            audience_lookalike=audience_lookalike
-        )
+        filler.process_lookalike_pipeline(audience_lookalike=audience_lookalike)
 
         source_uid_select = select(
             AudienceSourcesMatchedPerson.enrichment_user_id
@@ -601,13 +600,11 @@ async def main():
                 aud_sources_reader,
                 db_session=db_session,
                 connection=connection,
-                filler=filler
+                filler=filler,
             )
         )
 
         await asyncio.Future()
-
-
 
     except BaseException:
         db_session.rollback()

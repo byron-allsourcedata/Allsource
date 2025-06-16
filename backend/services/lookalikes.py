@@ -1,3 +1,4 @@
+import logging
 from typing import List, Tuple, Dict, Set
 from uuid import UUID
 
@@ -97,6 +98,9 @@ PROFESSIONAL_PROFILE = {
 }
 
 
+logger = logging.getLogger(__name__)
+
+
 @injectable
 class AudienceLookalikesService:
     def __init__(
@@ -183,10 +187,8 @@ class AudienceLookalikesService:
             },
         }
 
-
     def get_lookalike(self, lookalike_id: UUID) -> AudienceLookalikes | None:
         return self.lookalikes_persistence_service.get_lookalike(lookalike_id)
-
 
     def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(
@@ -404,12 +406,9 @@ class AudienceLookalikesService:
 
             return self.split_insights(rounded_feature)
 
-        except (
-            EqualTrainTargets,
-            EmptyTrainDataset,
-            LessThenTwoTrainDataset,
-            Exception,
-        ):
+        except Exception as e:
+            logger.error(e)
+            raise e
             return self._default_insights()
 
     def calculate_lookalike(
@@ -438,8 +437,9 @@ class AudienceLookalikesService:
         )
 
     def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
-        return self.lookalikes_persistence_service.update_dataset_size(lookalike_id=lookalike_id, dataset_size=dataset_size)
-
+        return self.lookalikes_persistence_service.update_dataset_size(
+            lookalike_id=lookalike_id, dataset_size=dataset_size
+        )
 
     def get_processing_lookalike(self, id: str):
         lookalike = (

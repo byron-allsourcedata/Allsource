@@ -1,16 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
-from uuid import UUID
 
 import pytz
-from psycopg2.extras import NumericRange
-from pydantic.v1 import UUID4
-from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from db_dependencies import Db
 from enums import LookalikeSize, BusinessType
 from models.enrichment import (
-    EnrichmentUser,
     EnrichmentPersonalProfiles,
     EnrichmentFinancialRecord,
     EnrichmentLifestyle,
@@ -23,24 +18,21 @@ from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
-from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 import math
 from sqlalchemy import asc, desc, or_, func, select, update
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
-from models.enrichment.enrichment_lookalike_scores import (
-    EnrichmentLookalikeScore,
-)
+
 from uuid import UUID
 
 from models.users import Users
-from persistence.audience_lookalikes import (
+from .interface import (
     AudienceLookalikesPersistenceInterface,
 )
 from resolver import injectable
-from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
+from schemas.similar_audiences import AudienceFeatureImportance
 
 
 @injectable
@@ -152,10 +144,12 @@ class AudienceLookalikesPostgresPersistence(
         max_page = math.ceil(count / per_page)
         return result_query, count, max_page, source_count
 
-
     def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
-        return self.db.execute(select(AudienceLookalikes).where(AudienceLookalikes.id == lookalike_id)).scalar()
-
+        return self.db.execute(
+            select(AudienceLookalikes).where(
+                AudienceLookalikes.id == lookalike_id
+            )
+        ).scalar()
 
     def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
         self.db.execute(
@@ -163,7 +157,6 @@ class AudienceLookalikesPostgresPersistence(
             .where(AudienceLookalikes.id == lookalike_id)
             .values(train_model_size=dataset_size)
         )
-
 
     def create_lookalike(
         self,
