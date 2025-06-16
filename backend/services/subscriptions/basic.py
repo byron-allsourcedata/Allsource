@@ -48,6 +48,8 @@ class BasicPlanService:
 
     def move_to_basic_plan(self, customer_id: str):
         user = self.users.by_customer_id(customer_id)
+        if not user:
+            return
         user_id = user.id
 
         self.create_basic_plan_subscription(customer_id)

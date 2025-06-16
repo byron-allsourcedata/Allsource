@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 
 from db_dependencies import Db
-from models import UserSubscriptions, Users
+from models import UserSubscriptions, Users, SubscriptionPlan
 from resolver import injectable
 
 
@@ -20,13 +20,15 @@ class UserSubscriptionsPersistence:
     def __init__(self, db: Db):
         self.db = db
 
-    def add(self, user_id: int, plan_id: int):
+    def add(self, user_id: int, plan: SubscriptionPlan):
         now = datetime.now(timezone.utc)
         user_subscription = UserSubscriptions(
             user_id=user_id,
-            plan_id=plan_id,
+            plan_id=plan.id,
             plan_start=now,
-            plan_end=end_of_month(now),
+            price_id=plan.stripe_price_id,
+            contact_credit_plan_id=plan.contact_credit_plan_id,
+            plan_end=None if plan.alias == 'basic' else end_of_month(now)
         )
 
         self.db.add(user_subscription)
