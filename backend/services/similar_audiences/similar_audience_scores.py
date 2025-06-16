@@ -10,7 +10,7 @@ from pandas import DataFrame
 from sqlalchemy import update, select
 from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
-
+from typing_extensions import deprecated
 
 from config.database import SqlConfigBase
 from db_dependencies import Db
@@ -85,6 +85,7 @@ class SimilarAudiencesScoresService:
     ):
         return self.enrichment_models_persistence.save(lookalike_id, model)
 
+    @deprecated
     def calculate_scores(
         self,
         model: CatBoostRegressor,
