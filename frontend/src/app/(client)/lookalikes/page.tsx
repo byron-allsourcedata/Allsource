@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import {
 	Box,
 	Typography,
@@ -106,7 +106,7 @@ interface TableRowData {
 	target_schema: string;
 }
 
-const CreateLookalikePage: React.FC = () => {
+const CreateLookalike: React.FC = () => {
 	const router = useRouter();
 	const {
 		lookalikesTableHints: lookalikesTableHints,
@@ -961,6 +961,15 @@ const CreateLookalikePage: React.FC = () => {
 				/>
 			</Box>
 		</Box>
+	);
+};
+
+
+const CreateLookalikePage: React.FC = () => {
+	return (
+		<Suspense fallback={<CustomizedProgressBar />}>
+			<CreateLookalike />
+		</Suspense>
 	);
 };
 
