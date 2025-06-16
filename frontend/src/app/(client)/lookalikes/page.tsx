@@ -47,6 +47,7 @@ import { useLookalikesHints } from "./context/LookalikesHintsContext";
 import HintCard from "../components/HintCard";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
+import { useSearchParams } from "next/navigation";
 
 const cardData: CardData[] = [
 	{
@@ -121,6 +122,8 @@ const CreateLookalikePage: React.FC = () => {
 	const [lookalikesData, setLookalikeData] = useState<TableRowData[]>([]);
 	const [sourceCount, setSourceCount] = useState<number>(0);
 	const [showNotification, setShowNotification] = useState(true);
+	const searchParams = useSearchParams();
+	const isDebug = searchParams.get("is_debug") === "true";
 	const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] =
 		useState<boolean>(false);
 
@@ -311,7 +314,7 @@ const CreateLookalikePage: React.FC = () => {
 
 			let url = `/audience-lookalikes?page=${
 				page + 1
-			}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+			}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}&is_debug=${isDebug}`;
 			if (startEpoch !== null && endEpoch !== null) {
 				url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
 			}
@@ -401,7 +404,7 @@ const CreateLookalikePage: React.FC = () => {
 				end: appliedDates.end,
 			},
 		});
-	}, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters]);
+	}, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters, isDebug]);
 
 	const handleResetFilters = async () => {
 		const url = `/audience-lookalikes`;
@@ -803,6 +806,7 @@ const CreateLookalikePage: React.FC = () => {
 								refreshData={refreshData}
 								loader_for_table={loaderForTable}
 								paginationProps={paginationProps}
+								isDebug={isDebug}
 							/>
 						</Box>
 					) : (

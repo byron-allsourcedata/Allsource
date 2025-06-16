@@ -77,6 +77,7 @@ interface LookalikeTableProps {
 	refreshData: () => void;
 	loader_for_table: boolean;
 	paginationProps: PaginatorProps;
+	isDebug: boolean;
 }
 
 const audienceSize = [
@@ -170,6 +171,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	refreshData,
 	loader_for_table,
 	paginationProps,
+	isDebug
 }) => {
 	const {
 		lookalikesTableHints,
@@ -187,8 +189,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	);
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-	const searchParams = useSearchParams();
-	const isDebug = searchParams.get("is_debug") === "true";
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 	const { smartLookaLikeProgress } = useSSE();
 	const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());

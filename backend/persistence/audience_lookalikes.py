@@ -67,17 +67,33 @@ class AudienceLookalikesPersistence:
         lookalike_size: Optional[str] = None,
         lookalike_type: Optional[str] = None,
         search_query: Optional[str] = None,
+        include_json_fields: bool = False
     ):
+        columns = [
+            AudienceLookalikes.id,
+            AudienceLookalikes.name,
+            AudienceLookalikes.lookalike_size,
+            AudienceLookalikes.created_date,
+            AudienceLookalikes.size,
+            AudienceLookalikes.processed_size,
+            AudienceLookalikes.train_model_size,
+            AudienceLookalikes.processed_train_model_size,
+            AudienceSource.name.label("source"),
+            AudienceSource.source_type,
+            Users.full_name.label("created_by"),
+            AudienceSource.source_origin,
+            UserDomains.domain,
+            AudienceSource.target_schema,
+        ]
+
+        if include_json_fields:
+            columns.extend([
+                AudienceLookalikes.significant_fields,
+                AudienceLookalikes.similarity_score,
+            ])
+
         query = (
-            self.db.query(
-                AudienceLookalikes,
-                AudienceSource.name,
-                AudienceSource.source_type,
-                Users.full_name,
-                AudienceSource.source_origin,
-                UserDomains.domain,
-                AudienceSource.target_schema,
-            )
+            self.db.query(*columns)
             .join(
                 AudienceSource,
                 AudienceLookalikes.source_uuid == AudienceSource.id,
@@ -139,7 +155,8 @@ class AudienceLookalikesPersistence:
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
-        result_query = query.limit(per_page).offset(offset).all()
+        result_query = [row._asdict() for row in query.limit(per_page).offset(offset).all()]
+
         count = query.count()
         max_page = math.ceil(count / per_page)
         return result_query, count, max_page, source_count
