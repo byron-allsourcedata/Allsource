@@ -121,8 +121,15 @@ class SimilarAudiencesScoresService:
         end = time.perf_counter()
         print(f"cursor time: {end - start:.3f}")
 
+        total_fetch_time = 0.0
+        total_query_time = 0.0
+        total_calculation_time = 0.0
+        total_insert_time = 0.0
+        total_update_time = 0.0
+
         while True:
             rows, duration = measure(lambda _: cursor.fetchmany(batch_size))
+            total_fetch_time += duration
             print(f"fetch time: {duration:.3f}")
 
             if not rows:
@@ -136,10 +143,11 @@ class SimilarAudiencesScoresService:
 
             asids = [rd["asid"] for rd in dict_rows]
 
-            result = measure_print(
+            result, duration = measure_print(
                 lambda _: (query.where(EnrichmentUser.asid.in_(asids))),
                 "query time",
             )
+            total_query_time += duration
 
             feature_dicts = [dict(row._mapping) for row in result]
             user_ids = [rd["id"] for rd in dict_rows]
@@ -149,6 +157,7 @@ class SimilarAudiencesScoresService:
                     model, feature_dicts, config
                 )
             )
+            total_calculation_time += duration
             print(f"calculation time: {duration:.3f}")
 
             _, duration = measure(
@@ -158,6 +167,7 @@ class SimilarAudiencesScoresService:
                     )
                 )
             )
+            total_insert_time += duration
             print(f"insert time: {duration:.3f}")
 
             _, duration = measure(
@@ -169,12 +179,18 @@ class SimilarAudiencesScoresService:
                     )
                 )
             )
+            total_update_time +=duration
             print(f"lookalike update time: {duration:.3f}")
             self.db.commit()
         cursor.close()
         conn.close()
-
         self.db.commit()
+        print("\n=== TOTAL TIMES ===")
+        print(f"Total fetch time: {total_fetch_time:.3f} sec")
+        print(f"Total query time: {total_query_time:.3f} sec")
+        print(f"Total calculation time: {total_calculation_time:.3f} sec")
+        print(f"Total insert time: {total_insert_time:.3f} sec")
+        print(f"Total update time: {total_update_time:.3f} sec")
 
     def calculate_score_dict_batch(
         self,

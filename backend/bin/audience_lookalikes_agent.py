@@ -108,6 +108,20 @@ async def aud_sources_matching(
             .where(AudienceLookalikes.id == lookalike_id)
             .values(insights=merged)
         )
+
+        # Forcefully set processed_size equal to size because of data inconsistency
+        # between Postgres and ClickHouse — we assume the full batch is received.
+        processed_size, total_records = db_session.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(
+                processed_size=AudienceLookalikes.size
+            )
+            .returning(
+                AudienceLookalikes.processed_size, AudienceLookalikes.size
+            )
+        ).fetchone()
+
         db_session.commit()
 
         await send_sse(
