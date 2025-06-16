@@ -350,6 +350,7 @@ class SettingsService:
     def extract_subscription_details(self, user):
         customer_id = user.get("customer_id")
         validation_funds = user.get("validation_funds")
+        leads_credits = user.get("leads_credits")
         user_id = user.get("id")
         subscription = get_billing_details_by_userid(customer_id)
         user_subscription = self.subscription_service.get_user_subscription(
@@ -360,6 +361,7 @@ class SettingsService:
             current_plan.domains_limit if current_plan.domains_limit else 0
         )
         validation_funds_limit = current_plan.validation_funds
+        leads_credits_limit = current_plan.leads_credits
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
         subscription_details = None
         total_key = (
@@ -388,18 +390,39 @@ class SettingsService:
                 total_sum = current_plan.price
 
             subscription_details = {
-                "billing_cycle": billing_cycle,
-                "plan_name": plan_name,
-                "domains": f"{user_limit_domain}/{plan_limit_domain} Domains",
-                "contacts_downloads": "Coming soon",
+                "billing_cycle": {
+                    "detail_type": "time",
+                    "value": billing_cycle,
+                },
+                "plan_name": {"detail_type": "plan", "value": plan_name},
+                "domains": {
+                    "detail_type": "limited",
+                    "limit_value": user_limit_domain,
+                    "current_value": plan_limit_domain,
+                },
+                "contacts_downloads": {
+                    "detail_type": "limited",
+                    "limit_value": leads_credits_limit,
+                    "current_value": leads_credits,
+                },
                 "smart_audience": "Coming soon",
-                "validation_funds": validation_funds,
+                "validation_funds": {
+                    "detail_type": "funds",
+                    "limit_value": validation_funds_limit,
+                    "current_value": validation_funds,
+                },
                 "premium_sources_funds": "Coming soon",
-                "next_billing_date": next_billing_date,
-                total_key: total_sum,
-                "active": True
-                if user_subscription.status == "active"
-                else False,
+                "next_billing_date": {
+                    "detail_type": "time",
+                    "value": next_billing_date,
+                },
+                total_key: {"detail_type": "time", "value": total_sum},
+                "active": {
+                    "detail_type": "plan",
+                    "value": True
+                    if user_subscription.status == "active"
+                    else False,
+                },
             }
         elif subscription and user_subscription:
             billing_cycle = (
@@ -451,18 +474,36 @@ class SettingsService:
 
                 total_price = f"${final_amount / 100:,.0f}"
             subscription_details = {
-                "billing_cycle": billing_cycle,
-                "plan_name": plan_name,
-                "domains": f"{user_limit_domain}/{plan_limit_domain} Domains",
-                "contacts_downloads": "Coming soon",
+                "billing_cycle": {
+                    "detail_type": "time",
+                    "value": billing_cycle,
+                },
+                "plan_name": {"detail_type": "plan", "value": plan_name},
+                "domains": {
+                    "detail_type": "limited",
+                    "limit_value": user_limit_domain,
+                    "current_value": plan_limit_domain,
+                },
+                "contacts_downloads": {
+                    "detail_type": "limited",
+                    "limit_value": leads_credits_limit,
+                    "current_value": leads_credits,
+                },
                 "smart_audience": "Coming soon",
-                "validation_funds": f"${validation_funds}/${validation_funds_limit}",
+                "validation_funds": {
+                    "detail_type": "funds",
+                    "limit_value": validation_funds_limit,
+                    "current_value": validation_funds,
+                },
                 "premium_sources_funds": "Coming soon",
-                "next_billing_date": self.timestamp_to_date(
-                    subscription["items"]["data"][0]["current_period_end"]
-                ).strftime("%b %d, %Y"),
-                total_key: total_price,
-                "active": is_active,
+                "next_billing_date": {
+                    "detail_type": "time",
+                    "value": self.timestamp_to_date(
+                        subscription["items"]["data"][0]["current_period_end"]
+                    ).strftime("%b %d, %Y"),
+                },
+                total_key: {"detail_type": "time", "value": total_price},
+                "active": {"detail_type": "plan", "value": is_active},
             }
 
         billing_detail = {

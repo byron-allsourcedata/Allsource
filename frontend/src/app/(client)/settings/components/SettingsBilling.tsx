@@ -1,46 +1,33 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
 	Box,
 	Typography,
 	Button,
-	Table,
-	TableBody,
 	Modal,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Grid,
 	IconButton,
-	Switch,
 	Divider,
 	Popover,
-	Drawer,
 	LinearProgress,
-	TextField,
-	Chip,
 	Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { Elements } from "@stripe/react-stripe-js";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
-import CloseIcon from "@mui/icons-material/Close";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CheckoutForm from "@/components/CheckoutForm";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
 import CustomTooltip from "@/components/customToolTip";
-import DownloadIcon from "@mui/icons-material/Download";
-import TelegramIcon from "@mui/icons-material/Telegram";
-import CustomTablePagination from "@/components/CustomTablePagination";
-import BlurBilling from "./BlurBilling";
 import { MoreVert } from "@mui/icons-material";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import PaymentIcon from "@mui/icons-material/Payment";
 import { SendInvoicePopup } from "./SendInvoice";
 import { RemoveCardPopup } from "./RemoveCard";
+import { BillingHistory } from "./BillingHistory";
+import CustomTablePagination from "@/components/CustomTablePagination";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
@@ -63,12 +50,12 @@ export const billingStyles = {
 			content: '""',
 			display: "block",
 			position: "absolute",
-			top: "15px", // Space from the top
-			bottom: "15px", // Space from the bottom
-			right: 0, // Position the border at the right edge
+			top: "15px",
+			bottom: "15px",
+			right: 0,
 			width: "1px",
-			height: "calc(100% - 30px)", // Full height minus top and bottom spacing
-			backgroundColor: "rgba(235, 235, 235, 1)", // Border color
+			height: "calc(100% - 30px)",
+			backgroundColor: "rgba(235, 235, 235, 1)",
 		},
 		"&:last-child::after": {
 			content: "none",
@@ -89,12 +76,12 @@ export const billingStyles = {
 			content: '""',
 			display: "block",
 			position: "absolute",
-			top: "15px", // Space from the top
-			bottom: "15px", // Space from the bottom
-			right: 0, // Position the border at the right edge
+			top: "15px",
+			bottom: "15px",
+			right: 0,
 			width: "1px",
-			height: "calc(100% - 30px)", // Full height minus top and bottom spacing
-			backgroundColor: "rgba(235, 235, 235, 1)", // Border color
+			height: "calc(100% - 30px)",
+			backgroundColor: "rgba(235, 235, 235, 1)",
 		},
 		"&:last-child::after": {
 			content: "none",
@@ -141,14 +128,15 @@ export const SettingsBilling: React.FC = () => {
 		useState(0);
 	const [cardDetails, setCardDetails] = useState<any[]>([]);
 	const [billingDetails, setBillingDetails] = useState<any>({});
-	const [billingHistory, setBillingHistory] = useState<any[]>([]);
 	const [checked, setChecked] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
-	const [overageAnchorEl, setOverageAnchorEl] = useState<null | HTMLElement>(
-		null,
-	);
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+	const [totalRows, setTotalRows] = useState(0);
+	const [billingHistory, setBillingHistory] = useState<any[]>([]);
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);
@@ -156,30 +144,11 @@ export const SettingsBilling: React.FC = () => {
 	const [canceled_at, setCanceled_at] = useState<string | null>();
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
-	const [totalRows, setTotalRows] = useState(0);
-	const [totalPages, setTotalPages] = useState(0);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
 	const [open, setOpen] = useState(false);
-	const [inactiveContactCounts, setInactiveContactCounts] = useState(0);
-	const [inactiveDate, setInactiveDate] = useState<string | null>();
 	const [hide, setHide] = useState(false);
-	const sourcePlatform = useMemo(() => {
-		if (typeof window !== "undefined") {
-			const savedMe = sessionStorage.getItem("me");
-			if (savedMe) {
-				try {
-					const parsed = JSON.parse(savedMe);
-					return parsed.source_platform || "";
-				} catch (error) {}
-			}
-		}
-		return "";
-	}, [typeof window !== "undefined" ? sessionStorage.getItem("me") : null]);
 
 	const handleOpen = () => setOpen(true);
 	const handleClose = () => setOpen(false);
@@ -188,6 +157,7 @@ export const SettingsBilling: React.FC = () => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
+			console.log(response.data);
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
@@ -255,6 +225,20 @@ export const SettingsBilling: React.FC = () => {
 		}
 	};
 
+	const handleChangePage = (
+		_: React.MouseEvent<HTMLButtonElement> | null,
+		newPage: number,
+	) => {
+		setPage(newPage);
+	};
+
+	const handleChangeRowsPerPage = (
+		event: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		setRowsPerPage(parseInt(event.target.value, 10));
+		setPage(0); // Reset to first page when changing rows per page
+	};
+
 	useEffect(() => {
 		fetchCardData();
 		fetchBillingHistoryData(page, rowsPerPage);
@@ -267,16 +251,23 @@ export const SettingsBilling: React.FC = () => {
 	};
 
 	const renderValue = (value: any) => {
-		if (value === null || value === undefined) {
-			return "--"; // Fallback value if undefined or null
+		if (value?.current_value === -1) {
+			return "Unlimited";
 		}
-		if (typeof value === "object") {
-			return JSON.stringify(value); // Convert objects/arrays to string
-		}
-		return String(value); // Ensure numbers and other values are converted to strings
-	};
 
-	const label = { inputProps: { "aria-label": "overage" } };
+		switch (value.detail_type) {
+			case "funds":
+				return `$${value.current_value.toLocaleString("en-US")}/$${value.limit_value.toLocaleString("en-US")}`;
+			case "limited":
+				return `${value.current_value.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
+			case "plan":
+				return value.value;
+			case "time":
+				return value.value;
+			default:
+				return "Comming soon";
+		}
+	};
 
 	const handleClickOpen = (
 		event: React.MouseEvent<HTMLElement>,
@@ -416,43 +407,6 @@ export const SettingsBilling: React.FC = () => {
 		</Box>
 	);
 
-	const fetchSaveBillingHistory = async (invoice_id: string) => {
-		try {
-			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				`/settings/billing/download-billing?invoice_id=${invoice_id}`,
-			);
-			const link = response.data;
-			if (link) {
-				const a = document.createElement("a");
-				a.href = link;
-				a.target = "_blank";
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-			} else {
-				showErrorToast("Download billing not found.");
-			}
-		} catch (error: unknown) {
-			if (axios.isAxiosError(error)) {
-				showErrorToast(error.message);
-			} else if (error instanceof Error) {
-				showErrorToast(error.message);
-			} else {
-				showErrorToast("An unexpected error occurred.");
-			}
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	const handleChangePage = (
-		_: React.MouseEvent<HTMLButtonElement> | null,
-		newPage: number,
-	) => {
-		setPage(newPage);
-	};
-
 	const handleBuyCredits = async () => {
 		try {
 			setIsLoading(true);
@@ -482,30 +436,8 @@ export const SettingsBilling: React.FC = () => {
 		}
 	};
 
-	// Handler for rows per page change
-	// const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
-	//     const newRowsPerPage = parseInt(event.target.value, 10); // Преобразуем строку в число
-	//     setRowsPerPage(newRowsPerPage);
-	// };
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0); // Reset to first page when changing rows per page
-	};
-
 	const handleCheckoutSuccess = (data: any) => {
 		setCardDetails((prevDetails) => [...prevDetails, data]);
-	};
-
-	const formatDate = (dateString: string): string => {
-		const options: Intl.DateTimeFormatOptions = {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		};
-		return new Date(dateString).toLocaleDateString("en-US", options);
 	};
 
 	const handleRedirectSubscription = () => {
@@ -533,31 +465,6 @@ export const SettingsBilling: React.FC = () => {
 			setIsLoading(false);
 		}
 		window.location.reload();
-	};
-
-	const getStatusStyles = (status: string) => {
-		switch (status?.toLowerCase()) {
-			case "successful":
-				return {
-					background: "#eaf8dd",
-					color: "#2b5b00 !important",
-				};
-			case "decline":
-				return {
-					background: "#ececec",
-					color: "#4a4a4a !important",
-				};
-			case "failed":
-				return {
-					background: "#fcd4cf",
-					color: "#a61100 !important",
-				};
-			default:
-				return {
-					background: "#ececec",
-					color: "#4a4a4a !important",
-				};
-		}
 	};
 
 	const deleteOpen = Boolean(deleteAnchorEl);
@@ -656,10 +563,10 @@ export const SettingsBilling: React.FC = () => {
 														src={
 															cardBrandImages[card.brand as CardBrand] ||
 															"/default-card-icon.svg"
-														} // Default icon if brand not found
+														}
 														alt={`${card.brand}-icon`}
 														height={54}
-														width={54} // Adjust the size as needed
+														width={54}
 													/>
 												</Box>
 												<Box
@@ -1142,9 +1049,7 @@ export const SettingsBilling: React.FC = () => {
 														color: "#5f6368 !important",
 													}}
 												>
-													{renderValue(value).includes("-1")
-														? renderValue(value).replace("-1", "unlimited")
-														: renderValue(value)}
+													{renderValue(value)}
 												</Typography>
 											</Grid>
 										);
@@ -1259,233 +1164,30 @@ export const SettingsBilling: React.FC = () => {
 					},
 				}}
 			/>
-			<Box sx={{ marginTop: "30px" }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: "8px", mb: 3 }}>
-					<Typography
-						variant="h6"
-						className="first-sub-title"
-						sx={{
-							lineHeight: "22px !important",
-						}}
-					>
-						Billing History
-					</Typography>
-					<CustomTooltip
-						title={
-							"You can download the billing history and share it with your teammates."
-						}
-						linkText="Learn more"
-						linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/billing-history"
-					/>
-				</Box>
-				<TableContainer
-					sx={{
-						border: "1px solid #EBEBEB",
-						borderRadius: "4px 4px 0px 0px",
-					}}
-				>
-					<Table>
-						<TableHead>
-							<TableRow>
-								<TableCell
-									className="table-heading"
-									sx={{
-										...billingStyles.tableColumn,
-										background: "#fff",
-									}}
-								>
-									Date
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Invoice ID
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Pricing Plan
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Total
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Status
-								</TableCell>
-								{sourcePlatform !== "shopify" && (
-									<TableCell
-										className="table-heading"
-										sx={billingStyles.tableColumn}
-									>
-										Actions
-									</TableCell>
-								)}
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{billingHistory.length === 0 ? (
-								<TableRow sx={billingStyles.tableBodyRow}>
-									<TableCell
-										className="table-data"
-										colSpan={5}
-										sx={{
-											...billingStyles.tableBodyColumn,
-											textAlign: "center",
-											paddingTop: "18px",
-											paddingBottom: "18px",
-										}}
-									>
-										No history found
-									</TableCell>
-								</TableRow>
-							) : (
-								billingHistory.map((history, index) => (
-									<TableRow
-										key={index}
-										sx={{
-											...billingStyles.tableBodyRow,
-											"&:hover": {
-												backgroundColor: "#F7F7F7",
-												"& .sticky-cell": {
-													backgroundColor: "#F7F7F7",
-												},
-											},
-										}}
-									>
-										<TableCell
-											className="sticky-cell table-data"
-											sx={{
-												...billingStyles.tableBodyColumn,
-												backgroundColor: "#fff",
-											}}
-										>
-											{history.date}
-										</TableCell>
 
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											{history.invoice_id}
-										</TableCell>
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											{history.pricing_plan}
-										</TableCell>
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											${history.total}
-										</TableCell>
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											<Typography
-												component="span"
-												className="table-data"
-												sx={{
-													...getStatusStyles(history.status),
-													padding: "6px 8px",
-													borderRadius: "2px",
-												}}
-											>
-												{history.status}
-											</Typography>
-										</TableCell>
-										{sourcePlatform !== "shopify" && (
-											<TableCell
-												className="table-data"
-												sx={billingStyles.tableBodyColumn}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														gap: 2,
-													}}
-												>
-													{/* Download Button */}
-													<IconButton
-														onClick={() =>
-															fetchSaveBillingHistory(history.invoice_id)
-														}
-														sx={{
-															":hover": { backgroundColor: "transparent" },
-															padding: 0,
-														}}
-													>
-														<DownloadIcon
-															sx={{
-																width: "24px",
-																height: "24px",
-																color: "rgba(188, 188, 188, 1)",
-																":hover": {
-																	color: "rgba(56, 152, 252, 1)",
-																},
-															}}
-														/>
-													</IconButton>
+			<BillingHistory
+				billingHistory={billingHistory}
+				setIsLoading={setIsLoading}
+				handleSendInvoicePopupOpen={handleSendInvoicePopupOpen}
+			/>
 
-													{/* Send Invoice Button */}
-													<IconButton
-														onClick={() =>
-															handleSendInvoicePopupOpen(history.invoice_id)
-														}
-														sx={{
-															":hover": { backgroundColor: "transparent" },
-															padding: 0,
-														}}
-													>
-														<TelegramIcon
-															sx={{
-																width: "24px",
-																height: "24px",
-																color: "rgba(188, 188, 188, 1)",
-																":hover": {
-																	color: "rgba(56, 152, 252, 1)",
-																},
-															}}
-														/>
-													</IconButton>
-												</Box>
-											</TableCell>
-										)}
-									</TableRow>
-								))
-							)}
-						</TableBody>
-					</Table>
-				</TableContainer>
-				{/* Pagination Component */}
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "flex-end",
-						padding: "42px 0 0px",
-						mb: 1,
-					}}
-				>
-					<CustomTablePagination
-						count={totalRows}
-						page={page}
-						rowsPerPage={rowsPerPage}
-						onPageChange={handleChangePage}
-						onRowsPerPageChange={handleChangeRowsPerPage}
-						rowsPerPageOptions={rowsPerPageOptions}
-					/>
-				</Box>
+			{/* Pagination Component */}
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "flex-end",
+					padding: "42px 0 0px",
+					mb: 1,
+				}}
+			>
+				<CustomTablePagination
+					count={totalRows}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={handleChangePage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+					rowsPerPageOptions={rowsPerPageOptions}
+				/>
 			</Box>
 
 			<SendInvoicePopup
