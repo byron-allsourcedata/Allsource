@@ -88,12 +88,16 @@ class Users(Base):
         Integer, nullable=True, server_default=text("0")
     )
     leads_credits = Column(Integer, nullable=False, server_default=text("0"))
-    prospect_credits = Column(Integer, nullable=False, server_default=text("0"))
     overage_leads_count = Column(
         Integer, nullable=False, server_default=text("0")
     )
     validation_funds = Column(
         DECIMAL(10, 2), nullable=False, server_default=text("0")
+    )
+    enrichment_credits = Column(DECIMAL(10, 2), nullable=True, server_default=text("0"))
+    premium_source_credits = Column(DECIMAL(10, 2), nullable=True, server_default=text("0"))
+    smart_audience_quota = Column(
+        Integer, nullable=False, server_default=text("0")
     )
     change_email_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
     is_leads_auto_charging = Column(

@@ -19,14 +19,6 @@ from .base import Base, update_timestamps
 
 class UserSubscriptions(Base):
     __tablename__ = "user_subscriptions"
-    __table_args__ = (
-        Index(
-            "user_subscriptions_contact_credit_plan_id_idx",
-            "contact_credit_plan_id",
-        ),
-        Index("user_subscriptions_user_id_idx", "user_id"),
-        Index("user_subscriptions_user_id_status_idx", "user_id", "status"),
-    )
 
     id = Column(
         BigInteger,
@@ -78,6 +70,15 @@ class UserSubscriptions(Base):
         BigInteger,
         ForeignKey("subscription_plans.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    __table_args__ = (
+        Index(
+            "user_subscriptions_contact_credit_plan_id_idx",
+            contact_credit_plan_id,
+        ),
+        Index("user_subscriptions_user_id_idx", user_id),
+        Index("user_subscriptions_user_id_status_idx", user_id, status),
     )
 
 

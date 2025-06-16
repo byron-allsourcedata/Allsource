@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, aliased, load_only
 from sqlalchemy.sql import func
 from sqlalchemy.orm import class_mapper
 
+from models import SubscriptionPlan, UserSubscriptions
 from models.audience_smarts import AudienceSmart
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -45,6 +46,9 @@ class AudienceSmartsPersistence:
             .first()
         )
         return use_case[0] if use_case else None
+
+    def check_access_for_user(self, user: dict):
+        self.db.query(UserSubscriptions).join(Users, Users.current_subscription_id == UserSubscriptions.id)
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         Lalp = aliased(AudienceLookalikesPerson)

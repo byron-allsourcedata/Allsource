@@ -150,6 +150,15 @@ def get_datasource(
     )
     return data_source
 
+@router.get("/check-access")
+def check_access(
+    user=Depends(check_user_authorization_without_pixel),
+    audience_smarts_service: AudienceSmartsService = Depends(
+        get_audience_smarts_service
+    ),
+):
+    return audience_smarts_service.check_access(user=user)
+
 
 @router.get("/search")
 def search_audience_smart(

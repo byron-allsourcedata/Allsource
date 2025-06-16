@@ -1338,8 +1338,27 @@ const SmartAudiences: React.FC = () => {
 																	caption:
 																		"Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins.",
 																	onOpenPopup: handleOpenPopup,
-																	onBegin: () =>
-																		router.push("/smart-audiences/builder"),
+																	onBegin: async () => {
+																		try {
+																			const res = await fetch("/audience-smarts/check-access", {
+																				method: "GET",
+																				headers: {
+																					"Content-Type": "application/json",
+																				},
+																			});
+																	
+																			const data = await res.json();
+																	
+																			if (res.ok && data.allowed) {
+																				router.push("/smart-audiences/builder");
+																			} else {
+																				onOpenPopup?.("You need a higher-tier subscription to use Smart Audiences.");
+																			}
+																		} catch (error) {
+																			console.error("Error checking access:", error);
+																			onOpenPopup?.("Something went wrong. Please try again later.");
+																		}
+																	},
 																	beginDisabled: !hasSource,
 																	buttonLabel: "Create Smart Audience",
 																	sx: {},

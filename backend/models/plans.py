@@ -18,21 +18,6 @@ from .base import Base
 
 class SubscriptionPlan(Base):
     __tablename__ = "subscription_plans"
-    __table_args__ = (
-        Index("subscription_plans_alias_idx", "alias", unique=True),
-        Index(
-            "subscription_plans_contact_credit_plan_id_idx",
-            "contact_credit_plan_id",
-        ),
-        Index(
-            "subscription_plans_interval_is_active_idx", "interval", "is_active"
-        ),
-        Index(
-            "subscription_plans_platform_is_active_idx", "platform", "is_active"
-        ),
-        Index("subscription_plans_title_interval_idx", "title", "interval"),
-        Index("subscription_plans_title_price_idx", "title", "price"),
-    )
 
     id = Column(
         BigInteger,
@@ -56,9 +41,8 @@ class SubscriptionPlan(Base):
     domains_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
     leads_credits = Column(BigInteger, nullable=True)
-    prospect_credits = Column(BigInteger, nullable=True)
     validation_funds = Column(
-        DECIMAL(10, 2), server_default=text("0"), nullable=True
+        DECIMAL(10, 2), nullable=True
     )
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
@@ -73,4 +57,24 @@ class SubscriptionPlan(Base):
     )
     overage_enabled = Column(
         Boolean, nullable=False, server_default=text("true")
+    )
+    is_unlimited = Column(Boolean, nullable=False, server_default=text("false"))
+    smart_audience_quota = Column(Integer, nullable=True)
+    enrichment_credits = Column(DECIMAL(10, 2), nullable=True)
+    premium_source_credits = Column(DECIMAL(10, 2), nullable=True)
+
+    __table_args__ = (
+        Index("subscription_plans_alias_idx", alias, unique=True),
+        Index(
+            "subscription_plans_contact_credit_plan_id_idx",
+            contact_credit_plan_id,
+        ),
+        Index(
+            "subscription_plans_interval_is_active_idx", interval, is_active
+        ),
+        Index(
+            "subscription_plans_platform_is_active_idx", platform, is_active
+        ),
+        Index("subscription_plans_title_interval_idx", title, interval),
+        Index("subscription_plans_title_price_idx", title, price),
     )
