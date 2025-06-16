@@ -964,7 +964,6 @@ const CreateLookalike: React.FC = () => {
 	);
 };
 
-
 const CreateLookalikePage: React.FC = () => {
 	return (
 		<Suspense fallback={<CustomizedProgressBar />}>
