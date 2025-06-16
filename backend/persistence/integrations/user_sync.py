@@ -145,8 +145,7 @@ class IntegrationsUserSyncPersistence:
             .select_from(DataSyncImportedLead)
             .join(
                 IntegrationUserSync,
-                IntegrationUserSync.id
-                == DataSyncImportedLead.data_sync_id,
+                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
             .where(DataSyncImportedLead.status == "success")
             .group_by(IntegrationUserSync.id)
@@ -160,8 +159,7 @@ class IntegrationsUserSyncPersistence:
             .select_from(DataSyncImportedLead)
             .join(
                 IntegrationUserSync,
-                IntegrationUserSync.id
-                == DataSyncImportedLead.data_sync_id,
+                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
             .where(DataSyncImportedLead.status == "sent")
         ).subquery()
@@ -174,8 +172,7 @@ class IntegrationsUserSyncPersistence:
             .select_from(DataSyncImportedLead)
             .join(
                 IntegrationUserSync,
-                IntegrationUserSync.id
-                == DataSyncImportedLead.data_sync_id,
+                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
             .where(DataSyncImportedLead.status == "failed")
             .group_by(IntegrationUserSync.id)
@@ -189,8 +186,7 @@ class IntegrationsUserSyncPersistence:
             .select_from(DataSyncImportedLead)
             .join(
                 IntegrationUserSync,
-                IntegrationUserSync.id
-                == DataSyncImportedLead.data_sync_id,
+                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
             .group_by(IntegrationUserSync.id)
         ).subquery()

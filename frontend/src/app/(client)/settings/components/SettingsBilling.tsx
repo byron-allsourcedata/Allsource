@@ -55,7 +55,7 @@ export const billingStyles = {
 			right: 0,
 			width: "1px",
 			height: "calc(100% - 30px)",
-			backgroundColor: "rgba(235, 235, 235, 1)"
+			backgroundColor: "rgba(235, 235, 235, 1)",
 		},
 		"&:last-child::after": {
 			content: "none",
@@ -134,9 +134,9 @@ export const SettingsBilling: React.FC = () => {
 	);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-    const [totalRows, setTotalRows] = useState(0);
-    const [billingHistory, setBillingHistory] = useState<any[]>([]);
+	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+	const [totalRows, setTotalRows] = useState(0);
+	const [billingHistory, setBillingHistory] = useState<any[]>([]);
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);
@@ -157,6 +157,7 @@ export const SettingsBilling: React.FC = () => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
+			console.log(response.data)
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
@@ -231,13 +232,12 @@ export const SettingsBilling: React.FC = () => {
 		setPage(newPage);
 	};
 
-    const handleChangeRowsPerPage = (
+	const handleChangeRowsPerPage = (
 		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		setRowsPerPage(parseInt(event.target.value, 10));
 		setPage(0); // Reset to first page when changing rows per page
 	};
-
 
 	useEffect(() => {
 		fetchCardData();
@@ -251,13 +251,23 @@ export const SettingsBilling: React.FC = () => {
 	};
 
 	const renderValue = (value: any) => {
-		if (value === null || value === undefined) {
-			return "--"; // Fallback value if undefined or null
+		if (value?.current_value === -1) {
+			return "Unlimited"
 		}
-		if (typeof value === "object") {
-			return JSON.stringify(value); // Convert objects/arrays to string
+
+		switch (value.detail_type) { 
+			case "funds":
+				return `$${value.current_value.toLocaleString("en-US")}/$${value.limit_value.toLocaleString("en-US")}`
+			case "limited":
+				return `${value.current_value.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`
+			case "plan":
+				return value.value
+			case "time":
+				return value.value
+			default: 
+				return "Comming soon"
+		
 		}
-		return String(value); // Ensure numbers and other values are converted to strings
 	};
 
 	const handleClickOpen = (
@@ -554,7 +564,7 @@ export const SettingsBilling: React.FC = () => {
 														src={
 															cardBrandImages[card.brand as CardBrand] ||
 															"/default-card-icon.svg"
-														} 
+														}
 														alt={`${card.brand}-icon`}
 														height={54}
 														width={54}
@@ -1040,9 +1050,8 @@ export const SettingsBilling: React.FC = () => {
 														color: "#5f6368 !important",
 													}}
 												>
-													{renderValue(value).includes("-1")
-														? renderValue(value).replace("-1", "unlimited")
-														: renderValue(value)}
+													
+													{renderValue(value)}
 												</Typography>
 											</Grid>
 										);
@@ -1158,7 +1167,7 @@ export const SettingsBilling: React.FC = () => {
 				}}
 			/>
 
-			<BillingHistory 
+			<BillingHistory
 				billingHistory={billingHistory}
 				setIsLoading={setIsLoading}
 				handleSendInvoicePopupOpen={handleSendInvoicePopupOpen}
