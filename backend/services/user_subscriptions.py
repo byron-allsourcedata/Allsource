@@ -6,6 +6,7 @@ from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
+
 @injectable
 class UserSubscriptionsService:
     def __init__(

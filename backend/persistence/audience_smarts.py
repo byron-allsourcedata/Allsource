@@ -48,7 +48,9 @@ class AudienceSmartsPersistence:
         return use_case[0] if use_case else None
 
     def check_access_for_user(self, user: dict):
-        self.db.query(UserSubscriptions).join(Users, Users.current_subscription_id == UserSubscriptions.id)
+        self.db.query(UserSubscriptions).join(
+            Users, Users.current_subscription_id == UserSubscriptions.id
+        )
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         Lalp = aliased(AudienceLookalikesPerson)

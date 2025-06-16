@@ -5,7 +5,11 @@ from services.subscriptions.basic import BasicPlanService
 
 @injectable
 class SubscriptionWebhookService:
-    def __init__(self, user_persistence: UserPersistence, basic_plan_service: BasicPlanService):
+    def __init__(
+        self,
+        user_persistence: UserPersistence,
+        basic_plan_service: BasicPlanService,
+    ):
         self.user_persistence = user_persistence
         self.basic_plan_service = basic_plan_service
 

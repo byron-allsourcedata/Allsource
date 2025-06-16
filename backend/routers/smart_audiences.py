@@ -150,6 +150,7 @@ def get_datasource(
     )
     return data_source
 
+
 @router.get("/check-access")
 def check_access(
     user=Depends(check_user_authorization_without_pixel),

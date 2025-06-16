@@ -1340,23 +1340,33 @@ const SmartAudiences: React.FC = () => {
 																	onOpenPopup: handleOpenPopup,
 																	onBegin: async () => {
 																		try {
-																			const res = await fetch("/audience-smarts/check-access", {
-																				method: "GET",
-																				headers: {
-																					"Content-Type": "application/json",
+																			const res = await fetch(
+																				"/audience-smarts/check-access",
+																				{
+																					method: "GET",
+																					headers: {
+																						"Content-Type": "application/json",
+																					},
 																				},
-																			});
-																	
+																			);
+
 																			const data = await res.json();
-																	
+
 																			if (res.ok && data.allowed) {
 																				router.push("/smart-audiences/builder");
 																			} else {
-																				onOpenPopup?.("You need a higher-tier subscription to use Smart Audiences.");
+																				onOpenPopup?.(
+																					"You need a higher-tier subscription to use Smart Audiences.",
+																				);
 																			}
 																		} catch (error) {
-																			console.error("Error checking access:", error);
-																			onOpenPopup?.("Something went wrong. Please try again later.");
+																			console.error(
+																				"Error checking access:",
+																				error,
+																			);
+																			onOpenPopup?.(
+																				"Something went wrong. Please try again later.",
+																			);
 																		}
 																	},
 																	beginDisabled: !hasSource,

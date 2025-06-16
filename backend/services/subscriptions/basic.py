@@ -12,6 +12,7 @@ from services.user_subscriptions import UserSubscriptionsService
 
 logger = logging.getLogger(__name__)
 
+
 @injectable
 class BasicPlanService:
     def __init__(

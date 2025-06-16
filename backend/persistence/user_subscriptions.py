@@ -34,7 +34,9 @@ class UserSubscriptionsPersistence:
         self.db.add(user_subscription)
         return user_subscription
 
-    def set_current_subscription(self, user_id: int, subscription_id: int, plan: SubscriptionPlan):
+    def set_current_subscription(
+        self, user_id: int, subscription_id: int, plan: SubscriptionPlan
+    ):
         user = self.db.execute(
             select(Users).where(Users.id == user_id)
         ).scalar()

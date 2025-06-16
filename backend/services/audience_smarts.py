@@ -361,6 +361,7 @@ class AudienceSmartsService:
 
     def check_access(self, user: dict):
         self.audience_smarts_persistence.check_access_for_user(user=user)
+
     def get_datasource(self, user: dict):
         lookalikes, count, max_page, _ = (
             self.lookalikes_persistence_service.get_lookalikes(
