@@ -51,7 +51,10 @@ class AudienceSmartsPersistence:
         restricted_plans = ["free_trial_monthly", "basic"]
         subscription = (
             self.db.query(SubscriptionPlan)
-            .join(UserSubscriptions, UserSubscriptions.plan_id == SubscriptionPlan.id)
+            .join(
+                UserSubscriptions,
+                UserSubscriptions.plan_id == SubscriptionPlan.id,
+            )
             .filter(UserSubscriptions.id == user["current_subscription_id"])
             .first()
         )

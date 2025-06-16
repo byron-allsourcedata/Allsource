@@ -361,7 +361,9 @@ class AudienceSmartsService:
 
     def check_access(self, user: dict):
         return {
-            'allowed': self.audience_smarts_persistence.check_access_for_user(user=user)
+            "allowed": self.audience_smarts_persistence.check_access_for_user(
+                user=user
+            )
         }
 
     def get_datasource(self, user: dict):
