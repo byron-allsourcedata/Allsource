@@ -95,7 +95,9 @@ class AudienceInsightsPersistence:
 
         if lookalike and lookalike.insights:
             return {
-                "insights": json.loads(gzip.decompress(lookalike.insights).decode('utf-8')),
+                "insights": json.loads(
+                    gzip.decompress(lookalike.insights).decode("utf-8")
+                ),
                 "name": lookalike.name,
                 "audience_type": lookalike.target_schema,
                 "significant_fields": lookalike.significant_fields,

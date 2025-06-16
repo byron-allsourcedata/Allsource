@@ -105,7 +105,7 @@ async def aud_sources_matching(
         )
 
         json_data = json.dumps(merged)
-        compressed_data = gzip.compress(json_data.encode('utf-8'))
+        compressed_data = gzip.compress(json_data.encode("utf-8"))
 
         db_session.execute(
             update(AudienceLookalikes)
