@@ -214,7 +214,7 @@ async def checkout_completed(
         if checkout_type == "upgrade_basic":
             subscription_webhooks.move_to_basic_plan(customer_id)
             db.commit()
-            return 'SUCCESS'
+            return "SUCCESS"
         else:
             logger.warning(f"Unknown checkout type: {checkout_type}")
 

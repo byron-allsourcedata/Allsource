@@ -49,7 +49,9 @@ class UserSubscriptions(Base):
     user_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
-    status = Column(VARCHAR(32), nullable=False, server_default=text("'active'"))
+    status = Column(
+        VARCHAR(32), nullable=False, server_default=text("'active'")
+    )
     plan_id = Column(
         BigInteger,
         ForeignKey("subscription_plans.id", onupdate="SET NULL"),
@@ -57,9 +59,13 @@ class UserSubscriptions(Base):
     )
     is_trial = Column(Boolean, nullable=False, server_default=text("false"))
     domains_limit = Column(Integer, nullable=False, server_default=text("-1"))
-    integrations_limit = Column(Integer, nullable=True, server_default=text("-1"))
+    integrations_limit = Column(
+        Integer, nullable=True, server_default=text("-1")
+    )
     platform_subscription_id = Column(VARCHAR, nullable=True)
-    members_limit = Column(BigInteger, nullable=False, server_default=text("-1"))
+    members_limit = Column(
+        BigInteger, nullable=False, server_default=text("-1")
+    )
     downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)
     downgrade_price_id = Column(VARCHAR, nullable=True)
     cancellation_reason = Column(TEXT, nullable=True)

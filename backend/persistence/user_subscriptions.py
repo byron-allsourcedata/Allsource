@@ -28,7 +28,7 @@ class UserSubscriptionsPersistence:
             plan_start=now,
             price_id=plan.stripe_price_id,
             contact_credit_plan_id=plan.contact_credit_plan_id,
-            plan_end=None if plan.alias == 'basic' else end_of_month(now)
+            plan_end=None if plan.alias == "basic" else end_of_month(now),
         )
 
         self.db.add(user_subscription)

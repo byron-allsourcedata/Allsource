@@ -908,8 +908,8 @@ async def process_user_data(
             lead_user.first_visit_id = lead_visit_id
             session.flush()
             if not user_domain.is_pixel_installed:
-                    user_domain.is_pixel_installed = True
-                    session.flush()
+                user_domain.is_pixel_installed = True
+                session.flush()
         else:
             if not lead_user.is_returning_visitor:
                 lead_user.is_returning_visitor = True

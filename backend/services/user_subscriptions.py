@@ -18,7 +18,9 @@ class UserSubscriptionsService:
 
     def move_to_plan(self, user_id: int, plan_alias: str):
         plan = self.plans.get_plan_by_alias(plan_alias)
-        user_subscription = self.user_subscriptions.add(user_id=user_id, plan=plan)
+        user_subscription = self.user_subscriptions.add(
+            user_id=user_id, plan=plan
+        )
         self.db.flush()
         self.user_subscriptions.set_current_subscription(
             user_id, user_subscription.id
