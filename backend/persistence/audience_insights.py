@@ -3,6 +3,8 @@ from decimal import Decimal
 from uuid import UUID
 
 import pytz
+import json
+import gzip
 from pydantic.v1 import UUID4
 
 from enums import LookalikeSize
@@ -93,7 +95,7 @@ class AudienceInsightsPersistence:
 
         if lookalike and lookalike.insights:
             return {
-                "insights": lookalike.insights,
+                "insights": json.loads(gzip.decompress(lookalike.insights).decode('utf-8')),
                 "name": lookalike.name,
                 "audience_type": lookalike.target_schema,
                 "significant_fields": lookalike.significant_fields,
