@@ -484,6 +484,7 @@ async def aud_sources_reader(
             == audience_lookalike.source_uuid
         )
 
+
         enrichment_lookalike_scores = (
             db_session.query(
                 EnrichmentLookalikeScore.enrichment_user_id,
@@ -499,6 +500,8 @@ async def aud_sources_reader(
             .limit(total_rows)
             .all()
         )
+
+
 
         logging.info(
             f"Total row in pixel file: {len(enrichment_lookalike_scores)}"
@@ -526,6 +529,8 @@ async def aud_sources_reader(
         audience_lookalike.similarity_score = similarity_score
         db_session.add(audience_lookalike)
         db_session.flush()
+
+        logging.info("flush happened")
         await send_sse(
             connection,
             audience_lookalike.user_id,
@@ -536,9 +541,12 @@ async def aud_sources_reader(
             },
         )
 
-        if not enrichment_lookalike_scores:
-            await message.ack()
-            return
+        logging.info("sse happend")
+
+
+        # if not enrichment_lookalike_scores:
+        #     await message.ack()
+        #     return
 
         persons = [
             str(enrichment_lookalike_score.enrichment_user_id)
@@ -552,11 +560,14 @@ async def aud_sources_reader(
             "enrichment_user": persons,
         }
 
+        logging.info("before publish")
         await publish_rabbitmq_message(
             connection=connection,
             queue_name=AUDIENCE_LOOKALIKES_MATCHING,
             message_body=message_body,
         )
+
+        logging.info("after publish")
 
         db_session.commit()
         await message.ack()

@@ -85,7 +85,7 @@ class SimilarAudiencesScoresService:
     ):
         return self.enrichment_models_persistence.save(lookalike_id, model)
 
-    @deprecated
+    @deprecated("deprecated")
     def calculate_scores(
         self,
         model: CatBoostRegressor,

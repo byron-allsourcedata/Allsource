@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, Dict, List
 from uuid import UUID
 
@@ -6,6 +7,7 @@ from sqlalchemy import update
 
 from db_dependencies import Clickhouse, Db
 from models import AudienceLookalikes
+from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_users import EnrichmentUsersPersistence
 from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
@@ -18,6 +20,7 @@ from services.similar_audiences.similar_audience_scores import (
     measure,
 )
 
+logger = logging.getLogger(__name__)
 
 @injectable
 class LookalikeFillerService:
@@ -80,6 +83,8 @@ class LookalikeFillerService:
             model=model,
             lookalike_id=audience_lookalike.id,
         )
+
+
 
     def train_and_save_model(
         self,
@@ -167,3 +172,17 @@ class LookalikeFillerService:
                 print(f"processed users = {count}")
                 batch_buffer = []
                 user_ids_buffer = []
+
+        logger.info("Updating костыль lookalike")
+        # Forcefully set processed_size equal to size because of data inconsistency
+        # between Postgres and ClickHouse — we assume the full batch is received.
+        processed_size, total_records = self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(
+                train_model_size=AudienceLookalikes.processed_train_model_size
+            )
+            .returning(
+                AudienceLookalikes.processed_size, AudienceLookalikes.size
+            )
+        ).fetchone()
