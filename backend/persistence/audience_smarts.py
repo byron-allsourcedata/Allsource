@@ -47,10 +47,16 @@ class AudienceSmartsPersistence:
         )
         return use_case[0] if use_case else None
 
-    def check_access_for_user(self, user: dict):
-        self.db.query(UserSubscriptions).join(
-            Users, Users.current_subscription_id == UserSubscriptions.id
+    def check_access_for_user(self, user: dict) -> bool:
+        restricted_plans = ["free_trial_monthly", "basic"]
+        subscription = (
+            self.db.query(SubscriptionPlan)
+            .join(UserSubscriptions, UserSubscriptions.plan_id == SubscriptionPlan.id)
+            .filter(UserSubscriptions.id == user["current_subscription_id"])
+            .first()
         )
+
+        return subscription.alias not in restricted_plans
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         Lalp = aliased(AudienceLookalikesPerson)

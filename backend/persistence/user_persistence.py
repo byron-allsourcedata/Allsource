@@ -182,6 +182,8 @@ class UserPersistence:
                 "stripe_connected_email": user.stripe_connected_email,
                 "stripe_connected_currently_due": user.stripe_connected_currently_due,
                 "partner_is_active": partner_is_active,
+                "premium_source_credits": user.premium_source_credits,
+                "smart_audience_quota": user.smart_audience_quota
             }
         self.db.rollback()
         if result_as_object:

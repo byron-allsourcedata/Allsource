@@ -124,6 +124,12 @@ export const SettingsBilling: React.FC = () => {
 	const [contactsCollected, setContactsCollected] = useState(0);
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
+	const [smartAudienceCollected, setSmartAudienceCollected] = useState(0);
+	const [planPremiumSourceCollected, setPlanPremiumSourceCollected] =
+		useState(0);
+	const [premiumSourceCollected, setPremiumSourceCollected] = useState(0);
+	const [planSmartAudienceCollected, setPlanSmartAudienceCollected] =
+		useState(0);
 	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
 	const [cardDetails, setCardDetails] = useState<any[]>([]);
@@ -167,8 +173,20 @@ export const SettingsBilling: React.FC = () => {
 					response.data.usages_credits.plan_leads_credits,
 				);
 				setValidationFundsData(response.data.usages_credits.validation_funds);
+				setPremiumSourceCollected(
+					response.data.usages_credits.premium_source_credits,
+				);
+				setSmartAudienceCollected(
+					response.data.usages_credits.smart_audience_quota,
+				);
 				setValidationFundsLimitedData(
 					response.data.usages_credits.validation_funds_limit,
+				);
+				setPlanPremiumSourceCollected(
+					response.data.usages_credits.plan_premium_source_collected,
+				);
+				setPlanSmartAudienceCollected(
+					response.data.usages_credits.plan_smart_audience_collected,
 				);
 			}
 			setChecked(response.data.billing_details.is_leads_auto_charging);
@@ -1121,8 +1139,27 @@ export const SettingsBilling: React.FC = () => {
 						>
 							{!hide && (
 								<>
-									{renderSection("Contacts Downloaded", 0, "0")}
-									{renderSection("Smart Audience", 0, "0")}
+									{renderSection(
+										"Contacts Downloaded",
+										Math.round(
+											((planContactsCollected - contactsCollected) /
+												planContactsCollected) *
+												100,
+										),
+										String(planContactsCollected),
+									)}
+									{renderSection(
+										"Smart Audience",
+										planSmartAudienceCollected === 0
+											? 100
+											: Math.round(
+													((planSmartAudienceCollected -
+														smartAudienceCollected) /
+														planSmartAudienceCollected) *
+														100,
+												),
+										String(smartAudienceCollected),
+									)}
 									{renderSection(
 										"Validation funds",
 										validationLimitFundsCollected === -1
@@ -1146,7 +1183,18 @@ export const SettingsBilling: React.FC = () => {
 												: "",
 										validationFundsCollected !== validationLimitFundsCollected,
 									)}
-									{renderSection("Premium Source funds", 0, "0")}
+									{renderSection(
+										"Premium Source funds",
+										planPremiumSourceCollected === 0
+											? 100
+											: Math.round(
+													((planPremiumSourceCollected -
+														premiumSourceCollected) /
+														planPremiumSourceCollected) *
+														100,
+												),
+										String(premiumSourceCollected),
+									)}
 								</>
 							)}
 						</Box>

@@ -360,7 +360,9 @@ class AudienceSmartsService:
         return [{item["key"]: item["validation"]} for item in result]
 
     def check_access(self, user: dict):
-        self.audience_smarts_persistence.check_access_for_user(user=user)
+        return {
+            'allowed': self.audience_smarts_persistence.check_access_for_user(user=user)
+        }
 
     def get_datasource(self, user: dict):
         lookalikes, count, max_page, _ = (

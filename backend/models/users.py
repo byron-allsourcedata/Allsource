@@ -94,9 +94,6 @@ class Users(Base):
     validation_funds = Column(
         DECIMAL(10, 2), nullable=False, server_default=text("0")
     )
-    enrichment_credits = Column(
-        DECIMAL(10, 2), nullable=True, server_default=text("0")
-    )
     premium_source_credits = Column(
         DECIMAL(10, 2), nullable=True, server_default=text("0")
     )

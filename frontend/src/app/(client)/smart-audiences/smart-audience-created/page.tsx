@@ -32,6 +32,10 @@ import { getStatusStyle } from "../components/utils/getStatusStyle";
 import HintCard from "../../components/HintCard";
 import { useSmartsHints } from "../context/SmartsHintsContext";
 import { createdHintCards } from "../context/hintsCardsContent";
+import {
+	BookACallPopup,
+	LeftMenuProps,
+} from "@/app/(client)/components/BookACallPopup";
 
 interface SmartAudienceSource {
 	id: string;
@@ -68,7 +72,7 @@ const SourcesList: React.FC = () => {
 	const [selectedName, setSelectedName] = React.useState<string | null>(null);
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 	const isOpenFullName = Boolean(anchorElFullName);
-
+	const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 	const { smartAudienceProgress, validationProgress } = useSSE();
 	const progress = smartAudienceProgress[createdData?.id];
 	const progressValidation = validationProgress[createdData?.id];
@@ -178,6 +182,10 @@ const SourcesList: React.FC = () => {
 	};
 	return (
 		<>
+			<BookACallPopup
+				open={upgradePlanPopup}
+				handleClose={() => setUpgradePlanPopup(false)}
+			/>
 			{loading && <CustomizedProgressBar />}
 			<Box
 				sx={{
@@ -567,8 +575,21 @@ const SourcesList: React.FC = () => {
 								</Button>
 								<Box sx={{ display: "block", position: "relative" }}>
 									<Button
-										variant="contained" /* need chnage < on !== */
-										onClick={() => router.push(`/smart-audiences/builder`)}
+										variant="contained"
+										onClick={async () => {
+											try {
+												const res = await axiosInstance.get(
+													"/audience-smarts/check-access",
+												);
+												if (res.data.allowed) {
+													router.push("/smart-audiences/builder");
+												} else {
+													setUpgradePlanPopup(true);
+												}
+											} catch (error) {
+												console.error("error:", error);
+											}
+										}}
 										className="second-sub-title"
 										sx={{
 											backgroundColor: "rgba(56, 152, 252, 1)",

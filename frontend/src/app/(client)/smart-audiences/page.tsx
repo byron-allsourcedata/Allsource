@@ -59,7 +59,6 @@ import { SliderProvider } from "../../../context/SliderContext";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import CustomTablePagination from "@/components/CustomTablePagination";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "../sources/components/ThreeDotsLoader";
@@ -67,11 +66,15 @@ import ProgressBar from "../sources/components/ProgressLoader";
 import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SmartAudienceFilter";
 import DetailsPopup from "./components/SmartAudienceDataSources";
+import GettingStartedSection from "@/components/GettingStartedSection";
 import ValidationsHistoryPopup from "./components/SmartAudienceValidationHistory";
 import CalendarPopup from "@/components/CustomCalendar";
-import TableCustomCell from "../sources/components/table/TableCustomCell";
+import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
+import {
+	BookACallPopup,
+	LeftMenuProps,
+} from "@/app/(client)/components/BookACallPopup";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
-import FirstTimeScreen from "./components/FirstTimeScreen";
 import {
 	FirstTimeScreenCommonVariant1,
 	BuilderIntro,
@@ -327,6 +330,7 @@ const SmartAudiences: React.FC = () => {
 	const router = useRouter();
 	const { changeSmartsTableHint, smartsTableHints } = useSmartsHints();
 	const { hasNotification } = useNotification();
+	const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 	const { smartAudienceProgress, validationProgress } = useSSE();
 	const [data, setData] = useState<Smarts[]>([]);
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
@@ -970,6 +974,10 @@ const SmartAudiences: React.FC = () => {
 			}}
 		>
 			{loading && <CustomizedProgressBar />}
+			<BookACallPopup
+				open={upgradePlanPopup}
+				handleClose={() => setUpgradePlanPopup(false)}
+			/>
 			{!loading && (
 				<Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
 					<Box>
@@ -1040,8 +1048,19 @@ const SmartAudiences: React.FC = () => {
 												borderColor: "rgba(56, 152, 252, 1)",
 											},
 										}}
-										onClick={() => {
-											router.push("/smart-audiences/builder");
+										onClick={async () => {
+											try {
+												const res = await axiosInstance.get(
+													"/audience-smarts/check-access",
+												);
+												if (res.data.allowed) {
+													router.push("/smart-audiences/builder");
+												} else {
+													setUpgradePlanPopup(true);
+												}
+											} catch (error) {
+												console.error("error:", error);
+											}
 										}}
 									>
 										Generate Smart Audience
@@ -1340,7 +1359,7 @@ const SmartAudiences: React.FC = () => {
 																	onOpenPopup: handleOpenPopup,
 																	onBegin: async () => {
 																		try {
-																			const res = await fetch(
+																			const res = await axiosInstance(
 																				"/audience-smarts/check-access",
 																				{
 																					method: "GET",
@@ -1350,23 +1369,13 @@ const SmartAudiences: React.FC = () => {
 																				},
 																			);
 
-																			const data = await res.json();
-
-																			if (res.ok && data.allowed) {
+																			if (res.data.allowed) {
 																				router.push("/smart-audiences/builder");
 																			} else {
-																				onOpenPopup?.(
-																					"You need a higher-tier subscription to use Smart Audiences.",
-																				);
+																				setUpgradePlanPopup(true);
 																			}
 																		} catch (error) {
-																			console.error(
-																				"Error checking access:",
-																				error,
-																			);
-																			onOpenPopup?.(
-																				"Something went wrong. Please try again later.",
-																			);
+																			setUpgradePlanPopup(true);
 																		}
 																	},
 																	beginDisabled: !hasSource,
