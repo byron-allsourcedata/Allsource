@@ -26,7 +26,7 @@ from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 import math
-from sqlalchemy import asc, desc, or_, func
+from sqlalchemy import asc, desc, or_, func, select, update
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
@@ -151,6 +151,19 @@ class AudienceLookalikesPostgresPersistence(
         count = query.count()
         max_page = math.ceil(count / per_page)
         return result_query, count, max_page, source_count
+
+
+    def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
+        return self.db.execute(select(AudienceLookalikes).where(AudienceLookalikes.id == lookalike_id)).scalar()
+
+
+    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(train_model_size=dataset_size)
+        )
+
 
     def create_lookalike(
         self,

@@ -1,34 +1,37 @@
 import time
 import psycopg2
-from decimal import Decimal
-from typing import List
+
+from typing import List, Any
 from uuid import UUID
 
 from catboost import CatBoostRegressor
-from fastapi import Depends
+
 from pandas import DataFrame
-from sqlalchemy import update, func, text, select
+from sqlalchemy import update, select
 from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
-from typing_extensions import Annotated
+
+
 
 from config.database import SqlConfigBase
-from dependencies import Db
-from models import AudienceLookalikes, EnrichmentUserContact, EnrichmentUser
+from db_dependencies import Db
+from models import AudienceLookalikes, EnrichmentUser
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
-    EnrichmentLookalikeScoresPersistenceDep,
+
 )
 from persistence.enrichment_models import (
     EnrichmentModelsPersistence,
-    EnrichmentModelsPersistenceDep,
+
 )
-from schemas.similar_audiences import NormalizationConfig, AudienceData
+from resolver import injectable
+from schemas.similar_audiences import NormalizationConfig
 from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
-    default_normalization_config,
-    AudienceDataNormalizationServiceDep,
+
 )
+from services.similar_audiences.column_selector import AudienceColumnSelector
 
 
 def is_uuid(value):
@@ -54,6 +57,7 @@ def measure_print(func, prefix):
     return result
 
 
+@injectable
 class SimilarAudiencesScoresService:
     enrichment_models_persistence: EnrichmentModelsPersistence
     enrichment_lookalike_scores_persistence: (
@@ -64,11 +68,15 @@ class SimilarAudiencesScoresService:
 
     def __init__(
         self,
-        db: Session,
+        db: Db,
+        lookalikes: AudienceLookalikesPersistence,
+        column_selector: AudienceColumnSelector,
         enrichment_models_persistence: EnrichmentModelsPersistence,
         enrichment_lookalike_scores_persistence: EnrichmentLookalikeScoresPersistence,
         normalization_service: AudienceDataNormalizationService,
     ):
+        self.lookalikes = lookalikes
+        self.column_selector = column_selector
         self.enrichment_models_persistence = enrichment_models_persistence
         self.enrichment_lookalike_scores_persistence = (
             enrichment_lookalike_scores_persistence
@@ -193,18 +201,34 @@ class SimilarAudiencesScoresService:
         result = model.predict(df_normed)
         return result.tolist()
 
+    def calculate_batch_scores(
+        self,
+        enrichment_user_ids: List[UUID],
+        batch: list[dict[str, Any]],
+        model: CatBoostRegressor,
+        lookalike_id: UUID,
+    ):
+        lookalike = self.lookalikes.get_lookalike(lookalike_id)
+        config = self.get_config(lookalike.significant_fields)
 
-def get_similar_audiences_service(
-    db: Db,
-    models: EnrichmentModelsPersistenceDep,
-    scores: EnrichmentLookalikeScoresPersistenceDep,
-    normalization: AudienceDataNormalizationServiceDep,
-) -> SimilarAudiencesScoresService:
-    return SimilarAudiencesScoresService(
-        db=db, models=models, scores=scores, normalization=normalization
-    )
+        scores = self.calculate_score_dict_batch(model, batch, config)
+        self.enrichment_lookalike_scores_persistence.bulk_insert(
+            lookalike_id, list(zip(enrichment_user_ids, scores))
+        )
 
 
-SimilarAudiencesServiceDep = Annotated[
-    SimilarAudiencesScoresService, Depends(get_similar_audiences_service)
-]
+    def get_config(self, significant_fields: dict):
+        column_names = self.column_selector.clickhouse_columns(
+            significant_fields
+        )
+        column_names = list(set(column_names))
+        column_names = [
+            column for column in column_names if column != "zip_code5"
+        ]
+        return NormalizationConfig(
+            ordered_features={},
+            numerical_features=[],
+            unordered_features=column_names,
+        )
+
+SimilarAudiencesServiceDep = SimilarAudiencesScoresService

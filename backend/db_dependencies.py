@@ -22,6 +22,7 @@ Db = Annotated[Session, Depends(get_db)]
 
 def get_clickhouse_db():
     ch = ClickhouseConfig.get_client()
+
     try:
         yield ch
     finally:

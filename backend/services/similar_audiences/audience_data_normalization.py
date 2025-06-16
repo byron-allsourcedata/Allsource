@@ -8,6 +8,7 @@ from pandas import DataFrame
 from pandas.errors import PerformanceWarning
 import numpy as np
 from config.folders import Folders
+from resolver import injectable
 from schemas.similar_audiences import (
     AudienceData,
     NormalizationConfig,
@@ -80,7 +81,11 @@ def default_normalization_config() -> NormalizationConfig:
     )
 
 
+@injectable
 class AudienceDataNormalizationService:
+    def __init__(self):
+        pass
+
     def normalize(
         self, audience_data: List[AudienceData]
     ) -> Tuple[DataFrame, DataFrame]:
@@ -123,6 +128,7 @@ class AudienceDataNormalizationService:
 
     def slice_zipcodes(self, df: DataFrame):
         if "zip_code5" in df.columns:
+            df["zip_code5"] = df["zip_code5"].fillna(0).astype(int).astype(str).replace("0", "00000")
             df["zip_code3"] = df["zip_code5"].str[:3]
             df["zip_code4"] = df["zip_code5"].str[:4]
 

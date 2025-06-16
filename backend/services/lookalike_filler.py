@@ -2,6 +2,7 @@ from typing import Tuple, Dict, List
 from uuid import UUID
 
 from clickhouse_connect.driver.common import StreamContext
+from sqlalchemy import update
 
 from db_dependencies import Clickhouse, Db
 from models import AudienceLookalikes
@@ -14,6 +15,7 @@ from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
 from services.similar_audiences.column_selector import AudienceColumnSelector
 from services.similar_audiences.similar_audience_scores import (
     SimilarAudiencesScoresService,
+    measure,
 )
 
 
@@ -106,21 +108,57 @@ class LookalikeFillerService:
         lookalike = self.lookalikes.get_lookalike(lookalike_id)
         significant_fields = lookalike.significant_fields
 
+        users_count = self.enrichment_users.count()
+        
+        self.lookalikes.update_dataset_size(lookalike_id=lookalike_id, dataset_size=users_count)
+
         rows_stream, column_names = self.get_enrichment_users(
             significant_fields=significant_fields
         )
 
+        count = 0
+        batch_buffer = []
+        user_ids_buffer = []
         with rows_stream:
             for batch in rows_stream:
                 dict_batch = [dict(zip(column_names, row)) for row in batch]
-                asids = [doc["asid"] for doc in dict_batch]
-                enrichment_user_ids = (
-                    self.enrichment_users.fetch_enrichment_user_ids(asids)
-                )
 
-                self.audiences_scores.calculate_batch_scores(
+                batch_buffer.extend(dict_batch)
+
+                if len(batch_buffer) < 100000:
+                    continue
+
+                asids = [doc["asid"] for doc in batch_buffer]
+
+                enrichment_user_ids, duration = measure(lambda _: (
+                    self.enrichment_users.fetch_enrichment_user_ids(asids)
+                ))
+
+                print(f"enrichment user fetch time: {duration:.3f}")
+
+                user_ids_buffer.extend(enrichment_user_ids)
+
+                _, duration = measure(lambda _: self.audiences_scores.calculate_batch_scores(
                     model=model,
-                    enrichment_user_ids=enrichment_user_ids,
+                    enrichment_user_ids=user_ids_buffer,
                     lookalike_id=lookalike_id,
-                    batch=dict_batch,
+                    batch=batch_buffer,
                 )
+                )
+                print(f"lookalike calculation time: {duration:.3f}")
+
+                count += len(user_ids_buffer)
+                _, duration = measure(
+                    lambda _: (
+                        self.db.execute(
+                            update(AudienceLookalikes)
+                            .where(AudienceLookalikes.id == lookalike_id)
+                            .values(processed_train_model_size=count)
+                        )
+                    )
+                )
+                print(f"lookalike update time: {duration:.3f}")
+                self.db.commit()
+                print(f"processed users = {count}")
+                batch_buffer = []
+                user_ids_buffer = []

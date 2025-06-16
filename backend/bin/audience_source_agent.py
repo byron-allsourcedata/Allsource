@@ -18,9 +18,13 @@ from dataclasses import asdict
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from db_dependencies import Db
+from resolver import Resolver
 
 from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
@@ -1274,11 +1278,8 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
 
+    resolver = Resolver()
     try:
         logging.info("Starting processing...")
         rmq_connection = RabbitMQConnection()
@@ -1286,12 +1287,8 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
 
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
+
+        db_session = await resolver.resolve(Db)
 
         queue = await channel.declare_queue(
             name=AUDIENCE_SOURCES_MATCHING,
@@ -1300,12 +1297,8 @@ async def main():
         similar_audience_service = SimilarAudienceService(
             audience_data_normalization_service=AudienceDataNormalizationService()
         )
-        lookalikes_persistence_service = AudienceLookalikesPersistence(
-            db_session
-        )
-        audience_lookalikes_service = AudienceLookalikesService(
-            lookalikes_persistence_service=lookalikes_persistence_service
-        )
+
+        audience_lookalikes_service = await resolver.resolve(AudienceLookalikesService)
         await queue.consume(
             functools.partial(
                 aud_sources_matching,

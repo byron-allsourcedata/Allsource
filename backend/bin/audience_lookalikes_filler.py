@@ -4,27 +4,31 @@ import sys
 import asyncio
 import functools
 import json
-from collections import Counter
 
-from sqlalchemy import desc, cast, String, exists, select, func
+from sqlalchemy import desc, select
 import statistics
-import aioboto3
 from aio_pika import IncomingMessage
-from sqlalchemy.orm import sessionmaker, Session, aliased
 from dotenv import load_dotenv
 from sqlalchemy.sql.functions import coalesce
+
+from typing import Dict, List, Tuple, Any
+from decimal import Decimal
+
+from sqlalchemy import cast, String
+from sqlalchemy.orm import Session
+
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from decimal import Decimal
-from schemas.similar_audiences import NormalizationConfig, AudienceData
-from services.similar_audiences.audience_data_normalization import (
-    AudienceDataNormalizationService,
-    map_letter_to_number,
-    map_credit_rating,
-    map_net_worth_code,
-)
+
+from db_dependencies import Db, Clickhouse
+from resolver import Resolver
+
+from services.lookalike_filler import LookalikeFillerService
+from services.similar_audiences import SimilarAudienceService
+
+from schemas.similar_audiences import NormalizationConfig
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from services.similar_audiences.similar_audience_scores import (
     SimilarAudiencesScoresService,
@@ -32,7 +36,6 @@ from services.similar_audiences.similar_audience_scores import (
 from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
 )
-from services.similar_audiences import SimilarAudienceService
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
 from models import EnrichmentEmploymentHistory, EnrichmentProfessionalProfile
@@ -41,11 +44,11 @@ from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
 )
 from persistence.enrichment_models import EnrichmentModelsPersistence
-from typing import Dict, List, Tuple, Any
-from decimal import Decimal
-from datetime import datetime
-from sqlalchemy import create_engine, cast, String
-from sqlalchemy.orm import Session
+from persistence.audience_lookalikes import (
+    AudienceLookalikesPostgresPersistence,
+    AudienceLookalikesPersistence,
+)
+
 from models.enrichment import (
     EnrichmentUser,
     EnrichmentPersonalProfiles,
@@ -452,30 +455,27 @@ async def aud_sources_reader(
     message: IncomingMessage,
     db_session: Session,
     connection,
-    similar_audiences_scores_service: SimilarAudiencesScoresService,
-    similar_audience_service: SimilarAudienceService,
+    filler: LookalikeFillerService,
 ):
     try:
         message_body = json.loads(message.body)
         logging.info(f"msg body {message_body}")
         lookalike_id = message_body.get("lookalike_id")
 
-        audience_lookalike = (
-            db_session.query(AudienceLookalikes)
+        audience_lookalike = db_session.execute(
+            select(AudienceLookalikes)
             .filter(AudienceLookalikes.id == lookalike_id)
-            .first()
-        )
+        ).scalar()
+
         if not audience_lookalike:
             logging.info(f"audience_lookalike with id {lookalike_id} not found")
             await message.ack()
             return
 
         total_rows = get_max_size(audience_lookalike.lookalike_size)
-        process_lookalike_pipeline(
-            db_session=db_session,
-            audience_lookalike=audience_lookalike,
-            similar_audiences_scores_service=similar_audiences_scores_service,
-            similar_audience_service=similar_audience_service,
+
+        filler.process_lookalike_pipeline(
+            audience_lookalike=audience_lookalike
         )
 
         source_uid_select = select(
@@ -577,11 +577,8 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
 
+    resolver = Resolver()
     try:
         logging.info("Starting processing...")
         rmq_connection = RabbitMQConnection()
@@ -589,27 +586,9 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
 
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-        audience_data_normalization_service = AudienceDataNormalizationService()
+        db_session = await resolver.resolve(Db)
+        filler = await resolver.resolve(LookalikeFillerService)
 
-        similar_audience_service = SimilarAudienceService(
-            audience_data_normalization_service=audience_data_normalization_service
-        )
-        similar_audiences_scores_service = SimilarAudiencesScoresService(
-            normalization_service=audience_data_normalization_service,
-            db=db_session,
-            enrichment_models_persistence=EnrichmentModelsPersistence(
-                db=db_session
-            ),
-            enrichment_lookalike_scores_persistence=EnrichmentLookalikeScoresPersistence(
-                db=db_session
-            ),
-        )
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_LOOKALIKES_READER,
             durable=True,
@@ -622,12 +601,13 @@ async def main():
                 aud_sources_reader,
                 db_session=db_session,
                 connection=connection,
-                similar_audience_service=similar_audience_service,
-                similar_audiences_scores_service=similar_audiences_scores_service,
+                filler=filler
             )
         )
 
         await asyncio.Future()
+
+
 
     except BaseException:
         db_session.rollback()
@@ -640,6 +620,7 @@ async def main():
         if rmq_connection:
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
+        await resolver.cleanup()
         logging.info("Shutting down...")
 
 

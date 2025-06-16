@@ -3,11 +3,13 @@ from uuid import UUID
 
 from pydantic.v1 import UUID4
 
+from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
+from resolver import injectable
 from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
 from schemas.similar_audiences import (
     AudienceFeatureImportance,
@@ -95,6 +97,7 @@ PROFESSIONAL_PROFILE = {
 }
 
 
+@injectable
 class AudienceLookalikesService:
     def __init__(
         self, lookalikes_persistence_service: AudienceLookalikesPersistence
@@ -179,6 +182,11 @@ class AudienceLookalikesService:
                 "source_count": source_count,
             },
         }
+
+
+    def get_lookalike(self, lookalike_id: UUID) -> AudienceLookalikes | None:
+        return self.lookalikes_persistence_service.get_lookalike(lookalike_id)
+
 
     def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(
@@ -428,6 +436,10 @@ class AudienceLookalikesService:
             audience_feature_importance_b2b=b2b_insights,
             audience_feature_importance_other=other,
         )
+
+    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        return self.lookalikes_persistence_service.update_dataset_size(lookalike_id=lookalike_id, dataset_size=dataset_size)
+
 
     def get_processing_lookalike(self, id: str):
         lookalike = (

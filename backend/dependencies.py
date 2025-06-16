@@ -99,19 +99,9 @@ from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
+from db_dependencies import get_db
 
 logger = logging.getLogger(__name__)
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-Db = Annotated[Session, Depends(get_db)]
 
 
 async def verify_signature(request: Request):
@@ -937,23 +927,3 @@ def check_api_key(
     )
 
 
-def get_lookalikes_service(
-    lookalikes_persistence_service: AudienceLookalikesPersistence,
-):
-    return AudienceLookalikesService(
-        lookalikes_persistence_service=lookalikes_persistence_service
-    )
-
-
-def get_audience_data_normalization():
-    return AudienceDataNormalizationService()
-
-
-def get_similar_audience_service(
-    audience_data_normalization_service: AudienceDataNormalizationService = Depends(
-        get_audience_data_normalization
-    ),
-):
-    return SimilarAudienceService(
-        audience_data_normalization_service=audience_data_normalization_service
-    )

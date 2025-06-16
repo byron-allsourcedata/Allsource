@@ -1,3 +1,4 @@
+import math
 from decimal import Decimal
 from typing import List, Dict, Tuple
 from uuid import UUID
@@ -45,7 +46,11 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
 
         result = self.parse_clickhouse_result(result)
 
-        def pad_with_zeros(zip_code: int) -> str:
+        def pad_with_zeros(zip_code: int | float | None) -> str:
+            if zip_code is None:
+                return "00000"
+            if math.isnan(zip_code):
+                return "00000"
             return str(zip_code).zfill(5)
 
         result = [
