@@ -370,22 +370,39 @@ export const SettingsBilling: React.FC = () => {
 					display: "flex",
 					justifyContent: "space-between",
 					opacity: !showValue ? 1 : 0.6,
+					mb: 2
 				}}
 			>
 				<Typography
 					className="second-sub-title"
-					sx={{ lineHeight: "20px !important", mb: "12px" }}
+					sx={{ lineHeight: "20px !important"}}
 				>
 					{title}
 				</Typography>
-				{showValue && (
-					<Typography
-						className="second-sub-title"
-						sx={{ lineHeight: "20px !important", mb: "12px" }}
-					>
-						{percentageUsed}% Used
-					</Typography>
-				)}
+				<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
+					<Tooltip title="Coming Soon" arrow>
+						<Box sx={{ display: "inline-block" }}>
+							<Button
+								className="hyperlink-red"
+								disabled={true}
+								sx={{
+									background: "rgba(56, 152, 252, 1)",
+									borderRadius: "4px",
+									border: "1px solid rgba(56, 152, 252, 1)",
+									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+									color: "#fff !important",
+									textTransform: "none",
+									padding: "6p6x 16.5px",
+									"&:hover": {
+										color: "rgba(56, 152, 252, 1) !important",
+									},
+								}}
+							>
+								Add Funds
+							</Button>
+						</Box>
+					</Tooltip>
+				</Box>
 			</Box>
 			<LinearProgress
 				variant="determinate"
@@ -398,12 +415,22 @@ export const SettingsBilling: React.FC = () => {
 					opacity: percentageUsed ? 1 : 0.6,
 				}}
 			/>
-			<Typography
-				className="paragraph"
-				sx={{ color: "#787878 !important", opacity: !showValue ? 1 : 0.6 }}
-			>
-				{valueText}
-			</Typography>
+			<Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
+				<Typography
+					className="paragraph"
+					sx={{ color: "#787878 !important", opacity: !showValue ? 1 : 0.6 }}
+				>
+					{valueText}
+				</Typography>
+				{showValue && (
+						<Typography
+							className="second-sub-title"
+							sx={{ lineHeight: "20px !important", }}
+						>
+							{percentageUsed}% Used
+						</Typography>
+					)}
+				</Box>
 		</Box>
 	);
 
@@ -476,8 +503,25 @@ export const SettingsBilling: React.FC = () => {
 
 	return (
 		<Box sx={{ pr: 2, pt: 1 }}>
-			<Grid container spacing={3} sx={{ mb: 3 }}>
-				<Grid item xs={12} md={8} sx={{ padding: "0px" }}>
+			<Box sx={{ 
+				display: "grid",
+				gap: 3,
+				gridTemplateColumns: "2fr 1fr", 
+				gridTemplateAreas: 
+				`"cards usage"
+				"details usage"
+				"details funds"`,
+				"@media (max-width: 900px)": {
+					gridTemplateColumns: "1fr",
+					gridTemplateAreas: `
+						"cards"
+						"usage"
+						"details"
+						"funds"
+					`,
+				},
+				mb: 3 }}>
+				<Box sx={{ gridArea: "cards", height: "auto", padding: "0px" }}>
 					<Box
 						sx={{
 							border: "1px solid #f0f0f0",
@@ -723,9 +767,9 @@ export const SettingsBilling: React.FC = () => {
 							</Box>
 						</Modal>
 					</Box>
-				</Grid>
+				</Box>
 
-				<Grid item xs={12} md={4} sx={{ padding: "0px" }}>
+				<Box sx={{ gridArea: "usage", padding: "0px" }}>
 					<Box
 						sx={{
 							display: "flex",
@@ -734,7 +778,6 @@ export const SettingsBilling: React.FC = () => {
 							border: "1px solid #f0f0f0",
 							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 							p: 3,
-							marginBottom: 2,
 						}}
 					>
 						<Box
@@ -747,30 +790,6 @@ export const SettingsBilling: React.FC = () => {
 							}}
 						>
 							<Typography className="first-sub-title">Usages</Typography>
-							<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-								<Tooltip title="Coming Soon" arrow>
-									<Box sx={{ display: "inline-block" }}>
-										<Button
-											className="hyperlink-red"
-											disabled={true}
-											sx={{
-												background: "rgba(56, 152, 252, 1)",
-												borderRadius: "4px",
-												border: "1px solid rgba(56, 152, 252, 1)",
-												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-												color: "#fff !important",
-												textTransform: "none",
-												padding: "10px 24px",
-												"&:hover": {
-													color: "rgba(56, 152, 252, 1) !important",
-												},
-											}}
-										>
-											Add Funds
-										</Button>
-									</Box>
-								</Tooltip>
-							</Box>
 						</Box>
 						<Box
 							sx={{
@@ -815,9 +834,9 @@ export const SettingsBilling: React.FC = () => {
 							)}
 						</Box>
 					</Box>
-				</Grid>
+				</Box>
 
-				<Grid item xs={12} md={8} sx={{ padding: "0px" }}>
+				<Box sx={{ gridArea: "details", padding: "0px" }}>
 					<Box
 						sx={{
 							border: "1px solid #f0f0f0",
@@ -1149,9 +1168,9 @@ export const SettingsBilling: React.FC = () => {
 							</Grid>
 						</Box>
 					</Box>
-				</Grid>
+				</Box>
 
-				<Grid item xs={12} md={4} sx={{ padding: "0px" }}>
+				<Box sx={{ gridArea: "funds", padding: "0px" }}>
 					<Box
 						sx={{
 							display: "flex",
@@ -1173,30 +1192,6 @@ export const SettingsBilling: React.FC = () => {
 							}}
 						>
 							<Typography className="first-sub-title">Funds</Typography>
-							<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-								<Tooltip title="Coming Soon" arrow>
-									<Box sx={{ display: "inline-block" }}>
-										<Button
-											className="hyperlink-red"
-											disabled={true}
-											sx={{
-												background: "rgba(56, 152, 252, 1)",
-												borderRadius: "4px",
-												border: "1px solid rgba(56, 152, 252, 1)",
-												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-												color: "#fff !important",
-												textTransform: "none",
-												padding: "10px 24px",
-												"&:hover": {
-													color: "rgba(56, 152, 252, 1) !important",
-												},
-											}}
-										>
-											Add Funds
-										</Button>
-									</Box>
-								</Tooltip>
-							</Box>
 						</Box>
 						<Box
 							sx={{
@@ -1241,8 +1236,8 @@ export const SettingsBilling: React.FC = () => {
 							)}
 						</Box>
 					</Box>
-				</Grid>
-			</Grid>
+				</Box>
+			</Box>
 
 			<Divider
 				sx={{
