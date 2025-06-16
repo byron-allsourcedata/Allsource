@@ -477,7 +477,7 @@ export const SettingsBilling: React.FC = () => {
 	return (
 		<Box sx={{ pr: 2, pt: 1 }}>
 			<Grid container spacing={3} sx={{ mb: 3 }}>
-				<Grid item xs={12} md={12} sx={{ padding: "0px" }}>
+				<Grid item xs={12} md={8} sx={{ padding: "0px" }}>
 					<Box
 						sx={{
 							border: "1px solid #f0f0f0",
@@ -722,6 +722,98 @@ export const SettingsBilling: React.FC = () => {
 								</Elements>
 							</Box>
 						</Modal>
+					</Box>
+				</Grid>
+
+				<Grid item xs={12} md={4} sx={{ padding: "0px" }}>
+					<Box
+						sx={{
+							display: "flex",
+							flexDirection: "column",
+							borderRadius: "4px",
+							border: "1px solid #f0f0f0",
+							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+							p: 3,
+							marginBottom: 2,
+						}}
+					>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "row",
+								justifyContent: "space-between",
+								alignItems: "start",
+								mb: 4,
+							}}
+						>
+							<Typography className="first-sub-title">Usages</Typography>
+							<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
+								<Tooltip title="Coming Soon" arrow>
+									<Box sx={{ display: "inline-block" }}>
+										<Button
+											className="hyperlink-red"
+											disabled={true}
+											sx={{
+												background: "rgba(56, 152, 252, 1)",
+												borderRadius: "4px",
+												border: "1px solid rgba(56, 152, 252, 1)",
+												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+												color: "#fff !important",
+												textTransform: "none",
+												padding: "10px 24px",
+												"&:hover": {
+													color: "rgba(56, 152, 252, 1) !important",
+												},
+											}}
+										>
+											Add Funds
+										</Button>
+									</Box>
+								</Tooltip>
+							</Box>
+						</Box>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "space-between",
+								gap: 4,
+								"@media (max-width: 600px)": {
+									gap: 3,
+									flexDirection: "column",
+									alignItems: "center",
+								},
+							}}
+						>
+							{!hide && (
+								<>
+									{renderSection("Smart Audience", 0, "0")}
+									{renderSection(
+										"Validation funds",
+										validationLimitFundsCollected === -1
+											? 0
+											: Math.round(
+													((validationLimitFundsCollected -
+														validationFundsCollected) /
+														validationLimitFundsCollected) *
+														100,
+												),
+										validationLimitFundsCollected - validationFundsCollected ===
+											validationLimitFundsCollected
+											? "Validation funds exhausted"
+											: validationFundsCollected &&
+													validationLimitFundsCollected
+												? `${Math.max(
+														0,
+														validationLimitFundsCollected -
+															validationFundsCollected,
+													)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
+												: "",
+										validationFundsCollected !== validationLimitFundsCollected,
+									)}
+								</>
+							)}
+						</Box>
 					</Box>
 				</Grid>
 
@@ -1080,7 +1172,7 @@ export const SettingsBilling: React.FC = () => {
 								mb: 4,
 							}}
 						>
-							<Typography className="first-sub-title">Usages</Typography>
+							<Typography className="first-sub-title">Funds</Typography>
 							<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
 								<Tooltip title="Coming Soon" arrow>
 									<Box sx={{ display: "inline-block" }}>
@@ -1121,8 +1213,6 @@ export const SettingsBilling: React.FC = () => {
 						>
 							{!hide && (
 								<>
-									{renderSection("Contacts Downloaded", 0, "0")}
-									{renderSection("Smart Audience", 0, "0")}
 									{renderSection(
 										"Validation funds",
 										validationLimitFundsCollected === -1
