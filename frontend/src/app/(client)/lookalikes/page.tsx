@@ -404,7 +404,15 @@ const CreateLookalikePage: React.FC = () => {
 				end: appliedDates.end,
 			},
 		});
-	}, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters, isDebug]);
+	}, [
+		appliedDates,
+		orderBy,
+		order,
+		page,
+		rowsPerPage,
+		selectedFilters,
+		isDebug,
+	]);
 
 	const handleResetFilters = async () => {
 		const url = `/audience-lookalikes`;

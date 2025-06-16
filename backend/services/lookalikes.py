@@ -128,7 +128,6 @@ class AudienceLookalikesService:
                 lookalike_type=lookalike_type,
                 search_query=search_query,
                 include_json_fields=include_json_fields,
-                
             )
         )
 
@@ -138,7 +137,8 @@ class AudienceLookalikesService:
                 if significant_fields and isinstance(significant_fields, dict):
                     processed_fields = {
                         key: round(value * 100, 3)
-                        for key, value in significant_fields.items() if value and round(value * 100, 3) != 0
+                        for key, value in significant_fields.items()
+                        if value and round(value * 100, 3) != 0
                     }
                     lookalike["significant_fields"] = processed_fields
 
@@ -146,7 +146,8 @@ class AudienceLookalikesService:
                 if similarity_score and isinstance(similarity_score, dict):
                     similarity_scores = {
                         key: round(value * 100, 3)
-                        for key, value in similarity_score.items() if value and round(value * 100, 3) != 0
+                        for key, value in similarity_score.items()
+                        if value and round(value * 100, 3) != 0
                     }
                     lookalike["similarity_score"] = similarity_scores
 

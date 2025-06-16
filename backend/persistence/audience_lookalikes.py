@@ -67,7 +67,7 @@ class AudienceLookalikesPersistence:
         lookalike_size: Optional[str] = None,
         lookalike_type: Optional[str] = None,
         search_query: Optional[str] = None,
-        include_json_fields: bool = False
+        include_json_fields: bool = False,
     ):
         columns = [
             AudienceLookalikes.id,
@@ -87,10 +87,12 @@ class AudienceLookalikesPersistence:
         ]
 
         if include_json_fields:
-            columns.extend([
-                AudienceLookalikes.significant_fields,
-                AudienceLookalikes.similarity_score,
-            ])
+            columns.extend(
+                [
+                    AudienceLookalikes.significant_fields,
+                    AudienceLookalikes.similarity_score,
+                ]
+            )
 
         query = (
             self.db.query(*columns)
@@ -155,7 +157,9 @@ class AudienceLookalikesPersistence:
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
-        result_query = [row._asdict() for row in query.limit(per_page).offset(offset).all()]
+        result_query = [
+            row._asdict() for row in query.limit(per_page).offset(offset).all()
+        ]
 
         count = query.count()
         max_page = math.ceil(count / per_page)

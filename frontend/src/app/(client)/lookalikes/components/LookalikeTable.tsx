@@ -171,7 +171,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	refreshData,
 	loader_for_table,
 	paginationProps,
-	isDebug
+	isDebug,
 }) => {
 	const {
 		lookalikesTableHints,
