@@ -390,18 +390,39 @@ class SettingsService:
                 total_sum = current_plan.price
 
             subscription_details = {
-                "billing_cycle": {"detail_type": "time", "value": billing_cycle},
+                "billing_cycle": {
+                    "detail_type": "time",
+                    "value": billing_cycle,
+                },
                 "plan_name": {"detail_type": "plan", "value": plan_name},
-                "domains": {"detail_type": "limited", "limit_value": user_limit_domain, "current_value": plan_limit_domain},
-                "contacts_downloads": {"detail_type": "limited", "limit_value": leads_credits_limit, "current_value": leads_credits},
+                "domains": {
+                    "detail_type": "limited",
+                    "limit_value": user_limit_domain,
+                    "current_value": plan_limit_domain,
+                },
+                "contacts_downloads": {
+                    "detail_type": "limited",
+                    "limit_value": leads_credits_limit,
+                    "current_value": leads_credits,
+                },
                 "smart_audience": "Coming soon",
-                "validation_funds": {"detail_type": "funds", "limit_value": validation_funds_limit, "current_value": validation_funds},
+                "validation_funds": {
+                    "detail_type": "funds",
+                    "limit_value": validation_funds_limit,
+                    "current_value": validation_funds,
+                },
                 "premium_sources_funds": "Coming soon",
-                "next_billing_date": {"detail_type": "time", "value": next_billing_date},
-                total_key: {"detail_type": "time", "value":  total_sum},
-                "active": {"detail_type": "plan", "value": True
-                if user_subscription.status == "active"
-                else False},
+                "next_billing_date": {
+                    "detail_type": "time",
+                    "value": next_billing_date,
+                },
+                total_key: {"detail_type": "time", "value": total_sum},
+                "active": {
+                    "detail_type": "plan",
+                    "value": True
+                    if user_subscription.status == "active"
+                    else False,
+                },
             }
         elif subscription and user_subscription:
             billing_cycle = (
@@ -453,17 +474,35 @@ class SettingsService:
 
                 total_price = f"${final_amount / 100:,.0f}"
             subscription_details = {
-                "billing_cycle": {"detail_type": "time", "value": billing_cycle},
+                "billing_cycle": {
+                    "detail_type": "time",
+                    "value": billing_cycle,
+                },
                 "plan_name": {"detail_type": "plan", "value": plan_name},
-                "domains": {"detail_type": "limited", "limit_value": user_limit_domain, "current_value": plan_limit_domain},
-                "contacts_downloads": {"detail_type": "limited", "limit_value": leads_credits_limit, "current_value": leads_credits},
+                "domains": {
+                    "detail_type": "limited",
+                    "limit_value": user_limit_domain,
+                    "current_value": plan_limit_domain,
+                },
+                "contacts_downloads": {
+                    "detail_type": "limited",
+                    "limit_value": leads_credits_limit,
+                    "current_value": leads_credits,
+                },
                 "smart_audience": "Coming soon",
-                "validation_funds": {"detail_type": "funds", "limit_value": validation_funds_limit, "current_value": validation_funds},
+                "validation_funds": {
+                    "detail_type": "funds",
+                    "limit_value": validation_funds_limit,
+                    "current_value": validation_funds,
+                },
                 "premium_sources_funds": "Coming soon",
-                "next_billing_date": {"detail_type": "time", "value": self.timestamp_to_date(
-                    subscription["items"]["data"][0]["current_period_end"]
-                ).strftime("%b %d, %Y")},
-                total_key: {"detail_type": "time", "value":  total_price},
+                "next_billing_date": {
+                    "detail_type": "time",
+                    "value": self.timestamp_to_date(
+                        subscription["items"]["data"][0]["current_period_end"]
+                    ).strftime("%b %d, %Y"),
+                },
+                total_key: {"detail_type": "time", "value": total_price},
                 "active": {"detail_type": "plan", "value": is_active},
             }
 

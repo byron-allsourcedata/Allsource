@@ -157,7 +157,7 @@ export const SettingsBilling: React.FC = () => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
-			console.log(response.data)
+			console.log(response.data);
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
@@ -252,21 +252,20 @@ export const SettingsBilling: React.FC = () => {
 
 	const renderValue = (value: any) => {
 		if (value?.current_value === -1) {
-			return "Unlimited"
+			return "Unlimited";
 		}
 
-		switch (value.detail_type) { 
+		switch (value.detail_type) {
 			case "funds":
-				return `$${value.current_value.toLocaleString("en-US")}/$${value.limit_value.toLocaleString("en-US")}`
+				return `$${value.current_value.toLocaleString("en-US")}/$${value.limit_value.toLocaleString("en-US")}`;
 			case "limited":
-				return `${value.current_value.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`
+				return `${value.current_value.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
 			case "plan":
-				return value.value
+				return value.value;
 			case "time":
-				return value.value
-			default: 
-				return "Comming soon"
-		
+				return value.value;
+			default:
+				return "Comming soon";
 		}
 	};
 
@@ -1050,7 +1049,6 @@ export const SettingsBilling: React.FC = () => {
 														color: "#5f6368 !important",
 													}}
 												>
-													
 													{renderValue(value)}
 												</Typography>
 											</Grid>
