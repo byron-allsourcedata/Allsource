@@ -415,8 +415,9 @@ class SettingsService:
 
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
-                detail_type="as_is", plan_start=user_subscription.plan_start,
-                plan_end=user_subscription.plan_end
+                detail_type="as_is",
+                plan_start=user_subscription.plan_start,
+                plan_end=user_subscription.plan_end,
             ),
             plan_name=PlanName(detail_type="plan_name", value=plan_name),
             domains=LimitedDetail(

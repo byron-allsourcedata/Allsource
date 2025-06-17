@@ -44,9 +44,7 @@ class UserSubscriptionsPersistence:
         blocked_leads = (
             self.db.query(LeadUser)
             .filter_by(user_id=user_id, is_active=False)
-            .order_by(
-                LeadUser.id.asc()
-            )
+            .order_by(LeadUser.id.asc())
             .limit(plan.leads_credits)
             .all()
         )

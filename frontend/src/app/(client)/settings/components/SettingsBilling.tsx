@@ -42,7 +42,7 @@ interface CardDetails {
 
 interface SubscriptionDetails {
 	active: { detail_type: string; value: boolean };
-	billing_cycle: { detail_type: string; plan_start: string, plan_end: string };
+	billing_cycle: { detail_type: string; plan_start: string; plan_end: string };
 	contacts_downloads: { detail_type: string; value: string };
 	next_billing_date: { detail_type: string; value: string };
 	plan_name: { detail_type: string; value: string };
@@ -172,7 +172,12 @@ export const SettingsBilling: React.FC = () => {
 			case "limited":
 				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
 			case "as_is":
-				return `${dayjs(value.plan_start).format("MMM D, YYYY")}` + (value.plan_end ? ` to ${dayjs(value.plan_end).format("MMM D, YYYY")}` : '');
+				return (
+					`${dayjs(value.plan_start).format("MMM D, YYYY")}` +
+					(value.plan_end
+						? ` to ${dayjs(value.plan_end).format("MMM D, YYYY")}`
+						: "")
+				);
 
 			default:
 				return "Coming soon";
