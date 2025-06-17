@@ -367,7 +367,9 @@ class SettingsService:
         validation_funds = user.get("validation_funds")
         leads_credits = user.get("leads_credits")
         user_id = user.get("id")
-        amount_user_domains = len(self.user_domains_service.get_domains(user_id))
+        amount_user_domains = len(
+            self.user_domains_service.get_domains(user_id)
+        )
         subscription = get_billing_details_by_userid(customer_id)
         user_subscription = self.subscription_service.get_user_subscription(
             user_id=user_id
@@ -447,8 +449,11 @@ class SettingsService:
             active=ActivePlan(detail_type="as_is", value=is_active),
         )
 
-        setattr(subscription_details, total_key, TotalKey(detail_type="as_is", value=total_sum))
-
+        setattr(
+            subscription_details,
+            total_key,
+            TotalKey(detail_type="as_is", value=total_sum),
+        )
 
         billing_detail = BillingSubscriptionDetails(
             subscription_details=subscription_details,
@@ -459,23 +464,21 @@ class SettingsService:
         return billing_detail
 
     def get_downgrade_plan(
-            self,
-            user_subscription: UserSubscriptions,
-        ) -> Optional[DowngradePlan]:
-            if user_subscription and user_subscription.downgrade_price_id:
-                product = get_product_from_price_id(
-                    user_subscription.downgrade_price_id
-                )
-                downgrade_time = user_subscription.plan_end.strftime(
-                    "%b %d, %Y"
-                )
+        self,
+        user_subscription: UserSubscriptions,
+    ) -> Optional[DowngradePlan]:
+        if user_subscription and user_subscription.downgrade_price_id:
+            product = get_product_from_price_id(
+                user_subscription.downgrade_price_id
+            )
+            downgrade_time = user_subscription.plan_end.strftime("%b %d, %Y")
 
-                return DowngradePlan(
-                    plan_name=product.name, downgrade_at=downgrade_time
-                )
+            return DowngradePlan(
+                plan_name=product.name, downgrade_at=downgrade_time
+            )
 
-            return None
-    
+        return None
+
     def calculate_final_price(self, subscription, user_subscription):
         plan = subscription["items"]["data"][0]["plan"]
         discount = subscription.get("discount")
