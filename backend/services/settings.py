@@ -1,6 +1,7 @@
 import logging
 import os
 
+from models import UserSubscriptions
 from persistence.leads_persistence import LeadsPersistence
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
@@ -16,7 +17,19 @@ from .jwt_service import (
     decode_jwt_data,
     verify_password,
 )
-from schemas.settings import AccountDetailsRequest, BillingSubscriptionDetails
+from schemas.settings import (
+    AccountDetailsRequest,
+    BillingSubscriptionDetails,
+    SubscriptionDetails,
+    BillingCycle,
+    PlanName,
+    LimitedDetail,
+    FundsDetail,
+    NextBillingDate,
+    TotalKey,
+    ActivePlan,
+    DowngradePlan,
+)
 from enums import VerifyToken
 
 logger = logging.getLogger(__name__)
@@ -406,50 +419,57 @@ class SettingsService:
             else user_subscription.status == "active"
         )
 
-        subscription_details = {
-            "billing_cycle": {"detail_type": "as_is", "value": billing_cycle},
-            "plan_name": {"detail_type": "as_is", "value": plan_name},
-            "domains": {
-                "detail_type": "limited",
-                "limit_value": user_limit_domain,
-                "current_value": plan_limit_domain,
-            },
-            "contacts_downloads": {
-                "detail_type": "limited",
-                "limit_value": leads_credits_limit,
-                "current_value": leads_credits,
-            },
-            "smart_audience": "Coming soon",
-            "validation_funds": {
-                "detail_type": "funds",
-                "limit_value": validation_funds_limit,
-                "current_value": validation_funds,
-            },
-            "premium_sources_funds": "Coming soon",
-            "next_billing_date": {
-                "detail_type": "as_is",
-                "value": next_billing_date,
-            },
-            total_key: {"detail_type": "as_is", "value": total_sum},
-            "active": {"detail_type": "as_is", "value": is_active},
-        }
+        subscription_details = SubscriptionDetails(
+            billing_cycle=BillingCycle(
+                detail_type="as_is", value=billing_cycle
+            ),
+            plan_name=PlanName(detail_type="as_is", value=plan_name),
+            domains=LimitedDetail(
+                detail_type="limited",
+                limit_value=user_limit_domain,
+                current_value=plan_limit_domain,
+            ),
+            contacts_downloads=LimitedDetail(
+                detail_type="limited",
+                limit_value=leads_credits_limit,
+                current_value=leads_credits,
+            ),
+            smart_audience="Coming soon",
+            validation_funds=FundsDetail(
+                detail_type="funds",
+                limit_value=validation_funds_limit,
+                current_value=validation_funds,
+            ),
+            premium_sources_funds="Coming soon",
+            next_billing_date=NextBillingDate(
+                detail_type="as_is", value=next_billing_date
+            ),
+            total_key=TotalKey(detail_type="as_is", value=total_sum),
+            active=ActivePlan(detail_type="as_is", value=is_active),
+        )
 
-        billing_detail = {
-            "subscription_details": subscription_details,
-            "downgrade_plan": {
-                "plan_name": get_product_from_price_id(
+        def get_downgrade_plan(
+            user_subscription: UserSubscriptions,
+        ) -> Optional[DowngradePlan]:
+            if user_subscription and user_subscription.downgrade_price_id:
+                product = get_product_from_price_id(
                     user_subscription.downgrade_price_id
-                ).name
-                if user_subscription and user_subscription.downgrade_price_id
-                else None,
-                "downgrade_at": user_subscription.plan_end.strftime("%b %d, %Y")
-                if user_subscription and user_subscription.downgrade_price_id
-                else None,
-            },
-            "canceled_at": user_subscription.cancel_scheduled_at
-            if user_subscription
-            else None,
-        }
+                )
+                downgrade_time = user_subscription.plan_end.strftime(
+                    "%b %d, %Y"
+                )
+
+                return DowngradePlan(
+                    plan_name=product.name, downgrade_at=downgrade_time
+                )
+
+            return None
+
+        billing_detail = BillingSubscriptionDetails(
+            subscription_details=subscription_details,
+            downgrade_plan=get_downgrade_plan(user_subscription),
+            canceled_at=user_subscription.cancel_scheduled_at,
+        )
 
         return billing_detail
 
@@ -490,7 +510,9 @@ class SettingsService:
         current_plan = self.plan_persistence.get_current_plan(
             user_id=user.get("id")
         )
-        result["billing_details"] = self.extract_subscription_details(user=user)
+        result["billing_details"] = self.extract_subscription_details(
+            user=user
+        ).model_dump()
         if user.get("source_platform") == "shopify":
             result["status"] = "hide"
             return result

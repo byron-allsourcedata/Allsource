@@ -97,6 +97,7 @@ class SubscriptionDetails(BaseModel):
     next_billing_date: NextBillingDate
     monthly_total: Optional[TotalKey] = None
     yearly_total: Optional[TotalKey] = None
+    total_key: TotalKey
     active: BaseModel
 
 
@@ -109,3 +110,8 @@ class BillingSubscriptionDetails(BaseModel):
     subscription_details: Optional[SubscriptionDetails]
     downgrade_plan: Optional[DowngradePlan]
     canceled_at: Optional[str]
+
+
+class ActivePlan(BaseModel):
+    detail_type: str
+    value: bool
