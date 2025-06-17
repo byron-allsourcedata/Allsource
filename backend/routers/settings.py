@@ -156,7 +156,7 @@ def check_team_invitations_limit(
 @router.get("/billing")
 def get_billing(
     settings_service: SettingsService = Depends(get_settings_service),
-    user: dict = Depends(check_user_authorization_without_pixel),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.get_billing(user=user)
 

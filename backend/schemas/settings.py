@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, Dict
 
 
 class ChangePassword(BaseModel):
@@ -52,3 +52,51 @@ class ApiKeysRequest(BaseModel):
     api_id: Optional[str] = None
     name: Optional[str] = None
     description: Optional[str] = None
+
+class BillingCycle(BaseModel):
+    detail_type: str
+    value: str
+
+class PlanName(BaseModel):
+    detail_type: str
+    value: str
+
+class LimitedDetail(BaseModel):
+    detail_type: str
+    limit_value: int
+    current_value: int
+
+class FundsDetail(BaseModel):
+    detail_type: str
+    limit_value: int
+    current_value: int
+
+class NextBillingDate(BaseModel):
+    detail_type: str
+    value: Optional[str]
+
+class TotalKey(BaseModel):
+    detail_type: str
+    value: Optional[str]
+
+class SubscriptionDetails(BaseModel):
+    billing_cycle: BillingCycle
+    plan_name: PlanName
+    domains: LimitedDetail
+    contacts_downloads: LimitedDetail
+    smart_audience: str
+    validation_funds: FundsDetail
+    premium_sources_funds: str
+    next_billing_date: NextBillingDate
+    monthly_total: Optional[TotalKey] = None
+    yearly_total: Optional[TotalKey] = None
+    active: BaseModel
+
+class DowngradePlan(BaseModel):
+    plan_name: Optional[str]
+    downgrade_at: Optional[str]
+
+class BillingSubscriptionDetails(BaseModel):
+    subscription_details: Optional[SubscriptionDetails]
+    downgrade_plan: Optional[DowngradePlan]
+    canceled_at: Optional[str]

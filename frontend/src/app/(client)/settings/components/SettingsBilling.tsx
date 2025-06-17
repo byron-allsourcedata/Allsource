@@ -31,6 +31,46 @@ import { billingStyles } from "./billingStyles";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
+interface CardDetails {
+	id: string;
+	brand: string;
+	last4: string;
+	exp_month: number;
+	exp_year: number;
+	is_default: boolean;
+}
+
+interface SubscriptionDetails {
+	active: {detail_type: string; value: boolean}
+	billing_cycle: {detail_type: string; value: string}
+	contacts_downloads: {detail_type: string; value: string}
+	next_billing_date: {detail_type: string; value: string}
+	plan_name: {detail_type: string; value: string}
+	yearly_total?: {detail_type: string; value: string}
+	monthly_total?: {detail_type: string; value: string}
+	domains: {detail_type: string; current_value: number, limit_value: number}
+	validation_funds: {detail_type: string; current_value: number, limit_value: number}
+	premium_sources_funds: string
+	smart_audience: string
+}
+
+interface BillingDetails {
+	subscription_details: SubscriptionDetails
+	downgrade_plan: {downgrade_at: string | null, plan_name: string | null};
+	is_leads_auto_charging: boolean;
+	canceled_at: any;
+	active?: boolean;
+}
+
+interface BillingHistoryItem {
+	invoice_id: string;
+	pricing_plan: string;
+	date: string;
+	status: string;
+	total: number;
+}
+
+
 const cardBrandImages: Record<CardBrand, string> = {
 	visa: "/visa-icon.svg",
 	mastercard: "/mastercard-icon.svg",
@@ -51,8 +91,8 @@ export const SettingsBilling: React.FC = () => {
 		useState(0);
 	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
-	const [cardDetails, setCardDetails] = useState<any[]>([]);
-	const [billingDetails, setBillingDetails] = useState<any>({});
+	const [cardDetails, setCardDetails] = useState<CardDetails[]>([]);
+	const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null);
 	const [checked, setChecked] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
@@ -61,14 +101,14 @@ export const SettingsBilling: React.FC = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [totalRows, setTotalRows] = useState(0);
-	const [billingHistory, setBillingHistory] = useState<any[]>([]);
+	const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>([]);
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);
 	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
-	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isLoading, setIsLoading] = useState(true);
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
@@ -125,7 +165,7 @@ export const SettingsBilling: React.FC = () => {
 				"/settings/billing-history",
 				{
 					params: {
-						page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
+						page: page + 1,
 						per_page: rowsPerPage,
 					},
 				},
@@ -135,7 +175,7 @@ export const SettingsBilling: React.FC = () => {
 			} else {
 				const { billing_history, count } = response.data;
 				setBillingHistory(billing_history);
-				setTotalRows(count); // Устанавливаем общее количество строк
+				setTotalRows(count);
 				let newRowsPerPageOptions: number[] = [];
 				if (count <= 10) {
 					newRowsPerPageOptions = [5, 10];
@@ -152,9 +192,9 @@ export const SettingsBilling: React.FC = () => {
 				}
 				if (!newRowsPerPageOptions.includes(count)) {
 					newRowsPerPageOptions.push(count);
-					newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+					newRowsPerPageOptions.sort((a, b) => a - b);
 				}
-				setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
+				setRowsPerPageOptions(newRowsPerPageOptions);
 			}
 		} catch (error) {
 		} finally {
@@ -194,15 +234,13 @@ export const SettingsBilling: React.FC = () => {
 
 		switch (value.detail_type) {
 			case "funds":
-				return `$${value.current_value.toLocaleString("en-US")}/$${value.limit_value.toLocaleString("en-US")}`;
+				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
 			case "limited":
-				return `${value.current_value.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
-			case "plan":
-				return value.value;
-			case "time":
+				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
+			case "as_is":
 				return value.value;
 			default:
-				return "Comming soon";
+				return "Coming soon";
 		}
 	};
 

@@ -87,7 +87,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 						opacity: commingSoon ? 0.6 : 1,
 					}}
 				>
-					{commingSoon ? "Comming Soon" : valueText}
+					{commingSoon ? "Coming Soon" : valueText}
 				</Typography>
 				{limitValue !== -1 && !commingSoon && (
 					<Typography
