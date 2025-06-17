@@ -7,28 +7,30 @@ import {
 	Tooltip,
 	LinearProgress,
 } from "@mui/material";
+import { billingStyles } from "./billingStyles";
 
 interface UsageItemProps {
 	title: string;
 	limitValue: number;
 	currentValue: number;
+	needButton?: boolean;
+    commingSoon?: boolean;
 }
 
 export const UsageItem: React.FC<UsageItemProps> = ({
 	title,
 	limitValue,
 	currentValue,
+    needButton = true,
+    commingSoon = false,
 }) => {
+    console.log(title, currentValue, limitValue);
 	const limit = Math.round(((limitValue - currentValue) / limitValue) * 100);
-
-	const printLimit = () => {
-		return limitValue === -1 ? "Unlimited" : limit;
-	};
 
 	const valueText =
 		limitValue === -1
 			? "Unlimited"
-			: `${Math.max(0, limitValue - currentValue)} out of ${limitValue} Remaining`;
+			: `${Math.max(0, currentValue)} out of ${limitValue} Remaining`;
 
 	return (
 		<Box sx={{ width: "100%" }}>
@@ -36,7 +38,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				sx={{
 					display: "flex",
 					justifyContent: "space-between",
-					// opacity: !showValue ? 1 : 0.6,
+					opacity: commingSoon ? 0.6 : 1,
 					mb: 2,
 				}}
 			>
@@ -46,34 +48,23 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				>
 					{title}
 				</Typography>
-				<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
+				{needButton && <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
 					<Tooltip title="Coming Soon" arrow>
 						<Box sx={{ display: "inline-block" }}>
 							<Button
 								className="hyperlink-red"
 								disabled={true}
-								sx={{
-									background: "rgba(56, 152, 252, 1)",
-									borderRadius: "4px",
-									border: "1px solid rgba(56, 152, 252, 1)",
-									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-									color: "#fff !important",
-									textTransform: "none",
-									padding: "6px 16.5px",
-									"&:hover": {
-										color: "rgba(56, 152, 252, 1) !important",
-									},
-								}}
+								sx={billingStyles.addFundsButton}
 							>
 								Add Funds
 							</Button>
 						</Box>
 					</Tooltip>
-				</Box>
+				</Box>}
 			</Box>
 			<LinearProgress
 				variant="determinate"
-				value={limitValue === -1 ? 100 : limit}
+				value={limitValue === -1 ? 100 : 100 - limit}
 				sx={{
 					height: "8px",
 					borderRadius: "4px",
@@ -83,7 +74,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 						backgroundColor: "#6EC125",
 					},
 					mb: 1,
-					// opacity: percentageUsed ? 1 : 0.6,
+					opacity: commingSoon ? 0.6 : 1,
 				}}
 			/>
 			<Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
@@ -91,17 +82,17 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 					className="paragraph"
 					sx={{
 						color: "#787878 !important",
-						// opacity: !showValue ? 1 : 0.6
+						opacity: commingSoon ? 0.6 : 1,
 					}}
 				>
-					{valueText}
+					{commingSoon ? "Comming Soon" : valueText}
 				</Typography>
-				{limitValue !== -1 && (
+				{limitValue !== -1 && !commingSoon && (
 					<Typography
 						className="second-sub-title"
 						sx={{ lineHeight: "20px !important" }}
 					>
-						{100 - limit}% Used
+						{limit}% Used
 					</Typography>
 				)}
 			</Box>

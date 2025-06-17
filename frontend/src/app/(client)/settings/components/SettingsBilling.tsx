@@ -10,8 +10,6 @@ import {
 	IconButton,
 	Divider,
 	Popover,
-	LinearProgress,
-	Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { Elements } from "@stripe/react-stripe-js";
@@ -29,6 +27,7 @@ import { RemoveCardPopup } from "./RemoveCard";
 import { BillingHistory } from "./BillingHistory";
 import { UsageItem } from "./UsageItem";
 import CustomTablePagination from "@/components/CustomTablePagination";
+import { billingStyles } from "./billingStyles";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
@@ -38,87 +37,6 @@ const cardBrandImages: Record<CardBrand, string> = {
 	amex: "/american-express.svg",
 	discover: "/discover-icon.svg",
 	unionpay: "/unionpay-icon.svg",
-};
-
-export const billingStyles = {
-	tableColumn: {
-		lineHeight: "16px !important",
-		position: "relative",
-		paddingLeft: "45px",
-		paddingTop: "18px",
-		paddingBottom: "18px",
-		"&::after": {
-			content: '""',
-			display: "block",
-			position: "absolute",
-			top: "15px",
-			bottom: "15px",
-			right: 0,
-			width: "1px",
-			height: "calc(100% - 30px)",
-			backgroundColor: "rgba(235, 235, 235, 1)",
-		},
-		"&:last-child::after": {
-			content: "none",
-		},
-	},
-	tableBodyRow: {
-		"&:last-child td": {
-			borderBottom: 0,
-		},
-	},
-	tableBodyColumn: {
-		lineHeight: "16px !important",
-		position: "relative",
-		paddingLeft: "45px",
-		paddingTop: "13.5px",
-		paddingBottom: "13.5px",
-		"&::after": {
-			content: '""',
-			display: "block",
-			position: "absolute",
-			top: "15px",
-			bottom: "15px",
-			right: 0,
-			width: "1px",
-			height: "calc(100% - 30px)",
-			backgroundColor: "rgba(235, 235, 235, 1)",
-		},
-		"&:last-child::after": {
-			content: "none",
-		},
-	},
-	formField: {
-		margin: "0",
-	},
-	inputLabel: {
-		top: "-3px",
-		"&.Mui-focused": {
-			top: 0,
-			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
-			fontWeight: 400,
-			fontSize: "12px",
-			lineHeight: "16px",
-		},
-	},
-	formInput: {
-		"&.MuiFormControl-root": {
-			margin: 0,
-		},
-		"&.MuiOutlinedInput-root": {
-			"& .MuiOutlinedInput-input": {
-				fontFamily: "Roboto",
-				color: "#202124",
-				fontSize: "14px",
-				lineHeight: "20px",
-			},
-		},
-	},
-	page_number: {
-		backgroundColor: "rgba(255, 255, 255, 1)",
-		color: "rgba(56, 152, 252, 1)",
-	},
 };
 
 export const SettingsBilling: React.FC = () => {
@@ -255,7 +173,7 @@ export const SettingsBilling: React.FC = () => {
 		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0); // Reset to first page when changing rows per page
+		setPage(0);
 	};
 
 	useEffect(() => {
@@ -376,82 +294,6 @@ export const SettingsBilling: React.FC = () => {
 		setSendInvoicePopupOpen(false);
 		setselectedInvoiceId(null);
 	};
-
-	const renderSection = (
-		title: string,
-		percentageUsed = 0,
-		valueText = "",
-		showValue = true,
-	) => (
-		<Box sx={{ width: "100%" }}>
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					opacity: !showValue ? 1 : 0.6,
-					mb: 2,
-				}}
-			>
-				<Typography
-					className="second-sub-title"
-					sx={{ lineHeight: "20px !important" }}
-				>
-					{title}
-				</Typography>
-				<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-					<Tooltip title="Coming Soon" arrow>
-						<Box sx={{ display: "inline-block" }}>
-							<Button
-								className="hyperlink-red"
-								disabled={true}
-								sx={{
-									background: "rgba(56, 152, 252, 1)",
-									borderRadius: "4px",
-									border: "1px solid rgba(56, 152, 252, 1)",
-									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-									color: "#fff !important",
-									textTransform: "none",
-									padding: "6p6x 16.5px",
-									"&:hover": {
-										color: "rgba(56, 152, 252, 1) !important",
-									},
-								}}
-							>
-								Add Funds
-							</Button>
-						</Box>
-					</Tooltip>
-				</Box>
-			</Box>
-			<LinearProgress
-				variant="determinate"
-				value={percentageUsed}
-				sx={{
-					height: "8px",
-					borderRadius: "4px",
-					backgroundColor: "#dbdbdb",
-					mb: 1,
-					opacity: percentageUsed ? 1 : 0.6,
-				}}
-			/>
-			<Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-				<Typography
-					className="paragraph"
-					sx={{ color: "#787878 !important", opacity: !showValue ? 1 : 0.6 }}
-				>
-					{valueText}
-				</Typography>
-				{showValue && (
-					<Typography
-						className="second-sub-title"
-						sx={{ lineHeight: "20px !important" }}
-					>
-						{percentageUsed}% Used
-					</Typography>
-				)}
-			</Box>
-		</Box>
-	);
 
 	const handleBuyCredits = async () => {
 		try {
@@ -719,44 +561,14 @@ export const SettingsBilling: React.FC = () => {
 															<Button
 																className="hyperlink-red"
 																onClick={handleRemovePopupOpen}
-																sx={{
-																	border: "none",
-																	boxShadow: "none",
-																	color: "#202124 !important",
-																	lineHeight: "normal !important",
-																	textTransform: "none",
-																	minWidth: "auto",
-																	width: "100%",
-																	padding: "4px 0 4px 16px",
-																	textAlign: "left",
-																	display: "block",
-																	borderRadius: "0",
-																	"&:hover": {
-																		backgroundColor: "rgba(80, 82, 178, 0.10)",
-																	},
-																}}
+																sx={billingStyles.buttonInPopover}
 															>
 																Remove
 															</Button>
 															<Button
 																className="hyperlink-red"
 																onClick={handleSetDefault}
-																sx={{
-																	border: "none",
-																	boxShadow: "none",
-																	color: "#202124 !important",
-																	lineHeight: "normal !important",
-																	textTransform: "none",
-																	minWidth: "auto",
-																	width: "100%",
-																	padding: "4px 0 4px 16px",
-																	textAlign: "left",
-																	display: "block",
-																	borderRadius: "0",
-																	"&:hover": {
-																		backgroundColor: "rgba(80, 82, 178, 0.10)",
-																	},
-																}}
+																sx={billingStyles.buttonInPopover}
 															>
 																Set as default
 															</Button>
@@ -829,13 +641,16 @@ export const SettingsBilling: React.FC = () => {
 								<>
 									<UsageItem
 										title="Contacts Downloaded"
-										limitValue={validationLimitFundsCollected}
-										currentValue={validationFundsCollected}
+										limitValue={planContactsCollected}
+										currentValue={contactsCollected}
+										needButton={false}
 									/>
 									<UsageItem
 										title="Smart Audience"
-										limitValue={1000}
-										currentValue={10}
+										limitValue={planSmartAudienceCollected}
+										currentValue={smartAudienceCollected}
+										needButton={false}
+										commingSoon={true}
 									/>
 								</>
 							)}
@@ -1186,7 +1001,6 @@ export const SettingsBilling: React.FC = () => {
 							border: "1px solid #f0f0f0",
 							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 							p: 3,
-							marginBottom: 2,
 						}}
 					>
 						<Box
@@ -1213,7 +1027,21 @@ export const SettingsBilling: React.FC = () => {
 								},
 							}}
 						>
-							{!hide && <></>}
+							{!hide && 
+								<>
+									<UsageItem
+										title="Validation funds"
+										limitValue={validationLimitFundsCollected}
+										currentValue={validationFundsCollected}
+									/>
+									<UsageItem
+										title="Premium Source funds"
+										limitValue={planPremiumSourceCollected}
+										currentValue={premiumSourceCollected}
+										commingSoon={true}
+									/>
+								</>
+							}
 						</Box>
 					</Box>
 				</Box>

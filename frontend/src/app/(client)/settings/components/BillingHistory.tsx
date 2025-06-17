@@ -15,7 +15,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
 import CustomTooltip from "@/components/customToolTip";
-import { billingStyles } from "./SettingsBilling";
+import { billingStyles } from "./billingStyles";
 import DownloadIcon from "@mui/icons-material/Download";
 import TelegramIcon from "@mui/icons-material/Telegram";
 
