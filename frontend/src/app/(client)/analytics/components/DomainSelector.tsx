@@ -175,14 +175,12 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 			const updated = domains.filter((d) => d.id !== toDelete.id);
 			setDomains(updated);
 
-			// обновляем sessionStorage
 			const meRaw = sessionStorage.getItem("me");
 			const me = meRaw ? JSON.parse(meRaw) : {};
 			me.domains = updated;
 			sessionStorage.setItem("me", JSON.stringify(me));
 			sessionStorage.removeItem("current_domain");
 
-			// если удалённый домен был выбран — сбрасываем выбор
 			if (selectedDomain?.id === toDelete.id) {
 				setSelectedDomain(null);
 				onDomainSelected(null);
