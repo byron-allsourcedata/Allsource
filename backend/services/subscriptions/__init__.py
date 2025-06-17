@@ -425,7 +425,6 @@ class SubscriptionService:
                 self.db.commit()
             elif product_description == "prospect_credits":
                 user = self.db.query(User).filter(User.id == user_id).first()
-                pass
         return status
 
     def get_user_payment_by_transaction_id(self, transaction_id):

@@ -21,6 +21,7 @@ from models.users import User
 from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
 from enums import AudienceSmartStatuses
+from schemas.audience_smart import AccessCheckResponse
 
 logger = logging.getLogger(__name__)
 
@@ -359,12 +360,9 @@ class AudienceSmartsService:
 
         return [{item["key"]: item["validation"]} for item in result]
 
-    def check_access(self, user: dict):
-        return {
-            "allowed": self.audience_smarts_persistence.check_access_for_user(
-                user=user
-            )
-        }
+    def check_access(self, user: dict) -> AccessCheckResponse:
+        allowed = self.audience_smarts_persistence.check_access_for_user(user)
+        return AccessCheckResponse(allowed=allowed)
 
     def get_datasource(self, user: dict):
         lookalikes, count, max_page, _ = (

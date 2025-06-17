@@ -38,12 +38,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 			);
 			const link = response.data;
 			if (link) {
-				const a = document.createElement("a");
-				a.href = link;
-				a.target = "_blank";
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
+				window.open(link, "_blank");
 			} else {
 				showErrorToast("Download billing not found.");
 			}
