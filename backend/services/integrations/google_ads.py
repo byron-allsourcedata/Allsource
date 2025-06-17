@@ -307,7 +307,12 @@ class GoogleAdsIntegrationsService:
                 results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
-                results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.SUCCESS.value})
+                results.append(
+                    {
+                        "lead_id": lead_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
 
             if result:
                 profiles.append(result)

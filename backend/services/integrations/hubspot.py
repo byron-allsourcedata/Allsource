@@ -292,14 +292,21 @@ class HubspotIntegrationsService:
                 results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
-                results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.SUCCESS.value})
+                results.append(
+                    {
+                        "lead_id": lead_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
 
             profiles.append(profile)
 
         if not profiles:
             return results
 
-        result_bulk = self.__create_profiles(user_integration.access_token, profiles)
+        result_bulk = self.__create_profiles(
+            user_integration.access_token, profiles
+        )
         if result_bulk != ProccessDataSyncResult.SUCCESS.value:
             for result in results:
                 if result["status"] == ProccessDataSyncResult.SUCCESS.value:

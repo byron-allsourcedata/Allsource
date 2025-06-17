@@ -273,7 +273,7 @@ async def ensure_integration(
 
             import_status = DataSyncImportedStatus.SENT.value
             for result in results:
-                match result['status']:
+                match result["status"]:
                     case ProccessDataSyncResult.INCORRECT_FORMAT.value:
                         logging.debug(f"incorrect_format: {service_name}")
                         import_status = (
