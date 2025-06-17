@@ -214,3 +214,6 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
             created_by_user_id,
             audience_feature_importance,
         )
+
+    def get_max_size(self, lookalike_size: str) -> int:
+        return self.postgres.get_max_size(lookalike_size)

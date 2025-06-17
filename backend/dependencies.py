@@ -13,7 +13,6 @@ from typing_extensions import Annotated
 
 from config.auth import AuthConfig
 from config.aws import get_s3_client
-from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from persistence.admin import AdminPersistence
@@ -75,7 +74,6 @@ from services.integrations.million_verifier import (
 )
 from services.integrations.slack import SlackService
 from services.leads import LeadsService
-from services.lookalikes import AudienceLookalikesService
 from services.meeting_schedule import MeetingScheduleService
 from services.notification import Notification
 from services.partners import PartnersService
@@ -86,10 +84,6 @@ from services.payouts import PayoutsService
 from services.pixel_installation import PixelInstallationService
 from services.plans import PlansService
 from services.settings import SettingsService
-from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.audience_data_normalization import (
-    AudienceDataNormalizationService,
-)
 from services.sse_events import SseEventsService
 from services.stripe_service import StripeService, get_stripe_payment_url
 from services.subscriptions import SubscriptionService
@@ -121,26 +115,10 @@ def get_audience_setting_persistence(db: Session = Depends(get_db)):
     return AudienceSettingPersistence(db)
 
 
-def get_audience_sources_matched_persons_persistence(
-    db: Session = Depends(get_db),
-):
-    return AudienceSourcesMatchedPersonsPersistence(db)
-
-
-def get_audience_smarts_persistence(db: Session = Depends(get_db)):
-    return AudienceSmartsPersistence(db)
-
-
 def get_partners_asset_persistence(
     db: Session = Depends(get_db),
 ) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)
-
-
-def get_referral_discount_codes_persistence(
-    db: Session = Depends(get_db),
-) -> ReferralDiscountCodesPersistence:
-    return ReferralDiscountCodesPersistence(db)
 
 
 def get_admin_persistence(db: Session = Depends(get_db)):
@@ -245,11 +223,9 @@ def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
 
 def get_audience_sources_service(
     domain_persistence: UserDomainsPersistence,
+    audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence,
     audience_sources_persistence: AudienceSourcesPersistence = Depends(
         get_audience_sources_persistence
-    ),
-    audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence = Depends(
-        get_audience_sources_matched_persons_persistence
     ),
 ):
     return AudienceSourceService(

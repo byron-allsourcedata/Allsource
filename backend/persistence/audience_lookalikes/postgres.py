@@ -158,6 +158,22 @@ class AudienceLookalikesPostgresPersistence(
             .values(train_model_size=dataset_size)
         )
 
+    def get_max_size(self, lookalike_size: str) -> int:
+        if lookalike_size == "almost_identical":
+            size = 10000
+        elif lookalike_size == "extremely_similar":
+            size = 50000
+        elif lookalike_size == "very_similar":
+            size = 100000
+        elif lookalike_size == "quite_similar":
+            size = 200000
+        elif lookalike_size == "broad":
+            size = 500000
+        else:
+            size = 50000
+
+        return size
+
     def create_lookalike(
         self,
         uuid_of_source,
@@ -189,20 +205,6 @@ class AudienceLookalikesPostgresPersistence(
             for k, v in audience_feature_importance.items()
         }
 
-        def get_max_size(lookalike_size):
-            if lookalike_size == "almost_identical":
-                size = 10000
-            elif lookalike_size == "extremely_similar":
-                size = 50000
-            elif lookalike_size == "very_similar":
-                size = 100000
-            elif lookalike_size == "quite_similar":
-                size = 200000
-            elif lookalike_size == "broad":
-                size = 500000
-
-            return size
-
         sorted_dict = dict(
             sorted(
                 audience_feature_dict.items(),
@@ -218,7 +220,7 @@ class AudienceLookalikesPostgresPersistence(
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
             significant_fields=sorted_dict,
-            size=get_max_size(lookalike_size),
+            size=self.get_max_size(lookalike_size),
         )
         self.db.add(lookalike)
         self.db.commit()

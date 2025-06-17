@@ -48,12 +48,30 @@ class AudienceColumnSelector:
             ),
             **self.get_enrichment_user_column_map(),
         }
+
+        for ignored_column in self.ignored_columns():
+            column_map.pop(ignored_column, None)
+
         selected_column_names = []
         for field in significant_fields:
             if field in column_map:
                 selected_column_names.append(field)
 
         return selected_column_names
+
+    def ignored_columns(self) -> list[str]:
+        return self.employment_columns()
+
+    def employment_columns(self) -> list[str]:
+        return [
+            "job_title",
+            "company_name",
+            "start_date",
+            "end_date",
+            "is_current",
+            "location",
+            "job_description",
+        ]
 
     def get_enrichment_user_column_map(self) -> Dict[str, Any]:
         return {

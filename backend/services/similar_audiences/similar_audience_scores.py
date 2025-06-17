@@ -159,7 +159,7 @@ class SimilarAudiencesScoresService:
                 )
             )
             total_calculation_time += duration
-            print(f"calculation time: {duration:.3f}")
+            print(f"calculation time: {duration:.3f}  - {len(scores)}")
 
             _, duration = measure(
                 lambda _: (
@@ -180,7 +180,7 @@ class SimilarAudiencesScoresService:
                     )
                 )
             )
-            total_update_time +=duration
+            total_update_time += duration
             print(f"lookalike update time: {duration:.3f}")
             self.db.commit()
         cursor.close()

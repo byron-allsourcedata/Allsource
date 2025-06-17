@@ -1,16 +1,25 @@
 import logging
-from typing import Tuple, Dict, List
+import statistics
+from typing import Tuple, Dict, List, TypedDict
 from uuid import UUID
 
 from clickhouse_connect.driver.common import StreamContext
 from sqlalchemy import update
+from typing_extensions import deprecated
 
 from db_dependencies import Clickhouse, Db
 from models import AudienceLookalikes
-from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_sources_matched_persons import (
+    AudienceSourcesMatchedPersonsPersistence,
+)
+from persistence.enrichment_lookalike_scores import (
+    EnrichmentLookalikeScoresPersistence,
+)
 from persistence.enrichment_users import EnrichmentUsersPersistence
 from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
+from services.lookalike_filler.rabbitmq import RabbitFillerService
 from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
@@ -22,6 +31,14 @@ from services.similar_audiences.similar_audience_scores import (
 
 logger = logging.getLogger(__name__)
 
+
+class SimilarityStats(TypedDict):
+    min: float | None
+    max: float | None
+    average: float | None
+    median: float | None
+
+
 @injectable
 class LookalikeFillerService:
     def __init__(
@@ -31,9 +48,13 @@ class LookalikeFillerService:
         lookalikes: AudienceLookalikesService,
         audiences_scores: SimilarAudiencesScoresService,
         column_selector: AudienceColumnSelector,
-        enrichment_users: EnrichmentUsersPersistence,
         similar_audience_service: SimilarAudienceService,
         profile_fetcher: ProfileFetcher,
+        enrichment_users: EnrichmentUsersPersistence,
+        enrichment_scores: EnrichmentLookalikeScoresPersistence,
+        audience_lookalikes: AudienceLookalikesPersistence,
+        matched_sources: AudienceSourcesMatchedPersonsPersistence,
+        rabbit: RabbitFillerService,
     ):
         self.db = db
         self.clickhouse = clickhouse
@@ -41,8 +62,12 @@ class LookalikeFillerService:
         self.profile_fetcher = profile_fetcher
         self.audiences_scores = audiences_scores
         self.column_selector = column_selector
-        self.enrichment_users = enrichment_users
         self.similar_audience_service = similar_audience_service
+        self.enrichment_users = enrichment_users
+        self.enrichment_scores = enrichment_scores
+        self.audience_lookalikes = audience_lookalikes
+        self.matched_sources = matched_sources
+        self.rabbit = rabbit
 
     def get_enrichment_users(
         self, significant_fields: Dict
@@ -64,6 +89,9 @@ class LookalikeFillerService:
 
         return rows_stream, column_names
 
+    def get_lookalike(self, lookalike_id: UUID) -> AudienceLookalikes | None:
+        return self.lookalikes.get_lookalike(lookalike_id)
+
     def process_lookalike_pipeline(
         self, audience_lookalike: AudienceLookalikes
     ):
@@ -84,7 +112,11 @@ class LookalikeFillerService:
             lookalike_id=audience_lookalike.id,
         )
 
+        top_asids, scores = self.post_process_lookalike(audience_lookalike)
 
+        user_ids = self.enrichment_users.fetch_enrichment_user_ids(top_asids)
+
+        return user_ids
 
     def train_and_save_model(
         self,
@@ -173,16 +205,88 @@ class LookalikeFillerService:
                 batch_buffer = []
                 user_ids_buffer = []
 
-        logger.info("Updating костыль lookalike")
-        # Forcefully set processed_size equal to size because of data inconsistency
-        # between Postgres and ClickHouse — we assume the full batch is received.
-        processed_size, total_records = self.db.execute(
+        self.db_workaround(lookalike_id=lookalike_id)
+
+    @deprecated("workaround")
+    def db_workaround(self, lookalike_id: UUID):
+        """
+        Forcefully set processed_size equal to size because of data inconsistency
+        between Postgres and ClickHouse — we assume the full batch is received.
+        """
+
+        self.db.execute(
             update(AudienceLookalikes)
             .where(AudienceLookalikes.id == lookalike_id)
             .values(
                 train_model_size=AudienceLookalikes.processed_train_model_size
             )
-            .returning(
-                AudienceLookalikes.processed_size, AudienceLookalikes.size
-            )
-        ).fetchone()
+        )
+
+    def post_process_lookalike(self, audience_lookalike: AudienceLookalikes):
+        source_id = audience_lookalike.source_uuid
+        lookalike_id = audience_lookalike.id
+        total_rows = self.audience_lookalikes.get_max_size(
+            audience_lookalike.lookalike_size
+        )
+
+        source_asids = self.matched_sources.matched_asids_for_source(
+            source_id=source_id
+        )
+
+        enrichment_lookalike_scores = self.enrichment_scores.select_top(
+            lookalike_id=lookalike_id,
+            source_asids=source_asids,
+            top_count=total_rows,
+        )
+
+        n_scores = len(enrichment_lookalike_scores)
+        logging.info(f"Total row in pixel file: {n_scores}")
+
+        asids = [s["asid"] for s in enrichment_lookalike_scores]
+        scores = self.preprocess_scores(enrichment_lookalike_scores)
+
+        audience_lookalike.size = n_scores
+        audience_lookalike.similarity_score = self.calculate_similarity_stats(
+            scores
+        )
+        self.db.add(audience_lookalike)
+        self.db.flush()
+
+        logger.info(f"asid len: {len(asids)}")
+
+        return asids, scores
+
+    def preprocess_scores(self, lookalike_scores: list) -> list[float]:
+        return [
+            float(s["score"])
+            for s in lookalike_scores
+            if s["score"] is not None
+        ]
+
+    def calculate_similarity_stats(
+        self, scores: list[float]
+    ) -> SimilarityStats:
+        if scores:
+            return {
+                "min": round(min(scores), 3),
+                "max": round(max(scores), 3),
+                "average": round(sum(scores) / len(scores), 3),
+                "median": round(statistics.median(scores), 3),
+            }
+
+        return {
+            "min": None,
+            "max": None,
+            "average": None,
+            "median": None,
+        }
+
+    async def inform_lookalike_agent(
+        self, connection, lookalike_id: UUID, user_id: int, persons: list[UUID]
+    ):
+        await self.rabbit.inform_lookalike_agent(
+            connection=connection,
+            lookalike_id=lookalike_id,
+            user_id=user_id,
+            persons=persons,
+        )

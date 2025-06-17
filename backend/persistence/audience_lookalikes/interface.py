@@ -33,5 +33,9 @@ class AudienceLookalikesPersistenceInterface(abc.ABC):
         pass
 
     @abstractmethod
+    def get_max_size(self, lookalike_size: str) -> int:
+        pass
+
+    @abstractmethod
     def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
         pass

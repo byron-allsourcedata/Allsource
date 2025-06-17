@@ -21,6 +21,8 @@ class EnrichmentUsersPersistence:
 
     def fetch_enrichment_user_ids(self, asids: List[UUID]) -> List[UUID]:
         query = select(EnrichmentUser).where(EnrichmentUser.asid.in_(asids))
-        rows = self.db.execute(query).scalars()
+        rows = self.db.execute(query).scalars().all()
+
+        print(f"enrichment user ids rows: {len(rows)}")
 
         return [row.id for row in rows]

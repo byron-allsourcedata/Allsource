@@ -135,8 +135,10 @@ class AudienceDataNormalizationService:
                 .astype(str)
                 .replace("0", "00000")
             )
-            df["zip_code3"] = df["zip_code5"].str[:3]
-            df["zip_code4"] = df["zip_code5"].str[:4]
+        else:
+            df["zip_code5"] = "00000"
+        df["zip_code4"] = df["zip_code5"].str[:4]
+        df["zip_code3"] = df["zip_code5"].str[:3]
 
     def fill_unknowns(self, df: DataFrame, cat_columns: List[str]):
         for cat in cat_columns:

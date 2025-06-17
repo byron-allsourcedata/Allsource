@@ -1,13 +1,11 @@
 import logging
-import statistics
 import os
 import sys
 import asyncio
 import functools
 import json
 
-import boto3
-from sqlalchemy import update, select, func, create_engine
+from sqlalchemy import update, select, create_engine
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -17,9 +15,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
-from models.enrichment.enrichment_lookalike_scores import (
-    EnrichmentLookalikeScore,
-)
+
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -108,7 +104,6 @@ async def aud_sources_matching(
             .where(AudienceLookalikes.id == lookalike_id)
             .values(insights=merged)
         )
-
 
         db_session.commit()
 
