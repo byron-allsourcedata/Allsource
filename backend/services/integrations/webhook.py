@@ -193,24 +193,6 @@ class WebhookIntegrationService:
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
-        profile = self.__create_profile(
-            five_x_five_users=five_x_five_users,
-            integration_data_sync=integration_data_sync,
-        )
-        if profile in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return profile
-
-        return ProccessDataSyncResult.SUCCESS.value
-
-    def __create_profile(
-        self,
-        integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
-    ):
         results = []
         for five_x_five_user in five_x_five_users:
             data = self.__mapped_lead(
@@ -219,16 +201,46 @@ class WebhookIntegrationService:
             )
             if data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                return data
+                results.append({"lead_id": five_x_five_user.id, "status": data})
+                continue
+            else:
+                results.append(
+                    {
+                        "lead_id": five_x_five_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
             results.append(data)
 
-            logger.info(f"sending data: {data}")
+            profile = self.__send_profile(
+                data=data,
+                integration_data_sync=integration_data_sync,
+            )
+            if profile in (
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                for result in results:
+                    if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                        result["status"] = result
+
+        return results
+
+    def __send_profile(
+        self,
+        integration_data_sync: IntegrationUserSync,
+        data: dict,
+    ):
+        logger.info(f"sending data: {data}")
         response = self.__handle_request(
             url=integration_data_sync.hook_url,
             method=integration_data_sync.method,
-            json=results,
+            json=data,
         )
         if not response or response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value

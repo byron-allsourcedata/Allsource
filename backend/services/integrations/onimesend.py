@@ -165,31 +165,31 @@ class OmnisendIntegrationService:
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
-        profile = self.__create_bulk_profiles(
-            five_x_five_users,
-            user_integration.access_token,
-            integration_data_sync.data_map,
-        )
-
-        if profile in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return profile
-
-        return ProccessDataSyncResult.SUCCESS.value
-
-    def __create_bulk_profiles(self, five_x_five_users, access_token, data_map):
+        results = []
         bulk_profiles = []
         for user in five_x_five_users:
             profile = self.__mapped_profile(user)
             identifiers = self.__mapped_identifiers(user)
-            if not identifiers:
+
+            if identifiers in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                results.append(
+                    {"lead_id": user.id, "status": profile}
+                )
                 continue
+            else:
+                results.append(
+                    {
+                        "lead_id": user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
 
             properties = (
-                self.__map_properties(user, data_map) if data_map else {}
+                self.__map_properties(user, integration_data_sync.data_map) if integration_data_sync.data_map else {}
             )
             contact_data = {
                 "customProperties": properties,
@@ -208,8 +208,27 @@ class OmnisendIntegrationService:
             bulk_profiles.append(contact_data)
 
         if not bulk_profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
+        profile = self.__create_bulk_profiles(
+            bulk_profiles,
+            user_integration.access_token,
+        )
+
+        if profile in (
+            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+        ):
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = (
+                        ProccessDataSyncResult.LIST_NOT_EXISTS.value
+                    )
+
+        return results
+
+    def __create_bulk_profiles(self, bulk_profiles: List[dict[str:str]], access_token):
         payload = {
             "method": "POST",
             "endpoint": "contacts",
@@ -241,7 +260,7 @@ class OmnisendIntegrationService:
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return None
+            return first_email
 
         return Identifiers(id=first_email)
 

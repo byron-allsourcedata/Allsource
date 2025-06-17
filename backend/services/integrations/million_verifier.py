@@ -33,18 +33,20 @@ class MillionVerifierIntegrationsService:
             logger.warning(result.get("error"))
             raise Exception(f"Insufficient credits for million_verifier")
 
+        subresult_value = result.get("subresult")
+
+        if subresult_value == 'ok':
+            is_verify = True
+
         if result.get("resultcode") in (3, 4, 5, 6):
             error_text = result.get("error")
             result_error = result.get("result")
+            is_verify = False
             if error_text:
                 logger.debug(f"millionverifier error: {error_text}")
             if result_error:
                 logger.debug(f"millionverifier error: {result_error}")
 
-        subresult_value = result.get("subresult")
-
-        if subresult_value in ("ok", "unknown", "greylisted"):
-            is_verify = True
         self.million_verifier_persistence.save_checked_email(
             email=email, is_verify=is_verify, verify_result=subresult_value
         )

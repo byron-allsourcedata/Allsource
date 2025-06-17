@@ -298,26 +298,30 @@ class GoogleAdsIntegrationsService:
         five_x_five_users: List[FiveXFiveUser],
     ):
         profiles = []
+        results = []
         for enrichment_user in five_x_five_users:
             profile = self.__mapped_googleads_profile_lead(enrichment_user)
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append({"lead_id": lead_user.id, "status": profile})
+                results.append(
+                    {"lead_id": enrichment_user.id, "status": profile}
+                )
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": lead_user.id,
+                        "lead_id": enrichment_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
 
-            if result:
-                profiles.append(result)
+            if profiles:
+                profiles.append(profile)
+
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
         list_response = self.__add_profile_to_list(
             access_token=user_integration.access_token,
@@ -334,7 +338,11 @@ class GoogleAdsIntegrationsService:
                 profiles=profiles,
             )
 
-        return list_response
+        if list_response != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = list_response
+        return results
 
     def get_last_offline_user_data_job(self, client, customer_id):
         google_ads_service = client.get_service("GoogleAdsService")
@@ -474,7 +482,7 @@ class GoogleAdsIntegrationsService:
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return None
+            return first_email
 
         first_phone = get_valid_phone(five_x_five_user)
 

@@ -15,7 +15,7 @@ from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
 import os
 from datetime import datetime, timedelta, timezone
-from utils import extract_first_email
+from utils import get_valid_email
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -343,6 +343,7 @@ class KlaviyoIntegrationsService:
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
+        results = []
         for five_x_five_user in five_x_five_users:
             profile = self.__create_profile(
                 five_x_five_user,
@@ -350,11 +351,21 @@ class KlaviyoIntegrationsService:
                 integration_data_sync.data_map,
             )
             if profile in (
-                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
+                results.append(
+                    {"lead_id": five_x_five_user.id, "status": profile}
+                )
                 continue
+            else:
+                results.append(
+                    {
+                        "lead_id": five_x_five_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
 
             list_response = self.__add_profile_to_list(
                 integration_data_sync.list_id,
@@ -364,9 +375,13 @@ class KlaviyoIntegrationsService:
                 profile["phone_number"],
             )
             if list_response.status_code == 404:
-                return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+                for result in results:
+                    if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                        result["status"] = (
+                            ProccessDataSyncResult.LIST_NOT_EXISTS.value
+                        )
 
-        return ProccessDataSyncResult.SUCCESS.value
+        return results
 
     def is_supported_region(self, phone_number: str) -> bool:
         return phone_number.startswith("+1")
@@ -624,59 +639,9 @@ class KlaviyoIntegrationsService:
     def __mapped_klaviyo_profile(
         self, five_x_five_user: FiveXFiveUser
     ) -> KlaviyoProfile:
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            if (
-                                personal_emails_last_seen_str
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
-                            )
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

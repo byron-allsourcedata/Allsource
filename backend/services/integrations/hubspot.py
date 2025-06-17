@@ -1,9 +1,11 @@
 import logging
-import re
-import json
+import os
+from datetime import datetime
+from typing import List, Any
 from uuid import UUID
 
-from pydantic import EmailStr
+import httpx
+from fastapi import HTTPException
 
 from enums import (
     SourcePlatformEnum,
@@ -13,22 +15,18 @@ from enums import (
     IntegrationLimit,
 )
 from models import FiveXFiveUser
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
-import httpx
-import os
-from services.integrations.commonIntegration import *
-from models.integrations.users_domains_integrations import UserIntegration
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from fastapi import HTTPException
-from models.enrichment.enrichment_users import EnrichmentUser
-from typing import List, Any
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
+from services.integrations.commonIntegration import *
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
@@ -364,7 +362,6 @@ class HubspotIntegrationsService:
                 access_token=access_token,
                 json={"inputs": to_create},
             )
-
             if create_resp.status_code == 402:
                 category = create_resp.json().get("category")
                 logging.warning(category)
@@ -442,7 +439,7 @@ class HubspotIntegrationsService:
 
     def __mapped_profile_lead(
         self, lead: FiveXFiveUser, data_map: list
-    ) -> dict[str, Any] | None:
+    ) -> str | dict[str | Any, str | None | Any]:
         first_email = get_valid_email(lead, self.million_verifier_integrations)
 
         if first_email in (
@@ -454,7 +451,7 @@ class HubspotIntegrationsService:
         first_phone = get_valid_phone(lead)
         location = get_valid_location(lead)
 
-        return {
+        profile = {
             "email": first_email,
             "phone": first_phone,
             "address": location[0],
@@ -468,3 +465,18 @@ class HubspotIntegrationsService:
             "hs_linkedin_url": getattr(lead, "linkedin_url", None),
             "gender": getattr(lead, "gender", None),
         }
+
+        for field in data_map:
+            t = field["type"]
+            v = field["value"]
+            val = getattr(lead, t, None)
+            if val is None:
+                continue
+
+            if isinstance(val, datetime):
+                val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            profile[v] = val
+
+        cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
+        return cleaned
