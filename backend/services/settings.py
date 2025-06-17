@@ -385,14 +385,6 @@ class SettingsService:
         )
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
 
-        billing_cycle = (
-            f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}"
-            if user_subscription
-            and user_subscription.plan_start
-            and hasattr(user_subscription.plan_start, "strftime")
-            else "Free trial"
-        )
-
         next_billing_date = (
             user_subscription.plan_end.strftime("%b %d, %Y")
             if user.get("source_platform") == "shopify" and user_subscription
@@ -423,9 +415,10 @@ class SettingsService:
 
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
-                detail_type="as_is", value=billing_cycle
+                detail_type="as_is", plan_start=user_subscription.plan_start,
+                plan_end=user_subscription.plan_end
             ),
-            plan_name=PlanName(detail_type="as_is", value=plan_name),
+            plan_name=PlanName(detail_type="plan_name", value=plan_name),
             domains=LimitedDetail(
                 detail_type="limited",
                 limit_value=plan_limit_domain,

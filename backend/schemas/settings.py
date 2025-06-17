@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, root_validator
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 
 class ChangePassword(BaseModel):
@@ -56,7 +56,8 @@ class ApiKeysRequest(BaseModel):
 
 class BillingCycle(BaseModel):
     detail_type: str
-    value: str
+    plan_start: Any
+    plan_end: Any
 
 
 class PlanName(BaseModel):
