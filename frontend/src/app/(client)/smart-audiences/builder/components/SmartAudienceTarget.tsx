@@ -41,10 +41,6 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
-import {
-	BookACallPopup,
-	LeftMenuProps,
-} from "@/app/(client)/components/BookACallPopup";
 import { BuilderKey } from "../../context/hintsCardsContent";
 
 interface Recency {
@@ -150,7 +146,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 	const [isValidate, setIsValidate] = useState(false);
 	const [isValidateSkip, setIsValidateSkip] = useState(false);
 	const [persentsData, setPersentsData] = useState<number>(0);
-	const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 	const [validationFilters, setValidationFilters] =
 		useState<ValidationData | null>();
 	const [targetAudience, setTargetAudience] = useState<string | "">("");
@@ -427,11 +422,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 					([_, v]) => v !== null && v !== undefined,
 				),
 			);
-			const res = await axiosInstance.get("/audience-smarts/check-access");
-			if (!res.data.allowed) {
-				setUpgradePlanPopup(true);
-				return;
-			}
 
 			const response = await axiosInstance.post(
 				"/audience-smarts/builder",
@@ -461,10 +451,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
 	return (
 		<Box sx={{ mb: 4 }}>
-			<BookACallPopup
-				open={upgradePlanPopup}
-				handleClose={() => setUpgradePlanPopup(false)}
-			/>
 			{loading && <CustomizedProgressBar />}
 			<Box
 				sx={{

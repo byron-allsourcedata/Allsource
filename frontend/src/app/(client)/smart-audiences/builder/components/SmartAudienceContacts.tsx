@@ -36,10 +36,6 @@ import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
 import { BuilderKey } from "../../context/hintsCardsContent";
-import {
-	BookACallPopup,
-	LeftMenuProps,
-} from "@/app/(client)/components/BookACallPopup";
 
 interface SelectedData {
 	includeExclude: string;
@@ -105,7 +101,6 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 	const [search, setSearch] = useState("");
 	const [selectedSources, setSelectedSources] = useState<SelectedData[]>([]);
 	const [showTable, setShowTable] = useState(true);
-	const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 	const [showForm, setShowForm] = useState(true);
 	const [isTableVisible, setIsTableVisible] = useState(true);
 
@@ -262,12 +257,6 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 				),
 			);
 
-			const res = await axiosInstance.get("/audience-smarts/check-access");
-			if (!res.data.allowed) {
-				setUpgradePlanPopup(true);
-				return;
-			}
-
 			const response = await axiosInstance.post(
 				"/audience-smarts/builder",
 				filteredRequestData,
@@ -296,10 +285,6 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 
 	return (
 		<Box>
-			<BookACallPopup
-				open={upgradePlanPopup}
-				handleClose={() => setUpgradePlanPopup(false)}
-			/>
 			{loading && <CustomizedProgressBar />}
 			<Box
 				sx={{

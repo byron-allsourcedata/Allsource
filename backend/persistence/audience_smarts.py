@@ -315,7 +315,7 @@ class AudienceSmartsPersistence:
         return updated_count
 
     def get_persons_by_smart_aud_id(
-        self, smart_audience_id, sent_contacts, fields
+        self, smart_audience_id, sent_contacts, fields, user: dict
     ):
         contact_fields = [
             getattr(EnrichmentUserContact, field)
@@ -349,8 +349,12 @@ class AudienceSmartsPersistence:
                 AudienceSmartPerson.is_valid == True,
             )
         )
-
-        smarts = query.limit(sent_contacts).all()
+        access_for_user = self.check_access_for_user(user=user)
+        if access_for_user:
+            limit = sent_contacts
+        else:
+            limit = 3
+        smarts = query.order_by(AudienceSmartPerson.id).limit(limit).all()
         return smarts
 
     def get_synced_persons_by_smart_aud_id(
