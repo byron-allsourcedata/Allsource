@@ -280,17 +280,31 @@ class HubspotIntegrationsService:
         lead_users: List[FiveXFiveUser],
     ):
         profiles = []
+        results = []
         for lead_user in lead_users:
             profile = self.__mapped_profile_lead(
                 lead_user, integration_data_sync.data_map
             )
-            if profile:
-                profiles.append(profile)
+            if profile in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                results.append({"lead_id": lead_user.id, "status": profile})
+                continue
+            else:
+                results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.SUCCESS.value})
+
+            profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
-        return self.__create_profiles(user_integration.access_token, profiles)
+        result_bulk = self.__create_profiles(user_integration.access_token, profiles)
+        if result_bulk != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = result_bulk
+        return results
 
     def __create_profiles(self, access_token, profiles_list):
         emails = [p.get("email") for p in profiles_list if p.get("email")]
@@ -428,7 +442,7 @@ class HubspotIntegrationsService:
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return None
+            return first_email
 
         first_phone = get_valid_phone(lead)
         location = get_valid_location(lead)

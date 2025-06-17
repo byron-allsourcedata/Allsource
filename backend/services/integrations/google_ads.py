@@ -299,7 +299,16 @@ class GoogleAdsIntegrationsService:
     ):
         profiles = []
         for enrichment_user in five_x_five_users:
-            result = self.__mapped_googleads_profile_lead(enrichment_user)
+            profile = self.__mapped_googleads_profile_lead(enrichment_user)
+            if profile in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                results.append({"lead_id": lead_user.id, "status": profile})
+                continue
+            else:
+                results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.SUCCESS.value})
+
             if result:
                 profiles.append(result)
         if not profiles:

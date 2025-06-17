@@ -261,118 +261,118 @@ async def ensure_integration(
             session, lead_user_ids, data_sync_id
         )
         if service:
-            result = None
             try:
-                result = await service.process_data_sync_lead(
+                results = await service.process_data_sync_lead(
                     user_integration, integration_data_sync, leads
                 )
-                logging.info(f"Result {result}")
+                logging.info(f"Result {results}")
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()
                 raise
 
             import_status = DataSyncImportedStatus.SENT.value
-            match result:
-                case ProccessDataSyncResult.INCORRECT_FORMAT.value:
-                    logging.debug(f"incorrect_format: {service_name}")
-                    import_status = (
-                        DataSyncImportedStatus.INCORRECT_FORMAT.value
-                    )
+            for result in results:
+                match result['status']:
+                    case ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                        logging.debug(f"incorrect_format: {service_name}")
+                        import_status = (
+                            DataSyncImportedStatus.INCORRECT_FORMAT.value
+                        )
 
-                case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
-                    logging.debug(f"incorrect_format: {service_name}")
-                    import_status = (
-                        DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
-                    )
+                    case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
+                        logging.debug(f"incorrect_format: {service_name}")
+                        import_status = (
+                            DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
+                        )
 
-                case ProccessDataSyncResult.SUCCESS.value:
-                    logging.debug(f"success: {service_name}")
-                    import_status = DataSyncImportedStatus.SUCCESS.value
+                    case ProccessDataSyncResult.SUCCESS.value:
+                        logging.debug(f"success: {service_name}")
+                        import_status = DataSyncImportedStatus.SUCCESS.value
 
-                case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
-                    logging.debug(f"list_not_exists: {service_name}")
-                    update_users_integrations(
-                        session=session,
-                        status=ProccessDataSyncResult.LIST_NOT_EXISTS.value,
-                        integration_data_sync_id=integration_data_sync.id,
-                        service_name=service_name,
-                    )
-                    await send_error_msg(
-                        users_id,
-                        service_name,
-                        notification_persistence,
-                        NotificationTitles.DATA_SYNC_ERROR.value,
-                    )
+                    case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
+                        logging.debug(f"list_not_exists: {service_name}")
+                        update_users_integrations(
+                            session=session,
+                            status=ProccessDataSyncResult.LIST_NOT_EXISTS.value,
+                            integration_data_sync_id=integration_data_sync.id,
+                            service_name=service_name,
+                        )
+                        await send_error_msg(
+                            users_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.DATA_SYNC_ERROR.value,
+                        )
 
-                case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
-                    logging.debug(f"too_many_requests: {service_name}")
-                    update_users_integrations(
-                        session=session,
-                        status=ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
-                        integration_data_sync_id=integration_data_sync.id,
-                        service_name=service_name,
-                    )
-                    await send_error_msg(
-                        users_id,
-                        service_name,
-                        notification_persistence,
-                        NotificationTitles.TOO_MANY_REQUESTS.value,
-                    )
+                    case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
+                        logging.debug(f"too_many_requests: {service_name}")
+                        update_users_integrations(
+                            session=session,
+                            status=ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
+                            integration_data_sync_id=integration_data_sync.id,
+                            service_name=service_name,
+                        )
+                        await send_error_msg(
+                            users_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.TOO_MANY_REQUESTS.value,
+                        )
 
-                case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
-                    logging.debug(f"Quota exhausted: {service_name}")
-                    update_users_integrations(
-                        session=session,
-                        status=ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
-                        integration_data_sync_id=integration_data_sync.id,
-                        service_name=service_name,
-                    )
-                    await send_error_msg(
-                        users_id,
-                        service_name,
-                        notification_persistence,
-                        NotificationTitles.QUOTA_EXHAUSTED.value,
-                    )
-                case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
-                    logging.debug(f"Quota exhausted: {service_name}")
-                    update_users_integrations(
-                        session=session,
-                        status=ProccessDataSyncResult.PAYMENT_REQUIRED.value,
-                        integration_data_sync_id=integration_data_sync.id,
-                        service_name=service_name,
-                    )
-                    await send_error_msg(
-                        users_id,
-                        service_name,
-                        notification_persistence,
-                        NotificationTitles.PAYMENT_REQUIRED.value,
-                    )
+                    case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
+                        logging.debug(f"Quota exhausted: {service_name}")
+                        update_users_integrations(
+                            session=session,
+                            status=ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
+                            integration_data_sync_id=integration_data_sync.id,
+                            service_name=service_name,
+                        )
+                        await send_error_msg(
+                            users_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.QUOTA_EXHAUSTED.value,
+                        )
+                    case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
+                        logging.debug(f"Quota exhausted: {service_name}")
+                        update_users_integrations(
+                            session=session,
+                            status=ProccessDataSyncResult.PAYMENT_REQUIRED.value,
+                            integration_data_sync_id=integration_data_sync.id,
+                            service_name=service_name,
+                        )
+                        await send_error_msg(
+                            users_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.PAYMENT_REQUIRED.value,
+                        )
 
-                case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
-                    logging.debug(f"authentication_failed: {service_name}")
-                    update_users_integrations(
+                    case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
+                        logging.debug(f"authentication_failed: {service_name}")
+                        update_users_integrations(
+                            session,
+                            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                            integration_data_sync.id,
+                            service_name,
+                            integration_data_sync.integration_id,
+                        )
+                        await send_error_msg(
+                            users_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value,
+                        )
+
+                if import_status != DataSyncImportedStatus.SENT.value:
+                    update_data_sync_imported_leads(
                         session,
-                        ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                        integration_data_sync.id,
-                        service_name,
-                        integration_data_sync.integration_id,
+                        import_status,
+                        data_sync_imported_ids,
+                        integration_data_sync,
+                        user_integration,
                     )
-                    await send_error_msg(
-                        users_id,
-                        service_name,
-                        notification_persistence,
-                        NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value,
-                    )
-
-            if import_status != DataSyncImportedStatus.SENT.value:
-                update_data_sync_imported_leads(
-                    session,
-                    import_status,
-                    data_sync_imported_ids,
-                    integration_data_sync,
-                    user_integration,
-                )
 
             logging.info(f"Processed message for service: {service_name}")
             await message.ack()
