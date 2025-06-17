@@ -24,7 +24,6 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	needButton = true,
 	commingSoon = false,
 }) => {
-	console.log(title, currentValue, limitValue);
 	const limit = Math.round(((limitValue - currentValue) / limitValue) * 100);
 
 	const valueText =
