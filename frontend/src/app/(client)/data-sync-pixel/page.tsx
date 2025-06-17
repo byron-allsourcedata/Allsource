@@ -214,7 +214,7 @@ const DataSync = () => {
 											color: "rgba(56, 152, 252, 1) !important",
 										}}
 									>
-										Create Contact Sync
+										Create Pixel Sync
 									</Typography>
 								</Button>
 								<Button
