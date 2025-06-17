@@ -393,7 +393,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setData((prevData) =>
 							prevData.map((item) =>
 								item.id === selectedId
-									? { ...item, dataSync: response.data.data_sync }
+									? {
+											...item,
+											dataSync: response.data.data_sync,
+										}
 									: item,
 							),
 						);
@@ -878,7 +881,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				<>
 					<Box
 						display={"flex"}
-						sx={{ alignItems: "center", mt: 2, mb: "16px", height: "100%" }}
+						sx={{
+							alignItems: "center",
+							mt: 2,
+							mb: "16px",
+							height: "100%",
+						}}
 					>
 						<Box
 							sx={{
@@ -1107,7 +1115,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													},
 													hideDivider: isScrolledX,
 												}}
-												tooltipOptions={{ content: listType(row.type) || "--" }}
+												tooltipOptions={{
+													content: listType(row.type) || "--",
+												}}
 											>
 												{listType(row.type) || "--"}
 											</SmartCell>
@@ -1131,7 +1141,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														position: "relative",
 													},
 												}}
-												tooltipOptions={{ content: row.platform || "--" }}
+												tooltipOptions={{
+													content: row.platform || "--",
+												}}
 											>
 												<Box
 													sx={{
@@ -1154,7 +1166,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																<Typography
 																	className="table-data"
 																	component="div"
-																	sx={{ fontSize: "12px !important" }}
+																	sx={{
+																		fontSize: "12px !important",
+																	}}
 																>
 																	{toCamelCase(row.platform) || "--"}
 																</Typography>
@@ -1194,7 +1208,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												tooltipOptions={{
 													content: (
 														<Box
-															sx={{ display: "flex", flexDirection: "column" }}
+															sx={{
+																display: "flex",
+																flexDirection: "column",
+															}}
 														>
 															<span>{row.createdBy || "--"}</span>
 															<span>{row.createdDate || "--"}</span>
@@ -1209,10 +1226,18 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														lineHeight: 1.4,
 													}}
 												>
-													<Typography sx={{ ...datasyncStyle.table_array }}>
+													<Typography
+														sx={{
+															...datasyncStyle.table_array,
+														}}
+													>
 														{row.createdBy || "--"}
 													</Typography>
-													<Typography sx={{ ...datasyncStyle.table_array }}>
+													<Typography
+														sx={{
+															...datasyncStyle.table_array,
+														}}
+													>
 														{row.createdDate || "--"}
 													</Typography>
 												</Box>
@@ -1224,7 +1249,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														position: "relative",
 													},
 												}}
-												tooltipOptions={{ content: row.lastSync || "--" }}
+												tooltipOptions={{
+													content: row.lastSync || "--",
+												}}
 											>
 												{row.lastSync || "--"}
 											</SmartCell>
@@ -1322,7 +1349,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																			<Typography
 																				className="table-data"
 																				component="div"
-																				sx={{ fontSize: "12px !important" }}
+																				sx={{
+																					fontSize: "12px !important",
+																				}}
 																			>
 																				{toolTipText}
 																				{!row.syncStatus && (

@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.params import Header
@@ -12,7 +12,6 @@ from dependencies import (
     check_pixel_install_domain,
     check_user_authentication,
     get_notification_service,
-    check_domain,
 )
 from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData

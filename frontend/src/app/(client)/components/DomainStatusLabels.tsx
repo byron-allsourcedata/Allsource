@@ -1,5 +1,6 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
+import { useRouter } from "next/navigation";
 
 interface DomainStatusLabelsProps {
 	isPixelInstalled: boolean;
@@ -11,38 +12,32 @@ interface DomainStatusLabelsProps {
 const statusConfig = {
 	pixel: {
 		success: {
-			label: "Pixel Installed",
+			label: "✓ Pixel Installed",
 			bg: "rgba(234, 248, 221, 1)",
-			color: "rgba(43, 91, 0, 1)",
 		},
 		error: {
-			label: "Pixel Not Installed",
+			label: "✗ Pixel Not Installed",
 			bg: "rgba(253, 221, 218, 1)",
-			color: "rgba(244, 87, 69, 1)",
 		},
 	},
 	contacts: {
 		success: {
-			label: "Contacts Resolving",
+			label: "✓ Contacts Resolving",
 			bg: "rgba(254, 243, 205, 1)",
-			color: "rgba(179, 151, 9, 1)",
 		},
 		error: {
-			label: "Resolution Failed",
+			label: "✗ Resolution Failed",
 			bg: "rgba(253, 221, 218, 1)",
-			color: "rgba(244, 87, 69, 1)",
 		},
 	},
 	sync: {
 		success: {
-			label: "Data Synced",
+			label: "✓ Data Synced",
 			bg: "rgba(204, 230, 254, 1)",
-			color: "rgba(0, 129, 251, 1)",
 		},
 		error: {
-			label: "Sync Error",
+			label: "✗ Sync Error",
 			bg: "rgba(253, 221, 218, 1)",
-			color: "rgba(244, 87, 69, 1)",
 		},
 	},
 } as const;
@@ -55,6 +50,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 	dataSynced,
 	dataSyncFailed,
 }) => {
+	const router = useRouter();
 	const getLabelProps = (key: StatusKey) => {
 		switch (key) {
 			case "pixel":
@@ -74,15 +70,45 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 		}
 	};
 
+	const renderAddDataSyncButton = () => {
+		if (isPixelInstalled && !dataSynced && !dataSyncFailed) {
+			return (
+				<Box
+					sx={{
+						cursor: "pointer",
+						color: "rgba(56, 152, 252, 1)",
+						fontFamily: "Roboto",
+						fontWeight: 400,
+						fontSize: "14px",
+						lineHeight: "100%",
+						letterSpacing: "0%",
+						textDecoration: "underline",
+						textDecorationStyle: "solid",
+						textDecorationOffset: "10%",
+						textDecorationThickness: "6%",
+					}}
+					onClick={() => {
+						router.push("/data-sync-pixel");
+					}}
+				>
+					+ Add Data Sync
+				</Box>
+			);
+		}
+		return null;
+	};
+
 	const keys: StatusKey[] = ["pixel", "contacts", "sync"];
 	const statuses = keys.map(getLabelProps).filter(Boolean) as {
 		label: string;
 		bg: string;
-		color: string;
+		color?: string;
 	}[];
 
 	return (
-		<Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap" }}>
+		<Box
+			sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", alignItems: "center" }}
+		>
 			{statuses.map((status, index) => (
 				<Box
 					key={index}
@@ -95,7 +121,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 					<Typography
 						variant="body2"
 						sx={{
-							color: status.color,
+							color: "rgba(74, 74, 74, 1)",
 							fontFamily: "Roboto",
 							fontWeight: "400",
 							fontSize: "14px",
@@ -105,6 +131,8 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 					</Typography>
 				</Box>
 			))}
+
+			{renderAddDataSyncButton()}
 		</Box>
 	);
 };

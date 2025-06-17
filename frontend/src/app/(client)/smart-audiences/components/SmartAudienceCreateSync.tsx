@@ -40,6 +40,10 @@ import MetaContactSyncTab from "./MetaContactSyncTab";
 import S3ContactSyncTab from "./S3ContactSyncTab";
 import { styled } from "@mui/material/styles";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import {
+	BookACallPopup,
+	LeftMenuProps,
+} from "@/app/(client)/components/BookACallPopup";
 import { AxiosError } from "axios";
 
 interface AudiencePopupProps {
@@ -568,6 +572,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			} else {
 				showErrorToast(`Error downloading file`);
 			}
+
+			const res = await axiosInstance.get("/audience-smarts/check-access");
+			if (res.data.allowed === false) {
+				showToast("Please upgrade your plan to download data");
+			}
 		} catch {
 		} finally {
 			setIsPageLoading(false);
@@ -578,6 +587,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	const createDataSync = async () => {
 		setIsLoading(true);
 		try {
+			const res = await axiosInstance.get("/audience-smarts/check-access");
+			if (res.data.allowed === false) {
+				handleClosePopup();
+				setUpgradePlanPopup(true);
+				return;
+			}
+
 			const requestObj: RequestData = {
 				sent_contacts: valueContactSync,
 				smart_audience_id: id,
@@ -1160,6 +1176,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	return (
 		<>
 			<Backdrop open={open} sx={{ zIndex: 100, color: "#fff" }} />
+			<BookACallPopup
+				open={upgradePlanPopup}
+				handleClose={() => setUpgradePlanPopup(false)}
+			/>
 			<Drawer
 				anchor="right"
 				open={open}
@@ -2322,12 +2342,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				}
 				invalid_api_key={isInvalidApiKey}
 				boxShadow="rgba(0, 0, 0, 0.01)"
-			/>
-
-			<UpgradePlanPopup
-				open={upgradePlanPopup}
-				limitName={"domain"}
-				handleClose={() => setUpgradePlanPopup(false)}
 			/>
 		</>
 	);

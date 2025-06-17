@@ -28,15 +28,31 @@ class UserSubscriptionsPersistence:
             plan_start=now,
             price_id=plan.stripe_price_id,
             contact_credit_plan_id=plan.contact_credit_plan_id,
-            plan_end=None if plan.alias == "basic" else end_of_month(now),
+            plan_end=None if plan.is_unlimited else end_of_month(now),
         )
 
         self.db.add(user_subscription)
         return user_subscription
 
-    def set_current_subscription(self, user_id: int, subscription_id: int):
+    def set_current_subscription(
+        self, user_id: int, subscription_id: int, plan: SubscriptionPlan
+    ):
         user = self.db.execute(
             select(Users).where(Users.id == user_id)
         ).scalar()
+
+        if plan.leads_credits >= user.overage_leads_count:
+            overage_leads_count = 0
+            leads_credits = plan.leads_credits - user.overage_leads_count
+        else:
+            overage_leads_count = user.overage_leads_count - plan.leads_credits
+            leads_credits = 0
+
         user.current_subscription_id = subscription_id
+        user.leads_credits = leads_credits
+        user.overage_leads_count = overage_leads_count
+        user.validation_funds = plan.validation_funds
+        user.enrichment_credits = plan.enrichment_credits
+        user.premium_source_credits = plan.premium_source_credits
+        user.smart_audience_quota = plan.smart_audience_quota
         self.db.add(user)

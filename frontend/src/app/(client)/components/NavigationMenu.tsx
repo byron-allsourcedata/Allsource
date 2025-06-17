@@ -22,9 +22,8 @@ import CategoryIcon from "@mui/icons-material/Category";
 import IntegrationIcon from "@mui/icons-material/IntegrationInstructions";
 import AnalyticsIcon from "@mui/icons-material/Assessment";
 import FeaturedPlayListIcon from "@mui/icons-material/FeaturedPlayList";
-import RuleFolderIcon from "@mui/icons-material/RuleFolder";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
 import SettingsIcon from "@mui/icons-material/Settings";
+import SettingsInputCompositeIcon from "@mui/icons-material/SettingsInputComposite";
 import PersonIcon from "@mui/icons-material/Person";
 import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
 import Image from "next/image";
@@ -470,6 +469,22 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 							</ListItem>
 							<ListItem
 								button
+								onClick={() => handleNavigation("/management")}
+								sx={{
+									...(isActive("/management")
+										? navigationmenuStyles.activeItem
+										: {}),
+									...navigationmenuStyles.mobileDrawerList,
+									pl: 4,
+								}}
+							>
+								<ListItemIcon>
+									<SettingsInputCompositeIcon />
+								</ListItemIcon>
+								<ListItemText primary="Management" />
+							</ListItem>
+							<ListItem
+								button
 								onClick={() => handleNavigation("/supression")}
 								sx={{
 									...(isActive("/supression")
@@ -632,7 +647,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						}}
 					>
 						<ListItemIcon>
-							<DnsIcon />
+							<SettingsIcon />
 						</ListItemIcon>
 						<ListItemText primary="Settings" />
 					</ListItem>

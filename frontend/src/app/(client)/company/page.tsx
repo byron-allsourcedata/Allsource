@@ -621,7 +621,9 @@ const Leads: React.FC = () => {
 				url += `?${params.join("&")}`;
 			}
 
-			const response = await axiosInstance.get(url, { responseType: "blob" });
+			const response = await axiosInstance.get(url, {
+				responseType: "blob",
+			});
 
 			if (response.status === 200) {
 				const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -1278,14 +1280,9 @@ const Leads: React.FC = () => {
 										<TableContainer
 											ref={tableContainerRef}
 											sx={{
-												height: "70vh",
 												overflowX: "scroll",
 												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "63vh"
-															: "70vh"
-														: "70vh",
+													data.length > 0 ? (true ? "63vh" : "70vh") : "70vh",
 												"@media (max-height: 800px)": {
 													height: "60vh",
 													maxHeight:
@@ -1314,7 +1311,11 @@ const Leads: React.FC = () => {
 													tableLayout: "fixed",
 												}}
 											>
-												<TableHead sx={{ position: "relative" }}>
+												<TableHead
+													sx={{
+														position: "relative",
+													}}
+												>
 													<TableRow>
 														{columns.map((column) => {
 															const {
@@ -1611,7 +1612,9 @@ const Leads: React.FC = () => {
 																			alt="linkedIn"
 																			width={16}
 																			height={16}
-																			style={{ marginRight: "2px" }}
+																			style={{
+																				marginRight: "2px",
+																			}}
 																		/>
 																		/
 																		{row.linkedin_url.replace(
@@ -1731,7 +1734,9 @@ const Leads: React.FC = () => {
 															<SmartCell
 																cellOptions={{
 																	sx: {
-																		"::after": { content: "none" },
+																		"::after": {
+																			content: "none",
+																		},
 																		// cursor: row.industry ? "pointer" : "default",
 																		borderRight:
 																			"1px solid rgba(235,235,235,1)",
@@ -1755,7 +1760,6 @@ const Leads: React.FC = () => {
 												</TableBody>
 											</Table>
 										</TableContainer>
-
 										<Paginator tableMode {...paginationProps} />
 									</Grid>
 								</Grid>
