@@ -370,28 +370,6 @@ class AudienceSmartsService:
             user_id=user.get("id"), page=1, per_page=50
         )
 
-        lookalike_list = []
-        for (
-            lookalike,
-            source_name,
-            source_type,
-            created_by,
-            source_origin,
-            domain,
-            target_schema,
-        ) in lookalikes:
-            lookalike_list.append(
-                {
-                    **lookalike.__dict__,
-                    "source": source_name,
-                    "source_type": source_type,
-                    "created_by": created_by,
-                    "source_origin": source_origin,
-                    "domain": domain,
-                    "target_schema": target_schema,
-                }
-            )
-
         source_list = [
             {
                 "id": s[0],
@@ -404,7 +382,7 @@ class AudienceSmartsService:
             for s in sources
         ]
 
-        return {"lookalikes": lookalike_list, "sources": source_list}
+        return {"lookalikes": lookalikes, "sources": source_list}
 
     def download_persons(self, smart_audience_id, sent_contacts, data_map):
         types = [contact.type for contact in data_map]
