@@ -259,7 +259,6 @@ class UsersAuth:
         shopify_access_token = None
         shop_id = None
         coupon = auth_google_data.coupon
-        ift = auth_google_data.ift
         awc = (
             auth_google_data.awc
             if auth_google_data.awc
@@ -429,7 +428,7 @@ class UsersAuth:
         ]
         if all(conditions):
             self.subscription_service.create_subscription_from_free_trial(
-                user_id=user_object.id, ftd=ftd
+                user_id=user_object.id
             )
 
         self.__on_create_account(
@@ -805,7 +804,7 @@ class UsersAuth:
         ]
         if all(conditions):
             self.subscription_service.create_subscription_from_free_trial(
-                user_id=user_object.id, ftd=ftd
+                user_id=user_object.id
             )
 
         conditions = [

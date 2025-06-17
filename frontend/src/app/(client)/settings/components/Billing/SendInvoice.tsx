@@ -9,7 +9,7 @@ import {
 	Drawer,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { billingStyles } from "./SettingsBilling";
+import { billingStyles } from "./billingStyles";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";

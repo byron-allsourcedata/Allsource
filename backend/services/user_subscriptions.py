@@ -1,7 +1,10 @@
+import logging
 from db_dependencies import Db
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_subscriptions import UserSubscriptionsPersistence
 from resolver import injectable
+
+logger = logging.getLogger(__name__)
 
 
 @injectable
@@ -18,9 +21,14 @@ class UserSubscriptionsService:
 
     def move_to_plan(self, user_id: int, plan_alias: str):
         plan = self.plans.get_plan_by_alias(plan_alias)
-        user_subscription = self.user_subscriptions.add(user_id, plan.id)
+        if not plan:
+            logger.warning(f"{plan_alias} not found!")
+            return
+        user_subscription = self.user_subscriptions.add(
+            user_id=user_id, plan=plan
+        )
         self.db.flush()
         self.user_subscriptions.set_current_subscription(
-            user_id, user_subscription.id
+            user_id=user_id, subscription_id=user_subscription.id, plan=plan
         )
         self.db.flush()
