@@ -100,7 +100,7 @@ def fetch_leads_by_domain(
         session.query(
             LeadUser.id.label("id"),
             LeadUser.user_id.label("user_id"),
-            LeadUser.five_x_five_user_id.label("five_x_five_user_id")
+            LeadUser.five_x_five_user_id.label("five_x_five_user_id"),
         )
         .join(UserDomains, UserDomains.id == LeadUser.domain_id)
         .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
@@ -191,7 +191,7 @@ def get_previous_imported_leads(session, data_sync_id):
         session.query(
             LeadUser.id.label("id"),
             LeadUser.user_id.label("user_id"),
-            LeadUser.five_x_five_user_id.label("five_x_five_user_id")
+            LeadUser.five_x_five_user_id.label("five_x_five_user_id"),
         )
         .join(
             DataSyncImportedLead,

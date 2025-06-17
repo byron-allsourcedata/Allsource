@@ -176,9 +176,7 @@ class OmnisendIntegrationService:
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append(
-                    {"lead_id": user.id, "status": profile}
-                )
+                results.append({"lead_id": user.id, "status": profile})
                 continue
             else:
                 results.append(
@@ -189,7 +187,9 @@ class OmnisendIntegrationService:
                 )
 
             properties = (
-                self.__map_properties(user, integration_data_sync.data_map) if integration_data_sync.data_map else {}
+                self.__map_properties(user, integration_data_sync.data_map)
+                if integration_data_sync.data_map
+                else {}
             )
             contact_data = {
                 "customProperties": properties,
@@ -228,7 +228,9 @@ class OmnisendIntegrationService:
 
         return results
 
-    def __create_bulk_profiles(self, bulk_profiles: List[dict[str:str]], access_token):
+    def __create_bulk_profiles(
+        self, bulk_profiles: List[dict[str:str]], access_token
+    ):
         payload = {
             "method": "POST",
             "endpoint": "contacts",

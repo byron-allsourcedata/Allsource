@@ -35,7 +35,7 @@ class MillionVerifierIntegrationsService:
 
         subresult_value = result.get("subresult")
 
-        if subresult_value == 'ok':
+        if subresult_value == "ok":
             is_verify = True
 
         if result.get("resultcode") in (3, 4, 5, 6):
