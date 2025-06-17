@@ -163,7 +163,7 @@ export const SettingsBilling: React.FC = () => {
 			return "Unlimited";
 		}
 
-		switch (value.detail_type) {
+		switch (value?.detail_type) {
 			case "funds":
 				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
 			case "limited":
@@ -677,7 +677,7 @@ export const SettingsBilling: React.FC = () => {
 											height={13.5}
 										/>
 									</Box>
-								) : downgrade_plan.plan_name ? (
+								) : downgrade_plan?.plan_name ? (
 									<Box
 										sx={{
 											display: "flex",
@@ -859,7 +859,8 @@ export const SettingsBilling: React.FC = () => {
 															Object.entries(billingDetails).map(
 																([nextKey, nextValue], nextIndex) => {
 																	if (
-																		nextKey === "monthly_total" ||
+																		(nextValue &&
+																			nextKey === "monthly_total") ||
 																		nextKey === "yearly_total"
 																	) {
 																		return (

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, root_validator
 from typing import Optional, Dict
 
 
@@ -97,7 +97,6 @@ class SubscriptionDetails(BaseModel):
     next_billing_date: NextBillingDate
     monthly_total: Optional[TotalKey] = None
     yearly_total: Optional[TotalKey] = None
-    total_key: TotalKey
     active: BaseModel
 
 
