@@ -27,6 +27,7 @@ import PaymentIcon from "@mui/icons-material/Payment";
 import { SendInvoicePopup } from "./SendInvoice";
 import { RemoveCardPopup } from "./RemoveCard";
 import { BillingHistory } from "./BillingHistory";
+import { UsageItem } from "./UsageItem";
 import CustomTablePagination from "@/components/CustomTablePagination";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
@@ -126,6 +127,12 @@ export const SettingsBilling: React.FC = () => {
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
 	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
+	const [smartAudienceCollected, setSmartAudienceCollected] = useState(0);
+	const [planPremiumSourceCollected, setPlanPremiumSourceCollected] =
+		useState(0);
+	const [premiumSourceCollected, setPremiumSourceCollected] = useState(0);
+	const [planSmartAudienceCollected, setPlanSmartAudienceCollected] =
+		useState(0);
 	const [cardDetails, setCardDetails] = useState<any[]>([]);
 	const [billingDetails, setBillingDetails] = useState<any>({});
 	const [checked, setChecked] = useState(false);
@@ -167,8 +174,20 @@ export const SettingsBilling: React.FC = () => {
 					response.data.usages_credits.plan_leads_credits,
 				);
 				setValidationFundsData(response.data.usages_credits.validation_funds);
+				setPremiumSourceCollected(
+					response.data.usages_credits.premium_source_credits,
+				);
+				setSmartAudienceCollected(
+					response.data.usages_credits.smart_audience_quota,
+				);
 				setValidationFundsLimitedData(
 					response.data.usages_credits.validation_funds_limit,
+				);
+				setPlanPremiumSourceCollected(
+					response.data.usages_credits.plan_premium_source_collected,
+				);
+				setPlanSmartAudienceCollected(
+					response.data.usages_credits.plan_smart_audience_collected,
 				);
 			}
 			setChecked(response.data.billing_details.is_leads_auto_charging);
@@ -370,12 +389,12 @@ export const SettingsBilling: React.FC = () => {
 					display: "flex",
 					justifyContent: "space-between",
 					opacity: !showValue ? 1 : 0.6,
-					mb: 2
+					mb: 2,
 				}}
 			>
 				<Typography
 					className="second-sub-title"
-					sx={{ lineHeight: "20px !important"}}
+					sx={{ lineHeight: "20px !important" }}
 				>
 					{title}
 				</Typography>
@@ -423,14 +442,14 @@ export const SettingsBilling: React.FC = () => {
 					{valueText}
 				</Typography>
 				{showValue && (
-						<Typography
-							className="second-sub-title"
-							sx={{ lineHeight: "20px !important", }}
-						>
-							{percentageUsed}% Used
-						</Typography>
-					)}
-				</Box>
+					<Typography
+						className="second-sub-title"
+						sx={{ lineHeight: "20px !important" }}
+					>
+						{percentageUsed}% Used
+					</Typography>
+				)}
+			</Box>
 		</Box>
 	);
 
@@ -503,24 +522,26 @@ export const SettingsBilling: React.FC = () => {
 
 	return (
 		<Box sx={{ pr: 2, pt: 1 }}>
-			<Box sx={{ 
-				display: "grid",
-				gap: 3,
-				gridTemplateColumns: "2fr 1fr", 
-				gridTemplateAreas: 
-				`"cards usage"
+			<Box
+				sx={{
+					display: "grid",
+					gap: 3,
+					gridTemplateColumns: "2fr 1fr",
+					gridTemplateAreas: `"cards usage"
 				"details usage"
 				"details funds"`,
-				"@media (max-width: 900px)": {
-					gridTemplateColumns: "1fr",
-					gridTemplateAreas: `
+					"@media (max-width: 900px)": {
+						gridTemplateColumns: "1fr",
+						gridTemplateAreas: `
 						"cards"
 						"usage"
 						"details"
 						"funds"
 					`,
-				},
-				mb: 3 }}>
+					},
+					mb: 3,
+				}}
+			>
 				<Box sx={{ gridArea: "cards", height: "auto", padding: "0px" }}>
 					<Box
 						sx={{
@@ -806,30 +827,16 @@ export const SettingsBilling: React.FC = () => {
 						>
 							{!hide && (
 								<>
-									{renderSection("Smart Audience", 0, "0")}
-									{renderSection(
-										"Validation funds",
-										validationLimitFundsCollected === -1
-											? 0
-											: Math.round(
-													((validationLimitFundsCollected -
-														validationFundsCollected) /
-														validationLimitFundsCollected) *
-														100,
-												),
-										validationLimitFundsCollected - validationFundsCollected ===
-											validationLimitFundsCollected
-											? "Validation funds exhausted"
-											: validationFundsCollected &&
-													validationLimitFundsCollected
-												? `${Math.max(
-														0,
-														validationLimitFundsCollected -
-															validationFundsCollected,
-													)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
-												: "",
-										validationFundsCollected !== validationLimitFundsCollected,
-									)}
+									<UsageItem
+										title="Contacts Downloaded"
+										limitValue={validationLimitFundsCollected}
+										currentValue={validationFundsCollected}
+									/>
+									<UsageItem
+										title="Smart Audience"
+										limitValue={1000}
+										currentValue={10}
+									/>
 								</>
 							)}
 						</Box>
