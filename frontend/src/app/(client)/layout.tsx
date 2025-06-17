@@ -152,7 +152,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							display: "flex",
 							flexWrap: "nowrap",
 							overflowX: "hidden",
-							overflowY: "scroll",
+							overflowY: "auto",
 							border: "none",
 							"@media (max-width: 899px)": {
 								paddingTop: "68px",
