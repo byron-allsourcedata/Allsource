@@ -26,7 +26,6 @@ import { SendInvoicePopup } from "./Billing/SendInvoice";
 import { RemoveCardPopup } from "./Billing/RemoveCard";
 import { BillingHistory } from "./Billing/BillingHistory";
 import { UsageItem } from "./Billing/UsageItem";
-import CustomTablePagination from "@/components/CustomTablePagination";
 import { billingStyles } from "./Billing/billingStyles";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
@@ -66,14 +65,6 @@ interface BillingDetails {
 	active?: boolean;
 }
 
-interface BillingHistoryItem {
-	invoice_id: string;
-	pricing_plan: string;
-	date: string;
-	status: string;
-	total: number;
-}
-
 const cardBrandImages: Record<CardBrand, string> = {
 	visa: "/visa-icon.svg",
 	mastercard: "/mastercard-icon.svg",
@@ -101,13 +92,6 @@ export const SettingsBilling: React.FC = () => {
 	const [checked, setChecked] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
-	);
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-	const [totalRows, setTotalRows] = useState(0);
-	const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>(
-		[],
 	);
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
@@ -164,68 +148,9 @@ export const SettingsBilling: React.FC = () => {
 		}
 	};
 
-	const fetchBillingHistoryData = async (page: number, rowsPerPage: number) => {
-		try {
-			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				"/settings/billing-history",
-				{
-					params: {
-						page: page + 1,
-						per_page: rowsPerPage,
-					},
-				},
-			);
-			if (response.data == "hide") {
-				setHide(true);
-			} else {
-				const { billing_history, count } = response.data;
-				setBillingHistory(billing_history);
-				setTotalRows(count);
-				let newRowsPerPageOptions: number[] = [];
-				if (count <= 10) {
-					newRowsPerPageOptions = [5, 10];
-				} else if (count <= 50) {
-					newRowsPerPageOptions = [10, 20];
-				} else if (count <= 100) {
-					newRowsPerPageOptions = [10, 20, 50];
-				} else if (count <= 300) {
-					newRowsPerPageOptions = [10, 20, 50, 100];
-				} else if (count <= 500) {
-					newRowsPerPageOptions = [10, 20, 50, 100, 300];
-				} else {
-					newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
-				}
-				if (!newRowsPerPageOptions.includes(count)) {
-					newRowsPerPageOptions.push(count);
-					newRowsPerPageOptions.sort((a, b) => a - b);
-				}
-				setRowsPerPageOptions(newRowsPerPageOptions);
-			}
-		} catch (error) {
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	const handleChangePage = (
-		_: React.MouseEvent<HTMLButtonElement> | null,
-		newPage: number,
-	) => {
-		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0);
-	};
-
 	useEffect(() => {
 		fetchCardData();
-		fetchBillingHistoryData(page, rowsPerPage);
-	}, [page, rowsPerPage]);
+	}, []);
 
 	const formatKey = (key: string) => {
 		return key
@@ -1103,29 +1028,9 @@ export const SettingsBilling: React.FC = () => {
 			/>
 
 			<BillingHistory
-				billingHistory={billingHistory}
 				setIsLoading={setIsLoading}
 				handleSendInvoicePopupOpen={handleSendInvoicePopupOpen}
 			/>
-
-			{/* Pagination Component */}
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "flex-end",
-					padding: "42px 0 0px",
-					mb: 1,
-				}}
-			>
-				<CustomTablePagination
-					count={totalRows}
-					page={page}
-					rowsPerPage={rowsPerPage}
-					onPageChange={handleChangePage}
-					onRowsPerPageChange={handleChangeRowsPerPage}
-					rowsPerPageOptions={rowsPerPageOptions}
-				/>
-			</Box>
 
 			<SendInvoicePopup
 				sendInvoicePopupOpen={sendInvoicePopupOpen}
