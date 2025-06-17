@@ -132,7 +132,14 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 					<>{children}</>
 				</NotificationProvider>
 			) : (
-				<>
+				<Box
+					sx={{
+						height: "100vh",
+						overflow: "auto",
+						display: "flex",
+						flexDirection: "column",
+					}}
+				>
 					<Header
 						NewRequestNotification={hasNewNotifications}
 						NotificationData={latestNotification}
@@ -141,11 +148,11 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 					<PixelSubheader />
 					<Grid
 						container
-						className="page-container"
 						sx={{
 							display: "flex",
 							flexWrap: "nowrap",
 							overflowX: "hidden",
+							overflowY: "scroll",
 							border: "none",
 							"@media (max-width: 899px)": {
 								paddingTop: "68px",
@@ -230,7 +237,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							</Grid>
 						</NotificationProvider>
 					</Grid>
-				</>
+				</Box>
 			)}
 		</>
 	);

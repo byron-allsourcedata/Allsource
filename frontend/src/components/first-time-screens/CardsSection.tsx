@@ -1,22 +1,54 @@
 import React from "react";
-import { Grid } from "@mui/material";
+import { Grid, SxProps, Theme } from "@mui/material";
 import FeatureCard from "./FeatureCard";
 import { FeatureCardProps } from "@/types/first_time_screens";
 
 interface CardsSectionProps {
 	items: FeatureCardProps[];
+	containerSx?: SxProps<Theme>;
+	itemProps?: {
+		xs?: number;
+		sm?: number;
+		md?: number;
+		lg?: number;
+		sx?: SxProps<Theme>;
+	};
+	spacing?: number | { xs?: number; sm?: number; md?: number };
 }
 
-const CardsSection: React.FC<CardsSectionProps> = ({ items }) => {
+const CardsSection: React.FC<CardsSectionProps> = ({
+	items,
+	containerSx = {},
+	itemProps = {},
+	spacing = { xs: 2, md: 3 },
+}) => {
+	const {
+		xs = 12,
+		sm = undefined,
+		md = 5.8,
+		lg = undefined,
+		sx: itemSx = {},
+	} = itemProps;
+
 	return (
 		<Grid
 			container
 			alignItems="stretch"
 			justifyContent="center"
-			sx={{ gap: 3 }}
+			spacing={spacing}
+			sx={containerSx}
 		>
 			{items.map((props, index) => (
-				<Grid item xs={12} md={5.8} key={index} padding={0}>
+				<Grid
+					item
+					key={index}
+					xs={xs}
+					sm={sm}
+					md={md}
+					lg={lg}
+					sx={itemSx}
+					padding={0}
+				>
 					<FeatureCard {...props} />
 				</Grid>
 			))}

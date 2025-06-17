@@ -64,9 +64,7 @@ class UserDomainsService:
         return f"{os.environ.get('SITE_HOST_URL')}"
 
     def get_domain_by_id(self, domain_id: int):
-        domains = self.domain_persistence.get_domain_by_filter(
-            domain_id=domain_id
-        )
+        domains = self.domain_persistence.get_domain_by_filter(id=domain_id)
         if domains:
             return domains[0]
 
