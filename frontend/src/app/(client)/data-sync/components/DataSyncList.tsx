@@ -66,6 +66,7 @@ import { SmartCell } from "@/components/table";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -114,7 +115,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		tableContainerRef,
 		data.length,
 	);
-
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 120);
 	const [openMetaConnect, setOpenMetaConnect] = useState(false);
 	const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
 	const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false);
@@ -878,27 +879,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<TableContainer
 						ref={tableContainerRef}
 						sx={{
-							overflowX: "scroll",
-							maxHeight:
-								data.length > 0 ? (hasNotification ? "63vh" : "70vh") : "70vh",
-							"@media (max-height: 800px)": {
-								height: "60vh",
-								maxHeight:
-									data.length > 0
-										? hasNotification
-											? "53vh"
-											: "60vh"
-										: "70vh",
-							},
-							"@media (max-width: 400px)": {
-								height: "50vh",
-								maxHeight:
-									data.length > 0
-										? hasNotification
-											? "53vh"
-											: "50vh"
-										: "70vh",
-							},
+							overflowX: "auto",
 						}}
 					>
 						<Table
@@ -1243,7 +1224,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							</TableBody>
 						</Table>
 					</TableContainer>
-					<Paginator tableMode {...paginationProps} />
+					<Box
+						ref={paginatorRef}
+						sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+					>
+						<Paginator tableMode {...paginationProps} />
+					</Box>
 					<Popover
 						id={id}
 						open={open}

@@ -55,6 +55,7 @@ import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/
 import { usePagination } from "@/hooks/usePagination";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -113,6 +114,9 @@ const Leads: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 111, [
+		data.length,
+	]);
 
 	useEffect(() => {
 		if (searchParams.get("pixel_installed")) setPixelPopup(true);
@@ -1738,31 +1742,7 @@ const Leads: React.FC = () => {
 									<TableContainer
 										ref={tableContainerRef}
 										sx={{
-											overflowX: "scroll",
-											maxHeight:
-												selectedFilters.length > 0
-													? hasNotification
-														? "63vh"
-														: "70vh"
-													: "70vh",
-											"@media (max-height: 800px)": {
-												height: "60vh",
-												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "53vh"
-															: "60vh"
-														: "70vh",
-											},
-											"@media (max-width: 400px)": {
-												height: "50vh",
-												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "53vh"
-															: "50vh"
-														: "70vh",
-											},
+											overflowX: "auto",
 										}}
 									>
 										<Table
@@ -2284,7 +2264,12 @@ const Leads: React.FC = () => {
 											</TableBody>
 										</Table>
 									</TableContainer>
-									<Paginator tableMode {...paginationProps} />
+									<Box
+										ref={paginatorRef}
+										sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+									>
+										<Paginator tableMode {...paginationProps} />
+									</Box>
 								</Grid>
 							</Grid>
 						)}
