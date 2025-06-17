@@ -41,22 +41,26 @@ interface CardDetails {
 }
 
 interface SubscriptionDetails {
-	active: {detail_type: string; value: boolean}
-	billing_cycle: {detail_type: string; value: string}
-	contacts_downloads: {detail_type: string; value: string}
-	next_billing_date: {detail_type: string; value: string}
-	plan_name: {detail_type: string; value: string}
-	yearly_total?: {detail_type: string; value: string}
-	monthly_total?: {detail_type: string; value: string}
-	domains: {detail_type: string; current_value: number, limit_value: number}
-	validation_funds: {detail_type: string; current_value: number, limit_value: number}
-	premium_sources_funds: string
-	smart_audience: string
+	active: { detail_type: string; value: boolean };
+	billing_cycle: { detail_type: string; value: string };
+	contacts_downloads: { detail_type: string; value: string };
+	next_billing_date: { detail_type: string; value: string };
+	plan_name: { detail_type: string; value: string };
+	yearly_total?: { detail_type: string; value: string };
+	monthly_total?: { detail_type: string; value: string };
+	domains: { detail_type: string; current_value: number; limit_value: number };
+	validation_funds: {
+		detail_type: string;
+		current_value: number;
+		limit_value: number;
+	};
+	premium_sources_funds: string;
+	smart_audience: string;
 }
 
 interface BillingDetails {
-	subscription_details: SubscriptionDetails
-	downgrade_plan: {downgrade_at: string | null, plan_name: string | null};
+	subscription_details: SubscriptionDetails;
+	downgrade_plan: { downgrade_at: string | null; plan_name: string | null };
 	is_leads_auto_charging: boolean;
 	canceled_at: any;
 	active?: boolean;
@@ -69,7 +73,6 @@ interface BillingHistoryItem {
 	status: string;
 	total: number;
 }
-
 
 const cardBrandImages: Record<CardBrand, string> = {
 	visa: "/visa-icon.svg",
@@ -92,7 +95,9 @@ export const SettingsBilling: React.FC = () => {
 	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
 	const [cardDetails, setCardDetails] = useState<CardDetails[]>([]);
-	const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(null);
+	const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(
+		null,
+	);
 	const [checked, setChecked] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
@@ -101,7 +106,9 @@ export const SettingsBilling: React.FC = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [totalRows, setTotalRows] = useState(0);
-	const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>([]);
+	const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>(
+		[],
+	);
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);

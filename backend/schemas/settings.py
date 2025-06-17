@@ -53,31 +53,38 @@ class ApiKeysRequest(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
 
+
 class BillingCycle(BaseModel):
     detail_type: str
     value: str
 
+
 class PlanName(BaseModel):
     detail_type: str
     value: str
+
 
 class LimitedDetail(BaseModel):
     detail_type: str
     limit_value: int
     current_value: int
 
+
 class FundsDetail(BaseModel):
     detail_type: str
     limit_value: int
     current_value: int
 
+
 class NextBillingDate(BaseModel):
     detail_type: str
     value: Optional[str]
 
+
 class TotalKey(BaseModel):
     detail_type: str
     value: Optional[str]
+
 
 class SubscriptionDetails(BaseModel):
     billing_cycle: BillingCycle
@@ -92,9 +99,11 @@ class SubscriptionDetails(BaseModel):
     yearly_total: Optional[TotalKey] = None
     active: BaseModel
 
+
 class DowngradePlan(BaseModel):
     plan_name: Optional[str]
     downgrade_at: Optional[str]
+
 
 class BillingSubscriptionDetails(BaseModel):
     subscription_details: Optional[SubscriptionDetails]

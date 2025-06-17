@@ -347,24 +347,34 @@ class SettingsService:
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
 
-    def extract_subscription_details(self, user: User) -> BillingSubscriptionDetails:
+    def extract_subscription_details(
+        self, user: User
+    ) -> BillingSubscriptionDetails:
         customer_id = user.get("customer_id")
         validation_funds = user.get("validation_funds")
         leads_credits = user.get("leads_credits")
         user_id = user.get("id")
         subscription = get_billing_details_by_userid(customer_id)
-        user_subscription = self.subscription_service.get_user_subscription(user_id=user_id)
+        user_subscription = self.subscription_service.get_user_subscription(
+            user_id=user_id
+        )
         current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
         plan_limit_domain = current_plan.domains_limit or -1
         validation_funds_limit = current_plan.validation_funds
         leads_credits_limit = current_plan.leads_credits
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
-        total_key = "monthly_total" if current_plan.interval == "month" else "yearly_total"
+        total_key = (
+            "monthly_total"
+            if current_plan.interval == "month"
+            else "yearly_total"
+        )
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
 
         billing_cycle = (
             f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}"
-            if user_subscription and user_subscription.plan_start and hasattr(user_subscription.plan_start, "strftime")
+            if user_subscription
+            and user_subscription.plan_start
+            and hasattr(user_subscription.plan_start, "strftime")
             else "Free trial"
         )
 
@@ -372,7 +382,9 @@ class SettingsService:
             user_subscription.plan_end.strftime("%b %d, %Y")
             if user.get("source_platform") == "shopify" and user_subscription
             else (
-                self.timestamp_to_date(subscription["items"]["data"][0]["current_period_end"]).strftime("%b %d, %Y")
+                self.timestamp_to_date(
+                    subscription["items"]["data"][0]["current_period_end"]
+                ).strftime("%b %d, %Y")
                 if subscription and user_subscription
                 else None
             )
@@ -397,12 +409,27 @@ class SettingsService:
         subscription_details = {
             "billing_cycle": {"detail_type": "as_is", "value": billing_cycle},
             "plan_name": {"detail_type": "as_is", "value": plan_name},
-            "domains": {"detail_type": "limited", "limit_value": user_limit_domain, "current_value": plan_limit_domain},
-            "contacts_downloads": {"detail_type": "limited", "limit_value": leads_credits_limit, "current_value": leads_credits},
+            "domains": {
+                "detail_type": "limited",
+                "limit_value": user_limit_domain,
+                "current_value": plan_limit_domain,
+            },
+            "contacts_downloads": {
+                "detail_type": "limited",
+                "limit_value": leads_credits_limit,
+                "current_value": leads_credits,
+            },
             "smart_audience": "Coming soon",
-            "validation_funds": {"detail_type": "funds", "limit_value": validation_funds_limit, "current_value": validation_funds},
+            "validation_funds": {
+                "detail_type": "funds",
+                "limit_value": validation_funds_limit,
+                "current_value": validation_funds,
+            },
             "premium_sources_funds": "Coming soon",
-            "next_billing_date": {"detail_type": "as_is", "value": next_billing_date},
+            "next_billing_date": {
+                "detail_type": "as_is",
+                "value": next_billing_date,
+            },
             total_key: {"detail_type": "as_is", "value": total_sum},
             "active": {"detail_type": "as_is", "value": is_active},
         }
@@ -410,14 +437,18 @@ class SettingsService:
         billing_detail = {
             "subscription_details": subscription_details,
             "downgrade_plan": {
-                "plan_name": get_product_from_price_id(user_subscription.downgrade_price_id).name
+                "plan_name": get_product_from_price_id(
+                    user_subscription.downgrade_price_id
+                ).name
                 if user_subscription and user_subscription.downgrade_price_id
                 else None,
                 "downgrade_at": user_subscription.plan_end.strftime("%b %d, %Y")
                 if user_subscription and user_subscription.downgrade_price_id
                 else None,
             },
-            "canceled_at": user_subscription.cancel_scheduled_at if user_subscription else None,
+            "canceled_at": user_subscription.cancel_scheduled_at
+            if user_subscription
+            else None,
         }
 
         return billing_detail
@@ -428,8 +459,14 @@ class SettingsService:
         plan_amount = plan["amount"]
 
         if user_subscription.downgrade_price_id:
-            downgrade_plan = get_price_from_price_id(user_subscription.downgrade_price_id)
-            return f"${(downgrade_plan['unit_amount'] / 100):,.0f}" if downgrade_plan else None
+            downgrade_plan = get_price_from_price_id(
+                user_subscription.downgrade_price_id
+            )
+            return (
+                f"${(downgrade_plan['unit_amount'] / 100):,.0f}"
+                if downgrade_plan
+                else None
+            )
 
         if user_subscription.cancel_scheduled_at:
             return None
@@ -446,7 +483,7 @@ class SettingsService:
         else:
             final_amount = plan_amount
 
-        return f"${(final_amount / 100):,.0f}" 
+        return f"${(final_amount / 100):,.0f}"
 
     def get_billing(self, user: User):
         result = {}
