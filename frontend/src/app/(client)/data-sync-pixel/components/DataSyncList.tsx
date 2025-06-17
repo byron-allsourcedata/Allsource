@@ -18,7 +18,14 @@ import {
 	SxProps,
 	Theme,
 } from "@mui/material";
-import React, { useState, useEffect, memo, useRef } from "react";
+import React, {
+	useState,
+	useEffect,
+	memo,
+	useRef,
+	useLayoutEffect,
+	RefObject,
+} from "react";
 import Image from "next/image";
 import axios, { AxiosError } from "axios";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -70,6 +77,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
 import { width } from "@mui/system";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -153,6 +161,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setOPenZapierComnect(false);
 		setOpenSlackConnect(false);
 	};
+
+	const paginatorRef = useRef<HTMLDivElement>(null);
+	useClampTableHeight(tableContainerRef, paginatorRef, 8, 120);
+
 	const handleSortRequest = (property: string) => {
 		const isAsc = orderBy === property && order === "asc";
 		setOrder(isAsc ? "desc" : "asc");
@@ -937,27 +949,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<TableContainer
 						ref={tableContainerRef}
 						sx={{
-							overflowX: "scroll",
-							maxHeight:
-								data.length > 0 ? (hasNotification ? "63vh" : "70vh") : "70vh",
-							"@media (max-height: 800px)": {
-								height: "60vh",
-								maxHeight:
-									data.length > 0
-										? hasNotification
-											? "53vh"
-											: "60vh"
-										: "70vh",
-							},
-							"@media (max-width: 400px)": {
-								height: "50vh",
-								maxHeight:
-									data.length > 0
-										? hasNotification
-											? "53vh"
-											: "50vh"
-										: "70vh",
-							},
+							overflowX: "auto",
 						}}
 					>
 						<Table
@@ -1455,7 +1447,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							</TableBody>
 						</Table>
 					</TableContainer>
-					<Paginator tableMode {...paginationProps} />
+					<Box
+						ref={paginatorRef}
+						sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+					>
+						<Paginator tableMode {...paginationProps} />
+					</Box>
 					<Popover
 						id={id}
 						open={open}

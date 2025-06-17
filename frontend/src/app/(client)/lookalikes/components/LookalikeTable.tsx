@@ -51,6 +51,7 @@ import {
 	Paginator,
 	type PaginatorProps,
 } from "@/components/PaginationComponent";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface TableRowData {
 	id: string;
@@ -193,6 +194,13 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	const { smartLookaLikeProgress } = useSSE();
 	const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 	const [openRowId, setOpenRowId] = useState<string | null>(null);
+	const tableContainerRef = useRef<HTMLDivElement>(null);
+	const { isScrolledX, isScrolledY } = useScrollShadow(
+		tableContainerRef,
+		tableData.length,
+	);
+	const paginatorRef = useRef<HTMLDivElement>(null);
+	useClampTableHeight(tableContainerRef, paginatorRef, 8, 122);
 
 	const toggleRow = (id: string) => {
 		setOpenRowId((prevId) => (prevId === id ? null : id));
@@ -343,12 +351,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 	};
 
-	const tableContainerRef = useRef<HTMLDivElement>(null);
-	const { isScrolledX, isScrolledY } = useScrollShadow(
-		tableContainerRef,
-		tableData.length,
-	);
-
 	return (
 		<Box
 			sx={{
@@ -358,13 +360,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 			<TableContainer
 				ref={tableContainerRef}
 				sx={{
-					overflowX: "scroll",
-					"@media (max-height: 800px)": {
-						maxHeight: "70vh",
-					},
-					"@media (max-width: 400px)": {
-						maxHeight: "67vh",
-					},
+					overflowX: "auto",
 				}}
 			>
 				<Table
@@ -1246,7 +1242,12 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 					</TableBody>
 				</Table>
 			</TableContainer>
-			<Paginator tableMode {...paginationProps} />
+			<Box
+				ref={paginatorRef}
+				sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+			>
+				<Paginator tableMode {...paginationProps} />
+			</Box>
 		</Box>
 	);
 };

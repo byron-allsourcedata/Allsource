@@ -80,6 +80,7 @@ import { tableHintCards } from "./context/hintsCardsContent";
 import SmartCell from "@/components/table/SmartCell";
 import { Paginator } from "@/components/PaginationComponent";
 import { usePagination } from "@/hooks/usePagination";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface Smarts {
 	id: string;
@@ -379,6 +380,8 @@ const SmartAudiences: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
+	const paginatorRef = useRef<HTMLDivElement>(null);
+	useClampTableHeight(tableContainerRef, paginatorRef, 8, 135, [data.length]);
 
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -1427,31 +1430,7 @@ const SmartAudiences: React.FC = () => {
 													<TableContainer
 														ref={tableContainerRef}
 														sx={{
-															overflowX: "scroll",
-															maxHeight:
-																selectedFilters.length > 0
-																	? hasNotification
-																		? "63vh"
-																		: "70vh"
-																	: "70vh",
-															"@media (max-height: 800px)": {
-																height: "60vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "60vh"
-																		: "70vh",
-															},
-															"@media (max-width: 400px)": {
-																height: "50vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "50vh"
-																		: "70vh",
-															},
+															overflowX: "auto",
 														}}
 													>
 														<Table
@@ -2302,7 +2281,12 @@ const SmartAudiences: React.FC = () => {
 															</TableBody>
 														</Table>
 													</TableContainer>
-													<Paginator tableMode {...paginationProps} />
+													<Box
+														ref={paginatorRef}
+														sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+													>
+														<Paginator tableMode {...paginationProps} />
+													</Box>
 												</Grid>
 											</Grid>
 										)}

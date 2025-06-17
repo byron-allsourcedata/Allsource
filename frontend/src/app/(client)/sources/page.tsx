@@ -72,6 +72,7 @@ import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
 import SmartCell from "@/components/table/SmartCell";
 import { usePagination } from "@/hooks/usePagination";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface Source {
 	id: string;
@@ -170,7 +171,8 @@ const Sources: React.FC = () => {
 
 	const paginationProps = usePagination(count_sources ?? 0);
 	const { page, rowsPerPage, setPage, setRowsPerPage } = paginationProps;
-
+	const paginatorRef = useRef<HTMLDivElement>(null);
+	useClampTableHeight(tableContainerRef, paginatorRef, 8, 121, [data.length]);
 	const cardData: CardData[] = [
 		{
 			title: "Pixel",
@@ -1152,31 +1154,7 @@ const Sources: React.FC = () => {
 													<TableContainer
 														ref={tableContainerRef}
 														sx={{
-															overflowX: "scroll",
-															maxHeight:
-																selectedFilters.length > 0
-																	? hasNotification
-																		? "63vh"
-																		: "70vh"
-																	: "70vh",
-															"@media (max-height: 800px)": {
-																height: "60vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "60vh"
-																		: "70vh",
-															},
-															"@media (max-width: 400px)": {
-																height: "50vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "50vh"
-																		: "70vh",
-															},
+															overflowX: "auto",
 														}}
 													>
 														<Table
@@ -1848,7 +1826,12 @@ const Sources: React.FC = () => {
 															</TableBody>
 														</Table>
 													</TableContainer>
-													<Paginator tableMode {...paginationProps} />
+													<Box
+														ref={paginatorRef}
+														sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+													>
+														<Paginator tableMode {...paginationProps} />
+													</Box>
 												</Grid>
 											</Grid>
 										)}
