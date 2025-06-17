@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 
+from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy import (
     Column,
     Integer,
@@ -57,7 +58,7 @@ class AudienceLookalikes(Base):
     )
     significant_fields = Column(JSON, nullable=True)
     similarity_score = Column(JSON, nullable=True)
-    insights = Column(JSON, nullable=True)
+    insights = Column(BYTEA, nullable=True)
     processed_train_model_size = Column(
         Integer, server_default="0", nullable=False
     )

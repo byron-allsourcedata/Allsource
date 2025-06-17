@@ -807,12 +807,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "list_type",
 			label: "List Type",
-			widths: { width: "10vw", minWidth: "155px", maxWidth: "20vw" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "20vw" },
 		},
 		{
 			key: "list_name",
 			label: "List Name",
-			widths: { width: "14vw", minWidth: "14vw", maxWidth: "14vw" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "14vw" },
 		},
 		{
 			key: "platform",
@@ -831,33 +831,32 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
-			key: "successful_contacts",
-			label: "Successful contacts",
-			widths: {
-				width: "6vw",
-				minWidth: "60px",
-				maxWidth: "6vw",
-			},
+			key: "data_sync",
+			label: "No of Contacts",
+			widths: { width: "120px", minWidth: "120px", maxWidth: "12vw" },
 		},
 		{
 			key: "processed_contacts",
-			label: "Processed contacts",
+			label: "Validated",
 			widths: {
-				width: "6vw",
-				minWidth: "60px",
-				maxWidth: "6vw",
+				width: "100px",
+				minWidth: "100px",
+				maxWidth: "8vw",
 			},
 		},
 		{
-			key: "data_sync",
-			label: "No. of Contacts",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			key: "successful_contacts",
+			label: "Synced",
+			widths: {
+				width: "80px",
+				minWidth: "80px",
+				maxWidth: "8vw",
+			},
 		},
-
 		{
 			key: "sync_status",
 			label: "Status",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			widths: { width: "8vw", minWidth: "8vw", maxWidth: "8vw" },
 		},
 		{
 			key: "action",
@@ -1229,7 +1228,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 											>
 												{row.lastSync || "--"}
 											</SmartCell>
-
 											<SmartCell
 												cellOptions={{
 													sx: {
@@ -1245,7 +1243,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.successful_contacts}
+												{row.contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1279,7 +1277,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.contacts}
+												{row.successful_contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
