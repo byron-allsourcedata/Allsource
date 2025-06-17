@@ -10,8 +10,6 @@ import {
 	IconButton,
 	Divider,
 	Popover,
-	LinearProgress,
-	Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { Elements } from "@stripe/react-stripe-js";
@@ -24,12 +22,57 @@ import CustomTooltip from "@/components/customToolTip";
 import { MoreVert } from "@mui/icons-material";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import PaymentIcon from "@mui/icons-material/Payment";
-import { SendInvoicePopup } from "./SendInvoice";
-import { RemoveCardPopup } from "./RemoveCard";
-import { BillingHistory } from "./BillingHistory";
+import { SendInvoicePopup } from "./Billing/SendInvoice";
+import { RemoveCardPopup } from "./Billing/RemoveCard";
+import { BillingHistory } from "./Billing/BillingHistory";
+import { UsageItem } from "./Billing/UsageItem";
 import CustomTablePagination from "@/components/CustomTablePagination";
+import { billingStyles } from "./Billing/billingStyles";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
+
+interface CardDetails {
+	id: string;
+	brand: string;
+	last4: string;
+	exp_month: number;
+	exp_year: number;
+	is_default: boolean;
+}
+
+interface SubscriptionDetails {
+	active: { detail_type: string; value: boolean };
+	billing_cycle: { detail_type: string; value: string };
+	contacts_downloads: { detail_type: string; value: string };
+	next_billing_date: { detail_type: string; value: string };
+	plan_name: { detail_type: string; value: string };
+	yearly_total?: { detail_type: string; value: string };
+	monthly_total?: { detail_type: string; value: string };
+	domains: { detail_type: string; current_value: number; limit_value: number };
+	validation_funds: {
+		detail_type: string;
+		current_value: number;
+		limit_value: number;
+	};
+	premium_sources_funds: string;
+	smart_audience: string;
+}
+
+interface BillingDetails {
+	subscription_details: SubscriptionDetails;
+	downgrade_plan: { downgrade_at: string | null; plan_name: string | null };
+	is_leads_auto_charging: boolean;
+	canceled_at: any;
+	active?: boolean;
+}
+
+interface BillingHistoryItem {
+	invoice_id: string;
+	pricing_plan: string;
+	date: string;
+	status: string;
+	total: number;
+}
 
 const cardBrandImages: Record<CardBrand, string> = {
 	visa: "/visa-icon.svg",
@@ -37,87 +80,6 @@ const cardBrandImages: Record<CardBrand, string> = {
 	amex: "/american-express.svg",
 	discover: "/discover-icon.svg",
 	unionpay: "/unionpay-icon.svg",
-};
-
-export const billingStyles = {
-	tableColumn: {
-		lineHeight: "16px !important",
-		position: "relative",
-		paddingLeft: "45px",
-		paddingTop: "18px",
-		paddingBottom: "18px",
-		"&::after": {
-			content: '""',
-			display: "block",
-			position: "absolute",
-			top: "15px",
-			bottom: "15px",
-			right: 0,
-			width: "1px",
-			height: "calc(100% - 30px)",
-			backgroundColor: "rgba(235, 235, 235, 1)",
-		},
-		"&:last-child::after": {
-			content: "none",
-		},
-	},
-	tableBodyRow: {
-		"&:last-child td": {
-			borderBottom: 0,
-		},
-	},
-	tableBodyColumn: {
-		lineHeight: "16px !important",
-		position: "relative",
-		paddingLeft: "45px",
-		paddingTop: "13.5px",
-		paddingBottom: "13.5px",
-		"&::after": {
-			content: '""',
-			display: "block",
-			position: "absolute",
-			top: "15px",
-			bottom: "15px",
-			right: 0,
-			width: "1px",
-			height: "calc(100% - 30px)",
-			backgroundColor: "rgba(235, 235, 235, 1)",
-		},
-		"&:last-child::after": {
-			content: "none",
-		},
-	},
-	formField: {
-		margin: "0",
-	},
-	inputLabel: {
-		top: "-3px",
-		"&.Mui-focused": {
-			top: 0,
-			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
-			fontWeight: 400,
-			fontSize: "12px",
-			lineHeight: "16px",
-		},
-	},
-	formInput: {
-		"&.MuiFormControl-root": {
-			margin: 0,
-		},
-		"&.MuiOutlinedInput-root": {
-			"& .MuiOutlinedInput-input": {
-				fontFamily: "Roboto",
-				color: "#202124",
-				fontSize: "14px",
-				lineHeight: "20px",
-			},
-		},
-	},
-	page_number: {
-		backgroundColor: "rgba(255, 255, 255, 1)",
-		color: "rgba(56, 152, 252, 1)",
-	},
 };
 
 export const SettingsBilling: React.FC = () => {
@@ -132,8 +94,10 @@ export const SettingsBilling: React.FC = () => {
 		useState(0);
 	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
-	const [cardDetails, setCardDetails] = useState<any[]>([]);
-	const [billingDetails, setBillingDetails] = useState<any>({});
+	const [cardDetails, setCardDetails] = useState<CardDetails[]>([]);
+	const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(
+		null,
+	);
 	const [checked, setChecked] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
@@ -142,14 +106,16 @@ export const SettingsBilling: React.FC = () => {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [totalRows, setTotalRows] = useState(0);
-	const [billingHistory, setBillingHistory] = useState<any[]>([]);
+	const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>(
+		[],
+	);
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);
 	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
-	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isLoading, setIsLoading] = useState(true);
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
@@ -163,7 +129,6 @@ export const SettingsBilling: React.FC = () => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
-			console.log(response.data);
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
@@ -206,7 +171,7 @@ export const SettingsBilling: React.FC = () => {
 				"/settings/billing-history",
 				{
 					params: {
-						page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
+						page: page + 1,
 						per_page: rowsPerPage,
 					},
 				},
@@ -216,7 +181,7 @@ export const SettingsBilling: React.FC = () => {
 			} else {
 				const { billing_history, count } = response.data;
 				setBillingHistory(billing_history);
-				setTotalRows(count); // Устанавливаем общее количество строк
+				setTotalRows(count);
 				let newRowsPerPageOptions: number[] = [];
 				if (count <= 10) {
 					newRowsPerPageOptions = [5, 10];
@@ -233,9 +198,9 @@ export const SettingsBilling: React.FC = () => {
 				}
 				if (!newRowsPerPageOptions.includes(count)) {
 					newRowsPerPageOptions.push(count);
-					newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+					newRowsPerPageOptions.sort((a, b) => a - b);
 				}
-				setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
+				setRowsPerPageOptions(newRowsPerPageOptions);
 			}
 		} catch (error) {
 		} finally {
@@ -254,7 +219,7 @@ export const SettingsBilling: React.FC = () => {
 		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0); // Reset to first page when changing rows per page
+		setPage(0);
 	};
 
 	useEffect(() => {
@@ -275,15 +240,13 @@ export const SettingsBilling: React.FC = () => {
 
 		switch (value.detail_type) {
 			case "funds":
-				return `$${value.current_value.toLocaleString("en-US")}/$${value.limit_value.toLocaleString("en-US")}`;
+				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
 			case "limited":
-				return `${value.current_value.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
-			case "plan":
-				return value.value;
-			case "time":
+				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
+			case "as_is":
 				return value.value;
 			default:
-				return "Comming soon";
+				return "Coming soon";
 		}
 	};
 
@@ -376,55 +339,6 @@ export const SettingsBilling: React.FC = () => {
 		setselectedInvoiceId(null);
 	};
 
-	const renderSection = (
-		title: string,
-		percentageUsed = 0,
-		valueText = "",
-		showValue = true,
-	) => (
-		<Box sx={{ width: "100%" }}>
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					opacity: !showValue ? 1 : 0.6,
-				}}
-			>
-				<Typography
-					className="second-sub-title"
-					sx={{ lineHeight: "20px !important", mb: "12px" }}
-				>
-					{title}
-				</Typography>
-				{showValue && (
-					<Typography
-						className="second-sub-title"
-						sx={{ lineHeight: "20px !important", mb: "12px" }}
-					>
-						{percentageUsed}% Used
-					</Typography>
-				)}
-			</Box>
-			<LinearProgress
-				variant="determinate"
-				value={percentageUsed}
-				sx={{
-					height: "8px",
-					borderRadius: "4px",
-					backgroundColor: "#dbdbdb",
-					mb: 1,
-					opacity: percentageUsed ? 1 : 0.6,
-				}}
-			/>
-			<Typography
-				className="paragraph"
-				sx={{ color: "#787878 !important", opacity: !showValue ? 1 : 0.6 }}
-			>
-				{valueText}
-			</Typography>
-		</Box>
-	);
-
 	const handleBuyCredits = async () => {
 		try {
 			setIsLoading(true);
@@ -494,8 +408,27 @@ export const SettingsBilling: React.FC = () => {
 
 	return (
 		<Box sx={{ pr: 2, pt: 1 }}>
-			<Grid container spacing={3} sx={{ mb: 3 }}>
-				<Grid item xs={12} md={12} sx={{ padding: "0px" }}>
+			<Box
+				sx={{
+					display: "grid",
+					gap: 3,
+					gridTemplateColumns: "2fr 1fr",
+					gridTemplateAreas: `"cards usage"
+				"details usage"
+				"details funds"`,
+					"@media (max-width: 900px)": {
+						gridTemplateColumns: "1fr",
+						gridTemplateAreas: `
+						"cards"
+						"usage"
+						"details"
+						"funds"
+					`,
+					},
+					mb: 3,
+				}}
+			>
+				<Box sx={{ gridArea: "cards", height: "auto", padding: "0px" }}>
 					<Box
 						sx={{
 							border: "1px solid #f0f0f0",
@@ -672,44 +605,14 @@ export const SettingsBilling: React.FC = () => {
 															<Button
 																className="hyperlink-red"
 																onClick={handleRemovePopupOpen}
-																sx={{
-																	border: "none",
-																	boxShadow: "none",
-																	color: "#202124 !important",
-																	lineHeight: "normal !important",
-																	textTransform: "none",
-																	minWidth: "auto",
-																	width: "100%",
-																	padding: "4px 0 4px 16px",
-																	textAlign: "left",
-																	display: "block",
-																	borderRadius: "0",
-																	"&:hover": {
-																		backgroundColor: "rgba(80, 82, 178, 0.10)",
-																	},
-																}}
+																sx={billingStyles.buttonInPopover}
 															>
 																Remove
 															</Button>
 															<Button
 																className="hyperlink-red"
 																onClick={handleSetDefault}
-																sx={{
-																	border: "none",
-																	boxShadow: "none",
-																	color: "#202124 !important",
-																	lineHeight: "normal !important",
-																	textTransform: "none",
-																	minWidth: "auto",
-																	width: "100%",
-																	padding: "4px 0 4px 16px",
-																	textAlign: "left",
-																	display: "block",
-																	borderRadius: "0",
-																	"&:hover": {
-																		backgroundColor: "rgba(80, 82, 178, 0.10)",
-																	},
-																}}
+																sx={billingStyles.buttonInPopover}
 															>
 																Set as default
 															</Button>
@@ -741,9 +644,65 @@ export const SettingsBilling: React.FC = () => {
 							</Box>
 						</Modal>
 					</Box>
-				</Grid>
+				</Box>
 
-				<Grid item xs={12} md={8} sx={{ padding: "0px" }}>
+				<Box sx={{ gridArea: "usage", padding: "0px" }}>
+					<Box
+						sx={{
+							display: "flex",
+							flexDirection: "column",
+							borderRadius: "4px",
+							border: "1px solid #f0f0f0",
+							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+							p: 3,
+						}}
+					>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "row",
+								justifyContent: "space-between",
+								alignItems: "start",
+								mb: 4,
+							}}
+						>
+							<Typography className="first-sub-title">Usages</Typography>
+						</Box>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "space-between",
+								gap: 4,
+								"@media (max-width: 600px)": {
+									gap: 3,
+									flexDirection: "column",
+									alignItems: "center",
+								},
+							}}
+						>
+							{!hide && (
+								<>
+									<UsageItem
+										title="Contacts Downloaded"
+										limitValue={planContactsCollected}
+										currentValue={contactsCollected}
+										needButton={false}
+									/>
+									<UsageItem
+										title="Smart Audience"
+										limitValue={planSmartAudienceCollected}
+										currentValue={smartAudienceCollected}
+										needButton={false}
+										commingSoon={true}
+									/>
+								</>
+							)}
+						</Box>
+					</Box>
+				</Box>
+
+				<Box sx={{ gridArea: "details", padding: "0px" }}>
 					<Box
 						sx={{
 							border: "1px solid #f0f0f0",
@@ -1075,9 +1034,9 @@ export const SettingsBilling: React.FC = () => {
 							</Grid>
 						</Box>
 					</Box>
-				</Grid>
+				</Box>
 
-				<Grid item xs={12} md={4} sx={{ padding: "0px" }}>
+				<Box sx={{ gridArea: "funds", padding: "0px" }}>
 					<Box
 						sx={{
 							display: "flex",
@@ -1086,7 +1045,6 @@ export const SettingsBilling: React.FC = () => {
 							border: "1px solid #f0f0f0",
 							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 							p: 3,
-							marginBottom: 2,
 						}}
 					>
 						<Box
@@ -1098,31 +1056,7 @@ export const SettingsBilling: React.FC = () => {
 								mb: 4,
 							}}
 						>
-							<Typography className="first-sub-title">Usages</Typography>
-							<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-								<Tooltip title="Coming Soon" arrow>
-									<Box sx={{ display: "inline-block" }}>
-										<Button
-											className="hyperlink-red"
-											disabled={true}
-											sx={{
-												background: "rgba(56, 152, 252, 1)",
-												borderRadius: "4px",
-												border: "1px solid rgba(56, 152, 252, 1)",
-												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-												color: "#fff !important",
-												textTransform: "none",
-												padding: "10px 24px",
-												"&:hover": {
-													color: "rgba(56, 152, 252, 1) !important",
-												},
-											}}
-										>
-											Add Funds
-										</Button>
-									</Box>
-								</Tooltip>
-							</Box>
+							<Typography className="first-sub-title">Funds</Typography>
 						</Box>
 						<Box
 							sx={{
@@ -1139,68 +1073,23 @@ export const SettingsBilling: React.FC = () => {
 						>
 							{!hide && (
 								<>
-									{renderSection(
-										"Contacts Downloaded",
-										Math.round(
-											((planContactsCollected - contactsCollected) /
-												planContactsCollected) *
-												100,
-										),
-										String(planContactsCollected),
-									)}
-									{renderSection(
-										"Smart Audience",
-										planSmartAudienceCollected === 0
-											? 100
-											: Math.round(
-													((planSmartAudienceCollected -
-														smartAudienceCollected) /
-														planSmartAudienceCollected) *
-														100,
-												),
-										String(smartAudienceCollected),
-									)}
-									{renderSection(
-										"Validation funds",
-										validationLimitFundsCollected === -1
-											? 0
-											: Math.round(
-													((validationLimitFundsCollected -
-														validationFundsCollected) /
-														validationLimitFundsCollected) *
-														100,
-												),
-										validationLimitFundsCollected - validationFundsCollected ===
-											validationLimitFundsCollected
-											? "Validation funds exhausted"
-											: validationFundsCollected &&
-													validationLimitFundsCollected
-												? `${Math.max(
-														0,
-														validationLimitFundsCollected -
-															validationFundsCollected,
-													)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
-												: "",
-										validationFundsCollected !== validationLimitFundsCollected,
-									)}
-									{renderSection(
-										"Premium Source funds",
-										planPremiumSourceCollected === 0
-											? 100
-											: Math.round(
-													((planPremiumSourceCollected -
-														premiumSourceCollected) /
-														planPremiumSourceCollected) *
-														100,
-												),
-										String(premiumSourceCollected),
-									)}
+									<UsageItem
+										title="Validation funds"
+										limitValue={validationLimitFundsCollected}
+										currentValue={validationFundsCollected}
+									/>
+									<UsageItem
+										title="Premium Source funds"
+										limitValue={planPremiumSourceCollected}
+										currentValue={premiumSourceCollected}
+										commingSoon={true}
+									/>
 								</>
 							)}
 						</Box>
 					</Box>
-				</Grid>
-			</Grid>
+				</Box>
+			</Box>
 
 			<Divider
 				sx={{

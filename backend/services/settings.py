@@ -1,6 +1,7 @@
 import logging
 import os
 
+from models import UserSubscriptions
 from persistence.leads_persistence import LeadsPersistence
 from persistence.settings_persistence import SettingsPersistence
 from models.users import User
@@ -16,7 +17,19 @@ from .jwt_service import (
     decode_jwt_data,
     verify_password,
 )
-from schemas.settings import AccountDetailsRequest
+from schemas.settings import (
+    AccountDetailsRequest,
+    BillingSubscriptionDetails,
+    SubscriptionDetails,
+    BillingCycle,
+    PlanName,
+    LimitedDetail,
+    FundsDetail,
+    NextBillingDate,
+    TotalKey,
+    ActivePlan,
+    DowngradePlan,
+)
 from enums import VerifyToken
 
 logger = logging.getLogger(__name__)
@@ -347,7 +360,9 @@ class SettingsService:
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
 
-    def extract_subscription_details(self, user):
+    def extract_subscription_details(
+        self, user: User
+    ) -> BillingSubscriptionDetails:
         customer_id = user.get("customer_id")
         validation_funds = user.get("validation_funds")
         leads_credits = user.get("leads_credits")
@@ -357,180 +372,147 @@ class SettingsService:
             user_id=user_id
         )
         current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
-        plan_limit_domain = (
-            current_plan.domains_limit if current_plan.domains_limit else 0
-        )
+        plan_limit_domain = current_plan.domains_limit or -1
         validation_funds_limit = current_plan.validation_funds
         leads_credits_limit = current_plan.leads_credits
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
-        subscription_details = None
         total_key = (
             "monthly_total"
             if current_plan.interval == "month"
             else "yearly_total"
         )
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
-        next_billing_date = None
-        total_sum = None
-        credit_price = self.plan_persistence.contact_credit_price_by_plan_id(
-            plan_id=user_subscription.contact_credit_plan_id
-        )
-        if subscription is None and user_subscription:
-            if user_subscription.plan_start and hasattr(
-                user_subscription.plan_start, "strftime"
-            ):
-                billing_cycle = f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}"
-            else:
-                billing_cycle = "Free trial"
 
-            if user.get("source_platform") == "shopify":
-                next_billing_date = user_subscription.plan_end.strftime(
+        billing_cycle = (
+            f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}"
+            if user_subscription
+            and user_subscription.plan_start
+            and hasattr(user_subscription.plan_start, "strftime")
+            else "Free trial"
+        )
+
+        next_billing_date = (
+            user_subscription.plan_end.strftime("%b %d, %Y")
+            if user.get("source_platform") == "shopify" and user_subscription
+            else (
+                self.timestamp_to_date(
+                    subscription["items"]["data"][0]["current_period_end"]
+                ).strftime("%b %d, %Y")
+                if subscription and user_subscription
+                else None
+            )
+        )
+
+        total_sum = (
+            current_plan.price
+            if user.get("source_platform") == "shopify" and user_subscription
+            else (
+                self.calculate_final_price(subscription, user_subscription)
+                if subscription and user_subscription
+                else None
+            )
+        )
+
+        is_active = (
+            subscription.get("status") in ["active", "trialing"]
+            if subscription
+            else user_subscription.status == "active"
+        )
+
+        subscription_details = SubscriptionDetails(
+            billing_cycle=BillingCycle(
+                detail_type="as_is", value=billing_cycle
+            ),
+            plan_name=PlanName(detail_type="as_is", value=plan_name),
+            domains=LimitedDetail(
+                detail_type="limited",
+                limit_value=user_limit_domain,
+                current_value=plan_limit_domain,
+            ),
+            contacts_downloads=LimitedDetail(
+                detail_type="limited",
+                limit_value=leads_credits_limit,
+                current_value=leads_credits,
+            ),
+            smart_audience="Coming soon",
+            validation_funds=FundsDetail(
+                detail_type="funds",
+                limit_value=validation_funds_limit,
+                current_value=validation_funds,
+            ),
+            premium_sources_funds="Coming soon",
+            next_billing_date=NextBillingDate(
+                detail_type="as_is", value=next_billing_date
+            ),
+            total_key=TotalKey(detail_type="as_is", value=total_sum),
+            active=ActivePlan(detail_type="as_is", value=is_active),
+        )
+
+        def get_downgrade_plan(
+            user_subscription: UserSubscriptions,
+        ) -> Optional[DowngradePlan]:
+            if user_subscription and user_subscription.downgrade_price_id:
+                product = get_product_from_price_id(
+                    user_subscription.downgrade_price_id
+                )
+                downgrade_time = user_subscription.plan_end.strftime(
                     "%b %d, %Y"
                 )
-                total_sum = current_plan.price
 
-            subscription_details = {
-                "billing_cycle": {
-                    "detail_type": "time",
-                    "value": billing_cycle,
-                },
-                "plan_name": {"detail_type": "plan", "value": plan_name},
-                "domains": {
-                    "detail_type": "limited",
-                    "limit_value": user_limit_domain,
-                    "current_value": plan_limit_domain,
-                },
-                "contacts_downloads": {
-                    "detail_type": "limited",
-                    "limit_value": leads_credits_limit,
-                    "current_value": leads_credits,
-                },
-                "smart_audience": "Coming soon",
-                "validation_funds": {
-                    "detail_type": "funds",
-                    "limit_value": validation_funds_limit,
-                    "current_value": validation_funds,
-                },
-                "premium_sources_funds": "Coming soon",
-                "next_billing_date": {
-                    "detail_type": "time",
-                    "value": next_billing_date,
-                },
-                total_key: {"detail_type": "time", "value": total_sum},
-                "active": {
-                    "detail_type": "plan",
-                    "value": True
-                    if user_subscription.status == "active"
-                    else False,
-                },
-            }
-        elif subscription and user_subscription:
-            billing_cycle = (
-                f"{user_subscription.plan_start.strftime('%b %d, %Y')} to {user_subscription.plan_end.strftime('%b %d, %Y')}"
-                if user_subscription.plan_start
-                and hasattr(user_subscription.plan_start, "strftime")
-                else "Free trial"
-            )
-            plan = subscription["items"]["data"][0]["plan"]
-            is_active = (
-                subscription.get("status") == "active"
-                or subscription.get("status") == "trialing"
-            )
-            if user_subscription.downgrade_price_id:
-                downgrade_plan = get_price_from_price_id(
-                    user_subscription.downgrade_price_id
+                return DowngradePlan(
+                    plan_name=product.name, downgrade_at=downgrade_time
                 )
-                downgrade_amount = (
-                    downgrade_plan["unit_amount"] if downgrade_plan else 0
-                )
-                total_price = f"${downgrade_amount / 100:,.0f}"
-            elif user_subscription.cancel_scheduled_at:
-                total_price = None
-            else:
-                discount = subscription.get("discount")
-                plan_amount = plan["amount"]
 
-                if discount:
-                    discount_amount = (
-                        discount["coupon"]["amount_off"]
-                        if discount["coupon"].get("amount_off")
-                        else 0
-                    )
-                    discount_percent = (
-                        discount["coupon"]["percent_off"]
-                        if discount["coupon"].get("percent_off")
-                        else 0
-                    )
-                    if discount_amount:
-                        final_amount = plan_amount - discount_amount
-                    elif discount_percent:
-                        final_amount = plan_amount * (
-                            1 - discount_percent / 100
-                        )
-                    else:
-                        final_amount = plan_amount
-                else:
-                    final_amount = plan_amount
+            return None
 
-                total_price = f"${final_amount / 100:,.0f}"
-            subscription_details = {
-                "billing_cycle": {
-                    "detail_type": "time",
-                    "value": billing_cycle,
-                },
-                "plan_name": {"detail_type": "plan", "value": plan_name},
-                "domains": {
-                    "detail_type": "limited",
-                    "limit_value": user_limit_domain,
-                    "current_value": plan_limit_domain,
-                },
-                "contacts_downloads": {
-                    "detail_type": "limited",
-                    "limit_value": leads_credits_limit,
-                    "current_value": leads_credits,
-                },
-                "smart_audience": "Coming soon",
-                "validation_funds": {
-                    "detail_type": "funds",
-                    "limit_value": validation_funds_limit,
-                    "current_value": validation_funds,
-                },
-                "premium_sources_funds": "Coming soon",
-                "next_billing_date": {
-                    "detail_type": "time",
-                    "value": self.timestamp_to_date(
-                        subscription["items"]["data"][0]["current_period_end"]
-                    ).strftime("%b %d, %Y"),
-                },
-                total_key: {"detail_type": "time", "value": total_price},
-                "active": {"detail_type": "plan", "value": is_active},
-            }
-
-        billing_detail = {
-            "subscription_details": subscription_details,
-            "downgrade_plan": {
-                "plan_name": get_product_from_price_id(
-                    user_subscription.downgrade_price_id
-                ).name
-                if user_subscription and user_subscription.downgrade_price_id
-                else None,
-                "downgrade_at": user_subscription.plan_end.strftime("%b %d, %Y")
-                if user_subscription and user_subscription.downgrade_price_id
-                else None,
-            },
-            "canceled_at": user_subscription.cancel_scheduled_at
-            if user_subscription
-            else None,
-        }
+        billing_detail = BillingSubscriptionDetails(
+            subscription_details=subscription_details,
+            downgrade_plan=get_downgrade_plan(user_subscription),
+            canceled_at=user_subscription.cancel_scheduled_at,
+        )
 
         return billing_detail
 
-    def get_billing(self, user: dict):
+    def calculate_final_price(self, subscription, user_subscription):
+        plan = subscription["items"]["data"][0]["plan"]
+        discount = subscription.get("discount")
+        plan_amount = plan["amount"]
+
+        if user_subscription.downgrade_price_id:
+            downgrade_plan = get_price_from_price_id(
+                user_subscription.downgrade_price_id
+            )
+            return (
+                f"${(downgrade_plan['unit_amount'] / 100):,.0f}"
+                if downgrade_plan
+                else None
+            )
+
+        if user_subscription.cancel_scheduled_at:
+            return None
+
+        if discount:
+            discount_amount = discount["coupon"].get("amount_off", 0)
+            discount_percent = discount["coupon"].get("percent_off", 0)
+            if discount_amount:
+                final_amount = plan_amount - discount_amount
+            elif discount_percent:
+                final_amount = plan_amount * (1 - discount_percent / 100)
+            else:
+                final_amount = plan_amount
+        else:
+            final_amount = plan_amount
+
+        return f"${(final_amount / 100):,.0f}"
+
+    def get_billing(self, user: User):
         result = {}
         current_plan = self.plan_persistence.get_current_plan(
             user_id=user.get("id")
         )
-        result["billing_details"] = self.extract_subscription_details(user=user)
+        result["billing_details"] = self.extract_subscription_details(
+            user=user
+        ).model_dump()
         if user.get("source_platform") == "shopify":
             result["status"] = "hide"
             return result
