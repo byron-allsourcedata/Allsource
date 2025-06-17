@@ -1027,7 +1027,7 @@ export const SettingsBilling: React.FC = () => {
 								},
 							}}
 						>
-							{!hide && 
+							{!hide && (
 								<>
 									<UsageItem
 										title="Validation funds"
@@ -1041,7 +1041,7 @@ export const SettingsBilling: React.FC = () => {
 										commingSoon={true}
 									/>
 								</>
-							}
+							)}
 						</Box>
 					</Box>
 				</Box>

@@ -14,17 +14,17 @@ interface UsageItemProps {
 	limitValue: number;
 	currentValue: number;
 	needButton?: boolean;
-    commingSoon?: boolean;
+	commingSoon?: boolean;
 }
 
 export const UsageItem: React.FC<UsageItemProps> = ({
 	title,
 	limitValue,
 	currentValue,
-    needButton = true,
-    commingSoon = false,
+	needButton = true,
+	commingSoon = false,
 }) => {
-    console.log(title, currentValue, limitValue);
+	console.log(title, currentValue, limitValue);
 	const limit = Math.round(((limitValue - currentValue) / limitValue) * 100);
 
 	const valueText =
@@ -48,19 +48,21 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				>
 					{title}
 				</Typography>
-				{needButton && <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-					<Tooltip title="Coming Soon" arrow>
-						<Box sx={{ display: "inline-block" }}>
-							<Button
-								className="hyperlink-red"
-								disabled={true}
-								sx={billingStyles.addFundsButton}
-							>
-								Add Funds
-							</Button>
-						</Box>
-					</Tooltip>
-				</Box>}
+				{needButton && (
+					<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
+						<Tooltip title="Coming Soon" arrow>
+							<Box sx={{ display: "inline-block" }}>
+								<Button
+									className="hyperlink-red"
+									disabled={true}
+									sx={billingStyles.addFundsButton}
+								>
+									Add Funds
+								</Button>
+							</Box>
+						</Tooltip>
+					</Box>
+				)}
 			</Box>
 			<LinearProgress
 				variant="determinate"
