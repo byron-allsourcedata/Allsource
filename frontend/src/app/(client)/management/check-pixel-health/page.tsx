@@ -1,56 +1,38 @@
 "use client";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography, IconButton } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
-import { managementStyle } from "./management";
+import { managementStyle } from "../management";
 import CustomToolTip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
+import { showErrorToast } from "@/components/ToastNotification";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { SliderProvider } from "@/context/SliderContext";
-import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
-import DomainButtonSelect from "../components/NavigationDomainButton";
-import ManagementTable from "./components/ManagementTable";
-
-export type PixelKey =
-	| "is_view_product_installed"
-	| "is_add_to_cart_installed"
-	| "is_converted_sales_installed";
-
-export interface AdditionalPixel {
-	is_add_to_cart_installed: boolean;
-	is_converted_sales_installed: boolean;
-	is_view_product_installed: boolean;
-	[key: string]: boolean;
-}
-
-export interface PixelDataSync {
-	createdDate: string;
-	list_name: string | null;
-	lastSync: string | null;
-	platform: string;
-	contacts: number;
-	createdBy: string;
-	status: string;
-	syncStatus: boolean;
-}
-
-export interface PixelManagementItem {
-	id: number;
-	domain_name: string;
-	pixel_status: boolean;
-	additional_pixel: AdditionalPixel;
-	resulutions: any;
-	data_syncs: PixelDataSync[];
-}
+import {
+	AudienceSynergyPreview,
+	FirstTimeScreenCommonVariant2,
+} from "@/components/first-time-screens";
+import DomainButtonSelect from "../../components/NavigationDomainButton";
+import ManagementTable from "../components/ManagementTable";
+import {
+	CardsSection,
+	FirstTimeScreenCommonVariant1,
+} from "@/components/first-time-screens";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
+import { EmptyAnalyticsPlaceholder } from "../../analytics/components/placeholders/EmptyPlaceholder";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { PixelManagementItem } from "../page";
+import FeatureCardWithButton from "@/components/first-time-screens/FeatureCardWithButton";
 
 const Management: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState("");
+	const [popupOpen, setPopupOpen] = useState(false);
 
 	const checkPixel = async () => {
 		try {
@@ -85,34 +67,6 @@ const Management: React.FC = () => {
 		}
 	};
 
-	const handleDelete = async (toDelete: PixelManagementItem) => {
-		try {
-			setLoading(true);
-
-			const currentDomain = sessionStorage.getItem("current_domain");
-
-			await axiosInstance.delete(`/domains/${toDelete.id}`, {
-				data: { domain: toDelete.domain_name },
-			});
-			showToast("Successfully removed domain");
-
-			await fetchData();
-
-			const updatedDomains: PixelManagementItem[] = JSON.parse(
-				sessionStorage.getItem("me") || "{}",
-			)?.domains;
-
-			if (currentDomain === toDelete.domain_name && updatedDomains?.length) {
-				const newDomain = updatedDomains[0].domain_name;
-				sessionStorage.setItem("current_domain", newDomain);
-			}
-		} catch (error) {
-			showErrorToast("Failed to delete domain. Please try again.");
-		} finally {
-			setLoading(false);
-		}
-	};
-
 	useEffect(() => {
 		checkPixel();
 		fetchData();
@@ -121,6 +75,10 @@ const Management: React.FC = () => {
 	if (loading) {
 		return <CustomizedProgressBar />;
 	}
+
+	const onBack = () => {
+		router.push("/management");
+	};
 
 	return (
 		<Box sx={{ ...managementStyle.mainContent }}>
@@ -131,30 +89,32 @@ const Management: React.FC = () => {
 					alignItems: "center",
 					position: "sticky",
 					top: 0,
-					pl: "0.5rem",
+					pl: "8px",
+					zIndex: 10,
 					pt: 1.5,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",
 					width: "100%",
-					"@media (max-width: 900px)": {
+					"@media (max-width: 56.25rem)": {
 						zIndex: 10,
 					},
-					"@media (max-width: 600px)": {
-						pt: "4.25rem",
+					"@media (max-width: 37.5rem)": {
+						pt: "68px",
 						flexDirection: "column",
-						pl: "0.5rem",
+						pl: "8px",
 						alignItems: "flex-start",
 						zIndex: 10,
 						width: "100%",
 						pr: 1.5,
 					},
-					"@media (max-width: 440px)": {
+					"@media (max-width: 27.5rem)": {
 						flexDirection: "column",
 						zIndex: 1,
 						justifyContent: "flex-start",
 					},
-					"@media (max-width: 400px)": {
-						pb: "6px",
+					"@media (max-width: 25rem)": {
+						pt: "20px",
+						pb: ".375rem",
 					},
 				}}
 			>
@@ -165,8 +125,8 @@ const Management: React.FC = () => {
 						flexDirection: "row",
 						alignItems: "center",
 						gap: 1,
-						"@media (max-width: 600px)": { mb: 2 },
-						"@media (max-width: 440px)": { mb: 1 },
+						"@media (max-width: 37.5rem)": { mb: 2 },
+						"@media (max-width: 27.5rem)": { mb: 1 },
 					}}
 				>
 					<Box
@@ -186,11 +146,14 @@ const Management: React.FC = () => {
 								pt: 0.75,
 							}}
 						>
+							<IconButton onClick={onBack}>
+								<ArrowBackIcon sx={{ color: "rgba(56, 152, 252, 1)" }} />
+							</IconButton>
 							<Typography
 								className="first-sub-title"
 								sx={{ textWrap: "nowrap" }}
 							>
-								Management
+								Management - Check Pixel Health
 							</Typography>
 							<CustomToolTip
 								title={
@@ -212,8 +175,8 @@ const Management: React.FC = () => {
 						width: "100%",
 						pr: "10%",
 						alignItems: "center",
-						"@media (max-width: 900px)": { pr: 0 },
-						"@media (max-width: 600px)": {
+						"@media (max-width: 56.25rem)": { pr: 0 },
+						"@media (max-width: 37.5rem)": {
 							width: "100%",
 							pr: "0",
 						},
@@ -221,50 +184,54 @@ const Management: React.FC = () => {
 				/>
 			</Box>
 
-			<Box sx={{ width: "100%" }}>
-				<ManagementTable tableData={pixelData} onDelete={handleDelete} />
-			</Box>
-			<Box
-				sx={{
-					display: "flex",
-					width: "100%",
-					justifyContent: "flex-end",
-					pb: 2,
-				}}
-			>
-				<Button
-					//onClick={handleButtonClick}
-					sx={{
-						ml: 2,
-						textTransform: "none",
-						background: "rgba(56, 152, 252, 1)",
-						color: "rgba(56, 152, 252, 1)",
-						fontFamily: "Nunito Sans",
-						padding: "0.65em 2em",
-						mr: 1,
-						"&:hover": {
-							background: "rgba(56, 152, 252, 1)",
-							boxShadow: 5,
-						},
-						"@media (max-width: 600px)": {
-							padding: "0.5em 1.5em",
-							mr: 0,
-							ml: 0,
-							left: 0,
-						},
-					}}
-				>
-					<Typography
-						className="second-sub-title"
-						sx={{
-							color: "rgba(255, 255, 255, 1) !important",
-							textAlign: "center",
+			{false && <EmptyAnalyticsPlaceholder />}
+			{true && (
+				<Box sx={{ pr: 2, width: "100%" }}>
+					<FirstTimeScreenCommonVariant1
+						InfoNotification={{
+							Text: "Check if your pixel is active and recording visitor interactions on your website.",
+							sx: {
+								width: "100%",
+								"@media (max-width: 37.5rem)": { pt: 3 },
+								"@media (max-width: 25rem)": { pt: 5 },
+							},
 						}}
-					>
-						+ Add a Domain
-					</Typography>
-				</Button>
-			</Box>
+						Content={
+							<FeatureCardWithButton
+								title={"Check Pixel Health "}
+								subtitle={"Test if your pixel works properly across all pages."}
+								imageSrc={"/check-pixel-health.svg"}
+								img_height={203}
+								img_width={373}
+								onClick={() => {}}
+								buttonLabel={"Test"}
+								showRecommended={false}
+							/>
+						}
+						MainBoxStyleSX={{ width: "100%" }}
+						ContentStyleSX={{
+							display: "flex",
+							flexDirection: "column",
+							justifyContent: "center",
+							alignItems: "center",
+							width: "100%",
+							margin: "0 auto",
+							padding: "0rem 9.5rem",
+							mt: 2,
+							"@media (max-width: 600px)": {
+								padding: 0,
+							},
+						}}
+					/>
+					{popupOpen && (
+						<WelcomePopup
+							open={popupOpen}
+							onClose={() => setPopupOpen(false)}
+							variant="integration"
+						/>
+					)}
+				</Box>
+			)}
 		</Box>
 	);
 };

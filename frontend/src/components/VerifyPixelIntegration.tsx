@@ -8,6 +8,7 @@ import { useGetStartedHints } from "@/app/(client)/analytics/components/context/
 type VerifyPixelIntegrationProps = {
 	domain: string;
 	showHint: boolean;
+	step?: number;
 };
 interface HintCardInterface {
 	description: string;
@@ -18,6 +19,7 @@ interface HintCardInterface {
 const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 	domain,
 	showHint,
+	step,
 }) => {
 	const {
 		verifyPixelIntegrationHints,
@@ -94,7 +96,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 					},
 				}}
 			>
-				3. Verify pixel integration on your website
+				{step ? step : 3}. Verify pixel integration on your website
 			</Typography>
 			<Box
 				display="flex"

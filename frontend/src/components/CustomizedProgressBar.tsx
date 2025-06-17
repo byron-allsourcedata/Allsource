@@ -33,7 +33,6 @@ const PageWithLoader: React.FC = () => {
 				top: computeTop(),
 				zIndex: 1200,
 				left: "175px",
-				"@media (min-height: 900px)": { top: "4.25rem" },
 				"@media (max-width: 899px)": { left: 0, top: "4.5rem" },
 			}}
 		>

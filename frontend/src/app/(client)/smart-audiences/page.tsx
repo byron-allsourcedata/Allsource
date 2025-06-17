@@ -59,7 +59,6 @@ import { SliderProvider } from "../../../context/SliderContext";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import CustomTablePagination from "@/components/CustomTablePagination";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "../sources/components/ThreeDotsLoader";
@@ -69,9 +68,7 @@ import FilterPopup from "./components/SmartAudienceFilter";
 import DetailsPopup from "./components/SmartAudienceDataSources";
 import ValidationsHistoryPopup from "./components/SmartAudienceValidationHistory";
 import CalendarPopup from "@/components/CustomCalendar";
-import TableCustomCell from "../sources/components/table/TableCustomCell";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
-import FirstTimeScreen from "./components/FirstTimeScreen";
 import {
 	FirstTimeScreenCommonVariant1,
 	BuilderIntro,

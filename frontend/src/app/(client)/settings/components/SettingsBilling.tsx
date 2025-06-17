@@ -1,48 +1,78 @@
 "use client";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import {
 	Box,
 	Typography,
 	Button,
-	Table,
-	TableBody,
 	Modal,
-	TableCell,
-	TableContainer,
-	TableHead,
-	TableRow,
 	Grid,
 	IconButton,
-	Switch,
 	Divider,
 	Popover,
-	Drawer,
-	LinearProgress,
-	TextField,
-	Chip,
-	Tooltip,
 } from "@mui/material";
 import Image from "next/image";
 import { Elements } from "@stripe/react-stripe-js";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
-import CloseIcon from "@mui/icons-material/Close";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CheckoutForm from "@/components/CheckoutForm";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
 import CustomTooltip from "@/components/customToolTip";
-import DownloadIcon from "@mui/icons-material/Download";
-import TelegramIcon from "@mui/icons-material/Telegram";
-import CustomTablePagination from "@/components/CustomTablePagination";
-import BlurBilling from "./BlurBilling";
 import { MoreVert } from "@mui/icons-material";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import PaymentIcon from "@mui/icons-material/Payment";
-import { SendInvoicePopup } from "./SendInvoice";
-import { RemoveCardPopup } from "./RemoveCard";
+import { SendInvoicePopup } from "./Billing/SendInvoice";
+import { RemoveCardPopup } from "./Billing/RemoveCard";
+import { BillingHistory } from "./Billing/BillingHistory";
+import { UsageItem } from "./Billing/UsageItem";
+import CustomTablePagination from "@/components/CustomTablePagination";
+import { billingStyles } from "./Billing/billingStyles";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
+
+interface CardDetails {
+	id: string;
+	brand: string;
+	last4: string;
+	exp_month: number;
+	exp_year: number;
+	is_default: boolean;
+}
+
+interface SubscriptionDetails {
+	active: { detail_type: string; value: boolean };
+	billing_cycle: { detail_type: string; value: string };
+	contacts_downloads: { detail_type: string; value: string };
+	next_billing_date: { detail_type: string; value: string };
+	plan_name: { detail_type: string; value: string };
+	yearly_total?: { detail_type: string; value: string };
+	monthly_total?: { detail_type: string; value: string };
+	domains: { detail_type: string; current_value: number; limit_value: number };
+	validation_funds: {
+		detail_type: string;
+		current_value: number;
+		limit_value: number;
+	};
+	premium_sources_funds: string;
+	smart_audience: string;
+}
+
+interface BillingDetails {
+	subscription_details: SubscriptionDetails;
+	downgrade_plan: { downgrade_at: string | null; plan_name: string | null };
+	is_leads_auto_charging: boolean;
+	canceled_at: any;
+	active?: boolean;
+}
+
+interface BillingHistoryItem {
+	invoice_id: string;
+	pricing_plan: string;
+	date: string;
+	status: string;
+	total: number;
+}
 
 const cardBrandImages: Record<CardBrand, string> = {
 	visa: "/visa-icon.svg",
@@ -52,102 +82,32 @@ const cardBrandImages: Record<CardBrand, string> = {
 	unionpay: "/unionpay-icon.svg",
 };
 
-export const billingStyles = {
-	tableColumn: {
-		lineHeight: "16px !important",
-		position: "relative",
-		paddingLeft: "45px",
-		paddingTop: "18px",
-		paddingBottom: "18px",
-		"&::after": {
-			content: '""',
-			display: "block",
-			position: "absolute",
-			top: "15px", // Space from the top
-			bottom: "15px", // Space from the bottom
-			right: 0, // Position the border at the right edge
-			width: "1px",
-			height: "calc(100% - 30px)", // Full height minus top and bottom spacing
-			backgroundColor: "rgba(235, 235, 235, 1)", // Border color
-		},
-		"&:last-child::after": {
-			content: "none",
-		},
-	},
-	tableBodyRow: {
-		"&:last-child td": {
-			borderBottom: 0,
-		},
-	},
-	tableBodyColumn: {
-		lineHeight: "16px !important",
-		position: "relative",
-		paddingLeft: "45px",
-		paddingTop: "13.5px",
-		paddingBottom: "13.5px",
-		"&::after": {
-			content: '""',
-			display: "block",
-			position: "absolute",
-			top: "15px", // Space from the top
-			bottom: "15px", // Space from the bottom
-			right: 0, // Position the border at the right edge
-			width: "1px",
-			height: "calc(100% - 30px)", // Full height minus top and bottom spacing
-			backgroundColor: "rgba(235, 235, 235, 1)", // Border color
-		},
-		"&:last-child::after": {
-			content: "none",
-		},
-	},
-	formField: {
-		margin: "0",
-	},
-	inputLabel: {
-		top: "-3px",
-		"&.Mui-focused": {
-			top: 0,
-			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
-			fontWeight: 400,
-			fontSize: "12px",
-			lineHeight: "16px",
-		},
-	},
-	formInput: {
-		"&.MuiFormControl-root": {
-			margin: 0,
-		},
-		"&.MuiOutlinedInput-root": {
-			"& .MuiOutlinedInput-input": {
-				fontFamily: "Roboto",
-				color: "#202124",
-				fontSize: "14px",
-				lineHeight: "20px",
-			},
-		},
-	},
-	page_number: {
-		backgroundColor: "rgba(255, 255, 255, 1)",
-		color: "rgba(56, 152, 252, 1)",
-	},
-};
-
 export const SettingsBilling: React.FC = () => {
 	const [contactsCollected, setContactsCollected] = useState(0);
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
+	const [smartAudienceCollected, setSmartAudienceCollected] = useState(0);
+	const [planPremiumSourceCollected, setPlanPremiumSourceCollected] =
+		useState(0);
+	const [premiumSourceCollected, setPremiumSourceCollected] = useState(0);
+	const [planSmartAudienceCollected, setPlanSmartAudienceCollected] =
+		useState(0);
 	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
-	const [cardDetails, setCardDetails] = useState<any[]>([]);
-	const [billingDetails, setBillingDetails] = useState<any>({});
-	const [billingHistory, setBillingHistory] = useState<any[]>([]);
+	const [cardDetails, setCardDetails] = useState<CardDetails[]>([]);
+	const [billingDetails, setBillingDetails] = useState<BillingDetails | null>(
+		null,
+	);
 	const [checked, setChecked] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
-	const [overageAnchorEl, setOverageAnchorEl] = useState<null | HTMLElement>(
-		null,
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
+	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+	const [totalRows, setTotalRows] = useState(0);
+	const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>(
+		[],
 	);
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
@@ -155,31 +115,12 @@ export const SettingsBilling: React.FC = () => {
 	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
-	const [isLoading, setIsLoading] = useState<boolean>(true);
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
-	const [totalRows, setTotalRows] = useState(0);
-	const [totalPages, setTotalPages] = useState(0);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
 	const [open, setOpen] = useState(false);
-	const [inactiveContactCounts, setInactiveContactCounts] = useState(0);
-	const [inactiveDate, setInactiveDate] = useState<string | null>();
 	const [hide, setHide] = useState(false);
-	const sourcePlatform = useMemo(() => {
-		if (typeof window !== "undefined") {
-			const savedMe = sessionStorage.getItem("me");
-			if (savedMe) {
-				try {
-					const parsed = JSON.parse(savedMe);
-					return parsed.source_platform || "";
-				} catch (error) {}
-			}
-		}
-		return "";
-	}, [typeof window !== "undefined" ? sessionStorage.getItem("me") : null]);
 
 	const handleOpen = () => setOpen(true);
 	const handleClose = () => setOpen(false);
@@ -197,8 +138,20 @@ export const SettingsBilling: React.FC = () => {
 					response.data.usages_credits.plan_leads_credits,
 				);
 				setValidationFundsData(response.data.usages_credits.validation_funds);
+				setPremiumSourceCollected(
+					response.data.usages_credits.premium_source_credits,
+				);
+				setSmartAudienceCollected(
+					response.data.usages_credits.smart_audience_quota,
+				);
 				setValidationFundsLimitedData(
 					response.data.usages_credits.validation_funds_limit,
+				);
+				setPlanPremiumSourceCollected(
+					response.data.usages_credits.plan_premium_source_collected,
+				);
+				setPlanSmartAudienceCollected(
+					response.data.usages_credits.plan_smart_audience_collected,
 				);
 			}
 			setChecked(response.data.billing_details.is_leads_auto_charging);
@@ -218,7 +171,7 @@ export const SettingsBilling: React.FC = () => {
 				"/settings/billing-history",
 				{
 					params: {
-						page: page + 1, // сервер принимает 1 как первую страницу, а пагинация в React считает с 0
+						page: page + 1,
 						per_page: rowsPerPage,
 					},
 				},
@@ -228,7 +181,7 @@ export const SettingsBilling: React.FC = () => {
 			} else {
 				const { billing_history, count } = response.data;
 				setBillingHistory(billing_history);
-				setTotalRows(count); // Устанавливаем общее количество строк
+				setTotalRows(count);
 				let newRowsPerPageOptions: number[] = [];
 				if (count <= 10) {
 					newRowsPerPageOptions = [5, 10];
@@ -245,14 +198,28 @@ export const SettingsBilling: React.FC = () => {
 				}
 				if (!newRowsPerPageOptions.includes(count)) {
 					newRowsPerPageOptions.push(count);
-					newRowsPerPageOptions.sort((a, b) => a - b); // Ensure the options remain sorted
+					newRowsPerPageOptions.sort((a, b) => a - b);
 				}
-				setRowsPerPageOptions(newRowsPerPageOptions); // Update the options
+				setRowsPerPageOptions(newRowsPerPageOptions);
 			}
 		} catch (error) {
 		} finally {
 			setIsLoading(false);
 		}
+	};
+
+	const handleChangePage = (
+		_: React.MouseEvent<HTMLButtonElement> | null,
+		newPage: number,
+	) => {
+		setPage(newPage);
+	};
+
+	const handleChangeRowsPerPage = (
+		event: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		setRowsPerPage(parseInt(event.target.value, 10));
+		setPage(0);
 	};
 
 	useEffect(() => {
@@ -267,16 +234,21 @@ export const SettingsBilling: React.FC = () => {
 	};
 
 	const renderValue = (value: any) => {
-		if (value === null || value === undefined) {
-			return "--"; // Fallback value if undefined or null
+		if (value?.current_value === -1) {
+			return "Unlimited";
 		}
-		if (typeof value === "object") {
-			return JSON.stringify(value); // Convert objects/arrays to string
-		}
-		return String(value); // Ensure numbers and other values are converted to strings
-	};
 
-	const label = { inputProps: { "aria-label": "overage" } };
+		switch (value.detail_type) {
+			case "funds":
+				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
+			case "limited":
+				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
+			case "as_is":
+				return value.value;
+			default:
+				return "Coming soon";
+		}
+	};
 
 	const handleClickOpen = (
 		event: React.MouseEvent<HTMLElement>,
@@ -367,92 +339,6 @@ export const SettingsBilling: React.FC = () => {
 		setselectedInvoiceId(null);
 	};
 
-	const renderSection = (
-		title: string,
-		percentageUsed = 0,
-		valueText = "",
-		showValue = true,
-	) => (
-		<Box sx={{ width: "100%" }}>
-			<Box
-				sx={{
-					display: "flex",
-					justifyContent: "space-between",
-					opacity: !showValue ? 1 : 0.6,
-				}}
-			>
-				<Typography
-					className="second-sub-title"
-					sx={{ lineHeight: "20px !important", mb: "12px" }}
-				>
-					{title}
-				</Typography>
-				{showValue && (
-					<Typography
-						className="second-sub-title"
-						sx={{ lineHeight: "20px !important", mb: "12px" }}
-					>
-						{percentageUsed}% Used
-					</Typography>
-				)}
-			</Box>
-			<LinearProgress
-				variant="determinate"
-				value={percentageUsed}
-				sx={{
-					height: "8px",
-					borderRadius: "4px",
-					backgroundColor: "#dbdbdb",
-					mb: 1,
-					opacity: percentageUsed ? 1 : 0.6,
-				}}
-			/>
-			<Typography
-				className="paragraph"
-				sx={{ color: "#787878 !important", opacity: !showValue ? 1 : 0.6 }}
-			>
-				{valueText}
-			</Typography>
-		</Box>
-	);
-
-	const fetchSaveBillingHistory = async (invoice_id: string) => {
-		try {
-			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				`/settings/billing/download-billing?invoice_id=${invoice_id}`,
-			);
-			const link = response.data;
-			if (link) {
-				const a = document.createElement("a");
-				a.href = link;
-				a.target = "_blank";
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-			} else {
-				showErrorToast("Download billing not found.");
-			}
-		} catch (error: unknown) {
-			if (axios.isAxiosError(error)) {
-				showErrorToast(error.message);
-			} else if (error instanceof Error) {
-				showErrorToast(error.message);
-			} else {
-				showErrorToast("An unexpected error occurred.");
-			}
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	const handleChangePage = (
-		_: React.MouseEvent<HTMLButtonElement> | null,
-		newPage: number,
-	) => {
-		setPage(newPage);
-	};
-
 	const handleBuyCredits = async () => {
 		try {
 			setIsLoading(true);
@@ -482,30 +368,8 @@ export const SettingsBilling: React.FC = () => {
 		}
 	};
 
-	// Handler for rows per page change
-	// const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLSelectElement>) => {
-	//     const newRowsPerPage = parseInt(event.target.value, 10); // Преобразуем строку в число
-	//     setRowsPerPage(newRowsPerPage);
-	// };
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<HTMLInputElement>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
-		setPage(0); // Reset to first page when changing rows per page
-	};
-
 	const handleCheckoutSuccess = (data: any) => {
 		setCardDetails((prevDetails) => [...prevDetails, data]);
-	};
-
-	const formatDate = (dateString: string): string => {
-		const options: Intl.DateTimeFormatOptions = {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		};
-		return new Date(dateString).toLocaleDateString("en-US", options);
 	};
 
 	const handleRedirectSubscription = () => {
@@ -535,31 +399,6 @@ export const SettingsBilling: React.FC = () => {
 		window.location.reload();
 	};
 
-	const getStatusStyles = (status: string) => {
-		switch (status?.toLowerCase()) {
-			case "successful":
-				return {
-					background: "#eaf8dd",
-					color: "#2b5b00 !important",
-				};
-			case "decline":
-				return {
-					background: "#ececec",
-					color: "#4a4a4a !important",
-				};
-			case "failed":
-				return {
-					background: "#fcd4cf",
-					color: "#a61100 !important",
-				};
-			default:
-				return {
-					background: "#ececec",
-					color: "#4a4a4a !important",
-				};
-		}
-	};
-
 	const deleteOpen = Boolean(deleteAnchorEl);
 	const deleteId = deleteOpen ? "delete-popover" : undefined;
 
@@ -569,8 +408,27 @@ export const SettingsBilling: React.FC = () => {
 
 	return (
 		<Box sx={{ pr: 2, pt: 1 }}>
-			<Grid container spacing={3} sx={{ mb: 3 }}>
-				<Grid item xs={12} md={12} sx={{ padding: "0px" }}>
+			<Box
+				sx={{
+					display: "grid",
+					gap: 3,
+					gridTemplateColumns: "2fr 1fr",
+					gridTemplateAreas: `"cards usage"
+				"details usage"
+				"details funds"`,
+					"@media (max-width: 900px)": {
+						gridTemplateColumns: "1fr",
+						gridTemplateAreas: `
+						"cards"
+						"usage"
+						"details"
+						"funds"
+					`,
+					},
+					mb: 3,
+				}}
+			>
+				<Box sx={{ gridArea: "cards", height: "auto", padding: "0px" }}>
 					<Box
 						sx={{
 							border: "1px solid #f0f0f0",
@@ -656,10 +514,10 @@ export const SettingsBilling: React.FC = () => {
 														src={
 															cardBrandImages[card.brand as CardBrand] ||
 															"/default-card-icon.svg"
-														} // Default icon if brand not found
+														}
 														alt={`${card.brand}-icon`}
 														height={54}
-														width={54} // Adjust the size as needed
+														width={54}
 													/>
 												</Box>
 												<Box
@@ -747,44 +605,14 @@ export const SettingsBilling: React.FC = () => {
 															<Button
 																className="hyperlink-red"
 																onClick={handleRemovePopupOpen}
-																sx={{
-																	border: "none",
-																	boxShadow: "none",
-																	color: "#202124 !important",
-																	lineHeight: "normal !important",
-																	textTransform: "none",
-																	minWidth: "auto",
-																	width: "100%",
-																	padding: "4px 0 4px 16px",
-																	textAlign: "left",
-																	display: "block",
-																	borderRadius: "0",
-																	"&:hover": {
-																		backgroundColor: "rgba(80, 82, 178, 0.10)",
-																	},
-																}}
+																sx={billingStyles.buttonInPopover}
 															>
 																Remove
 															</Button>
 															<Button
 																className="hyperlink-red"
 																onClick={handleSetDefault}
-																sx={{
-																	border: "none",
-																	boxShadow: "none",
-																	color: "#202124 !important",
-																	lineHeight: "normal !important",
-																	textTransform: "none",
-																	minWidth: "auto",
-																	width: "100%",
-																	padding: "4px 0 4px 16px",
-																	textAlign: "left",
-																	display: "block",
-																	borderRadius: "0",
-																	"&:hover": {
-																		backgroundColor: "rgba(80, 82, 178, 0.10)",
-																	},
-																}}
+																sx={billingStyles.buttonInPopover}
 															>
 																Set as default
 															</Button>
@@ -816,9 +644,65 @@ export const SettingsBilling: React.FC = () => {
 							</Box>
 						</Modal>
 					</Box>
-				</Grid>
+				</Box>
 
-				<Grid item xs={12} md={8} sx={{ padding: "0px" }}>
+				<Box sx={{ gridArea: "usage", padding: "0px" }}>
+					<Box
+						sx={{
+							display: "flex",
+							flexDirection: "column",
+							borderRadius: "4px",
+							border: "1px solid #f0f0f0",
+							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+							p: 3,
+						}}
+					>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "row",
+								justifyContent: "space-between",
+								alignItems: "start",
+								mb: 4,
+							}}
+						>
+							<Typography className="first-sub-title">Usages</Typography>
+						</Box>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "space-between",
+								gap: 4,
+								"@media (max-width: 600px)": {
+									gap: 3,
+									flexDirection: "column",
+									alignItems: "center",
+								},
+							}}
+						>
+							{!hide && (
+								<>
+									<UsageItem
+										title="Contacts Downloaded"
+										limitValue={planContactsCollected}
+										currentValue={contactsCollected}
+										needButton={false}
+									/>
+									<UsageItem
+										title="Smart Audience"
+										limitValue={planSmartAudienceCollected}
+										currentValue={smartAudienceCollected}
+										needButton={false}
+										commingSoon={true}
+									/>
+								</>
+							)}
+						</Box>
+					</Box>
+				</Box>
+
+				<Box sx={{ gridArea: "details", padding: "0px" }}>
 					<Box
 						sx={{
 							border: "1px solid #f0f0f0",
@@ -1142,9 +1026,7 @@ export const SettingsBilling: React.FC = () => {
 														color: "#5f6368 !important",
 													}}
 												>
-													{renderValue(value).includes("-1")
-														? renderValue(value).replace("-1", "unlimited")
-														: renderValue(value)}
+													{renderValue(value)}
 												</Typography>
 											</Grid>
 										);
@@ -1152,9 +1034,9 @@ export const SettingsBilling: React.FC = () => {
 							</Grid>
 						</Box>
 					</Box>
-				</Grid>
+				</Box>
 
-				<Grid item xs={12} md={4} sx={{ padding: "0px" }}>
+				<Box sx={{ gridArea: "funds", padding: "0px" }}>
 					<Box
 						sx={{
 							display: "flex",
@@ -1163,7 +1045,6 @@ export const SettingsBilling: React.FC = () => {
 							border: "1px solid #f0f0f0",
 							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 							p: 3,
-							marginBottom: 2,
 						}}
 					>
 						<Box
@@ -1175,31 +1056,7 @@ export const SettingsBilling: React.FC = () => {
 								mb: 4,
 							}}
 						>
-							<Typography className="first-sub-title">Usages</Typography>
-							<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-								<Tooltip title="Coming Soon" arrow>
-									<Box sx={{ display: "inline-block" }}>
-										<Button
-											className="hyperlink-red"
-											disabled={true}
-											sx={{
-												background: "rgba(56, 152, 252, 1)",
-												borderRadius: "4px",
-												border: "1px solid rgba(56, 152, 252, 1)",
-												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-												color: "#fff !important",
-												textTransform: "none",
-												padding: "10px 24px",
-												"&:hover": {
-													color: "rgba(56, 152, 252, 1) !important",
-												},
-											}}
-										>
-											Add Funds
-										</Button>
-									</Box>
-								</Tooltip>
-							</Box>
+							<Typography className="first-sub-title">Funds</Typography>
 						</Box>
 						<Box
 							sx={{
@@ -1216,38 +1073,23 @@ export const SettingsBilling: React.FC = () => {
 						>
 							{!hide && (
 								<>
-									{renderSection("Contacts Downloaded", 0, "0")}
-									{renderSection("Smart Audience", 0, "0")}
-									{renderSection(
-										"Validation funds",
-										validationLimitFundsCollected === -1
-											? 0
-											: Math.round(
-													((validationLimitFundsCollected -
-														validationFundsCollected) /
-														validationLimitFundsCollected) *
-														100,
-												),
-										validationLimitFundsCollected - validationFundsCollected ===
-											validationLimitFundsCollected
-											? "Validation funds exhausted"
-											: validationFundsCollected &&
-													validationLimitFundsCollected
-												? `${Math.max(
-														0,
-														validationLimitFundsCollected -
-															validationFundsCollected,
-													)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
-												: "",
-										validationFundsCollected !== validationLimitFundsCollected,
-									)}
-									{renderSection("Premium Source funds", 0, "0")}
+									<UsageItem
+										title="Validation funds"
+										limitValue={validationLimitFundsCollected}
+										currentValue={validationFundsCollected}
+									/>
+									<UsageItem
+										title="Premium Source funds"
+										limitValue={planPremiumSourceCollected}
+										currentValue={premiumSourceCollected}
+										commingSoon={true}
+									/>
 								</>
 							)}
 						</Box>
 					</Box>
-				</Grid>
-			</Grid>
+				</Box>
+			</Box>
 
 			<Divider
 				sx={{
@@ -1259,233 +1101,30 @@ export const SettingsBilling: React.FC = () => {
 					},
 				}}
 			/>
-			<Box sx={{ marginTop: "30px" }}>
-				<Box sx={{ display: "flex", alignItems: "center", gap: "8px", mb: 3 }}>
-					<Typography
-						variant="h6"
-						className="first-sub-title"
-						sx={{
-							lineHeight: "22px !important",
-						}}
-					>
-						Billing History
-					</Typography>
-					<CustomTooltip
-						title={
-							"You can download the billing history and share it with your teammates."
-						}
-						linkText="Learn more"
-						linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/billing-history"
-					/>
-				</Box>
-				<TableContainer
-					sx={{
-						border: "1px solid #EBEBEB",
-						borderRadius: "4px 4px 0px 0px",
-					}}
-				>
-					<Table>
-						<TableHead>
-							<TableRow>
-								<TableCell
-									className="table-heading"
-									sx={{
-										...billingStyles.tableColumn,
-										background: "#fff",
-									}}
-								>
-									Date
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Invoice ID
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Pricing Plan
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Total
-								</TableCell>
-								<TableCell
-									className="table-heading"
-									sx={billingStyles.tableColumn}
-								>
-									Status
-								</TableCell>
-								{sourcePlatform !== "shopify" && (
-									<TableCell
-										className="table-heading"
-										sx={billingStyles.tableColumn}
-									>
-										Actions
-									</TableCell>
-								)}
-							</TableRow>
-						</TableHead>
-						<TableBody>
-							{billingHistory.length === 0 ? (
-								<TableRow sx={billingStyles.tableBodyRow}>
-									<TableCell
-										className="table-data"
-										colSpan={5}
-										sx={{
-											...billingStyles.tableBodyColumn,
-											textAlign: "center",
-											paddingTop: "18px",
-											paddingBottom: "18px",
-										}}
-									>
-										No history found
-									</TableCell>
-								</TableRow>
-							) : (
-								billingHistory.map((history, index) => (
-									<TableRow
-										key={index}
-										sx={{
-											...billingStyles.tableBodyRow,
-											"&:hover": {
-												backgroundColor: "#F7F7F7",
-												"& .sticky-cell": {
-													backgroundColor: "#F7F7F7",
-												},
-											},
-										}}
-									>
-										<TableCell
-											className="sticky-cell table-data"
-											sx={{
-												...billingStyles.tableBodyColumn,
-												backgroundColor: "#fff",
-											}}
-										>
-											{history.date}
-										</TableCell>
 
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											{history.invoice_id}
-										</TableCell>
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											{history.pricing_plan}
-										</TableCell>
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											${history.total}
-										</TableCell>
-										<TableCell
-											className="table-data"
-											sx={billingStyles.tableBodyColumn}
-										>
-											<Typography
-												component="span"
-												className="table-data"
-												sx={{
-													...getStatusStyles(history.status),
-													padding: "6px 8px",
-													borderRadius: "2px",
-												}}
-											>
-												{history.status}
-											</Typography>
-										</TableCell>
-										{sourcePlatform !== "shopify" && (
-											<TableCell
-												className="table-data"
-												sx={billingStyles.tableBodyColumn}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														gap: 2,
-													}}
-												>
-													{/* Download Button */}
-													<IconButton
-														onClick={() =>
-															fetchSaveBillingHistory(history.invoice_id)
-														}
-														sx={{
-															":hover": { backgroundColor: "transparent" },
-															padding: 0,
-														}}
-													>
-														<DownloadIcon
-															sx={{
-																width: "24px",
-																height: "24px",
-																color: "rgba(188, 188, 188, 1)",
-																":hover": {
-																	color: "rgba(56, 152, 252, 1)",
-																},
-															}}
-														/>
-													</IconButton>
+			<BillingHistory
+				billingHistory={billingHistory}
+				setIsLoading={setIsLoading}
+				handleSendInvoicePopupOpen={handleSendInvoicePopupOpen}
+			/>
 
-													{/* Send Invoice Button */}
-													<IconButton
-														onClick={() =>
-															handleSendInvoicePopupOpen(history.invoice_id)
-														}
-														sx={{
-															":hover": { backgroundColor: "transparent" },
-															padding: 0,
-														}}
-													>
-														<TelegramIcon
-															sx={{
-																width: "24px",
-																height: "24px",
-																color: "rgba(188, 188, 188, 1)",
-																":hover": {
-																	color: "rgba(56, 152, 252, 1)",
-																},
-															}}
-														/>
-													</IconButton>
-												</Box>
-											</TableCell>
-										)}
-									</TableRow>
-								))
-							)}
-						</TableBody>
-					</Table>
-				</TableContainer>
-				{/* Pagination Component */}
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "flex-end",
-						padding: "42px 0 0px",
-						mb: 1,
-					}}
-				>
-					<CustomTablePagination
-						count={totalRows}
-						page={page}
-						rowsPerPage={rowsPerPage}
-						onPageChange={handleChangePage}
-						onRowsPerPageChange={handleChangeRowsPerPage}
-						rowsPerPageOptions={rowsPerPageOptions}
-					/>
-				</Box>
+			{/* Pagination Component */}
+			<Box
+				sx={{
+					display: "flex",
+					justifyContent: "flex-end",
+					padding: "42px 0 0px",
+					mb: 1,
+				}}
+			>
+				<CustomTablePagination
+					count={totalRows}
+					page={page}
+					rowsPerPage={rowsPerPage}
+					onPageChange={handleChangePage}
+					onRowsPerPageChange={handleChangeRowsPerPage}
+					rowsPerPageOptions={rowsPerPageOptions}
+				/>
 			</Box>
 
 			<SendInvoicePopup
