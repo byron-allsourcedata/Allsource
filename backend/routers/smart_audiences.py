@@ -221,7 +221,7 @@ def download_persons(
         smart_audience_id=payload.smart_audience_id,
         sent_contacts=payload.sent_contacts,
         data_map=payload.data_map,
-        user=user
+        user=user,
     )
 
     if result:
