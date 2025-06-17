@@ -105,8 +105,6 @@ export function FeatureImportanceTable<T extends FeatureObject>({
 	};
 
 	useEffect(() => {
-		console.log("currentFeatures");
-		console.log(currentFeatures);
 		setSelectedKeys(currentFeatures as (keyof T)[]);
 	}, [currentFeatures]);
 

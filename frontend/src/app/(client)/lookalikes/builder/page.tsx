@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 
 import {
 	ReadonlyURLSearchParams,
@@ -22,12 +22,8 @@ import {
 	TableRow,
 	TableCell,
 	TableBody,
-	Grid,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import CustomTooltip from "@/components/customToolTip";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
 import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -35,33 +31,20 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
-import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import ProgressBar from "@/components/ProgressBar";
 import {
 	TableData,
 	LookalikeData,
 	CalculationResponse,
-	FinancialResults,
-	LifestylesResults,
-	VoterResults,
-	RealEstateResults,
 	Field,
-	FeatureObject,
-	PersonalResults,
-	ProfessionalProfileResults,
-	EmploymentHistoryResults,
 } from "@/types";
 import {
-	FeatureImportanceTable,
-	DragAndDropTable,
-	AudienceFieldsSelector,
-	OrderFieldsStep,
 	CalculatedSteps,
 } from "../components";
 import { ResetProvider } from "@/context/ResetContext";
 import HintCard from "../../components/HintCard";
 import { useLookalikesHints } from "../context/LookalikesHintsContext";
-import { BuilderKey } from "../context/hintsCardsContent";
+import { ExpandLessIcon, ExpandMoreIcon, SearchIcon } from "@/icon";
 export const dynamic = "force-dynamic";
 
 const CreateLookalikePage: React.FC = () => {
@@ -257,7 +240,7 @@ const CreateLookalikePage: React.FC = () => {
 		setCurrentStep(0);
 	};
 
-	const canProceed = true;
+	const [canProceed, setCanProceed] = useState<Boolean>(false);
 
 	return (
 		<Box
@@ -685,6 +668,7 @@ const CreateLookalikePage: React.FC = () => {
 								{calculatedResults && currentStep >= 2 && (
 									<Box sx={{ mt: 2 }}>
 										<CalculatedSteps
+											handleSetCanProceed={setCanProceed}
 											calculatedResults={calculatedResults}
 											currentStep={currentStep}
 											handlePrevStep={handlePrevStep}

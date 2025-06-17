@@ -12,6 +12,7 @@ interface CalculatedStepsProps {
 	currentStep: number;
 	handlePrevStep: () => void;
 	handleNextStep: () => void;
+	handleSetCanProceed: (value: boolean) => void;
 	onFieldsOrderChangeUp: (newOrder: Field[]) => void;
 }
 
@@ -20,6 +21,7 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
 	currentStep,
 	handlePrevStep,
 	handleNextStep,
+	handleSetCanProceed,
 	onFieldsOrderChangeUp,
 }) => {
 	// Initial recommended by category
@@ -129,7 +131,7 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
 	};
 
 	const canProceed = Object.values(selectedByCategory).flat().length >= 3;
-
+	handleSetCanProceed(canProceed)
 	return (
 		<Box>
 			<Box hidden={currentStep !== 2}>

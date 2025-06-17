@@ -30,3 +30,5 @@ export { default as DeleteOutlinedIcon } from "@mui/icons-material/DeleteOutline
 export { default as SearchIcon } from "@mui/icons-material/Search";
 export { default as ArrowDownwardIcon } from "@mui/icons-material/ArrowDownward";
 export { default as ArrowUpwardIcon } from "@mui/icons-material/ArrowUpward";
+export { default as ExpandMoreIcon } from "@mui/icons-material/ExpandMore";
+export { default as ExpandLessIcon } from "@mui/icons-material/ExpandLess";

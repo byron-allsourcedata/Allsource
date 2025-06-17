@@ -350,10 +350,14 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	);
 
 	return (
+		<Box
+		sx={{
+			width: "100%",
+		}}
+		>
 		<TableContainer
 			ref={tableContainerRef}
 			sx={{
-				height: "70vh",
 				overflowX: "scroll",
 				"@media (max-height: 800px)": {
 					maxHeight: "70vh",
@@ -1236,8 +1240,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 					})}
 				</TableBody>
 			</Table>
-			<Paginator tableMode {...paginationProps} />
 		</TableContainer>
+		<Paginator tableMode {...paginationProps} />
+		</Box>
 	);
 };
 
