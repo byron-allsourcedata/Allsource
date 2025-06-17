@@ -22,12 +22,12 @@ import CustomTooltip from "@/components/customToolTip";
 import { MoreVert } from "@mui/icons-material";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import PaymentIcon from "@mui/icons-material/Payment";
-import { SendInvoicePopup } from "./SendInvoice";
-import { RemoveCardPopup } from "./RemoveCard";
-import { BillingHistory } from "./BillingHistory";
-import { UsageItem } from "./UsageItem";
+import { SendInvoicePopup } from "./Billing/SendInvoice";
+import { RemoveCardPopup } from "./Billing/RemoveCard";
+import { BillingHistory } from "./Billing/BillingHistory";
+import { UsageItem } from "./Billing/UsageItem";
 import CustomTablePagination from "@/components/CustomTablePagination";
-import { billingStyles } from "./billingStyles";
+import { billingStyles } from "./Billing/billingStyles";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
