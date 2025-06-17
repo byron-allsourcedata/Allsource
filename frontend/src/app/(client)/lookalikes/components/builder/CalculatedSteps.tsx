@@ -131,7 +131,7 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
 	};
 
 	const canProceed = Object.values(selectedByCategory).flat().length >= 3;
-	handleSetCanProceed(canProceed)
+	handleSetCanProceed(canProceed);
 	return (
 		<Box>
 			<Box hidden={currentStep !== 2}>

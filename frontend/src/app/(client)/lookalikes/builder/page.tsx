@@ -32,15 +32,8 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
 import ProgressBar from "@/components/ProgressBar";
-import {
-	TableData,
-	LookalikeData,
-	CalculationResponse,
-	Field,
-} from "@/types";
-import {
-	CalculatedSteps,
-} from "../components";
+import { TableData, LookalikeData, CalculationResponse, Field } from "@/types";
+import { CalculatedSteps } from "../components";
 import { ResetProvider } from "@/context/ResetContext";
 import HintCard from "../../components/HintCard";
 import { useLookalikesHints } from "../context/LookalikesHintsContext";
