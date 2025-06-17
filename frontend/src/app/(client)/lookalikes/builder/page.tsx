@@ -38,6 +38,10 @@ import { smartAudiences } from "../../smart-audiences/smartAudiences";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import ProgressBar from "@/components/ProgressBar";
 import {
+	BookACallPopup,
+	LeftMenuProps,
+} from "@/app/(client)/components/BookACallPopup";
+import {
 	TableData,
 	LookalikeData,
 	CalculationResponse,
@@ -73,6 +77,7 @@ const CreateLookalikePage: React.FC = () => {
 	const [selectedLabel, setSelectedLabel] = useState<string>("");
 	const [currentStep, setCurrentStep] = useState(0);
 	const [sourceName, setSourceName] = useState("");
+	const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 	const [sourceData, setSourceData] = useState<TableData[]>([]);
 	const [selectSourceData, setSelectSourceData] = useState<TableData[]>([]);
 	const [loading, setLoading] = useState(false);
@@ -270,6 +275,10 @@ const CreateLookalikePage: React.FC = () => {
 				overflow: "auto",
 			}}
 		>
+			<BookACallPopup
+				open={upgradePlanPopup}
+				handleClose={() => setUpgradePlanPopup(false)}
+			/>
 			{loading && (
 				<Box
 					sx={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 1200 }}
@@ -988,7 +997,20 @@ const CreateLookalikePage: React.FC = () => {
 								>
 									<Button
 										variant="contained"
-										onClick={() => router.push("/smart-audiences/builder")}
+										onClick={async () => {
+											try {
+												const res = await axiosInstance.get(
+													"/audience-smarts/check-access",
+												);
+												if (res.data.allowed) {
+													router.push("/smart-audiences/builder");
+												} else {
+													setUpgradePlanPopup(true);
+												}
+											} catch (error) {
+												console.error("error:", error);
+											}
+										}}
 										sx={{
 											backgroundColor: "rgba(56, 152, 252, 1)",
 											textTransform: "none",

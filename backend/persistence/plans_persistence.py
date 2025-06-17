@@ -93,14 +93,12 @@ class PlansPersistence:
         domains_limit = plan.domains_limit
         integrations_limit = plan.integrations_limit
         leads_credits = plan.leads_credits
-        prospect_credits = plan.prospect_credits
         members_limit = plan.members_limit
         contact_credit_plan_id = plan.contact_credit_plan_id
         return (
             domains_limit,
             integrations_limit,
             leads_credits,
-            prospect_credits,
             members_limit,
             contact_credit_plan_id,
         )

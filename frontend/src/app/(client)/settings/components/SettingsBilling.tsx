@@ -125,13 +125,13 @@ export const SettingsBilling: React.FC = () => {
 	const [contactsCollected, setContactsCollected] = useState(0);
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
-	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
-		useState(0);
 	const [smartAudienceCollected, setSmartAudienceCollected] = useState(0);
 	const [planPremiumSourceCollected, setPlanPremiumSourceCollected] =
 		useState(0);
 	const [premiumSourceCollected, setPremiumSourceCollected] = useState(0);
 	const [planSmartAudienceCollected, setPlanSmartAudienceCollected] =
+		useState(0);
+	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
 	const [cardDetails, setCardDetails] = useState<any[]>([]);
 	const [billingDetails, setBillingDetails] = useState<any>({});
@@ -1213,34 +1213,7 @@ export const SettingsBilling: React.FC = () => {
 								},
 							}}
 						>
-							{!hide && (
-								<>
-									{renderSection(
-										"Validation funds",
-										validationLimitFundsCollected === -1
-											? 0
-											: Math.round(
-													((validationLimitFundsCollected -
-														validationFundsCollected) /
-														validationLimitFundsCollected) *
-														100,
-												),
-										validationLimitFundsCollected - validationFundsCollected ===
-											validationLimitFundsCollected
-											? "Validation funds exhausted"
-											: validationFundsCollected &&
-													validationLimitFundsCollected
-												? `${Math.max(
-														0,
-														validationLimitFundsCollected -
-															validationFundsCollected,
-													)} out of ${validationLimitFundsCollected ?? "∞"} Remaining`
-												: "",
-										validationFundsCollected !== validationLimitFundsCollected,
-									)}
-									{renderSection("Premium Source funds", 0, "0")}
-								</>
-							)}
+							{!hide && <></>}
 						</Box>
 					</Box>
 				</Box>
