@@ -92,7 +92,6 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 		fetchBillingHistoryData(page, rowsPerPage);
 	}, [page, rowsPerPage]);
 
-
 	const fetchSaveBillingHistory = async (invoice_id: string) => {
 		try {
 			setIsLoading(true);
