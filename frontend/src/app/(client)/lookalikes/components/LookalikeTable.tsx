@@ -199,8 +199,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 		tableContainerRef,
 		tableData.length,
 	);
-	const paginatorRef = useRef<HTMLDivElement>(null);
-	useClampTableHeight(tableContainerRef, paginatorRef, 8, 122);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 122);
 
 	const toggleRow = (id: string) => {
 		setOpenRowId((prevId) => (prevId === id ? null : id));

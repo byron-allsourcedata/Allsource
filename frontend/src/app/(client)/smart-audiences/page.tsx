@@ -380,8 +380,9 @@ const SmartAudiences: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
-	const paginatorRef = useRef<HTMLDivElement>(null);
-	useClampTableHeight(tableContainerRef, paginatorRef, 8, 135, [data.length]);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 135, [
+		data.length,
+	]);
 
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 

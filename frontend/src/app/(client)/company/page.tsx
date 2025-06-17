@@ -128,8 +128,10 @@ const Leads: React.FC = () => {
 
 	const paginationProps = usePagination(count_companies ?? 0);
 	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
-	const paginatorRef = useRef<HTMLDivElement>(null);
-	useClampTableHeight(tableContainerRef, paginatorRef, 8, 124, [data.length]);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 124, [
+		data.length,
+	]);
+
 	const handleOpenPopover = (
 		event: React.MouseEvent<HTMLElement>,
 		industry: string,
@@ -1082,6 +1084,7 @@ const Leads: React.FC = () => {
 						display: "flex",
 						flexDirection: "column",
 						pr: 2.5,
+						height: "100%",
 						"@media (max-width: 900px)": {
 							paddingRight: 0,
 							minHeight: "100vh",
@@ -1282,7 +1285,6 @@ const Leads: React.FC = () => {
 										ref={tableContainerRef}
 										sx={{
 											overflowX: "auto",
-											// overflowY: "auto",
 										}}
 									>
 										<Table

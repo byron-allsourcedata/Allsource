@@ -115,8 +115,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		tableContainerRef,
 		data.length,
 	);
-	const paginatorRef = useRef<HTMLDivElement>(null);
-	useClampTableHeight(tableContainerRef, paginatorRef, 8, 120);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 120);
 	const [openMetaConnect, setOpenMetaConnect] = useState(false);
 	const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
 	const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false);

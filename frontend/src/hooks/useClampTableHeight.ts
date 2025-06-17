@@ -1,14 +1,14 @@
-import { RefObject, useLayoutEffect } from "react";
+import { RefObject, useLayoutEffect, useRef } from "react";
 
 type Deps = React.DependencyList;
 
 export const useClampTableHeight = (
 	tableRef: RefObject<HTMLElement>,
-	paginatorRef: RefObject<HTMLElement>,
 	gap = 8,
 	minHeight = 120,
 	deps: Deps = [],
 ) => {
+	const paginatorRef = useRef<HTMLElement>(null);
 	useLayoutEffect(() => {
 		if (!tableRef.current) return;
 
@@ -32,4 +32,5 @@ export const useClampTableHeight = (
 			window.removeEventListener("scroll", clamp, true);
 		};
 	}, [tableRef, paginatorRef, gap, minHeight, ...deps]);
+	return paginatorRef;
 };

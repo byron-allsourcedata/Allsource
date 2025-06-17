@@ -114,8 +114,9 @@ const Leads: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
-	const paginatorRef = useRef<HTMLDivElement>(null);
-	useClampTableHeight(tableContainerRef, paginatorRef, 8, 111, [data.length]);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 111, [
+		data.length,
+	]);
 
 	useEffect(() => {
 		if (searchParams.get("pixel_installed")) setPixelPopup(true);

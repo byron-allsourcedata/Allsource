@@ -171,8 +171,9 @@ const Sources: React.FC = () => {
 
 	const paginationProps = usePagination(count_sources ?? 0);
 	const { page, rowsPerPage, setPage, setRowsPerPage } = paginationProps;
-	const paginatorRef = useRef<HTMLDivElement>(null);
-	useClampTableHeight(tableContainerRef, paginatorRef, 8, 121, [data.length]);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 121, [
+		data.length,
+	]);
 	const cardData: CardData[] = [
 		{
 			title: "Pixel",
