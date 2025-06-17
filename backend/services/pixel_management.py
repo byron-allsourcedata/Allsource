@@ -84,11 +84,12 @@ class PixelManagementService:
                 domain_id=domain_id, data_provider_id=client_id
             )
 
-        base_path = os.path.join(
-            os.path.dirname(__file__), "data", "additional_pixels"
+        base_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..")
         )
-        script_path = os.path.join(base_path, f"{action}.js")
-
+        script_path = os.path.join(
+            base_path, "data", "additional_pixels", f"{action}.js"
+        )
         if not os.path.isfile(script_path):
             return {"status": "script_not_found"}
 
