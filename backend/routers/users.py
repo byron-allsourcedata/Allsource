@@ -232,7 +232,7 @@ async def get_started_info(
 ):
     domains = user_service.get_domains()
     is_pixel_installed = any(
-        domain.get("is_pixel_installed") is True for domain in domains
+        domain.is_pixel_installed is True for domain in domains
     )
     has_source = user_service.check_source_import()
     return GetStartedResponse(

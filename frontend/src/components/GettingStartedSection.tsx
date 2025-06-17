@@ -17,7 +17,15 @@ import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/analytics/components/DomainSelector";
 import { GetStartedHintsProvider } from "@/app/(client)/analytics/components/context/PixelInstallHintsContext";
 
-const GettingStartedSection: React.FC = () => {
+type GettingStartedSectionProps = {
+	addDomain?: boolean;
+	showStepper?: boolean;
+};
+
+const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
+	addDomain,
+	showStepper = true,
+}) => {
 	const [selectedDomain, setSelectedDomain] = useState("");
 	const [showHintVerify, setShowHintVerify] = useState(false);
 	const [selectedMethod, setSelectedMethod] = useState<string | null>("");
@@ -168,6 +176,8 @@ const GettingStartedSection: React.FC = () => {
 	const shouldRenderBasedOnStatus =
 		!isGoogleOrManualMethod || installationStatus === "success";
 
+	const isCenteredLayout = !showStepper;
+
 	return (
 		<>
 			<GetStartedHintsProvider>
@@ -176,6 +186,8 @@ const GettingStartedSection: React.FC = () => {
 					sx={{
 						height: "100%",
 						pr: 2,
+						justifyContent: isCenteredLayout ? "center" : undefined,
+						alignItems: isCenteredLayout ? "center" : undefined,
 						"@media (max-width: 1200px)": { gap: 4, pr: 0 },
 					}}
 				>
@@ -192,12 +204,13 @@ const GettingStartedSection: React.FC = () => {
 						>
 							Install Your Pixel
 						</Typography>
-						<VerticalStepper steps={stepData} />
+						{showStepper && <VerticalStepper steps={stepData} />}
 						<DomainSelector
 							onDomainSelected={(domain) => {
 								setSelectedDomain(domain ? domain.domain : "");
 							}}
 							selectedDomainProp={selectedDomain}
+							addDomain={addDomain}
 						/>
 						{selectedDomain !== "" && (
 							<PixelInstallation
@@ -219,7 +232,7 @@ const GettingStartedSection: React.FC = () => {
 					<Grid
 						item
 						xs={12}
-						lg={8}
+						lg={showStepper ? 8 : 12}
 						sx={{
 							display: { xs: "none", md: "block" },
 							order: { xs: 2, sm: 2, md: 2, lg: 1 },
@@ -231,6 +244,7 @@ const GettingStartedSection: React.FC = () => {
 									setSelectedDomain(domain ? domain.domain : "");
 								}}
 								selectedDomainProp={selectedDomain}
+								addDomain={addDomain}
 							/>
 							{selectedDomain !== "" && (
 								<PixelInstallation
@@ -250,17 +264,19 @@ const GettingStartedSection: React.FC = () => {
 							)}
 						</Box>
 					</Grid>
-					<Grid
-						item
-						xs={12}
-						lg={4}
-						sx={{
-							display: { xs: "none", md: "block" },
-							order: { xs: 1, sm: 1, md: 1, lg: 2 },
-						}}
-					>
-						<VerticalStepper steps={stepData} />
-					</Grid>
+					{showStepper && (
+						<Grid
+							item
+							xs={12}
+							lg={4}
+							sx={{
+								display: { xs: "none", md: "block" },
+								order: { xs: 1, sm: 1, md: 1, lg: 2 },
+							}}
+						>
+							<VerticalStepper steps={stepData} />
+						</Grid>
+					)}
 				</Grid>
 			</GetStartedHintsProvider>
 		</>

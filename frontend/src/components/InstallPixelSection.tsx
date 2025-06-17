@@ -6,7 +6,13 @@ import PixelInstallation from "@/app/(client)/analytics/components/PixelInstalla
 import VerifyPixelIntegration from "./VerifyPixelIntegration";
 import { GetStartedHintsProvider } from "@/app/(client)/analytics/components/context/PixelInstallHintsContext";
 
-const InstallPixelSection: React.FC = () => {
+type InstallPixelSectionProps = {
+	newDomain?: boolean;
+};
+
+const InstallPixelSection: React.FC<InstallPixelSectionProps> = ({
+	newDomain,
+}) => {
 	const [selectedDomain, setSelectedDomain] = useState("");
 	const [showHintVerify, setShowHintVerify] = useState(false);
 	const [selectedMethod, setSelectedMethod] = useState<string | null>("");

@@ -13,6 +13,7 @@ import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import ManagementTable from "./components/ManagementTable";
+import { Domain } from "../analytics/components/DomainSelector";
 
 export type PixelKey =
 	| "is_view_product_installed"
@@ -85,6 +86,10 @@ const Management: React.FC = () => {
 		}
 	};
 
+	const handleAddDomainButtonClick = () => {
+		router.push("/management/add-domain");
+	};
+
 	const handleDelete = async (toDelete: PixelManagementItem) => {
 		try {
 			setLoading(true);
@@ -95,6 +100,14 @@ const Management: React.FC = () => {
 				data: { domain: toDelete.domain_name },
 			});
 			showToast("Successfully removed domain");
+			const me = JSON.parse(sessionStorage.getItem("me") || "{}");
+			if (me.domains) {
+				console.log(12345);
+				me.domains = me.domains.filter(
+					(domain: Domain) => domain.domain !== toDelete.domain_name,
+				);
+				sessionStorage.setItem("me", JSON.stringify(me));
+			}
 
 			await fetchData();
 
@@ -233,7 +246,7 @@ const Management: React.FC = () => {
 				}}
 			>
 				<Button
-					//onClick={handleButtonClick}
+					onClick={handleAddDomainButtonClick}
 					sx={{
 						ml: 2,
 						textTransform: "none",

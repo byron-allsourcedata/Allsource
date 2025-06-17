@@ -29,7 +29,7 @@ const subheaderStyles = {
 		left: 0,
 		right: 0,
 		background: "#fff",
-		zIndex: 10,
+		zIndex: 5,
 	},
 };
 
