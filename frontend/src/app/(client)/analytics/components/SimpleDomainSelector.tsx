@@ -9,7 +9,7 @@ import {
 	Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { UpgradePlanPopup } from "../../components/UpgradePlanPopup";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -31,6 +31,7 @@ interface SimpleDomainSelectorProps {
 	domains: Domain[];
 	selectedDomain: Domain | null;
 	onChange: (domain: Domain | null) => void;
+	onDelete: (domain: Domain) => void;
 }
 
 interface AddDomainProps {
@@ -209,6 +210,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 	domains,
 	selectedDomain,
 	onChange,
+	onDelete,
 }) => {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
@@ -252,29 +254,12 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 		handleClose();
 	};
 	const handleDelete = async (toDelete: Domain) => {
-		try {
-			setLoading(true);
-			await axiosInstance.delete(`/domains/${toDelete.id}`);
-			const updated = localDomains.filter((d) => d.id !== toDelete.id);
-			setLocalDomains(updated);
-			const meRaw = sessionStorage.getItem("me");
-			const me = meRaw ? JSON.parse(meRaw) : {};
-			me.domains = updated;
-			sessionStorage.setItem("me", JSON.stringify(me));
-			sessionStorage.removeItem("current_domain");
-
-			if (selectedDomain?.id === toDelete.id) {
-				onChange(null);
-			}
-
-			showToast("Domain deleted successfully");
-		} catch (err) {
-			// console.error(err);
-			showErrorToast("Failed to delete domain");
-		} finally {
-			setLoading(false);
-		}
+		onDelete?.(toDelete);
 	};
+
+	useEffect(() => {
+		setLocalDomains(domains);
+	}, [domains]);
 
 	return (
 		<>

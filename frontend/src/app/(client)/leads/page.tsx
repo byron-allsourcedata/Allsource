@@ -1211,26 +1211,26 @@ const Leads: React.FC = () => {
 	const noContactsYet = data.length === 0;
 
 	const columns = [
-		{ 
-			key: "name", 
-			label: "Name", 
+		{
+			key: "name",
+			label: "Name",
 			sortable: true,
 			widths: { width: "100px", minWidth: "100px", maxWidth: "25vw" },
 		},
-		{ 
-			key: "personal_email", 
+		{
+			key: "personal_email",
 			label: "Personal Email",
 			widths: { width: "140px", minWidth: "140px", maxWidth: "25vw" },
 		},
-		{ 
-			key: "business_email", 
+		{
+			key: "business_email",
 			label: "Business Email",
 			widths: { width: "140px", minWidth: "140px", maxWidth: "25vw" },
 		},
-		{ 
-			key: "mobile_phone", 
+		{
+			key: "mobile_phone",
 			label: "Mobile phone",
-			widths: { width: "120px", minWidth: "120px", maxWidth: "120px" }, 
+			widths: { width: "120px", minWidth: "120px", maxWidth: "120px" },
 		},
 		{
 			key: "first_visited_date",
@@ -1238,13 +1238,13 @@ const Leads: React.FC = () => {
 			sortable: true,
 			widths: { width: "140px", minWidth: "140px", maxWidth: "120px" },
 		},
-		{ 
-			key: "funnel", 
+		{
+			key: "funnel",
 			label: "Lead Status",
 			widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
 		},
-		{ 
-			key: "status", 
+		{
+			key: "status",
 			label: "Visitor Type",
 			widths: {
 				width: "150px",
@@ -1252,8 +1252,8 @@ const Leads: React.FC = () => {
 				maxWidth: "150px",
 			},
 		},
-		{ 
-			key: "number_of_page", 
+		{
+			key: "number_of_page",
 			label: "URL Visited",
 			widths: {
 				width: "120px",
@@ -1267,7 +1267,7 @@ const Leads: React.FC = () => {
 			sortable: true,
 			widths: { width: "130px", minWidth: "130px", maxWidth: "130px" },
 		},
-	]
+	];
 
 	const ButtonGroup = (
 		<>
@@ -1775,116 +1775,134 @@ const Leads: React.FC = () => {
 										>
 											<TableHead>
 												<TableRow>
-												{columns.map((col) => {
-										const { key, label, sortable = false, widths } = col;
+													{columns.map((col) => {
+														const {
+															key,
+															label,
+															sortable = false,
+															widths,
+														} = col;
 
-										const isNameColumn = key === "name";
-										const isActionsColumn = key === "average_time_sec";
-										const hideDivider =
-											(isNameColumn && isScrolledX) || isActionsColumn;
-										const baseCellSX: SxProps<Theme> = {
-											...widths,
-											position: "sticky",
-											top: 0,
-											zIndex: 97,
-											borderTop: "1px solid rgba(235,235,235,1)",
-											borderBottom: "1px solid rgba(235,235,235,1)",
-											cursor: sortable ? "pointer" : "default",
-											borderRight: isActionsColumn
-												? "1px solid rgba(235,235,235,1)"
-												: "none",
-											whiteSpace:
-												isActionsColumn || isNameColumn ? "normal" : "wrap",
-											overflow:
-												isActionsColumn || isNameColumn ? "visible" : "hidden",
-										};
-										if (isNameColumn) {
-											baseCellSX.left = 0;
-											baseCellSX.zIndex = 99;
-											baseCellSX.boxShadow = isScrolledX
-												? "3px 0px 3px rgba(0,0,0,0.2)"
-												: "none";
-										}
-										const className = isNameColumn ? "sticky-cell" : undefined;
-										const onClickHandler = sortable
-											? () => handleSortRequest(key)
-											: undefined;
-										return (
-											<SmartCell
-												key={key}
-												cellOptions={{
-													sx: baseCellSX,
-													hideDivider,
-													onClick: onClickHandler,
-													className,
-												}}
-											>
-												<Box
-																sx={{ display: "flex",
-																	alignItems: "center",
-																	position: "relative",
-																	justifyContent: "space-between", }}
+														const isNameColumn = key === "name";
+														const isActionsColumn = key === "average_time_sec";
+														const hideDivider =
+															(isNameColumn && isScrolledX) || isActionsColumn;
+														const baseCellSX: SxProps<Theme> = {
+															...widths,
+															position: "sticky",
+															top: 0,
+															zIndex: 97,
+															borderTop: "1px solid rgba(235,235,235,1)",
+															borderBottom: "1px solid rgba(235,235,235,1)",
+															cursor: sortable ? "pointer" : "default",
+															borderRight: isActionsColumn
+																? "1px solid rgba(235,235,235,1)"
+																: "none",
+															whiteSpace:
+																isActionsColumn || isNameColumn
+																	? "normal"
+																	: "wrap",
+															overflow:
+																isActionsColumn || isNameColumn
+																	? "visible"
+																	: "hidden",
+														};
+														if (isNameColumn) {
+															baseCellSX.left = 0;
+															baseCellSX.zIndex = 99;
+															baseCellSX.boxShadow = isScrolledX
+																? "3px 0px 3px rgba(0,0,0,0.2)"
+																: "none";
+														}
+														const className = isNameColumn
+															? "sticky-cell"
+															: undefined;
+														const onClickHandler = sortable
+															? () => handleSortRequest(key)
+															: undefined;
+														return (
+															<SmartCell
+																key={key}
+																cellOptions={{
+																	sx: baseCellSX,
+																	hideDivider,
+																	onClick: onClickHandler,
+																	className,
+																}}
 															>
-																<Typography
-																	variant="body2"
+																<Box
 																	sx={{
-																		...leadsStyles.table_column,
-																		borderRight: "0",
+																		display: "flex",
+																		alignItems: "center",
+																		position: "relative",
+																		justifyContent: "space-between",
 																	}}
 																>
-																	{label}
-																</Typography>
-																{sortable && orderBy === key && (
-																	<IconButton size="small" sx={{ ml: 1 }}>
-																		{order === "asc" ? (
-																			<ArrowUpwardIcon fontSize="inherit" />
-																		) : (
-																			<ArrowDownwardIcon fontSize="inherit" />
-																		)}
-																	</IconButton>
-																)}
-															</Box>
+																	<Typography
+																		variant="body2"
+																		sx={{
+																			...leadsStyles.table_column,
+																			borderRight: "0",
+																		}}
+																	>
+																		{label}
+																	</Typography>
+																	{sortable && orderBy === key && (
+																		<IconButton size="small" sx={{ ml: 1 }}>
+																			{order === "asc" ? (
+																				<ArrowUpwardIcon fontSize="inherit" />
+																			) : (
+																				<ArrowDownwardIcon fontSize="inherit" />
+																			)}
+																		</IconButton>
+																	)}
+																</Box>
 
-															{key === "name" && (
-																<Box
-																	onClick={(e) => e.stopPropagation()}
-																	sx={{ position: "absolute", top: 0, left: 0 }}
-																>
-																	<HintCard
-																		card={tableHintCards["overview"]}
-																		positionLeft={135}
-																		positionTop={73}
-																		isOpenBody={
-																			leadsTableHints["overview"].showBody
-																		}
-																		toggleClick={() => {
-																			if (
-																				leadsTableHints["download"].showBody
-																			) {
+																{key === "name" && (
+																	<Box
+																		onClick={(e) => e.stopPropagation()}
+																		sx={{
+																			position: "absolute",
+																			top: 0,
+																			left: 0,
+																		}}
+																	>
+																		<HintCard
+																			card={tableHintCards["overview"]}
+																			positionLeft={135}
+																			positionTop={73}
+																			isOpenBody={
+																				leadsTableHints["overview"].showBody
+																			}
+																			toggleClick={() => {
+																				if (
+																					leadsTableHints["download"].showBody
+																				) {
+																					changeLeadsTableHint(
+																						"download",
+																						"showBody",
+																						"close",
+																					);
+																				}
 																				changeLeadsTableHint(
-																					"download",
+																					"overview",
+																					"showBody",
+																					"toggle",
+																				);
+																			}}
+																			closeClick={() => {
+																				changeLeadsTableHint(
+																					"overview",
 																					"showBody",
 																					"close",
 																				);
-																			}
-																			changeLeadsTableHint(
-																				"overview",
-																				"showBody",
-																				"toggle",
-																			);
-																		}}
-																		closeClick={() => {
-																			changeLeadsTableHint(
-																				"overview",
-																				"showBody",
-																				"close",
-																			);
-																		}}
-																	/>
-																</Box>
-															)}
-											</SmartCell>
-													)})}
+																			}}
+																		/>
+																	</Box>
+																)}
+															</SmartCell>
+														);
+													})}
 												</TableRow>
 											</TableHead>
 											<TableBody>
@@ -1914,19 +1932,21 @@ const Leads: React.FC = () => {
 																		? "3px 0px 3px #00000033"
 																		: "none",
 																	color: "rgba(56, 152, 252, 1)",
-																	cursor: "pointer"
+																	cursor: "pointer",
 																},
 																hideDivider: isScrolledX,
 																onClick: (e) => {
 																	e.stopPropagation();
 																	handleOpenPopup(row);
-																}
+																},
 															}}
-															tooltipOptions={{ content: row.first_name + " " + row.last_name }}
+															tooltipOptions={{
+																content: row.first_name + " " + row.last_name,
+															}}
 														>
 															{row.first_name} {row.last_name}
 														</SmartCell>
-														
+
 														{/* Personal Email */}
 														<SmartCell
 															cellOptions={{
@@ -1934,21 +1954,20 @@ const Leads: React.FC = () => {
 																	position: "relative",
 																},
 															}}
-															contentOptions={{
-															}}
-															tooltipOptions={{ 
+															contentOptions={{}}
+															tooltipOptions={{
 																content: row.is_active
-																	? (row.personal_emails
+																	? row.personal_emails
 																		? row.personal_emails.split(",")[0]
-																		: "--")
+																		: "--"
 																	: "",
-																}}
+															}}
 														>
 															{row.is_active ? (
 																row.personal_emails ? (
-																		<span className="truncate-email">
-																			{row.personal_emails.split(",")[0]}
-																		</span>
+																	<span className="truncate-email">
+																		{row.personal_emails.split(",")[0]}
+																	</span>
 																) : (
 																	<span className="truncate-email">--</span>
 																)
@@ -1967,15 +1986,14 @@ const Leads: React.FC = () => {
 																	position: "relative",
 																},
 															}}
-															contentOptions={{
-															}}
-															tooltipOptions={{ 
+															contentOptions={{}}
+															tooltipOptions={{
 																content: row.is_active
-																	? (row.business_email
+																	? row.business_email
 																		? row.business_email.split(",")[0]
-																		: "--")
+																		: "--"
 																	: "",
-																}}
+															}}
 														>
 															{row.is_active ? (
 																row.business_email ? (
@@ -2002,13 +2020,13 @@ const Leads: React.FC = () => {
 															}}
 															tooltipOptions={{
 																content: row.is_active
-																	? (row.mobile_phone
+																	? row.mobile_phone
 																		? row.mobile_phone.split(",")[0]
-																		: row.personal_phone 
-																		? row.personal_phone.split(",")[0]
-																		: row.direct_number 
-																		? row.direct_number.split(",")[0]
-																		: "--")
+																		: row.personal_phone
+																			? row.personal_phone.split(",")[0]
+																			: row.direct_number
+																				? row.direct_number.split(",")[0]
+																				: "--"
 																	: "",
 															}}
 														>
@@ -2039,12 +2057,12 @@ const Leads: React.FC = () => {
 															}}
 															tooltipOptions={{
 																content: row.first_visited_date
-																? (() => {
-																		const [day, month, year] =
-																			row.first_visited_date.split(".");
-																		return `${month}/${day}/${year}`;
-																	})()
-																: "--"
+																	? (() => {
+																			const [day, month, year] =
+																				row.first_visited_date.split(".");
+																			return `${month}/${day}/${year}`;
+																		})()
+																	: "--",
 															}}
 														>
 															{row.first_visited_date
@@ -2055,7 +2073,7 @@ const Leads: React.FC = () => {
 																	})()
 																: "--"}
 														</SmartCell>
-														
+
 														{/* Visitor Type */}
 														<SmartCell
 															cellOptions={{
@@ -2064,7 +2082,8 @@ const Leads: React.FC = () => {
 																},
 															}}
 															tooltipOptions={{
-																content: formatFunnelText(row.behavior_type) || "--"
+																content:
+																	formatFunnelText(row.behavior_type) || "--",
 															}}
 														>
 															<Box
@@ -2089,7 +2108,7 @@ const Leads: React.FC = () => {
 																{formatFunnelText(row.behavior_type) || "--"}
 															</Box>
 														</SmartCell>
-														
+
 														{/* URL Visited */}
 														<SmartCell
 															cellOptions={{
@@ -2098,7 +2117,8 @@ const Leads: React.FC = () => {
 																},
 															}}
 															tooltipOptions={{
-																content: formatFunnelText(row.visitor_type) || "--",
+																content:
+																	formatFunnelText(row.visitor_type) || "--",
 															}}
 														>
 															<Box
@@ -2122,18 +2142,18 @@ const Leads: React.FC = () => {
 																{formatFunnelText(row.visitor_type) || "--"}
 															</Box>
 														</SmartCell>
-														
+
 														<SmartCell
 															cellOptions={{
 																sx: {
 																	position: "relative",
-																cursor: "pointer",
-																color: "rgba(56, 152, 252, 1)",
+																	cursor: "pointer",
+																	color: "rgba(56, 152, 252, 1)",
 																},
 																onClick: (e) => {
 																	e.stopPropagation();
 																	handleOpenPopup(row);
-																}
+																},
 															}}
 														>
 															<Box onClick={(e) => e.stopPropagation()}>
@@ -2245,23 +2265,20 @@ const Leads: React.FC = () => {
 															cellOptions={{
 																sx: {
 																	position: "relative",
-																	borderRight:
-																		"1px solid rgba(235,235,235,1)",
+																	borderRight: "1px solid rgba(235,235,235,1)",
 																},
 																hideDivider: true,
 															}}
 															tooltipOptions={{
-																content:
-																row.average_time_sec
-																? formatTimeSpent(row.average_time_sec)
-																: "--"
+																content: row.average_time_sec
+																	? formatTimeSpent(row.average_time_sec)
+																	: "--",
 															}}
 														>
 															{row.average_time_sec
 																? formatTimeSpent(row.average_time_sec)
 																: "--"}
 														</SmartCell>
-														
 													</TableRow>
 												))}
 											</TableBody>

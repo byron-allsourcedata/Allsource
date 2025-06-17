@@ -11,8 +11,12 @@ export const useHasSubheader = (): boolean => {
 		"/data-sync-pixel",
 	];
 
+	const excludedSubheaderPaths = ["/management/add-domain"];
+
 	const hasSubheader =
-		(pathname.startsWith("/management") && pathname !== "/management") ||
+		(!excludedSubheaderPaths.includes(pathname) &&
+			pathname.startsWith("/management") &&
+			pathname !== "/management") ||
 		pixelPages.includes(pathname);
 
 	return hasSubheader;

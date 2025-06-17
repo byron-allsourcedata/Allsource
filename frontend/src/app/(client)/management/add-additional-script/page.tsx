@@ -20,6 +20,15 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { PixelManagementItem } from "../page";
 import ScriptsPopup from "../components/ScriptsPopup";
 
+type Domain = {
+	id: number;
+	domain: string;
+};
+
+type Me = {
+	domains: Domain[];
+};
+
 type ScriptCardConfig = {
 	key: string;
 	title: string;
@@ -40,7 +49,6 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 		popupTitle: "View Product Script Installation",
 		secondStepText:
 			"Place this script before the </body> tag on product pages you want to track.",
-		showInstalled: true,
 	},
 	{
 		key: "converted_sale",
@@ -78,17 +86,16 @@ const AddAdditionalScript: React.FC = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [status, setStatus] = useState("");
 	const [popupOpen, setPopupOpen] = useState(false);
-	const handleManualClose = () => setOpen(false);
 
-	const getCurrentDomainId = () => {
+	const getCurrentDomainId = (): number | null => {
 		const currentDomain = sessionStorage.getItem("current_domain");
 		const meRaw = sessionStorage.getItem("me");
 
 		if (!currentDomain || !meRaw) return null;
 
 		try {
-			const me = JSON.parse(meRaw);
-			const domainObj = me.domains.find((d: any) => d.domain === currentDomain);
+			const me: Me = JSON.parse(meRaw);
+			const domainObj = me.domains.find((d) => d.domain === currentDomain);
 			return domainObj?.id ?? null;
 		} catch {
 			return null;
@@ -103,7 +110,7 @@ const AddAdditionalScript: React.FC = () => {
 		const domainId = getCurrentDomainId();
 
 		if (!domainId) {
-			showErrorToast("Error");
+			showErrorToast("Error fetching pixel script(no domain find)");
 			return;
 		}
 
@@ -185,20 +192,20 @@ const AddAdditionalScript: React.FC = () => {
 					position: "sticky",
 					top: 0,
 					pl: "0.5rem",
-					zIndex: 100,
+					zIndex: 1,
 					pt: 1.5,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",
 					width: "100%",
 					"@media (max-width: 900px)": {
-						zIndex: 10,
+						zIndex: 1,
 					},
 					"@media (max-width: 600px)": {
 						pt: "4.25rem",
 						flexDirection: "column",
 						pl: "0.5rem",
 						alignItems: "flex-start",
-						zIndex: 10,
+						zIndex: 1,
 						width: "100%",
 						pr: 1.5,
 					},
