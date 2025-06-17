@@ -59,7 +59,7 @@ class UserDomainsService:
             user_dict=user_dict
         )
         self.subscription_service.create_subscription_from_free_trial(
-            user_id=user_id, ftd=None
+            user_id=user_id
         )
         return f"{os.environ.get('SITE_HOST_URL')}"
 

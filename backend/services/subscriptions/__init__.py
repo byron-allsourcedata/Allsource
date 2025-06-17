@@ -520,14 +520,16 @@ class SubscriptionService:
         user.current_subscription_id = add_subscription_obj.id
         self.db.commit()
 
-    def create_subscription_from_free_trial(self, user_id, ftd=None):
-        plan = self.plans_persistence.get_free_trial_plan(ftd)
+    def create_subscription_from_free_trial(self, user_id):
+        plan = self.plans_persistence.get_free_trial_plan()
+        now = datetime.now(timezone.utc)
         add_subscription_obj = Subscription(
             domains_limit=plan.domains_limit,
             integrations_limit=plan.integrations_limit,
             user_id=user_id,
             members_limit=plan.members_limit,
             status="active",
+            plan_start=now,
             plan_id=plan.id,
             is_trial=True,
             contact_credit_plan_id=plan.contact_credit_plan_id,

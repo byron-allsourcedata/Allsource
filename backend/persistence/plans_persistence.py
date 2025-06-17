@@ -103,11 +103,10 @@ class PlansPersistence:
             contact_credit_plan_id,
         )
 
-    def get_free_trial_plan(self, ftd):
-        trial_days = 90 if ftd == "n" else 14
+    def get_free_trial_plan(self):
         return (
             self.db.query(SubscriptionPlan)
-            .filter_by(is_free_trial=True, trial_days=trial_days)
+            .filter_by(is_free_trial=True)
             .first()
         )
 
