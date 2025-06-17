@@ -1501,6 +1501,9 @@ const Leads: React.FC = () => {
 																	backgroundColor: "rgba(247, 247, 247, 1)",
 																},
 															},
+															"&:last-of-type .MuiTableCell-root": {
+																borderBottom: "none",
+															},
 														}}
 													>
 														{/* Company name Column */}

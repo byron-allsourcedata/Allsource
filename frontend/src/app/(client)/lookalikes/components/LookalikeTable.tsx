@@ -591,6 +591,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												opacity: 1,
 												pointerEvents: "auto",
 											},
+											"&:last-of-type .MuiTableCell-root": {
+												borderBottom: "none",
+											},
 										}}
 									>
 										<SmartCell

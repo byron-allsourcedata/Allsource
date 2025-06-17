@@ -1891,11 +1891,15 @@ const Leads: React.FC = () => {
 														key={row.id}
 														selected={selectedRows.has(row.id)}
 														sx={{
+															backgroundColor: "#fff",
 															"&:hover": {
 																backgroundColor: "rgba(247, 247, 247, 1)",
 																"& .sticky-cell": {
 																	backgroundColor: "rgba(247, 247, 247, 1)",
 																},
+															},
+															"&:last-of-type .MuiTableCell-root": {
+																borderBottom: "none",
 															},
 														}}
 													>

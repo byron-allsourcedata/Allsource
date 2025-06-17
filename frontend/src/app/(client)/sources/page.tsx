@@ -1357,6 +1357,9 @@ const Sources: React.FC = () => {
 																							"rgba(247, 247, 247, 1)",
 																					},
 																				},
+																				"&:last-of-type .MuiTableCell-root": {
+																					borderBottom: "none",
+																				},
 																			}}
 																		>
 																			{/* Name Column */}
