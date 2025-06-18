@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from db_dependencies import Db
 from enums import PlanAlias
@@ -22,7 +22,7 @@ from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from resolver import injectable
-from utils import get_utc_aware_date_for_postgres
+from utils import get_utc_aware_date_for_postgres, get_end_of_month
 from decimal import *
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
@@ -521,7 +521,7 @@ class SubscriptionService:
 
     def create_subscription_from_free_trial(self, user_id):
         plan = self.plans_persistence.get_free_trial_plan()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         add_subscription_obj = Subscription(
             domains_limit=plan.domains_limit,
             integrations_limit=plan.integrations_limit,
@@ -529,6 +529,7 @@ class SubscriptionService:
             members_limit=plan.members_limit,
             status="active",
             plan_start=now,
+            plan_end=get_end_of_month(now),
             plan_id=plan.id,
             is_trial=True,
             contact_credit_plan_id=plan.contact_credit_plan_id,
