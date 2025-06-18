@@ -61,6 +61,7 @@ def refresh_free_trail_lead_credits(db_session: Session):
         f"Updated {result_users.rowcount} users and {result_subs.rowcount} subscriptions for free trial."
     )
 
+
 def refresh_basic_lead_credits(db_session: Session):
     credits = (
         db_session.query(SubscriptionPlan.leads_credits)
