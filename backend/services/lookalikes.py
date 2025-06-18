@@ -407,7 +407,7 @@ class AudienceLookalikesService:
             return self.split_insights(rounded_feature)
 
         except Exception as e:
-            logger.error(e)
+            logger.error(e, exc_info=True)
             raise e
             return self._default_insights()
 

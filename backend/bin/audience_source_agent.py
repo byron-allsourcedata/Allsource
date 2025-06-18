@@ -18,6 +18,7 @@ from dataclasses import asdict
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
+from services.source_agent.agent import SourceAgentService, EmailAsid, ProfContact
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -113,6 +114,7 @@ async def send_sse(connection, user_id: int, data: dict):
 async def process_email_leads(
     persons: List[PersonRow],
     db_session: Session,
+    source_agent_service: SourceAgentService,
     source_id: str,
     include_amount: bool = False,
     date_range: Optional[int] = None,
@@ -122,7 +124,7 @@ async def process_email_leads(
             "orders_amount": 0.0 if include_amount else None,
             "orders_count": 0,
             "start_date": None,
-            "enrichment_user_id": None,
+            "enrichment_user_asid": None,
         }
     )
 
@@ -135,25 +137,12 @@ async def process_email_leads(
         logging.info("No valid emails found in input data.")
         return 0
 
-    rows = (
-        db_session.query(EnrichmentEmails.email, EnrichmentUser.id)
-        .join(
-            EnrichmentUsersEmails,
-            EnrichmentEmails.id == EnrichmentUsersEmails.email_id,
-        )
-        .join(
-            EnrichmentUser,
-            EnrichmentUsersEmails.enrichment_user_id == EnrichmentUser.id,
-        )
-        .filter(EnrichmentEmails.email.in_(emails))
-        .all()
-    )
-
-    if not rows:
-        logging.info("No matching emails found in enrichment_emails.")
+    matches: List[EmailAsid] = await source_agent_service.get_user_ids_by_emails(emails)
+    if not matches:
+        logging.info("No matching emails found in ClickHouse.")
         return 0
 
-    email_to_user_id = {email: user_id for email, user_id in rows}
+    email_to_user_id = {m.email: m.asid for m in matches}
 
     filtered_persons = [
         p
@@ -211,7 +200,7 @@ async def process_email_leads(
             matched_persons[email] = {
                 "orders_count": 1,
                 "start_date": transaction_date_obj,
-                "enrichment_user_id": email_to_user_id[email],
+                "enrichment_user_asid": email_to_user_id[email],
             }
             if include_amount:
                 matched_persons[email]["orders_amount"] = sale_amount
@@ -279,7 +268,7 @@ async def process_email_leads(
                     count=data["orders_count"],
                     start_date=last_transaction,
                     recency=recency,
-                    enrichment_user_id=data["enrichment_user_id"],
+                    enrichment_user_asid=data["enrichment_user_asid"],
                 )
                 if include_amount:
                     new_p.amount = data["orders_amount"]
@@ -300,18 +289,28 @@ async def process_email_leads(
 
 
 async def process_email_customer_conversion(
-    persons: List[PersonRow], db_session: Session, source_id: str
+    persons: List[PersonRow], db_session: Session, source_id: str,
+    source_agent_service: SourceAgentService,
 ) -> int:
     return await process_email_leads(
-        persons, db_session, source_id, include_amount=True
+        persons=persons,
+        db_session=db_session,
+        source_id=source_id,
+        include_amount=True,
+        source_agent_service=source_agent_service
     )
 
 
 async def process_email_failed_leads(
-    persons: List[PersonRow], db_session: Session, source_id: str
+    persons: List[PersonRow], db_session: Session, source_id: str,
+    source_agent_service: SourceAgentService,
 ) -> int:
     return await process_email_leads(
-        persons, db_session, source_id, include_amount=False
+        persons=persons,
+        db_session=db_session,
+        source_id=source_id,
+        include_amount=False,
+        source_agent_service=source_agent_service
     )
 
 
@@ -377,12 +376,16 @@ def calculate_website_visitor_user_value(
 
 
 async def process_email_interest_leads(
-    persons: List[PersonRow], db_session: Session, source_id: str
+    persons: List[PersonRow], db_session: Session, source_id: str, source_agent_service: SourceAgentService,
 ) -> int:
     return await process_email_leads(
-        persons, db_session, source_id, include_amount=False, date_range=90
+        persons=persons,
+        db_session=db_session,
+        source_id=source_id,
+        include_amount=False,
+        date_range=90,
+        source_agent_service=source_agent_service
     )
-
 
 async def process_user_id(
     persons: List[PersonRow],
@@ -636,6 +639,7 @@ async def normalize_persons_customer_conversion(
     persons: List[PersonEntry],
     source_id: str,
     data_for_normalize: DataForNormalize,
+    source_agent_service: SourceAgentService,
     db_session: Session,
     source_schema: str,
 ):
@@ -724,53 +728,41 @@ async def normalize_persons_customer_conversion(
         # 3. Completeness Score based on the presence of a valid business email, LinkedIn URL,
         #    and non-null professional attributes.
         matched_ids = [UUID(p.id) for p in persons]
-        prof_rows = (
+        rows = (
             db_session.query(
-                AudienceSourcesMatchedPerson.id.label("mp_id"),
-                EnrichmentProfessionalProfile.job_level,
-                EnrichmentProfessionalProfile.department,
-                EnrichmentProfessionalProfile.company_size,
-            )
-            .join(
-                EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id
-                == EnrichmentUser.id,
-            )
-            .join(
-                EnrichmentProfessionalProfile,
-                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid,
+                AudienceSourcesMatchedPerson.id,
+                AudienceSourcesMatchedPerson.enrichment_user_asid,
             )
             .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
             .all()
         )
-        profile_map = {row.mp_id: row for row in prof_rows}
 
-        contact_rows = (
-            db_session.query(
-                AudienceSourcesMatchedPerson.id.label("mp_id"),
-                EnrichmentUserContact.business_email,
-                EnrichmentUserContact.business_email_validation_status,
-                EnrichmentUserContact.linkedin_url,
-            )
-            .join(
-                EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id
-                == EnrichmentUser.id,
-            )
-            .join(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
-            .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
-            .all()
+        mp_to_asid: dict[UUID, UUID] = {}
+        for mp_id, asid in rows:
+            if not asid:
+                logging.debug("Skip mp_id %s: asid is null", mp_id)
+                continue
+            try:
+                mp_to_asid[UUID(mp_id)] = UUID(asid)
+            except (TypeError, ValueError) as err:
+                logging.warning("Bad UUID in row %s → %s: %s", mp_id, asid, err)
+
+        asid_to_details = await source_agent_service.get_details_by_asids(
+            mp_to_asid.values(),
         )
-        contact_map = {row.mp_id: row for row in contact_rows}
 
-        inverted_values = []
+        profile_map: dict[UUID, ProfContact] = {}
+        contact_map: dict[UUID, ProfContact] = {}
+        for mp_id, asid in mp_to_asid.items():
+            det = asid_to_details.get(asid)
+            if det:
+                profile_map[mp_id] = det
+                contact_map[mp_id] = det
 
-        for person in persons:
-            inv = AudienceSourceMath.inverted_decimal(Decimal(person.recency))
-            inverted_values.append(inv)
+        inverted_values = [
+            AudienceSourceMath.inverted_decimal(Decimal(p.recency))
+            for p in persons
+        ]
 
         job_level_map = {
             "Executive": Decimal("1.0"),
@@ -1091,6 +1083,7 @@ async def aud_sources_matching(
     connection: Connection,
     similar_audience_service: SimilarAudienceService,
     audience_lookalikes_service: AudienceLookalikesService,
+    source_agent_service: SourceAgentService,
 ):
     try:
         message_body_dict = json.loads(message.body)
@@ -1146,6 +1139,7 @@ async def aud_sources_matching(
                         data_for_normalize=data_for_normalize,
                         db_session=db_session,
                         source_schema=audience_source.target_schema,
+                        source_agent_service=source_agent_service,
                     )
 
                 if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
@@ -1163,7 +1157,6 @@ async def aud_sources_matching(
                         data_for_normalize=data_for_normalize,
                         db_session=db_session,
                     )
-
                 await message.ack()
                 return
 
@@ -1182,13 +1175,15 @@ async def aud_sources_matching(
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 logging.info(f"Processing {len(persons)} customer conversions.")
                 count = await process_email_customer_conversion(
-                    persons=persons, db_session=db_session, source_id=source_id
+                    persons=persons, db_session=db_session, source_id=source_id,
+                    source_agent_service=source_agent_service
                 )
 
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
                 logging.info(f"Processing {len(persons)} failed lead records.")
                 count = await process_email_failed_leads(
-                    persons=persons, db_session=db_session, source_id=source_id
+                    persons=persons, db_session=db_session, source_id=source_id,
+                    source_agent_service=source_agent_service
                 )
 
             if message_body.status == TypeOfCustomer.INTEREST.value:
@@ -1196,7 +1191,8 @@ async def aud_sources_matching(
                     f"Processing {len(persons)} interest lead records."
                 )
                 count = await process_email_interest_leads(
-                    persons=persons, db_session=db_session, source_id=source_id
+                    persons=persons, db_session=db_session, source_id=source_id,
+                    source_agent_service=source_agent_service
                 )
 
         logging.info(
@@ -1209,7 +1205,7 @@ async def aud_sources_matching(
             .values(
                 matched_records=AudienceSource.matched_records + count,
                 processed_records=AudienceSource.processed_records
-                + len(persons),
+                                  + len(persons),
             )
             .returning(
                 AudienceSource.total_records,
@@ -1264,6 +1260,7 @@ async def aud_sources_matching(
         logging.warning(
             f"Message for source_id failed and will be reprocessed. {e}"
         )
+        logging.exception("Unhandled error for source %s", source_id)
         db_session.rollback()
         await message.ack()
 
@@ -1298,7 +1295,11 @@ async def main():
         )
 
         audience_lookalikes_service = await resolver.resolve(
-            AudienceLookalikesService
+            AudienceLookalikesService,
+        )
+
+        source_agent_service = await resolver.resolve(
+            SourceAgentService,
         )
         await queue.consume(
             functools.partial(
@@ -1307,6 +1308,7 @@ async def main():
                 db_session=db_session,
                 similar_audience_service=similar_audience_service,
                 audience_lookalikes_service=audience_lookalikes_service,
+                source_agent_service=source_agent_service,
             )
         )
 
