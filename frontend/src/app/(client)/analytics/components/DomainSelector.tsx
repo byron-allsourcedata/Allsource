@@ -253,7 +253,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 						/>
 					)}
 				</Box>
-			) : addingNew ? (
+			) : addingNew || showAddDomain ? (
 				<Box
 					display="flex"
 					alignItems="start"
