@@ -5,14 +5,18 @@ import {
 	Typography,
 	Button,
 	Tooltip,
+	Link,
 	LinearProgress,
 } from "@mui/material";
 import { billingStyles } from "./billingStyles";
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+// import Link from "next/link";
 
 interface UsageItemProps {
 	title: string;
 	limitValue: number;
 	currentValue: number;
+	available?: boolean;
 	needButton?: boolean;
 	commingSoon?: boolean;
 }
@@ -21,6 +25,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	title,
 	limitValue,
 	currentValue,
+	available = true,
 	needButton = true,
 	commingSoon = false,
 }) => {
@@ -62,10 +67,27 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 						</Tooltip>
 					</Box>
 				)}
+				{!available && (
+					<Link 
+						href={"/settings?section=subscription"} 
+						underline="hover"
+						sx={{
+							display: "inline-flex",
+							alignItems: "center",
+							color: "#3898FC",
+							fontSize: 14,
+							fontFamily: "Nunito Sans",
+							ml: 1,
+							fontWeight: 500
+						}}
+					>
+						Upgrade Plan
+					</Link>
+				)}
 			</Box>
 			<LinearProgress
 				variant="determinate"
-				value={limitValue === -1 ? 100 : 100 - limit}
+				value={limitValue === -1 ? 100 : !available ? 0 : 100 - limit}
 				sx={{
 					height: "8px",
 					borderRadius: "4px",
@@ -79,6 +101,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				}}
 			/>
 			<Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
+				{available &&
 				<Typography
 					className="paragraph"
 					sx={{
@@ -87,8 +110,20 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 					}}
 				>
 					{commingSoon ? "Coming Soon" : valueText}
-				</Typography>
-				{limitValue !== -1 && !commingSoon && (
+				</Typography>}
+				{!available &&
+				<Box sx={{display: "flex", alignItems: "center", gap: 1}}>
+					<WarningAmberIcon sx={{color: "#E65A59", width: "16px", height: "16px"}} />
+					<Typography
+						className="paragraph"
+						sx={{
+							color: "#E65A59 !important",
+						}}
+					>
+						Not included in your plan
+					</Typography>
+				</Box>}
+				{limitValue !== -1 && available && !commingSoon && (
 					<Typography
 						className="second-sub-title"
 						sx={{ lineHeight: "20px !important" }}
