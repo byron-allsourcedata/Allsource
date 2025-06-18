@@ -132,8 +132,8 @@ export const SettingsBilling: React.FC = () => {
 					response.data.usages_credits.smart_audience_quota.value,
 				);
 				setIsAvailableSmartAudience(
-					response.data.usages_credits.smart_audience_quota.available
-				)
+					response.data.usages_credits.smart_audience_quota.available,
+				);
 				setValidationFundsLimitedData(
 					response.data.usages_credits.validation_funds_limit,
 				);
@@ -168,8 +168,8 @@ export const SettingsBilling: React.FC = () => {
 		if (value?.current_value === -1 || value?.limit_value === -1) {
 			return "Unlimited";
 		}
-		const { limit_value, current_value } = value
-		const limit = current_value > limit_value ? current_value : limit_value
+		const { limit_value, current_value } = value;
+		const limit = current_value > limit_value ? current_value : limit_value;
 
 		switch (value?.detail_type) {
 			case "funds":
@@ -626,13 +626,21 @@ export const SettingsBilling: React.FC = () => {
 								<>
 									<UsageItem
 										title="Contacts Downloaded"
-										limitValue={contactsCollected > planContactsCollected ? contactsCollected : planContactsCollected}
+										limitValue={
+											contactsCollected > planContactsCollected
+												? contactsCollected
+												: planContactsCollected
+										}
 										currentValue={contactsCollected}
 										needButton={false}
 									/>
 									<UsageItem
 										title="Smart Audience"
-										limitValue={smartAudienceCollected > planSmartAudienceCollected ? smartAudienceCollected : planSmartAudienceCollected}
+										limitValue={
+											smartAudienceCollected > planSmartAudienceCollected
+												? smartAudienceCollected
+												: planSmartAudienceCollected
+										}
 										currentValue={smartAudienceCollected}
 										needButton={false}
 										available={isAvailableSmartAudience}
@@ -1017,12 +1025,20 @@ export const SettingsBilling: React.FC = () => {
 								<>
 									<UsageItem
 										title="Validation funds"
-										limitValue={validationFundsCollected > validationLimitFundsCollected ? validationFundsCollected : validationLimitFundsCollected}
+										limitValue={
+											validationFundsCollected > validationLimitFundsCollected
+												? validationFundsCollected
+												: validationLimitFundsCollected
+										}
 										currentValue={validationFundsCollected}
 									/>
 									<UsageItem
 										title="Premium Source funds"
-										limitValue={premiumSourceCollected > planPremiumSourceCollected ? premiumSourceCollected : planPremiumSourceCollected}
+										limitValue={
+											premiumSourceCollected > planPremiumSourceCollected
+												? premiumSourceCollected
+												: planPremiumSourceCollected
+										}
 										currentValue={premiumSourceCollected}
 										commingSoon={true}
 									/>
