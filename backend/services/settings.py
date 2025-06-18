@@ -403,7 +403,7 @@ class SettingsService:
             else (
                 self.calculate_final_price(subscription, user_subscription)
                 if subscription and user_subscription
-                else None
+                else "$0"
             )
         )
 

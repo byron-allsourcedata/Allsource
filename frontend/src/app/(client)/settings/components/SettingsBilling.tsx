@@ -160,7 +160,7 @@ export const SettingsBilling: React.FC = () => {
 	};
 
 	const renderValue = (value: any) => {
-		if (value?.current_value === -1) {
+		if (value?.current_value === -1 || value?.limit_value === -1) {
 			return "Unlimited";
 		}
 
@@ -869,8 +869,8 @@ export const SettingsBilling: React.FC = () => {
 																([nextKey, nextValue], nextIndex) => {
 																	if (
 																		(nextValue &&
-																			nextKey === "monthly_total") ||
-																		nextKey === "yearly_total"
+																			(nextKey === "monthly_total") ||
+																			nextKey === "yearly_total")
 																	) {
 																		return (
 																			<Box
