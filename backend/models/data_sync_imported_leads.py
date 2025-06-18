@@ -42,12 +42,6 @@ class DataSyncImportedLead(Base):
         nullable=False,
     )
 
-    five_x_five_user_id = Column(
-        BigInteger,
-        ForeignKey("5x5_users.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-
     __table_args__ = (
         Index(
             "data_sync_imported_leads_data_sync_id_status_idx",
