@@ -18,7 +18,11 @@ from dataclasses import asdict
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-from services.source_agent.agent import SourceAgentService, EmailAsid, ProfContact
+from services.source_agent.agent import (
+    SourceAgentService,
+    EmailAsid,
+    ProfContact,
+)
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -137,7 +141,9 @@ async def process_email_leads(
         logging.info("No valid emails found in input data.")
         return 0
 
-    matches: List[EmailAsid] = await source_agent_service.get_user_ids_by_emails(emails)
+    matches: List[
+        EmailAsid
+    ] = await source_agent_service.get_user_ids_by_emails(emails)
     if not matches:
         logging.info("No matching emails found in ClickHouse.")
         return 0
@@ -289,7 +295,9 @@ async def process_email_leads(
 
 
 async def process_email_customer_conversion(
-    persons: List[PersonRow], db_session: Session, source_id: str,
+    persons: List[PersonRow],
+    db_session: Session,
+    source_id: str,
     source_agent_service: SourceAgentService,
 ) -> int:
     return await process_email_leads(
@@ -297,12 +305,14 @@ async def process_email_customer_conversion(
         db_session=db_session,
         source_id=source_id,
         include_amount=True,
-        source_agent_service=source_agent_service
+        source_agent_service=source_agent_service,
     )
 
 
 async def process_email_failed_leads(
-    persons: List[PersonRow], db_session: Session, source_id: str,
+    persons: List[PersonRow],
+    db_session: Session,
+    source_id: str,
     source_agent_service: SourceAgentService,
 ) -> int:
     return await process_email_leads(
@@ -310,7 +320,7 @@ async def process_email_failed_leads(
         db_session=db_session,
         source_id=source_id,
         include_amount=False,
-        source_agent_service=source_agent_service
+        source_agent_service=source_agent_service,
     )
 
 
@@ -376,7 +386,10 @@ def calculate_website_visitor_user_value(
 
 
 async def process_email_interest_leads(
-    persons: List[PersonRow], db_session: Session, source_id: str, source_agent_service: SourceAgentService,
+    persons: List[PersonRow],
+    db_session: Session,
+    source_id: str,
+    source_agent_service: SourceAgentService,
 ) -> int:
     return await process_email_leads(
         persons=persons,
@@ -384,8 +397,9 @@ async def process_email_interest_leads(
         source_id=source_id,
         include_amount=False,
         date_range=90,
-        source_agent_service=source_agent_service
+        source_agent_service=source_agent_service,
     )
+
 
 async def process_user_id(
     persons: List[PersonRow],
@@ -1175,15 +1189,19 @@ async def aud_sources_matching(
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 logging.info(f"Processing {len(persons)} customer conversions.")
                 count = await process_email_customer_conversion(
-                    persons=persons, db_session=db_session, source_id=source_id,
-                    source_agent_service=source_agent_service
+                    persons=persons,
+                    db_session=db_session,
+                    source_id=source_id,
+                    source_agent_service=source_agent_service,
                 )
 
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
                 logging.info(f"Processing {len(persons)} failed lead records.")
                 count = await process_email_failed_leads(
-                    persons=persons, db_session=db_session, source_id=source_id,
-                    source_agent_service=source_agent_service
+                    persons=persons,
+                    db_session=db_session,
+                    source_id=source_id,
+                    source_agent_service=source_agent_service,
                 )
 
             if message_body.status == TypeOfCustomer.INTEREST.value:
@@ -1191,8 +1209,10 @@ async def aud_sources_matching(
                     f"Processing {len(persons)} interest lead records."
                 )
                 count = await process_email_interest_leads(
-                    persons=persons, db_session=db_session, source_id=source_id,
-                    source_agent_service=source_agent_service
+                    persons=persons,
+                    db_session=db_session,
+                    source_id=source_id,
+                    source_agent_service=source_agent_service,
                 )
 
         logging.info(
@@ -1205,7 +1225,7 @@ async def aud_sources_matching(
             .values(
                 matched_records=AudienceSource.matched_records + count,
                 processed_records=AudienceSource.processed_records
-                                  + len(persons),
+                + len(persons),
             )
             .returning(
                 AudienceSource.total_records,

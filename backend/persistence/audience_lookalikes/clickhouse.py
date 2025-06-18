@@ -81,7 +81,10 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         limit: Optional[int] = None,
     ) -> List[Dict]:
         q = (
-            self.db.query(AudienceSourcesMatchedPerson.enrichment_user_asid, AudienceSourcesMatchedPerson.value_score)
+            self.db.query(
+                AudienceSourcesMatchedPerson.enrichment_user_asid,
+                AudienceSourcesMatchedPerson.value_score,
+            )
             .select_from(AudienceSourcesMatchedPerson)
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         )
@@ -92,7 +95,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
             q = q.limit(5_000)
         rows = q.all()
 
-        asid_scores = { asid: score for asid, score in rows }
+        asid_scores = {asid: score for asid, score in rows}
 
         b2c_columns = [
             "age",
