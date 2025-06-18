@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker, Session
 
 logging.basicConfig(level=logging.INFO)
 
+
 def refresh_lead_credits(db_session: Session):
     credits = (
         db_session.query(SubscriptionPlan.leads_credits)
@@ -28,8 +29,13 @@ def refresh_lead_credits(db_session: Session):
 
     subquery_user_sub_ids = (
         select(Users.current_subscription_id)
-        .join(UserSubscriptions, Users.current_subscription_id == UserSubscriptions.id)
-        .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
+        .join(
+            UserSubscriptions,
+            Users.current_subscription_id == UserSubscriptions.id,
+        )
+        .join(
+            SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id
+        )
         .filter(SubscriptionPlan.is_free_trial == True)
         .scalar_subquery()
     )
@@ -50,8 +56,9 @@ def refresh_lead_credits(db_session: Session):
     result_subs = db_session.execute(stmt_subs)
     db_session.commit()
 
-    logging.info(f"Updated {result_users.rowcount} users and {result_subs.rowcount} subscriptions for free trial.")
-
+    logging.info(
+        f"Updated {result_users.rowcount} users and {result_subs.rowcount} subscriptions for free trial."
+    )
 
 
 def main():
