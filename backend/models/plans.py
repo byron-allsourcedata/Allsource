@@ -56,7 +56,6 @@ class SubscriptionPlan(Base):
     overage_enabled = Column(
         Boolean, nullable=False, server_default=text("true")
     )
-    is_unlimited = Column(Boolean, nullable=False, server_default=text("false"))
     smart_audience_quota = Column(Integer, nullable=True)
     enrichment_credits = Column(DECIMAL(10, 2), nullable=True)
     premium_source_credits = Column(DECIMAL(10, 2), nullable=True)
