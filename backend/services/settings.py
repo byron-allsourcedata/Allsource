@@ -527,7 +527,11 @@ class SettingsService:
             "leads_credits": user.get("leads_credits"),
             "validation_funds": user.get("validation_funds"),
             "premium_source_credits": user.get("premium_source_credits"),
-            "smart_audience_quota": {"available": current_plan.alias == "free_trial_monthly" or current_plan.alias == "basic", "value": user.get("smart_audience_quota")},
+            "smart_audience_quota": {
+                "available": current_plan.alias == "free_trial_monthly"
+                or current_plan.alias == "basic",
+                "value": user.get("smart_audience_quota"),
+            },
             "plan_leads_credits": current_plan.leads_credits,
             "plan_premium_source_collected": current_plan.premium_source_credits,
             "plan_smart_audience_collected": current_plan.smart_audience_quota,
