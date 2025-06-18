@@ -869,8 +869,8 @@ export const SettingsBilling: React.FC = () => {
 																([nextKey, nextValue], nextIndex) => {
 																	if (
 																		(nextValue &&
-																			(nextKey === "monthly_total") ||
-																			nextKey === "yearly_total")
+																			nextKey === "monthly_total") ||
+																		nextKey === "yearly_total"
 																	) {
 																		return (
 																			<Box
