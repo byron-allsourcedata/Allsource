@@ -10,13 +10,14 @@ sys.path.append(parent_dir)
 
 from models import Users, UserSubscriptions, SubscriptionPlan
 from utils import end_of_month
+from enums import PlanAlias
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
 logging.basicConfig(level=logging.INFO)
 
 
-def refresh_lead_credits(db_session: Session):
+def refresh_free_trail_lead_credits(db_session: Session):
     credits = (
         db_session.query(SubscriptionPlan.leads_credits)
         .filter(SubscriptionPlan.is_free_trial == True)
@@ -60,6 +61,50 @@ def refresh_lead_credits(db_session: Session):
         f"Updated {result_users.rowcount} users and {result_subs.rowcount} subscriptions for free trial."
     )
 
+def refresh_basic_lead_credits(db_session: Session):
+    credits = (
+        db_session.query(SubscriptionPlan.leads_credits)
+        .filter(SubscriptionPlan.alias == PlanAlias.BASIC.value)
+        .scalar()
+    )
+
+    if credits is None:
+        logging.error("Basic plan not found")
+        return
+
+    subquery_user_sub_ids = (
+        select(Users.current_subscription_id)
+        .join(
+            UserSubscriptions,
+            Users.current_subscription_id == UserSubscriptions.id,
+        )
+        .join(
+            SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id
+        )
+        .filter(SubscriptionPlan.alias == PlanAlias.BASIC.value)
+        .scalar_subquery()
+    )
+
+    stmt_users = (
+        update(Users)
+        .where(Users.current_subscription_id.in_(subquery_user_sub_ids))
+        .values(leads_credits=credits)
+    )
+    result_users = db_session.execute(stmt_users)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    stmt_subs = (
+        update(UserSubscriptions)
+        .where(UserSubscriptions.id.in_(subquery_user_sub_ids))
+        .values(plan_end=end_of_month(now))
+    )
+
+    result_subs = db_session.execute(stmt_subs)
+    db_session.commit()
+
+    logging.info(
+        f"Updated {result_users.rowcount} users and {result_subs.rowcount} subscriptions for basic."
+    )
+
 
 def main():
     logging.info("Started")
@@ -71,7 +116,8 @@ def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        refresh_lead_credits(db_session=db_session)
+        refresh_free_trail_lead_credits(db_session=db_session)
+        refresh_basic_lead_credits(db_session=db_session)
 
     except Exception as err:
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
