@@ -51,17 +51,26 @@ async def send_leads_to_queue(rmq_connection, processed_lead):
         message_body=processed_lead,
     )
 
+
 async def prepare_users_for_billing(rmq_connection, session):
     results = (
         session.query(Users.id)
-        .join(UserSubscriptions, UserSubscriptions.id == Users.current_subscription_id)
-        .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
-        .filter(SubscriptionPlan.alias == PlanAlias.BASIC, Users.overage_leads_count > 0)
+        .join(
+            UserSubscriptions,
+            UserSubscriptions.id == Users.current_subscription_id,
+        )
+        .join(
+            SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id
+        )
+        .filter(
+            SubscriptionPlan.alias == PlanAlias.BASIC,
+            Users.overage_leads_count > 0,
+        )
         .all()
     )
     user_ids = [result.id for result in results]
 
-    msg = {'user_ids': user_ids}
+    msg = {"user_ids": user_ids}
     await send_leads_to_queue(rmq_connection, msg)
 
 
