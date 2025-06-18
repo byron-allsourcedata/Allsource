@@ -114,6 +114,7 @@ export const SettingsBilling: React.FC = () => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
+			console.log(response.data)
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
@@ -167,11 +168,11 @@ export const SettingsBilling: React.FC = () => {
 		switch (value?.detail_type) {
 			case "funds":
 				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
-			case "plan_name":
+			case "as_is":
 				return value.value;
 			case "limited":
 				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
-			case "as_is":
+			case "time":
 				return (
 					`${dayjs(value.plan_start).format("MMM D, YYYY")}` +
 					(value.plan_end

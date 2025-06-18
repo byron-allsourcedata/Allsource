@@ -29,7 +29,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	const valueText =
 		limitValue === -1
 			? "Unlimited"
-			: `${Math.max(0, currentValue)} out of ${limitValue} Remaining`;
+			: `${needButton ? "$" : ""}${Math.max(0, currentValue).toLocaleString("en-US")} out of ${needButton ? "$" : ""}${limitValue?.toLocaleString("en-US")} Remaining`;
 
 	return (
 		<Box sx={{ width: "100%" }}>
