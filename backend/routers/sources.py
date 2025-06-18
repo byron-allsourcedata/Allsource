@@ -87,7 +87,6 @@ def download_value_calculation(
 def get_domains_with_leads(
     domains_service: UserDomainsService,
     user=Depends(check_user_authorization_without_pixel),
-
 ):
     return domains_service.get_domains_with_leads(user=user)
 

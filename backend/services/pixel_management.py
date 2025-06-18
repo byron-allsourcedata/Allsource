@@ -23,8 +23,12 @@ logger = logging.getLogger(__name__)
 class PixelManagementService:
     def __init__(
         self,
-        user_domains_service: Annotated[UserDomainsService, Depends(get_domain_service)],
-        integration_service: Annotated[IntegrationService, Depends(get_integration_service)],
+        user_domains_service: Annotated[
+            UserDomainsService, Depends(get_domain_service)
+        ],
+        integration_service: Annotated[
+            IntegrationService, Depends(get_integration_service)
+        ],
         lead_persistence: LeadsPersistence,
         user_domain_persistence: UserDomainsPersistence,
     ):
@@ -36,8 +40,9 @@ class PixelManagementService:
     def get_pixel_management_data(self, user_id) -> List[ManagementResult]:
         result = []
 
-        contacts_resolving_ids = self.domain_persistence.get_domains_with_contacts_resolving(
-            user_id)
+        contacts_resolving_ids = (
+            self.domain_persistence.get_domains_with_contacts_resolving(user_id)
+        )
 
         domains = self.user_domains_service.get_domains(user_id=user_id)
         for domain in domains:
@@ -48,16 +53,23 @@ class PixelManagementService:
                     "id": domain["id"],
                     "domain_name": domain["domain"],
                     "pixel_status": domain["is_pixel_installed"],
-                    "contacts_resolving": domain["id"] in contacts_resolving_ids,
+                    "contacts_resolving": domain["id"]
+                    in contacts_resolving_ids,
                     "additional_pixel": [
                         {
-                            "is_add_to_cart_installed": domain["is_add_to_cart_installed"],
-                            "is_converted_sales_installed": domain["is_converted_sales_installed"],
+                            "is_add_to_cart_installed": domain[
+                                "is_add_to_cart_installed"
+                            ],
+                            "is_converted_sales_installed": domain[
+                                "is_converted_sales_installed"
+                            ],
                         }
                     ],
                     "resolutions": [
                         {"date": d, "lead_count": c}
-                        for d, c in self.leads_persistence.get_leads_count_by_day(domain_id=domain["id"])
+                        for d, c in self.leads_persistence.get_leads_count_by_day(
+                            domain_id=domain["id"]
+                        )
                     ],
                     "data_syncs_count": len(syncs),
                 }

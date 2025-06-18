@@ -722,7 +722,6 @@ def get_leads_service(
     )
 
 
-
 def get_companies_service(
     domain: UserDomains = Depends(check_pixel_install_domain),
     companies_persistence_service: CompanyPersistence = Depends(
@@ -816,7 +815,7 @@ def get_settings_service(
     ),
     send_grid_persistence: SendgridPersistence = Depends(
         get_send_grid_persistence_service
-    )
+    ),
 ):
     return SettingsService(
         settings_persistence=settings_persistence,
