@@ -99,6 +99,8 @@ export const SettingsBilling: React.FC = () => {
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);
 	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
+	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
+		useState(false);
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 	const stripePromise = loadStripe(
@@ -160,7 +162,7 @@ export const SettingsBilling: React.FC = () => {
 	};
 
 	const renderValue = (value: any) => {
-		if (value?.current_value === -1) {
+		if (value?.current_value === -1 || value?.limit_value === -1) {
 			return "Unlimited";
 		}
 
@@ -628,7 +630,7 @@ export const SettingsBilling: React.FC = () => {
 										limitValue={planSmartAudienceCollected}
 										currentValue={smartAudienceCollected}
 										needButton={false}
-										commingSoon={true}
+										available={isAvailableSmartAudience}
 									/>
 								</>
 							)}
@@ -868,9 +870,9 @@ export const SettingsBilling: React.FC = () => {
 															Object.entries(billingDetails).map(
 																([nextKey, nextValue], nextIndex) => {
 																	if (
-																		(nextValue &&
-																			nextKey === "monthly_total") ||
-																		nextKey === "yearly_total"
+																		(nextKey === "monthly_total" &&
+																			nextValue) ||
+																		(nextKey === "yearly_total" && nextValue)
 																	) {
 																		return (
 																			<Box

@@ -87,18 +87,23 @@ class TotalKey(BaseModel):
     value: Optional[str]
 
 
+class ActivePlan(BaseModel):
+    detail_type: str
+    value: bool
+
+
 class SubscriptionDetails(BaseModel):
     billing_cycle: BillingCycle
     plan_name: PlanName
     domains: LimitedDetail
     contacts_downloads: LimitedDetail
-    smart_audience: str
+    smart_audience: LimitedDetail
     validation_funds: FundsDetail
     premium_sources_funds: str
     next_billing_date: NextBillingDate
     monthly_total: Optional[TotalKey] = None
     yearly_total: Optional[TotalKey] = None
-    active: BaseModel
+    active: ActivePlan
 
 
 class DowngradePlan(BaseModel):
@@ -110,8 +115,3 @@ class BillingSubscriptionDetails(BaseModel):
     subscription_details: Optional[SubscriptionDetails]
     downgrade_plan: Optional[DowngradePlan]
     canceled_at: Optional[str]
-
-
-class ActivePlan(BaseModel):
-    detail_type: str
-    value: bool

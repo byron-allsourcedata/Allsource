@@ -2,8 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from typing import List
-from uuid import UUID
+from datetime import datetime
 
 import mailchimp_marketing as MailchimpMarketing
 from fastapi import HTTPException
@@ -376,15 +375,33 @@ class MailchimpIntegrationsService:
         five_x_five_users: List[FiveXFiveUser],
     ):
         profiles = []
+        results = []
         for five_x_five_user in five_x_five_users:
             profile = self.__mapped_member_into_list_lead(
                 five_x_five_user, integration_data_sync.data_map
             )
+            if profile in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                results.append(
+                    {"lead_id": five_x_five_user.id, "status": profile}
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "lead_id": five_x_five_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
             if profile:
                 profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
         profile = self.__create_profile(
             user_integration, integration_data_sync, profiles
@@ -394,9 +411,11 @@ class MailchimpIntegrationsService:
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.LIST_NOT_EXISTS.value,
         ):
-            return profile
+            for res in results:
+                if res["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    res["status"] = profile
 
-        return ProccessDataSyncResult.SUCCESS.value
+        return results
 
     def sync_contacts_bulk(self, list_id: str, profiles_list: List[dict]):
         operations = []
@@ -609,7 +628,7 @@ class MailchimpIntegrationsService:
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return None
+            return first_email
 
         first_phone = (
             getattr(five_x_five_user, "mobile_phone")
@@ -649,8 +668,18 @@ class MailchimpIntegrationsService:
             "merge_fields": {
                 "FNAME": getattr(five_x_five_user, "first_name", None),
                 "LNAME": getattr(five_x_five_user, "last_name", None),
+                "PHONE": format_phone_number(first_phone),
+                "COMPANY": getattr(five_x_five_user, "company_name", None),
             },
         }
+        for field in data_map:
+            key = field["type"]
+            merge_tag = field["value"].upper().replace(" ", "_")
+            value = getattr(five_x_five_user, key, None)
+            if value is not None:
+                if isinstance(value, datetime):
+                    value = value.strftime("%Y-%m-%dT%H:%M:%SZ")
+                result["merge_fields"][merge_tag] = value
 
         def replace_none_with_na(d):
             for k, v in d.items():
