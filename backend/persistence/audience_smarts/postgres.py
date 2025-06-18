@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 
@@ -5,7 +6,6 @@ import pytz
 from sqlalchemy import desc, asc, or_, union
 from sqlalchemy.orm import Session, aliased, load_only
 from sqlalchemy.sql import func
-from sqlalchemy.orm import class_mapper
 
 from db_dependencies import Db
 from models.audience_smarts import AudienceSmart
@@ -124,6 +124,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         target_schema: str,
         validation_params: Optional[dict],
         active_segment_records: int,
+        need_validate: bool = False
     ) -> AudienceSmartDTO:
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
         if not use_case_id:
@@ -136,9 +137,10 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             user_id=user_id,
             created_by_user_id=created_by_user_id,
             use_case_id=use_case_id,
-            validations=validation_params,
+            validations=validation_params if need_validate else json.dumps({}),
             total_records=total_records,
             target_schema=target_schema,
+            validated_records=0 if need_validate else active_segment_records,
             active_segment_records=active_segment_records,
             status=status,
         )
@@ -164,7 +166,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             processed_active_segment_records=new_audience.processed_active_segment_records,
             status=new_audience.status,
             use_case_id=new_audience.use_case_id,
-            validations=new_audience.validations,
+            validations=json.loads(new_audience.validations),
             target_schema=new_audience.target_schema,
         )
 

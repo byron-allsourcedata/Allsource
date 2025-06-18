@@ -9,12 +9,10 @@ from uuid import UUID
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Union, Optional, Any, Dict, Tuple
+from typing import List, Union, Optional, Tuple
 import boto3
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Connection
-from sqlalchemy import create_engine
-from dataclasses import asdict
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
@@ -37,11 +35,6 @@ from models.leads_visits import LeadsVisits
 from models.enrichment import (
     EnrichmentUsersEmails,
     EnrichmentUser,
-    EnrichmentFinancialRecord,
-    EnrichmentLifestyle,
-    EnrichmentVoterRecord,
-    EnrichmentPersonalProfiles,
-    EnrichmentEmploymentHistory,
     EnrichmentProfessionalProfile,
 )
 from models.enrichment.enrichment_emails import EnrichmentEmails

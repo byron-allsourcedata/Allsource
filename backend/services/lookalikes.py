@@ -120,7 +120,7 @@ class AudienceLookalikesService:
         lookalike_size,
         lookalike_type,
         search_query,
-        include_json_fields,
+        include_json_fields: bool,
     ):
         result_query, total, max_page, source_count = (
             self.lookalikes_persistence_service.get_lookalikes(

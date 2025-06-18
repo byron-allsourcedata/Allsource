@@ -25,6 +25,7 @@ class AudienceLookalikesPersistenceInterface(abc.ABC):
         lookalike_size: Optional[str] = None,
         lookalike_type: Optional[str] = None,
         search_query: Optional[str] = None,
+        include_json_fields: bool = False,
     ) -> Tuple[List[LookalikeInfo], int, int, int]:
         pass
 

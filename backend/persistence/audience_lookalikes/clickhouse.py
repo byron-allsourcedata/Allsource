@@ -47,6 +47,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         lookalike_size: Optional[str] = None,
         lookalike_type: Optional[str] = None,
         search_query: Optional[str] = None,
+        include_json_fields: bool = False,
     ) -> Tuple[List[LookalikeInfo], int, int, int]:
         return self.postgres.get_lookalikes(
             user_id=user_id,
@@ -59,6 +60,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
             lookalike_size=lookalike_size,
             lookalike_type=lookalike_type,
             search_query=search_query,
+            include_json_fields=include_json_fields
         )
 
     def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
