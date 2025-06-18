@@ -13,8 +13,8 @@ router = APIRouter()
 
 @router.get("/", response_class=JSONResponse)
 async def clean_account(
-    email: str = Query(...),
-    domain_service: UserDomainsService = Depends(get_domain_service),
+    domain_service: UserDomainsService,
+    email: str = Query(...)
 ):
     redirect_url = domain_service.clean_account(email)
     if not redirect_url:

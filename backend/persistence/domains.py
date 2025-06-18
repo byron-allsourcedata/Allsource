@@ -268,14 +268,29 @@ class UserDomainsPersistence:
             domain_query.domain = new_domain
             self.db.commit()
 
-    def delete_domain(self, user_id: int, domain: int):
+    def delete_domain(self, user_id: int, domain_id: int):
         domain = (
             self.db.query(UserDomains)
-            .filter(UserDomains.user_id == user_id, UserDomains.id == domain)
-            .first()
+                .filter(UserDomains.user_id == user_id, UserDomains.id == domain_id)
+                .first()
         )
         if not domain:
-            raise HTTPException(status_code=404, detail={"status": "NOT_FOUND"})
+            raise HTTPException(status_code=404, detail="Domain not found")
+
+        lead_exists = (
+                self.db.query(LeadUser)
+                .filter(
+                    LeadUser.domain_id == domain_id,
+                )
+                .first()
+                is not None
+        )
+        if lead_exists:
+            raise HTTPException(
+                status_code=400,
+                detail="Domain cannot be deleted because it has associated leads"
+            )
+
         self.db.delete(domain)
         self.db.commit()
 
