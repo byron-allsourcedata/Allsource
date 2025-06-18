@@ -207,6 +207,8 @@ class AudienceDataNormalizationService:
         value = None
         if "customer_value" in df_with_geo.columns:
             value = df_with_geo["customer_value"]
+        else:
+            raise Exception("No 'customer_value' column in training data")
 
         return df_final, value
 

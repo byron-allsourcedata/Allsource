@@ -81,21 +81,21 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         limit: Optional[int] = None,
     ) -> List[Dict]:
         q = (
-            self.db.query(EnrichmentUser.asid)
-            .select_from(AudienceSourcesMatchedPerson)
-            .join(
-                EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id
-                == EnrichmentUser.id,
+            self.db.query(
+                AudienceSourcesMatchedPerson.enrichment_user_asid,
+                AudienceSourcesMatchedPerson.value_score,
             )
+            .select_from(AudienceSourcesMatchedPerson)
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         )
 
         if limit is not None:
             q = q.limit(limit)
         else:
-            q = q.limit(500_000)
+            q = q.limit(5_000)
         rows = q.all()
+
+        asid_scores = {asid: score for asid, score in rows}
 
         b2c_columns = [
             "age",
@@ -167,6 +167,8 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         else:
             enrichment_columns = b2c_columns + b2b_columns
 
+        enrichment_columns = ["asid"] + enrichment_columns
+
         asids = [row[0] for row in rows]
 
         columns = ", ".join(enrichment_columns)
@@ -177,7 +179,16 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         )
 
         names: list[str] = result.column_names
-        rows = [dict(zip(names, vals)) for vals in result.result_set]
+
+        rows = []
+        for row in result.result_set:
+            enrichment_user = dict(zip(names, row))
+
+            asid = enrichment_user["asid"]
+            enrichment_user["customer_value"] = asid_scores[asid]
+
+            rows.append(enrichment_user)
+
         return rows
 
     def get_processing_lookalike(self, id: UUID):
