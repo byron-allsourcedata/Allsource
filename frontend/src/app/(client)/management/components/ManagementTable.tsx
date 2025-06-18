@@ -1,5 +1,6 @@
 import type React from "react";
 import { useRef, useState } from "react";
+import DownloadIcon from "@mui/icons-material/Download";
 import {
 	Table,
 	TableBody,
@@ -341,7 +342,35 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												gap: "4px",
 											}}
 										>
-											{row.pixel_status ? "✓ Installed" : "✗ Not Installed"}
+											{row.pixel_status ? (
+												"✓ Installed"
+											) : (
+												<Button
+													variant="text"
+													onClick={() =>
+														handleInstallPixelClick(row.domain_name)
+													}
+													sx={{
+														p: 0,
+														minWidth: 0,
+														textTransform: "none",
+														fontSize: "14px",
+														fontFamily: "Roboto",
+														fontWeight: 400,
+														color: "rgba(56, 152, 252, 1)",
+														textDecoration: "underline",
+														display: "inline-flex",
+														alignItems: "center",
+														"&:hover": {
+															textDecoration: "none",
+															backgroundColor: "transparent",
+														},
+													}}
+												>
+													<DownloadIcon sx={{ fontSize: "18px", mt: 0.25 }} />
+													Install Pixel
+												</Button>
+											)}
 										</Typography>
 									</TableCell>
 									<TableCell>
