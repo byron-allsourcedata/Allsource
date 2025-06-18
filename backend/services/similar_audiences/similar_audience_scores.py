@@ -216,7 +216,7 @@ class SimilarAudiencesScoresService:
 
     def calculate_batch_scores(
         self,
-        enrichment_user_ids: List[UUID],
+        asids: List[UUID],
         batch: list[dict[str, Any]],
         model: CatBoostRegressor,
         lookalike_id: UUID,
@@ -226,7 +226,7 @@ class SimilarAudiencesScoresService:
 
         scores = self.calculate_score_dict_batch(model, batch, config)
         self.enrichment_lookalike_scores_persistence.bulk_insert(
-            lookalike_id, list(zip(enrichment_user_ids, scores))
+            lookalike_id, list(zip(asids, scores))
         )
 
     def get_config(self, significant_fields: dict):

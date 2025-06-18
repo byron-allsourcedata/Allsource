@@ -31,10 +31,11 @@ class EnrichmentLookalikeScoresPersistence:
         self, lookalike_id: UUID, source_asids: list[UUID], top_count: int
     ) -> list[dict]:
         logger.info(f"provided source_asids: {len(source_asids)}  {top_count}")
+
         query = """
         select asid, score from enrichment_lookalike_scores
             where lookalike_id = %(lookalike_id)s
-           
+            and asid not in %(source_uuids)s 
             order by score desc
             limit %(total_rows)s
         """
@@ -59,7 +60,7 @@ class EnrichmentLookalikeScoresPersistence:
     def clickhouse_bulk_insert(
         self, lookalike_id: UUID, scores: list[tuple[UUID, float]]
     ):
-        rows = [(user_id, lookalike_id, score) for user_id, score in scores]
+        rows = [(asid, lookalike_id, score) for asid, score in scores]
         query_result = self.ch.insert("enrichment_lookalike_scores", rows)
         logger.info(f"Written rows to scores: {query_result.written_rows}")
 

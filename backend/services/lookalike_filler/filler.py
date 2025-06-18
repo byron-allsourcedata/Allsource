@@ -101,6 +101,8 @@ class LookalikeFillerService:
             audience_lookalike
         )
 
+        logger.info(f"fetched profiles: {len(profiles)}")
+
         model = self.train_and_save_model(
             lookalike_id=audience_lookalike.id,
             user_profiles=profiles,
@@ -157,7 +159,7 @@ class LookalikeFillerService:
 
         count = 0
         batch_buffer = []
-        user_ids_buffer = []
+
         with rows_stream:
             for batch in rows_stream:
                 dict_batch = [dict(zip(column_names, row)) for row in batch]
@@ -169,27 +171,17 @@ class LookalikeFillerService:
 
                 asids = [doc["asid"] for doc in batch_buffer]
 
-                enrichment_user_ids, duration = measure(
-                    lambda _: (
-                        self.enrichment_users.fetch_enrichment_user_ids(asids)
-                    )
-                )
-
-                print(f"enrichment user fetch time: {duration:.3f}")
-
-                user_ids_buffer.extend(enrichment_user_ids)
-
                 _, duration = measure(
                     lambda _: self.audiences_scores.calculate_batch_scores(
                         model=model,
-                        enrichment_user_ids=user_ids_buffer,
+                        asids=asids,
                         lookalike_id=lookalike_id,
                         batch=batch_buffer,
                     )
                 )
                 print(f"lookalike calculation time: {duration:.3f}")
 
-                count += len(user_ids_buffer)
+                count += len(asids)
                 _, duration = measure(
                     lambda _: (
                         self.db.execute(
@@ -203,7 +195,6 @@ class LookalikeFillerService:
                 self.db.commit()
                 print(f"processed users = {count}")
                 batch_buffer = []
-                user_ids_buffer = []
 
         self.db_workaround(lookalike_id=lookalike_id)
 

@@ -14,10 +14,11 @@ class RabbitFillerService:
     async def inform_lookalike_agent(
         self, connection, lookalike_id: UUID, user_id: int, persons: list[UUID]
     ):
+        persons_ids = [str(id) for id in persons]
         message_body = {
             "lookalike_id": str(lookalike_id),
             "user_id": user_id,
-            "enrichment_user": persons,
+            "enrichment_user": persons_ids,
         }
 
         await self.rabbit.publish_rabbitmq_message(
