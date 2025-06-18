@@ -1,5 +1,7 @@
 import math
 import os
+import uuid
+
 import certifi
 from typing import List, Optional
 
@@ -18,6 +20,15 @@ stripe.api_key = StripeConfig.api_key
 
 logging.getLogger("stripe").setLevel(logging.WARNING)
 TRIAL_PERIOD_WITH_COUPON = 7
+
+
+def create_stripe_transfer(amount: int, destination_account: str):
+    transfer = stripe.Transfer.create(
+        amount=int(amount * 100),
+        currency="usd",
+        destination=destination_account,
+    )
+    return transfer
 
 
 @injectable
@@ -43,13 +54,17 @@ class StripeService:
             logging.error(f"Authentication error: {e.user_message}")
             return None
 
-    def create_stripe_transfer(self, amount: int, destination_account: str):
-        transfer = stripe.Transfer.create(
-            amount=int(amount * 100),
-            currency="usd",
-            destination=destination_account,
+    @staticmethod
+    def record_usage(customer_id: str, quantity: int):
+        resp = stripe.billing.MeterEvent.create(
+            event_name="records",
+            identifier=str(uuid.uuid4()),
+            payload={
+                "stripe_customer_id": customer_id,
+                "value": quantity,
+            },
         )
-        return transfer
+        return resp
 
     def create_checkout_session(
         self,

@@ -3,33 +3,17 @@ import logging
 import os
 import sys
 
-from models import Users, UserSubscriptions, SubscriptionPlan
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from models import Users, UserSubscriptions, SubscriptionPlan
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-from sqlalchemy import create_engine, and_, or_, select
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
-from models.leads_visits import LeadsVisits
 from sqlalchemy.orm import sessionmaker, Session
-from datetime import datetime, timezone, timedelta
 from enums import (
-    DataSyncImportedStatus,
-    ProccessDataSyncResult,
-    SourcePlatformEnum,
-    DataSyncType,
     PlanAlias,
 )
-from utils import get_utc_aware_date
-from models.leads_users_added_to_cart import LeadsUsersAddedToCart
-from models.leads_users_ordered import LeadsUsersOrdered
-from models.users_domains import UserDomains
-from sqlalchemy.dialects.postgresql import insert
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from models.integrations.users_domains_integrations import UserIntegration
-from models.data_sync_imported_leads import DataSyncImportedLead
-from models.leads_users import LeadUser
 
 load_dotenv()
 
@@ -52,7 +36,8 @@ async def send_leads_to_queue(rmq_connection, processed_lead):
     )
 
 
-async def prepare_users_for_billing(rmq_connection, session):
+async def prepare_users_for_billing(rmq_connection: RabbitMQConnection, session: Session):
+    logging.info("Preparing users for billing...")
     results = (
         session.query(Users.id)
         .join(
@@ -63,15 +48,24 @@ async def prepare_users_for_billing(rmq_connection, session):
             SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id
         )
         .filter(
-            SubscriptionPlan.alias == PlanAlias.BASIC,
+            SubscriptionPlan.alias == PlanAlias.BASIC.value,
             Users.overage_leads_count > 0,
         )
         .all()
     )
     user_ids = [result.id for result in results]
+    logging.info(
+        f"Found {len(user_ids)} users with overage leads for BASIC plan."
+    )
+    if not user_ids:
+        logging.info("No users to bill at this time.")
+        return
 
     msg = {"user_ids": user_ids}
     await send_leads_to_queue(rmq_connection, msg)
+    logging.info(
+        f"Successfully sent {len(user_ids)} user IDs to billing queue."
+    )
 
 
 async def main():
@@ -100,8 +94,6 @@ async def main():
     db_session = None
     rabbitmq_connection = None
     try:
-        logging.info("Starting processing...")
-
         rabbitmq_connection = RabbitMQConnection()
         rmq_connection = await rabbitmq_connection.connect()
         channel = await rmq_connection.channel()
@@ -119,10 +111,10 @@ async def main():
         logging.error("Unhandled Exception:", exc_info=True)
     finally:
         if db_session:
-            logging.info("Closing the database session...")
+            logging.debug("Closing the database session...")
             db_session.close()
         if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
+            logging.debug("Closing RabbitMQ connection...")
             await rabbitmq_connection.close()
 
 

@@ -88,6 +88,7 @@ from .audience_smarts_validations import AudienceSmartValidation
 from .usa_zip_codes import UsaZipCode
 from .audience_postals_verification import AudiencePostalVerification
 from .admin_invitations import AdminInvitation
+from .transaction_history import TransactionHistory
 
 
 __all__ = [
@@ -95,6 +96,7 @@ __all__ = [
     "ExternalAppsInstall",
     "IntegrationUserSync",
     "LeadsSupperssion",
+    "TransactionHistory",
     "SuppressedContact",
     "UserIntegration",
     "Integration",
