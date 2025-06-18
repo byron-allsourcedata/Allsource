@@ -151,6 +151,16 @@ def get_datasource(
     return data_source
 
 
+@router.get("/check-access")
+def check_access(
+    user=Depends(check_user_authorization_without_pixel),
+    audience_smarts_service: AudienceSmartsService = Depends(
+        get_audience_smarts_service
+    ),
+):
+    return audience_smarts_service.check_access(user=user)
+
+
 @router.get("/search")
 def search_audience_smart(
     start_letter: str = Query(..., min_length=3),
@@ -202,6 +212,7 @@ def update_audience_smart(
 @router.post("/download-persons")
 def download_persons(
     payload: SmartAudienceSyncCreate,
+    user=Depends(check_user_authorization_without_pixel),
     audience_smarts_service: AudienceSmartsService = Depends(
         get_audience_smarts_service
     ),
@@ -210,6 +221,7 @@ def download_persons(
         smart_audience_id=payload.smart_audience_id,
         sent_contacts=payload.sent_contacts,
         data_map=payload.data_map,
+        user=user,
     )
 
     if result:

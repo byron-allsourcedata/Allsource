@@ -45,6 +45,7 @@ async def get_lookalikes(
     search_query: str = Query(
         None, description="Search by lookalikes name, source or creator"
     ),
+    is_debug: bool = Query(False),
 ):
     return lookalike_service.get_lookalikes(
         user=user,
@@ -57,6 +58,7 @@ async def get_lookalikes(
         from_date=from_date,
         to_date=to_date,
         search_query=search_query,
+        include_json_fields=is_debug,
     )
 
 

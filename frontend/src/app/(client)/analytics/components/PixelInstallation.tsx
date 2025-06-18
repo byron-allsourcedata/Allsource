@@ -3,7 +3,6 @@ import { Box, Grid, Typography, Button } from "@mui/material";
 import Image from "next/image";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios, { AxiosError } from "axios";
-import { useSlider } from "@/context/SliderContext";
 import CustomTooltip from "@/components/customToolTip";
 import React, { useEffect, useState, useMemo } from "react";
 import ManualPopup from "./ManualPopup";
@@ -29,18 +28,19 @@ interface CmsData {
 interface PixelInstallationProps {
 	onInstallSelected: (method: "manual" | "google" | "cms" | null) => void;
 	onInstallStatusChange: (status: "success" | "failed" | null) => void;
+	step?: number;
 }
 
 const PixelInstallation: React.FC<PixelInstallationProps> = ({
 	onInstallSelected,
 	onInstallStatusChange,
+	step = 2,
 }) => {
 	const {
 		pixelInstallationHints,
 		resetPixelInstallationHints,
 		changePixelInstallationHint,
 	} = useGetStartedHints();
-	const { setShowSlider } = useSlider();
 	const [showHint, setShowHint] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [showManualInline, setShowManualInline] = useState(false);
@@ -95,13 +95,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 					showErrorToast("Please set up your domain to continue");
 					return;
 				}
-				if (status === 403 && data?.status === "NEED_BOOK_CALL") {
-					sessionStorage.setItem("is_slider_opened", "true");
-					setShowSlider(true);
-				} else {
-					sessionStorage.setItem("is_slider_opened", "false");
-					setShowSlider(false);
-				}
 			}
 		} finally {
 			setIsLoading(false);
@@ -127,15 +120,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 			setShowGoogleInline(true);
 			setTimeout(() => scrollToRef(googleRef), 100);
 		} catch (error) {
-			if (error instanceof AxiosError && error.response?.status === 403) {
-				if (error.response.data.status === "NEED_BOOK_CALL") {
-					sessionStorage.setItem("is_slider_opened", "true");
-					setShowSlider(true);
-				} else {
-					sessionStorage.setItem("is_slider_opened", "false");
-					setShowSlider(false);
-				}
-			}
 		} finally {
 			setIsLoading(false);
 		}
@@ -225,13 +209,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 					showErrorToast("Please set up your domain to continue");
 					return;
 				}
-				if (status === 403 && data?.status === "NEED_BOOK_CALL") {
-					sessionStorage.setItem("is_slider_opened", "true");
-					setShowSlider(true);
-				} else {
-					sessionStorage.setItem("is_slider_opened", "false");
-					setShowSlider(false);
-				}
 			}
 		} finally {
 			setIsLoading(false);
@@ -273,7 +250,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 						},
 					}}
 				>
-					2. Pixel Installation
+					{step ? step : 2}. Pixel Installation
 				</Typography>
 				<CustomTooltip
 					title="Set which domain's user activity will be tracked."

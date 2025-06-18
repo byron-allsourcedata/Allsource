@@ -11,7 +11,12 @@ from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
 from enums import TeamsInvitationStatus, SignUpStatus
-from models import AudienceLookalikes
+from models import (
+    AudienceLookalikes,
+    LeadUser,
+    SubscriptionPlan,
+    UserSubscriptions,
+)
 from models.partner import Partner
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
@@ -163,7 +168,6 @@ class UserPersistence:
                 "calendly_invitee_uuid": user.calendly_invitee_uuid,
                 "activate_steps_percent": user.activate_steps_percent,
                 "leads_credits": user.leads_credits,
-                "prospect_credits": user.prospect_credits,
                 "validation_funds": user.validation_funds,
                 "is_leads_auto_charging": user.is_leads_auto_charging,
                 "team_access_level": user.team_access_level,
@@ -178,6 +182,8 @@ class UserPersistence:
                 "stripe_connected_email": user.stripe_connected_email,
                 "stripe_connected_currently_due": user.stripe_connected_currently_due,
                 "partner_is_active": partner_is_active,
+                "premium_source_credits": user.premium_source_credits,
+                "smart_audience_quota": user.smart_audience_quota,
             }
         self.db.rollback()
         if result_as_object:
@@ -337,17 +343,8 @@ class UserPersistence:
 
         return query.all()
 
-    def get_customer_users(
-        self,
-        search_query: str,
-        page: int,
-        per_page: int,
-        sort_by: str,
-        sort_order: str,
-        last_login_date_start=None,
-        last_login_date_end=None,
-        join_date_start=None,
-        join_date_end=None,
+    def get_base_customers(
+        self, search_query, page, per_page, sort_by, sort_order, filters
     ):
         query = (
             self.db.query(
@@ -360,49 +357,43 @@ class UserPersistence:
                 Users.is_email_confirmed,
                 Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
-                func.count(
-                    case((UserDomains.is_pixel_installed == True, 1))
-                ).label("pixel_installed_count"),
-                func.count(
-                    case((func.coalesce(AudienceSource.id, None) != None, 1))
-                ).label("sources_count"),
-                func.count(
-                    case(
-                        (func.coalesce(AudienceLookalikes.id, None) != None, 1)
-                    )
-                ).label("lookalikes_count"),
+                SubscriptionPlan.title.label("subscription_plan"),
             )
-            .outerjoin(
-                AudienceLookalikes, AudienceLookalikes.user_id == Users.id
+            .join(
+                UserSubscriptions,
+                UserSubscriptions.id == Users.current_subscription_id,
             )
-            .outerjoin(AudienceSource, AudienceSource.user_id == Users.id)
-            .outerjoin(UserDomains, UserDomains.user_id == Users.id)
+            .join(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
             .filter(Users.role.any("customer"))
-            .group_by(Users.id)
         )
 
-        if last_login_date_start:
-            start_date = datetime.fromtimestamp(
-                last_login_date_start, tz=pytz.UTC
+        if filters.get("last_login_date_start"):
+            last_login_date_start = datetime.fromtimestamp(
+                filters["last_login_date_start"], tz=pytz.UTC
             ).date()
-            query = query.filter(func.DATE(Users.last_login) >= start_date)
-
-        if last_login_date_end:
-            end_date = datetime.fromtimestamp(
-                last_login_date_end, tz=pytz.UTC
+            query = query.filter(
+                func.DATE(Users.last_login) >= last_login_date_start
+            )
+        if filters.get("last_login_date_end"):
+            last_login_date_end = datetime.fromtimestamp(
+                filters["last_login_date_end"], tz=pytz.UTC
             ).date()
-            query = query.filter(func.DATE(Users.last_login) <= end_date)
-
-        if join_date_start:
-            start_date = datetime.fromtimestamp(
-                join_date_start, tz=pytz.UTC
+            query = query.filter(
+                func.DATE(Users.last_login) <= last_login_date_end
+            )
+        if filters.get("join_date_start"):
+            join_date_start = datetime.fromtimestamp(
+                filters["join_date_start"], tz=pytz.UTC
             ).date()
-            query = query.filter(func.DATE(Users.created_at) >= start_date)
-
-        if join_date_end:
-            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
-            query = query.filter(func.DATE(Users.created_at) <= end_date)
-
+            query = query.filter(func.DATE(Users.created_at) >= join_date_start)
+        if filters.get("join_date_end"):
+            join_date_end = datetime.fromtimestamp(
+                filters["join_date_end"], tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.created_at) <= join_date_end)
         if search_query:
             query = query.filter(
                 or_(
@@ -411,25 +402,63 @@ class UserPersistence:
                 )
             )
 
-        total_count = query.count()
-        offset = (page - 1) * per_page
-
         sort_options = {
             "id": Users.id,
             "join_date": Users.created_at,
             "last_login_date": Users.last_login,
         }
+        sort_column = sort_options.get(sort_by, Users.created_at)
+        query = query.order_by(
+            asc(sort_column) if sort_order == "asc" else desc(sort_column)
+        )
 
-        if sort_by in sort_options:
-            sort_column = sort_options[sort_by]
-            query = query.order_by(
-                asc(sort_column) if sort_order == "asc" else desc(sort_column)
-            )
-        else:
-            query = query.order_by(desc(Users.created_at))
-
-        users = query.limit(per_page).offset(offset).all()
+        total_count = query.count()
+        users = query.offset((page - 1) * per_page).limit(per_page).all()
         return users, total_count
+
+    def get_customer_aggregates(self, user_ids: list[int]):
+        pixel_counts = dict(
+            self.db.query(UserDomains.user_id, func.count(UserDomains.id))
+            .filter(
+                UserDomains.user_id.in_(user_ids),
+                UserDomains.is_pixel_installed == True,
+            )
+            .group_by(UserDomains.user_id)
+            .all()
+        )
+
+        contacts_counts = dict(
+            self.db.query(LeadUser.user_id, func.count(LeadUser.id))
+            .filter(LeadUser.user_id.in_(user_ids))
+            .group_by(LeadUser.user_id)
+            .all()
+        )
+
+        sources_counts = dict(
+            self.db.query(AudienceSource.user_id, func.count(AudienceSource.id))
+            .filter(AudienceSource.user_id.in_(user_ids))
+            .group_by(AudienceSource.user_id)
+            .all()
+        )
+
+        lookalikes_counts = dict(
+            self.db.query(
+                AudienceLookalikes.user_id, func.count(AudienceLookalikes.id)
+            )
+            .filter(AudienceLookalikes.user_id.in_(user_ids))
+            .group_by(AudienceLookalikes.user_id)
+            .all()
+        )
+
+        return {
+            user_id: {
+                "pixel_installed_count": pixel_counts.get(user_id, 0),
+                "contacts_count": contacts_counts.get(user_id, 0),
+                "sources_count": sources_counts.get(user_id, 0),
+                "lookalikes_count": lookalikes_counts.get(user_id, 0),
+            }
+            for user_id in user_ids
+        }
 
     def get_not_partner_users(self, page, per_page):
         query = self.db.query(

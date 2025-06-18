@@ -120,6 +120,7 @@ class AudienceLookalikesService:
         lookalike_size,
         lookalike_type,
         search_query,
+        include_json_fields,
     ):
         result_query, total, max_page, source_count = (
             self.lookalikes_persistence_service.get_lookalikes(
@@ -133,53 +134,32 @@ class AudienceLookalikesService:
                 lookalike_size=lookalike_size,
                 lookalike_type=lookalike_type,
                 search_query=search_query,
+                include_json_fields=include_json_fields,
             )
         )
 
-        result = []
-        for (
-            lookalike,
-            source_name,
-            source_type,
-            created_by,
-            source_origin,
-            domain,
-            target_schema,
-        ) in result_query:
-            significant_fields = getattr(lookalike, "significant_fields", None)
-            if significant_fields and isinstance(significant_fields, dict):
-                processed_fields = {}
-                for key, value in significant_fields.items():
-                    if value:
-                        scaled = round(value * 100, 3)
-                        if scaled != 0:
-                            processed_fields[key] = scaled
-                lookalike.significant_fields = processed_fields
+        if include_json_fields:
+            for lookalike in result_query:
+                significant_fields = lookalike.get("significant_fields")
+                if significant_fields and isinstance(significant_fields, dict):
+                    processed_fields = {
+                        key: round(value * 100, 3)
+                        for key, value in significant_fields.items()
+                        if value and round(value * 100, 3) != 0
+                    }
+                    lookalike["significant_fields"] = processed_fields
 
-            similarity_score = getattr(lookalike, "similarity_score", None)
-            if similarity_score and isinstance(similarity_score, dict):
-                similarity_scores = {}
-                for key, value in similarity_score.items():
-                    if value:
-                        scaled = round(value * 100, 3)
-                        if scaled != 0:
-                            similarity_scores[key] = scaled
-                lookalike.similarity_score = similarity_scores
-
-            result.append(
-                {
-                    **lookalike.__dict__,
-                    "source": source_name,
-                    "source_type": source_type,
-                    "created_by": created_by,
-                    "source_origin": source_origin,
-                    "domain": domain,
-                    "target_schema": target_schema,
-                }
-            )
+                similarity_score = lookalike.get("similarity_score")
+                if similarity_score and isinstance(similarity_score, dict):
+                    similarity_scores = {
+                        key: round(value * 100, 3)
+                        for key, value in similarity_score.items()
+                        if value and round(value * 100, 3) != 0
+                    }
+                    lookalike["similarity_score"] = similarity_scores
 
         return {
-            "data": result,
+            "data": result_query,
             "meta": {
                 "total": total,
                 "max_page": max_page,

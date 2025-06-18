@@ -88,8 +88,18 @@ EMAIL_NOTIFICATIONS = "email_notifications"
 
 ROOT_BOT_CLIENT_EMAIL = "master-demo@maximiz.ai"
 ROOT_BOT_CLIENT_DOMAIN = "demo.com"
-
+ROOT_DOMAINS = ["maximiz.ai", "lolly.com", "allforce.io"]
 count = 0
+
+
+def normalize_domain(domain):
+    if domain.startswith("https://"):
+        domain = domain[8:]
+    elif domain.startswith("http://"):
+        domain = domain[7:]
+    if domain.startswith("www."):
+        domain = domain[4:]
+    return domain.lower()
 
 
 def group_requests_by_date(request_row, groupped_requests):
@@ -638,6 +648,8 @@ async def process_user_data(
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain = result
+    if root_user and normalize_domain(user_domain.domain) not in ROOT_DOMAINS:
+        return
     if not user_domain.is_enable and not root_user:
         logging.info(f"Domain is not enabled: {user_domain.id}")
         return
@@ -895,45 +907,9 @@ async def process_user_data(
         if is_first_request == True:
             lead_user.first_visit_id = lead_visit_id
             session.flush()
-            lead_users = (
-                session.query(LeadUser)
-                .filter_by(user_id=user.id)
-                .limit(2)
-                .all()
-            )
-            if len(lead_users) == 1:
-                subscription_result = subscription_service.get_user_subscription_with_trial_status(
-                    user.id
-                )
-                if (
-                    subscription_result["is_artificial_status"]
-                    and not subscription_result["subscription"].plan_end
-                    and subscription_result["alias"] != PlanAlias.PARTNERS.value
-                ):
-                    if subscription_result["artificial_trial_days"]:
-                        date_now = datetime.now(timezone.utc)
-                        subscription_result[
-                            "subscription"
-                        ].plan_start = date_now.replace(tzinfo=None)
-                        subscription_result["subscription"].plan_end = (
-                            date_now
-                            + relativedelta(
-                                days=subscription_result[
-                                    "artificial_trial_days"
-                                ]
-                            )
-                        ).replace(tzinfo=None)
-                        session.flush()
             if not user_domain.is_pixel_installed:
-                domain_lead_users = (
-                    session.query(LeadUser)
-                    .filter_by(domain_id=user_domain.id)
-                    .limit(2)
-                    .all()
-                )
-                if len(domain_lead_users) == 1:
-                    user_domain.is_pixel_installed = True
-                    session.flush()
+                user_domain.is_pixel_installed = True
+                session.flush()
         else:
             if not lead_user.is_returning_visitor:
                 lead_user.is_returning_visitor = True

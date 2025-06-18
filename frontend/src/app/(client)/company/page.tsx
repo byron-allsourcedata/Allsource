@@ -44,7 +44,10 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
 import CalendarPopup from "@/components/CustomCalendar";
-import PaginationComponent from "@/components/PaginationComponent";
+import PaginationComponent, {
+	Paginator,
+	PaginatorTable,
+} from "@/components/PaginationComponent";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast } from "@/components/ToastNotification";
@@ -55,13 +58,14 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { companyTableCards } from "./context/hintsCardsContent";
-import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
 import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/EmptyPlaceholder";
 import { CalendarButton } from "./CalendarButton";
 import { FilterButton } from "./FilterButton";
 import { SelectedFilter } from "./schemas";
+import { usePagination } from "@/hooks/usePagination";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -88,8 +92,6 @@ const Leads: React.FC = () => {
 	const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
 	const dropdownOpen = Boolean(dropdownEl);
 	const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [activeFilter, setActiveFilter] = useState<string>("");
 	const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
 		null,
@@ -123,6 +125,12 @@ const Leads: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
+
+	const paginationProps = usePagination(count_companies ?? 0);
+	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 124, [
+		data.length,
+	]);
 
 	const handleOpenPopover = (
 		event: React.MouseEvent<HTMLElement>,
@@ -231,13 +239,6 @@ const Leads: React.FC = () => {
 
 	const installPixel = () => {
 		router.push("/dashboard");
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
 	};
 
 	const fetchData = async ({
@@ -624,7 +625,9 @@ const Leads: React.FC = () => {
 				url += `?${params.join("&")}`;
 			}
 
-			const response = await axiosInstance.get(url, { responseType: "blob" });
+			const response = await axiosInstance.get(url, {
+				responseType: "blob",
+			});
 
 			if (response.status === 200) {
 				const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -643,10 +646,6 @@ const Leads: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
-
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
 	};
 
 	const truncateText = (text: string, maxLength: number) => {
@@ -1085,6 +1084,7 @@ const Leads: React.FC = () => {
 						display: "flex",
 						flexDirection: "column",
 						pr: 2.5,
+						height: "100%",
 						"@media (max-width: 900px)": {
 							paddingRight: 0,
 							minHeight: "100vh",
@@ -1156,7 +1156,6 @@ const Leads: React.FC = () => {
 												linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/company"
 											/>
 										</Box>
-										<DomainButtonSelect />
 									</Box>
 
 									{!noContactsYet && ButtonGroup}
@@ -1281,498 +1280,474 @@ const Leads: React.FC = () => {
 							) : data.length === 0 ? (
 								<EmptyAnalyticsPlaceholder />
 							) : (
-								<Grid container spacing={1} sx={{ flex: 1 }}>
-									<Grid item xs={12}>
-										<TableContainer
-											ref={tableContainerRef}
+								<>
+									<TableContainer
+										ref={tableContainerRef}
+										sx={{
+											overflowX: "auto",
+										}}
+									>
+										<Table
+											stickyHeader
+											component={Paper}
+											aria-label="leads table"
 											sx={{
-												height: "70vh",
-												overflowX: "scroll",
-												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "63vh"
-															: "70vh"
-														: "70vh",
-												"@media (max-height: 800px)": {
-													height: "60vh",
-													maxHeight:
-														selectedFilters.length > 0
-															? hasNotification
-																? "53vh"
-																: "60vh"
-															: "70vh",
-												},
-												"@media (max-width: 400px)": {
-													height: "50vh",
-													maxHeight:
-														selectedFilters.length > 0
-															? hasNotification
-																? "53vh"
-																: "50vh"
-															: "70vh",
-												},
+												tableLayout: "fixed",
 											}}
 										>
-											<Table
-												stickyHeader
-												component={Paper}
-												aria-label="leads table"
+											<TableHead
 												sx={{
-													tableLayout: "fixed",
+													position: "relative",
 												}}
 											>
-												<TableHead sx={{ position: "relative" }}>
-													<TableRow>
-														{columns.map((column) => {
-															const {
-																key,
-																label,
-																sortable = false,
-																widths,
-															} = column;
-															const isNameColumn = key === "company_name";
-															const isActionsColumn =
-																key === "average_time_sec";
-															const hideDivider =
-																(isNameColumn && isScrolledX) ||
-																isActionsColumn;
-															const baseCellSX: SxProps<Theme> = {
-																...widths,
-																position: "sticky",
-																top: 0,
-																zIndex: 97,
-																borderBottom: "1px solid rgba(235,235,235,1)",
-																borderTop: "1px solid rgba(235,235,235,1)",
-																cursor: sortable ? "pointer" : "default",
-																borderRight: isActionsColumn
-																	? "1px solid rgba(235,235,235,1)"
-																	: "none",
-																whiteSpace: isActionsColumn ? "normal" : "wrap",
-																overflow: isActionsColumn
-																	? "visible"
-																	: "hidden",
-															};
+												<TableRow>
+													{columns.map((column) => {
+														const {
+															key,
+															label,
+															sortable = false,
+															widths,
+														} = column;
+														const isNameColumn = key === "company_name";
+														const isActionsColumn = key === "average_time_sec";
+														const hideDivider =
+															(isNameColumn && isScrolledX) || isActionsColumn;
+														const baseCellSX: SxProps<Theme> = {
+															...widths,
+															position: "sticky",
+															top: 0,
+															zIndex: 97,
+															borderBottom: "1px solid rgba(235,235,235,1)",
+															borderTop: "1px solid rgba(235,235,235,1)",
+															cursor: sortable ? "pointer" : "default",
+															borderRight: isActionsColumn
+																? "1px solid rgba(235,235,235,1)"
+																: "none",
+															whiteSpace: isActionsColumn ? "normal" : "wrap",
+															overflow: isActionsColumn ? "visible" : "hidden",
+														};
 
-															if (isNameColumn) {
-																baseCellSX.left = 0;
-																baseCellSX.zIndex = 99;
-																baseCellSX.boxShadow = isScrolledX
-																	? "3px 0px 3px rgba(0,0,0,0.2)"
-																	: "none";
-															}
+														if (isNameColumn) {
+															baseCellSX.left = 0;
+															baseCellSX.zIndex = 99;
+															baseCellSX.boxShadow = isScrolledX
+																? "3px 0px 3px rgba(0,0,0,0.2)"
+																: "none";
+														}
 
-															const className = isNameColumn
-																? "sticky-cell"
-																: undefined;
-															const onClickHandler = sortable
-																? () => handleSortRequest(key)
-																: undefined;
+														const className = isNameColumn
+															? "sticky-cell"
+															: undefined;
+														const onClickHandler = sortable
+															? () => handleSortRequest(key)
+															: undefined;
 
-															return (
-																<SmartCell
-																	key={key}
-																	cellOptions={{
-																		sx: baseCellSX,
-																		hideDivider,
-																		onClick: onClickHandler,
-																		className,
+														return (
+															<SmartCell
+																key={key}
+																cellOptions={{
+																	sx: baseCellSX,
+																	hideDivider,
+																	onClick: onClickHandler,
+																	className,
+																}}
+																contentOptions={{}}
+															>
+																<Box
+																	sx={{
+																		display: "flex",
+																		alignItems: "center",
+																		position: "relative",
+																		justifyContent: "space-between",
 																	}}
-																	contentOptions={{}}
 																>
-																	<Box
+																	<Typography
+																		variant="body2"
 																		sx={{
-																			display: "flex",
-																			alignItems: "center",
-																			position: "relative",
-																			justifyContent: "space-between",
+																			...companyStyles.table_column,
+																			borderRight: "0",
 																		}}
 																	>
-																		<Typography
-																			variant="body2"
-																			sx={{
-																				...companyStyles.table_column,
-																				borderRight: "0",
+																		{label}
+																	</Typography>
+																	{sortable && (
+																		<IconButton
+																			size="small"
+																			onClick={
+																				sortable
+																					? () => handleSortRequest(key)
+																					: undefined
+																			}
+																			style={{
+																				cursor: sortable
+																					? "pointer"
+																					: "default",
 																			}}
 																		>
-																			{label}
-																		</Typography>
-																		{sortable && (
-																			<IconButton
-																				size="small"
-																				onClick={
-																					sortable
-																						? () => handleSortRequest(key)
-																						: undefined
-																				}
-																				style={{
-																					cursor: sortable
-																						? "pointer"
-																						: "default",
-																				}}
-																			>
-																				{orderBy === key ? (
-																					order === "asc" ? (
-																						<NorthOutlinedIcon fontSize="inherit" />
-																					) : (
-																						<SouthOutlinedIcon fontSize="inherit" />
-																					)
+																			{orderBy === key ? (
+																				order === "asc" ? (
+																					<NorthOutlinedIcon fontSize="inherit" />
 																				) : (
-																					<SwapVertIcon fontSize="inherit" />
-																				)}
-																			</IconButton>
-																		)}
-																	</Box>
-																	{key === "number_of_employees" && (
-																		<HintCard
-																			card={companyTableCards["employees"]}
-																			positionLeft={-300}
-																			positionTop={80}
-																			rightSide={true}
-																			isOpenBody={
-																				companyTableHints["employees"].showBody
-																			}
-																			toggleClick={() => {
-																				if (
-																					companyTableHints["download"].showBody
-																				) {
-																					changeCompanyTableHint(
-																						"download",
-																						"showBody",
-																						"close",
-																					);
-																				}
-																				if (
-																					companyTableHints["overview"].showBody
-																				) {
-																					changeCompanyTableHint(
-																						"overview",
-																						"showBody",
-																						"close",
-																					);
-																				}
+																					<SouthOutlinedIcon fontSize="inherit" />
+																				)
+																			) : (
+																				<SwapVertIcon fontSize="inherit" />
+																			)}
+																		</IconButton>
+																	)}
+																</Box>
+																{key === "number_of_employees" && (
+																	<HintCard
+																		card={companyTableCards["employees"]}
+																		positionLeft={-300}
+																		positionTop={80}
+																		rightSide={true}
+																		isOpenBody={
+																			companyTableHints["employees"].showBody
+																		}
+																		toggleClick={() => {
+																			if (
+																				companyTableHints["download"].showBody
+																			) {
 																				changeCompanyTableHint(
-																					"employees",
-																					"showBody",
-																					"toggle",
-																				);
-																			}}
-																			closeClick={() => {
-																				changeCompanyTableHint(
-																					"employees",
+																					"download",
 																					"showBody",
 																					"close",
 																				);
-																			}}
-																		/>
-																	)}
-																	{key === "company_name" && (
-																		<HintCard
-																			card={companyTableCards["overview"]}
-																			positionLeft={110}
-																			positionTop={100}
-																			isOpenBody={
+																			}
+																			if (
 																				companyTableHints["overview"].showBody
-																			}
-																			toggleClick={() => {
-																				if (
-																					companyTableHints["download"].showBody
-																				) {
-																					changeCompanyTableHint(
-																						"download",
-																						"showBody",
-																						"close",
-																					);
-																				}
-																				if (
-																					companyTableHints["employees"]
-																						.showBody
-																				) {
-																					changeCompanyTableHint(
-																						"employees",
-																						"showBody",
-																						"close",
-																					);
-																				}
-																				changeCompanyTableHint(
-																					"overview",
-																					"showBody",
-																					"toggle",
-																				);
-																			}}
-																			closeClick={() => {
+																			) {
 																				changeCompanyTableHint(
 																					"overview",
 																					"showBody",
 																					"close",
 																				);
-																			}}
-																		/>
-																	)}
-																</SmartCell>
-															);
-														})}
-													</TableRow>
-												</TableHead>
-												<TableBody>
-													{data.map((row) => (
-														<TableRow
-															key={row.id}
-															selected={selectedRows.has(row.id)}
-															sx={{
-																backgroundColor: selectedRows.has(row.id)
-																	? "rgba(247, 247, 247, 1)"
-																	: "#fff",
-																"&:hover": {
+																			}
+																			changeCompanyTableHint(
+																				"employees",
+																				"showBody",
+																				"toggle",
+																			);
+																		}}
+																		closeClick={() => {
+																			changeCompanyTableHint(
+																				"employees",
+																				"showBody",
+																				"close",
+																			);
+																		}}
+																	/>
+																)}
+																{key === "company_name" && (
+																	<HintCard
+																		card={companyTableCards["overview"]}
+																		positionLeft={110}
+																		positionTop={100}
+																		isOpenBody={
+																			companyTableHints["overview"].showBody
+																		}
+																		toggleClick={() => {
+																			if (
+																				companyTableHints["download"].showBody
+																			) {
+																				changeCompanyTableHint(
+																					"download",
+																					"showBody",
+																					"close",
+																				);
+																			}
+																			if (
+																				companyTableHints["employees"].showBody
+																			) {
+																				changeCompanyTableHint(
+																					"employees",
+																					"showBody",
+																					"close",
+																				);
+																			}
+																			changeCompanyTableHint(
+																				"overview",
+																				"showBody",
+																				"toggle",
+																			);
+																		}}
+																		closeClick={() => {
+																			changeCompanyTableHint(
+																				"overview",
+																				"showBody",
+																				"close",
+																			);
+																		}}
+																	/>
+																)}
+															</SmartCell>
+														);
+													})}
+												</TableRow>
+											</TableHead>
+											<TableBody>
+												{data.map((row) => (
+													<TableRow
+														key={row.id}
+														selected={selectedRows.has(row.id)}
+														sx={{
+															backgroundColor: selectedRows.has(row.id)
+																? "rgba(247, 247, 247, 1)"
+																: "#fff",
+															"&:hover": {
+																backgroundColor: "rgba(247, 247, 247, 1)",
+																"& .sticky-cell": {
 																	backgroundColor: "rgba(247, 247, 247, 1)",
-																	"& .sticky-cell": {
-																		backgroundColor: "rgba(247, 247, 247, 1)",
-																	},
+																},
+															},
+															"&:last-of-type .MuiTableCell-root": {
+																borderBottom: "none",
+															},
+														}}
+													>
+														{/* Company name Column */}
+														<SmartCell
+															tooltipOptions={{
+																content: row.name,
+																always: false,
+															}}
+															cellOptions={{
+																className: "sticky-cell",
+																onClick: (e) => {
+																	e.stopPropagation();
+																	handleOpenPopup(row);
+																},
+																sx: {
+																	zIndex: 9,
+																	position: "sticky",
+																	left: 0,
+																	backgroundColor: "#fff",
+																	boxShadow: isScrolledX
+																		? "3px 0px 3px #00000033"
+																		: "none",
+																},
+																hideDivider: isScrolledX,
+															}}
+															contentOptions={{
+																sx: {
+																	cursor: "pointer",
+																	color: "rgba(56, 152, 252, 1)",
 																},
 															}}
 														>
-															{/* Company name Column */}
-															<SmartCell
-																tooltipOptions={{
-																	content: row.name,
-																	always: false,
-																}}
-																cellOptions={{
-																	className: "sticky-cell",
-																	onClick: (e) => {
-																		e.stopPropagation();
-																		handleOpenPopup(row);
-																	},
-																	sx: {
-																		zIndex: 9,
-																		position: "sticky",
-																		left: 0,
-																		backgroundColor: "#fff",
-																		boxShadow: isScrolledX
-																			? "3px 0px 3px #00000033"
-																			: "none",
-																	},
-																	hideDivider: isScrolledX,
-																}}
-																contentOptions={{
-																	sx: {
-																		cursor: "pointer",
-																		color: "rgba(56, 152, 252, 1)",
-																	},
-																}}
-															>
-																{row.name ? row.name : "--"}
-															</SmartCell>
+															{row.name ? row.name : "--"}
+														</SmartCell>
 
-															{/* Company phone Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		position: "relative",
-																	},
-																}}
-																tooltipOptions={{
-																	content: row.phone?.split(",")[0] || "--",
-																}}
-															>
-																{row.phone?.split(",")[0] || "--"}
-															</SmartCell>
+														{/* Company phone Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content: row.phone?.split(",")[0] || "--",
+															}}
+														>
+															{row.phone?.split(",")[0] || "--"}
+														</SmartCell>
 
-															{/* Company linkedIn Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		position: "relative",
-																	},
-																	onClick: () => {
-																		if (row.linkedin_url) {
-																			window.open(
-																				`https://${row.linkedin_url}`,
-																				"_blank",
-																			);
-																		}
-																	},
-																}}
-																tooltipOptions={{
-																	content: row.linkedin_url
-																		? row.linkedin_url.replace(
-																				"linkedin.com/company/",
-																				"",
-																			)
-																		: "--",
-																}}
-																contentOptions={{
-																	sx: {
-																		color: row.linkedin_url
-																			? "rgba(56, 152, 252, 1)"
-																			: "",
-																		cursor: row.linkedin_url
-																			? "pointer"
-																			: "default",
-																	},
-																}}
-															>
-																{row.linkedin_url ? (
-																	<>
-																		<Image
-																			src="/linkedIn.svg"
-																			alt="linkedIn"
-																			width={16}
-																			height={16}
-																			style={{ marginRight: "2px" }}
-																		/>
-																		/
-																		{row.linkedin_url.replace(
+														{/* Company linkedIn Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+																onClick: () => {
+																	if (row.linkedin_url) {
+																		window.open(
+																			`https://${row.linkedin_url}`,
+																			"_blank",
+																		);
+																	}
+																},
+															}}
+															tooltipOptions={{
+																content: row.linkedin_url
+																	? row.linkedin_url.replace(
 																			"linkedin.com/company/",
 																			"",
-																		)}
-																	</>
-																) : (
-																	"--"
-																)}
-															</SmartCell>
+																		)
+																	: "--",
+															}}
+															contentOptions={{
+																sx: {
+																	color: row.linkedin_url
+																		? "rgba(56, 152, 252, 1)"
+																		: "",
+																	cursor: row.linkedin_url
+																		? "pointer"
+																		: "default",
+																},
+															}}
+														>
+															{row.linkedin_url ? (
+																<>
+																	<Image
+																		src="/linkedIn.svg"
+																		alt="linkedIn"
+																		width={16}
+																		height={16}
+																		style={{
+																			marginRight: "2px",
+																		}}
+																	/>
+																	/
+																	{row.linkedin_url.replace(
+																		"linkedin.com/company/",
+																		"",
+																	)}
+																</>
+															) : (
+																"--"
+															)}
+														</SmartCell>
 
-															{/* Employess Visited  Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		...companyStyles.table_array,
-																		position: "relative",
-																	},
-																}}
-																tooltipOptions={{
-																	content: row.employees_visited || "--",
-																}}
-															>
-																{row.employees_visited || "--"}
-															</SmartCell>
+														{/* Employess Visited  Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	...companyStyles.table_array,
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content: row.employees_visited || "--",
+															}}
+														>
+															{row.employees_visited || "--"}
+														</SmartCell>
 
-															{/* Employess Visited date  Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		position: "relative",
-																	},
-																}}
-																tooltipOptions={{
-																	content: row.visited_date
-																		? (() => {
-																				const [day, month, year] =
-																					row.visited_date.split(".");
-																				return `${month}/${day}/${year}`;
-																			})()
-																		: "--",
-																}}
-															>
-																{row.visited_date
+														{/* Employess Visited date  Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content: row.visited_date
 																	? (() => {
 																			const [day, month, year] =
 																				row.visited_date.split(".");
 																			return `${month}/${day}/${year}`;
 																		})()
-																	: "--"}
-															</SmartCell>
+																	: "--",
+															}}
+														>
+															{row.visited_date
+																? (() => {
+																		const [day, month, year] =
+																			row.visited_date.split(".");
+																		return `${month}/${day}/${year}`;
+																	})()
+																: "--"}
+														</SmartCell>
 
-															{/* Company revenue  Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		position: "relative",
-																	},
-																}}
-																tooltipOptions={{
-																	content: row.company_revenue || "--",
-																}}
-															>
-																{row.company_revenue || "--"}
-															</SmartCell>
+														{/* Company revenue  Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content: row.company_revenue || "--",
+															}}
+														>
+															{row.company_revenue || "--"}
+														</SmartCell>
 
-															{/* Company employee count  Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		position: "relative",
-																	},
-																	onClick: () => {
-																		setCompanyEmployeesOpen(true);
-																		setCompanyName(row.name);
-																		setCompanyId(row.id);
-																	},
-																}}
-																tooltipOptions={{
-																	content: row.employee_count || "--",
-																}}
-																contentOptions={{
-																	sx: {
-																		cursor: "pointer",
-																		color: "rgba(56, 152, 252, 1)",
-																	},
-																}}
-															>
-																{row.employee_count || "--"}
-															</SmartCell>
+														{/* Company employee count  Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+																onClick: () => {
+																	setCompanyEmployeesOpen(true);
+																	setCompanyName(row.name);
+																	setCompanyId(row.id);
+																},
+															}}
+															tooltipOptions={{
+																content: row.employee_count || "--",
+															}}
+															contentOptions={{
+																sx: {
+																	cursor: "pointer",
+																	color: "rgba(56, 152, 252, 1)",
+																},
+															}}
+														>
+															{row.employee_count || "--"}
+														</SmartCell>
 
-															{/* Company location  Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		position: "relative",
-																	},
-																}}
-																tooltipOptions={{
-																	content:
-																		row.city || row.state
-																			? [capitalizeCity(row.city), row.state]
-																					.filter(Boolean)
-																					.join(", ")
-																			: "--",
-																}}
-															>
-																{row.city || row.state
-																	? [capitalizeCity(row.city), row.state]
-																			.filter(Boolean)
-																			.join(", ")
-																	: "--"}
-															</SmartCell>
+														{/* Company location  Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content:
+																	row.city || row.state
+																		? [capitalizeCity(row.city), row.state]
+																				.filter(Boolean)
+																				.join(", ")
+																		: "--",
+															}}
+														>
+															{row.city || row.state
+																? [capitalizeCity(row.city), row.state]
+																		.filter(Boolean)
+																		.join(", ")
+																: "--"}
+														</SmartCell>
 
-															{/* Company industry  Column */}
-															<SmartCell
-																cellOptions={{
-																	sx: {
-																		"::after": { content: "none" },
-																		// cursor: row.industry ? "pointer" : "default",
-																		borderRight:
-																			"1px solid rgba(235,235,235,1)",
+														{/* Company industry  Column */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	"::after": {
+																		content: "none",
 																	},
-																	// onClick: (e) => {
-																	//     if (row.industry) {
-																	//         handleOpenPopover(e, row.industry);
-																	//     }
-																	// },
-																}}
-																tooltipOptions={{
-																	content: row.industry || "--",
-																}}
-															>
-																{row.industry && row.industry.length > 30
-																	? `${row.industry.slice(0, 20)}...`
-																	: row.industry || "--"}
-															</SmartCell>
-														</TableRow>
-													))}
-												</TableBody>
-											</Table>
-										</TableContainer>
-										<PaginationComponent
-											countRows={count_companies ?? 0}
-											page={page}
-											rowsPerPage={rowsPerPage}
-											onPageChange={handleChangePage}
-											onRowsPerPageChange={handleChangeRowsPerPage}
-											rowsPerPageOptions={rowsPerPageOptions}
-										/>
-									</Grid>
-								</Grid>
+																	// cursor: row.industry ? "pointer" : "default",
+																	borderRight: "1px solid rgba(235,235,235,1)",
+																},
+																// onClick: (e) => {
+																//     if (row.industry) {
+																//         handleOpenPopover(e, row.industry);
+																//     }
+																// },
+															}}
+															tooltipOptions={{
+																content: row.industry || "--",
+															}}
+														>
+															{row.industry && row.industry.length > 30
+																? `${row.industry.slice(0, 20)}...`
+																: row.industry || "--"}
+														</SmartCell>
+													</TableRow>
+												))}
+											</TableBody>
+										</Table>
+									</TableContainer>
+									<Box
+										ref={paginatorRef}
+										sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+									>
+										<Paginator tableMode {...paginationProps} />
+									</Box>
+								</>
 							)}
 							{showSlider && <Slider />}
 						</Box>

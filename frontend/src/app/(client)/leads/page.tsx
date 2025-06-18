@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import {
 	Box,
 	Grid,
@@ -14,6 +14,8 @@ import {
 	Paper,
 	IconButton,
 	Chip,
+	SxProps,
+	Theme,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -37,7 +39,10 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
 import CalendarPopup from "@/components/CustomCalendar";
-import PaginationComponent from "@/components/PaginationComponent";
+import PaginationComponent, {
+	Paginator,
+	PaginatorTable,
+} from "@/components/PaginationComponent";
 import UnlockButton from "./UnlockButton";
 import { useNotification } from "@/context/NotificationContext";
 import GettingStartedSection from "@/components/GettingStartedSection";
@@ -45,9 +50,12 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import HintCard from "../components/HintCard";
 import { useLeadsHints } from "./context/LeadsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
-import DomainButtonSelect from "../components/NavigationDomainButton";
 import PixelPopup from "@/components/PixelPopup";
 import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/EmptyPlaceholder";
+import { usePagination } from "@/hooks/usePagination";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
+import { SmartCell } from "@/components/table";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -75,8 +83,6 @@ const Leads: React.FC = () => {
 	const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
 	const dropdownOpen = Boolean(dropdownEl);
 	const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [activeFilter, setActiveFilter] = useState<string>("");
 	const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
 		null,
@@ -100,6 +106,17 @@ const Leads: React.FC = () => {
 		useLeadsHints();
 	const searchParams = useSearchParams();
 	const [showPixel, setPixelPopup] = useState<boolean | null>(null);
+
+	const paginationProps = usePagination(count_leads ?? 0);
+	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const tableContainerRef = useRef<HTMLDivElement>(null);
+	const { isScrolledX, isScrolledY } = useScrollShadow(
+		tableContainerRef,
+		data.length,
+	);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 111, [
+		data.length,
+	]);
 
 	useEffect(() => {
 		if (searchParams.get("pixel_installed")) setPixelPopup(true);
@@ -278,13 +295,6 @@ const Leads: React.FC = () => {
 
 	const installPixel = () => {
 		router.push("/dashboard");
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
 	};
 
 	const fetchData = async ({
@@ -1173,16 +1183,12 @@ const Leads: React.FC = () => {
 		}
 	};
 
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
-	};
-
 	const formatTimeSpent = (seconds: number): string => {
 		if (!seconds) return "--";
 
-		const hours = Math.floor(seconds / 3600); // Получаем часы
-		const minutes = Math.floor((seconds % 3600) / 60); // Получаем оставшиеся минуты
-		const remainingSeconds = seconds % 60; // Получаем оставшиеся секунды
+		const hours = Math.floor(seconds / 3600);
+		const minutes = Math.floor((seconds % 3600) / 60);
+		const remainingSeconds = seconds % 60;
 
 		let result = "";
 		if (hours > 0) {
@@ -1207,6 +1213,65 @@ const Leads: React.FC = () => {
 	};
 
 	const noContactsYet = data.length === 0;
+
+	const columns = [
+		{
+			key: "name",
+			label: "Name",
+			sortable: true,
+			widths: { width: "100px", minWidth: "100px", maxWidth: "25vw" },
+		},
+		{
+			key: "personal_email",
+			label: "Personal Email",
+			widths: { width: "140px", minWidth: "140px", maxWidth: "25vw" },
+		},
+		{
+			key: "business_email",
+			label: "Business Email",
+			widths: { width: "140px", minWidth: "140px", maxWidth: "25vw" },
+		},
+		{
+			key: "mobile_phone",
+			label: "Mobile phone",
+			widths: { width: "120px", minWidth: "120px", maxWidth: "120px" },
+		},
+		{
+			key: "first_visited_date",
+			label: "Visited date",
+			sortable: true,
+			widths: { width: "140px", minWidth: "140px", maxWidth: "120px" },
+		},
+		{
+			key: "funnel",
+			label: "Lead Status",
+			widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+		},
+		{
+			key: "status",
+			label: "Visitor Type",
+			widths: {
+				width: "150px",
+				minWidth: "150px",
+				maxWidth: "150px",
+			},
+		},
+		{
+			key: "number_of_page",
+			label: "URL Visited",
+			widths: {
+				width: "120px",
+				minWidth: "120px",
+				maxWidth: "120px",
+			},
+		},
+		{
+			key: "average_time_sec",
+			label: "Time on site",
+			sortable: true,
+			widths: { width: "130px", minWidth: "130px", maxWidth: "130px" },
+		},
+	];
 
 	const ButtonGroup = (
 		<>
@@ -1513,7 +1578,6 @@ const Leads: React.FC = () => {
 											linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/resolved-contacts"
 										/>
 									</Box>
-									<DomainButtonSelect />
 								</Box>
 								<Box
 									sx={{
@@ -1676,151 +1740,149 @@ const Leads: React.FC = () => {
 							<Grid container spacing={1} sx={{}}>
 								<Grid item xs={12}>
 									<TableContainer
+										ref={tableContainerRef}
 										sx={{
-											height: "70vh",
-											overflowX: "scroll",
-											maxHeight:
-												selectedFilters.length > 0
-													? hasNotification
-														? "63vh"
-														: "70vh"
-													: "70vh",
-											"@media (max-height: 800px)": {
-												height: "60vh",
-												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "53vh"
-															: "60vh"
-														: "70vh",
-											},
-											"@media (max-width: 400px)": {
-												height: "50vh",
-												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "53vh"
-															: "50vh"
-														: "70vh",
-											},
+											overflowX: "auto",
 										}}
 									>
 										<Table
 											stickyHeader
-											component={Paper}
 											aria-label="leads table"
+											component={Paper}
 											sx={{
 												tableLayout: "fixed",
-												border: "1px solid rgba(235, 235, 235, 1)",
 											}}
 										>
 											<TableHead>
 												<TableRow>
-													{[
-														{ key: "name", label: "Name", sortable: true },
-														{ key: "personal_email", label: "Personal Email" },
-														{ key: "business_email", label: "Business Email" },
-														{ key: "mobile_phone", label: "Mobile phone" },
-														{
-															key: "first_visited_date",
-															label: "Visited date",
-															sortable: true,
-														},
-														{ key: "funnel", label: "Lead Status" },
-														{ key: "status", label: "Visitor Type" },
-														{ key: "number_of_page", label: "URL Visited" },
-														{
-															key: "average_time_sec",
-															label: "Time on site",
-															sortable: true,
-														},
-													].map(({ key, label, sortable = false }) => (
-														<TableCell
-															key={key}
-															sx={{
-																...leadsStyles.table_column,
-																...(key === "name" && {
-																	position: "sticky",
-																	left: 0,
-																	zIndex: 99,
-																}),
-																...(key === "average_time_sec" && {
-																	...leadsStyles.table_array,
-																	"::after": { content: "none" },
-																}),
-															}}
-															onClick={
-																sortable
-																	? () => handleSortRequest(key)
-																	: undefined
-															}
-															style={{
-																cursor: sortable ? "pointer" : "default",
-															}}
-														>
-															<Box
-																sx={{ display: "flex", alignItems: "center" }}
+													{columns.map((col) => {
+														const {
+															key,
+															label,
+															sortable = false,
+															widths,
+														} = col;
+
+														const isNameColumn = key === "name";
+														const isActionsColumn = key === "average_time_sec";
+														const hideDivider =
+															(isNameColumn && isScrolledX) || isActionsColumn;
+														const baseCellSX: SxProps<Theme> = {
+															...widths,
+															position: "sticky",
+															top: 0,
+															zIndex: 97,
+															borderTop: "1px solid rgba(235,235,235,1)",
+															borderBottom: "1px solid rgba(235,235,235,1)",
+															cursor: sortable ? "pointer" : "default",
+															borderRight: isActionsColumn
+																? "1px solid rgba(235,235,235,1)"
+																: "none",
+															whiteSpace:
+																isActionsColumn || isNameColumn
+																	? "normal"
+																	: "wrap",
+															overflow:
+																isActionsColumn || isNameColumn
+																	? "visible"
+																	: "hidden",
+														};
+														if (isNameColumn) {
+															baseCellSX.left = 0;
+															baseCellSX.zIndex = 99;
+															baseCellSX.boxShadow = isScrolledX
+																? "3px 0px 3px rgba(0,0,0,0.2)"
+																: "none";
+														}
+														const className = isNameColumn
+															? "sticky-cell"
+															: undefined;
+														const onClickHandler = sortable
+															? () => handleSortRequest(key)
+															: undefined;
+														return (
+															<SmartCell
+																key={key}
+																cellOptions={{
+																	sx: baseCellSX,
+																	hideDivider,
+																	onClick: onClickHandler,
+																	className,
+																}}
 															>
-																<Typography
-																	variant="body2"
+																<Box
 																	sx={{
-																		...leadsStyles.table_column,
-																		borderRight: "0",
+																		display: "flex",
+																		alignItems: "center",
+																		position: "relative",
+																		justifyContent: "space-between",
 																	}}
 																>
-																	{label}
-																</Typography>
-																{sortable && orderBy === key && (
-																	<IconButton size="small" sx={{ ml: 1 }}>
-																		{order === "asc" ? (
-																			<ArrowUpwardIcon fontSize="inherit" />
-																		) : (
-																			<ArrowDownwardIcon fontSize="inherit" />
-																		)}
-																	</IconButton>
-																)}
-															</Box>
+																	<Typography
+																		variant="body2"
+																		sx={{
+																			...leadsStyles.table_column,
+																			borderRight: "0",
+																		}}
+																	>
+																		{label}
+																	</Typography>
+																	{sortable && orderBy === key && (
+																		<IconButton size="small" sx={{ ml: 1 }}>
+																			{order === "asc" ? (
+																				<ArrowUpwardIcon fontSize="inherit" />
+																			) : (
+																				<ArrowDownwardIcon fontSize="inherit" />
+																			)}
+																		</IconButton>
+																	)}
+																</Box>
 
-															{key === "name" && (
-																<Box
-																	onClick={(e) => e.stopPropagation()}
-																	sx={{ position: "absolute", top: 0, left: 0 }}
-																>
-																	<HintCard
-																		card={tableHintCards["overview"]}
-																		positionLeft={135}
-																		positionTop={73}
-																		isOpenBody={
-																			leadsTableHints["overview"].showBody
-																		}
-																		toggleClick={() => {
-																			if (
-																				leadsTableHints["download"].showBody
-																			) {
+																{key === "name" && (
+																	<Box
+																		onClick={(e) => e.stopPropagation()}
+																		sx={{
+																			position: "absolute",
+																			top: 0,
+																			left: 0,
+																		}}
+																	>
+																		<HintCard
+																			card={tableHintCards["overview"]}
+																			positionLeft={135}
+																			positionTop={73}
+																			isOpenBody={
+																				leadsTableHints["overview"].showBody
+																			}
+																			toggleClick={() => {
+																				if (
+																					leadsTableHints["download"].showBody
+																				) {
+																					changeLeadsTableHint(
+																						"download",
+																						"showBody",
+																						"close",
+																					);
+																				}
 																				changeLeadsTableHint(
-																					"download",
+																					"overview",
+																					"showBody",
+																					"toggle",
+																				);
+																			}}
+																			closeClick={() => {
+																				changeLeadsTableHint(
+																					"overview",
 																					"showBody",
 																					"close",
 																				);
-																			}
-																			changeLeadsTableHint(
-																				"overview",
-																				"showBody",
-																				"toggle",
-																			);
-																		}}
-																		closeClick={() => {
-																			changeLeadsTableHint(
-																				"overview",
-																				"showBody",
-																				"close",
-																			);
-																		}}
-																	/>
-																</Box>
-															)}
-														</TableCell>
-													))}
+																			}}
+																		/>
+																	</Box>
+																)}
+															</SmartCell>
+														);
+													})}
 												</TableRow>
 											</TableHead>
 											<TableBody>
@@ -1829,53 +1891,67 @@ const Leads: React.FC = () => {
 														key={row.id}
 														selected={selectedRows.has(row.id)}
 														sx={{
-															backgroundColor: selectedRows.has(row.id)
-																? "rgba(247, 247, 247, 1)"
-																: "#fff",
+															backgroundColor: "#fff",
 															"&:hover": {
 																backgroundColor: "rgba(247, 247, 247, 1)",
 																"& .sticky-cell": {
 																	backgroundColor: "rgba(247, 247, 247, 1)",
 																},
 															},
+															"&:last-of-type .MuiTableCell-root": {
+																borderBottom: "none",
+															},
 														}}
 													>
-														<TableCell
-															className="sticky-cell"
-															sx={{
-																...leadsStyles.table_array,
-																cursor: "pointer",
-																position: "sticky",
-																left: "0",
-																zIndex: 9,
-																color: "rgba(56, 152, 252, 1)",
-																backgroundColor: "#fff",
+														{/* Name */}
+														<SmartCell
+															cellOptions={{
+																className: "sticky-cell",
+																sx: {
+																	zIndex: 9,
+																	position: "sticky",
+																	left: 0,
+																	backgroundColor: "#fff",
+																	boxShadow: isScrolledX
+																		? "3px 0px 3px #00000033"
+																		: "none",
+																	color: "rgba(56, 152, 252, 1)",
+																	cursor: "pointer",
+																},
+																hideDivider: isScrolledX,
+																onClick: (e) => {
+																	e.stopPropagation();
+																	handleOpenPopup(row);
+																},
 															}}
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenPopup(row);
+															tooltipOptions={{
+																content: row.first_name + " " + row.last_name,
 															}}
 														>
 															{row.first_name} {row.last_name}
-														</TableCell>
-														<TableCell
-															sx={{
-																...leadsStyles.table_array,
-																position: "relative",
+														</SmartCell>
+
+														{/* Personal Email */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															contentOptions={{}}
+															tooltipOptions={{
+																content: row.is_active
+																	? row.personal_emails
+																		? row.personal_emails.split(",")[0]
+																		: "--"
+																	: "",
 															}}
 														>
 															{row.is_active ? (
 																row.personal_emails ? (
-																	<Tooltip
-																		title={row.personal_emails.split(",")[0]}
-																	>
-																		<span className="truncate-email">
-																			{truncateText(
-																				row.personal_emails.split(",")[0],
-																				16,
-																			)}
-																		</span>
-																	</Tooltip>
+																	<span className="truncate-email">
+																		{row.personal_emails.split(",")[0]}
+																	</span>
 																) : (
 																	<span className="truncate-email">--</span>
 																)
@@ -1885,27 +1961,29 @@ const Leads: React.FC = () => {
 																	label="Unlock email"
 																/>
 															)}
-														</TableCell>
+														</SmartCell>
 
 														{/* Business Email Column */}
-														<TableCell
-															sx={{
-																...leadsStyles.table_array,
-																position: "relative",
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															contentOptions={{}}
+															tooltipOptions={{
+																content: row.is_active
+																	? row.business_email
+																		? row.business_email.split(",")[0]
+																		: "--"
+																	: "",
 															}}
 														>
 															{row.is_active ? (
 																row.business_email ? (
-																	<Tooltip
-																		title={row.business_email.split(",")[0]}
-																	>
-																		<span className="truncate-email">
-																			{truncateText(
-																				row.business_email.split(",")[0],
-																				16,
-																			)}
-																		</span>
-																	</Tooltip>
+																	<span className="truncate-email">
+																		{row.business_email.split(",")[0]}
+																	</span>
 																) : (
 																	<span className="truncate-email">--</span>
 																)
@@ -1915,13 +1993,25 @@ const Leads: React.FC = () => {
 																	label="Unlock email"
 																/>
 															)}
-														</TableCell>
+														</SmartCell>
 
 														{/* Mobile Phone Column */}
-														<TableCell
-															sx={{
-																...leadsStyles.table_array_phone,
-																position: "relative",
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content: row.is_active
+																	? row.mobile_phone
+																		? row.mobile_phone.split(",")[0]
+																		: row.personal_phone
+																			? row.personal_phone.split(",")[0]
+																			: row.direct_number
+																				? row.direct_number.split(",")[0]
+																				: "--"
+																	: "",
 															}}
 														>
 															{row.is_active ? (
@@ -1940,12 +2030,23 @@ const Leads: React.FC = () => {
 																	label="Unlock mobile number"
 																/>
 															)}
-														</TableCell>
+														</SmartCell>
 
-														<TableCell
-															sx={{
-																...leadsStyles.table_array,
-																position: "relative",
+														{/* Lead Status */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content: row.first_visited_date
+																	? (() => {
+																			const [day, month, year] =
+																				row.first_visited_date.split(".");
+																			return `${month}/${day}/${year}`;
+																		})()
+																	: "--",
 															}}
 														>
 															{row.first_visited_date
@@ -1955,12 +2056,18 @@ const Leads: React.FC = () => {
 																		return `${month}/${day}/${year}`;
 																	})()
 																: "--"}
-														</TableCell>
+														</SmartCell>
 
-														<TableCell
-															sx={{
-																...leadsStyles.table_array,
-																position: "relative",
+														{/* Visitor Type */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content:
+																	formatFunnelText(row.behavior_type) || "--",
 															}}
 														>
 															<Box
@@ -1984,12 +2091,18 @@ const Leads: React.FC = () => {
 															>
 																{formatFunnelText(row.behavior_type) || "--"}
 															</Box>
-														</TableCell>
+														</SmartCell>
 
-														<TableCell
-															sx={{
-																...leadsStyles.table_array,
-																position: "relative",
+														{/* URL Visited */}
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																},
+															}}
+															tooltipOptions={{
+																content:
+																	formatFunnelText(row.visitor_type) || "--",
 															}}
 														>
 															<Box
@@ -2012,18 +2125,19 @@ const Leads: React.FC = () => {
 															>
 																{formatFunnelText(row.visitor_type) || "--"}
 															</Box>
-														</TableCell>
+														</SmartCell>
 
-														<TableCell
-															onClick={(e) => {
-																e.stopPropagation();
-																handleOpenPopup(row);
-															}}
-															sx={{
-																...leadsStyles.table_array,
-																position: "relative",
-																cursor: "pointer",
-																color: "rgba(56, 152, 252, 1)",
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																	cursor: "pointer",
+																	color: "rgba(56, 152, 252, 1)",
+																},
+																onClick: (e) => {
+																	e.stopPropagation();
+																	handleOpenPopup(row);
+																},
 															}}
 														>
 															<Box onClick={(e) => e.stopPropagation()}>
@@ -2130,31 +2244,36 @@ const Leads: React.FC = () => {
 																	</span>
 																</Tooltip>
 															</Box>
-														</TableCell>
-
-														<TableCell
-															sx={{
-																...leadsStyles.table_array,
-																"::after": { content: "none" },
+														</SmartCell>
+														<SmartCell
+															cellOptions={{
+																sx: {
+																	position: "relative",
+																	borderRight: "1px solid rgba(235,235,235,1)",
+																},
+																hideDivider: true,
+															}}
+															tooltipOptions={{
+																content: row.average_time_sec
+																	? formatTimeSpent(row.average_time_sec)
+																	: "--",
 															}}
 														>
 															{row.average_time_sec
 																? formatTimeSpent(row.average_time_sec)
 																: "--"}
-														</TableCell>
+														</SmartCell>
 													</TableRow>
 												))}
 											</TableBody>
 										</Table>
 									</TableContainer>
-									<PaginationComponent
-										countRows={count_leads ?? 0}
-										page={page}
-										rowsPerPage={rowsPerPage}
-										onPageChange={handleChangePage}
-										onRowsPerPageChange={handleChangeRowsPerPage}
-										rowsPerPageOptions={rowsPerPageOptions}
-									/>
+									<Box
+										ref={paginatorRef}
+										sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+									>
+										<Paginator tableMode {...paginationProps} />
+									</Box>
 								</Grid>
 							</Grid>
 						)}

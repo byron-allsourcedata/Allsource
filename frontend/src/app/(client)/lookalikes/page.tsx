@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import {
 	Box,
 	Typography,
@@ -45,6 +45,9 @@ import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { width } from "@mui/system";
 import { useLookalikesHints } from "./context/LookalikesHintsContext";
 import HintCard from "../components/HintCard";
+import { usePagination } from "@/hooks/usePagination";
+import { Paginator } from "@/components/PaginationComponent";
+import { useSearchParams } from "next/navigation";
 
 const cardData: CardData[] = [
 	{
@@ -103,7 +106,7 @@ interface TableRowData {
 	target_schema: string;
 }
 
-const CreateLookalikePage: React.FC = () => {
+const CreateLookalike: React.FC = () => {
 	const router = useRouter();
 	const {
 		lookalikesTableHints: lookalikesTableHints,
@@ -119,16 +122,23 @@ const CreateLookalikePage: React.FC = () => {
 	const [lookalikesData, setLookalikeData] = useState<TableRowData[]>([]);
 	const [sourceCount, setSourceCount] = useState<number>(0);
 	const [showNotification, setShowNotification] = useState(true);
+	const searchParams = useSearchParams();
+	const isDebug = searchParams.get("is_debug") === "true";
 	const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] =
 		useState<boolean>(false);
 
 	// Pagination and Sorting
 	const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(15);
+
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [orderBy, setOrderBy] = useState<keyof TableRowData>();
 	const [order, setOrder] = useState<"asc" | "desc">();
+
+	const paginationProps = {
+		...usePagination(count_lookalikes ?? 0),
+		rowsPerPageOptions,
+	};
+	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
 
 	// Calendary
 	const [selectedDates, setSelectedDates] = useState<{
@@ -173,17 +183,6 @@ const CreateLookalikePage: React.FC = () => {
 
 	const handleCalendarClose = () => {
 		setCalendarAnchorEl(null);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
-	};
-
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
 	};
 
 	const handleDateChange = (dates: {
@@ -318,7 +317,7 @@ const CreateLookalikePage: React.FC = () => {
 
 			let url = `/audience-lookalikes?page=${
 				page + 1
-			}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+			}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}&is_debug=${isDebug}`;
 			if (startEpoch !== null && endEpoch !== null) {
 				url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
 			}
@@ -408,7 +407,15 @@ const CreateLookalikePage: React.FC = () => {
 				end: appliedDates.end,
 			},
 		});
-	}, [appliedDates, orderBy, order, page, rowsPerPage, selectedFilters]);
+	}, [
+		appliedDates,
+		orderBy,
+		order,
+		page,
+		rowsPerPage,
+		selectedFilters,
+		isDebug,
+	]);
 
 	const handleResetFilters = async () => {
 		const url = `/audience-lookalikes`;
@@ -809,61 +816,9 @@ const CreateLookalikePage: React.FC = () => {
 								onSort={handleSort}
 								refreshData={refreshData}
 								loader_for_table={loaderForTable}
+								paginationProps={paginationProps}
+								isDebug={isDebug}
 							/>
-							<Box
-								sx={{
-									display: "flex",
-									justifyContent: "flex-end",
-									flexGrow: 1,
-									alignItems: "end",
-									padding: "24px 0 0",
-									"@media (max-width: 600px)": { padding: "12px 0 0" },
-								}}
-							>
-								{count_lookalikes && count_lookalikes > 10 ? (
-									<Box
-										sx={{
-											display: "flex",
-											justifyContent: "flex-end",
-											padding: "24px 0 0",
-											"@media (max-width: 600px)": { padding: "12px 0 0" },
-										}}
-									>
-										<CustomTablePagination
-											count={count_lookalikes ?? 0}
-											page={page}
-											rowsPerPage={rowsPerPage}
-											onPageChange={handleChangePage}
-											onRowsPerPageChange={handleChangeRowsPerPage}
-											rowsPerPageOptions={rowsPerPageOptions}
-										/>
-									</Box>
-								) : (
-									<Box
-										display="flex"
-										justifyContent="flex-end"
-										alignItems="center"
-										sx={{
-											padding: "16px",
-											backgroundColor: "#fff",
-											borderRadius: "4px",
-											"@media (max-width: 600px)": { padding: "12px" },
-										}}
-									>
-										<Typography
-											sx={{
-												fontFamily: "Nunito Sans",
-												fontWeight: "400",
-												fontSize: "12px",
-												lineHeight: "16px",
-												marginRight: "16px",
-											}}
-										>
-											{`1 - ${count_lookalikes} of ${count_lookalikes}`}
-										</Typography>
-									</Box>
-								)}
-							</Box>
 						</Box>
 					) : (
 						<>
@@ -1009,6 +964,14 @@ const CreateLookalikePage: React.FC = () => {
 				/>
 			</Box>
 		</Box>
+	);
+};
+
+const CreateLookalikePage: React.FC = () => {
+	return (
+		<Suspense fallback={<CustomizedProgressBar />}>
+			<CreateLookalike />
+		</Suspense>
 	);
 };
 

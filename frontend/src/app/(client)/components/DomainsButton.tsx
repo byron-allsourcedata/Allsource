@@ -7,13 +7,16 @@ import {
 	TextField,
 	IconButton,
 	InputAdornment,
-	colors,
+	Dialog,
+	DialogContent,
+	DialogActions,
+	DialogContentText,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import React, { useEffect, useState, useMemo } from "react";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CloseIcon from "@mui/icons-material/Close";
-import { showToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { UpgradePlanPopup } from "./UpgradePlanPopup";
 import { AxiosError } from "axios";
 import { SliderProvider } from "@/context/SliderContext";
@@ -22,6 +25,10 @@ import Image from "next/image";
 import ConfirmDeleteDomain from "./DeleteDomain";
 import CustomizedProgressBar from "../../../components/FirstLevelLoader";
 import { fetchUserData } from "@/services/meService";
+import WysiwygIcon from "@mui/icons-material/Wysiwyg";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import { display } from "@mui/system";
+import { useRouter } from "next/navigation";
 
 interface Domain {
 	id: number;
@@ -251,6 +258,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 };
 
 const DomainButton: React.FC = () => {
+	const router = useRouter();
 	const [domains, setDomains] = useState<Domain[]>([]);
 	const [currentDomain, setCurrentDomain] = useState("");
 	const [showDomainPopup, setDomainPopup] = useState(false);
@@ -320,24 +328,51 @@ const DomainButton: React.FC = () => {
 		handleDropdownClose();
 	};
 
-	const handleDeleteDomain = (domain: Domain) => {
-		if (sessionStorage.getItem("current_domain") === domain.domain) {
-			sessionStorage.removeItem("current_domain");
+	const handleDeleteDomain = async (domain: Domain) => {
+		try {
+			setLoading(true);
+
+			const currentDomain = sessionStorage.getItem("current_domain");
+
+			await axiosInstance.delete(`/domains/${domain.id}`, {
+				data: { domain: domain.domain },
+			});
+
+			showToast("Successfully removed domain");
+
+			const savedMeRaw = sessionStorage.getItem("me");
+			if (savedMeRaw) {
+				const savedMe = JSON.parse(savedMeRaw);
+				const updatedDomains = (savedMe.domains || []).filter(
+					(d: Domain) => d.id !== domain.id,
+				);
+
+				if (currentDomain === domain.domain) {
+					if (updatedDomains.length > 0) {
+						sessionStorage.setItem("current_domain", updatedDomains[0].domain);
+					} else {
+						sessionStorage.removeItem("current_domain");
+					}
+				}
+
+				savedMe.domains = updatedDomains;
+				sessionStorage.setItem("me", JSON.stringify(savedMe));
+
+				setDomains(updatedDomains);
+			}
+
+			setDeleteDomainPopup(false);
+
+			window.location.reload();
+		} catch (err) {
+			console.error("Failed to delete domain", err);
+			showErrorToast("Failed to delete domain. Please try again.");
+		} finally {
+			setLoading(false);
 		}
-		const savedMe = sessionStorage.getItem("me");
-		const savedDomains = savedMe ? JSON.parse(savedMe).domains : [];
-		const updatedDomains = savedDomains.filter(
-			(d: Domain) => d.id !== domain.id,
-		);
-		const updatedMe = savedMe ? JSON.parse(savedMe) : {};
-		updatedMe.domains = updatedDomains;
-		sessionStorage.setItem("me", JSON.stringify(updatedMe));
-		setDomains((prevDomains) => prevDomains.filter((d) => d.id !== domain.id));
-		window.location.reload();
-		setDeleteDomainPopup(false);
 	};
 
-	if (domains.length === 0) return null;
+	//if (domains.length === 0) return null;
 
 	return (
 		<>
@@ -353,28 +388,32 @@ const DomainButton: React.FC = () => {
 				onClick={handleDropdownClick}
 				sx={{
 					textTransform: "none",
-					color: "rgba(128, 128, 128, 1)",
-					border: "1px solid rgba(184, 184, 184, 1)",
-					borderRadius: "3.27px",
-					padding: "7px",
+					color: "#000",
+					borderRadius: "4px",
+					padding: "6px 4px",
+					display: "flex",
+					alignItems: "center",
+					gap: "8px",
+					minWidth: "170px",
+					justifyContent: "space-between",
+					"&:hover": {
+						backgroundColor: "transparent",
+					},
 				}}
 			>
-				<Typography
-					className="second-sub-title"
-					sx={{
-						marginRight: "0.5em",
-						letterSpacing: "-0.02em",
-						textAlign: "left",
-						color: "rgba(98, 98, 98, 1) !important",
-					}}
-				>
-					{currentDomain !== ""
-						? currentDomain
-						: domains.length > 0
-							? domains[0].domain
-							: "Loading..."}
-				</Typography>
-				<ExpandMoreIcon sx={{ width: "20px", height: "20px" }} />
+				<Box display="flex" alignItems="center" gap="8px" ml={1.125}>
+					<WysiwygIcon sx={{ color: "#666", minWidth: "1.5rem" }} />
+					<Typography variant="body2">
+						{currentDomain !== ""
+							? currentDomain.replace("https://", "")
+							: domains.length > 0
+								? domains[0].domain.replace("https://", "")
+								: "Loading..."}
+					</Typography>
+				</Box>
+				<Box display="flex" flexDirection="column" pr={0}>
+					<UnfoldMoreIcon sx={{ fontSize: "22px", color: "#666" }} />
+				</Box>
 			</Button>
 			<Menu
 				id="account-dropdown"
@@ -382,38 +421,41 @@ const DomainButton: React.FC = () => {
 				anchorEl={dropdownEl}
 				open={dropdownOpen}
 				onClose={handleDropdownClose}
-				sx={{ "& .MuiMenu-list": { padding: "2px" } }}
+				sx={{ "& .MuiMenu-list": { pt: 0, pr: 0, pl: 0, pb: 0 } }}
 			>
-				{sourcePlatform !== "shopify" && (
-					<Box>
-						<MenuItem onClick={() => setDomainPopup(true)}>
-							<Typography
-								className="second-sub-title"
-								sx={{ color: "rgba(56, 152, 252, 1) " }}
-							>
-								{" "}
-								+ Add new domain
-							</Typography>
-						</MenuItem>
-						<AddDomainPopup
-							open={showDomainPopup}
-							handleClose={() => setDomainPopup(false)}
-							handleSave={handleSave}
-						/>
-					</Box>
-				)}
+				<Box>
+					<MenuItem
+						onClick={() => setDomainPopup(true)}
+						sx={{ borderBottom: "0.5px solid #CDCDCD" }}
+					>
+						<Typography
+							className="second-sub-title"
+							sx={{
+								color: "rgba(56, 152, 252, 1) ",
+								textAlign: "center",
+								width: "100%",
+							}}
+						>
+							{" "}
+							+ Add new domain
+						</Typography>
+					</MenuItem>
+					<AddDomainPopup
+						open={showDomainPopup}
+						handleClose={() => setDomainPopup(false)}
+						handleSave={handleSave}
+					/>
+				</Box>
 				<Box
 					sx={{
 						display: "flex",
 						justifyContent: "flex-end",
 						width: "100%",
-						marginTop: "0.5rem",
 					}}
 				>
 					<span
 						style={{
-							border: "1px solid #CDCDCD",
-							marginBottom: "0.5rem",
+							border: "0.5px solid #CDCDCD",
 							width: "100%",
 						}}
 					></span>
@@ -454,17 +496,78 @@ const DomainButton: React.FC = () => {
 							>
 								{domain.domain.replace("https://", "")}
 							</Typography>
-							{domains.length > 1 && (
-								<HoverableImage
-									srcDefault="/trash-03.svg"
-									srcHover="/trash-03-active.svg"
-									alt="Remove"
-									onClick={() => handleShowDelete(domain)}
-								/>
-							)}
+							<Box sx={{ display: "flex", gap: 1 }}>
+								{domain.is_pixel_installed == true && (
+									<Box
+										sx={{
+											backgroundColor: "rgba(234, 248, 221, 1)",
+											borderRadius: "200px",
+											padding: "4px 8px",
+											justifyContent: "flex-end",
+											display: "flex",
+										}}
+									>
+										<Typography
+											variant="body2"
+											sx={{
+												color: "rgba(43, 91, 0, 1)",
+												fontFamily: "Roboto",
+												fontWeight: "400",
+												fontSize: "12px",
+											}}
+										>
+											Pixel Installed
+										</Typography>
+									</Box>
+								)}
+								{domains.length > 1 && (
+									<HoverableImage
+										srcDefault="/trash-03.svg"
+										srcHover="/trash-03-active.svg"
+										alt="Remove"
+										onClick={() => handleShowDelete(domain)}
+									/>
+								)}
+							</Box>
 						</Box>
 					</MenuItem>
 				))}
+				<Box
+					sx={{
+						display: "flex",
+						justifyContent: "flex-end",
+						width: "100%",
+					}}
+				>
+					<span
+						style={{
+							border: "0.5px solid #CDCDCD",
+							width: "100%",
+						}}
+					></span>
+				</Box>
+				<Box>
+					<MenuItem
+						onClick={() => router.push("/management")}
+						sx={{ borderBottom: "0.5px solid #CDCDCD" }}
+					>
+						<Typography
+							className="second-sub-title"
+							sx={{
+								color: "rgba(56, 152, 252, 1) !important",
+								textAlign: "center",
+								width: "100%",
+								textDecoration: "underline",
+								"&:hover": {
+									textDecoration: "none",
+								},
+							}}
+						>
+							{" "}
+							Go to all domains
+						</Typography>
+					</MenuItem>
+				</Box>
 			</Menu>
 			{loading && (
 				<Box
@@ -485,12 +588,81 @@ const DomainButton: React.FC = () => {
 				</Box>
 			)}
 			{deleteDomainPopup && deleteDomain && (
-				<ConfirmDeleteDomain
+				// <ConfirmDeleteDomain
+				// 	open={deleteDomainPopup}
+				// 	domain={deleteDomain}
+				// 	handleClose={() => setDeleteDomainPopup(false)}
+				// 	handleDelete={handleDeleteDomain}
+				// />
+				<Dialog
 					open={deleteDomainPopup}
-					domain={deleteDomain}
-					handleClose={() => setDeleteDomainPopup(false)}
-					handleDelete={handleDeleteDomain}
-				/>
+					onClose={() => setDeleteDomainPopup(false)}
+					PaperProps={{
+						sx: {
+							padding: 2,
+
+							width: "fit-content",
+							borderRadius: 2,
+							border: "1px solid rgba(175, 175, 175, 1)",
+						},
+					}}
+				>
+					<Typography
+						className="first-sub-title"
+						sx={{ paddingLeft: 1, pt: 1, pb: 0 }}
+					>
+						Confirm Deletion
+					</Typography>
+					<DialogContent sx={{ padding: 2, pr: 1, pl: 1 }}>
+						<DialogContentText className="table-data">
+							Are you sure you want to delete this domain -{" "}
+							<span style={{ fontWeight: "600" }}>{deleteDomain?.domain} </span>
+							?
+						</DialogContentText>
+					</DialogContent>
+					<DialogActions>
+						<Button
+							className="second-sub-title"
+							onClick={() => setDeleteDomainPopup(false)}
+							sx={{
+								backgroundColor: "#fff",
+								color: "rgba(56, 152, 252, 1) !important",
+								fontSize: "14px",
+								textTransform: "none",
+								padding: "0.75em 1em",
+								border: "1px solid rgba(56, 152, 252, 1)",
+								maxWidth: "50px",
+								maxHeight: "30px",
+								"&:hover": {
+									backgroundColor: "#fff",
+									boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+								},
+							}}
+						>
+							Cancel
+						</Button>
+						<Button
+							className="second-sub-title"
+							onClick={() => handleDeleteDomain(deleteDomain)}
+							sx={{
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff !important",
+								fontSize: "14px",
+								textTransform: "none",
+								padding: "0.75em 1em",
+								border: "1px solid rgba(56, 152, 252, 1)",
+								maxWidth: "60px",
+								maxHeight: "30px",
+								"&:hover": {
+									backgroundColor: "rgba(56, 152, 252, 1)",
+									boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+								},
+							}}
+						>
+							Delete
+						</Button>
+					</DialogActions>
+				</Dialog>
 			)}
 		</>
 	);

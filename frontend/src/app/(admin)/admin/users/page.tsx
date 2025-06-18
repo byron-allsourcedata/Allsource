@@ -46,8 +46,10 @@ interface UserData {
 	is_trial?: boolean;
 	last_login: string;
 	invited_by_email?: string;
+	subscription_plan?: string;
 	role: string[];
 	pixel_installed_count?: number;
+	contacts_count?: number;
 	sources_count?: number;
 	lookalikes_count?: number;
 	credits_count?: number;

@@ -59,7 +59,6 @@ import { SliderProvider } from "../../../context/SliderContext";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import CustomTablePagination from "@/components/CustomTablePagination";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "../sources/components/ThreeDotsLoader";
@@ -69,9 +68,7 @@ import FilterPopup from "./components/SmartAudienceFilter";
 import DetailsPopup from "./components/SmartAudienceDataSources";
 import ValidationsHistoryPopup from "./components/SmartAudienceValidationHistory";
 import CalendarPopup from "@/components/CustomCalendar";
-import TableCustomCell from "../sources/components/table/TableCustomCell";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
-import FirstTimeScreen from "./components/FirstTimeScreen";
 import {
 	FirstTimeScreenCommonVariant1,
 	BuilderIntro,
@@ -81,6 +78,9 @@ import HintCard from "../components/HintCard";
 import { useSmartsHints } from "./context/SmartsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import SmartCell from "@/components/table/SmartCell";
+import { Paginator } from "@/components/PaginationComponent";
+import { usePagination } from "@/hooks/usePagination";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface Smarts {
 	id: string;
@@ -334,8 +334,6 @@ const SmartAudiences: React.FC = () => {
 	const [loaderForTable, setLoaderForTable] = useState(false);
 	const [isFirstLoad, setIsFirstLoad] = useState(true);
 
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [count_smarts_audience, setCount] = useState<number | null>(null);
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
@@ -382,6 +380,9 @@ const SmartAudiences: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 135, [
+		data.length,
+	]);
 
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -390,6 +391,10 @@ const SmartAudiences: React.FC = () => {
 	const [hasSource, setHasSource] = useState(false);
 	const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] =
 		useState<boolean>(false);
+
+	const paginationProps = usePagination(count_smarts_audience ?? 0);
+
+	const { page, rowsPerPage, setPage, setRowsPerPage } = paginationProps;
 
 	const checkHasSource = async () => {
 		const response = await axiosInstance.get(
@@ -967,844 +972,1261 @@ const SmartAudiences: React.FC = () => {
 		>
 			{loading && <CustomizedProgressBar />}
 			{!loading && (
-				<>
-					<Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-						<Box>
-							{data.length !== 0 && (
-								<Box
-									sx={{
-										display: "flex",
-										flexDirection: "row",
-										alignItems: "center",
-										justifyContent: "space-between",
-										marginTop: hasNotification ? "1rem" : "0.5rem",
-										flexWrap: "wrap",
-										gap: "15px",
-										"@media (max-width: 900px)": {
-											marginTop: hasNotification ? "3rem" : "1.125rem",
-										},
-										"@media (max-width: 600px)": {
-											marginTop: hasNotification ? "2rem" : "0rem",
-										},
-									}}
-								>
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "row",
-											alignItems: "center",
-											gap: 1,
-										}}
-									>
-										<Typography className="first-sub-title">
-											Smart Audience
-										</Typography>
-										<CustomToolTip
-											title={
-												"Discover AI-powered Smart Audiences based on your sorces and lookalikes."
-											}
-											linkText="Learn more"
-											linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-										/>
-									</Box>
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "row",
-											alignItems: "center",
-											position: "relative",
-											gap: "15px",
-											pt: "4px",
-											pr: 2,
-											"@media (max-width: 900px)": {
-												gap: "8px",
-											},
-										}}
-									>
-										<Button
-											variant="outlined"
-											sx={{
-												height: "40px",
-												borderRadius: "4px",
-												textTransform: "none",
-												fontSize: "14px",
-												lineHeight: "19.6px",
-												fontWeight: "500",
-												color: "rgba(56, 152, 252, 1)",
-												borderColor: "rgba(56, 152, 252, 1)",
-												"&:hover": {
-													backgroundColor: "rgba(80, 82, 178, 0.1)",
-													borderColor: "rgba(56, 152, 252, 1)",
-												},
-											}}
-											onClick={() => {
-												router.push("/smart-audiences/builder");
-											}}
-										>
-											Generate Smart Audience
-										</Button>
-										<Button
-											onClick={handleFilterPopupOpen}
-											disabled={data?.length === 0}
-											sx={{
-												textTransform: "none",
-												color:
-													selectedFilters.length > 0
-														? "rgba(56, 152, 252, 1)"
-														: "rgba(128, 128, 128, 1)",
-												border:
-													selectedFilters.length > 0
-														? "1px solid rgba(56, 152, 252, 1)"
-														: "1px solid rgba(184, 184, 184, 1)",
-												borderRadius: "4px",
-												padding: "8px",
-												opacity: data?.length === 0 ? "0.5" : "1",
-												minWidth: "auto",
-												maxHeight: "40px",
-												maxWidth: "40px",
-												position: "relative",
-												"@media (max-width: 900px)": {
-													border: "none",
-													padding: 0,
-												},
-												"&:hover": {
-													backgroundColor: "transparent",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													color: "rgba(56, 152, 252, 1)",
-													"& .MuiSvgIcon-root": {
-														color: "rgba(56, 152, 252, 1)",
-													},
-												},
-											}}
-										>
-											<FilterListIcon
-												fontSize="medium"
-												sx={{
-													color:
-														selectedFilters.length > 0
-															? "rgba(56, 152, 252, 1)"
-															: "rgba(128, 128, 128, 1)",
-												}}
-											/>
-
-											{selectedFilters.length > 0 && (
-												<Box
-													sx={{
-														position: "absolute",
-														top: 6,
-														right: 8,
-														width: "10px",
-														height: "10px",
-														backgroundColor: "red",
-														borderRadius: "50%",
-														"@media (max-width: 900px)": {
-															top: -1,
-															right: 1,
-														},
-													}}
-												/>
-											)}
-										</Button>
-
-										<HintCard
-											card={tableHintCards["builder"]}
-											positionLeft={-420}
-											positionTop={20}
-											rightSide={true}
-											isOpenBody={smartsTableHints["builder"].showBody}
-											toggleClick={() => {
-												if (smartsTableHints["actions"].showBody) {
-													changeSmartsTableHint("actions", "showBody", "close");
-												}
-												changeSmartsTableHint("builder", "showBody", "toggle");
-											}}
-											closeClick={() => {
-												changeSmartsTableHint("builder", "showBody", "close");
-											}}
-										/>
-										<Button
-											disabled={data?.length === 0}
-											aria-controls={
-												isCalendarOpen ? "calendar-popup" : undefined
-											}
-											aria-haspopup="true"
-											aria-expanded={isCalendarOpen ? "true" : undefined}
-											onClick={handleCalendarClick}
-											sx={{
-												textTransform: "none",
-												color: "rgba(128, 128, 128, 1)",
-												border: formattedDates
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid rgba(184, 184, 184, 1)",
-												borderRadius: "4px",
-												padding: "8px",
-												opacity: data?.length === 0 ? "0.5" : "1",
-												minWidth: "auto",
-												"@media (max-width: 900px)": {
-													border: "none",
-													padding: 0,
-												},
-												"&:hover": {
-													backgroundColor: "transparent",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													color: "rgba(56, 152, 252, 1)",
-													"& .MuiSvgIcon-root": {
-														color: "rgba(56, 152, 252, 1)",
-													},
-												},
-											}}
-										>
-											<DateRangeIcon
-												fontSize="medium"
-												sx={{
-													color: formattedDates
-														? "rgba(56, 152, 252, 1)"
-														: "rgba(128, 128, 128, 1)",
-												}}
-											/>
-											<Typography
-												variant="body1"
-												sx={{
-													fontFamily: "Nunito Sans",
-													fontSize: "14px",
-													fontWeight: "600",
-													lineHeight: "19.6px",
-													textAlign: "left",
-													color: formattedDates
-														? "rgba(56, 152, 252, 1)"
-														: "rgba(128, 128, 128, 1)",
-													"@media (max-width: 600px)": {
-														display: "none",
-													},
-												}}
-											>
-												{formattedDates}
-											</Typography>
-										</Button>
-									</Box>
-								</Box>
-							)}
-
+				<Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+					<Box>
+						{data.length !== 0 && (
 							<Box
 								sx={{
-									flex: 1,
 									display: "flex",
-									flexDirection: "column",
-									pr: 2,
-									maxWidth: "100%",
+									flexDirection: "row",
+									alignItems: "center",
+									justifyContent: "space-between",
+									marginTop: hasNotification ? "1rem" : "0.5rem",
+									flexWrap: "wrap",
+									gap: "15px",
 									"@media (max-width: 900px)": {
-										pt: "2px",
+										marginTop: hasNotification ? "3rem" : "1.125rem",
+									},
+									"@media (max-width: 600px)": {
+										marginTop: hasNotification ? "2rem" : "0rem",
 									},
 								}}
 							>
 								<Box
 									sx={{
 										display: "flex",
-										flexDirection: "column",
-										height: "100%",
+										flexDirection: "row",
+										alignItems: "center",
+										gap: 1,
+									}}
+								>
+									<Typography className="first-sub-title">
+										Smart Audience
+									</Typography>
+									<CustomToolTip
+										title={
+											"Discover AI-powered Smart Audiences based on your sorces and lookalikes."
+										}
+										linkText="Learn more"
+										linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+									/>
+								</Box>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "row",
+										alignItems: "center",
+										position: "relative",
+										gap: "15px",
+										pt: "4px",
+										pr: 2,
 										"@media (max-width: 900px)": {
-											paddingRight: 0,
-											minHeight: "100vh",
+											gap: "8px",
 										},
+									}}
+								>
+									<Button
+										variant="outlined"
+										sx={{
+											height: "40px",
+											borderRadius: "4px",
+											textTransform: "none",
+											fontSize: "14px",
+											lineHeight: "19.6px",
+											fontWeight: "500",
+											color: "rgba(56, 152, 252, 1)",
+											borderColor: "rgba(56, 152, 252, 1)",
+											"&:hover": {
+												backgroundColor: "rgba(80, 82, 178, 0.1)",
+												borderColor: "rgba(56, 152, 252, 1)",
+											},
+										}}
+										onClick={() => {
+											router.push("/smart-audiences/builder");
+										}}
+									>
+										Generate Smart Audience
+									</Button>
+									<Button
+										onClick={handleFilterPopupOpen}
+										disabled={data?.length === 0}
+										sx={{
+											textTransform: "none",
+											color:
+												selectedFilters.length > 0
+													? "rgba(56, 152, 252, 1)"
+													: "rgba(128, 128, 128, 1)",
+											border:
+												selectedFilters.length > 0
+													? "1px solid rgba(56, 152, 252, 1)"
+													: "1px solid rgba(184, 184, 184, 1)",
+											borderRadius: "4px",
+											padding: "8px",
+											opacity: data?.length === 0 ? "0.5" : "1",
+											minWidth: "auto",
+											maxHeight: "40px",
+											maxWidth: "40px",
+											position: "relative",
+											"@media (max-width: 900px)": {
+												border: "none",
+												padding: 0,
+											},
+											"&:hover": {
+												backgroundColor: "transparent",
+												border: "1px solid rgba(56, 152, 252, 1)",
+												color: "rgba(56, 152, 252, 1)",
+												"& .MuiSvgIcon-root": {
+													color: "rgba(56, 152, 252, 1)",
+												},
+											},
+										}}
+									>
+										<FilterListIcon
+											fontSize="medium"
+											sx={{
+												color:
+													selectedFilters.length > 0
+														? "rgba(56, 152, 252, 1)"
+														: "rgba(128, 128, 128, 1)",
+											}}
+										/>
+
+										{selectedFilters.length > 0 && (
+											<Box
+												sx={{
+													position: "absolute",
+													top: 6,
+													right: 8,
+													width: "10px",
+													height: "10px",
+													backgroundColor: "red",
+													borderRadius: "50%",
+													"@media (max-width: 900px)": {
+														top: -1,
+														right: 1,
+													},
+												}}
+											/>
+										)}
+									</Button>
+
+									<HintCard
+										card={tableHintCards["builder"]}
+										positionLeft={-420}
+										positionTop={20}
+										rightSide={true}
+										isOpenBody={smartsTableHints["builder"].showBody}
+										toggleClick={() => {
+											if (smartsTableHints["actions"].showBody) {
+												changeSmartsTableHint("actions", "showBody", "close");
+											}
+											changeSmartsTableHint("builder", "showBody", "toggle");
+										}}
+										closeClick={() => {
+											changeSmartsTableHint("builder", "showBody", "close");
+										}}
+									/>
+									<Button
+										disabled={data?.length === 0}
+										aria-controls={
+											isCalendarOpen ? "calendar-popup" : undefined
+										}
+										aria-haspopup="true"
+										aria-expanded={isCalendarOpen ? "true" : undefined}
+										onClick={handleCalendarClick}
+										sx={{
+											textTransform: "none",
+											color: "rgba(128, 128, 128, 1)",
+											border: formattedDates
+												? "1px solid rgba(56, 152, 252, 1)"
+												: "1px solid rgba(184, 184, 184, 1)",
+											borderRadius: "4px",
+											padding: "8px",
+											opacity: data?.length === 0 ? "0.5" : "1",
+											minWidth: "auto",
+											"@media (max-width: 900px)": {
+												border: "none",
+												padding: 0,
+											},
+											"&:hover": {
+												backgroundColor: "transparent",
+												border: "1px solid rgba(56, 152, 252, 1)",
+												color: "rgba(56, 152, 252, 1)",
+												"& .MuiSvgIcon-root": {
+													color: "rgba(56, 152, 252, 1)",
+												},
+											},
+										}}
+									>
+										<DateRangeIcon
+											fontSize="medium"
+											sx={{
+												color: formattedDates
+													? "rgba(56, 152, 252, 1)"
+													: "rgba(128, 128, 128, 1)",
+											}}
+										/>
+										<Typography
+											variant="body1"
+											sx={{
+												fontFamily: "Nunito Sans",
+												fontSize: "14px",
+												fontWeight: "600",
+												lineHeight: "19.6px",
+												textAlign: "left",
+												color: formattedDates
+													? "rgba(56, 152, 252, 1)"
+													: "rgba(128, 128, 128, 1)",
+												"@media (max-width: 600px)": {
+													display: "none",
+												},
+											}}
+										>
+											{formattedDates}
+										</Typography>
+									</Button>
+								</Box>
+							</Box>
+						)}
+
+						<Box
+							sx={{
+								flex: 1,
+								display: "flex",
+								flexDirection: "column",
+								pr: 2,
+								maxWidth: "100%",
+								"@media (max-width: 900px)": {
+									pt: "2px",
+								},
+							}}
+						>
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									height: "100%",
+									"@media (max-width: 900px)": {
+										paddingRight: 0,
+										minHeight: "100vh",
+									},
+								}}
+							>
+								<Box
+									sx={{
+										flex: 1,
+										display: "flex",
+										flexDirection: "column",
 									}}
 								>
 									<Box
 										sx={{
-											flex: 1,
 											display: "flex",
-											flexDirection: "column",
+											flexDirection: "row",
+											gap: 1,
+											mt: 2,
+											overflowX: "auto",
+											"@media (max-width: 600px)": { mb: 1 },
 										}}
 									>
-										<Box
-											sx={{
-												display: "flex",
-												flexDirection: "row",
-												gap: 1,
-												mt: 2,
-												overflowX: "auto",
-												"@media (max-width: 600px)": { mb: 1 },
-											}}
-										>
-											{/* CHIPS */}
-											{selectedFilters.length > 0 && (
+										{/* CHIPS */}
+										{selectedFilters.length > 0 && (
+											<Chip
+												className="second-sub-title"
+												label="Clear all"
+												onClick={handleResetFilters}
+												sx={{
+													color: "rgba(56, 152, 252, 1) !important",
+													backgroundColor: "transparent",
+													lineHeight: "20px !important",
+													fontWeight: "400 !important",
+													borderRadius: "4px",
+												}}
+											/>
+										)}
+										{selectedFilters.map((filter) => {
+											let displayValue = filter.value;
+											return (
 												<Chip
-													className="second-sub-title"
-													label="Clear all"
-													onClick={handleResetFilters}
+													className="paragraph"
+													key={filter.label}
+													label={`${filter.label}: ${
+														displayValue.charAt(0).toUpperCase() +
+														displayValue.slice(1)
+													}`}
+													onDelete={() => handleDeleteFilter(filter)}
+													deleteIcon={
+														<CloseIcon
+															sx={{
+																backgroundColor: "transparent",
+																color: "#828282 !important",
+																fontSize: "14px !important",
+															}}
+														/>
+													}
 													sx={{
-														color: "rgba(56, 152, 252, 1) !important",
-														backgroundColor: "transparent",
-														lineHeight: "20px !important",
-														fontWeight: "400 !important",
-														borderRadius: "4px",
+														borderRadius: "4.5px",
+														backgroundColor: "rgba(80, 82, 178, 0.10)",
+														color: "#5F6368 !important",
+														lineHeight: "16px !important",
 													}}
 												/>
-											)}
-											{selectedFilters.map((filter) => {
-												let displayValue = filter.value;
-												return (
-													<Chip
-														className="paragraph"
-														key={filter.label}
-														label={`${filter.label}: ${
-															displayValue.charAt(0).toUpperCase() +
-															displayValue.slice(1)
-														}`}
-														onDelete={() => handleDeleteFilter(filter)}
-														deleteIcon={
-															<CloseIcon
-																sx={{
-																	backgroundColor: "transparent",
-																	color: "#828282 !important",
-																	fontSize: "14px !important",
+											);
+										})}
+									</Box>
+									<Box
+										sx={{
+											flex: 1,
+											display: "flex",
+											flexGrow: 1,
+											flexDirection: "column",
+											maxWidth: "100%",
+											pl: 0,
+											pr: 0,
+											pt: "7px",
+											"@media (max-width: 900px)": {
+												pt: "2px",
+											},
+										}}
+									>
+										{data.length === 0 && (
+											<>
+												<FirstTimeScreenCommonVariant1
+													Header={{
+														TextTitle: "Generate Smart Audience",
+														TextSubtitle:
+															"Combine your existing sources and lookalikes to create a dynamic, high-performing smart audience",
+														link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder",
+													}}
+													InfoNotification={{
+														Text: "On this page you can build, refine  and validate algorithmically-generated audiences in one place. Leverage machine learning to automatically target high-value users.",
+													}}
+													WarningNotification={{
+														condition: !hasSource,
+														ctaUrl: "/sources",
+														ctaLabel: "Create Source",
+														message:
+															"You need to import at least one source to generate smart audience",
+													}}
+													Content={
+														<>
+															<BuilderIntro
+																steps={[
+																	{
+																		title: "Select Use Case",
+																		subtitle:
+																			"Select between digital advertising platforms and direct marketing channels.",
+																	},
+																	{
+																		title: "Choose Target Type",
+																		subtitle:
+																			"Select B2B for business audiences, B2C for consumer targeting, or Both to create parallel segments.",
+																	},
+																	{
+																		title: "Audience Refinement",
+																		subtitle:
+																			"Combine your data sources. Select which source or lookalike to include or exclude.",
+																	},
+																	{
+																		title: "Validation",
+																		subtitle:
+																			"Before finalizing your audience, verify contact data quality through our validation system. *This step is only  for direct marketing.",
+																	},
+																]}
+																previewProps={{
+																	tableSrc: "/smart-audience-synergy.svg",
+																	headerTitle: "Next-Level Audience Synergy",
+																	caption:
+																		"Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins.",
+																	onOpenPopup: handleOpenPopup,
+																	onBegin: () =>
+																		router.push("/smart-audiences/builder"),
+																	beginDisabled: !hasSource,
+																	buttonLabel: "Create Smart Audience",
+																	sx: {},
 																}}
 															/>
-														}
-														sx={{
-															borderRadius: "4.5px",
-															backgroundColor: "rgba(80, 82, 178, 0.10)",
-															color: "#5F6368 !important",
-															lineHeight: "16px !important",
-														}}
-													/>
-												);
-											})}
-										</Box>
-										<Box
-											sx={{
-												flex: 1,
-												display: "flex",
-												flexGrow: 1,
-												flexDirection: "column",
-												maxWidth: "100%",
-												pl: 0,
-												pr: 0,
-												pt: "7px",
-												"@media (max-width: 900px)": {
-													pt: "2px",
-												},
-											}}
-										>
-											{data.length === 0 && (
-												<>
-													<FirstTimeScreenCommonVariant1
-														Header={{
-															TextTitle: "Generate Smart Audience",
-															TextSubtitle:
-																"Combine your existing sources and lookalikes to create a dynamic, high-performing smart audience",
-															link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder",
-														}}
-														InfoNotification={{
-															Text: "On this page you can build, refine  and validate algorithmically-generated audiences in one place. Leverage machine learning to automatically target high-value users.",
-														}}
-														WarningNotification={{
-															condition: !hasSource,
-															ctaUrl: "/sources",
-															ctaLabel: "Create Source",
-															message:
-																"You need to import at least one source to generate smart audience",
-														}}
-														Content={
-															<>
-																<BuilderIntro
-																	steps={[
-																		{
-																			title: "Select Use Case",
-																			subtitle:
-																				"Select between digital advertising platforms and direct marketing channels.",
-																		},
-																		{
-																			title: "Choose Target Type",
-																			subtitle:
-																				"Select B2B for business audiences, B2C for consumer targeting, or Both to create parallel segments.",
-																		},
-																		{
-																			title: "Audience Refinement",
-																			subtitle:
-																				"Combine your data sources. Select which source or lookalike to include or exclude.",
-																		},
-																		{
-																			title: "Validation",
-																			subtitle:
-																				"Before finalizing your audience, verify contact data quality through our validation system. *This step is only  for direct marketing.",
-																		},
-																	]}
-																	previewProps={{
-																		tableSrc: "/smart-audience-synergy.svg",
-																		headerTitle: "Next-Level Audience Synergy",
-																		caption:
-																			"Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins.",
-																		onOpenPopup: handleOpenPopup,
-																		onBegin: () =>
-																			router.push("/smart-audiences/builder"),
-																		beginDisabled: !hasSource,
-																		buttonLabel: "Create Smart Audience",
-																		sx: {},
-																	}}
-																/>
-															</>
-														}
-														HelpCard={{
-															headline: "Need Help with Smart Audiences?",
-															description:
-																"Get a free 30-minute consultation to optimize your AI-powered audience segments.",
-															helpPoints: [
-																{
-																	title: "Audience Quality Check ",
-																	description: "Validate segment accuracy",
-																},
-																{
-																	title: "Performance Tuning",
-																	description:
-																		"Adjust parameters for better results",
-																},
-																{
-																	title: "Expansion Strategies",
-																	description: "Scale what's working",
-																},
-															],
-														}}
-														LeftMenu={{
-															header: "Build Smarter Audiences",
-															subtitle: "Free 30-Min AI Optimization Session",
-															image: {
-																url: "/smart-audience-synergy.svg",
-																width: 600,
-																height: 300,
+														</>
+													}
+													HelpCard={{
+														headline: "Need Help with Smart Audiences?",
+														description:
+															"Get a free 30-minute consultation to optimize your AI-powered audience segments.",
+														helpPoints: [
+															{
+																title: "Audience Quality Check ",
+																description: "Validate segment accuracy",
 															},
-															items: [
-																{
-																	Icon: SettingsIcon,
-																	title: "Audience Quality Check",
-																	subtitle: `We’ll audit your current Smart Audiences to ensure optimal performance.`,
-																},
-																{
-																	Icon: SpeedIcon,
-																	title: "Performance Tuning",
-																	subtitle: `Fine-tune your settings for maximum conversions.`,
-																},
-																{
-																	Icon: MovingIcon,
-																	title: "Expansion Strategies",
-																	subtitle:
-																		"Safely scale your best audiences without quality loss.",
-																},
-															],
-														}}
-														ContentStyleSX={{
-															display: "flex",
-															flexDirection: "column",
-															justifyContent: "center",
-															alignItems: "center",
-															maxWidth: "840px",
-															margin: "0 auto",
-															mt: 2,
-														}}
+															{
+																title: "Performance Tuning",
+																description:
+																	"Adjust parameters for better results",
+															},
+															{
+																title: "Expansion Strategies",
+																description: "Scale what's working",
+															},
+														],
+													}}
+													LeftMenu={{
+														header: "Build Smarter Audiences",
+														subtitle: "Free 30-Min AI Optimization Session",
+														image: {
+															url: "/smart-audience-synergy.svg",
+															width: 600,
+															height: 300,
+														},
+														items: [
+															{
+																Icon: SettingsIcon,
+																title: "Audience Quality Check",
+																subtitle: `We’ll audit your current Smart Audiences to ensure optimal performance.`,
+															},
+															{
+																Icon: SpeedIcon,
+																title: "Performance Tuning",
+																subtitle: `Fine-tune your settings for maximum conversions.`,
+															},
+															{
+																Icon: MovingIcon,
+																title: "Expansion Strategies",
+																subtitle:
+																	"Safely scale your best audiences without quality loss.",
+															},
+														],
+													}}
+													ContentStyleSX={{
+														display: "flex",
+														flexDirection: "column",
+														justifyContent: "center",
+														alignItems: "center",
+														maxWidth: "840px",
+														margin: "0 auto",
+														mt: 2,
+													}}
+												/>
+												{popupOpen && !hasSource && (
+													<WelcomePopup
+														open={popupOpen}
+														onClose={() => setPopupOpen(false)}
+														variant={
+															isPixelInstalledAnywhere ? "alternate" : "welcome"
+														}
 													/>
-													{popupOpen && !hasSource && (
-														<WelcomePopup
-															open={popupOpen}
-															onClose={() => setPopupOpen(false)}
-															variant={
-																isPixelInstalledAnywhere
-																	? "alternate"
-																	: "welcome"
-															}
-														/>
-													)}
-												</>
-											)}
+												)}
+											</>
+										)}
 
-											{data.length !== 0 && (
-												<Grid container spacing={1} sx={{ flex: 1 }}>
-													<Grid
-														item
-														xs={12}
+										{data.length !== 0 && (
+											<Grid container spacing={1} sx={{ flex: 1 }}>
+												<Grid
+													item
+													xs={12}
+													sx={{
+														display: "flex",
+														flexDirection: "column",
+														justifyContent: "space-between",
+													}}
+												>
+													<TableContainer
+														ref={tableContainerRef}
 														sx={{
-															display: "flex",
-															flexDirection: "column",
-															justifyContent: "space-between",
+															overflowX: "auto",
 														}}
 													>
-														<TableContainer
-															ref={tableContainerRef}
+														<Table
+															stickyHeader
 															sx={{
-																height: "70vh",
-																overflowX: "scroll",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "63vh"
-																			: "70vh"
-																		: "70vh",
-																"@media (max-height: 800px)": {
-																	height: "60vh",
-																	maxHeight:
-																		selectedFilters.length > 0
-																			? hasNotification
-																				? "53vh"
-																				: "60vh"
-																			: "70vh",
-																},
-																"@media (max-width: 400px)": {
-																	height: "50vh",
-																	maxHeight:
-																		selectedFilters.length > 0
-																			? hasNotification
-																				? "53vh"
-																				: "50vh"
-																			: "70vh",
-																},
+																tableLayout: "fixed",
 															}}
 														>
-															<Table
-																stickyHeader
-																component={Paper}
-																sx={{
-																	tableLayout: "fixed",
-																}}
-															>
-																<TableHead sx={{ position: "relative" }}>
-																	<TableRow>
-																		{columns.map((col) => {
-																			const {
-																				key,
-																				label,
-																				sortable = false,
-																				widths,
-																			} = col;
+															<TableHead sx={{ position: "relative" }}>
+																<TableRow>
+																	{columns.map((col) => {
+																		const {
+																			key,
+																			label,
+																			sortable = false,
+																			widths,
+																		} = col;
 
-																			const isNameColumn = key === "name";
-																			const isActionsColumn = key === "actions";
-																			const hideDivider =
-																				(isNameColumn && isScrolledX) ||
-																				isActionsColumn;
-																			const baseCellSX: SxProps<Theme> = {
-																				...widths,
-																				position: "sticky",
-																				top: 0,
-																				zIndex: 97,
-																				borderBottom: "none",
-																				borderTop:
-																					"1px solid rgba(235,235,235,1)",
-																				cursor: sortable
-																					? "pointer"
-																					: "default",
-																				borderRight: isActionsColumn
-																					? "1px solid rgba(235,235,235,1)"
-																					: "none",
-																				whiteSpace:
-																					isActionsColumn || isNameColumn
-																						? "normal"
-																						: "wrap",
-																				overflow:
-																					isActionsColumn || isNameColumn
-																						? "visible"
-																						: "hidden",
-																			};
-																			if (isNameColumn) {
-																				baseCellSX.left = 0;
-																				baseCellSX.zIndex = 99;
-																				baseCellSX.boxShadow = isScrolledX
-																					? "3px 0px 3px rgba(0,0,0,0.2)"
-																					: "none";
-																			}
-																			const className = isNameColumn
-																				? "sticky-cell"
-																				: undefined;
-																			const onClickHandler = sortable
-																				? () => handleSortRequest(key)
-																				: undefined;
-																			return (
-																				<SmartCell
-																					key={key}
-																					cellOptions={{
-																						sx: baseCellSX,
-																						hideDivider,
-																						onClick: onClickHandler,
-																						className,
+																		const isNameColumn = key === "name";
+																		const isActionsColumn = key === "actions";
+																		const hideDivider =
+																			(isNameColumn && isScrolledX) ||
+																			isActionsColumn;
+																		const baseCellSX: SxProps<Theme> = {
+																			...widths,
+																			position: "sticky",
+																			top: 0,
+																			zIndex: 97,
+																			borderBottom: "none",
+																			borderTop:
+																				"1px solid rgba(235,235,235,1)",
+																			cursor: sortable ? "pointer" : "default",
+																			borderRight: isActionsColumn
+																				? "1px solid rgba(235,235,235,1)"
+																				: "none",
+																			whiteSpace:
+																				isActionsColumn || isNameColumn
+																					? "normal"
+																					: "wrap",
+																			overflow:
+																				isActionsColumn || isNameColumn
+																					? "visible"
+																					: "hidden",
+																		};
+																		if (isNameColumn) {
+																			baseCellSX.left = 0;
+																			baseCellSX.zIndex = 99;
+																			baseCellSX.boxShadow = isScrolledX
+																				? "3px 0px 3px rgba(0,0,0,0.2)"
+																				: "none";
+																		}
+																		const className = isNameColumn
+																			? "sticky-cell"
+																			: undefined;
+																		const onClickHandler = sortable
+																			? () => handleSortRequest(key)
+																			: undefined;
+																		return (
+																			<SmartCell
+																				key={key}
+																				cellOptions={{
+																					sx: baseCellSX,
+																					hideDivider,
+																					onClick: onClickHandler,
+																					className,
+																				}}
+																			>
+																				<Box
+																					sx={{
+																						display: "flex",
+																						alignItems: "center",
+																						position: "relative",
 																					}}
 																				>
-																					<Box
+																					<Typography
+																						variant="body2"
 																						sx={{
-																							display: "flex",
-																							alignItems: "center",
-																							position: "relative",
+																							...smartAudiences.table_array,
+																							borderRight: "0",
 																						}}
 																					>
-																						<Typography
-																							variant="body2"
-																							sx={{
-																								...smartAudiences.table_array,
-																								borderRight: "0",
-																							}}
-																						>
-																							{label}
-																						</Typography>
-																						{sortable && (
-																							<IconButton size="small">
-																								{orderBy === key ? (
-																									order === "asc" ? (
-																										<ArrowUpwardRoundedIcon fontSize="inherit" />
-																									) : (
-																										<ArrowDownwardRoundedIcon fontSize="inherit" />
-																									)
+																						{label}
+																					</Typography>
+																					{sortable && (
+																						<IconButton size="small">
+																							{orderBy === key ? (
+																								order === "asc" ? (
+																									<ArrowUpwardRoundedIcon fontSize="inherit" />
 																								) : (
-																									<SwapVertIcon fontSize="inherit" />
-																								)}
-																							</IconButton>
-																						)}
-																					</Box>
-																					{label === "Actions" && (
-																						<HintCard
-																							card={tableHintCards["actions"]}
-																							positionLeft={-380}
-																							positionTop={100}
-																							rightSide={true}
-																							isOpenBody={
-																								smartsTableHints["actions"]
+																									<ArrowDownwardRoundedIcon fontSize="inherit" />
+																								)
+																							) : (
+																								<SwapVertIcon fontSize="inherit" />
+																							)}
+																						</IconButton>
+																					)}
+																				</Box>
+																				{label === "Actions" && (
+																					<HintCard
+																						card={tableHintCards["actions"]}
+																						positionLeft={-380}
+																						positionTop={100}
+																						rightSide={true}
+																						isOpenBody={
+																							smartsTableHints["actions"]
+																								.showBody
+																						}
+																						toggleClick={() => {
+																							if (
+																								smartsTableHints["builder"]
 																									.showBody
-																							}
-																							toggleClick={() => {
-																								if (
-																									smartsTableHints["builder"]
-																										.showBody
-																								) {
-																									changeSmartsTableHint(
-																										"builder",
-																										"showBody",
-																										"close",
-																									);
-																								}
+																							) {
 																								changeSmartsTableHint(
-																									"actions",
-																									"showBody",
-																									"toggle",
-																								);
-																							}}
-																							closeClick={() => {
-																								changeSmartsTableHint(
-																									"actions",
+																									"builder",
 																									"showBody",
 																									"close",
 																								);
-																							}}
-																						/>
-																					)}
-																				</SmartCell>
-																			);
-																		})}
-																	</TableRow>
-																	<TableRow
+																							}
+																							changeSmartsTableHint(
+																								"actions",
+																								"showBody",
+																								"toggle",
+																							);
+																						}}
+																						closeClick={() => {
+																							changeSmartsTableHint(
+																								"actions",
+																								"showBody",
+																								"close",
+																							);
+																						}}
+																					/>
+																				)}
+																			</SmartCell>
+																		);
+																	})}
+																</TableRow>
+																<TableRow
+																	sx={{
+																		position: "sticky",
+																		top: "65px",
+																		zIndex: 99,
+																		borderTop: "none",
+																	}}
+																>
+																	<TableCell
+																		colSpan={columns.length}
 																		sx={{
-																			position: "sticky",
-																			top: "65px",
-																			zIndex: 99,
+																			p: 0,
+																			pb: "1.5px",
 																			borderTop: "none",
+																			backgroundColor: "rgba(235, 235, 235, 1)",
+																			borderColor: "rgba(235, 235, 235, 1)",
 																		}}
 																	>
-																		<TableCell
-																			colSpan={columns.length}
-																			sx={{
-																				p: 0,
-																				pb: "1.5px",
-																				borderTop: "none",
-																				backgroundColor:
-																					"rgba(235, 235, 235, 1)",
-																				borderColor: "rgba(235, 235, 235, 1)",
-																			}}
-																		>
-																			{loaderForTable && (
-																				<LinearProgress
-																					variant="indeterminate"
-																					sx={{
-																						width: "100%",
-																						height: "1.5px",
-																						position: "absolute",
-																					}}
-																				/>
-																			)}
-																		</TableCell>
-																	</TableRow>
-																</TableHead>
-																<TableBody>
-																	{data.map((row: Smarts, index) => {
-																		const progress =
-																			smartAudienceProgress[row.id];
-																		const progressValidation =
-																			validationProgress[row.id];
-																		return (
-																			<TableRow
-																				key={row.id}
-																				selected={selectedRows.has(row.id)}
+																		{loaderForTable && (
+																			<LinearProgress
+																				variant="indeterminate"
 																				sx={{
+																					width: "100%",
+																					height: "1.5px",
+																					position: "absolute",
+																				}}
+																			/>
+																		)}
+																	</TableCell>
+																</TableRow>
+															</TableHead>
+															<TableBody>
+																{data.map((row: Smarts, index) => {
+																	const progress =
+																		smartAudienceProgress[row.id];
+																	const progressValidation =
+																		validationProgress[row.id];
+																	return (
+																		<TableRow
+																			key={row.id}
+																			selected={selectedRows.has(row.id)}
+																			sx={{
+																				backgroundColor:
+																					selectedRows.has(row.id) &&
+																					!loaderForTable
+																						? "rgba(247, 247, 247, 1)"
+																						: "#fff",
+																				borderTop: index === 0 ? 0 : "default",
+																				"&:hover": {
 																					backgroundColor:
-																						selectedRows.has(row.id) &&
-																						!loaderForTable
-																							? "rgba(247, 247, 247, 1)"
-																							: "#fff",
-																					borderTop:
-																						index === 0 ? 0 : "default",
-																					"&:hover": {
+																						"rgba(247, 247, 247, 1)",
+																					"& .sticky-cell": {
 																						backgroundColor:
 																							"rgba(247, 247, 247, 1)",
-																						"& .sticky-cell": {
-																							backgroundColor:
-																								"rgba(247, 247, 247, 1)",
-																						},
 																					},
+																				},
+																				"&:last-of-type .MuiTableCell-root": {
+																					borderBottom: "none",
+																				},
+																			}}
+																		>
+																			{/* Name Column */}
+																			<SmartCell
+																				cellOptions={{
+																					key: row.id,
+																					className: "sticky-cell",
+																					sx: {
+																						position: "sticky",
+																						left: 0,
+																						zIndex: 8,
+																						backgroundColor: "#fff",
+																						"&:hover .edit-icon": {
+																							opacity: 1,
+																							pointerEvents: "auto",
+																						},
+																						boxShadow: isScrolledX
+																							? "3px 0px 3px #00000033"
+																							: "none",
+																						color: "inherit",
+																						cursor: "pointer",
+																					},
+																					hideDivider: isScrolledX,
 																				}}
 																			>
-																				{/* Name Column */}
-																				<SmartCell
-																					cellOptions={{
-																						key: row.id,
-																						className: "sticky-cell",
-																						sx: {
-																							position: "sticky",
-																							left: 0,
-																							zIndex: 8,
-																							backgroundColor: "#fff",
-																							"&:hover .edit-icon": {
-																								opacity: 1,
-																								pointerEvents: "auto",
-																							},
-																							boxShadow: isScrolledX
-																								? "3px 0px 3px #00000033"
-																								: "none",
-																							color: "inherit",
-																							cursor: "pointer",
-																						},
-																						hideDivider: isScrolledX,
+																				<Box
+																					sx={{
+																						display: "flex",
+																						width: "100%",
+																						justifyContent: "space-between",
+																						alignItems: "center",
+																						gap: 1,
 																					}}
 																				>
-																					<Box
+																					<OverflowTooltipText
+																						text={row.name}
+																						onClick={() => {
+																							setSelectedRowData(row);
+																							handleDetailsPopupOpen();
+																						}}
+																					/>
+																					<IconButton
+																						className="edit-icon"
 																						sx={{
-																							display: "flex",
-																							width: "100%",
-																							justifyContent: "space-between",
-																							alignItems: "center",
-																							gap: 1,
-																						}}
-																					>
-																						<OverflowTooltipText
-																							text={row.name}
-																							onClick={() => {
-																								setSelectedRowData(row);
-																								handleDetailsPopupOpen();
-																							}}
-																						/>
-																						<IconButton
-																							className="edit-icon"
-																							sx={{
-																								pl: 0,
-																								pr: 0,
-																								pt: 0.25,
-																								pb: 0.25,
-																								margin: 0,
-																								opacity: 0,
-																								pointerEvents: "none",
-																								transition:
-																									"opacity 0.2s ease-in-out",
-																								"@media (max-width: 900px)": {
-																									opacity: 1,
-																								},
-																							}}
-																							onClick={(event) =>
-																								handleRename(
-																									event,
-																									row.id,
-																									row.name,
-																								)
-																							}
-																						>
-																							<EditIcon
-																								sx={{ maxHeight: "18px" }}
-																							/>
-																						</IconButton>
-																					</Box>
-																					<Popover
-																						open={isEditPopoverOpen}
-																						anchorEl={editPopoverAnchorEl}
-																						onClose={handleCloseEditPopover}
-																						anchorOrigin={{
-																							vertical: "center",
-																							horizontal: "center",
-																						}}
-																						transformOrigin={{
-																							vertical: "top",
-																							horizontal: "left",
-																						}}
-																						slotProps={{
-																							paper: {
-																								sx: {
-																									width: "15.875rem",
-																									boxShadow: 0,
-																									borderRadius: "4px",
-																									border:
-																										"0.5px solid rgba(175, 175, 175, 1)",
-																								},
+																							pl: 0,
+																							pr: 0,
+																							pt: 0.25,
+																							pb: 0.25,
+																							margin: 0,
+																							opacity: 0,
+																							pointerEvents: "none",
+																							transition:
+																								"opacity 0.2s ease-in-out",
+																							"@media (max-width: 900px)": {
+																								opacity: 1,
 																							},
 																						}}
+																						onClick={(event) =>
+																							handleRename(
+																								event,
+																								row.id,
+																								row.name,
+																							)
+																						}
 																					>
-																						<Box sx={{ p: 2 }}>
-																							<TextField
-																								value={editedName}
-																								onChange={(e) =>
-																									setEditedName(e.target.value)
-																								}
-																								variant="outlined"
-																								label="Smart Audience Name"
-																								size="small"
-																								fullWidth
-																								sx={{
-																									"& label.Mui-focused": {
+																						<EditIcon
+																							sx={{ maxHeight: "18px" }}
+																						/>
+																					</IconButton>
+																				</Box>
+																				<Popover
+																					open={isEditPopoverOpen}
+																					anchorEl={editPopoverAnchorEl}
+																					onClose={handleCloseEditPopover}
+																					anchorOrigin={{
+																						vertical: "center",
+																						horizontal: "center",
+																					}}
+																					transformOrigin={{
+																						vertical: "top",
+																						horizontal: "left",
+																					}}
+																					slotProps={{
+																						paper: {
+																							sx: {
+																								width: "15.875rem",
+																								boxShadow: 0,
+																								borderRadius: "4px",
+																								border:
+																									"0.5px solid rgba(175, 175, 175, 1)",
+																							},
+																						},
+																					}}
+																				>
+																					<Box sx={{ p: 2 }}>
+																						<TextField
+																							value={editedName}
+																							onChange={(e) =>
+																								setEditedName(e.target.value)
+																							}
+																							variant="outlined"
+																							label="Smart Audience Name"
+																							size="small"
+																							fullWidth
+																							sx={{
+																								"& label.Mui-focused": {
+																									color:
+																										"rgba(56, 152, 252, 1)",
+																								},
+																								"& .MuiOutlinedInput-root:hover fieldset":
+																									{
 																										color:
 																											"rgba(56, 152, 252, 1)",
 																									},
-																									"& .MuiOutlinedInput-root:hover fieldset":
-																										{
-																											color:
-																												"rgba(56, 152, 252, 1)",
-																										},
-																									"& .MuiOutlinedInput-root": {
-																										"&:hover fieldset": {
-																											borderColor:
-																												"rgba(56, 152, 252, 1)",
-																											border:
-																												"1px solid rgba(56, 152, 252, 1)",
-																										},
-																										"&.Mui-focused fieldset": {
-																											borderColor:
-																												"rgba(56, 152, 252, 1)",
-																											border:
-																												"1px solid rgba(56, 152, 252, 1)",
-																										},
+																								"& .MuiOutlinedInput-root": {
+																									"&:hover fieldset": {
+																										borderColor:
+																											"rgba(56, 152, 252, 1)",
+																										border:
+																											"1px solid rgba(56, 152, 252, 1)",
 																									},
-																								}}
-																								InputProps={{
-																									style: {
-																										fontFamily: "Roboto",
-																										fontSize: "14px",
+																									"&.Mui-focused fieldset": {
+																										borderColor:
+																											"rgba(56, 152, 252, 1)",
+																										border:
+																											"1px solid rgba(56, 152, 252, 1)",
 																									},
-																								}}
-																								InputLabelProps={{
-																									style: {
-																										fontSize: "14px",
-																										fontFamily: "Roboto",
-																									},
-																								}}
-																							/>
-																							<Box
+																								},
+																							}}
+																							InputProps={{
+																								style: {
+																									fontFamily: "Roboto",
+																									fontSize: "14px",
+																								},
+																							}}
+																							InputLabelProps={{
+																								style: {
+																									fontSize: "14px",
+																									fontFamily: "Roboto",
+																								},
+																							}}
+																						/>
+																						<Box
+																							sx={{
+																								display: "flex",
+																								justifyContent: "flex-end",
+																								mt: 2,
+																							}}
+																						>
+																							<Button
+																								onClick={handleCloseEditPopover}
 																								sx={{
-																									display: "flex",
-																									justifyContent: "flex-end",
-																									mt: 2,
+																									backgroundColor: "#fff",
+																									color:
+																										"rgba(56, 152, 252, 1) !important",
+																									fontSize: "14px",
+																									textTransform: "none",
+																									padding: "0.75em 1em",
+																									maxWidth: "50px",
+																									maxHeight: "30px",
+																									mr: 0.5,
+																									"&:hover": {
+																										backgroundColor: "#fff",
+																										boxShadow:
+																											"0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+																									},
 																								}}
 																							>
+																								<Typography
+																									className="second-sub-title"
+																									sx={{
+																										color:
+																											"rgba(56, 152, 252, 1) !important",
+																									}}
+																								>
+																									Cancel
+																								</Typography>
+																							</Button>
+																							<Button
+																								onClick={() => {
+																									handleConfirmRename();
+																									handleCloseEditPopover();
+																								}}
+																								sx={{
+																									backgroundColor: "#fff",
+																									color:
+																										"rgba(56, 152, 252, 1) !important",
+																									fontSize: "14px",
+																									textTransform: "none",
+																									padding: "0.75em 1em",
+																									maxWidth: "50px",
+																									maxHeight: "30px",
+																									"&:hover": {
+																										backgroundColor: "#fff",
+																										boxShadow:
+																											"0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+																									},
+																								}}
+																							>
+																								<Typography
+																									className="second-sub-title"
+																									sx={{
+																										color:
+																											"rgba(56, 152, 252, 1) !important",
+																									}}
+																								>
+																									Save
+																								</Typography>
+																							</Button>
+																						</Box>
+																					</Box>
+																				</Popover>
+																			</SmartCell>
+
+																			{/* Use Case Column */}
+																			<SmartCell
+																				cellOptions={{
+																					sx: {
+																						position: "relative",
+																						textAlign: "center",
+																					},
+																				}}
+																				tooltipOptions={{
+																					content: row.use_case_alias,
+																				}}
+																			>
+																				{getUseCaseStyle(row.use_case_alias)}
+																			</SmartCell>
+
+																			{/* Validations Column */}
+																			<SmartCell
+																				cellOptions={{
+																					sx: {
+																						position: "relative",
+																						textAlign: "center",
+																					},
+																				}}
+																			>
+																				{row.status === "unvalidated" ? (
+																					<Image
+																						src="./danger_yellow.svg"
+																						alt="danger"
+																						width={20}
+																						height={20}
+																					/>
+																				) : row.status === "n_a" ? (
+																					"N/A"
+																				) : row.validated_records === 0 &&
+																					row.status === "validating" &&
+																					!progressValidation?.total ? (
+																					<Box
+																						sx={{
+																							display: "flex",
+																							justifyContent: "center",
+																						}}
+																					>
+																						<ThreeDotsLoader />
+																					</Box>
+																				) : (
+																					<Box
+																						sx={{
+																							cursor: "pointer",
+																							color: "rgba(56, 152, 252, 1)",
+																						}}
+																						onClick={() => {
+																							setSelectedRowData(row);
+																							handleValidationsHistoryPopupOpen();
+																						}}
+																					>
+																						{progressValidation?.total >
+																						row.validated_records
+																							? progressValidation?.total.toLocaleString(
+																									"en-US",
+																								)
+																							: row.validated_records.toLocaleString(
+																									"en-US",
+																								)}
+																					</Box>
+																				)}
+																			</SmartCell>
+
+																			{/* Created Column */}
+																			<SmartCell
+																				cellOptions={{
+																					sx: {
+																						position: "relative",
+																						textAlign: "center",
+																					},
+																				}}
+																				tooltipOptions={{
+																					content: dayjs(row.created_at).format(
+																						"MMM D, YYYY",
+																					),
+																				}}
+																			>
+																				{dayjs(row.created_at).format(
+																					"MMM D, YYYY",
+																				)}
+																			</SmartCell>
+
+																			{/* Total Universe Column */}
+																			<SmartCell
+																				cellOptions={{
+																					sx: {
+																						position: "relative",
+																					},
+																				}}
+																				tooltipOptions={{
+																					content:
+																						row.total_records.toLocaleString(
+																							"en-US",
+																						),
+																				}}
+																			>
+																				{row.total_records.toLocaleString(
+																					"en-US",
+																				)}
+																			</SmartCell>
+
+																			{/* Active Segment Column */}
+																			<SmartCell
+																				cellOptions={{
+																					sx: {
+																						position: "relative",
+																					},
+																				}}
+																			>
+																				{progressValidation?.total > 0 ? (
+																					Math.max(
+																						progressValidation.total,
+																						row.validated_records,
+																					).toLocaleString("en-US")
+																				) : (progress?.processed &&
+																						progress?.processed ===
+																							row?.active_segment_records) ||
+																					(row?.processed_active_segment_records ===
+																						row?.active_segment_records &&
+																						(row.status === "unvalidated" ||
+																							row?.processed_active_segment_records !==
+																								0)) ? (
+																					row.active_segment_records.toLocaleString(
+																						"en-US",
+																					)
+																				) : row?.processed_active_segment_records >
+																					progress?.processed ? (
+																					<ProgressBar
+																						progress={{
+																							total:
+																								row?.active_segment_records,
+																							processed:
+																								row?.processed_active_segment_records,
+																						}}
+																					/>
+																				) : (
+																					<ProgressBar
+																						progress={{
+																							...progress,
+																							total: row.active_segment_records,
+																						}}
+																					/>
+																				)}
+																			</SmartCell>
+
+																			{/* Status Column */}
+																			<SmartCell
+																				cellOptions={{
+																					sx: {
+																						position: "relative",
+																					},
+																				}}
+																			>
+																				<Box
+																					sx={{
+																						display: "flex",
+																						justifyContent: "center",
+																					}}
+																				>
+																					<Typography
+																						component="div"
+																						sx={{
+																							width: "100px",
+																							margin: 0,
+																							background: getStatusStyle(
+																								progressValidation?.total
+																									? "Ready"
+																									: preRenderStatus(
+																											setStatus(row.status),
+																										),
+																							).background,
+																							padding: "3px 8px",
+																							borderRadius: "2px",
+																							fontFamily: "Roboto",
+																							fontSize: "12px",
+																							fontWeight: "400",
+																							lineHeight: "16px",
+																							textAlign: "center",
+																							color: getStatusStyle(
+																								progressValidation?.total
+																									? "Ready"
+																									: preRenderStatus(
+																											setStatus(row.status),
+																										),
+																							).color,
+																						}}
+																					>
+																						{progressValidation?.total
+																							? "Ready"
+																							: preRenderStatus(
+																									setStatus(row.status),
+																								)}
+																					</Typography>
+																				</Box>
+																			</SmartCell>
+
+																			{/* Action Column */}
+																			<SmartCell
+																				cellOptions={{
+																					sx: {
+																						position: "relative",
+																						textAlign: "center",
+																						p: 0,
+																						borderRight:
+																							"1px solid rgba(235,235,235,1)",
+																					},
+																					hideDivider: true,
+																				}}
+																			>
+																				<IconButton
+																					onClick={(event) =>
+																						handleOpenMorePopover(event, row)
+																					}
+																					sx={{
+																						fontSize: "16px",
+																						":hover": {
+																							backgroundColor: "transparent",
+																						},
+																					}}
+																				>
+																					<MoreVert
+																						sx={{
+																							color: "rgba(32, 33, 36, 1)",
+																						}}
+																					/>
+																				</IconButton>
+
+																				<Popover
+																					open={isOpeMorePopover}
+																					anchorEl={anchorEl}
+																					onClose={handleCloseMorePopover}
+																					slotProps={{
+																						paper: {
+																							sx: {
+																								boxShadow: 0,
+																								borderRadius: "4px",
+																								border:
+																									"0.5px solid rgba(175, 175, 175, 1)",
+																							},
+																						},
+																					}}
+																					anchorOrigin={{
+																						vertical: "center",
+																						horizontal: "center",
+																					}}
+																					transformOrigin={{
+																						vertical: "top",
+																						horizontal: "right",
+																					}}
+																				>
+																					<List
+																						sx={{
+																							width: "100%",
+																							maxWidth: 360,
+																							boxShadow: "none",
+																						}}
+																					>
+																						<ListItemButton
+																							disabled={
+																								!(
+																									selectedRowData?.status ===
+																										"ready" ||
+																									selectedRowData?.status ===
+																										"n_a"
+																								)
+																							}
+																							sx={{
+																								padding: "4px 16px",
+																								":hover": {
+																									backgroundColor:
+																										"rgba(80, 82, 178, 0.1)",
+																								},
+																							}}
+																							onClick={() => {
+																								handleCloseMorePopover();
+																								handleDataSyncPopupOpen();
+																							}}
+																						>
+																							<ListItemText
+																								primaryTypographyProps={{
+																									fontSize: "14px",
+																								}}
+																								primary="Create Sync"
+																							/>
+																						</ListItemButton>
+																						<ListItemButton
+																							disabled={
+																								selectedRowData?.active_segment_records !==
+																									selectedRowData?.processed_active_segment_records ||
+																								selectedRowData?.status ===
+																									"unvalidated" ||
+																								selectedRowData?.status ===
+																									"validating"
+																							}
+																							sx={{
+																								padding: "4px 16px",
+																								":hover": {
+																									backgroundColor:
+																										"rgba(80, 82, 178, 0.1)",
+																								},
+																							}}
+																							onClick={() => {
+																								setIsDownloadAction(true);
+																								handleCloseMorePopover();
+																								handleDataSyncPopupOpen();
+																							}}
+																						>
+																							<ListItemText
+																								primaryTypographyProps={{
+																									fontSize: "14px",
+																								}}
+																								primary="Download"
+																							/>
+																						</ListItemButton>
+																						<ListItemButton
+																							sx={{
+																								padding: "4px 16px",
+																								":hover": {
+																									backgroundColor:
+																										"rgba(80, 82, 178, 0.1)",
+																								},
+																							}}
+																							onClick={() => {
+																								handleOpenConfirmDialog();
+																							}}
+																						>
+																							<ListItemText
+																								primaryTypographyProps={{
+																									fontSize: "14px",
+																								}}
+																								primary="Remove"
+																							/>
+																						</ListItemButton>
+																						<Popover
+																							open={openConfirmDialog}
+																							onClose={handleCloseConfirmDialog}
+																							anchorEl={anchorEl}
+																							anchorOrigin={{
+																								vertical: "bottom",
+																								horizontal: "right",
+																							}}
+																							transformOrigin={{
+																								vertical: "top",
+																								horizontal: "center",
+																							}}
+																							slotProps={{
+																								paper: {
+																									sx: {
+																										padding: "0.125rem",
+																										width: "15.875rem",
+																										boxShadow: 0,
+																										borderRadius: "8px",
+																										border:
+																											"0.5px solid rgba(175, 175, 175, 1)",
+																									},
+																								},
+																							}}
+																						>
+																							<Typography
+																								className="first-sub-title"
+																								sx={{
+																									paddingLeft: 2,
+																									pt: 1,
+																									pb: 0,
+																								}}
+																							>
+																								Confirm Deletion
+																							</Typography>
+																							<DialogContent
+																								sx={{ padding: 2 }}
+																							>
+																								<DialogContentText className="table-data">
+																									Are you sure you want to
+																									delete this smart audience?
+																								</DialogContentText>
+																							</DialogContent>
+																							<DialogActions>
 																								<Button
+																									className="second-sub-title"
 																									onClick={
-																										handleCloseEditPopover
+																										handleCloseConfirmDialog
 																									}
 																									sx={{
 																										backgroundColor: "#fff",
@@ -1813,616 +2235,121 @@ const SmartAudiences: React.FC = () => {
 																										fontSize: "14px",
 																										textTransform: "none",
 																										padding: "0.75em 1em",
+																										border:
+																											"1px solid rgba(56, 152, 252, 1)",
 																										maxWidth: "50px",
 																										maxHeight: "30px",
-																										mr: 0.5,
 																										"&:hover": {
 																											backgroundColor: "#fff",
 																											boxShadow:
-																												"0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+																												"0 2px 2px rgba(0, 0, 0, 0.3)",
 																										},
 																									}}
 																								>
-																									<Typography
-																										className="second-sub-title"
-																										sx={{
-																											color:
-																												"rgba(56, 152, 252, 1) !important",
-																										}}
-																									>
-																										Cancel
-																									</Typography>
+																									Cancel
 																								</Button>
 																								<Button
-																									onClick={() => {
-																										handleConfirmRename();
-																										handleCloseEditPopover();
-																									}}
+																									className="second-sub-title"
+																									onClick={
+																										handleDeleteSmartAudience
+																									}
 																									sx={{
-																										backgroundColor: "#fff",
-																										color:
-																											"rgba(56, 152, 252, 1) !important",
+																										backgroundColor:
+																											"rgba(56, 152, 252, 1)",
+																										color: "#fff !important",
 																										fontSize: "14px",
 																										textTransform: "none",
 																										padding: "0.75em 1em",
-																										maxWidth: "50px",
+																										border:
+																											"1px solid rgba(56, 152, 252, 1)",
+																										maxWidth: "60px",
 																										maxHeight: "30px",
 																										"&:hover": {
-																											backgroundColor: "#fff",
-																											boxShadow:
-																												"0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-																										},
-																									}}
-																								>
-																									<Typography
-																										className="second-sub-title"
-																										sx={{
-																											color:
-																												"rgba(56, 152, 252, 1) !important",
-																										}}
-																									>
-																										Save
-																									</Typography>
-																								</Button>
-																							</Box>
-																						</Box>
-																					</Popover>
-																				</SmartCell>
-
-																				{/* Use Case Column */}
-																				<SmartCell
-																					cellOptions={{
-																						sx: {
-																							position: "relative",
-																							textAlign: "center",
-																						},
-																					}}
-																					tooltipOptions={{
-																						content: row.use_case_alias,
-																					}}
-																				>
-																					{getUseCaseStyle(row.use_case_alias)}
-																				</SmartCell>
-
-																				{/* Validations Column */}
-																				<SmartCell
-																					cellOptions={{
-																						sx: {
-																							position: "relative",
-																							textAlign: "center",
-																						},
-																					}}
-																				>
-																					{row.status === "unvalidated" ? (
-																						<Image
-																							src="./danger_yellow.svg"
-																							alt="danger"
-																							width={20}
-																							height={20}
-																						/>
-																					) : row.status === "n_a" ? (
-																						"N/A"
-																					) : row.validated_records === 0 &&
-																						row.status === "validating" &&
-																						!progressValidation?.total ? (
-																						<Box
-																							sx={{
-																								display: "flex",
-																								justifyContent: "center",
-																							}}
-																						>
-																							<ThreeDotsLoader />
-																						</Box>
-																					) : (
-																						<Box
-																							sx={{
-																								cursor: "pointer",
-																								color: "rgba(56, 152, 252, 1)",
-																							}}
-																							onClick={() => {
-																								setSelectedRowData(row);
-																								handleValidationsHistoryPopupOpen();
-																							}}
-																						>
-																							{progressValidation?.total >
-																							row.validated_records
-																								? progressValidation?.total.toLocaleString(
-																										"en-US",
-																									)
-																								: row.validated_records.toLocaleString(
-																										"en-US",
-																									)}
-																						</Box>
-																					)}
-																				</SmartCell>
-
-																				{/* Created Column */}
-																				<SmartCell
-																					cellOptions={{
-																						sx: {
-																							position: "relative",
-																							textAlign: "center",
-																						},
-																					}}
-																					tooltipOptions={{
-																						content: dayjs(
-																							row.created_at,
-																						).format("MMM D, YYYY"),
-																					}}
-																				>
-																					{dayjs(row.created_at).format(
-																						"MMM D, YYYY",
-																					)}
-																				</SmartCell>
-
-																				{/* Total Universe Column */}
-																				<SmartCell
-																					cellOptions={{
-																						sx: {
-																							position: "relative",
-																						},
-																					}}
-																					tooltipOptions={{
-																						content:
-																							row.total_records.toLocaleString(
-																								"en-US",
-																							),
-																					}}
-																				>
-																					{row.total_records.toLocaleString(
-																						"en-US",
-																					)}
-																				</SmartCell>
-
-																				{/* Active Segment Column */}
-																				<SmartCell
-																					cellOptions={{
-																						sx: {
-																							position: "relative",
-																						},
-																					}}
-																				>
-																					{progressValidation?.total > 0 ? (
-																						Math.max(
-																							progressValidation.total,
-																							row.validated_records,
-																						).toLocaleString("en-US")
-																					) : (progress?.processed &&
-																							progress?.processed ===
-																								row?.active_segment_records) ||
-																						(row?.processed_active_segment_records ===
-																							row?.active_segment_records &&
-																							(row.status === "unvalidated" ||
-																								row?.processed_active_segment_records !==
-																									0)) ? (
-																						row.active_segment_records.toLocaleString(
-																							"en-US",
-																						)
-																					) : row?.processed_active_segment_records >
-																						progress?.processed ? (
-																						<ProgressBar
-																							progress={{
-																								total:
-																									row?.active_segment_records,
-																								processed:
-																									row?.processed_active_segment_records,
-																							}}
-																						/>
-																					) : (
-																						<ProgressBar
-																							progress={{
-																								...progress,
-																								total:
-																									row.active_segment_records,
-																							}}
-																						/>
-																					)}
-																				</SmartCell>
-
-																				{/* Status Column */}
-																				<SmartCell
-																					cellOptions={{
-																						sx: {
-																							position: "relative",
-																						},
-																					}}
-																				>
-																					<Box
-																						sx={{
-																							display: "flex",
-																							justifyContent: "center",
-																						}}
-																					>
-																						<Typography
-																							component="div"
-																							sx={{
-																								width: "100px",
-																								margin: 0,
-																								background: getStatusStyle(
-																									progressValidation?.total
-																										? "Ready"
-																										: preRenderStatus(
-																												setStatus(row.status),
-																											),
-																								).background,
-																								padding: "3px 8px",
-																								borderRadius: "2px",
-																								fontFamily: "Roboto",
-																								fontSize: "12px",
-																								fontWeight: "400",
-																								lineHeight: "16px",
-																								textAlign: "center",
-																								color: getStatusStyle(
-																									progressValidation?.total
-																										? "Ready"
-																										: preRenderStatus(
-																												setStatus(row.status),
-																											),
-																								).color,
-																							}}
-																						>
-																							{progressValidation?.total
-																								? "Ready"
-																								: preRenderStatus(
-																										setStatus(row.status),
-																									)}
-																						</Typography>
-																					</Box>
-																				</SmartCell>
-
-																				{/* Action Column */}
-																				<SmartCell
-																					cellOptions={{
-																						sx: {
-																							position: "relative",
-																							textAlign: "center",
-																							p: 0,
-																							borderRight:
-																								"1px solid rgba(235,235,235,1)",
-																						},
-																						hideDivider: true,
-																					}}
-																				>
-																					<IconButton
-																						onClick={(event) =>
-																							handleOpenMorePopover(event, row)
-																						}
-																						sx={{
-																							fontSize: "16px",
-																							":hover": {
-																								backgroundColor: "transparent",
-																							},
-																						}}
-																					>
-																						<MoreVert
-																							sx={{
-																								color: "rgba(32, 33, 36, 1)",
-																							}}
-																						/>
-																					</IconButton>
-
-																					<Popover
-																						open={isOpeMorePopover}
-																						anchorEl={anchorEl}
-																						onClose={handleCloseMorePopover}
-																						slotProps={{
-																							paper: {
-																								sx: {
-																									boxShadow: 0,
-																									borderRadius: "4px",
-																									border:
-																										"0.5px solid rgba(175, 175, 175, 1)",
-																								},
-																							},
-																						}}
-																						anchorOrigin={{
-																							vertical: "center",
-																							horizontal: "center",
-																						}}
-																						transformOrigin={{
-																							vertical: "top",
-																							horizontal: "right",
-																						}}
-																					>
-																						<List
-																							sx={{
-																								width: "100%",
-																								maxWidth: 360,
-																								boxShadow: "none",
-																							}}
-																						>
-																							<ListItemButton
-																								disabled={
-																									!(
-																										selectedRowData?.status ===
-																											"ready" ||
-																										selectedRowData?.status ===
-																											"n_a"
-																									)
-																								}
-																								sx={{
-																									padding: "4px 16px",
-																									":hover": {
-																										backgroundColor:
-																											"rgba(80, 82, 178, 0.1)",
-																									},
-																								}}
-																								onClick={() => {
-																									handleCloseMorePopover();
-																									handleDataSyncPopupOpen();
-																								}}
-																							>
-																								<ListItemText
-																									primaryTypographyProps={{
-																										fontSize: "14px",
-																									}}
-																									primary="Create Sync"
-																								/>
-																							</ListItemButton>
-																							<ListItemButton
-																								disabled={
-																									selectedRowData?.active_segment_records !==
-																										selectedRowData?.processed_active_segment_records ||
-																									selectedRowData?.status ===
-																										"unvalidated" ||
-																									selectedRowData?.status ===
-																										"validating"
-																								}
-																								sx={{
-																									padding: "4px 16px",
-																									":hover": {
-																										backgroundColor:
-																											"rgba(80, 82, 178, 0.1)",
-																									},
-																								}}
-																								onClick={() => {
-																									setIsDownloadAction(true);
-																									handleCloseMorePopover();
-																									handleDataSyncPopupOpen();
-																								}}
-																							>
-																								<ListItemText
-																									primaryTypographyProps={{
-																										fontSize: "14px",
-																									}}
-																									primary="Download"
-																								/>
-																							</ListItemButton>
-																							<ListItemButton
-																								sx={{
-																									padding: "4px 16px",
-																									":hover": {
-																										backgroundColor:
-																											"rgba(80, 82, 178, 0.1)",
-																									},
-																								}}
-																								onClick={() => {
-																									handleOpenConfirmDialog();
-																								}}
-																							>
-																								<ListItemText
-																									primaryTypographyProps={{
-																										fontSize: "14px",
-																									}}
-																									primary="Remove"
-																								/>
-																							</ListItemButton>
-																							<Popover
-																								open={openConfirmDialog}
-																								onClose={
-																									handleCloseConfirmDialog
-																								}
-																								anchorEl={anchorEl}
-																								anchorOrigin={{
-																									vertical: "bottom",
-																									horizontal: "right",
-																								}}
-																								transformOrigin={{
-																									vertical: "top",
-																									horizontal: "center",
-																								}}
-																								slotProps={{
-																									paper: {
-																										sx: {
-																											padding: "0.125rem",
-																											width: "15.875rem",
-																											boxShadow: 0,
-																											borderRadius: "8px",
-																											border:
-																												"0.5px solid rgba(175, 175, 175, 1)",
-																										},
-																									},
-																								}}
-																							>
-																								<Typography
-																									className="first-sub-title"
-																									sx={{
-																										paddingLeft: 2,
-																										pt: 1,
-																										pb: 0,
-																									}}
-																								>
-																									Confirm Deletion
-																								</Typography>
-																								<DialogContent
-																									sx={{ padding: 2 }}
-																								>
-																									<DialogContentText className="table-data">
-																										Are you sure you want to
-																										delete this smart audience?
-																									</DialogContentText>
-																								</DialogContent>
-																								<DialogActions>
-																									<Button
-																										className="second-sub-title"
-																										onClick={
-																											handleCloseConfirmDialog
-																										}
-																										sx={{
-																											backgroundColor: "#fff",
-																											color:
-																												"rgba(56, 152, 252, 1) !important",
-																											fontSize: "14px",
-																											textTransform: "none",
-																											padding: "0.75em 1em",
-																											border:
-																												"1px solid rgba(56, 152, 252, 1)",
-																											maxWidth: "50px",
-																											maxHeight: "30px",
-																											"&:hover": {
-																												backgroundColor: "#fff",
-																												boxShadow:
-																													"0 2px 2px rgba(0, 0, 0, 0.3)",
-																											},
-																										}}
-																									>
-																										Cancel
-																									</Button>
-																									<Button
-																										className="second-sub-title"
-																										onClick={
-																											handleDeleteSmartAudience
-																										}
-																										sx={{
 																											backgroundColor:
 																												"rgba(56, 152, 252, 1)",
-																											color: "#fff !important",
-																											fontSize: "14px",
-																											textTransform: "none",
-																											padding: "0.75em 1em",
-																											border:
-																												"1px solid rgba(56, 152, 252, 1)",
-																											maxWidth: "60px",
-																											maxHeight: "30px",
-																											"&:hover": {
-																												backgroundColor:
-																													"rgba(56, 152, 252, 1)",
-																												boxShadow:
-																													"0 2px 2px rgba(0, 0, 0, 0.3)",
-																											},
-																										}}
-																									>
-																										Delete
-																									</Button>
-																								</DialogActions>
-																							</Popover>
-																						</List>
-																					</Popover>
-																				</SmartCell>
-																			</TableRow>
-																		);
-																	})}
-																</TableBody>
-															</Table>
-														</TableContainer>
-														{count_smarts_audience &&
-														count_smarts_audience > 10 ? (
-															<Box
-																sx={{
-																	display: "flex",
-																	justifyContent: "flex-end",
-																	padding: "24px 0 0",
-																	"@media (max-width: 600px)": {
-																		padding: "12px 0 0",
-																	},
-																}}
-															>
-																<CustomTablePagination
-																	count={count_smarts_audience ?? 0}
-																	page={page}
-																	rowsPerPage={rowsPerPage}
-																	onPageChange={handleChangePage}
-																	onRowsPerPageChange={handleChangeRowsPerPage}
-																	rowsPerPageOptions={rowsPerPageOptions}
-																/>
-															</Box>
-														) : (
-															<Box
-																display="flex"
-																justifyContent="flex-end"
-																alignItems="center"
-																sx={{
-																	padding: "16px",
-																	backgroundColor: "#fff",
-																	borderRadius: "4px",
-																	"@media (max-width: 600px)": {
-																		padding: "12px",
-																	},
-																}}
-															>
-																<Typography
-																	sx={{
-																		fontFamily: "Nunito Sans",
-																		fontWeight: "400",
-																		fontSize: "12px",
-																		lineHeight: "16px",
-																		marginRight: "16px",
-																	}}
-																>
-																	{`1 - ${count_smarts_audience} of ${count_smarts_audience}`}
-																</Typography>
-															</Box>
-														)}
-													</Grid>
+																											boxShadow:
+																												"0 2px 2px rgba(0, 0, 0, 0.3)",
+																										},
+																									}}
+																								>
+																									Delete
+																								</Button>
+																							</DialogActions>
+																						</Popover>
+																					</List>
+																				</Popover>
+																			</SmartCell>
+																		</TableRow>
+																	);
+																})}
+															</TableBody>
+														</Table>
+													</TableContainer>
+													<Box
+														ref={paginatorRef}
+														sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+													>
+														<Paginator tableMode {...paginationProps} />
+													</Box>
 												</Grid>
-											)}
-										</Box>
-
-										<CreateSyncPopup
-											open={dataSyncPopupOpen}
-											id={selectedRowData?.id}
-											activeSegmentRecords={selectedRowData?.validated_records}
-											onClose={handleDataSyncPopupClose}
-											integrationsList={selectedRowData?.integrations}
-											isDownloadAction={isDownloadAction}
-											updateSmartAudStatus={updateSmartAudStatus}
-											setIsPageLoading={setLoading}
-										/>
-										<FilterPopup
-											open={filterPopupOpen}
-											onClose={handleFilterPopupClose}
-											onApply={handleApplyFilters}
-										/>
-										<DetailsPopup
-											open={detailsPopupOpen}
-											onClose={handleDetailsPopupClose}
-											id={selectedRowData?.id}
-											name={selectedRowData?.name}
-										/>
-										<ValidationsHistoryPopup
-											open={validationHistoryPopupOpen}
-											onClose={handleValidationsHistoryPopupClose}
-											id={selectedRowData?.id}
-											smartAudience={[
-												{
-													title: selectedRowData?.name,
-													value: selectedRowData?.created_at,
-												},
-												{
-													title: "Total Universe",
-													value: selectedRowData?.total_records,
-												},
-												{
-													title: "Active Segment",
-													value: selectedRowData?.active_segment_records,
-												},
-											]}
-										/>
-										<CalendarPopup
-											anchorEl={calendarAnchorEl}
-											open={isCalendarOpen}
-											onClose={handleCalendarClose}
-											onDateChange={handleDateChange}
-											onApply={handleApply}
-											onDateLabelChange={handleDateLabelChange}
-											selectedDates={selectedDates}
-										/>
+											</Grid>
+										)}
 									</Box>
+
+									<CreateSyncPopup
+										open={dataSyncPopupOpen}
+										id={selectedRowData?.id}
+										activeSegmentRecords={selectedRowData?.validated_records}
+										onClose={handleDataSyncPopupClose}
+										integrationsList={selectedRowData?.integrations}
+										isDownloadAction={isDownloadAction}
+										updateSmartAudStatus={updateSmartAudStatus}
+										setIsPageLoading={setLoading}
+									/>
+									<FilterPopup
+										open={filterPopupOpen}
+										onClose={handleFilterPopupClose}
+										onApply={handleApplyFilters}
+									/>
+									<DetailsPopup
+										open={detailsPopupOpen}
+										onClose={handleDetailsPopupClose}
+										id={selectedRowData?.id}
+										name={selectedRowData?.name}
+									/>
+									<ValidationsHistoryPopup
+										open={validationHistoryPopupOpen}
+										onClose={handleValidationsHistoryPopupClose}
+										id={selectedRowData?.id}
+										smartAudience={[
+											{
+												title: selectedRowData?.name,
+												value: selectedRowData?.created_at,
+											},
+											{
+												title: "Total Universe",
+												value: selectedRowData?.total_records,
+											},
+											{
+												title: "Active Segment",
+												value: selectedRowData?.active_segment_records,
+											},
+										]}
+									/>
+									<CalendarPopup
+										anchorEl={calendarAnchorEl}
+										open={isCalendarOpen}
+										onClose={handleCalendarClose}
+										onDateChange={handleDateChange}
+										onApply={handleApply}
+										onDateLabelChange={handleDateLabelChange}
+										selectedDates={selectedDates}
+									/>
 								</Box>
 							</Box>
 						</Box>
 					</Box>
-				</>
+				</Box>
 			)}
 		</Box>
 	);

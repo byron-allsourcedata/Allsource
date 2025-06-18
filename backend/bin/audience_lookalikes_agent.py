@@ -4,6 +4,7 @@ import sys
 import asyncio
 import functools
 import json
+import gzip
 
 from sqlalchemy import update, select, create_engine
 from aio_pika import IncomingMessage
@@ -99,10 +100,13 @@ async def aud_sources_matching(
             existing_insights, new_insights
         )
 
+        json_data = json.dumps(merged)
+        compressed_data = gzip.compress(json_data.encode("utf-8"))
+
         db_session.execute(
             update(AudienceLookalikes)
             .where(AudienceLookalikes.id == lookalike_id)
-            .values(insights=merged)
+            .values(insights=compressed_data)
         )
 
         db_session.commit()

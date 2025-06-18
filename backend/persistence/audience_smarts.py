@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, aliased, load_only
 from sqlalchemy.sql import func
 from sqlalchemy.orm import class_mapper
 
+from models import SubscriptionPlan, UserSubscriptions
 from models.audience_smarts import AudienceSmart
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -45,6 +46,20 @@ class AudienceSmartsPersistence:
             .first()
         )
         return use_case[0] if use_case else None
+
+    def check_access_for_user(self, user: dict) -> bool:
+        restricted_plans = ["free_trial_monthly", "basic"]
+        subscription = (
+            self.db.query(SubscriptionPlan)
+            .join(
+                UserSubscriptions,
+                UserSubscriptions.plan_id == SubscriptionPlan.id,
+            )
+            .filter(UserSubscriptions.id == user["current_subscription_id"])
+            .first()
+        )
+
+        return subscription.alias not in restricted_plans
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         Lalp = aliased(AudienceLookalikesPerson)
@@ -300,7 +315,7 @@ class AudienceSmartsPersistence:
         return updated_count
 
     def get_persons_by_smart_aud_id(
-        self, smart_audience_id, sent_contacts, fields
+        self, smart_audience_id, sent_contacts, fields, user: dict
     ):
         contact_fields = [
             getattr(EnrichmentUserContact, field)
@@ -334,8 +349,12 @@ class AudienceSmartsPersistence:
                 AudienceSmartPerson.is_valid == True,
             )
         )
-
-        smarts = query.limit(sent_contacts).all()
+        access_for_user = self.check_access_for_user(user=user)
+        if access_for_user:
+            limit = sent_contacts
+        else:
+            limit = 3
+        smarts = query.order_by(AudienceSmartPerson.id).limit(limit).all()
         return smarts
 
     def get_synced_persons_by_smart_aud_id(

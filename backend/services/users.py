@@ -6,7 +6,7 @@ from models import Users
 from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
 from schemas.users import UpdatePassword, MeetingData
-from schemas.domains import DomainResponse
+from schemas.domains import DomainResponse, DomainWithStats
 from services.jwt_service import get_password_hash
 from dotenv import load_dotenv
 
@@ -89,9 +89,15 @@ class UsersService:
             "leads_credits": self.user.get("leads_credits"),
         }
 
-    def add_percent_to_domain(
-        self, domain: UserDomains, activate_percent, is_current_subscription_id
-    ):
+    def get_domain_with_stats(
+        self,
+        domain: UserDomains,
+        activate_percent,
+        is_current_subscription_id,
+        contacts_resolving_ids: set[int],
+        data_synced_ids: set[int],
+        data_sync_failed_ids: set[int],
+    ) -> DomainWithStats:
         domain_percent = 0
         if domain.is_pixel_installed:
             domain_percent = 75
@@ -102,17 +108,34 @@ class UsersService:
                 domain_percent = 50
 
         domain_data = self.domain_mapped(domain)
-        domain_data["activate_percent"] = domain_percent
-        return domain_data
+
+        return DomainWithStats(
+            **domain_data.dict(),
+            activate_percent=domain_percent,
+            contacts_resolving=domain.id in contacts_resolving_ids,
+            data_synced=domain.id in data_synced_ids,
+            data_sync_failed=domain.id in data_sync_failed_ids,
+        )
 
     def get_domains(self):
-        domains = self.domain_persistence.get_domains_by_user(
-            self.user.get("id")
+        user_id = self.user.get("id")
+        domains = self.domain_persistence.get_domains_by_user(user_id)
+
+        contacts_resolving_ids = (
+            self.domain_persistence.get_domains_with_contacts_resolving(user_id)
         )
+        data_synced_ids = self.domain_persistence.get_domains_with_data_synced(
+            user_id
+        )
+        data_sync_failed_ids = (
+            self.domain_persistence.get_domains_with_failed_data_sync(user_id)
+        )
+
         enabled_domains = [domain for domain in domains if domain.is_enable]
         disabled_domains = [
             domain for domain in domains if not domain.is_enable
         ]
+
         enabled_domains_sorted = sorted(
             enabled_domains, key=lambda x: (x.created_at, x.id)
         )
@@ -120,23 +143,29 @@ class UsersService:
             disabled_domains, key=lambda x: (x.created_at, x.id)
         )
         sorted_domains = enabled_domains_sorted + disabled_domains_sorted
+
         return [
-            self.add_percent_to_domain(
+            self.get_domain_with_stats(
                 domain,
                 self.user.get("activate_steps_percent"),
                 self.user.get("current_subscription_id"),
+                contacts_resolving_ids,
+                data_synced_ids,
+                data_sync_failed_ids,
             )
             for domain in sorted_domains
         ]
 
-    def domain_mapped(self, domain: UserDomains):
+    def domain_mapped(self, domain: UserDomains) -> DomainResponse:
         return DomainResponse(
             id=domain.id,
             domain=domain.domain,
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
             enable=domain.is_enable,
-        ).model_dump()
+            is_add_to_cart_installed=domain.is_add_to_cart_installed,
+            is_converted_sales_installed=domain.is_converted_sales_installed,
+        )
 
     def get_meeting_info(self) -> MeetingData:
         return self.meeting_schedule.get_meeting_info(self.user)

@@ -425,10 +425,6 @@ class SubscriptionService:
                 self.db.commit()
             elif product_description == "prospect_credits":
                 user = self.db.query(User).filter(User.id == user_id).first()
-                if user.prospect_credits is None:
-                    user.prospect_credits = 0
-                user.prospect_credits += int(amount_credits)
-                self.db.commit()
         return status
 
     def get_user_payment_by_transaction_id(self, transaction_id):
@@ -490,7 +486,6 @@ class SubscriptionService:
         user.activate_steps_percent = 50
         user.is_book_call_passed = True
         user.leads_credits = plan.leads_credits
-        user.prospect_credits = plan.prospect_credits
         user.current_subscription_id = add_subscription_obj.id
         self.db.commit()
 
@@ -515,26 +510,25 @@ class SubscriptionService:
         self.db.flush()
         user = self.db.query(User).filter(User.id == user_id).first()
         user.activate_steps_percent = 50
+        user.enrichment_credits = plan.enrichment_credits
+        user.validation_funds = plan.validation_funds
+        user.premium_source_credits = plan.premium_source_credits
+        user.smart_audience_quota = plan.smart_audience_quota
         user.is_book_call_passed = True
         user.leads_credits = plan.leads_credits
-        user.prospect_credits = plan.prospect_credits
         user.current_subscription_id = add_subscription_obj.id
         self.db.commit()
 
-    def create_subscription_from_free_trial(self, user_id, ftd=None):
-        plan = self.plans_persistence.get_free_trial_plan(ftd)
-        status = "active"
-        created_at = datetime.strptime(
-            get_utc_aware_date_for_postgres(), "%Y-%m-%dT%H:%M:%SZ"
-        )
+    def create_subscription_from_free_trial(self, user_id):
+        plan = self.plans_persistence.get_free_trial_plan()
+        now = datetime.now(timezone.utc)
         add_subscription_obj = Subscription(
             domains_limit=plan.domains_limit,
             integrations_limit=plan.integrations_limit,
             user_id=user_id,
-            updated_at=created_at.isoformat() + "Z",
-            created_at=created_at.isoformat() + "Z",
             members_limit=plan.members_limit,
-            status=status,
+            status="active",
+            plan_start=now,
             plan_id=plan.id,
             is_trial=True,
             contact_credit_plan_id=plan.contact_credit_plan_id,
@@ -543,9 +537,11 @@ class SubscriptionService:
         self.db.flush()
         user = self.db.query(User).filter(User.id == user_id).first()
         user.activate_steps_percent = 50
+        user.enrichment_credits = plan.enrichment_credits
+        user.premium_source_credits = plan.premium_source_credits
+        user.smart_audience_quota = plan.smart_audience_quota
         user.leads_credits = plan.leads_credits
         user.validation_funds = plan.validation_funds
-        user.prospect_credits = plan.prospect_credits
         user.current_subscription_id = add_subscription_obj.id
         user.is_book_call_passed = True
         self.db.commit()
@@ -690,7 +686,6 @@ class SubscriptionService:
             self.update_team_members(user.id, plan.members_limit)
 
             user.leads_credits = max(plan.leads_credits - user.leads_credits, 0)
-            user.prospect_credits = plan.prospect_credits
             user.current_subscription_id = user_subscription.id
             user.is_leads_auto_charging = True
             user.stripe_payment_url = (
@@ -841,7 +836,6 @@ class SubscriptionService:
             domains_limit = plan.domains_limit
             integrations_limit = plan.integrations_limit
             leads_credits = plan.leads_credits
-            prospect_credits = plan.prospect_credits
             members_limit = plan.members_limit
             contact_credit_plan_id = plan.contact_credit_plan_id
             result["contact_credit_plan_id"] = contact_credit_plan_id
@@ -866,7 +860,6 @@ class SubscriptionService:
                         contact_credit_plan_id,
                     )
                     user.leads_credits = leads_credits
-                    user.prospect_credits = prospect_credits
                 self.db.flush()
             else:
                 self.db.query(UserSubscriptions).where(
@@ -902,7 +895,6 @@ class SubscriptionService:
                 self.update_users_domains(user_id, domains_limit)
                 self.update_team_members(user.id, members_limit)
                 user.leads_credits = leads_credits
-                user.prospect_credits = prospect_credits
                 user.current_subscription_id = user_subscription.id
                 user.is_leads_auto_charging = True
                 if user.stripe_payment_url:

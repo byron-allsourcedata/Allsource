@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Backdrop, LinearProgress } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useNotification } from "../context/NotificationContext";
+import { useHasSubheader } from "@/hooks/useHasSubheader";
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 	height: 4,
@@ -15,15 +16,23 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const PageWithLoader: React.FC = () => {
 	const { hasNotification } = useNotification();
+	const hasSubheader = useHasSubheader();
+
+	const computeTop = () => {
+		if (hasNotification && hasSubheader) return "10.85rem";
+		if (hasSubheader) return "8.25rem";
+		if (hasNotification) return "6.25rem";
+		return "4.25rem";
+	};
+
 	return (
 		<Box
 			sx={{
 				width: "100%",
 				position: "fixed",
-				top: hasNotification ? "6.85rem" : "4.25rem",
+				top: computeTop(),
 				zIndex: 1200,
 				left: "175px",
-				"@media (min-height: 900px)": { top: "4.25rem" },
 				"@media (max-width: 899px)": { left: 0, top: "4.5rem" },
 			}}
 		>

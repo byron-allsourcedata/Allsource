@@ -59,9 +59,16 @@ class UserDomainsService:
             user_dict=user_dict
         )
         self.subscription_service.create_subscription_from_free_trial(
-            user_id=user_id, ftd=None
+            user_id=user_id
         )
         return f"{os.environ.get('SITE_HOST_URL')}"
+
+    def get_domain_by_id(self, domain_id: int):
+        domains = self.domain_persistence.get_domain_by_filter(id=domain_id)
+        if domains:
+            return domains[0]
+
+        return None
 
     def get_domains(self, user_id: int, **filter_by):
         domains = self.domain_persistence.get_domains_by_user(user_id)
@@ -97,6 +104,11 @@ class UserDomainsService:
             for domain in domains
         ]
 
+    def update_data_provider_id(self, domain_id, data_provider_id):
+        self.domain_persistence.update_data_provider_id(
+            domain_id=domain_id, data_provider_id=data_provider_id
+        )
+
     def update_domain_name(self, domain_id: int, domain_name: str):
         self.domain_persistence.update_domain_name(domain_id, domain_name)
         return {"status": "SUCCESS"}
@@ -113,6 +125,8 @@ class UserDomainsService:
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
             enable=domain.is_enable,
+            is_add_to_cart_installed=domain.is_add_to_cart_installed,
+            is_converted_sales_installed=domain.is_converted_sales_installed,
         ).model_dump()
 
     def delete_domain(self, user_id: int, domain_id: int):

@@ -45,7 +45,10 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import PaginationComponent from "@/components/PaginationComponent";
+import PaginationComponent, {
+	Paginator,
+	PaginatorTable,
+} from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "./components/ThreeDotsLoader";
@@ -68,6 +71,8 @@ import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
 import SmartCell from "@/components/table/SmartCell";
+import { usePagination } from "@/hooks/usePagination";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface Source {
 	id: string;
@@ -122,8 +127,6 @@ const Sources: React.FC = () => {
 	const { setIsGetStartedPage, setInstalledResources } = useSidebar();
 	const { hasNotification } = useNotification();
 	const [data, setData] = useState<Source[]>([]);
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [count_sources, setCount] = useState<number | null>(null);
 	const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
 	const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -166,6 +169,11 @@ const Sources: React.FC = () => {
 	const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } =
 		useSourcesHints();
 
+	const paginationProps = usePagination(count_sources ?? 0);
+	const { page, rowsPerPage, setPage, setRowsPerPage } = paginationProps;
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 121, [
+		data.length,
+	]);
 	const cardData: CardData[] = [
 		{
 			title: "Pixel",
@@ -1147,37 +1155,11 @@ const Sources: React.FC = () => {
 													<TableContainer
 														ref={tableContainerRef}
 														sx={{
-															height: "70vh",
-															overflowX: "scroll",
-															maxHeight:
-																selectedFilters.length > 0
-																	? hasNotification
-																		? "63vh"
-																		: "70vh"
-																	: "70vh",
-															"@media (max-height: 800px)": {
-																height: "60vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "60vh"
-																		: "70vh",
-															},
-															"@media (max-width: 400px)": {
-																height: "50vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "50vh"
-																		: "70vh",
-															},
+															overflowX: "auto",
 														}}
 													>
 														<Table
 															stickyHeader
-															component={Paper}
 															aria-label="leads table"
 															sx={{
 																tableLayout: "fixed",
@@ -1374,6 +1356,9 @@ const Sources: React.FC = () => {
 																						backgroundColor:
 																							"rgba(247, 247, 247, 1)",
 																					},
+																				},
+																				"&:last-of-type .MuiTableCell-root": {
+																					borderBottom: "none",
 																				},
 																			}}
 																		>
@@ -1845,14 +1830,12 @@ const Sources: React.FC = () => {
 															</TableBody>
 														</Table>
 													</TableContainer>
-													<PaginationComponent
-														countRows={count_sources ?? 0}
-														page={page}
-														rowsPerPage={rowsPerPage}
-														onPageChange={handleChangePage}
-														onRowsPerPageChange={handleChangeRowsPerPage}
-														rowsPerPageOptions={rowsPerPageOptions}
-													/>
+													<Box
+														ref={paginatorRef}
+														sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+													>
+														<Paginator tableMode {...paginationProps} />
+													</Box>
 												</Grid>
 											</Grid>
 										)}

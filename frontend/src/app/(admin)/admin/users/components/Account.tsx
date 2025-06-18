@@ -41,9 +41,11 @@ interface UserData {
 	is_trial?: boolean;
 	last_login: string;
 	invited_by_email?: string;
+	subscription_plan?: string;
 	role: string[];
 	pixel_installed_count?: number;
 	sources_count?: number;
+	contacts_count?: number;
 	lookalikes_count?: number;
 	credits_count?: number;
 	type?: string;
@@ -80,23 +82,43 @@ const TableHeader: React.FC<{
 							textWrap: "wrap",
 							textAlign: "center",
 							position: "relative",
-							...(key === "account_name" && {
-								position: "sticky",
+							whiteSpace: "nowrap",
+							overflow: "hidden",
+							textOverflow: "ellipsis",
+							...(key === "name" && {
+								width: "100px",
+								maxWidth: "200px",
+								minWidth: "100px",
 								left: 0,
 								zIndex: 1,
 							}),
-							...(key === "actions" && {
-								"::after": {
-									content: "none",
-								},
+							...(key === "status" && {
+								width: "180px",
+								maxWidth: "100px",
+								minWidth: "120px",
+								left: 0,
+								zIndex: 1,
 							}),
+							...(key === "email" && {
+								width: "200px",
+								maxWidth: "200px",
+								minWidth: "150px",
+							}),
+							// ...(key === "actions" && {
+							// 	width: "100px",
+							// 	maxWidth: "100px",
+							// 	minWidth: "60px",
+							// 	"::after": {
+							// 		content: "none",
+							// 	},
+							// }),
 						}}
 						onClick={sortable ? () => onSort(key) : undefined}
 					>
 						<Box
 							sx={{ display: "flex", alignItems: "center" }}
 							style={
-								key === "email" || key === "status" || key === "actions"
+								key === "email" || key === "status"
 									? { justifyContent: "left" }
 									: {}
 							}
@@ -105,7 +127,7 @@ const TableHeader: React.FC<{
 								{label}
 							</Typography>
 							{sortable && (
-								<IconButton size="small" sx={{ ml: 1 }}>
+								<IconButton size="small">
 									{sortField === key ? (
 										sortOrder === "asc" ? (
 											<ArrowUpwardIcon fontSize="inherit" />
@@ -205,41 +227,23 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	};
 	const getStatusStyle = (behavior_type: string) => {
 		switch (behavior_type) {
-			case "TRIAL_ACTIVE":
+			case "PIXEL_VERIFIED":
 				return {
-					background: "rgba(235, 243, 254, 1)",
-					color: "rgba(20, 110, 246, 1) !important",
+					background: "rgba(221, 248, 234, 1)",
+					color: "rgba(0, 91, 43, 1) !important",
 				};
-			case "PIXEL_INSTALLED":
+
+			case "USER_AUTHENTICATED":
 				return {
-					background: "rgba(234, 248, 221, 1)",
-					color: "rgba(43, 91, 0, 1) !important",
-				};
-			case "FILL_COMPANY_DETAILS":
-				return {
-					background: "rgba(254, 243, 205, 1)",
-					color: "rgba(101, 79, 0, 1) !important",
-				};
-			case "SUBSCRIPTION_ACTIVE":
-				return {
-					background: "rgba(234, 248, 221, 1)",
-					color: "rgba(43, 91, 0, 1) !important",
+					background: "rgba(210, 230, 255, 0.8)",
+					color: "rgba(30, 90, 200, 1) !important",
 				};
 			case "NEED_CONFIRM_EMAIL":
 				return {
-					background: "rgba(241, 241, 249, 1)",
-					color: "rgba(56, 152, 252, 1) !important",
+					background: "rgba(255, 165, 0, 0.3)",
+					color: "#FF8C00 !important",
 				};
-			case "NEED_CHOOSE_PLAN":
-				return {
-					background: "rgba(254, 238, 236, 1)",
-					color: "rgba(244, 87, 69, 1) !important",
-				};
-			case "NEED_BOOK_CALL":
-				return {
-					background: "rgba(254, 238, 236, 1)",
-					color: "rgba(244, 87, 69, 1) !important",
-				};
+
 			default:
 				return {
 					background: "transparent",
@@ -250,28 +254,22 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 
 	const formatFunnelText = (text: string) => {
 		if (text === "NEED_CHOOSE_PLAN") {
-			return "Need choose Plan";
-		}
-		if (text === "FILL_COMPANY_DETAILS") {
-			return "Fill company details";
+			return "---";
 		}
 		if (text === "TRIAL_ACTIVE") {
-			return "Trial Active";
+			return "---";
 		}
-		if (text === "SUBSCRIPTION_ACTIVE") {
-			return "Subscription Active";
+		if (text === "USER_AUTHENTICATED") {
+			return "User authenticated";
 		}
 		if (text === "NEED_CONFIRM_EMAIL") {
 			return "Need confirm email";
 		}
-		if (text === "NEED_BOOK_CALL") {
-			return "Need book call";
-		}
 		if (text === "PAYMENT_NEEDED") {
 			return "Payment needed";
 		}
-		if (text === "PIXEL_INSTALLED") {
-			return "Pixel installed";
+		if (text === "PIXEL_VERIFIED") {
+			return "Pixel verified";
 		}
 	};
 
@@ -347,8 +345,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 										sx={{
 											textOverflow: "ellipsis",
 											whiteSpace: "nowrap",
-											minWidth: 0,
 											flexShrink: 1,
+											minWidth: 0,
+											overflow: "hidden",
 											pr: "10px",
 										}}
 									>
@@ -427,6 +426,8 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				return row.sources_count || "0";
 			case "lookalikes_count":
 				return row.lookalikes_count || "0";
+			case "contacts_count":
+				return row.contacts_count || "0";
 			case "credits_count":
 				return formatCreditsCount(row.credits_count || 0);
 			case "status":
@@ -452,62 +453,71 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 						{formatFunnelText(row.payment_status ?? "") || "--"}
 					</Typography>
 				);
-			case "actions":
-				if (currentPage === 0) {
-					return (
-						<>
-							<MenuIconButton
-								buttonProps={{
-									onClick: (event) => handleOpenMenu(event, row.id),
-								}}
-								iconProps={{
-									icon: <MoreVert />,
-								}}
-							/>
-							<Popover
-								open={Boolean(menuAnchor) && activeRow === row.id}
-								anchorEl={menuAnchor}
-								onClose={handleCloseMenu}
-								anchorOrigin={{
-									vertical: "bottom",
-									horizontal: "center",
-								}}
-							>
-								<Box
-									sx={{
-										p: 1,
-										display: "flex",
-										flexDirection: "column",
-										alignItems: "flex-start",
-										width: "100%",
-										maxWidth: "160px",
-									}}
-								>
-									<Button
-										sx={{
-											justifyContent: "flex-start",
-											width: "100%",
-											textTransform: "none",
-											fontFamily: "Nunito Sans",
-											fontSize: "14px",
-											color: "rgba(32, 33, 36, 1)",
-											fontWeight: 600,
-											":hover": {
-												color: "rgba(56, 152, 252, 1)",
-												backgroundColor: "rgba(80, 82, 178, 0.1)",
-											},
-										}}
-										onClick={() => {
-											console.log("Customer: View Orders clicked");
-										}}
-									>
-										View Orders
-									</Button>
-								</Box>
-							</Popover>
-						</>
-					);
-				}
+			case "subscription_plan":
+				return (
+					<Box
+						sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+					>
+						{row.subscription_plan || "--"}
+					</Box>
+				);
+
+				// case "actions":
+				// 	if (currentPage === 0) {
+				// 		return (
+				// 			<>
+				// 				<MenuIconButton
+				// 					buttonProps={{
+				// 						onClick: (event) => handleOpenMenu(event, row.id),
+				// 					}}
+				// 					iconProps={{
+				// 						icon: <MoreVert />,
+				// 					}}
+				// 				/>
+				// 				<Popover
+				// 					open={Boolean(menuAnchor) && activeRow === row.id}
+				// 					anchorEl={menuAnchor}
+				// 					onClose={handleCloseMenu}
+				// 					anchorOrigin={{
+				// 						vertical: "bottom",
+				// 						horizontal: "center",
+				// 					}}
+				// 				>
+				// 					<Box
+				// 						sx={{
+				// 							p: 1,
+				// 							display: "flex",
+				// 							flexDirection: "column",
+				// 							alignItems: "flex-start",
+				// 							width: "100%",
+				// 							maxWidth: "160px",
+				// 						}}
+				// 					>
+				// 						<Button
+				// 							sx={{
+				// 								justifyContent: "flex-start",
+				// 								width: "100%",
+				// 								textTransform: "none",
+				// 								fontFamily: "Nunito Sans",
+				// 								fontSize: "14px",
+				// 								color: "rgba(32, 33, 36, 1)",
+				// 								fontWeight: 600,
+				// 								":hover": {
+				// 									color: "rgba(56, 152, 252, 1)",
+				// 									backgroundColor: "rgba(80, 82, 178, 0.1)",
+				// 								},
+				// 							}}
+				// 							onClick={() => {
+				// 								console.log("Customer: View Orders clicked");
+				// 							}}
+				// 						>
+				// 							View Orders
+				// 						</Button>
+				// 					</Box>
+				// 				</Popover>
+				// 			</>
+				// 		);
+				// 	}
 				if (currentPage === 1) {
 					return (
 						<>
@@ -583,7 +593,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							key={key}
 							sx={{
 								...leadsStyles.table_array,
-								textAlign: key === "actions" ? "center" : "left",
+								textAlign: "left",
 								position: "relative",
 								padding: "8px",
 							}}
@@ -651,22 +661,28 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "name", label: "Account name", sortable: false },
 				{ key: "email", label: "Email", sortable: false },
 				{ key: "join_date", label: "Join date", sortable: true },
-				{ key: "last_login_date", label: "Last Login Date", sortable: true },
+				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "invited_by", label: "Invited by", sortable: false },
 				{ key: "access_level", label: "Access level", sortable: false },
-				{ key: "actions", label: "Actions", sortable: false },
+				// { key: "actions", label: "Actions", sortable: false },
 			]
 		: [
 				{ key: "name", label: "Account name", sortable: false },
 				{ key: "email", label: "Email", sortable: false },
 				{ key: "join_date", label: "Join date", sortable: true },
-				{ key: "last_login_date", label: "Last Login Date", sortable: true },
+				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
+				{ key: "contacts_count", label: "Contacts", sortable: false },
 				{ key: "sources_count", label: "Sources", sortable: false },
 				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
-				{ key: "credits_count", label: "Credits count", sortable: false },
+				{ key: "credits_count", label: "Credits", sortable: false },
 				{ key: "status", label: "Status", sortable: false },
-				{ key: "actions", label: "Actions", sortable: false },
+				{
+					key: "subscription_plan",
+					label: "Plan",
+					sortable: false,
+				},
+				// { key: "actions", label: "Actions", sortable: false },
 			];
 
 	const handlePageChange = (
