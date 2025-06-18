@@ -390,6 +390,7 @@ class ProccessDataSyncResult(Enum):
 class PlanAlias(Enum):
     PARTNERS = "partners"
     SHOPIFY = "shopify"
+    BASIC = "basic"
 
 
 class ProgramType(Enum):
