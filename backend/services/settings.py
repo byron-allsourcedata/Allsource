@@ -314,7 +314,7 @@ class SettingsService:
             template_placeholder={
                 "full_name": invite_user,
                 "link": confirm_email_url,
-                "company_name": user.get("company_name"),
+                "company_name": user["full_name"],
             },
         )
         invited_by_id = (
