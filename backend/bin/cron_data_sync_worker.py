@@ -1,21 +1,18 @@
-import logging
-import os
-import sys
 import asyncio
 import functools
 import json
-import requests
+import logging
 import os
 import sys
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from sqlalchemy import create_engine, or_
+from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from utils import get_utc_aware_date
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import publish_rabbitmq_message
 from config.aws import get_s3_client
 from enums import (
     ProccessDataSyncResult,
@@ -68,53 +65,45 @@ def setup_logging(level):
 
 
 def check_correct_data_sync(
-    data_sync_imported_ids: list[int], session: Session
-) -> dict[int, int]:
-    result = (
-        session.query(
-            DataSyncImportedLead.lead_users_id,
-            DataSyncImportedLead.five_x_five_user_id,
+    data_sync_id: int, data_sync_imported_ids: list[int], session: Session
+):
+    integration_data = (
+        session.query(UserIntegration, IntegrationUserSync)
+        .join(
+            IntegrationUserSync,
+            IntegrationUserSync.integration_id == UserIntegration.id,
         )
+        .filter(IntegrationUserSync.id == data_sync_id)
+        .first()
+    )
+
+    if not integration_data:
+        logging.info("Data sync not found")
+        return None
+
+    result = (
+        session.query(DataSyncImportedLead.lead_users_id.label("lead_users_id"))
         .filter(
             DataSyncImportedLead.id.in_(data_sync_imported_ids),
             DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
         )
         .all()
     )
-    return {row.five_x_five_user_id: row.lead_users_id for row in result}
+    return integration_data, result
 
 
-def get_lead_attributes(session, lead_user_ids, data_sync_id):
-    result = (
-        session.query(FiveXFiveUser, UserIntegration, IntegrationUserSync)
-        .select_from(LeadUser)
-        .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
-        .join(
-            UserIntegration,
-            or_(
-                UserIntegration.user_id == LeadUser.user_id,
-                UserIntegration.domain_id == LeadUser.domain_id,
-            ),
-        )
-        .join(
-            IntegrationUserSync,
-            IntegrationUserSync.integration_id == UserIntegration.id,
-        )
-        .filter(
-            LeadUser.id.in_(lead_user_ids),
-            IntegrationUserSync.id == data_sync_id,
-        )
+def get_lead_attributes(session, lead_user_ids):
+    five_x_five_users = (
+        session.query(LeadUser, FiveXFiveUser)
+        .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+        .filter(LeadUser.id.in_(lead_user_ids))
         .all()
     )
-
-    if result:
-        leads = [row[0] for row in result]
-        user_integration = result[0][1]
-        data_sync = result[0][2]
-
-        return leads, user_integration, data_sync
+    if five_x_five_users:
+        leads = five_x_five_users
+        return leads
     else:
-        return None, None, None
+        return None
 
 
 def update_users_integrations(
@@ -242,15 +231,18 @@ async def ensure_integration(
         data_sync_id = message_body.get("data_sync_id")
         users_id = message_body.get("users_id")
         logging.info(f"Data sync id {data_sync_id}")
-        lead_to_five_map = check_correct_data_sync(
-            data_sync_imported_ids=data_sync_imported_ids, session=session
+        integration_data, lead_user_data = check_correct_data_sync(
+            data_sync_id,
+            data_sync_imported_ids=data_sync_imported_ids,
+            session=session,
         )
-        lead_ids = list(lead_to_five_map.values())
-        if not lead_to_five_map:
+        if not lead_user_data:
             logging.info(f"data sync empty for {data_sync_id}")
             await message.ack()
             return
 
+        user_integration = integration_data[0]
+        data_sync = integration_data[1]
         service_map = {
             "klaviyo": integration_service.klaviyo,
             "meta": integration_service.meta,
@@ -265,14 +257,13 @@ async def ensure_integration(
             "sales_force": integration_service.sales_force,
             "s3": integration_service.s3,
         }
+        lead_user_ids = [t.lead_users_id for t in lead_user_data]
         service = service_map.get(service_name)
-        leads, user_integration, integration_data_sync = get_lead_attributes(
-            session, lead_ids, data_sync_id
-        )
+        leads = get_lead_attributes(session, lead_user_ids)
         if service:
             try:
                 results = await service.process_data_sync_lead(
-                    user_integration, integration_data_sync, leads
+                    user_integration, data_sync, leads
                 )
                 logging.info(f"Result {results}")
             except BaseException as e:
@@ -304,7 +295,7 @@ async def ensure_integration(
                         update_users_integrations(
                             session=session,
                             status=ProccessDataSyncResult.LIST_NOT_EXISTS.value,
-                            integration_data_sync_id=integration_data_sync.id,
+                            integration_data_sync_id=data_sync.id,
                             service_name=service_name,
                         )
                         await send_error_msg(
@@ -319,7 +310,7 @@ async def ensure_integration(
                         update_users_integrations(
                             session=session,
                             status=ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
-                            integration_data_sync_id=integration_data_sync.id,
+                            integration_data_sync_id=data_sync.id,
                             service_name=service_name,
                         )
                         await send_error_msg(
@@ -334,7 +325,7 @@ async def ensure_integration(
                         update_users_integrations(
                             session=session,
                             status=ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
-                            integration_data_sync_id=integration_data_sync.id,
+                            integration_data_sync_id=data_sync.id,
                             service_name=service_name,
                         )
                         await send_error_msg(
@@ -348,7 +339,7 @@ async def ensure_integration(
                         update_users_integrations(
                             session=session,
                             status=ProccessDataSyncResult.PAYMENT_REQUIRED.value,
-                            integration_data_sync_id=integration_data_sync.id,
+                            integration_data_sync_id=data_sync.id,
                             service_name=service_name,
                         )
                         await send_error_msg(
@@ -363,9 +354,9 @@ async def ensure_integration(
                         update_users_integrations(
                             session,
                             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                            integration_data_sync.id,
+                            data_sync.id,
                             service_name,
-                            integration_data_sync.integration_id,
+                            data_sync.integration_id,
                         )
                         await send_error_msg(
                             users_id,
@@ -378,8 +369,8 @@ async def ensure_integration(
                     update_data_sync_imported_leads(
                         session=session,
                         status=import_status,
-                        lead_id=lead_to_five_map[result["lead_id"]],
-                        integration_data_sync=integration_data_sync,
+                        lead_id=result["lead_id"],
+                        integration_data_sync=data_sync,
                         user_integration=user_integration,
                     )
 
