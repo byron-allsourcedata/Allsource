@@ -1,4 +1,3 @@
-
 from datetime import datetime, timezone
 
 from sqlalchemy import select
@@ -7,7 +6,6 @@ from db_dependencies import Db
 from models import UserSubscriptions, Users, SubscriptionPlan, LeadUser
 from resolver import injectable
 from utils import end_of_month
-
 
 
 @injectable
