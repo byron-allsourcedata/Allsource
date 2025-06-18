@@ -19,14 +19,6 @@ from .base import Base, update_timestamps
 
 class UserSubscriptions(Base):
     __tablename__ = "user_subscriptions"
-    __table_args__ = (
-        Index(
-            "user_subscriptions_contact_credit_plan_id_idx",
-            "contact_credit_plan_id",
-        ),
-        Index("user_subscriptions_user_id_idx", "user_id"),
-        Index("user_subscriptions_user_id_status_idx", "user_id", "status"),
-    )
 
     id = Column(
         BigInteger,
@@ -49,17 +41,23 @@ class UserSubscriptions(Base):
     user_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
-    status = Column(VARCHAR(32), nullable=True)
+    status = Column(
+        VARCHAR(32), nullable=False, server_default=text("'active'")
+    )
     plan_id = Column(
         BigInteger,
         ForeignKey("subscription_plans.id", onupdate="SET NULL"),
         nullable=True,
     )
-    is_trial = Column(Boolean, nullable=True, server_default=text("false"))
-    domains_limit = Column(Integer, nullable=True)
-    integrations_limit = Column(Integer, nullable=True)
+    is_trial = Column(Boolean, nullable=False, server_default=text("false"))
+    domains_limit = Column(Integer, nullable=False, server_default=text("-1"))
+    integrations_limit = Column(
+        Integer, nullable=True, server_default=text("-1")
+    )
     platform_subscription_id = Column(VARCHAR, nullable=True)
-    members_limit = Column(BigInteger, nullable=True)
+    members_limit = Column(
+        BigInteger, nullable=False, server_default=text("-1")
+    )
     downgrade_at = Column(TIMESTAMP(precision=7), nullable=True)
     downgrade_price_id = Column(VARCHAR, nullable=True)
     cancellation_reason = Column(TEXT, nullable=True)
@@ -72,6 +70,15 @@ class UserSubscriptions(Base):
         BigInteger,
         ForeignKey("subscription_plans.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    __table_args__ = (
+        Index(
+            "user_subscriptions_contact_credit_plan_id_idx",
+            contact_credit_plan_id,
+        ),
+        Index("user_subscriptions_user_id_idx", user_id),
+        Index("user_subscriptions_user_id_status_idx", user_id, status),
     )
 
 

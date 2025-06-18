@@ -510,19 +510,43 @@ class MetaIntegrationsService:
         five_x_five_users: List[FiveXFiveUser],
     ):
         profiles = []
+        results = []
         for five_x_five_user in five_x_five_users:
             profile = self.__hash_mapped_meta_user_lead(five_x_five_user)
+            if profile in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                results.append(
+                    {"lead_id": five_x_five_user.id, "status": profile}
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "lead_id": five_x_five_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
             if profile:
                 profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
-        return self.__create_user(
+        bulk_result = self.__create_user(
             custom_audience_id=integration_data_sync.list_id,
             access_token=user_integration.access_token,
             profiles=profiles,
         )
+        if bulk_result != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = bulk_result
+
+        return results
 
     def __create_user(
         self, custom_audience_id: str, access_token: str, profiles: List[dict]
@@ -579,7 +603,7 @@ class MetaIntegrationsService:
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return None
+            return first_email
 
         def hash_value(value):
             return (
@@ -620,7 +644,7 @@ class MetaIntegrationsService:
     ):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         business_email, personal_email, phone = (
             self.sync_persistence.get_verified_email_and_phone(

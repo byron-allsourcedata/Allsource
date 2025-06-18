@@ -1,5 +1,5 @@
 "use client";
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import { managementStyle } from "./management";
 import CustomToolTip from "@/components/customToolTip";
@@ -13,6 +13,7 @@ import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import ManagementTable from "./components/ManagementTable";
+import { Domain } from "../analytics/components/DomainSelector";
 
 export type PixelKey =
 	| "is_view_product_installed"
@@ -85,6 +86,10 @@ const Management: React.FC = () => {
 		}
 	};
 
+	const handleAddDomainButtonClick = () => {
+		router.push("/management/add-domain");
+	};
+
 	const handleDelete = async (toDelete: PixelManagementItem) => {
 		try {
 			setLoading(true);
@@ -95,6 +100,14 @@ const Management: React.FC = () => {
 				data: { domain: toDelete.domain_name },
 			});
 			showToast("Successfully removed domain");
+			const me = JSON.parse(sessionStorage.getItem("me") || "{}");
+			if (me.domains) {
+				console.log(12345);
+				me.domains = me.domains.filter(
+					(domain: Domain) => domain.domain !== toDelete.domain_name,
+				);
+				sessionStorage.setItem("me", JSON.stringify(me));
+			}
 
 			await fetchData();
 
@@ -223,6 +236,47 @@ const Management: React.FC = () => {
 
 			<Box sx={{ width: "100%" }}>
 				<ManagementTable tableData={pixelData} onDelete={handleDelete} />
+			</Box>
+			<Box
+				sx={{
+					display: "flex",
+					width: "100%",
+					justifyContent: "flex-end",
+					pb: 2,
+				}}
+			>
+				<Button
+					onClick={handleAddDomainButtonClick}
+					sx={{
+						ml: 2,
+						textTransform: "none",
+						background: "rgba(56, 152, 252, 1)",
+						color: "rgba(56, 152, 252, 1)",
+						fontFamily: "Nunito Sans",
+						padding: "0.65em 2em",
+						mr: 1,
+						"&:hover": {
+							background: "rgba(56, 152, 252, 1)",
+							boxShadow: 5,
+						},
+						"@media (max-width: 600px)": {
+							padding: "0.5em 1.5em",
+							mr: 0,
+							ml: 0,
+							left: 0,
+						},
+					}}
+				>
+					<Typography
+						className="second-sub-title"
+						sx={{
+							color: "rgba(255, 255, 255, 1) !important",
+							textAlign: "center",
+						}}
+					>
+						+ Add a Domain
+					</Typography>
+				</Button>
 			</Box>
 		</Box>
 	);

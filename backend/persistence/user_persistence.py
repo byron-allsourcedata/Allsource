@@ -168,7 +168,6 @@ class UserPersistence:
                 "calendly_invitee_uuid": user.calendly_invitee_uuid,
                 "activate_steps_percent": user.activate_steps_percent,
                 "leads_credits": user.leads_credits,
-                "prospect_credits": user.prospect_credits,
                 "validation_funds": user.validation_funds,
                 "is_leads_auto_charging": user.is_leads_auto_charging,
                 "team_access_level": user.team_access_level,
@@ -183,6 +182,8 @@ class UserPersistence:
                 "stripe_connected_email": user.stripe_connected_email,
                 "stripe_connected_currently_due": user.stripe_connected_currently_due,
                 "partner_is_active": partner_is_active,
+                "premium_source_credits": user.premium_source_credits,
+                "smart_audience_quota": user.smart_audience_quota,
             }
         self.db.rollback()
         if result_as_object:

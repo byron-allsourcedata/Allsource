@@ -21,6 +21,7 @@ from models.users import User
 from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
 from enums import AudienceSmartStatuses
+from schemas.audience_smart import AccessCheckResponse
 
 logger = logging.getLogger(__name__)
 
@@ -359,6 +360,10 @@ class AudienceSmartsService:
 
         return [{item["key"]: item["validation"]} for item in result]
 
+    def check_access(self, user: dict) -> AccessCheckResponse:
+        allowed = self.audience_smarts_persistence.check_access_for_user(user)
+        return AccessCheckResponse(allowed=allowed)
+
     def get_datasource(self, user: dict):
         lookalikes, count, max_page, _ = (
             self.lookalikes_persistence_service.get_lookalikes(
@@ -369,28 +374,6 @@ class AudienceSmartsService:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"), page=1, per_page=50
         )
-
-        lookalike_list = []
-        for (
-            lookalike,
-            source_name,
-            source_type,
-            created_by,
-            source_origin,
-            domain,
-            target_schema,
-        ) in lookalikes:
-            lookalike_list.append(
-                {
-                    **lookalike.__dict__,
-                    "source": source_name,
-                    "source_type": source_type,
-                    "created_by": created_by,
-                    "source_origin": source_origin,
-                    "domain": domain,
-                    "target_schema": target_schema,
-                }
-            )
 
         source_list = [
             {
@@ -404,13 +387,15 @@ class AudienceSmartsService:
             for s in sources
         ]
 
-        return {"lookalikes": lookalike_list, "sources": source_list}
+        return {"lookalikes": lookalikes, "sources": source_list}
 
-    def download_persons(self, smart_audience_id, sent_contacts, data_map):
+    def download_persons(
+        self, smart_audience_id, sent_contacts, data_map, user: dict
+    ):
         types = [contact.type for contact in data_map]
         values = [contact.value for contact in data_map]
         leads = self.audience_smarts_persistence.get_persons_by_smart_aud_id(
-            smart_audience_id, sent_contacts, types
+            smart_audience_id, sent_contacts, types, user
         )
 
         output = io.StringIO()

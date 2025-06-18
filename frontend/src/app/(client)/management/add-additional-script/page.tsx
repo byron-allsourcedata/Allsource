@@ -8,11 +8,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast } from "@/components/ToastNotification";
-import GettingStartedSection from "@/components/GettingStartedSection";
 import { SliderProvider } from "@/context/SliderContext";
-import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
-import DomainButtonSelect from "../../components/NavigationDomainButton";
-import ManagementTable from "../components/ManagementTable";
 import {
 	CardsSection,
 	FirstTimeScreenCommonVariant1,
@@ -21,34 +17,123 @@ import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup
 import { EmptyAnalyticsPlaceholder } from "../../analytics/components/placeholders/EmptyPlaceholder";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { PixelManagementItem } from "../page";
+import ScriptsPopup from "../components/ScriptsPopup";
 
-export type PixelKey =
-	| "is_view_product_installed"
-	| "is_add_to_cart_installed"
-	| "is_converted_sales_installed";
-
-export interface AdditionalPixel {
-	is_add_to_cart_installed: boolean;
-	is_converted_sales_installed: boolean;
-	is_view_product_installed: boolean;
-	[key: string]: boolean;
-}
-
-export interface PixelManagementItem {
+type Domain = {
 	id: number;
-	domain_name: string;
-	pixel_status: boolean;
-	additional_pixel: AdditionalPixel;
-	resulutions: any;
-	data_sync: number;
-}
+	domain: string;
+};
 
-const Management: React.FC = () => {
+type Me = {
+	domains: Domain[];
+};
+
+type ScriptCardConfig = {
+	key: string;
+	title: string;
+	subtitle: string;
+	imageSrc: string;
+	popupTitle: string;
+	secondStepText: string;
+	showInstalled?: boolean;
+};
+
+const scriptCardConfigs: ScriptCardConfig[] = [
+	{
+		key: "view_product",
+		title: "View Product",
+		subtitle:
+			"This script records product pages visited, time spent, and categories browsed.",
+		imageSrc: "/view_product.svg",
+		popupTitle: "View Product Script Installation",
+		secondStepText:
+			"Place this script before the </body> tag on product pages you want to track.",
+	},
+	{
+		key: "converted_sale",
+		title: "Converted Sales",
+		subtitle:
+			"This script tracks completed purchases and capturing order values.",
+		imageSrc: "/converted_sale.svg",
+		popupTitle: "Converted Sales Script Installation",
+		secondStepText:
+			'Paste this script inside the <body> tag on the "Thank You" page after a successful purchase.',
+	},
+	{
+		key: "add_to_cart",
+		title: "Add to Cart",
+		subtitle:
+			"This script identifies users who showed purchase intent by adding items to cart.",
+		imageSrc: "/add_to_cart.svg",
+		popupTitle: "Add To Cart Script Installation",
+		secondStepText:
+			'Paste this script in the <footer> tag or before </body> on each page with an "Add to cart" button.',
+	},
+];
+
+const AddAdditionalScript: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
+	const [openmanually, setOpen] = useState(false);
+	const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+	const [selectedSecondText, setSelectedSecondText] = useState<string | null>(
+		null,
+	);
+	const [pixelCode, setPixelCode] = useState<string | null>(null);
+	const [secondPixelCode, setSecondPixelCode] = useState<string | null>(null);
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(false);
 	const [status, setStatus] = useState("");
 	const [popupOpen, setPopupOpen] = useState(false);
+
+	const getCurrentDomainId = (): number | null => {
+		const currentDomain = sessionStorage.getItem("current_domain");
+		const meRaw = sessionStorage.getItem("me");
+
+		if (!currentDomain || !meRaw) return null;
+
+		try {
+			const me: Me = JSON.parse(meRaw);
+			const domainObj = me.domains.find((d) => d.domain === currentDomain);
+			return domainObj?.id ?? null;
+		} catch {
+			return null;
+		}
+	};
+
+	const fetchScriptByType = async (
+		type: string,
+		popupTitle: string,
+		secondStepText: string,
+	) => {
+		const domainId = getCurrentDomainId();
+
+		if (!domainId) {
+			showErrorToast("Error fetching pixel script(no domain find)");
+			return;
+		}
+
+		try {
+			setIsLoading(true);
+			const res = await axiosInstance.get(
+				`/pixel-management/${type}/${domainId}`,
+			);
+			if (res.status === 200 && typeof res.data === "string") {
+				setPixelCode(res.data);
+				setSecondPixelCode("");
+				setSelectedTitle(popupTitle);
+				setSelectedSecondText(secondStepText);
+				setOpen(true);
+			} else {
+				showErrorToast("Script not found.");
+			}
+		} catch (err) {
+			showErrorToast("Error fetching pixel script.");
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	const checkPixel = async () => {
 		try {
@@ -98,6 +183,7 @@ const Management: React.FC = () => {
 
 	return (
 		<Box sx={{ ...managementStyle.mainContent }}>
+			{isLoading && <CustomizedProgressBar />}
 			<Box
 				sx={{
 					display: "flex",
@@ -106,20 +192,20 @@ const Management: React.FC = () => {
 					position: "sticky",
 					top: 0,
 					pl: "0.5rem",
-					zIndex: 10000,
+					zIndex: 1,
 					pt: 1.5,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",
 					width: "100%",
 					"@media (max-width: 900px)": {
-						zIndex: 10,
+						zIndex: 1,
 					},
 					"@media (max-width: 600px)": {
 						pt: "4.25rem",
 						flexDirection: "column",
 						pl: "0.5rem",
 						alignItems: "flex-start",
-						zIndex: 10,
+						zIndex: 1,
 						width: "100%",
 						pr: 1.5,
 					},
@@ -201,7 +287,7 @@ const Management: React.FC = () => {
 
 			{false && <EmptyAnalyticsPlaceholder />}
 			{true && (
-				<Box sx={{ mt: 2 }}>
+				<Box sx={{ pr: 2 }}>
 					<FirstTimeScreenCommonVariant1
 						WarningNotification={{
 							condition: false,
@@ -219,32 +305,26 @@ const Management: React.FC = () => {
 						}}
 						Content={
 							<CardsSection
-								items={[
-									{
-										title: "Converted Sales",
-										subtitle:
-											"This script tracks completed purchases and capturing order values.",
-										imageSrc: "/converted_sale.svg",
-										onClick: () => {},
-										showRecommended: false,
-									},
-									{
-										title: "Add to Cart",
-										subtitle:
-											"This script identifies users who who showed purchase intent by adding items to cart.",
-										imageSrc: "/add_to_cart.svg",
-										onClick: () => {},
-										showRecommended: false,
-									},
-									{
-										title: "View Product",
-										subtitle:
-											"This script records product pages visited, time spent, and categories browsed.",
-										imageSrc: "/view_product.svg",
-										onClick: () => {},
-										showRecommended: false,
-									},
-								]}
+								items={scriptCardConfigs.map((card) => ({
+									title: card.title,
+									subtitle: card.subtitle,
+									imageSrc: card.imageSrc,
+									onClick: () =>
+										fetchScriptByType(
+											card.key,
+											card.popupTitle,
+											card.secondStepText,
+										),
+									showRecommended: false,
+									showInstalled: card.showInstalled,
+								}))}
+								itemProps={{
+									xs: 12,
+									sm: 6,
+									md: 4,
+								}}
+								spacing={3}
+								containerSx={{ gap: 0, display: "flex" }}
 							/>
 						}
 						HelpCard={{
@@ -304,6 +384,7 @@ const Management: React.FC = () => {
 							mt: 2,
 						}}
 					/>
+
 					{popupOpen && (
 						<WelcomePopup
 							open={popupOpen}
@@ -313,18 +394,26 @@ const Management: React.FC = () => {
 					)}
 				</Box>
 			)}
+			<ScriptsPopup
+				open={openmanually}
+				handleClose={() => setOpen(false)}
+				pixelCode={pixelCode || ""}
+				secondPixelCode={secondPixelCode || ""}
+				title={selectedTitle || ""}
+				secondStepText={selectedSecondText || ""}
+			/>
 		</Box>
 	);
 };
 
-const ManagementPage: React.FC = () => {
+const AddAdditionalScriptPage: React.FC = () => {
 	return (
 		<Suspense fallback={<CustomizedProgressBar />}>
 			<SliderProvider>
-				<Management />
+				<AddAdditionalScript />
 			</SliderProvider>
 		</Suspense>
 	);
 };
 
-export default ManagementPage;
+export default AddAdditionalScriptPage;

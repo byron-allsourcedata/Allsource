@@ -18,7 +18,14 @@ import {
 	SxProps,
 	Theme,
 } from "@mui/material";
-import React, { useState, useEffect, memo, useRef } from "react";
+import React, {
+	useState,
+	useEffect,
+	memo,
+	useRef,
+	useLayoutEffect,
+	RefObject,
+} from "react";
 import Image from "next/image";
 import axios, { AxiosError } from "axios";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -70,6 +77,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
 import { width } from "@mui/system";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -153,6 +161,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setOPenZapierComnect(false);
 		setOpenSlackConnect(false);
 	};
+
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 120);
+
 	const handleSortRequest = (property: string) => {
 		const isAsc = orderBy === property && order === "asc";
 		setOrder(isAsc ? "desc" : "asc");
@@ -393,7 +404,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setData((prevData) =>
 							prevData.map((item) =>
 								item.id === selectedId
-									? { ...item, dataSync: response.data.data_sync }
+									? {
+											...item,
+											dataSync: response.data.data_sync,
+										}
 									: item,
 							),
 						);
@@ -807,12 +821,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "list_type",
 			label: "List Type",
-			widths: { width: "10vw", minWidth: "155px", maxWidth: "20vw" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "20vw" },
 		},
 		{
 			key: "list_name",
 			label: "List Name",
-			widths: { width: "14vw", minWidth: "14vw", maxWidth: "14vw" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "14vw" },
 		},
 		{
 			key: "platform",
@@ -831,33 +845,32 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
-			key: "successful_contacts",
-			label: "Successful contacts",
-			widths: {
-				width: "6vw",
-				minWidth: "60px",
-				maxWidth: "6vw",
-			},
+			key: "data_sync",
+			label: "No of Contacts",
+			widths: { width: "120px", minWidth: "120px", maxWidth: "12vw" },
 		},
 		{
 			key: "processed_contacts",
-			label: "Processed contacts",
+			label: "Validated",
 			widths: {
-				width: "6vw",
-				minWidth: "60px",
-				maxWidth: "6vw",
+				width: "100px",
+				minWidth: "100px",
+				maxWidth: "8vw",
 			},
 		},
 		{
-			key: "data_sync",
-			label: "No. of Contacts",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			key: "successful_contacts",
+			label: "Synced",
+			widths: {
+				width: "80px",
+				minWidth: "80px",
+				maxWidth: "8vw",
+			},
 		},
-
 		{
 			key: "sync_status",
 			label: "Status",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			widths: { width: "8vw", minWidth: "8vw", maxWidth: "8vw" },
 		},
 		{
 			key: "action",
@@ -879,7 +892,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				<>
 					<Box
 						display={"flex"}
-						sx={{ alignItems: "center", mt: 2, mb: "16px", height: "100%" }}
+						sx={{
+							alignItems: "center",
+							mt: 2,
+							mb: "16px",
+							height: "100%",
+						}}
 					>
 						<Box
 							sx={{
@@ -930,27 +948,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<TableContainer
 						ref={tableContainerRef}
 						sx={{
-							overflowX: "scroll",
-							maxHeight:
-								data.length > 0 ? (hasNotification ? "63vh" : "70vh") : "70vh",
-							"@media (max-height: 800px)": {
-								height: "60vh",
-								maxHeight:
-									data.length > 0
-										? hasNotification
-											? "53vh"
-											: "60vh"
-										: "70vh",
-							},
-							"@media (max-width: 400px)": {
-								height: "50vh",
-								maxHeight:
-									data.length > 0
-										? hasNotification
-											? "53vh"
-											: "50vh"
-										: "70vh",
-							},
+							overflowX: "auto",
 						}}
 					>
 						<Table
@@ -1086,11 +1084,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 										<TableRow
 											key={row.id}
 											sx={{
+												backgroundColor: "#fff",
 												"&:hover": {
 													backgroundColor: "rgba(247, 247, 247, 1)",
 													"& .sticky-cell": {
 														backgroundColor: "rgba(247, 247, 247, 1)",
 													},
+												},
+												"&:last-of-type .MuiTableCell-root": {
+													borderBottom: "none",
 												},
 											}}
 										>
@@ -1108,7 +1110,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													},
 													hideDivider: isScrolledX,
 												}}
-												tooltipOptions={{ content: listType(row.type) || "--" }}
+												tooltipOptions={{
+													content: listType(row.type) || "--",
+												}}
 											>
 												{listType(row.type) || "--"}
 											</SmartCell>
@@ -1132,7 +1136,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														position: "relative",
 													},
 												}}
-												tooltipOptions={{ content: row.platform || "--" }}
+												tooltipOptions={{
+													content: row.platform || "--",
+												}}
 											>
 												<Box
 													sx={{
@@ -1155,7 +1161,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																<Typography
 																	className="table-data"
 																	component="div"
-																	sx={{ fontSize: "12px !important" }}
+																	sx={{
+																		fontSize: "12px !important",
+																	}}
 																>
 																	{toCamelCase(row.platform) || "--"}
 																</Typography>
@@ -1195,7 +1203,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												tooltipOptions={{
 													content: (
 														<Box
-															sx={{ display: "flex", flexDirection: "column" }}
+															sx={{
+																display: "flex",
+																flexDirection: "column",
+															}}
 														>
 															<span>{row.createdBy || "--"}</span>
 															<span>{row.createdDate || "--"}</span>
@@ -1210,10 +1221,18 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														lineHeight: 1.4,
 													}}
 												>
-													<Typography sx={{ ...datasyncStyle.table_array }}>
+													<Typography
+														sx={{
+															...datasyncStyle.table_array,
+														}}
+													>
 														{row.createdBy || "--"}
 													</Typography>
-													<Typography sx={{ ...datasyncStyle.table_array }}>
+													<Typography
+														sx={{
+															...datasyncStyle.table_array,
+														}}
+													>
 														{row.createdDate || "--"}
 													</Typography>
 												</Box>
@@ -1225,11 +1244,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														position: "relative",
 													},
 												}}
-												tooltipOptions={{ content: row.lastSync || "--" }}
+												tooltipOptions={{
+													content: row.lastSync || "--",
+												}}
 											>
 												{row.lastSync || "--"}
 											</SmartCell>
-
 											<SmartCell
 												cellOptions={{
 													sx: {
@@ -1245,7 +1265,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.successful_contacts}
+												{row.contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1279,7 +1299,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.contacts}
+												{row.successful_contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1324,7 +1344,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																			<Typography
 																				className="table-data"
 																				component="div"
-																				sx={{ fontSize: "12px !important" }}
+																				sx={{
+																					fontSize: "12px !important",
+																				}}
 																			>
 																				{toolTipText}
 																				{!row.syncStatus && (
@@ -1428,7 +1450,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							</TableBody>
 						</Table>
 					</TableContainer>
-					<Paginator tableMode {...paginationProps} />
+					<Box
+						ref={paginatorRef}
+						sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+					>
+						<Paginator tableMode {...paginationProps} />
+					</Box>
 					<Popover
 						id={id}
 						open={open}

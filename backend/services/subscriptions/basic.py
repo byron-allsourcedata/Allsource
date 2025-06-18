@@ -1,3 +1,5 @@
+import logging
+
 import stripe
 
 from db_dependencies import Db
@@ -7,6 +9,8 @@ from resolver import injectable
 from services.stripe_service import StripeService
 from services.subscriptions.exceptions import PlanNotFoundException
 from services.user_subscriptions import UserSubscriptionsService
+
+logger = logging.getLogger(__name__)
 
 
 @injectable
@@ -48,9 +52,13 @@ class BasicPlanService:
 
     def move_to_basic_plan(self, customer_id: str):
         user = self.users.by_customer_id(customer_id)
+        if not user:
+            logger.error(
+                f"Basic plan not found for user with customer_id: {customer_id}, user_id: {user.id}"
+            )
+            return
         user_id = user.id
 
-        self.create_basic_plan_subscription(customer_id)
         self.user_subscriptions.move_to_plan(user_id, "basic")
 
     def create_basic_plan_subscription(self, customer_id: str):

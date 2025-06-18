@@ -59,7 +59,6 @@ import { SliderProvider } from "../../../context/SliderContext";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import CustomTablePagination from "@/components/CustomTablePagination";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "../sources/components/ThreeDotsLoader";
@@ -69,9 +68,7 @@ import FilterPopup from "./components/SmartAudienceFilter";
 import DetailsPopup from "./components/SmartAudienceDataSources";
 import ValidationsHistoryPopup from "./components/SmartAudienceValidationHistory";
 import CalendarPopup from "@/components/CustomCalendar";
-import TableCustomCell from "../sources/components/table/TableCustomCell";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
-import FirstTimeScreen from "./components/FirstTimeScreen";
 import {
 	FirstTimeScreenCommonVariant1,
 	BuilderIntro,
@@ -83,6 +80,7 @@ import { tableHintCards } from "./context/hintsCardsContent";
 import SmartCell from "@/components/table/SmartCell";
 import { Paginator } from "@/components/PaginationComponent";
 import { usePagination } from "@/hooks/usePagination";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface Smarts {
 	id: string;
@@ -382,6 +380,9 @@ const SmartAudiences: React.FC = () => {
 		tableContainerRef,
 		data.length,
 	);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 135, [
+		data.length,
+	]);
 
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -1430,31 +1431,7 @@ const SmartAudiences: React.FC = () => {
 													<TableContainer
 														ref={tableContainerRef}
 														sx={{
-															overflowX: "scroll",
-															maxHeight:
-																selectedFilters.length > 0
-																	? hasNotification
-																		? "63vh"
-																		: "70vh"
-																	: "70vh",
-															"@media (max-height: 800px)": {
-																height: "60vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "60vh"
-																		: "70vh",
-															},
-															"@media (max-width: 400px)": {
-																height: "50vh",
-																maxHeight:
-																	selectedFilters.length > 0
-																		? hasNotification
-																			? "53vh"
-																			: "50vh"
-																		: "70vh",
-															},
+															overflowX: "auto",
 														}}
 													>
 														<Table
@@ -1647,6 +1624,9 @@ const SmartAudiences: React.FC = () => {
 																						backgroundColor:
 																							"rgba(247, 247, 247, 1)",
 																					},
+																				},
+																				"&:last-of-type .MuiTableCell-root": {
+																					borderBottom: "none",
 																				},
 																			}}
 																		>
@@ -2305,7 +2285,12 @@ const SmartAudiences: React.FC = () => {
 															</TableBody>
 														</Table>
 													</TableContainer>
-													<Paginator tableMode {...paginationProps} />
+													<Box
+														ref={paginatorRef}
+														sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+													>
+														<Paginator tableMode {...paginationProps} />
+													</Box>
 												</Grid>
 											</Grid>
 										)}

@@ -1,26 +1,12 @@
-import os
-import re
 import csv
-import logging
-import io
 import hashlib
-from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from persistence.domains import UserDomainsPersistence
-from schemas.integrations.integrations import *
-from schemas.integrations.sales_force import SalesForceProfile
+import io
+import logging
+import os
+
+import httpx
 from fastapi import HTTPException
-from services.integrations.commonIntegration import *
-from models.integrations.users_domains_integrations import UserIntegration
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from datetime import datetime, timedelta
-from utils import extract_first_email
+
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -28,13 +14,22 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
-import httpx
 from models.enrichment.enrichment_users import EnrichmentUser
-import json
-from utils import format_phone_number
-from typing import List
-from utils import validate_and_format_phone, format_phone_number
-from uuid import UUID
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
+from schemas.integrations.integrations import *
+from services.integrations.commonIntegration import *
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import get_valid_email
+from utils import validate_and_format_phone
 
 
 class SalesForceIntegrationsService:
@@ -415,6 +410,7 @@ class SalesForceIntegrationsService:
         five_x_five_users: List[FiveXFiveUser],
     ):
         profiles = []
+        results = []
         access_token = self.get_access_token(user_integration.access_token)
         if not access_token:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -423,11 +419,28 @@ class SalesForceIntegrationsService:
             profile = self.__mapped_sales_force_profile_lead(
                 five_x_five_user, integration_data_sync.data_map
             )
+            if profile in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                results.append(
+                    {"lead_id": five_x_five_user.id, "status": profile}
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "lead_id": five_x_five_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
             if profile:
                 profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
         response_result = self.bulk_upsert_leads(
             profiles=profiles,
@@ -438,9 +451,11 @@ class SalesForceIntegrationsService:
             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
         ):
-            return profile
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = response_result
 
-        return ProccessDataSyncResult.SUCCESS.value
+        return results
 
     def set_suppression(self, suppression: bool, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id, user.get("id"))
@@ -569,59 +584,9 @@ class SalesForceIntegrationsService:
     def __mapped_sales_force_profile_lead(
         self, five_x_five_user: FiveXFiveUser, data_map: list
     ) -> dict:
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            if (
-                                personal_emails_last_seen_str
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
-                            )
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

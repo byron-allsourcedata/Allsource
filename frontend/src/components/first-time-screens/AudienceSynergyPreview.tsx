@@ -98,20 +98,6 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
 						height={160}
 						style={{ maxWidth: "100%", height: "auto" }}
 					/>
-
-					{/* <motion.div
-              key={activeLogo}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Box
-                component="img"
-                src={logos[activeLogo]}
-                alt={Logo ${activeLogo + 1}}
-                sx={{ width: "100px", height: "100px", mt: 4 }}
-              />
-          </motion.div> */}
 				</Box>
 
 				<Typography variant="body2" sx={{ color: "#7E7E7E" }}>

@@ -31,17 +31,20 @@ export interface Domain {
 interface DomainSelectorProps {
 	onDomainSelected: (domain: Domain | null) => void;
 	selectedDomainProp: string;
+	addDomain?: boolean;
 }
 
 const DomainSelector: React.FC<DomainSelectorProps> = ({
 	onDomainSelected,
 	selectedDomainProp,
+	addDomain,
 }) => {
 	const {
 		domainSelectorHints,
 		resetDomainSelectorHints,
 		changeDomainSelectorHint,
 	} = useGetStartedHints();
+	const [showAddDomain, setShowAddDomain] = useState<boolean>(!!addDomain);
 	const [domains, setDomains] = useState<Domain[]>([]);
 	const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
 	const [addingNew, setAddingNew] = useState(false);
@@ -91,22 +94,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 	}, [domains]);
 
 	useEffect(() => {
-		const interval = setInterval(() => {
-			const saved = loadDomainsFromSession();
-
-			const filtered = saved.filter(
-				(domain) => domain.is_pixel_installed === false,
-			);
-
-			setDomains((prev) => {
-				if (JSON.stringify(prev) !== JSON.stringify(filtered)) {
-					return filtered;
-				}
-				return prev;
-			});
-		}, 1000);
-
-		return () => clearInterval(interval);
+		setDomains(loadDomainsFromSession());
 	}, []);
 
 	useEffect(() => {
@@ -162,6 +150,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 				setNewDomain("");
 				setAddingNew(false);
 				setError(null);
+				setShowAddDomain(false);
 				showToast("Domain added successfully");
 			}
 		} catch (err) {
@@ -173,6 +162,33 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 			} else {
 				setError("Failed to add domain");
 			}
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleDeleteDomain = async (toDelete: Domain) => {
+		try {
+			setLoading(true);
+			await axiosInstance.delete(`/domains/${toDelete.id}`);
+
+			const updated = domains.filter((d) => d.id !== toDelete.id);
+			setDomains(updated);
+
+			const meRaw = sessionStorage.getItem("me");
+			const me = meRaw ? JSON.parse(meRaw) : {};
+			me.domains = updated;
+			sessionStorage.setItem("me", JSON.stringify(me));
+			sessionStorage.removeItem("current_domain");
+
+			if (selectedDomain?.id === toDelete.id) {
+				setSelectedDomain(null);
+				onDomainSelected(null);
+			}
+
+			showToast("Domain deleted successfully");
+		} catch (err) {
+			showErrorToast("Failed to delete domain");
 		} finally {
 			setLoading(false);
 		}
@@ -208,7 +224,8 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 				Select the domain you want to install pixel on
 			</Typography>
 
-			{domains.length === 0 && !addingNew ? (
+			{domains.filter((d) => !d.is_pixel_installed).length === 0 &&
+			!addingNew ? (
 				<Box sx={{ position: "relative" }}>
 					<Button
 						variant="contained"
@@ -333,7 +350,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 			) : (
 				<Box sx={{ position: "relative" }}>
 					<SimpleDomainSelector
-						domains={domains}
+						domains={domains.filter((d) => !d.is_pixel_installed)}
 						selectedDomain={selectedDomain}
 						onChange={(newDomain) => {
 							setSelectedDomain(newDomain);
@@ -345,6 +362,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 								return prev;
 							});
 						}}
+						onDelete={handleDeleteDomain}
 					/>
 					{domainSelectorHints["selectDomain"]?.show && !selectedDomain && (
 						<HintCard
