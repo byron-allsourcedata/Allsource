@@ -54,13 +54,7 @@ class SourceAgentService:
         sql: str,
         params: Dict | None = None,
     ):
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(
-            None,
-            self.clickhouse.query,
-            sql,
-            params,
-        )
+        result = self.clickhouse.query(sql, params)
         return result.result_rows if hasattr(result, "result_rows") else result
 
     async def get_user_ids_by_emails(
