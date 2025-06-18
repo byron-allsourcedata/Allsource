@@ -27,24 +27,19 @@ export interface AdditionalPixel {
 	[key: string]: boolean;
 }
 
-export interface PixelDataSync {
-	createdDate: string;
-	list_name: string | null;
-	lastSync: string | null;
-	platform: string;
-	contacts: number;
-	createdBy: string;
-	status: string;
-	syncStatus: boolean;
+export interface ResolutionItem {
+	date: string;
+	lead_count: number;
 }
 
 export interface PixelManagementItem {
 	id: number;
 	domain_name: string;
 	pixel_status: boolean;
+	contacts_resolving: boolean;
 	additional_pixel: AdditionalPixel;
-	resulutions: any;
-	data_syncs: PixelDataSync[];
+	resolutions: ResolutionItem[];
+	data_syncs_count: number;
 }
 
 const Management: React.FC = () => {
@@ -91,6 +86,12 @@ const Management: React.FC = () => {
 	};
 
 	const handleDelete = async (toDelete: PixelManagementItem) => {
+		if (toDelete.contacts_resolving) {
+			showErrorToast(
+				"Domain cannot be deleted because it has associated leads",
+			);
+			return;
+		}
 		try {
 			setLoading(true);
 

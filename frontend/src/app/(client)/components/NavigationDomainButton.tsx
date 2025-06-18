@@ -8,6 +8,11 @@ import {
 	IconButton,
 	InputAdornment,
 	colors,
+	Tooltip,
+	DialogContent,
+	DialogContentText,
+	DialogActions,
+	Dialog,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import React, { useEffect, useState } from "react";
@@ -19,17 +24,9 @@ import { AxiosError } from "axios";
 import { SliderProvider } from "@/context/SliderContext";
 import Slider from "../../../components/Slider";
 import Image from "next/image";
-import ConfirmDeleteDomain from "./DeleteDomain";
 import CustomizedProgressBar from "../../../components/FirstLevelLoader";
-
-interface Domain {
-	id: number;
-	user_id: number;
-	domain: string;
-	data_provider_id: number;
-	is_pixel_installed: boolean;
-	enable: boolean;
-}
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import { Domain } from "./DomainsButton";
 
 interface AddDomainProps {
 	open: boolean;
@@ -42,14 +39,44 @@ interface HoverImageProps {
 	srcHover: string;
 	alt: string;
 	onClick: () => void;
+	disabled?: boolean;
 }
 
-const HoverableImage = ({ srcDefault, alt, onClick }: HoverImageProps) => {
-	return (
+const HoverableImage = ({
+	srcDefault,
+	srcHover,
+	alt,
+	onClick,
+	disabled = false,
+}: HoverImageProps) => {
+	const [isHovered, setIsHovered] = useState(false);
+
+	const icon = disabled ? (
+		<DeleteForeverOutlinedIcon
+			sx={{ fontSize: 20, color: "rgba(0,0,0,0.3)" }}
+		/>
+	) : (
+		<Image
+			height={20}
+			width={20}
+			alt={alt}
+			src={isHovered ? srcHover : srcDefault}
+			style={{
+				transition: "opacity 0.3s ease",
+				cursor: "pointer",
+			}}
+		/>
+	);
+
+	const button = (
 		<Button
+			onMouseEnter={() => setIsHovered(true)}
+			onMouseLeave={() => setIsHovered(false)}
 			onClick={(e) => {
 				e.stopPropagation();
-				onClick();
+				if (!disabled) {
+					onClick();
+				}
 			}}
 			className="delete-icon"
 			sx={{
@@ -57,19 +84,56 @@ const HoverableImage = ({ srcDefault, alt, onClick }: HoverImageProps) => {
 				minWidth: "auto",
 				border: "none",
 				background: "transparent",
+				cursor: disabled ? "not-allowed" : "pointer",
 			}}
 		>
-			<Image
-				height={20}
-				width={20}
-				alt={alt}
-				src={srcDefault}
-				style={{
-					transition: "opacity 0.3s ease",
-					cursor: "pointer",
-				}}
-			/>
+			{icon}
 		</Button>
+	);
+
+	return disabled ? (
+		<Tooltip
+			title={
+				<Box
+					sx={{
+						backgroundColor: "#fff",
+						margin: 0,
+						padding: 0,
+						display: "flex",
+						flexDirection: "row",
+						alignItems: "center",
+					}}
+				>
+					<Typography
+						className="table-data"
+						component="div"
+						sx={{ fontSize: "12px !important" }}
+					>
+						This domain cannot be deleted because it has associated leads.
+					</Typography>
+				</Box>
+			}
+			componentsProps={{
+				tooltip: {
+					sx: {
+						backgroundColor: "#fff",
+						color: "#000",
+						boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+						border: " 0.2px solid rgba(255, 255, 255, 1)",
+						borderRadius: "4px",
+						maxHeight: "100%",
+						maxWidth: "500px",
+						minWidth: "200px",
+						padding: "11px 10px",
+					},
+				},
+			}}
+			placement="right"
+		>
+			<span>{button}</span>
+		</Tooltip>
+	) : (
+		button
 	);
 };
 
@@ -412,6 +476,9 @@ const DomainButton: React.FC = () => {
 									srcHover="/trash-03-active.svg"
 									alt="Remove"
 									onClick={() => handleShowDelete(domain)}
+									disabled={
+										!(domains.length > 1 && domain.contacts_resolving !== true)
+									}
 								/>
 							)}
 						</Box>
@@ -419,12 +486,75 @@ const DomainButton: React.FC = () => {
 				))}
 			</Menu>
 			{deleteDomainPopup && deleteDomain && (
-				<ConfirmDeleteDomain
+				<Dialog
 					open={deleteDomainPopup}
-					domain={deleteDomain}
-					handleClose={() => setDeleteDomainPopup(false)}
-					handleDelete={handleDeleteDomain}
-				/>
+					onClose={() => setDeleteDomainPopup(false)}
+					PaperProps={{
+						sx: {
+							padding: 2,
+
+							width: "fit-content",
+							borderRadius: 2,
+							border: "1px solid rgba(175, 175, 175, 1)",
+						},
+					}}
+				>
+					<Typography
+						className="first-sub-title"
+						sx={{ paddingLeft: 1, pt: 1, pb: 0 }}
+					>
+						Confirm Deletion
+					</Typography>
+					<DialogContent sx={{ padding: 2, pr: 1, pl: 1 }}>
+						<DialogContentText className="table-data">
+							Are you sure you want to delete this domain -{" "}
+							<span style={{ fontWeight: "600" }}>{deleteDomain?.domain} </span>
+							?
+						</DialogContentText>
+					</DialogContent>
+					<DialogActions>
+						<Button
+							className="second-sub-title"
+							onClick={() => setDeleteDomainPopup(false)}
+							sx={{
+								backgroundColor: "#fff",
+								color: "rgba(56, 152, 252, 1) !important",
+								fontSize: "14px",
+								textTransform: "none",
+								padding: "0.75em 1em",
+								border: "1px solid rgba(56, 152, 252, 1)",
+								maxWidth: "50px",
+								maxHeight: "30px",
+								"&:hover": {
+									backgroundColor: "#fff",
+									boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+								},
+							}}
+						>
+							Cancel
+						</Button>
+						<Button
+							className="second-sub-title"
+							onClick={() => handleDeleteDomain(deleteDomain)}
+							sx={{
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff !important",
+								fontSize: "14px",
+								textTransform: "none",
+								padding: "0.75em 1em",
+								border: "1px solid rgba(56, 152, 252, 1)",
+								maxWidth: "60px",
+								maxHeight: "30px",
+								"&:hover": {
+									backgroundColor: "rgba(56, 152, 252, 1)",
+									boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+								},
+							}}
+						>
+							Delete
+						</Button>
+					</DialogActions>
+				</Dialog>
 			)}
 			{loading && (
 				<Box

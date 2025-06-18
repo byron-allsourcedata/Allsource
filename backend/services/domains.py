@@ -7,11 +7,13 @@ from enums import SubscriptionStatus
 from models import Users
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.plans_persistence import PlansPersistence
+from resolver import injectable
 from schemas.domains import DomainResponse, UpdateDomain
 from services.subscriptions import SubscriptionService
 from utils import normalize_url
 
 
+@injectable
 class UserDomainsService:
     def __init__(
         self,
