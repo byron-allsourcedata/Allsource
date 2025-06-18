@@ -10,6 +10,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomNotification from "@/components/CustomNotification";
 import PixelPopup from "@/components/PixelPopup";
 import { useRouter } from "next/navigation";
+import { fetchUserData } from "@/services/meService";
 
 interface Data {
 	num: number;
@@ -192,8 +193,9 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
 		};
 	}, [url]);
 
-	const handleClosePixel = () => {
+	const handleClosePixel = async () => {
 		try {
+			await fetchUserData();
 			const meData = sessionStorage.getItem("me");
 			if (!meData) return;
 

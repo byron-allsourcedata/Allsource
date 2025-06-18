@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	Box,
 	Button,
@@ -66,7 +66,11 @@ interface PopupProps {
 	pixelCode: string;
 	secondPixelCode?: string;
 	title: string;
-	secondStepText: string;
+	secondStepText: {
+		button: string;
+		default: string;
+	};
+	thirdStepText: string;
 }
 
 const ScriptsPopup: React.FC<PopupProps> = ({
@@ -76,18 +80,19 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 	secondPixelCode,
 	title,
 	secondStepText,
+	thirdStepText,
 }) => {
 	const [tabIndex, setTabIndex] = useState(0);
 	const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
 		setTabIndex(newValue);
 	};
 
-	const displayedCode = tabIndex === 0 ? pixelCode : (secondPixelCode ?? "");
-
-	const handleCopy = () => {
-		navigator.clipboard.writeText(pixelCode);
-		alert("Copied to clipboard");
+	const tabToKeyMap: { [key: number]: "button" | "default" } = {
+		0: "button",
+		1: "default",
 	};
+
+	const displayedCode = tabIndex === 0 ? pixelCode : (secondPixelCode ?? "");
 
 	const [email, setEmail] = useState("");
 
@@ -99,6 +104,12 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 			})
 			.catch((error) => {});
 	};
+
+	useEffect(() => {
+		if (open) {
+			setTabIndex(0);
+		}
+	}, [open]);
 
 	return (
 		<Modal
@@ -320,8 +331,11 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 							"@media (max-width: 600px)": { pt: 2 },
 						}}
 					>
-						<Typography className="paragraph" sx={subtext}>
-							{secondStepText}
+						<Typography
+							className="paragraph"
+							sx={{ ...subtext, fontSize: "13px !important" }}
+						>
+							{secondStepText[tabToKeyMap[tabIndex]]}
 						</Typography>
 						<Box
 							sx={{
@@ -344,6 +358,9 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 								}}
 							>
 								Send this to my developer
+							</Typography>
+							<Typography sx={{ ...subtext, pt: 2, pb: 1 }}>
+								Enter your email to receive the script by email:
 							</Typography>
 							<Box
 								display="flex"
@@ -419,16 +436,31 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 							</Box>
 						</Box>
 					</Box>
-					{/*<Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', padding: '1.25em 0em 0em 0em', justifyContent: 'start' }}>
-                        <Image src='/3.svg' alt='3' width={28} height={28} />
-                        <Typography className='first-sub-title' sx={maintext}>Verify Your Pixel</Typography>
-                    </Box>
-                    <Typography className='paragraph' sx={{ ...subtext, paddingLeft: '3.75em', }}>Once the pixel is pasted in your website, wait for 10-15 mins and verify your pixel.</Typography>
-                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingBottom: '0em', pt: 3, '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '94%', pl: 2 } }}>
-                        <Button variant="contained" onClick={handleClose} className='second-sub-title' sx={{ backgroundColor: 'rgba(56, 152, 252, 1)', color: 'rgba(255, 255, 255, 1) !important', textTransform: 'none', padding: '0.75em 3em', "&:hover": { backgroundColor: 'rgba(56, 152, 252, 1)' }, '@media (max-width: 600px)': { width: '100%' } }}>
-                            Verify Installation
-                        </Button>
-                    </Box> */}
+					<Box
+						sx={{
+							display: "flex",
+							flexDirection: "row",
+							alignItems: "center",
+							padding: "1.25em 0 0 0",
+							justifyContent: "start",
+						}}
+					>
+						<Image src="/3.svg" alt="3" width={28} height={28} />
+						<Typography className="first-sub-title" sx={maintext}>
+							Verify Your Pixel
+						</Typography>
+					</Box>
+
+					<Typography
+						className="paragraph"
+						sx={{
+							...subtext,
+							paddingLeft: "3.75em",
+							fontSize: "13px !important",
+						}}
+					>
+						{thirdStepText}
+					</Typography>
 				</Box>
 			</Box>
 		</Modal>

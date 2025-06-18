@@ -26,7 +26,7 @@ async def get_pixel_script(
     pixel_management_service: PixelManagementService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
-    return pixel_management_service.get_pixel_script(
+    return pixel_management_service.get_pixel_scripts(
         action=action,
         domain_id=domain_id,
     )
