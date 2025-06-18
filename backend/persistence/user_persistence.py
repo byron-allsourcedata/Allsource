@@ -103,11 +103,11 @@ class UserPersistence:
         )
         return user_object
 
-    def check_status_invitations(self, admin_token, user_mail):
+    def check_status_invitations(self, teams_token, user_mail):
         result = {"success": False}
         teams_invitation = (
             self.db.query(TeamInvitation)
-            .filter(TeamInvitation.token == admin_token)
+            .filter(TeamInvitation.token == teams_token)
             .first()
         )
         if teams_invitation:
