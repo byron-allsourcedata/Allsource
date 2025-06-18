@@ -39,7 +39,13 @@ class DataSyncImportedLead(Base):
     lead_users_id = Column(
         BigInteger,
         ForeignKey("leads_users.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=True,
+        nullable=False,
+    )
+
+    five_x_five_user_id = Column(
+        BigInteger,
+        ForeignKey("5x5_users.id", ondelete="CASCADE"),
+        nullable=False,
     )
 
     __table_args__ = (

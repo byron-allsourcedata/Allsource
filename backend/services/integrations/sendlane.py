@@ -253,35 +253,50 @@ class SendlaneIntegrationService:
             list_id=integration_data_sync.list_id,
         )
 
-    def bulk_add_contacts(self, five_x_five_users, access_token, list_id: int):
+    def bulk_add_contacts(
+        self, five_x_five_users: List[FiveXFiveUser], access_token, list_id: int
+    ):
         chunks = [
             five_x_five_users[i : i + 100]
             for i in range(0, len(five_x_five_users), 100)
         ]
+        results = []
 
         for chunk in chunks:
-            contacts = [
-                {
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                }
-                for user in chunk
-            ]
+            contacts = []
+            chunk_id_map = {}
 
-            data = {"contacts": contacts}
-            response = self.__handle_request(
-                f"/lists/{list_id}/contacts",
-                api_key=access_token,
-                json=data,
-                method="POST",
-            )
+            for user in chunk:
+                contacts.append(
+                    {
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                    }
+                )
+                chunk_id_map[user.email] = user.id
 
-            if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-            else:
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        return ProccessDataSyncResult.SUCCESS.value
+                data = {"contacts": contacts}
+                response = self.__handle_request(
+                    f"/lists/{list_id}/contacts",
+                    api_key=access_token,
+                    json=data,
+                    method="POST",
+                )
+
+                if response.status_code == 401:
+                    status = ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+                elif response.status_code != 200:
+                    status = ProccessDataSyncResult.INCORRECT_FORMAT.value
+                else:
+                    status = ProccessDataSyncResult.SUCCESS.value
+
+                for contact in contacts:
+                    email = contact["email"]
+                    lead_id = chunk_id_map.get(email)
+
+                    results.append({"lead_id": lead_id, "status": status})
+        return results
 
     def __create_contact(self, five_x_five_user, access_token, list_id: int):
         profile = self.__mapped_sendlane_contact(five_x_five_user)
