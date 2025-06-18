@@ -561,7 +561,9 @@ export const SettingsBilling: React.FC = () => {
 								))}
 						</Grid>
 
-						<AddCardPopup open={open} onClose={handleClose} />
+						<Elements stripe={stripePromise}> 
+							<AddCardPopup open={open} onClose={handleClose} onSuccess={handleCheckoutSuccess} />
+						</Elements>
 
 						{/* <Modal open={open} onClose={handleClose}>
 							<Box
