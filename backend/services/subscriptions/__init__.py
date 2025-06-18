@@ -22,7 +22,7 @@ from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from resolver import injectable
-from utils import get_utc_aware_date_for_postgres, get_end_of_month
+from utils import get_utc_aware_date_for_postgres, end_of_month
 from decimal import *
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
@@ -529,7 +529,7 @@ class SubscriptionService:
             members_limit=plan.members_limit,
             status="active",
             plan_start=now,
-            plan_end=get_end_of_month(now),
+            plan_end=end_of_month(now),
             plan_id=plan.id,
             is_trial=True,
             contact_credit_plan_id=plan.contact_credit_plan_id,

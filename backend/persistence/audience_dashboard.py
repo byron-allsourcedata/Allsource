@@ -460,7 +460,7 @@ class DashboardAudiencePersistence:
                 )
                 .where(IntegrationUserSync.id.in_(ids))
             )
-        return self.db.execute(stmt).all()
+        return self.db.execute(stmt).fetchall()
 
     def get_last_lookalike_smart_audiences(
         self, user_id: int, limit: int, smart_audiences: List[AudienceSmart]
