@@ -16,7 +16,7 @@ from sqlalchemy import func, case, and_, or_, distinct
 from fastapi import HTTPException
 import re
 
-
+from persistence.leads_persistence import LeadsPersistence
 from resolver import injectable
 
 
@@ -24,6 +24,7 @@ from resolver import injectable
 class UserDomainsPersistence:
     def __init__(self, db: Db):
         self.db = db
+        self.leads_persistence = LeadsPersistence
 
     def get_domains_by_user(self, user_id: int, domain_substr: str = None):
         query = self.db.query(UserDomains).filter_by(user_id=user_id)
@@ -277,14 +278,8 @@ class UserDomainsPersistence:
         if not domain:
             raise HTTPException(status_code=404, detail="Domain not found")
 
-        lead_exists = (
-            self.db.query(LeadUser)
-            .filter(
-                LeadUser.domain_id == domain_id,
-            )
-            .first()
-            is not None
-        )
+        lead_exists = self.leads_persistence.exists_by_domain_id(domain_id)
+
         if lead_exists:
             raise HTTPException(
                 status_code=400,

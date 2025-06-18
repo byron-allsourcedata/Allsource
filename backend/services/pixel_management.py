@@ -23,9 +23,7 @@ logger = logging.getLogger(__name__)
 class PixelManagementService:
     def __init__(
         self,
-        user_domains_service: Annotated[
-            UserDomainsService, Depends(get_domain_service)
-        ],
+        user_domains_service: UserDomainsService,
         integration_service: Annotated[
             IntegrationService, Depends(get_integration_service)
         ],

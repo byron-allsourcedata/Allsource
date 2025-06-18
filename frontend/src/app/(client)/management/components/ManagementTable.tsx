@@ -18,6 +18,8 @@ import {
 	DialogContent,
 	DialogContentText,
 	Dialog,
+	Theme,
+	SxProps,
 } from "@mui/material";
 import {
 	LineChart,
@@ -535,14 +537,11 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														>
 															Add Additional Pixel Script
 														</Button>
-														{!row.contacts_resolving && (
-															<Button
-																sx={style.actionButtonText}
-																onClick={(e) => handleOpenConfirmDialog(e, row)}
-															>
-																Delete
-															</Button>
-														)}
+														<DeleteButton
+															onClick={(e) => handleOpenConfirmDialog(e, row)}
+															disabled={row.contacts_resolving}
+															sx={style.actionButtonText}
+														/>
 													</Box>
 												) : (
 													<Box
@@ -558,14 +557,11 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														>
 															Install Pixel
 														</Button>
-														{!row.contacts_resolving && (
-															<Button
-																sx={style.actionButtonText}
-																onClick={(e) => handleOpenConfirmDialog(e, row)}
-															>
-																Delete
-															</Button>
-														)}
+														<DeleteButton
+															onClick={(e) => handleOpenConfirmDialog(e, row)}
+															disabled={row.contacts_resolving}
+															sx={style.actionButtonText}
+														/>
 													</Box>
 												)}
 											</Box>
@@ -649,6 +645,26 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 				</DialogActions>
 			</Dialog>
 		</>
+	);
+};
+
+interface DeleteButtonProps {
+	onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+	disabled?: boolean;
+	sx?: SxProps<Theme>;
+}
+
+const DeleteButton: React.FC<DeleteButtonProps> = ({
+	onClick,
+	disabled = false,
+	sx,
+}) => {
+	if (disabled) return null;
+
+	return (
+		<Button sx={sx} onClick={onClick}>
+			Delete
+		</Button>
 	);
 };
 
