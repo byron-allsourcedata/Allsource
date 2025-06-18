@@ -11,6 +11,7 @@ import {
 	Divider,
 	Popover,
 } from "@mui/material";
+import dayjs from "dayjs";
 import Image from "next/image";
 import { Elements } from "@stripe/react-stripe-js";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
@@ -41,7 +42,7 @@ interface CardDetails {
 
 interface SubscriptionDetails {
 	active: { detail_type: string; value: boolean };
-	billing_cycle: { detail_type: string; value: string };
+	billing_cycle: { detail_type: string; plan_start: string; plan_end: string };
 	contacts_downloads: { detail_type: string; value: string };
 	next_billing_date: { detail_type: string; value: string };
 	plan_name: { detail_type: string; value: string };
@@ -166,10 +167,18 @@ export const SettingsBilling: React.FC = () => {
 		switch (value?.detail_type) {
 			case "funds":
 				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
+			case "plan_name":
+				return value.value;
 			case "limited":
 				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
 			case "as_is":
-				return value.value;
+				return (
+					`${dayjs(value.plan_start).format("MMM D, YYYY")}` +
+					(value.plan_end
+						? ` to ${dayjs(value.plan_end).format("MMM D, YYYY")}`
+						: "")
+				);
+
 			default:
 				return "Coming soon";
 		}

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 
 from db_dependencies import Db
-from models import UserSubscriptions, Users, SubscriptionPlan
+from models import UserSubscriptions, Users, SubscriptionPlan, LeadUser
 from resolver import injectable
 
 
@@ -41,16 +41,21 @@ class UserSubscriptionsPersistence:
             select(Users).where(Users.id == user_id)
         ).scalar()
 
-        if plan.leads_credits >= user.overage_leads_count:
-            overage_leads_count = 0
-            leads_credits = plan.leads_credits - user.overage_leads_count
-        else:
-            overage_leads_count = user.overage_leads_count - plan.leads_credits
-            leads_credits = 0
+        blocked_leads = (
+            self.db.query(LeadUser)
+            .filter_by(user_id=user_id, is_active=False)
+            .order_by(LeadUser.id.asc())
+            .limit(plan.leads_credits)
+            .all()
+        )
+        to_unlock_count = len(blocked_leads)
+        for lead in blocked_leads:
+            lead.is_active = True
+            self.db.add(lead)
 
+        remaining_credits = plan.leads_credits - to_unlock_count
         user.current_subscription_id = subscription_id
-        user.leads_credits = leads_credits
-        user.overage_leads_count = overage_leads_count
+        user.leads_credits = remaining_credits
         user.validation_funds = plan.validation_funds
         user.enrichment_credits = plan.enrichment_credits
         user.premium_source_credits = plan.premium_source_credits
