@@ -28,7 +28,7 @@ import { RemoveCardPopup } from "./Billing/RemoveCard";
 import { BillingHistory } from "./Billing/BillingHistory";
 import { UsageItem } from "./Billing/UsageItem";
 import { billingStyles } from "./Billing/billingStyles";
-import AddCardPopup from "./Billing/AddCard"
+import AddCardPopup from "./Billing/AddCard";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
@@ -561,7 +561,7 @@ export const SettingsBilling: React.FC = () => {
 								))}
 						</Grid>
 
-						<AddCardPopup open={open} onClose={handleClose}/>
+						<AddCardPopup open={open} onClose={handleClose} />
 
 						{/* <Modal open={open} onClose={handleClose}>
 							<Box
