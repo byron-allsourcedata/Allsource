@@ -36,10 +36,14 @@ def get_utc_aware_date_for_postgres():
 def timestamp_to_date(timestamp):
     return datetime.fromtimestamp(timestamp)
 
+
 def get_end_of_month(dt: datetime) -> datetime:
     next_month = (dt.replace(day=28) + timedelta(days=4)).replace(day=1)
     end_of_month = next_month - timedelta(days=1)
-    return end_of_month.replace(hour=23, minute=59, second=59, microsecond=999999)
+    return end_of_month.replace(
+        hour=23, minute=59, second=59, microsecond=999999
+    )
+
 
 def get_valid_email(
     user: FiveXFiveUser,

@@ -29,7 +29,7 @@ class UserSubscriptionsPersistence:
             plan_start=now,
             plan_end=get_end_of_month(now),
             price_id=plan.stripe_price_id,
-            contact_credit_plan_id=plan.contact_credit_plan_id
+            contact_credit_plan_id=plan.contact_credit_plan_id,
         )
 
         self.db.add(user_subscription)
