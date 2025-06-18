@@ -4,13 +4,13 @@ from slack_sdk.errors import SlackApiError
 from config.slack import SlackConfig
 from fastapi import HTTPException
 import json
-from typing import List
+from typing import List, Tuple
 from urllib.parse import unquote
 import base64
 import os
 from datetime import datetime, timedelta
 
-from models import UserIntegration, IntegrationUserSync
+from models import UserIntegration, IntegrationUserSync, LeadUser
 from utils import extract_first_email, get_valid_email
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
@@ -263,23 +263,23 @@ class SlackService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         results = []
-        for five_x_five_user in five_x_five_users:
+        for lead_user, five_x_five_user in user_data:
             user_text = self.generate_user_text(five_x_five_user)
             if user_text in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
                 results.append(
-                    {"lead_id": five_x_five_user.id, "status": user_text}
+                    {"lead_id": lead_user.id, "status": user_text}
                 )
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": five_x_five_user.id,
+                        "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )

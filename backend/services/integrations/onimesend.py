@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Tuple
 
 import httpx
 
@@ -12,7 +12,7 @@ from enums import (
     ProccessDataSyncResult,
     DataSyncType,
 )
-from models import UserIntegration, IntegrationUserSync
+from models import UserIntegration, IntegrationUserSync, LeadUser
 from models.five_x_five_users import FiveXFiveUser
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
@@ -163,31 +163,31 @@ class OmnisendIntegrationService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         results = []
         bulk_profiles = []
-        for user in five_x_five_users:
-            profile = self.__mapped_profile(user)
-            identifiers = self.__mapped_identifiers(user)
+        for lead_user, five_x_five_user in user_data:
+            profile = self.__mapped_profile(five_x_five_user)
+            identifiers = self.__mapped_identifiers(five_x_five_user)
 
             if identifiers in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append({"lead_id": user.id, "status": profile})
+                results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": user.id,
+                        "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
 
             properties = (
-                self.__map_properties(user, integration_data_sync.data_map)
+                self.__map_properties(five_x_five_user, integration_data_sync.data_map)
                 if integration_data_sync.data_map
                 else {}
             )

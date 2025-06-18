@@ -7,7 +7,7 @@ import time
 import google.api_core.exceptions
 from google.auth.exceptions import RefreshError
 
-from models import FiveXFiveUser
+from models import FiveXFiveUser, LeadUser
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
@@ -37,7 +37,7 @@ from enums import (
     IntegrationLimit,
 )
 import httpx
-from typing import List
+from typing import List, Tuple
 from utils import (
     validate_and_format_phone,
     get_valid_email,
@@ -295,30 +295,29 @@ class GoogleAdsIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         profiles = []
         results = []
-        for enrichment_user in five_x_five_users:
-            profile = self.__mapped_googleads_profile_lead(enrichment_user)
+        for lead_user, five_x_five_user in user_data:
+            profile = self.__mapped_googleads_profile_lead(five_x_five_user)
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
                 results.append(
-                    {"lead_id": enrichment_user.id, "status": profile}
+                    {"lead_id": lead_user.id, "status": profile}
                 )
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": enrichment_user.id,
+                        "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
 
-            if profiles:
-                profiles.append(profile)
+            profiles.append(profile)
 
         if not profiles:
             return results

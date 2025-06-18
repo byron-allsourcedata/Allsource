@@ -218,22 +218,18 @@ async def send_leads_to_rmq(
     data_sync,
     user_integrations_service_name,
 ):
-    lead_map = {
-        lead_user.id: lead_user.five_x_five_user_id for lead_user in lead_users
-    }
     lead_ids = [lead_user.id for lead_user in lead_users]
     users_id = lead_users[-1].user_id
     records = [
         {
             "status": DataSyncImportedStatus.SENT.value,
             "lead_users_id": lead_id,
-            "five_x_five_user_id": lead_map[lead_id],
             "service_name": user_integrations_service_name,
             "data_sync_id": data_sync.id,
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        for lead_id in lead_map
+        for lead_id in lead_ids
     ]
     stmt = (
         insert(DataSyncImportedLead)
