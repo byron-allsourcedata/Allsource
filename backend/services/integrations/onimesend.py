@@ -187,7 +187,9 @@ class OmnisendIntegrationService:
                 )
 
             properties = (
-                self.__map_properties(five_x_five_user, integration_data_sync.data_map)
+                self.__map_properties(
+                    five_x_five_user, integration_data_sync.data_map
+                )
                 if integration_data_sync.data_map
                 else {}
             )

@@ -272,9 +272,7 @@ class SlackService:
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append(
-                    {"lead_id": lead_user.id, "status": user_text}
-                )
+                results.append({"lead_id": lead_user.id, "status": user_text})
                 continue
             else:
                 results.append(

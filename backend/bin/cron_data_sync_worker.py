@@ -64,7 +64,9 @@ def setup_logging(level):
     )
 
 
-def check_correct_data_sync(data_sync_id: int, data_sync_imported_ids: list[int], session: Session):
+def check_correct_data_sync(
+    data_sync_id: int, data_sync_imported_ids: list[int], session: Session
+):
     integration_data = (
         session.query(UserIntegration, IntegrationUserSync)
         .join(
@@ -76,13 +78,11 @@ def check_correct_data_sync(data_sync_id: int, data_sync_imported_ids: list[int]
     )
 
     if not integration_data:
-        logging.info('Data sync not found')
+        logging.info("Data sync not found")
         return None
 
     result = (
-        session.query(
-            DataSyncImportedLead.lead_users_id.label("lead_users_id")
-        )
+        session.query(DataSyncImportedLead.lead_users_id.label("lead_users_id"))
         .filter(
             DataSyncImportedLead.id.in_(data_sync_imported_ids),
             DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
@@ -233,7 +233,8 @@ async def ensure_integration(
         logging.info(f"Data sync id {data_sync_id}")
         integration_data, lead_user_data = check_correct_data_sync(
             data_sync_id,
-            data_sync_imported_ids=data_sync_imported_ids, session=session
+            data_sync_imported_ids=data_sync_imported_ids,
+            session=session,
         )
         if not lead_user_data:
             logging.info(f"data sync empty for {data_sync_id}")
@@ -258,9 +259,7 @@ async def ensure_integration(
         }
         lead_user_ids = [t.lead_users_id for t in lead_user_data]
         service = service_map.get(service_name)
-        leads = get_lead_attributes(
-            session, lead_user_ids
-        )
+        leads = get_lead_attributes(session, lead_user_ids)
         if service:
             try:
                 results = await service.process_data_sync_lead(

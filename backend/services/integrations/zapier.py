@@ -128,14 +128,14 @@ class ZapierIntegrationService:
             profile = self.__create_profile(data, integration_data_sync)
             if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                 for result in results:
-                    result["status"] = ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+                    result["status"] = (
+                        ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+                    )
                 return results
 
         return results
 
-    def __create_profile(
-        self, data: dict, sync: IntegrationUserSync
-    ):
+    def __create_profile(self, data: dict, sync: IntegrationUserSync):
         response = self.client.post(url=sync.hook_url, json=data)
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value

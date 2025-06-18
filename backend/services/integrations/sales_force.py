@@ -426,9 +426,7 @@ class SalesForceIntegrationsService:
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append(
-                    {"lead_id": lead_user.id, "status": profile}
-                )
+                results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
                 results.append(

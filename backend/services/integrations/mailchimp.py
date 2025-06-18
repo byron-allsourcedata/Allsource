@@ -374,7 +374,7 @@ class MailchimpIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        user_data: List[Tuple[LeadUser, FiveXFiveUser]]
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         profiles = []
         results = []
@@ -387,9 +387,7 @@ class MailchimpIntegrationsService:
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append(
-                    {"lead_id": lead_user.id, "status": profile}
-                )
+                results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
                 results.append(
