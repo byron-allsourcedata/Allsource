@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         session.rollback()
-        logging.error(f"Ошибка обновления: {e}")
+        logging.error(f"error: {e}")
 
     finally:
         session.close()
