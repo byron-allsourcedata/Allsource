@@ -97,7 +97,7 @@ class SubscriptionDetails(BaseModel):
     plan_name: PlanName
     domains: LimitedDetail
     contacts_downloads: LimitedDetail
-    smart_audience: str
+    smart_audience: LimitedDetail
     validation_funds: FundsDetail
     premium_sources_funds: str
     next_billing_date: NextBillingDate
