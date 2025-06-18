@@ -1,7 +1,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import List, Any
+from typing import List, Any, Tuple
 from uuid import UUID
 
 import httpx
@@ -14,7 +14,7 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
-from models import FiveXFiveUser
+from models import FiveXFiveUser, LeadUser
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -275,13 +275,13 @@ class HubspotIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        lead_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         profiles = []
         results = []
-        for lead_user in lead_users:
+        for lead_user, five_x_five_user in user_data:
             profile = self.__mapped_profile_lead(
-                lead_user, integration_data_sync.data_map
+                five_x_five_user, integration_data_sync.data_map
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -311,8 +311,7 @@ class HubspotIntegrationsService:
                     result["status"] = result_bulk
         return results
 
-    def __create_profiles(self, access_token, profiles_list):
-        emails = [p.get("email") for p in profiles_list if p.get("email")]
+    def fetch_all_contacts(self, access_token, emails, after=None):
         search_payload = {
             "filterGroups": [
                 {
@@ -327,33 +326,49 @@ class HubspotIntegrationsService:
             ],
             "properties": ["email"],
         }
+        if after:
+            search_payload["after"] = after
+
         search_resp = self.__handle_request(
             url="https://api.hubapi.com/crm/v3/objects/contacts/search",
             method="POST",
             access_token=access_token,
             json=search_payload,
         )
+
         if search_resp.status_code != 200:
             logging.error("Search failed: %s", search_resp.text)
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return []
 
+        results = search_resp.json().get("results", [])
+        paging = search_resp.json().get("paging", {})
+        after = paging.get("next", {}).get("after")
+        if after:
+            results.extend(self.fetch_all_contacts(access_token, emails, after))
+
+        return results
+
+    def __create_profiles(self, access_token, profiles_list):
+        emails = [p.get("email") for p in profiles_list if p.get("email")]
+        all_contacts = self.fetch_all_contacts(access_token, emails)
         existing = {
-            item["properties"]["email"]: item["id"]
-            for item in search_resp.json().get("results", [])
+            item["properties"]["email"]: item["id"] for item in all_contacts
         }
-
-        to_create = []
         to_update = []
+        to_create = []
+        created_emails = set()
         for props in profiles_list:
-            clean_props = {k: v for k, v in props.items() if v is not None}
             email = props.get("email")
+            clean_props = {k: v for k, v in props.items() if v is not None}
             if email in existing:
                 clean_props.pop("email", None)
                 to_update.append(
                     {"id": existing[email], "properties": clean_props}
                 )
             else:
-                to_create.append({"properties": clean_props})
+                if email not in created_emails:
+                    created_emails.add(email)
+                    to_create.append({"properties": clean_props})
 
         if to_create:
             create_resp = self.__handle_request(
