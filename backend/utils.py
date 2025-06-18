@@ -4,7 +4,7 @@ import os
 import hashlib
 import json
 from typing import Optional, Any
-
+import calendar
 import regex
 from urllib.parse import urlparse, parse_qs
 import logging
@@ -37,11 +37,10 @@ def timestamp_to_date(timestamp):
     return datetime.fromtimestamp(timestamp)
 
 
-def get_end_of_month(dt: datetime) -> datetime:
-    next_month = (dt.replace(day=28) + timedelta(days=4)).replace(day=1)
-    end_of_month = next_month - timedelta(days=1)
-    return end_of_month.replace(
-        hour=23, minute=59, second=59, microsecond=999999
+def end_of_month(dt: datetime) -> datetime:
+    last_day = calendar.monthrange(dt.year, dt.month)[1]
+    return dt.replace(
+        day=last_day, hour=23, minute=59, second=59, microsecond=999999
     )
 
 
