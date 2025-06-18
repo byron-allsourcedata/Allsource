@@ -99,6 +99,8 @@ export const SettingsBilling: React.FC = () => {
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);
 	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
+	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
+		useState(false);
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 	const stripePromise = loadStripe(
@@ -628,7 +630,7 @@ export const SettingsBilling: React.FC = () => {
 										limitValue={planSmartAudienceCollected}
 										currentValue={smartAudienceCollected}
 										needButton={false}
-										commingSoon={true}
+										available={isAvailableSmartAudience}
 									/>
 								</>
 							)}
