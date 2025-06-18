@@ -51,9 +51,11 @@ class AudienceSmart(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    user_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
+    user_id = Column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     created_by_user_id = Column(
-        BigInteger, ForeignKey("users.id", onupdate="SET NULL"), nullable=True
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     total_records = Column(BigInteger, server_default="0", nullable=False)
     validated_records = Column(BigInteger, server_default="0", nullable=False)
