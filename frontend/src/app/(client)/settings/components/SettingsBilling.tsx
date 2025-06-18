@@ -868,9 +868,7 @@ export const SettingsBilling: React.FC = () => {
 															Object.entries(billingDetails).map(
 																([nextKey, nextValue], nextIndex) => {
 																	if (
-																		(nextValue &&
-																			nextKey === "monthly_total") ||
-																		nextKey === "yearly_total"
+																		((nextKey === "monthly_total" && nextValue) || (nextKey === "yearly_total" && nextValue))
 																	) {
 																		return (
 																			<Box
