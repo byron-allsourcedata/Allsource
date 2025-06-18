@@ -114,7 +114,7 @@ export const SettingsBilling: React.FC = () => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
-			console.log(response.data)
+			console.log(response.data);
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
