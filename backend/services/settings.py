@@ -366,6 +366,7 @@ class SettingsService:
         customer_id = user.get("customer_id")
         validation_funds = user.get("validation_funds")
         leads_credits = user.get("leads_credits")
+        smart_audience_quota = user.get("smart_audience_quota")
         user_id = user.get("id")
         amount_user_domains = len(
             self.user_domains_service.get_domains(user_id)
@@ -378,6 +379,7 @@ class SettingsService:
         plan_limit_domain = current_plan.domains_limit or -1
         validation_funds_limit = current_plan.validation_funds
         leads_credits_limit = current_plan.leads_credits
+        smart_audience_quota_limit = current_plan.smart_audience_quota
         total_key = (
             "monthly_total"
             if current_plan.interval == "month"
@@ -430,7 +432,11 @@ class SettingsService:
                 limit_value=leads_credits_limit,
                 current_value=leads_credits,
             ),
-            smart_audience="Coming soon",
+            smart_audience=LimitedDetail(
+                detail_type="limited",
+                limit_value=smart_audience_quota_limit,
+                current_value=smart_audience_quota,
+            ),
             validation_funds=FundsDetail(
                 detail_type="funds",
                 limit_value=validation_funds_limit,
