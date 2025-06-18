@@ -36,7 +36,9 @@ async def send_leads_to_queue(rmq_connection, processed_lead):
     )
 
 
-async def prepare_users_for_billing(rmq_connection: RabbitMQConnection, session: Session):
+async def prepare_users_for_billing(
+    rmq_connection: RabbitMQConnection, session: Session
+):
     logging.info("Preparing users for billing...")
     results = (
         session.query(Users.id)

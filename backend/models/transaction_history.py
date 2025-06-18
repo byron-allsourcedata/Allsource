@@ -1,4 +1,3 @@
-
 from sqlalchemy import (
     UUID,
     Column,
@@ -23,9 +22,7 @@ class TransactionHistory(Base):
     )
     event_name = Column(VARCHAR(32), nullable=False)
     identifier = Column(VARCHAR(64), nullable=False)
-    customer_id = Column(
-        VARCHAR(32), nullable=False
-    )
+    customer_id = Column(VARCHAR(32), nullable=False)
     quantity = Column(Integer, nullable=False)
     created = Column(
         TIMESTAMP,

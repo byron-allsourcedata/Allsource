@@ -47,6 +47,7 @@ async def send_leads_to_queue(rmq_connection, processed_lead):
         message_body=processed_lead,
     )
 
+
 def save_transaction(db_session, event_data):
     created_dt = datetime.fromtimestamp(event_data["created"])
 
@@ -60,21 +61,24 @@ def save_transaction(db_session, event_data):
     )
     db_session.add(tx)
 
+
 async def process_rmq_message(
-    message: IncomingMessage,
-    db_session: Session,
-    channel: Channel
+    message: IncomingMessage, db_session: Session, channel: Channel
 ):
     try:
         body = json.loads(message.body)
         user_ids = body.get("user_ids")
         result_users = (
-            db_session.query(Users.id, Users.customer_id, Users.overage_leads_count)
+            db_session.query(
+                Users.id, Users.customer_id, Users.overage_leads_count
+            )
             .filter(Users.id.in_(user_ids))
             .all()
         )
         for user_id, customer_id, overage_leads_count in result_users:
-            event_data = StripeService.record_usage(customer_id=customer_id, quantity=overage_leads_count)
+            event_data = StripeService.record_usage(
+                customer_id=customer_id, quantity=overage_leads_count
+            )
             save_transaction(db_session=db_session, event_data=event_data)
             await send_sse(
                 channel=channel,
@@ -134,9 +138,7 @@ async def main():
 
         await queue.consume(
             functools.partial(
-                process_rmq_message,
-                channel=channel,
-                db_session=db_session
+                process_rmq_message, channel=channel, db_session=db_session
             ),
         )
 

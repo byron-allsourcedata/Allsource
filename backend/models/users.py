@@ -129,9 +129,7 @@ class Users(Base):
     __table_args__ = (
         Index("users_email_idx", email, unique=True),
         Index("users_data_provider_id_idx", data_provider_id, unique=True),
-        Index(
-            "users_overage_leads_count_idx", overage_leads_count
-        ),
+        Index("users_overage_leads_count_idx", overage_leads_count),
     )
 
 
