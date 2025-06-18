@@ -265,13 +265,24 @@ class SlackService:
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
+        results = []
         for five_x_five_user in five_x_five_users:
             user_text = self.generate_user_text(five_x_five_user)
             if user_text in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
+                results.append(
+                    {"lead_id": five_x_five_user.id, "status": user_text}
+                )
                 continue
+            else:
+                results.append(
+                    {
+                        "lead_id": five_x_five_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
 
             result = self.send_message_to_channels(
                 user_text,
@@ -279,8 +290,10 @@ class SlackService:
                 integration_data_sync.list_id,
             )
             if result != ProccessDataSyncResult.SUCCESS.value:
-                return result
-        return ProccessDataSyncResult.SUCCESS.value
+                for result in results:
+                    if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                        result["status"] = result
+        return results
 
     def generate_user_text(self, five_x_five_user: FiveXFiveUser) -> str:
         if not five_x_five_user.linkedin_url:
