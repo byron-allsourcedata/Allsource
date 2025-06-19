@@ -77,8 +77,7 @@ const cardBrandImages: Record<CardBrand, string> = {
 	unionpay: "/unionpay-icon.svg",
 };
 
-export const SettingsBilling: React.FC<{}> = ({
-}) => {
+export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [contactsCollected, setContactsCollected] = useState(0);
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
@@ -355,382 +354,410 @@ export const SettingsBilling: React.FC<{}> = ({
 
 	return (
 		<>
-		<Box sx={{ pr: 2, pt: 1 }}>
-			<Box
-				sx={{
-					display: "grid",
-					gap: 3,
-					gridTemplateColumns: "2fr 1fr",
-					gridTemplateAreas: `"cards usage"
+			<Box sx={{ pr: 2, pt: 1 }}>
+				<Box
+					sx={{
+						display: "grid",
+						gap: 3,
+						gridTemplateColumns: "2fr 1fr",
+						gridTemplateAreas: `"cards usage"
 				"details usage"
 				"details funds"`,
-					"@media (max-width: 900px)": {
-						gridTemplateColumns: "1fr",
-						gridTemplateAreas: `
+						"@media (max-width: 900px)": {
+							gridTemplateColumns: "1fr",
+							gridTemplateAreas: `
 						"cards"
 						"usage"
 						"details"
 						"funds"
 					`,
-					},
-					mb: 3,
-				}}
-			>
-				<Box sx={{ gridArea: "cards", height: "auto", padding: "0px" }}>
-					<Box
-						sx={{
-							border: "1px solid #f0f0f0",
-							borderRadius: "4px",
-							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-							p: 3,
-							height: "100%",
-						}}
-					>
-						{!hide && (
-							<Box
-								sx={{
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-									pb: 2,
-								}}
-							>
-								<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-									<Typography className="first-sub-title">
-										Card Details
-									</Typography>
-									<CustomTooltip
-										title={
-											"View detailed information about your card, including balance, transactions, and expiration date."
-										}
-										linkText="Learn more"
-										linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/card-details"
-									/>
-								</Box>
-								<Box
-									sx={{
-										border: "1px dashed rgba(56, 152, 252, 1)",
-										borderRadius: "4px",
-										width: "24px",
-										height: "24px",
-										display: "flex",
-										justifyContent: "center",
-										alignItems: "center",
-									}}
-								>
-									<Button onClick={handleOpen} sx={{ padding: 2 }}>
-										<Image
-											src="/add-square.svg"
-											alt="add-square"
-											height={24}
-											width={24}
-										/>
-									</Button>
-								</Box>
-							</Box>
-						)}
-
-						<Grid container spacing={2}>
-							{cardDetails.length > 0 &&
-								cardDetails.map((card) => (
-									<Grid item xs={12} md={6} key={card.id}>
-										<Box
-											key={card.id}
-											sx={{
-												display: "flex",
-												justifyContent: "space-between",
-												alignItems: "center",
-												mb: 2,
-												"@media (max-width: 600px)": {
-													alignItems: "flex-end",
-												},
-											}}
-										>
-											<Box sx={{ display: "flex", gap: 2 }}>
-												<Box
-													sx={{
-														width: "62px",
-														height: "62px",
-														borderRadius: "4px",
-														border: "1px solid #f0f0f0",
-														display: "flex",
-														justifyContent: "center",
-														alignItems: "center",
-													}}
-												>
-													<Image
-														src={
-															cardBrandImages[card.brand as CardBrand] ||
-															"/default-card-icon.svg"
-														}
-														alt={`${card.brand}-icon`}
-														height={54}
-														width={54}
-													/>
-												</Box>
-												<Box
-													sx={{
-														display: "flex",
-														flexDirection: "column",
-														gap: "8px",
-														justifyContent: "center",
-													}}
-												>
-													<Box sx={{ display: "flex", gap: 1 }}>
-														<Typography
-															className="first-sub-title"
-															sx={{
-																"@media (max-width: 600px)": {
-																	fontSize: "12px !important",
-																},
-															}}
-														>
-															{`${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** ${card.last4})`}
-														</Typography>
-														{card.is_default && (
-															<Typography
-																className="main-text"
-																sx={{
-																	borderRadius: "4px",
-																	background: "#eaf8dd",
-																	color: "#2b5b00",
-																	fontSize: "12px",
-																	fontWeight: "600",
-																	padding: "2px 12px",
-																}}
-															>
-																Default
-															</Typography>
-														)}
-													</Box>
-													<Typography
-														className="second-text"
-														sx={{
-															fontSize: "12px",
-															fontWeight: "400",
-															lineHeight: "normal",
-															color: "#787878",
-															letterSpacing: "0.06px",
-														}}
-													>
-														Expire date:{" "}
-														{`${card.exp_month < 10 ? "0" : ""}${card.exp_month}/${card.exp_year}`}
-													</Typography>
-												</Box>
-											</Box>
-											<Box>
-												{!card.is_default && (
-													<IconButton
-														onClick={(event) => handleClickOpen(event, card.id)}
-													>
-														<MoreVert
-															sx={{
-																color: "rgba(32, 33, 36, 1)",
-															}}
-														/>
-													</IconButton>
-												)}
-												<Popover
-													id={deleteId}
-													open={deleteOpen}
-													anchorEl={deleteAnchorEl}
-													onClose={handleDeleteClose}
-													anchorOrigin={{
-														vertical: "bottom",
-														horizontal: "center",
-													}}
-													transformOrigin={{
-														vertical: "top",
-														horizontal: "right",
-													}}
-												>
-													<Box
-														sx={{
-															minWidth: "140px",
-														}}
-													>
-														<Box sx={{ my: 1.5 }}>
-															<Button
-																className="hyperlink-red"
-																onClick={handleRemovePopupOpen}
-																sx={billingStyles.buttonInPopover}
-															>
-																Remove
-															</Button>
-															<Button
-																className="hyperlink-red"
-																onClick={handleSetDefault}
-																sx={billingStyles.buttonInPopover}
-															>
-																Set as default
-															</Button>
-														</Box>
-													</Box>
-												</Popover>
-											</Box>
-										</Box>
-									</Grid>
-								))}
-						</Grid>
-
-						<Elements stripe={stripePromise}>
-							<AddCardPopup
-								title="Add Card"
-								confirmButtonName="Save Card"
-								open={open}
-								onClose={handleClose}
-								onSuccess={handleCheckoutSuccess}
-							/>
-						</Elements>
-					</Box>
-				</Box>
-
-				<Box sx={{ gridArea: "usage", padding: "0px" }}>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							borderRadius: "4px",
-							border: "1px solid #f0f0f0",
-							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-							p: 3,
-						}}
-					>
+						},
+						mb: 3,
+					}}
+				>
+					<Box sx={{ gridArea: "cards", height: "auto", padding: "0px" }}>
 						<Box
 							sx={{
-								display: "flex",
-								flexDirection: "row",
-								justifyContent: "space-between",
-								alignItems: "start",
-								mb: 4,
+								border: "1px solid #f0f0f0",
+								borderRadius: "4px",
+								boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+								p: 3,
+								height: "100%",
 							}}
 						>
-							<Typography className="first-sub-title">Usages</Typography>
+							{!hide && (
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "center",
+										pb: 2,
+									}}
+								>
+									<Box
+										sx={{ display: "flex", alignItems: "center", gap: "8px" }}
+									>
+										<Typography className="first-sub-title">
+											Card Details
+										</Typography>
+										<CustomTooltip
+											title={
+												"View detailed information about your card, including balance, transactions, and expiration date."
+											}
+											linkText="Learn more"
+											linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/card-details"
+										/>
+									</Box>
+									<Box
+										sx={{
+											border: "1px dashed rgba(56, 152, 252, 1)",
+											borderRadius: "4px",
+											width: "24px",
+											height: "24px",
+											display: "flex",
+											justifyContent: "center",
+											alignItems: "center",
+										}}
+									>
+										<Button onClick={handleOpen} sx={{ padding: 2 }}>
+											<Image
+												src="/add-square.svg"
+												alt="add-square"
+												height={24}
+												width={24}
+											/>
+										</Button>
+									</Box>
+								</Box>
+							)}
+
+							<Grid container spacing={2}>
+								{cardDetails.length > 0 &&
+									cardDetails.map((card) => (
+										<Grid item xs={12} md={6} key={card.id}>
+											<Box
+												key={card.id}
+												sx={{
+													display: "flex",
+													justifyContent: "space-between",
+													alignItems: "center",
+													mb: 2,
+													"@media (max-width: 600px)": {
+														alignItems: "flex-end",
+													},
+												}}
+											>
+												<Box sx={{ display: "flex", gap: 2 }}>
+													<Box
+														sx={{
+															width: "62px",
+															height: "62px",
+															borderRadius: "4px",
+															border: "1px solid #f0f0f0",
+															display: "flex",
+															justifyContent: "center",
+															alignItems: "center",
+														}}
+													>
+														<Image
+															src={
+																cardBrandImages[card.brand as CardBrand] ||
+																"/default-card-icon.svg"
+															}
+															alt={`${card.brand}-icon`}
+															height={54}
+															width={54}
+														/>
+													</Box>
+													<Box
+														sx={{
+															display: "flex",
+															flexDirection: "column",
+															gap: "8px",
+															justifyContent: "center",
+														}}
+													>
+														<Box sx={{ display: "flex", gap: 1 }}>
+															<Typography
+																className="first-sub-title"
+																sx={{
+																	"@media (max-width: 600px)": {
+																		fontSize: "12px !important",
+																	},
+																}}
+															>
+																{`${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** ${card.last4})`}
+															</Typography>
+															{card.is_default && (
+																<Typography
+																	className="main-text"
+																	sx={{
+																		borderRadius: "4px",
+																		background: "#eaf8dd",
+																		color: "#2b5b00",
+																		fontSize: "12px",
+																		fontWeight: "600",
+																		padding: "2px 12px",
+																	}}
+																>
+																	Default
+																</Typography>
+															)}
+														</Box>
+														<Typography
+															className="second-text"
+															sx={{
+																fontSize: "12px",
+																fontWeight: "400",
+																lineHeight: "normal",
+																color: "#787878",
+																letterSpacing: "0.06px",
+															}}
+														>
+															Expire date:{" "}
+															{`${card.exp_month < 10 ? "0" : ""}${card.exp_month}/${card.exp_year}`}
+														</Typography>
+													</Box>
+												</Box>
+												<Box>
+													{!card.is_default && (
+														<IconButton
+															onClick={(event) =>
+																handleClickOpen(event, card.id)
+															}
+														>
+															<MoreVert
+																sx={{
+																	color: "rgba(32, 33, 36, 1)",
+																}}
+															/>
+														</IconButton>
+													)}
+													<Popover
+														id={deleteId}
+														open={deleteOpen}
+														anchorEl={deleteAnchorEl}
+														onClose={handleDeleteClose}
+														anchorOrigin={{
+															vertical: "bottom",
+															horizontal: "center",
+														}}
+														transformOrigin={{
+															vertical: "top",
+															horizontal: "right",
+														}}
+													>
+														<Box
+															sx={{
+																minWidth: "140px",
+															}}
+														>
+															<Box sx={{ my: 1.5 }}>
+																<Button
+																	className="hyperlink-red"
+																	onClick={handleRemovePopupOpen}
+																	sx={billingStyles.buttonInPopover}
+																>
+																	Remove
+																</Button>
+																<Button
+																	className="hyperlink-red"
+																	onClick={handleSetDefault}
+																	sx={billingStyles.buttonInPopover}
+																>
+																	Set as default
+																</Button>
+															</Box>
+														</Box>
+													</Popover>
+												</Box>
+											</Box>
+										</Grid>
+									))}
+							</Grid>
+
+							<Elements stripe={stripePromise}>
+								<AddCardPopup
+									title="Add Card"
+									confirmButtonName="Save Card"
+									open={open}
+									onClose={handleClose}
+									onSuccess={handleCheckoutSuccess}
+								/>
+							</Elements>
 						</Box>
+					</Box>
+
+					<Box sx={{ gridArea: "usage", padding: "0px" }}>
 						<Box
 							sx={{
 								display: "flex",
 								flexDirection: "column",
-								justifyContent: "space-between",
-								gap: 4,
-								"@media (max-width: 600px)": {
-									gap: 3,
-									flexDirection: "column",
-									alignItems: "center",
-								},
+								borderRadius: "4px",
+								border: "1px solid #f0f0f0",
+								boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+								p: 3,
 							}}
 						>
-							{!hide && (
-								<>
-									<UsageItem
-										title="Contacts Downloaded"
-										limitValue={planContactsCollected}
-										currentValue={contactsCollected}
-										needButton={false}
-									/>
-									<UsageItem
-										title="Smart Audience"
-										limitValue={planSmartAudienceCollected}
-										currentValue={smartAudienceCollected}
-										needButton={false}
-										commingSoon={true}
-									/>
-								</>
-							)}
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "row",
+									justifyContent: "space-between",
+									alignItems: "start",
+									mb: 4,
+								}}
+							>
+								<Typography className="first-sub-title">Usages</Typography>
+							</Box>
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									justifyContent: "space-between",
+									gap: 4,
+									"@media (max-width: 600px)": {
+										gap: 3,
+										flexDirection: "column",
+										alignItems: "center",
+									},
+								}}
+							>
+								{!hide && (
+									<>
+										<UsageItem
+											title="Contacts Downloaded"
+											limitValue={planContactsCollected}
+											currentValue={contactsCollected}
+											needButton={false}
+										/>
+										<UsageItem
+											title="Smart Audience"
+											limitValue={planSmartAudienceCollected}
+											currentValue={smartAudienceCollected}
+											needButton={false}
+											commingSoon={true}
+										/>
+									</>
+								)}
+							</Box>
 						</Box>
 					</Box>
-				</Box>
 
-				<Box sx={{ gridArea: "details", padding: "0px" }}>
-					<Box
-						sx={{
-							border: "1px solid #f0f0f0",
-							borderRadius: "4px",
-							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-							p: 3,
-						}}
-					>
+					<Box sx={{ gridArea: "details", padding: "0px" }}>
 						<Box
 							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								pb: 2,
+								border: "1px solid #f0f0f0",
+								borderRadius: "4px",
+								boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+								p: 3,
 							}}
 						>
-							<Typography className="first-sub-title">
-								Billing Details
-							</Typography>
-							{billingDetails?.active ? (
-								canceled_at ? (
-									<Box
-										sx={{
-											display: "flex",
-											borderRadius: "4px",
-											background: "#FCDBDC",
-											padding: "2px 12px",
-											gap: "3px",
-											alignItems: "center",
-										}}
-									>
-										<Typography
-											className="main-text"
+							<Box
+								sx={{
+									display: "flex",
+									justifyContent: "space-between",
+									pb: 2,
+								}}
+							>
+								<Typography className="first-sub-title">
+									Billing Details
+								</Typography>
+								{billingDetails?.active ? (
+									canceled_at ? (
+										<Box
 											sx={{
+												display: "flex",
 												borderRadius: "4px",
-												color: "#4E0110",
-												fontSize: "12px",
-												fontWeight: "600",
-												lineHeight: "16px",
+												background: "#FCDBDC",
+												padding: "2px 12px",
+												gap: "3px",
+												alignItems: "center",
 											}}
 										>
-											Subscription Cancelled
-										</Typography>
-										<Image
-											src={"danger.svg"}
-											alt="danger"
-											width={14}
-											height={13.5}
-										/>
-									</Box>
-								) : downgrade_plan?.plan_name ? (
-									<Box
-										sx={{
-											display: "flex",
-											borderRadius: "4px",
-											background: "#FDF2CA",
-											padding: "2px 12px",
-											gap: "3px",
-											alignItems: "center",
-										}}
-									>
-										<Typography
-											className="main-text"
-											sx={{
-												borderRadius: "4px",
-												color: "#795E00",
-												fontSize: "12px",
-												fontWeight: "600",
-												lineHeight: "16px",
-											}}
-										>
-											Downgrade pending - {downgrade_plan.plan_name}{" "}
-											{downgrade_plan.downgrade_at}.{" "}
-											<span
-												onClick={handleCancel}
-												style={{
-													color: "blue",
-													cursor: "pointer",
+											<Typography
+												className="main-text"
+												sx={{
+													borderRadius: "4px",
+													color: "#4E0110",
+													fontSize: "12px",
+													fontWeight: "600",
+													lineHeight: "16px",
 												}}
 											>
-												Cancel
-											</span>
-										</Typography>
-									</Box>
+												Subscription Cancelled
+											</Typography>
+											<Image
+												src={"danger.svg"}
+												alt="danger"
+												width={14}
+												height={13.5}
+											/>
+										</Box>
+									) : downgrade_plan?.plan_name ? (
+										<Box
+											sx={{
+												display: "flex",
+												borderRadius: "4px",
+												background: "#FDF2CA",
+												padding: "2px 12px",
+												gap: "3px",
+												alignItems: "center",
+											}}
+										>
+											<Typography
+												className="main-text"
+												sx={{
+													borderRadius: "4px",
+													color: "#795E00",
+													fontSize: "12px",
+													fontWeight: "600",
+													lineHeight: "16px",
+												}}
+											>
+												Downgrade pending - {downgrade_plan.plan_name}{" "}
+												{downgrade_plan.downgrade_at}.{" "}
+												<span
+													onClick={handleCancel}
+													style={{
+														color: "blue",
+														cursor: "pointer",
+													}}
+												>
+													Cancel
+												</span>
+											</Typography>
+										</Box>
+									) : (
+										<Box
+											sx={{
+												display: "flex",
+												borderRadius: "4px",
+												background: "#eaf8dd",
+												padding: "2px 12px",
+												gap: "3px",
+											}}
+										>
+											<Typography
+												className="main-text"
+												sx={{
+													borderRadius: "4px",
+													color: "#2b5b00",
+													fontSize: "12px",
+													fontWeight: "600",
+													lineHeight: "16px",
+												}}
+											>
+												Active
+											</Typography>
+										</Box>
+									)
 								) : (
 									<Box
 										sx={{
 											display: "flex",
 											borderRadius: "4px",
-											background: "#eaf8dd",
+											background: "#f8dede",
 											padding: "2px 12px",
 											gap: "3px",
 										}}
@@ -739,334 +766,312 @@ export const SettingsBilling: React.FC<{}> = ({
 											className="main-text"
 											sx={{
 												borderRadius: "4px",
-												color: "#2b5b00",
+												color: "#b00000",
 												fontSize: "12px",
 												fontWeight: "600",
 												lineHeight: "16px",
-											}}
-										>
-											Active
-										</Typography>
-									</Box>
-								)
-							) : (
-								<Box
-									sx={{
-										display: "flex",
-										borderRadius: "4px",
-										background: "#f8dede",
-										padding: "2px 12px",
-										gap: "3px",
-									}}
-								>
-									<Typography
-										className="main-text"
-										sx={{
-											borderRadius: "4px",
-											color: "#b00000",
-											fontSize: "12px",
-											fontWeight: "600",
-											lineHeight: "16px",
-											cursor: "pointer",
-										}}
-									>
-										Subscription Cancelled.{" "}
-										<span
-											onClick={handleRedirectSubscription}
-											style={{
-												color: "#146EF6",
 												cursor: "pointer",
 											}}
-											onMouseEnter={(e) =>
-												(e.currentTarget.style.color = "darkblue")
-											}
-											onMouseLeave={(e) =>
-												(e.currentTarget.style.color = "#146EF6")
-											}
 										>
-											Choose Plan
-										</span>
-									</Typography>
-								</Box>
-							)}
-						</Box>
-						<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-							<Grid container spacing={2}>
-								{billingDetails &&
-									Object.entries(billingDetails).map(([key, value], index) => {
-										if (key === "next_billing_date" && value) {
-											return (
-												<Grid
-													item
-													xs={12}
-													key={index}
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														gap: "16px",
-														"@media (max-width: 600px)": {
-															gap: "12px",
-														},
-													}}
-												>
-													{/* Next Billing Date */}
-													<Grid item xs={5.95} md={5.95}>
-														<Box
+											Subscription Cancelled.{" "}
+											<span
+												onClick={handleRedirectSubscription}
+												style={{
+													color: "#146EF6",
+													cursor: "pointer",
+												}}
+												onMouseEnter={(e) =>
+													(e.currentTarget.style.color = "darkblue")
+												}
+												onMouseLeave={(e) =>
+													(e.currentTarget.style.color = "#146EF6")
+												}
+											>
+												Choose Plan
+											</span>
+										</Typography>
+									</Box>
+								)}
+							</Box>
+							<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+								<Grid container spacing={2}>
+									{billingDetails &&
+										Object.entries(billingDetails).map(
+											([key, value], index) => {
+												if (key === "next_billing_date" && value) {
+													return (
+														<Grid
+															item
+															xs={12}
+															key={index}
 															sx={{
 																display: "flex",
 																alignItems: "center",
-																justifyContent: "center",
-																background: "#fafaf6",
-																borderRadius: "4px",
-																margin: "0 5%",
-																border: "1px solid #F0F0F0",
-																padding: "8px 16px",
 																gap: "16px",
 																"@media (max-width: 600px)": {
-																	padding: "8px 10px",
-																	gap: "8px",
+																	gap: "12px",
 																},
 															}}
 														>
-															<DateRangeIcon />
-															<Box>
-																<Typography
-																	className="main-text"
+															{/* Next Billing Date */}
+															<Grid item xs={5.95} md={5.95}>
+																<Box
 																	sx={{
-																		fontSize: "12px",
-																		fontWeight: "600",
-																		lineHeight: "16px",
-																		color: "#4a4a4a",
-																	}}
-																>
-																	{canceled_at
-																		? `Cancellation Date`
-																		: "Next Billing Date"}
-																</Typography>
-																<Typography
-																	className="first-sub-title"
-																	sx={{
+																		display: "flex",
+																		alignItems: "center",
+																		justifyContent: "center",
+																		background: "#fafaf6",
+																		borderRadius: "4px",
+																		margin: "0 5%",
+																		border: "1px solid #F0F0F0",
+																		padding: "8px 16px",
+																		gap: "16px",
 																		"@media (max-width: 600px)": {
-																			fontSize: "12px !important",
+																			padding: "8px 10px",
+																			gap: "8px",
 																		},
 																	}}
 																>
-																	On {renderValue(value)}
-																</Typography>
-															</Box>
-														</Box>
-													</Grid>
+																	<DateRangeIcon />
+																	<Box>
+																		<Typography
+																			className="main-text"
+																			sx={{
+																				fontSize: "12px",
+																				fontWeight: "600",
+																				lineHeight: "16px",
+																				color: "#4a4a4a",
+																			}}
+																		>
+																			{canceled_at
+																				? `Cancellation Date`
+																				: "Next Billing Date"}
+																		</Typography>
+																		<Typography
+																			className="first-sub-title"
+																			sx={{
+																				"@media (max-width: 600px)": {
+																					fontSize: "12px !important",
+																				},
+																			}}
+																		>
+																			On {renderValue(value)}
+																		</Typography>
+																	</Box>
+																</Box>
+															</Grid>
 
-													{/* Divider */}
-													<Grid item xs={0.01} md={0.01}>
-														<Divider
-															orientation="vertical"
-															flexItem
-															sx={{ height: "32px", alignSelf: "center" }}
-														/>
-													</Grid>
+															{/* Divider */}
+															<Grid item xs={0.01} md={0.01}>
+																<Divider
+																	orientation="vertical"
+																	flexItem
+																	sx={{ height: "32px", alignSelf: "center" }}
+																/>
+															</Grid>
 
-													{/* Monthly Total - find it in the next iteration */}
-													<Grid item xs={5.95} md={5.95}>
-														{billingDetails &&
-															typeof billingDetails === "object" &&
-															Object.entries(billingDetails).map(
-																([nextKey, nextValue], nextIndex) => {
-																	if (
-																		(nextValue &&
-																			nextKey === "monthly_total") ||
-																		nextKey === "yearly_total"
-																	) {
-																		return (
-																			<Box
-																				key={nextIndex}
-																				sx={{
-																					display: "flex",
-																					justifyContent: "center",
-																					gap: "16px",
-																					alignItems: "center",
-																					margin: "0 5%",
-																					border: "1px solid #F0F0F0",
-																					padding: "8px 16px",
-																				}}
-																			>
-																				<PaymentIcon />
-																				<Box>
-																					<Typography
-																						className="main-text"
+															{/* Monthly Total - find it in the next iteration */}
+															<Grid item xs={5.95} md={5.95}>
+																{billingDetails &&
+																	typeof billingDetails === "object" &&
+																	Object.entries(billingDetails).map(
+																		([nextKey, nextValue], nextIndex) => {
+																			if (
+																				(nextValue &&
+																					nextKey === "monthly_total") ||
+																				nextKey === "yearly_total"
+																			) {
+																				return (
+																					<Box
+																						key={nextIndex}
 																						sx={{
-																							fontSize: "12px",
-																							fontWeight: "600",
-																							lineHeight: "16px",
-																							color: "#4a4a4a",
+																							display: "flex",
+																							justifyContent: "center",
+																							gap: "16px",
+																							alignItems: "center",
+																							margin: "0 5%",
+																							border: "1px solid #F0F0F0",
+																							padding: "8px 16px",
 																						}}
 																					>
-																						{nextKey === "monthly_total" &&
-																							"Monthly Total"}
-																						{nextKey === "yearly_total" &&
-																							"Yearly Total"}
-																					</Typography>
-																					<Typography className="first-sub-title">
-																						{renderValue(nextValue)}
-																					</Typography>
-																				</Box>
-																			</Box>
-																		);
-																	}
-																	return null;
+																						<PaymentIcon />
+																						<Box>
+																							<Typography
+																								className="main-text"
+																								sx={{
+																									fontSize: "12px",
+																									fontWeight: "600",
+																									lineHeight: "16px",
+																									color: "#4a4a4a",
+																								}}
+																							>
+																								{nextKey === "monthly_total" &&
+																									"Monthly Total"}
+																								{nextKey === "yearly_total" &&
+																									"Yearly Total"}
+																							</Typography>
+																							<Typography className="first-sub-title">
+																								{renderValue(nextValue)}
+																							</Typography>
+																						</Box>
+																					</Box>
+																				);
+																			}
+																			return null;
+																		},
+																	)}
+															</Grid>
+														</Grid>
+													);
+												}
+
+												// Skip rendering 'Monthly Total' in its own row, since it's already handled
+												if (
+													key === "monthly_total" ||
+													key === "active" ||
+													key === "yearly_total"
+												) {
+													return null;
+												}
+
+												// Default layout for other billing details
+												return (
+													<Grid
+														item
+														xs={12}
+														md={key === "billing_cycle" ? 12 : 6}
+														key={index}
+														sx={{
+															display: "flex",
+															flexDirection: "row",
+															gap: "26px",
+															"@media (max-width: 600px)": {
+																gap: "12px",
+															},
+														}}
+													>
+														<Typography
+															className="first-sub-title"
+															sx={{
+																width: "140px",
+																fontSize: "12px !important",
+																lineHeight: "16px !important",
+																"@media (max-width: 600px)": {
+																	width: "110px",
 																},
-															)}
+															}}
+														>
+															{formatKey(key)}
+														</Typography>
+														<Typography
+															className="paragraph"
+															sx={{
+																lineHeight: "16px !important",
+																color: "#5f6368 !important",
+															}}
+														>
+															{renderValue(value)}
+														</Typography>
 													</Grid>
-												</Grid>
-											);
-										}
-
-										// Skip rendering 'Monthly Total' in its own row, since it's already handled
-										if (
-											key === "monthly_total" ||
-											key === "active" ||
-											key === "yearly_total"
-										) {
-											return null;
-										}
-
-										// Default layout for other billing details
-										return (
-											<Grid
-												item
-												xs={12}
-												md={key === "billing_cycle" ? 12 : 6}
-												key={index}
-												sx={{
-													display: "flex",
-													flexDirection: "row",
-													gap: "26px",
-													"@media (max-width: 600px)": {
-														gap: "12px",
-													},
-												}}
-											>
-												<Typography
-													className="first-sub-title"
-													sx={{
-														width: "140px",
-														fontSize: "12px !important",
-														lineHeight: "16px !important",
-														"@media (max-width: 600px)": {
-															width: "110px",
-														},
-													}}
-												>
-													{formatKey(key)}
-												</Typography>
-												<Typography
-													className="paragraph"
-													sx={{
-														lineHeight: "16px !important",
-														color: "#5f6368 !important",
-													}}
-												>
-													{renderValue(value)}
-												</Typography>
-											</Grid>
-										);
-									})}
-							</Grid>
+												);
+											},
+										)}
+								</Grid>
+							</Box>
 						</Box>
 					</Box>
-				</Box>
 
-				<Box sx={{ gridArea: "funds", padding: "0px" }}>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							borderRadius: "4px",
-							border: "1px solid #f0f0f0",
-							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-							p: 3,
-						}}
-					>
-						<Box
-							sx={{
-								display: "flex",
-								flexDirection: "row",
-								justifyContent: "space-between",
-								alignItems: "start",
-								mb: 4,
-							}}
-						>
-							<Typography className="first-sub-title">Funds</Typography>
-						</Box>
+					<Box sx={{ gridArea: "funds", padding: "0px" }}>
 						<Box
 							sx={{
 								display: "flex",
 								flexDirection: "column",
-								justifyContent: "space-between",
-								gap: 4,
-								"@media (max-width: 600px)": {
-									gap: 3,
-									flexDirection: "column",
-									alignItems: "center",
-								},
+								borderRadius: "4px",
+								border: "1px solid #f0f0f0",
+								boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+								p: 3,
 							}}
 						>
-							{!hide && (
-								<>
-									<UsageItem
-										title="Validation funds"
-										limitValue={validationLimitFundsCollected}
-										currentValue={validationFundsCollected}
-									/>
-									<UsageItem
-										title="Premium Source funds"
-										limitValue={planPremiumSourceCollected}
-										currentValue={premiumSourceCollected}
-										commingSoon={true}
-									/>
-								</>
-							)}
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "row",
+									justifyContent: "space-between",
+									alignItems: "start",
+									mb: 4,
+								}}
+							>
+								<Typography className="first-sub-title">Funds</Typography>
+							</Box>
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									justifyContent: "space-between",
+									gap: 4,
+									"@media (max-width: 600px)": {
+										gap: 3,
+										flexDirection: "column",
+										alignItems: "center",
+									},
+								}}
+							>
+								{!hide && (
+									<>
+										<UsageItem
+											title="Validation funds"
+											limitValue={validationLimitFundsCollected}
+											currentValue={validationFundsCollected}
+										/>
+										<UsageItem
+											title="Premium Source funds"
+											limitValue={planPremiumSourceCollected}
+											currentValue={premiumSourceCollected}
+											commingSoon={true}
+										/>
+									</>
+								)}
+							</Box>
 						</Box>
 					</Box>
 				</Box>
+
+				<Divider
+					sx={{
+						borderColor: "#e4e4e4",
+						maxWidth: "100%",
+						"@media (max-width: 600px)": {
+							marginLeft: "-16px",
+							marginRight: "-16px",
+						},
+					}}
+				/>
+
+				<BillingHistory
+					setIsLoading={setIsLoading}
+					handleSendInvoicePopupOpen={handleSendInvoicePopupOpen}
+				/>
+
+				<SendInvoicePopup
+					sendInvoicePopupOpen={sendInvoicePopupOpen}
+					handleSendInvoicePopupClose={handleSendInvoicePopupClose}
+					setIsLoading={setIsLoading}
+					selectedInvoiceId={selectedInvoiceId ?? ""}
+				/>
+
+				<RemoveCardPopup
+					removePopupOpen={removePopupOpen}
+					setIsLoading={setIsLoading}
+					handleRemovePopupClose={handleRemovePopupClose}
+					selectedCardId={selectedCardId ?? ""}
+					setCardDetails={setCardDetails}
+				/>
 			</Box>
-
-			<Divider
-				sx={{
-					borderColor: "#e4e4e4",
-					maxWidth: "100%",
-					"@media (max-width: 600px)": {
-						marginLeft: "-16px",
-						marginRight: "-16px",
-					},
-				}}
+			<PaymentFail
+				open={paymentFailed}
+				cardDetails={cardDetails}
+				handleCheckoutSuccess={handleCheckoutSuccess}
 			/>
-
-			<BillingHistory
-				setIsLoading={setIsLoading}
-				handleSendInvoicePopupOpen={handleSendInvoicePopupOpen}
-			/>
-
-			<SendInvoicePopup
-				sendInvoicePopupOpen={sendInvoicePopupOpen}
-				handleSendInvoicePopupClose={handleSendInvoicePopupClose}
-				setIsLoading={setIsLoading}
-				selectedInvoiceId={selectedInvoiceId ?? ""}
-			/>
-
-			<RemoveCardPopup
-				removePopupOpen={removePopupOpen}
-				setIsLoading={setIsLoading}
-				handleRemovePopupClose={handleRemovePopupClose}
-				selectedCardId={selectedCardId ?? ""}
-				setCardDetails={setCardDetails}
-			/>
-		</Box>
-		<PaymentFail
-			open={paymentFailed}
-			cardDetails={cardDetails}
-			handleCheckoutSuccess={handleCheckoutSuccess}
-		/>
 		</>
 	);
 };

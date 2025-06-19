@@ -221,7 +221,11 @@ class SubscriptionService:
         return self.is_subscription_active(result)
 
     def is_user_has_inactive_subscription_on_basic(self, user_id):
-        return self.plans_persistence.is_user_has_inactive_subscription_on_basic(user_id=user_id)
+        return (
+            self.plans_persistence.is_user_has_inactive_subscription_on_basic(
+                user_id=user_id
+            )
+        )
 
     def is_subscription_active(self, subscription_with_trial):
         if not subscription_with_trial["subscription"]:

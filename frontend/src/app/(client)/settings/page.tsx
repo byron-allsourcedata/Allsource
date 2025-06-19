@@ -41,7 +41,7 @@ const Settings: React.FC = () => {
 		if (sectionFromUrl) {
 			setActiveSection(sectionFromUrl);
 		}
-		fetchAccountDetails()
+		fetchAccountDetails();
 	}, []);
 
 	const handleTabChange = (section: string) => {
@@ -188,9 +188,7 @@ const Settings: React.FC = () => {
 
 					{activeSection === "teams" && <SettingsTeams />}
 
-					{activeSection === "billing" && (
-						<SettingsBilling />
-					)}
+					{activeSection === "billing" && <SettingsBilling />}
 
 					{activeSection === "subscription" && <SettingsSubscription />}
 
