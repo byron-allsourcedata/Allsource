@@ -54,3 +54,27 @@ class UserSubscriptionsPersistence:
         user.premium_source_credits = plan.premium_source_credits
         user.smart_audience_quota = plan.smart_audience_quota
         self.db.add(user)
+
+    def subquery_current_free_trial_sub_ids(self, alias):
+        subquery_user_sub_ids = (
+            select(Users.current_subscription_id)
+            .join(
+                UserSubscriptions,
+                Users.current_subscription_id == UserSubscriptions.id,
+            )
+            .join(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .filter(SubscriptionPlan.alias == alias)
+            .scalar_subquery()
+        )
+        return subquery_user_sub_ids
+
+    def get_lead_credits(self, alias):
+        credits = (
+            self.db.query(SubscriptionPlan.leads_credits)
+            .filter(SubscriptionPlan.alias == alias)
+            .scalar()
+        )
+        return credits
