@@ -1,7 +1,7 @@
 from typing import Optional, List, Tuple
 from uuid import UUID
 
-from dependencies import Clickhouse
+from db_dependencies import Clickhouse, Db
 from persistence.audience_smarts import AudienceSmartsPostgresPersistence
 from persistence.audience_smarts.dto import (
     AudienceSmartDTO,
@@ -46,20 +46,22 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         total_records: int,
         status: str,
         target_schema: str,
-        validation_params: dict | None,
+        validation_params: Optional[dict],
         active_segment_records: int,
+        need_validate: bool = False,
     ) -> AudienceSmartDTO:
         return self.postgres.create_audience_smart(
-            name,
-            user_id,
-            created_by_user_id,
-            use_case_alias,
-            data_sources,
-            total_records,
-            status,
-            target_schema,
-            validation_params,
-            active_segment_records,
+            name=name,
+            user_id=user_id,
+            created_by_user_id=created_by_user_id,
+            use_case_alias=use_case_alias,
+            data_sources=data_sources,
+            total_records=total_records,
+            status=status,
+            target_schema=target_schema,
+            validation_params=validation_params,
+            active_segment_records=active_segment_records,
+            need_validate=need_validate,
         )
 
     def get_audience_smarts(
@@ -156,15 +158,14 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         return [SyncedPersonRecord(**dict(zip(col_names, row))) for row in rows]
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
+        self.client.command("SET max_query_size = 10485760")
         ids = self.postgres.collect_user_ids_for_smart_audience(data)
         if not ids:
             return 0
-
         in_list = ", ".join(f"'{i}'" for i in ids)
         linkedin_filter = ""
         if data.get("use_case") == "linkedin":
             linkedin_filter = "AND linkedin_url IS NOT NULL"
-
         sql = f"""
         SELECT count(*) 
         FROM enrichment_users 
@@ -173,3 +174,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         """
         q = self.client.query(sql)
         return int(q.result_rows[0][0]) if q.result_rows else 0
+
+    def check_access_for_user(self, user: dict) -> bool:
+        return self.postgres.check_access_for_user(user)

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, aliased, load_only
 from sqlalchemy.sql import func
 
 from db_dependencies import Db
+from models import SubscriptionPlan, UserSubscriptions
 from models.audience_smarts import AudienceSmart
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -70,7 +71,6 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             .filter(Smp.source_id.in_(data["source_ids"]["include"]))
             .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
         )
-
         combined_subq = lalp_q.union(smp_q).subquery()
         count_q = (
             self.db.query(func.count(EnrichmentUser.id))
@@ -483,15 +483,29 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         Smp = aliased(AudienceSourcesMatchedPerson)
 
         lalp_q = (
-            self.db.query(Lalp.enrichment_user_id)
+            self.db.query(Lalp.enrichment_user_asid)
             .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
             .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
         )
         smp_q = (
-            self.db.query(Smp.enrichment_user_id)
+            self.db.query(Smp.enrichment_user_asid)
             .filter(Smp.source_id.in_(data["source_ids"]["include"]))
             .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
         )
 
         unioned = lalp_q.union(smp_q).distinct().all()
         return [row[0] for row in unioned]
+
+    def check_access_for_user(self, user: dict) -> bool:
+        restricted_plans = ["free_trial_monthly", "basic"]
+        subscription = (
+            self.db.query(SubscriptionPlan)
+            .join(
+                UserSubscriptions,
+                UserSubscriptions.plan_id == SubscriptionPlan.id,
+            )
+            .filter(UserSubscriptions.id == user["current_subscription_id"])
+            .first()
+        )
+
+        return subscription.alias not in restricted_plans

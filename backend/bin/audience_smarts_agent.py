@@ -63,11 +63,10 @@ async def aud_smarts_matching(
             bulk_data = [
                 {
                     "smart_audience_id": str(aud_smart_id),
-                    "enrichment_user_id": enrichment_user_id,
+                    "enrichment_user_asid": enrichment_user_id,
                 }
                 for enrichment_user_id in enrichment_users_ids
             ]
-
             db_session.bulk_insert_mappings(AudienceSmartPerson, bulk_data)
             db_session.flush()
 
