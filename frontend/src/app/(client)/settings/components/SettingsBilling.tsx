@@ -562,27 +562,8 @@ export const SettingsBilling: React.FC = () => {
 						</Grid>
 
 						<Elements stripe={stripePromise}> 
-							<AddCardPopup open={open} onClose={handleClose} onSuccess={handleCheckoutSuccess} />
+							<AddCardPopup title="Add Card" confirmButtonName="Save Card" open={open} onClose={handleClose} onSuccess={handleCheckoutSuccess} />
 						</Elements>
-
-						{/* <Modal open={open} onClose={handleClose}>
-							<Box
-								sx={{
-									bgcolor: "white",
-									borderRadius: "4px",
-									padding: "16px",
-									maxWidth: "400px",
-									margin: "100px auto",
-								}}
-							>
-								<Elements stripe={stripePromise}>
-									<CheckoutForm
-										handleClose={handleClose}
-										onSuccess={handleCheckoutSuccess}
-									/>
-								</Elements>
-							</Box>
-						</Modal> */}
 					</Box>
 				</Box>
 

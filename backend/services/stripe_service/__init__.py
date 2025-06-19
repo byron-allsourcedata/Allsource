@@ -139,11 +139,16 @@ def get_card_details_by_customer_id(customer_id):
     return card_details
 
 
-def add_card_to_customer(customer_id, payment_method_id):
+def add_card_to_customer(customer_id, payment_method_id, is_default: bool):
     try:
         payment_method = stripe.PaymentMethod.attach(
-            payment_method_id, customer=customer_id
+            payment_method_id, customer=customer_id, 
         )
+        if is_default:
+            stripe.Customer.modify(
+                customer_id,
+                invoice_settings={"default_payment_method": payment_method_id},
+            )
         return {
             "status": "SUCCESS",
             "card_details": {
@@ -152,7 +157,7 @@ def add_card_to_customer(customer_id, payment_method_id):
                 "brand": payment_method.card.brand,
                 "exp_month": payment_method.card.exp_month,
                 "exp_year": payment_method.card.exp_year,
-                "is_default": False,
+                "is_default": is_default,
             },
         }
     except stripe.error.StripeError as e:

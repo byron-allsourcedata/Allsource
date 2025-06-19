@@ -4,11 +4,8 @@ import {
 	DialogTitle,
 	DialogContent,
 	DialogActions,
-	TextField,
-	FormControlLabel,
 	Switch,
-	Checkbox,
-	Button,
+	Divider,
 	Box,
 	Typography,
 } from "@mui/material";
@@ -24,14 +21,78 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
 
-type PaymentPopupProps = {
+interface CardDetails {
+	id: string
+	last4: string,
+	brand: string,
+	exp_month: number,
+	exp_year: number,
+	is_default: boolean,
+}
+
+interface PaymentPopupProps {
+	title: string;
+	confirmButtonName: string;
 	open: boolean;
 	onClose: () => void;
-	onSuccess: (cardDetails: any) => void;
+	onSuccess: (cardDetails: CardDetails) => void;
 };
 
-const AddCardPopup: React.FC<PaymentPopupProps> = ({ open, onClose, onSuccess }) => {
-	const [checked, setChecked] = useState(false);
+const addCardStyles = {
+	switchStyle: {
+		"& .MuiSwitch-switchBase": {
+			"&+.MuiSwitch-track": {
+				backgroundColor: "rgba(163, 176, 194, 1)",
+				opacity: 1,
+			},
+			"&.Mui-checked": {
+				color: "#fff",
+				"&+.MuiSwitch-track": {
+					backgroundColor: "rgba(56, 152, 252, 1)",
+					opacity: 1,
+				},
+			},
+		},
+	},
+	imageStyle: {
+		width: 290,
+		height: 190,
+		mb: "40px",
+		borderRadius: "4px",
+		backgroundPosition: "center",
+		backgroundRepeat: "no-repeat",
+		backgroundImage: "url(/bank_card.svg)",
+	},
+	wrapStripeInput: {
+		border: "1px solid #ddd", borderRadius: "4px", padding: "10px"
+	}
+}
+
+const stripeStyles = {
+	style: {
+		base: {
+			color: "#707071",
+			fontFamily: "Nunito Sans, sans-serif",
+			fontSize: "16px",
+			fontWeight: "400",
+			lineHeight: "24px",
+			padding: "10px",
+			backgroundColor: "#fff",
+			"::placeholder": {
+				color: "#aab7c4",
+			},
+		},
+		invalid: {
+			color: "#fa755a",
+		},
+		complete: {
+			color: "#4CAF50",
+		},
+	},
+}
+
+const AddCardPopup: React.FC<PaymentPopupProps> = ({ title, confirmButtonName, open, onClose, onSuccess }) => {
+	const [isDefault, setIsDefault] = useState(false);
 	const elements = useElements();
 	const stripe = useStripe();
 	const [loading, setLoading] = useState(false);
@@ -65,7 +126,7 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({ open, onClose, onSuccess })
 		try {
 			const response = await axiosInterceptorInstance.post(
 				"/settings/billing/add-card",
-				{ payment_method_id: paymentMethod.id },
+				{ payment_method_id: paymentMethod.id, is_default: isDefault },
 			);
 			if (response.status === 200) {
 				const { status } = response.data;
@@ -98,127 +159,46 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({ open, onClose, onSuccess })
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle>Complete Your Payment</DialogTitle>
+			<DialogTitle sx={{padding: 3}} className="first-sub-title">{title}</DialogTitle>
+			<Divider />
 			<DialogContent>
 				<Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
-					<Box
-						sx={{
-							width: 290,
-							height: 190,
-							mb: "40px",
-							borderRadius: "4px",
-							backgroundPosition: "center",
-							backgroundRepeat: "no-repeat",
-							backgroundImage: "url(/bank_card.svg)",
-						}}
-					/>
+					<Box sx={addCardStyles.imageStyle} />
 				</Box>
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-						<CardNumberElement
-							options={{
-								style: {
-									base: {
-										color: "#32325d",
-										fontFamily: "Nunito Sans, sans-serif",
-										fontSize: "16px",
-										fontWeight: "400",
-										lineHeight: "24px",
-										padding: "10px",
-										backgroundColor: "#fff",
-										"::placeholder": {
-											color: "#aab7c4",
-										},
-									},
-									invalid: {
-										color: "#fa755a",
-									},
-									complete: {
-										color: "#4CAF50",
-									},
-								},
-							}}
-						/>
+						<Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+							<Typography className="table-heading">Card Number</Typography>
+							<Box sx={addCardStyles.wrapStripeInput}>
+								<CardNumberElement options={stripeStyles} />
+							</Box>
+						 </Box>
 					<Box sx={{ display: "flex", gap: 2 }}>
-					<Box sx={{ flex: "1", mr: 1 }}>
-						<CardExpiryElement
-							options={{
-								style: {
-									base: {
-										color: "#32325d",
-										fontFamily: "Nunito Sans, sans-serif",
-										fontSize: "16px",
-										fontWeight: "400",
-										lineHeight: "24px",
-										padding: "10px",
-										backgroundColor: "#fff",
-										"::placeholder": {
-											color: "#aab7c4",
-										},
-									},
-									invalid: {
-										color: "#fa755a",
-									},
-									complete: {
-										color: "#4CAF50",
-									},
-								},
-							}}
-						/>
+					<Box sx={{ display: "flex", flex: "1", flexDirection: "column", gap: 1  }}>
+						<Typography className="table-heading">Exp. Date</Typography>
+						<Box sx={addCardStyles.wrapStripeInput}>
+							<CardExpiryElement options={stripeStyles} />
+						</Box>
 					</Box>
-					<Box sx={{ flex: "1", mr: 1 }}>
-						<CardCvcElement
-							options={{
-								style: {
-									base: {
-										color: "#32325d",
-										fontFamily: "Nunito Sans, sans-serif",
-										fontSize: "16px",
-										fontWeight: "400",
-										lineHeight: "24px",
-										padding: "10px",
-										backgroundColor: "#fff",
-										"::placeholder": {
-											color: "#aab7c4",
-										},
-									},
-									invalid: {
-										color: "#fa755a",
-									},
-									complete: {
-										color: "#4CAF50",
-									},
-								},
-							}}
-						/>
+					<Box sx={{ display: "flex", flex: "1", flexDirection: "column", gap: 1 }}>
+						<Typography className="table-heading">CVV/CVC</Typography>
+						<Box sx={addCardStyles.wrapStripeInput}>
+							<CardCvcElement options={{...stripeStyles, placeholder: "123"}} />
+						</Box>
 					</Box>
 					</Box>
-					<Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<Switch
-							checked={checked}
-							onChange={() => setChecked((prev) => !prev)}
-							sx={{
-								"& .MuiSwitch-switchBase": {
-									"&+.MuiSwitch-track": {
-										backgroundColor: "rgba(163, 176, 194, 1)",
-										opacity: 1,
-									},
-									"&.Mui-checked": {
-										color: "#fff",
-										"&+.MuiSwitch-track": {
-											backgroundColor: "rgba(56, 152, 252, 1)",
-											opacity: 1,
-										},
-									},
-								},
-							}}
+							checked={isDefault}
+							onChange={() => setIsDefault((prev) => !prev)}
+							sx={addCardStyles.switchStyle}
 						/>
-						<Typography>Set as default</Typography>
+						<Typography className="second-sub-title">Set as default</Typography>
 					</Box>
 				</Box>
 			</DialogContent>
 			<DialogActions>
 				<CustomButton variant="outlined" onClick={onClose}>Back</CustomButton>
-				<CustomButton variant="contained" onClick={handleButtonClick}>Pay</CustomButton>
+				<CustomButton variant="contained" onClick={handleButtonClick}>{confirmButtonName}</CustomButton>
 			</DialogActions>
 		</Dialog>
 	);
