@@ -20,9 +20,17 @@ class EnrichmentUsersPersistence:
         return count
 
     def fetch_enrichment_user_ids(self, asids: List[UUID]) -> List[UUID]:
-        query = select(EnrichmentUser).where(EnrichmentUser.asid.in_(asids))
-        rows = self.db.execute(query).scalars().all()
+        if not asids:
+            return []
 
-        print(f"enrichment user ids rows: {len(rows)}")
+        sql = (
+            "SELECT asid "
+            "FROM maximiz_local.enrichment_users "
+            "WHERE asid IN %(ids)s"
+        )
 
-        return [row.id for row in rows]
+        result = self.clickhouse.query(sql, {"ids": [str(a) for a in asids]})
+
+        found = [row[0] for row in result.result_rows]
+        print(f"enrichment user ids rows: {len(found)}")
+        return found

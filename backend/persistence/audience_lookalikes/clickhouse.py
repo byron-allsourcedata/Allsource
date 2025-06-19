@@ -1,13 +1,17 @@
 from typing import List, Dict, Optional, Tuple
 from uuid import UUID
 
+from fastapi import HTTPException
+from sqlalchemy import func
+
 from config import ClickhouseConfig
 from db_dependencies import Clickhouse, Db
-from enums import BusinessType
+from enums import BusinessType, LookalikeSize
 from models import (
     AudienceSourcesMatchedPerson,
     EnrichmentUser,
     AudienceLookalikes,
+    AudienceSource,
 )
 from .dto import LookalikeInfo, SourceInfo
 from .interface import AudienceLookalikesPersistenceInterface
@@ -60,7 +64,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
             lookalike_size=lookalike_size,
             lookalike_type=lookalike_type,
             search_query=search_query,
-            include_json_fields=include_json_fields
+            include_json_fields=include_json_fields,
         )
 
     def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
@@ -72,9 +76,51 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
     def calculate_lookalikes(
         self, user_id: int, source_uuid: UUID, lookalike_size: str
     ) -> List[Dict]:
-        return self.postgres.calculate_lookalikes(
-            user_id, source_uuid, lookalike_size
+        audience_source = (
+            self.db.query(AudienceSource)
+            .filter(
+                AudienceSource.id == str(source_uuid),
+                AudienceSource.user_id == user_id,
+            )
+            .first()
         )
+        if not audience_source:
+            raise HTTPException(
+                status_code=404,
+                detail="Audience source not found or access denied",
+            )
+
+        total_matched = (
+            self.db.query(func.count(AudienceSourcesMatchedPerson.id))
+            .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
+            .scalar()
+        )
+
+        def get_number_users(lookalike_size: str, size: int) -> int:
+            if lookalike_size == LookalikeSize.ALMOST.value:
+                number = size * 0.2
+            elif lookalike_size == LookalikeSize.EXTREMELY.value:
+                number = size * 0.4
+            elif lookalike_size == LookalikeSize.VERY.value:
+                number = size * 0.6
+            elif lookalike_size == LookalikeSize.QUITE.value:
+                number = size * 0.8
+            elif lookalike_size == LookalikeSize.BROAD.value:
+                number = size * 1
+            else:
+                number = size * 1
+            return int(number)
+
+        number_required = get_number_users(lookalike_size, total_matched)
+        atype = {
+            "b2b": BusinessType.B2B,
+            "b2c": BusinessType.B2C,
+        }.get(audience_source.target_schema, BusinessType.ALL)
+        result = self.retrieve_source_insights(
+            source_uuid=source_uuid, audience_type=atype, limit=number_required
+        )
+
+        return result
 
     def retrieve_source_insights(
         self,

@@ -61,12 +61,12 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         Smp = aliased(AudienceSourcesMatchedPerson)
 
         lalp_q = (
-            self.db.query(Lalp.enrichment_user_id.label("uid"))
+            self.db.query(Lalp.enrichment_user_asid.label("uid"))
             .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
             .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
         )
         smp_q = (
-            self.db.query(Smp.enrichment_user_id.label("uid"))
+            self.db.query(Smp.enrichment_user_asid.label("uid"))
             .filter(Smp.source_id.in_(data["source_ids"]["include"]))
             .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
         )
@@ -124,7 +124,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         target_schema: str,
         validation_params: Optional[dict],
         active_segment_records: int,
-        need_validate: bool = False
+        need_validate: bool = False,
     ) -> AudienceSmartDTO:
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
         if not use_case_id:

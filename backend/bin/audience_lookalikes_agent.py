@@ -60,7 +60,8 @@ async def aud_sources_matching(
         lookalike_persons_to_add = []
         for enrichment_user_id in enrichment_user_ids:
             matched_person = AudienceLookalikesPerson(
-                lookalike_id=lookalike_id, enrichment_user_id=enrichment_user_id
+                lookalike_id=lookalike_id,
+                enrichment_user_asid=enrichment_user_id,
             )
             lookalike_persons_to_add.append(matched_person)
 

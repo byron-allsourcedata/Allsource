@@ -88,6 +88,7 @@ async def aud_sources_reader(
         user_ids = filler.process_lookalike_pipeline(
             audience_lookalike=audience_lookalike
         )
+        print(user_ids)
 
         await send_sse(
             connection,

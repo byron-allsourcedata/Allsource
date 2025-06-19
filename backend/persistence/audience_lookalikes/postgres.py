@@ -453,6 +453,8 @@ class AudienceLookalikesPostgresPersistence(
             .scalar()
         )
 
+        print(total_matched)
+
         def get_number_users(lookalike_size: str, size: int) -> int:
             if lookalike_size == LookalikeSize.ALMOST.value:
                 number = size * 0.2
