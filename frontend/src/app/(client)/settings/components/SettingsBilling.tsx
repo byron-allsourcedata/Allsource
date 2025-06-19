@@ -29,6 +29,7 @@ import { BillingHistory } from "./Billing/BillingHistory";
 import { UsageItem } from "./Billing/UsageItem";
 import { billingStyles } from "./Billing/billingStyles";
 import AddCardPopup from "./Billing/AddCard";
+import PaymentFail from "./Billing/PaymentFail";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
@@ -75,7 +76,9 @@ const cardBrandImages: Record<CardBrand, string> = {
 	unionpay: "/unionpay-icon.svg",
 };
 
-export const SettingsBilling: React.FC = () => {
+export const SettingsBilling: React.FC<{paymentFailed: boolean}> = ({
+	paymentFailed,
+}) => {
 	const [contactsCollected, setContactsCollected] = useState(0);
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
@@ -1029,6 +1032,11 @@ export const SettingsBilling: React.FC = () => {
 					},
 				}}
 			/>
+
+			<PaymentFail
+			 	open={paymentFailed}
+				cardDetails={cardDetails}
+			 />
 
 			<BillingHistory
 				setIsLoading={setIsLoading}

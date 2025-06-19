@@ -3,12 +3,13 @@ import {
 	Dialog,
 	DialogTitle,
 	DialogContent,
-	IconButton,
+	DialogActions,
+	Divider,
 	Typography,
-	Button,
+	Switch,
 	Box,
-	Backdrop,
-	CardContent,
+	Radio,
+	RadioGroup,
 	Grid,
 	CardActions,
 	Card,
@@ -17,279 +18,117 @@ import { useRouter } from "next/navigation";
 import CloseIcon from "@mui/icons-material/Close";
 import LegendToggleOutlinedIcon from "@mui/icons-material/LegendToggleOutlined";
 import AllInboxOutlinedIcon from "@mui/icons-material/AllInboxOutlined";
+import CustomButton from "@/components/ui/CustomButton";
 
-const PaymentFail = () => {
-	const [open, setOpen] = useState(true);
+interface PaymentPopupProps {
+	open: boolean;
+	cardDetails: any
+}
+
+const PaymentFail: React.FC<PaymentPopupProps> = ({
+	open,
+	cardDetails
+}) => {
 	const router = useRouter();
+	console.log({open})
 
-	const handleClose = () => {
-		setOpen(false);
-		localStorage.removeItem("welcome_popup");
+
+	const handlePay = () => {}
+	const onClose = () => {}
+
+	const addCardStyles = {
+		switchStyle: {
+			"& .MuiSwitch-switchBase": {
+				"&+.MuiSwitch-track": {
+					backgroundColor: "rgba(163, 176, 194, 1)",
+					opacity: 1,
+				},
+				"&.Mui-checked": {
+					color: "#fff",
+					"&+.MuiSwitch-track": {
+						backgroundColor: "rgba(56, 152, 252, 1)",
+						opacity: 1,
+					},
+				},
+			},
+		},
+		imageStyle: {
+			width: 87,
+			height: 78,
+			borderRadius: "4px",
+			backgroundPosition: "center",
+			backgroundRepeat: "no-repeat",
+			backgroundImage: "url(/danger-fill-icon.svg)",
+		},
+		wrapStripeInput: {
+			border: "1px solid #ddd",
+			borderRadius: "4px",
+			padding: "10px",
+		},
 	};
 
-	const navigateToSourcePage = () => {
-		handleClose();
-		router.push("./sources");
-	};
+	const [selectedCard, setSelectedCard] = useState<string>("visa");
 
-	const navigateToDashboardPage = () => {
-		handleClose();
+	const handleCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+	  setSelectedCard(event.target.value);
 	};
 
 	return (
-		<>
-			<Backdrop
-				open={open}
-				onClick={handleClose}
-				sx={{
-					zIndex: 3000,
-					color: "#fff",
-					backdropFilter: "blur(12px)",
-					backgroundColor: "#0000001A",
-				}}
-			/>
-			<Dialog
-				open={open}
-				sx={{ zIndex: 3100 }}
-				onClose={handleClose}
-				maxWidth="md"
-				fullWidth
-			>
-				<DialogTitle sx={{ p: "16px 16px 8px" }}>
-					<Box
-						sx={{ display: "flex", justifyContent: "flex-end", width: "100%" }}
-					>
-						<IconButton
-							sx={{ width: "30px", height: "30px" }}
-							onClick={handleClose}
-						>
-							<CloseIcon sx={{ color: "#202124" }} />
-						</IconButton>
+		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+			<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
+				Complete Your Payment
+			</DialogTitle>
+			<Divider />
+			<DialogContent>
+				<Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "20px", my: 2 }}>
+					<Box sx={{display: "flex", justifyContent: "center"}}><Box sx={addCardStyles.imageStyle} /></Box>
+					<Typography className="hyperlink-red" sx={{textAlign: "center"}}>Your access has been paused because your last payment failed. To restore full functionality, please complete the payment below.</Typography>
+				</Box>
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+						<Typography className="first-sub-title">Payment Method:</Typography>
 					</Box>
-					<Typography
-						fontWeight="600"
-						fontSize="26px"
-						textAlign="center"
-						fontFamily="Nunito Sans"
-					>
-						Welcome Aboard
-					</Typography>
-				</DialogTitle>
-				<DialogContent sx={{ p: 2 }}>
-					<Typography className="fourth-sub-title" sx={{ textAlign: "center" }}>
-						To begin building your audience, you&apos;ll need to provide a data
-						source.
-					</Typography>
-					<Grid
-						container
-						spacing={4}
-						alignItems="center"
-						justifyContent="center"
-						sx={{ mt: 0 }}
-					>
-						{/* Left Section */}
-						<Grid item xs={12} md={5.75}>
-							<Card
-								variant="outlined"
-								sx={{
-									border: "none",
-									boxShadow: "none",
-								}}
-							>
-								<CardContent
-									sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-								>
-									<Box
-										sx={{ display: "flex", justifyContent: "space-between" }}
-									>
-										<Typography className="first-sub-title">
-											Install Pixel
-										</Typography>
-										<Box
-											sx={{
-												display: "flex",
-												flexDirection: "column",
-												gap: 0.5,
-											}}
-										>
-											<Typography
-												className="table-data"
-												sx={{
-													color: "rgba(43, 91, 0, 1) !important",
-													fontSize: "14px !important",
-													backgroundColor: "rgba(234, 248, 221, 1) !important",
-													padding: "4px 12px",
-													borderRadius: "4px",
-												}}
-											>
-												Recommended
-											</Typography>
-										</Box>
-									</Box>
-									<Typography className="description">
-										It will automatically collect visitor information from your
-										website.
-									</Typography>
-									<Box
-										sx={{
-											height: 140,
-											backgroundColor: "#f0f4ff",
-											backgroundImage: "url(/pixel.svg)",
-											backgroundPosition: "center",
-											backgroundRepeat: "no-repeat",
-											borderRadius: 2,
-										}}
-									/>
-								</CardContent>
-								<CardActions sx={{ pt: 0, pl: 2, pr: 2 }}>
-									<Button
-										variant="contained"
-										fullWidth
-										onClick={navigateToDashboardPage}
-										sx={{
-											backgroundColor: "#3898FC",
-											"&:hover": {
-												backgroundColor: "#1E88E5",
-											},
-											"&:active": {
-												backgroundColor: "#74B7FD",
-											},
-											dropShadow: "#00000040",
-										}}
-									>
-										<IconButton
-											sx={{ width: "30px", height: "30px", color: "#fff" }}
-										>
-											<LegendToggleOutlinedIcon />
-										</IconButton>
-										<Typography
-											className="description"
-											style={{ color: "#fff" }}
-										>
-											Start with Pixel
-										</Typography>
-									</Button>
-								</CardActions>
-							</Card>
-						</Grid>
-
-						{/* OR Divider */}
-						<Grid
-							item
-							xs={12}
-							md={0.5}
-							sx={{
-								display: "flex",
-								flexDirection: { xs: "row", md: "column" },
-								alignItems: "center",
-								gap: 1,
-								height: { xs: "auto", md: "340px" },
-								width: "100%",
-							}}
-						>
-							<Box
-								sx={{
-									display: "flex",
-									flexDirection: { xs: "row", md: "column" },
-									alignItems: "center",
-									height: "100%",
-									justifyContent: "center",
-									width: "100%",
-								}}
-							>
-								<Box
-									sx={{
-										width: { xs: "50%", md: "auto" },
-										height: { xs: "1px", md: "50%" },
-										borderBottom: { xs: "1px solid #DCE1E8", md: "none" },
-										borderRight: { xs: "none", md: "1px solid #DCE1E8" },
-										marginRight: { xs: "8px", md: "0" },
-										marginBottom: { xs: "0", md: "8px" },
-									}}
-								/>
+					<Box sx={{ display: "flex", gap: 2}}>
+						<RadioGroup value={selectedCard} onChange={handleCardChange} sx={{width: "100%", gap: 2}}>
+							<Box sx={{ display: "flex", alignItems: "start", width: "100%", gap: 2, border: "1px solid #ddd", borderRadius: 2, p: 2 }}>
+								<Radio value="visa" />
+								<Box sx={{ display: "flex", flexDirection: "column", width: "100%", justifyContent: "center", flexGrow: 1 }}>
+									<Typography sx={{ fontWeight: 600 }}>Visa (**** 5555)</Typography>
+									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>Expire date: 08/29</Typography>
+								</Box>
 								<Typography
-									variant="body1"
-									className="third-sub-title"
-									sx={{ color: "#6B7280" }}
-								>
-									OR
-								</Typography>
-								<Box
+									className="main-text"
 									sx={{
-										width: { xs: "50%", md: "auto" },
-										height: { xs: "1px", md: "50%" },
-										borderBottom: { xs: "1px solid #DCE1E8", md: "none" },
-										borderRight: { xs: "none", md: "1px solid #DCE1E8" },
-										marginRight: { xs: "8px", md: "0" },
-										marginBottom: { xs: "0", md: "8px" },
+										borderRadius: "4px",
+										background: "#eaf8dd",
+										color: "#2b5b00",
+										fontSize: "12px",
+										fontWeight: "600",
+										padding: "2px 12px",
 									}}
-								/>
-							</Box>
-						</Grid>
-
-						{/* Right Section */}
-						<Grid item xs={12} md={5.75}>
-							<Card
-								variant="outlined"
-								sx={{
-									border: "none",
-									boxShadow: "none",
-								}}
-							>
-								<CardContent
-									sx={{ display: "flex", flexDirection: "column", gap: 2 }}
 								>
-									<Typography className="first-sub-title">
-										Import Source from CSV file
-									</Typography>
-									<Typography className="description">
-										Alternatively, you can upload a CSV file containing your
-										existing customer data.
-									</Typography>
-									<Box
-										sx={{
-											height: 140,
-											backgroundColor: "#f0f4ff",
-											backgroundImage: "url(/audience.svg)",
-											backgroundPosition: "center",
-											backgroundRepeat: "no-repeat",
-											borderRadius: 2,
-										}}
-									/>
-								</CardContent>
-								<CardActions sx={{ pt: 0, pl: 2, pr: 2 }}>
-									<Button
-										variant="outlined"
-										fullWidth
-										onClick={navigateToSourcePage}
-										sx={{
-											"&:hover": {
-												borderColor: "#1E88E5",
-											},
-											"&:active": {
-												borderColor: "#74B7FD",
-											},
-										}}
-									>
-										<IconButton
-											sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-										>
-											<AllInboxOutlinedIcon />
-										</IconButton>
-										<Typography
-											className="description"
-											style={{ color: "#3898FC" }}
-										>
-											Start from Source
-										</Typography>
-									</Button>
-								</CardActions>
-							</Card>
-						</Grid>
-					</Grid>
-				</DialogContent>
-			</Dialog>
-		</>
+									Default
+								</Typography>
+							</Box>
+							<Box sx={{ display: "flex", alignItems: "center", gap: 2, border: "1px solid #ddd", borderRadius: 2, p: 2 }}>
+								<Radio value="amex" />
+								<Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+									<Typography sx={{ fontWeight: 600 }}>American Express (**** 5555)</Typography>
+									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>Expire date: 05/30</Typography>
+								</Box>
+							</Box>
+						</RadioGroup>
+					</Box>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					</Box>
+				</Box>
+			</DialogContent>
+			<DialogActions>
+				<CustomButton variant="contained" onClick={handlePay}>
+					Pay
+				</CustomButton>
+			</DialogActions>
+		</Dialog>
 	);
 };
 

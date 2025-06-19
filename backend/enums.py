@@ -195,10 +195,19 @@ class UserAuthorizationStatus(Enum):
     FILL_COMPANY_DETAILS = "FILL_COMPANY_DETAILS"
     NEED_BOOK_CALL = "NEED_BOOK_CALL"
     PAYMENT_NEEDED = "PAYMENT_NEEDED"
+    PAYMENT_FAILED = "PAYMENT_FAILED"
     PIXEL_INSTALLATION_NEEDED = "PIXEL_INSTALLATION_NEEDED"
     TEAM_TOKEN_EXPIRED = "TEAM_TOKEN_EXPIRED"
     INVALID_API_KEY = "INVALID_API_KEY"
 
+class SubscriptionPlanAlias(Enum):
+    BASIC = "basic"
+    BASIC_RECORDS = "basic_records"
+
+class UserSubscriptionsStatus(Enum):
+    ACTIVE = "active"
+    CANCELED = "canceled"
+    INACTIVE = "inactive"
 
 class MiddleWareEnum(Enum):
     NEED_EMAIL_CONFIRMATION = "NEED_EMAIL_CONFIRMATION"

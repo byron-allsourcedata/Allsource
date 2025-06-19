@@ -16,6 +16,7 @@ import { useNotification } from "@/context/NotificationContext";
 const Settings: React.FC = () => {
 	const { hasNotification } = useNotification();
 	const [activeSection, setActiveSection] = useState<string>("accountDetails");
+	const [paymentFailed, setPaymentFailed] = useState(false);
 	const [accountDetails, setAccountDetails] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -39,6 +40,11 @@ const Settings: React.FC = () => {
 
 	useEffect(() => {
 		const sectionFromUrl = searchParams.get("section");
+		const paymentFailed = searchParams.get("payment_failed");
+		console.log({sectionFromUrl, paymentFailed})
+		if (paymentFailed) {
+			setPaymentFailed(true);
+		}
 		if (sectionFromUrl) {
 			setActiveSection(sectionFromUrl);
 		}
@@ -189,7 +195,7 @@ const Settings: React.FC = () => {
 
 					{activeSection === "teams" && <SettingsTeams />}
 
-					{activeSection === "billing" && <SettingsBilling />}
+					{activeSection === "billing" && <SettingsBilling paymentFailed={paymentFailed}/>}
 
 					{activeSection === "subscription" && <SettingsSubscription />}
 

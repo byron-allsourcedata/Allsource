@@ -7,7 +7,7 @@ from db_dependencies import Db
 from models import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
-from enums import SourcePlatformEnum
+from enums import SourcePlatformEnum, UserSubscriptionsStatus, SubscriptionPlanAlias
 from resolver import injectable
 
 
@@ -152,6 +152,26 @@ class PlansPersistence:
         )
 
         return result
+
+    def is_user_has_inactive_subscription_on_basic(self, user_id):
+        result = (
+            self.db.query(
+                UserSubscriptions.id
+            )
+            .join(User, User.current_subscription_id == UserSubscriptions.id)
+            .join(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .filter(
+                User.id == user_id,
+                UserSubscriptions.status ==  UserSubscriptionsStatus.INACTIVE.value,
+                SubscriptionPlan.alias.in_([SubscriptionPlanAlias.BASIC.value, SubscriptionPlanAlias.BASIC_RECORDS.value])
+            )
+            .first()
+        )
+
+        return bool(result)
 
     def get_plan_by_price_id(self, price_id):
         subscription_plan = (
