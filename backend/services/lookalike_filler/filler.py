@@ -7,7 +7,7 @@ from clickhouse_connect.driver.common import StreamContext
 from sqlalchemy import update
 from typing_extensions import deprecated
 
-from db_dependencies import Clickhouse, Db
+from db_dependencies import Clickhouse, Db, ClickhouseInserter
 from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_matched_persons import (
@@ -45,6 +45,7 @@ class LookalikeFillerService:
         self,
         db: Db,
         clickhouse: Clickhouse,
+        clickhouse_inserter: ClickhouseInserter,
         lookalikes: AudienceLookalikesService,
         audiences_scores: SimilarAudiencesScoresService,
         column_selector: AudienceColumnSelector,
@@ -58,6 +59,7 @@ class LookalikeFillerService:
     ):
         self.db = db
         self.clickhouse = clickhouse
+        self.clickhouse_inserter = clickhouse_inserter
         self.lookalikes = lookalikes
         self.profile_fetcher = profile_fetcher
         self.audiences_scores = audiences_scores

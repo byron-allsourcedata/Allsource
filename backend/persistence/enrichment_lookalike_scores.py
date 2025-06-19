@@ -3,7 +3,7 @@ from time import sleep
 from typing import List, Tuple
 from uuid import UUID
 
-from db_dependencies import Db, Clickhouse
+from db_dependencies import Db, Clickhouse, ClickhouseInserter
 from models.enrichment.enrichment_lookalike_scores import (
     EnrichmentLookalikeScore,
 )
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @injectable
 class EnrichmentLookalikeScoresPersistence:
-    def __init__(self, db: Db, ch: Clickhouse):
+    def __init__(self, db: Db, ch: ClickhouseInserter):
         self.db = db
         self.ch = ch
 

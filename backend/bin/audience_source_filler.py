@@ -6,7 +6,7 @@ import asyncio
 import functools
 import json
 from datetime import datetime, timezone
-from typing import List, Optional, Dict
+from typing import List, Dict
 
 import chardet
 import io
@@ -14,7 +14,6 @@ import csv
 import boto3
 import aioboto3
 from aio_pika import IncomingMessage, Connection
-from aiormq.abc import AbstractConnection
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 from itertools import islice
