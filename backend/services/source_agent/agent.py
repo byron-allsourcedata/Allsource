@@ -1,26 +1,6 @@
-import inspect
 import logging
-import asyncio
 from typing import Iterable, List, Dict
 from uuid import UUID
-
-from pydantic import BaseModel, EmailStr
-
-from db_dependencies import Db, Clickhouse
-from resolver import injectable
-
-logger = logging.getLogger(__name__)
-
-
-class EmailAsid(BaseModel):
-    email: EmailStr
-    asid: str
-
-
-import asyncio
-import inspect
-import logging
-from typing import Iterable, List, Sequence
 
 from pydantic import BaseModel, EmailStr
 from db_dependencies import Db, Clickhouse
@@ -49,7 +29,7 @@ class SourceAgentService:
         self.db = db
         self.clickhouse = clickhouse
 
-    async def _run_query(
+    def _run_query(
         self,
         sql: str,
         params: Dict | None = None,
@@ -57,7 +37,7 @@ class SourceAgentService:
         result = self.clickhouse.query(sql, params)
         return result.result_rows if hasattr(result, "result_rows") else result
 
-    async def get_user_ids_by_emails(
+    def get_user_ids_by_emails(
         self,
         emails: Iterable[str],
     ) -> List[EmailAsid]:
@@ -72,7 +52,7 @@ class SourceAgentService:
                 WHERE email IN %(ids)s
                 """
 
-        rows = await self._run_query(sql, {"ids": emails_clean})
+        rows = self._run_query(sql, {"ids": emails_clean})
 
         result = [
             EmailAsid(email=email.lower(), asid=str(asid))
@@ -86,7 +66,7 @@ class SourceAgentService:
         )
         return result
 
-    async def get_details_by_asids(
+    def get_details_by_asids(
         self,
         asids: Iterable[UUID | str],
     ) -> Dict[UUID, ProfContact]:
@@ -107,7 +87,7 @@ class SourceAgentService:
         WHERE asid IN %(ids)s
         """
 
-        rows = await self._run_query(sql, {"ids": asid_list})
+        rows = self._run_query(sql, {"ids": asid_list})
 
         contacts: Dict[UUID, ProfContact] = {
             UUID(asid): ProfContact(

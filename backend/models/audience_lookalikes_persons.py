@@ -25,8 +25,9 @@ class AudienceLookalikesPerson(Base):
     enrichment_user_id = Column(
         UUID(as_uuid=True),
         ForeignKey(EnrichmentUser.id, ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
+    enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(
         TIMESTAMP,
         nullable=False,

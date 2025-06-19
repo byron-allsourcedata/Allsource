@@ -146,7 +146,12 @@ class LookalikeFillerService:
     ):
         lookalike = self.lookalikes.get_lookalike(lookalike_id)
         significant_fields = lookalike.significant_fields
-
+        value_by_asid: dict[UUID, float] = {
+            asid: float(val)
+            for val, asid in self.profile_fetcher.get_value_and_user_asids(
+                self.db, lookalike.source_uuid
+            )
+        }
         users_count = self.enrichment_users.count()
 
         self.lookalikes.update_dataset_size(
@@ -162,7 +167,15 @@ class LookalikeFillerService:
 
         with rows_stream:
             for batch in rows_stream:
-                dict_batch = [dict(zip(column_names, row)) for row in batch]
+                dict_batch = [
+                    {
+                        **dict(zip(column_names, row)),
+                        "customer_value": value_by_asid.get(
+                            row[column_names.index("asid")], 0.0
+                        ),
+                    }
+                    for row in batch
+                ]
 
                 batch_buffer.extend(dict_batch)
 

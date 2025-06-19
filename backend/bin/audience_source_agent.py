@@ -129,9 +129,9 @@ async def process_email_leads(
         logging.info("No valid emails found in input data.")
         return 0
 
-    matches: List[
-        EmailAsid
-    ] = await source_agent_service.get_user_ids_by_emails(emails)
+    matches: List[EmailAsid] = source_agent_service.get_user_ids_by_emails(
+        emails
+    )
     if not matches:
         logging.info("No matching emails found in ClickHouse.")
         return 0
@@ -394,6 +394,7 @@ async def process_user_id(
     db_session: Session,
     source_id: str,
     audience_source: AudienceSource,
+    source_agent_service: SourceAgentService,
 ) -> int:
     five_x_five_user_ids = [p.user_id for p in persons]
     logging.info(
@@ -402,10 +403,10 @@ async def process_user_id(
 
     db_session.commit()
     with db_session.begin():
-        existing_uids = {
+        existing_asids = {
             row[0]
             for row in db_session.query(
-                AudienceSourcesMatchedPerson.enrichment_user_id
+                AudienceSourcesMatchedPerson.enrichment_user_asid
             )
             .filter(AudienceSourcesMatchedPerson.source_id == source_id)
             .all()
@@ -426,48 +427,36 @@ async def process_user_id(
 
         updates = []
         for lead_id, five_x_id in results_query:
-            enrichment_user_id = None
-            chosen_email = None
+            email = None
             for t in (
                 EmailType.BUSINESS,
                 EmailType.PERSONAL,
                 EmailType.ADDITIONAL_PERSONAL,
             ):
-                link_row = (
+                link = (
                     db_session.query(FiveXFiveUsersEmails.email_id)
                     .filter_by(user_id=five_x_id, type=t.value)
                     .first()
                 )
-                if not link_row:
+                if not link:
                     continue
-
-                email_id = link_row[0]
-
                 email_row = (
                     db_session.query(FiveXFiveEmails.email)
-                    .filter_by(id=email_id)
+                    .filter_by(id=link[0])
                     .first()
                 )
-                if not email_row:
-                    continue
-                email = email_row[0]
+                if email_row:
+                    email = email_row[0].strip().lower()
+                    break
+            if not email:
+                continue
 
-                enrich_row = (
-                    db_session.query(EnrichmentUsersEmails.enrichment_user_id)
-                    .join(
-                        EnrichmentEmails,
-                        EnrichmentEmails.id == EnrichmentUsersEmails.email_id,
-                    )
-                    .filter(EnrichmentEmails.email == email)
-                    .first()
-                )
-                if not enrich_row:
-                    continue
-                enrichment_user_id = enrich_row[0]
-                chosen_email = email
-                break
+            matches = source_agent_service.get_user_ids_by_emails([email])
+            if not matches:
+                continue
+            asid = UUID(matches[0].asid)
 
-            if not enrichment_user_id or enrichment_user_id in existing_uids:
+            if asid in existing_asids:
                 continue
 
             first = (
@@ -484,7 +473,6 @@ async def process_user_id(
                 )
                 .first()
             )
-
             if not first or not last:
                 continue
 
@@ -496,8 +484,8 @@ async def process_user_id(
             updates.append(
                 {
                     "source_id": source_id,
-                    "enrichment_user_id": enrichment_user_id,
-                    "email": chosen_email,
+                    "enrichment_user_asid": asid,
+                    "email": email,
                     "start_date": calc["active_start_date"],
                     "end_date": calc["active_end_date"],
                     "recency": calc["recency"],
@@ -512,7 +500,7 @@ async def process_user_id(
                     "value_score": calc["user_value_score"],
                 }
             )
-            existing_uids.add(enrichment_user_id)
+            existing_asids.add(asid)
 
         if updates:
             db_session.bulk_insert_mappings(
@@ -749,7 +737,7 @@ async def normalize_persons_customer_conversion(
             except (TypeError, ValueError) as err:
                 logging.warning("Bad UUID in row %s → %s: %s", mp_id, asid, err)
 
-        asid_to_details = await source_agent_service.get_details_by_asids(
+        asid_to_details = source_agent_service.get_details_by_asids(
             mp_to_asid.values(),
         )
 
@@ -1171,6 +1159,7 @@ async def aud_sources_matching(
                 db_session=db_session,
                 source_id=source_id,
                 audience_source=audience_source,
+                source_agent_service=source_agent_service,
             )
 
         if type == "emails":
@@ -1226,7 +1215,9 @@ async def aud_sources_matching(
         )
         if processed_records >= total_records:
             InsightsUtils.process_insights(
-                source_id=source_id, db_session=db_session
+                source_agent=source_agent_service,
+                source_id=source_id,
+                db_session=db_session,
             )
             if type == "user_ids":
                 calculate_and_save_significant_fields(

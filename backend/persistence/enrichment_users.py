@@ -23,8 +23,8 @@ class EnrichmentUsersPersistence:
         return count
 
     def fetch_enrichment_user_ids(self, asids: List[UUID]) -> List[UUID]:
-        query = select(EnrichmentUser).where(EnrichmentUser.asid.in_(asids))
-        rows = self.db.execute(query).scalars().all()
+        if not asids:
+            return []
 
         sql = (
             "SELECT asid "

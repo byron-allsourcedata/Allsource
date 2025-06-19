@@ -85,7 +85,6 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
             {**profile, "customer_value": customer_value}
             for customer_value, profile in zip(customer_values, profiles)
         ]
-
         return profiles
 
     def parse_clickhouse_result(
@@ -124,17 +123,12 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
                 AudienceSourcesMatchedPerson.value_score.label(
                     "customer_value"
                 ),
-                EnrichmentUser.asid,
+                AudienceSourcesMatchedPerson.enrichment_user_asid,
             )
             .select_from(AudienceSource)
             .join(
                 AudienceSourcesMatchedPerson,
                 AudienceSourcesMatchedPerson.source_id == AudienceSource.id,
-            )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.id
-                == AudienceSourcesMatchedPerson.enrichment_user_id,
             )
             .where(AudienceSource.id == source_id)
         )
