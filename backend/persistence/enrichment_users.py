@@ -11,6 +11,7 @@ from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
+
 @injectable
 class EnrichmentUsersPersistence:
     def __init__(self, db: Db, clickhouse: Clickhouse):
@@ -26,11 +27,7 @@ class EnrichmentUsersPersistence:
         if not asids:
             return []
 
-        sql = (
-            "SELECT asid "
-            "FROM enrichment_users "
-            "WHERE asid IN %(ids)s"
-        )
+        sql = "SELECT asid FROM enrichment_users WHERE asid IN %(ids)s"
 
         result = self.clickhouse.query(sql, {"ids": [str(a) for a in asids]})
 

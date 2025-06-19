@@ -25,12 +25,7 @@ from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
 from persistence.user_persistence import UserPersistence
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
-from models.enrichment.enrichment_employment_history import (
-    EnrichmentEmploymentHistory,
-)
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )

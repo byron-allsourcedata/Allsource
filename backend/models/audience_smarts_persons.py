@@ -53,8 +53,11 @@ class AudienceSmartPerson(Base):
         nullable=False,
     )
     enrichment_user_id = Column(
-        UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=True
+        UUID(as_uuid=True),
+        ForeignKey(EnrichmentUser.id, ondelete="CASCADE"),
+        nullable=True,
     )
+    enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
     is_valid = Column(Boolean, nullable=False, server_default=text("true"))
     is_validation_processed = Column(
         Boolean, nullable=True, server_default=text("true")
