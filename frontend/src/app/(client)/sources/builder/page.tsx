@@ -267,8 +267,29 @@ const SourcesImport: React.FC = () => {
 	};
 
 	const handlePixelInstall = () => {
-		router.push("/dashboard");
-		sessionStorage.setItem("current_domain", domainsWithoutPixel[0].name);
+		const meRaw = sessionStorage.getItem("me");
+
+		if (!meRaw) {
+			router.push("/dashboard");
+			return;
+		}
+
+		try {
+			const me = JSON.parse(meRaw);
+			const isPixelInstalled = me?.get_started?.is_pixel_installed;
+
+			if (domainsWithoutPixel.length > 0) {
+				sessionStorage.setItem("current_domain", domainsWithoutPixel[0].name);
+			}
+
+			if (isPixelInstalled === false) {
+				router.push("/get-started?pixel=true");
+			} else {
+				router.push("/management/");
+			}
+		} catch (err) {
+			console.error("Error parsing `me` from sessionStorage:", err);
+		}
 	};
 
 	const handleAdd = () => {
@@ -740,7 +761,8 @@ const SourcesImport: React.FC = () => {
 					domains.filter((domain: DomainsLeads) => !domain.pixel_installed),
 				);
 				setPixelNotInstalled(
-					domains.some((domain: DomainsLeads) => !domain.pixel_installed),
+					domains.length === 0 ||
+						domains.some((domain: DomainsLeads) => !domain.pixel_installed),
 				);
 			}
 		} catch {
@@ -1680,8 +1702,9 @@ const SourcesImport: React.FC = () => {
 																display: "flex",
 																justifyContent: "center",
 																width: "100%",
+																backgroundColor: "#ffffff !important",
 																"&:hover": {
-																	backgroundColor: "transparent",
+																	backgroundColor: "#ffffff !important",
 																},
 															}}
 														>
