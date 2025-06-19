@@ -674,9 +674,7 @@ class UserPersistence:
             select(Users).where(Users.email == email)
         ).scalar()
 
-    def update_users_credits(
-       self, subscription_ids: any, credits: int
-    ):
+    def update_users_credits(self, subscription_ids: any, credits: int):
         stmt_users = (
             update(Users)
             .where(Users.current_subscription_id.in_(subscription_ids))
@@ -685,9 +683,7 @@ class UserPersistence:
         result = self.db.execute(stmt_users)
         return result
 
-    def update_subscriptions_dates(
-        self, subscription_ids: any
-    ):
+    def update_subscriptions_dates(self, subscription_ids: any):
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         stmt_subs = (
             update(UserSubscriptions)

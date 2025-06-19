@@ -18,16 +18,30 @@ from sqlalchemy.orm import Session
 logging.basicConfig(level=logging.INFO)
 
 
-def refresh_free_trail_lead_credits(db_session: Session, user_subscriptions_persistence: UserSubscriptionsPersistence, user_persistence: UserPersistence):
-    credits = user_subscriptions_persistence.get_lead_credits(PlanAlias.FREE_TRIAL.value)
+def refresh_free_trail_lead_credits(
+    db_session: Session,
+    user_subscriptions_persistence: UserSubscriptionsPersistence,
+    user_persistence: UserPersistence,
+):
+    credits = user_subscriptions_persistence.get_lead_credits(
+        PlanAlias.FREE_TRIAL.value
+    )
 
     if credits is None:
         logging.error("Free trial plan not found")
         return
 
-    subquery_user_sub_ids = user_subscriptions_persistence.subquery_current_free_trial_sub_ids(PlanAlias.FREE_TRIAL.value)
-    result_users = user_persistence.update_users_credits(subquery_user_sub_ids, credits)
-    result_subs= user_persistence.update_subscriptions_dates(subquery_user_sub_ids)
+    subquery_user_sub_ids = (
+        user_subscriptions_persistence.subquery_current_free_trial_sub_ids(
+            PlanAlias.FREE_TRIAL.value
+        )
+    )
+    result_users = user_persistence.update_users_credits(
+        subquery_user_sub_ids, credits
+    )
+    result_subs = user_persistence.update_subscriptions_dates(
+        subquery_user_sub_ids
+    )
     db_session.commit()
 
     logging.info(
@@ -35,19 +49,31 @@ def refresh_free_trail_lead_credits(db_session: Session, user_subscriptions_pers
     )
 
 
-def refresh_basic_lead_credits(db_session: Session, user_subscriptions_persistence: UserSubscriptionsPersistence, user_persistence: UserPersistence):
-    credits = user_subscriptions_persistence.get_lead_credits(PlanAlias.BASIC.value)
+def refresh_basic_lead_credits(
+    db_session: Session,
+    user_subscriptions_persistence: UserSubscriptionsPersistence,
+    user_persistence: UserPersistence,
+):
+    credits = user_subscriptions_persistence.get_lead_credits(
+        PlanAlias.BASIC.value
+    )
 
     if credits is None:
         logging.error("Basic plan not found")
         return
 
-    subquery_user_sub_ids = user_subscriptions_persistence.subquery_current_free_trial_sub_ids(
-        PlanAlias.BASIC.value
+    subquery_user_sub_ids = (
+        user_subscriptions_persistence.subquery_current_free_trial_sub_ids(
+            PlanAlias.BASIC.value
+        )
     )
 
-    result_users = user_persistence.update_users_credits(subquery_user_sub_ids, credits)
-    result_subs = user_persistence.update_subscriptions_dates(subquery_user_sub_ids)
+    result_users = user_persistence.update_users_credits(
+        subquery_user_sub_ids, credits
+    )
+    result_subs = user_persistence.update_subscriptions_dates(
+        subquery_user_sub_ids
+    )
 
     db_session.commit()
 
@@ -63,12 +89,20 @@ async def main():
     resolver = Resolver()
     try:
         db_session = await resolver.resolve(Db)
-        user_subscriptions_persistence = await resolver.resolve(UserSubscriptionsPersistence)
-        user_persistence = await resolver.resolve(
-            UserPersistence
+        user_subscriptions_persistence = await resolver.resolve(
+            UserSubscriptionsPersistence
         )
-        refresh_free_trail_lead_credits(db_session=db_session, user_subscriptions_persistence=user_subscriptions_persistence, user_persistence=user_persistence)
-        refresh_basic_lead_credits(db_session=db_session, user_subscriptions_persistence=user_subscriptions_persistence, user_persistence=user_persistence)
+        user_persistence = await resolver.resolve(UserPersistence)
+        refresh_free_trail_lead_credits(
+            db_session=db_session,
+            user_subscriptions_persistence=user_subscriptions_persistence,
+            user_persistence=user_persistence,
+        )
+        refresh_basic_lead_credits(
+            db_session=db_session,
+            user_subscriptions_persistence=user_subscriptions_persistence,
+            user_persistence=user_persistence,
+        )
 
     except Exception as err:
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
