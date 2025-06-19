@@ -1,5 +1,6 @@
 import type React from "react";
 import { useRef, useState } from "react";
+import DownloadIcon from "@mui/icons-material/Download";
 import {
 	Table,
 	TableBody,
@@ -18,6 +19,8 @@ import {
 	DialogContent,
 	DialogContentText,
 	Dialog,
+	Theme,
+	SxProps,
 } from "@mui/material";
 import {
 	LineChart,
@@ -26,6 +29,8 @@ import {
 	YAxis,
 	Tooltip as RechartsTooltip,
 	ResponsiveContainer,
+	Area,
+	AreaChart,
 } from "recharts";
 import { useSSE } from "@/context/SSEContext";
 import { MenuIconButton } from "@/components/table";
@@ -36,6 +41,11 @@ import { AdditionalPixel, PixelKey, PixelManagementItem } from "../page";
 import { style } from "./TableManagement";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+
+type Resolution = {
+	date: string;
+	lead_count: number;
+};
 
 interface TableContainerProps {
 	tableData?: PixelManagementItem[];
@@ -129,7 +139,6 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 					boxShadow: "none",
 					borderRadius: ".25rem",
 					padding: "1rem",
-					overflowX: "auto",
 				}}
 			>
 				{loading && <CustomizedProgressBar />}
@@ -138,9 +147,6 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 						borderCollapse: "separate",
 						width: "100%",
 						display: "table",
-						"@media (max-width: 37.5rem)": {
-							display: "none",
-						},
 					}}
 				>
 					<TableHead
@@ -206,7 +212,8 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 									rawAdditionalPixel?.is_add_to_cart_installed ?? false,
 								is_converted_sales_installed:
 									rawAdditionalPixel?.is_converted_sales_installed ?? false,
-								is_view_product_installed: row.pixel_status === true,
+								is_view_product_installed:
+									rawAdditionalPixel.is_view_product_installed ?? false,
 							};
 
 							const flags: { key: PixelKey; label: string }[] = [
@@ -228,6 +235,41 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 								(count, f) => (additional_pixel[f.key] ? count + 1 : count),
 								0,
 							);
+
+							const total = row.resolutions.reduce(
+								(acc, r) => acc + r.lead_count,
+								0,
+							);
+
+							const formatNumber = (num: number): string => {
+								if (num >= 1000)
+									return `${(num / 1000).toFixed(1).replace(/\.0$/, "")}к`;
+								return num.toString();
+							};
+
+							function getResolvedGraphData(
+								resolutions: Resolution[],
+							): Resolution[] {
+								const last = resolutions[resolutions.length - 1];
+								const lastDate = last ? new Date(last.date) : new Date();
+
+								const days = 7;
+								const fullSeries: Resolution[] = [];
+
+								for (let i = days - 1; i >= 0; i--) {
+									const date = new Date(lastDate);
+									date.setDate(date.getDate() - i);
+									const isoDate = date.toISOString().split("T")[0];
+
+									const match = resolutions.find((r) => r.date === isoDate);
+									fullSeries.push({
+										date: isoDate,
+										lead_count: match?.lead_count ?? 0,
+									});
+								}
+
+								return fullSeries;
+							}
 
 							return (
 								<TableRow
@@ -300,7 +342,35 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												gap: "4px",
 											}}
 										>
-											{row.pixel_status ? "✓ Installed" : "✗ Not Installed"}
+											{row.pixel_status ? (
+												"✓ Installed"
+											) : (
+												<Button
+													variant="text"
+													onClick={() =>
+														handleInstallPixelClick(row.domain_name)
+													}
+													sx={{
+														p: 0,
+														minWidth: 0,
+														textTransform: "none",
+														fontSize: "14px",
+														fontFamily: "Roboto",
+														fontWeight: 400,
+														color: "rgba(56, 152, 252, 1)",
+														textDecoration: "underline",
+														display: "inline-flex",
+														alignItems: "center",
+														"&:hover": {
+															textDecoration: "none",
+															backgroundColor: "transparent",
+														},
+													}}
+												>
+													<DownloadIcon sx={{ fontSize: "18px", mt: 0.25 }} />
+													Install Pixel
+												</Button>
+											)}
 										</Typography>
 									</TableCell>
 									<TableCell>
@@ -330,24 +400,79 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 											</Typography>
 										</Box>
 									</TableCell>
-									<TableCell sx={{ width: 120, height: 40 }}>
-										{Array.isArray(row.resulutions) &&
-										row.resulutions.length > 0 ? (
-											<ResponsiveContainer width="100%" height={40}>
-												<LineChart data={row.resulutions}>
-													<Line
-														type="monotone"
-														dataKey="lead_count"
-														stroke="#3B82F6"
-														strokeWidth={2}
-														dot={false}
-													/>
-													<XAxis dataKey="date" hide />
-													<YAxis hide />
-												</LineChart>
-											</ResponsiveContainer>
+									<TableCell>
+										{row.pixel_status ? (
+											<Box
+												sx={{
+													display: "flex",
+													alignItems: "flex-end",
+													maxWidth: "120px",
+												}}
+											>
+												<ResponsiveContainer width={80} height={30}>
+													<AreaChart
+														data={getResolvedGraphData(row.resolutions)}
+														margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+													>
+														<defs>
+															<linearGradient
+																id="colorGradient"
+																x1="0"
+																y1="0"
+																x2="0"
+																y2="1"
+															>
+																<stop
+																	offset="0%"
+																	stopColor="#3898FC"
+																	stopOpacity={1}
+																/>
+																<stop
+																	offset="98.31%"
+																	stopColor="rgba(224, 236, 255, 1)"
+																	stopOpacity={0.1}
+																/>
+															</linearGradient>
+														</defs>
+														<Area
+															type="monotone"
+															dataKey="lead_count"
+															stroke="rgba(56, 152, 252, 1)"
+															strokeWidth={2}
+															fill="url(#colorGradient)"
+														/>
+														<XAxis dataKey="date" hide />
+														<YAxis hide domain={[0, "dataMax"]} />
+													</AreaChart>
+												</ResponsiveContainer>
+												<Box ml={0.5}>
+													<Typography
+														sx={{
+															fontFamily: "Roboto",
+															fontWeight: "400",
+															fontSize: "14px",
+															lineHeight: "140%",
+															letterSpacing: "0%",
+															color: "rgba(32, 33, 36, 0.7)",
+														}}
+													>
+														{formatNumber(total)}
+													</Typography>
+												</Box>
+											</Box>
 										) : (
-											"--"
+											<Typography
+												sx={{
+													fontFamily: "Roboto",
+													fontWeight: "400",
+													fontSize: "14px",
+													lineHeight: "140%",
+													letterSpacing: "0%",
+													color: "rgba(32, 33, 36, 0.7)",
+												}}
+											>
+												Pending Pixel
+											</Typography>
 										)}
 									</TableCell>
 
@@ -372,7 +497,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												}}
 												onClick={() => handleDataSyncClick(row.domain_name)}
 											>
-												{row.data_syncs?.length ?? 0}
+												{row.data_syncs_count}
 											</Typography>
 										</Box>
 									</TableCell>
@@ -439,12 +564,11 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														>
 															Add Additional Pixel Script
 														</Button>
-														<Button
-															sx={style.actionButtonText}
+														<DeleteButton
 															onClick={(e) => handleOpenConfirmDialog(e, row)}
-														>
-															Delete
-														</Button>
+															disabled={row.contacts_resolving}
+															sx={style.actionButtonText}
+														/>
 													</Box>
 												) : (
 													<Box
@@ -460,12 +584,11 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														>
 															Install Pixel
 														</Button>
-														<Button
-															sx={style.actionButtonText}
+														<DeleteButton
 															onClick={(e) => handleOpenConfirmDialog(e, row)}
-														>
-															Delete
-														</Button>
+															disabled={row.contacts_resolving}
+															sx={style.actionButtonText}
+														/>
 													</Box>
 												)}
 											</Box>
@@ -549,6 +672,26 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 				</DialogActions>
 			</Dialog>
 		</>
+	);
+};
+
+interface DeleteButtonProps {
+	onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+	disabled?: boolean;
+	sx?: SxProps<Theme>;
+}
+
+const DeleteButton: React.FC<DeleteButtonProps> = ({
+	onClick,
+	disabled = false,
+	sx,
+}) => {
+	if (disabled) return null;
+
+	return (
+		<Button sx={sx} onClick={onClick}>
+			Delete
+		</Button>
 	);
 };
 

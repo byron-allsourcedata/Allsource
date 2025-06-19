@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from models import UserIntegration
+from models import UserIntegration, LeadUser
 from utils import format_phone_number
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
@@ -11,7 +11,7 @@ from services.integrations.million_verifier import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Tuple
 import httpx
 import os
 from models.five_x_five_users import FiveXFiveUser
@@ -191,10 +191,10 @@ class WebhookIntegrationService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         results = []
-        for five_x_five_user in five_x_five_users:
+        for lead_user, five_x_five_user in user_data:
             data = self.__mapped_lead(
                 five_x_five_user=five_x_five_user,
                 data_map=integration_data_sync.data_map,
@@ -204,17 +204,15 @@ class WebhookIntegrationService:
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append({"lead_id": five_x_five_user.id, "status": data})
+                results.append({"lead_id": lead_user.id, "status": data})
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": five_x_five_user.id,
+                        "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
-
-            results.append(data)
 
             profile = self.__send_profile(
                 data=data,
@@ -223,7 +221,6 @@ class WebhookIntegrationService:
             if profile in (
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
                 for result in results:
                     if result["status"] == ProccessDataSyncResult.SUCCESS.value:

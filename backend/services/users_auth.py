@@ -316,7 +316,7 @@ class UsersAuth:
                 status = SignUpStatus.SUCCESS
                 status_result = (
                     self.user_persistence_service.check_status_invitations(
-                        admin_token=admin_token, user_mail=idinfo.get("email")
+                        teams_token=teams_token, user_mail=idinfo.get("email")
                     )
                 )
                 if status_result["success"] is False:
@@ -329,7 +329,7 @@ class UsersAuth:
             if admin_token:
                 status = SignUpStatus.SUCCESS
                 status_result = self.admin_persistence.check_status_invitations(
-                    teams_token=teams_token, user_mail=idinfo.get("email")
+                    admin_token=admin_token, user_mail=idinfo.get("email")
                 )
                 if status_result["success"] is False:
                     return {

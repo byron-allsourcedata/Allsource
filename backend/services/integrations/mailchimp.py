@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
+from typing import List, Tuple
 
 import mailchimp_marketing as MailchimpMarketing
 from fastapi import HTTPException
@@ -15,6 +16,7 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
+from models import LeadUser
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -372,11 +374,11 @@ class MailchimpIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         profiles = []
         results = []
-        for five_x_five_user in five_x_five_users:
+        for lead_user, five_x_five_user in user_data:
             profile = self.__mapped_member_into_list_lead(
                 five_x_five_user, integration_data_sync.data_map
             )
@@ -385,20 +387,17 @@ class MailchimpIntegrationsService:
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append(
-                    {"lead_id": five_x_five_user.id, "status": profile}
-                )
+                results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": five_x_five_user.id,
+                        "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
 
-            if profile:
-                profiles.append(profile)
+            profiles.append(profile)
 
         if not profiles:
             return results

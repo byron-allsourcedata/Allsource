@@ -58,9 +58,16 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 					? statusConfig.pixel.success
 					: statusConfig.pixel.error;
 			case "contacts":
-				return contactsResolving
-					? statusConfig.contacts.success
-					: statusConfig.contacts.error;
+				if (contactsResolving) {
+					return statusConfig.contacts.success;
+				}
+				if (isPixelInstalled) {
+					return {
+						label: "Waiting Contacts",
+						bg: "rgba(255, 249, 196, 1)",
+					};
+				}
+				return statusConfig.contacts.error;
 			case "sync":
 				if (dataSyncFailed) return statusConfig.sync.error;
 				if (dataSynced) return statusConfig.sync.success;

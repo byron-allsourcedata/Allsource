@@ -1,6 +1,6 @@
-from models import UserIntegration, IntegrationUserSync
+from models import UserIntegration, IntegrationUserSync, LeadUser
 from utils import validate_and_format_phone
-from typing import List
+from typing import List, Tuple
 from fastapi import HTTPException
 import httpx
 import os
@@ -245,57 +245,54 @@ class SendlaneIntegrationService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         return self.bulk_add_contacts(
-            five_x_five_users=five_x_five_users,
+            user_data=user_data,
             access_token=user_integration.access_token,
             list_id=integration_data_sync.list_id,
         )
 
     def bulk_add_contacts(
-        self, five_x_five_users: List[FiveXFiveUser], access_token, list_id: int
+        self,
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        access_token,
+        list_id: int,
     ):
-        chunks = [
-            five_x_five_users[i : i + 100]
-            for i in range(0, len(five_x_five_users), 100)
-        ]
+        contacts = []
+        id_map = {}
+
+        for lead_user, five_x_five_user in user_data:
+            contacts.append(
+                {
+                    "email": five_x_five_user.email,
+                    "first_name": five_x_five_user.first_name,
+                    "last_name": five_x_five_user.last_name,
+                }
+            )
+            id_map[five_x_five_user.email] = lead_user.id
+
+        data = {"contacts": contacts}
+        response = self.__handle_request(
+            f"/lists/{list_id}/contacts",
+            api_key=access_token,
+            json=data,
+            method="POST",
+        )
+
+        if response.status_code == 401:
+            status = ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        elif response.status_code != 200:
+            status = ProccessDataSyncResult.INCORRECT_FORMAT.value
+        else:
+            status = ProccessDataSyncResult.SUCCESS.value
+
         results = []
+        for contact in contacts:
+            email = contact["email"]
+            lead_id = id_map.get(email)
+            results.append({"lead_id": lead_id, "status": status})
 
-        for chunk in chunks:
-            contacts = []
-            chunk_id_map = {}
-
-            for user in chunk:
-                contacts.append(
-                    {
-                        "email": user.email,
-                        "first_name": user.first_name,
-                        "last_name": user.last_name,
-                    }
-                )
-                chunk_id_map[user.email] = user.id
-
-                data = {"contacts": contacts}
-                response = self.__handle_request(
-                    f"/lists/{list_id}/contacts",
-                    api_key=access_token,
-                    json=data,
-                    method="POST",
-                )
-
-                if response.status_code == 401:
-                    status = ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-                elif response.status_code != 200:
-                    status = ProccessDataSyncResult.INCORRECT_FORMAT.value
-                else:
-                    status = ProccessDataSyncResult.SUCCESS.value
-
-                for contact in contacts:
-                    email = contact["email"]
-                    lead_id = chunk_id_map.get(email)
-
-                    results.append({"lead_id": lead_id, "status": status})
         return results
 
     def __create_contact(self, five_x_five_user, access_token, list_id: int):

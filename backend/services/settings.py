@@ -314,7 +314,7 @@ class SettingsService:
             template_placeholder={
                 "full_name": invite_user,
                 "link": confirm_email_url,
-                "company_name": user.get("company_name"),
+                "company_name": user["full_name"],
             },
         )
         invited_by_id = (
@@ -366,6 +366,7 @@ class SettingsService:
         customer_id = user.get("customer_id")
         validation_funds = user.get("validation_funds")
         leads_credits = user.get("leads_credits")
+        smart_audience_quota = user.get("smart_audience_quota")
         user_id = user.get("id")
         amount_user_domains = len(
             self.user_domains_service.get_domains(user_id)
@@ -378,6 +379,7 @@ class SettingsService:
         plan_limit_domain = current_plan.domains_limit or -1
         validation_funds_limit = current_plan.validation_funds
         leads_credits_limit = current_plan.leads_credits
+        smart_audience_quota_limit = current_plan.smart_audience_quota
         total_key = (
             "monthly_total"
             if current_plan.interval == "month"
@@ -430,7 +432,11 @@ class SettingsService:
                 limit_value=leads_credits_limit,
                 current_value=leads_credits,
             ),
-            smart_audience="Coming soon",
+            smart_audience=LimitedDetail(
+                detail_type="limited",
+                limit_value=smart_audience_quota_limit,
+                current_value=smart_audience_quota,
+            ),
             validation_funds=FundsDetail(
                 detail_type="funds",
                 limit_value=validation_funds_limit,
@@ -510,6 +516,7 @@ class SettingsService:
         current_plan = self.plan_persistence.get_current_plan(
             user_id=user.get("id")
         )
+
         result["billing_details"] = self.extract_subscription_details(
             user=user
         ).model_dump()
@@ -526,7 +533,14 @@ class SettingsService:
             "leads_credits": user.get("leads_credits"),
             "validation_funds": user.get("validation_funds"),
             "premium_source_credits": user.get("premium_source_credits"),
-            "smart_audience_quota": user.get("smart_audience_quota"),
+            "smart_audience_quota": {
+                "available": user.get("smart_audience_quota") != 0
+                and (
+                    current_plan.alias != "free_trial_monthly"
+                    or current_plan.alias != "basic"
+                ),
+                "value": user.get("smart_audience_quota"),
+            },
             "plan_leads_credits": current_plan.leads_credits,
             "plan_premium_source_collected": current_plan.premium_source_credits,
             "plan_smart_audience_collected": current_plan.smart_audience_quota,

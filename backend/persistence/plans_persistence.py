@@ -144,6 +144,7 @@ class PlansPersistence:
                 SubscriptionPlan.price,
                 SubscriptionPlan.alias,
                 SubscriptionPlan.leads_credits,
+                SubscriptionPlan.validation_funds,
             )
             .join(User, User.current_subscription_id == UserSubscriptions.id)
             .join(

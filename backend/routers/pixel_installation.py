@@ -63,7 +63,7 @@ async def send_pixel_code_in_email(
 @router.put("/update-domain")
 def update_domain(
     request: UpdateDomain,
-    domain_service: UserDomainsService = Depends(get_domain_service),
+    domain_service: UserDomainsService,
     user=Depends(check_user_authentication),
 ):
     domain_service.update_domain(user.get("id"), request)
@@ -114,8 +114,8 @@ async def check_pixel_installation_status(
 
 @router.get("/verified_domains", response_model=DomainsListResponse)
 def get_verify_domains(
+    domain_service: UserDomainsService,
     secret_key: str = Query(..., description="The secret key to verify access"),
-    domain_service: UserDomainsService = Depends(get_domain_service),
 ):
     if secret_key != SECRET_PIXEL_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")

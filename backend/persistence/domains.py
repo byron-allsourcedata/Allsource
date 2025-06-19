@@ -16,7 +16,7 @@ from sqlalchemy import func, case, and_, or_, distinct
 from fastapi import HTTPException
 import re
 
-
+from persistence.leads_persistence import LeadsPersistence
 from resolver import injectable
 
 
@@ -24,6 +24,7 @@ from resolver import injectable
 class UserDomainsPersistence:
     def __init__(self, db: Db):
         self.db = db
+        self.leads_persistence = LeadsPersistence
 
     def get_domains_by_user(self, user_id: int, domain_substr: str = None):
         query = self.db.query(UserDomains).filter_by(user_id=user_id)
@@ -268,14 +269,23 @@ class UserDomainsPersistence:
             domain_query.domain = new_domain
             self.db.commit()
 
-    def delete_domain(self, user_id: int, domain: int):
+    def delete_domain(self, user_id: int, domain_id: int):
         domain = (
             self.db.query(UserDomains)
-            .filter(UserDomains.user_id == user_id, UserDomains.id == domain)
+            .filter(UserDomains.user_id == user_id, UserDomains.id == domain_id)
             .first()
         )
         if not domain:
-            raise HTTPException(status_code=404, detail={"status": "NOT_FOUND"})
+            raise HTTPException(status_code=404, detail="Domain not found")
+
+        lead_exists = self.leads_persistence.exists_by_domain_id(domain_id)
+
+        if lead_exists:
+            raise HTTPException(
+                status_code=400,
+                detail="Domain cannot be deleted because it has associated leads",
+            )
+
         self.db.delete(domain)
         self.db.commit()
 
