@@ -35,7 +35,11 @@ type ScriptCardConfig = {
 	subtitle: string;
 	imageSrc: string;
 	popupTitle: string;
-	secondStepText: string;
+	secondStepText: {
+		button: string;
+		default: string;
+	};
+	thirdStepText: string;
 	showInstalled?: boolean;
 };
 
@@ -47,18 +51,14 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 			"This script records product pages visited, time spent, and categories browsed.",
 		imageSrc: "/view_product.svg",
 		popupTitle: "View Product Script Installation",
-		secondStepText:
-			"Place this script before the </body> tag on product pages you want to track.",
-	},
-	{
-		key: "converted_sale",
-		title: "Converted Sales",
-		subtitle:
-			"This script tracks completed purchases and capturing order values.",
-		imageSrc: "/converted_sale.svg",
-		popupTitle: "Converted Sales Script Installation",
-		secondStepText:
-			'Paste this script inside the <body> tag on the "Thank You" page after a successful purchase.',
+		secondStepText: {
+			button:
+				"Insert this script just before the closing </body> tag on all product pages.",
+			default:
+				"Insert this script just before the closing </body> tag on all product pages.",
+		},
+		thirdStepText:
+			'Once the "View Product" pixel is added to your product pages, please wait 10–15 minutes. The pixel will be automatically marked as "Installed" after a visitor lands on a product page and is recognized in our system.',
 	},
 	{
 		key: "add_to_cart",
@@ -67,8 +67,30 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 			"This script identifies users who showed purchase intent by adding items to cart.",
 		imageSrc: "/add_to_cart.svg",
 		popupTitle: "Add To Cart Script Installation",
-		secondStepText:
-			'Paste this script in the <footer> tag or before </body> on each page with an "Add to cart" button.',
+		secondStepText: {
+			button:
+				"Place this script inside the <footer> tag or before the closing </body> tag on every page containing an 'Add to Cart' button. This script tracks 'Add to Cart' events triggered by button clicks.",
+			default:
+				"Place this script just before the closing </body> tag on all pages that include an 'Add to Cart' button to track events triggered on page load.",
+		},
+		thirdStepText:
+			'Once the "Add to Cart" pixel is placed on your website, please wait 10–15 minutes. The pixel will be automatically marked as "Installed" after a user clicks an "Add to Cart" button and the event is registered in our system.',
+	},
+	{
+		key: "converted_sale",
+		title: "Converted Sales",
+		subtitle:
+			"This script tracks completed purchases and captures order values.",
+		imageSrc: "/converted_sale.svg",
+		popupTitle: "Converted Sales Script Installation",
+		secondStepText: {
+			button:
+				"Paste this script inside the <body> tag on the 'Thank You' or order confirmation page, triggering on the purchase button click.",
+			default:
+				"Place this script inside the <body> tag on the order confirmation (Thank You) page to track completed purchases on page load.",
+		},
+		thirdStepText:
+			'Once the "Converted Sale" pixel is added to your order confirmation (Thank You) page, please wait 10–15 minutes. The pixel will be automatically marked as "Installed" after a purchase is completed and the conversion is tracked in our system.',
 	},
 ];
 
@@ -76,7 +98,11 @@ const AddAdditionalScript: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
 	const [openmanually, setOpen] = useState(false);
 	const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
-	const [selectedSecondText, setSelectedSecondText] = useState<string | null>(
+	const [selectedSecondText, setSelectedSecondText] = useState<{
+		button: string;
+		default: string;
+	} | null>(null);
+	const [selectedThirdText, setSelectedThirdText] = useState<string | null>(
 		null,
 	);
 	const [pixelCode, setPixelCode] = useState<string | null>(null);
@@ -105,7 +131,11 @@ const AddAdditionalScript: React.FC = () => {
 	const fetchScriptByType = async (
 		type: string,
 		popupTitle: string,
-		secondStepText: string,
+		secondStepText: {
+			button: string;
+			default: string;
+		},
+		thirdStepText: string,
 	) => {
 		const domainId = getCurrentDomainId();
 
@@ -119,11 +149,18 @@ const AddAdditionalScript: React.FC = () => {
 			const res = await axiosInstance.get(
 				`/pixel-management/${type}/${domainId}`,
 			);
-			if (res.status === 200 && typeof res.data === "string") {
-				setPixelCode(res.data);
-				setSecondPixelCode("");
+			if (res.status === 200 && typeof res.data === "object") {
+				const { button: buttonScript, default: defaultScript } = res.data;
+				if (type === "view_product") {
+					setPixelCode(defaultScript || null);
+					setSecondPixelCode(null);
+				} else {
+					setPixelCode(buttonScript || null);
+					setSecondPixelCode(defaultScript || null);
+				}
 				setSelectedTitle(popupTitle);
 				setSelectedSecondText(secondStepText);
+				setSelectedThirdText(thirdStepText);
 				setOpen(true);
 			} else {
 				showErrorToast("Script not found.");
@@ -314,6 +351,7 @@ const AddAdditionalScript: React.FC = () => {
 											card.key,
 											card.popupTitle,
 											card.secondStepText,
+											card.thirdStepText,
 										),
 									showRecommended: false,
 									showInstalled: card.showInstalled,
@@ -397,10 +435,11 @@ const AddAdditionalScript: React.FC = () => {
 			<ScriptsPopup
 				open={openmanually}
 				handleClose={() => setOpen(false)}
-				pixelCode={pixelCode || ""}
-				secondPixelCode={secondPixelCode || ""}
-				title={selectedTitle || ""}
-				secondStepText={selectedSecondText || ""}
+				pixelCode={pixelCode ?? ""}
+				secondPixelCode={secondPixelCode ?? ""}
+				title={selectedTitle ?? ""}
+				secondStepText={selectedSecondText ?? { button: "", default: "" }}
+				thirdStepText={selectedThirdText ?? ""}
 			/>
 		</Box>
 	);
