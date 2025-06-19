@@ -1,21 +1,12 @@
+import json
 import logging
-
-from models import UserIntegration, IntegrationUserSync
-from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from persistence.domains import UserDomainsPersistence
-from schemas.integrations.integrations import *
-from schemas.integrations.klaviyo import *
-from fastapi import HTTPException
 import os
-from datetime import datetime, timedelta, timezone
-from utils import get_valid_email
+from datetime import datetime
+from typing import List, Tuple
+
+import httpx
+from fastapi import HTTPException
+
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -23,10 +14,19 @@ from enums import (
     IntegrationLimit,
     DataSyncType,
 )
-import httpx
-import json
-from utils import format_phone_number
-from typing import List
+from models import UserIntegration, IntegrationUserSync, LeadUser
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
+from schemas.integrations.integrations import *
+from schemas.integrations.klaviyo import *
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import get_valid_email
 from utils import validate_and_format_phone, format_phone_number
 
 logging.basicConfig(
@@ -341,10 +341,10 @@ class KlaviyoIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         results = []
-        for five_x_five_user in five_x_five_users:
+        for lead_user, five_x_five_user in user_data:
             profile = self.__create_profile(
                 five_x_five_user,
                 user_integration.access_token,
@@ -355,14 +355,12 @@ class KlaviyoIntegrationsService:
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append(
-                    {"lead_id": five_x_five_user.id, "status": profile}
-                )
+                results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": five_x_five_user.id,
+                        "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )

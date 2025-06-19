@@ -1,4 +1,3 @@
-import calendar
 from datetime import datetime, timezone
 
 from sqlalchemy import select
@@ -6,13 +5,7 @@ from sqlalchemy import select
 from db_dependencies import Db
 from models import UserSubscriptions, Users, SubscriptionPlan, LeadUser
 from resolver import injectable
-
-
-def end_of_month(dt: datetime) -> datetime:
-    last_day = calendar.monthrange(dt.year, dt.month)[1]
-    return dt.replace(
-        day=last_day, hour=23, minute=59, second=59, microsecond=999999
-    )
+from utils import end_of_month
 
 
 @injectable
@@ -21,14 +14,14 @@ class UserSubscriptionsPersistence:
         self.db = db
 
     def add(self, user_id: int, plan: SubscriptionPlan):
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         user_subscription = UserSubscriptions(
             user_id=user_id,
             plan_id=plan.id,
             plan_start=now,
+            plan_end=end_of_month(now),
             price_id=plan.stripe_price_id,
             contact_credit_plan_id=plan.contact_credit_plan_id,
-            plan_end=None if plan.is_unlimited else end_of_month(now),
         )
 
         self.db.add(user_subscription)

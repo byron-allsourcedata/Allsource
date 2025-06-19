@@ -11,6 +11,7 @@ import {
 	DialogContent,
 	DialogActions,
 	DialogContentText,
+	Tooltip,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import React, { useEffect, useState, useMemo } from "react";
@@ -22,20 +23,21 @@ import { AxiosError } from "axios";
 import { SliderProvider } from "@/context/SliderContext";
 import Slider from "../../../components/Slider";
 import Image from "next/image";
-import ConfirmDeleteDomain from "./DeleteDomain";
 import CustomizedProgressBar from "../../../components/FirstLevelLoader";
 import { fetchUserData } from "@/services/meService";
 import WysiwygIcon from "@mui/icons-material/Wysiwyg";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import { display } from "@mui/system";
 import { useRouter } from "next/navigation";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 
-interface Domain {
+export interface Domain {
 	id: number;
 	user_id: number;
 	domain: string;
 	data_provider_id: number;
 	is_pixel_installed: boolean;
+	contacts_resolving: boolean;
 	enable: boolean;
 }
 
@@ -50,6 +52,7 @@ interface HoverImageProps {
 	srcHover: string;
 	alt: string;
 	onClick: () => void;
+	disabled?: boolean;
 }
 
 const HoverableImage = ({
@@ -57,16 +60,36 @@ const HoverableImage = ({
 	srcHover,
 	alt,
 	onClick,
+	disabled = false,
 }: HoverImageProps) => {
 	const [isHovered, setIsHovered] = useState(false);
 
-	return (
+	const icon = disabled ? (
+		<DeleteForeverOutlinedIcon
+			sx={{ fontSize: 20, color: "rgba(0,0,0,0.3)" }}
+		/>
+	) : (
+		<Image
+			height={20}
+			width={20}
+			alt={alt}
+			src={isHovered ? srcHover : srcDefault}
+			style={{
+				transition: "opacity 0.3s ease",
+				cursor: "pointer",
+			}}
+		/>
+	);
+
+	const button = (
 		<Button
 			onMouseEnter={() => setIsHovered(true)}
 			onMouseLeave={() => setIsHovered(false)}
 			onClick={(e) => {
 				e.stopPropagation();
-				onClick();
+				if (!disabled) {
+					onClick();
+				}
 			}}
 			className="delete-icon"
 			sx={{
@@ -74,19 +97,56 @@ const HoverableImage = ({
 				minWidth: "auto",
 				border: "none",
 				background: "transparent",
+				cursor: disabled ? "not-allowed" : "pointer",
 			}}
 		>
-			<Image
-				height={20}
-				width={20}
-				alt={alt}
-				src={isHovered ? srcHover : srcDefault}
-				style={{
-					transition: "opacity 0.3s ease",
-					cursor: "pointer",
-				}}
-			/>
+			{icon}
 		</Button>
+	);
+
+	return disabled ? (
+		<Tooltip
+			title={
+				<Box
+					sx={{
+						backgroundColor: "#fff",
+						margin: 0,
+						padding: 0,
+						display: "flex",
+						flexDirection: "row",
+						alignItems: "center",
+					}}
+				>
+					<Typography
+						className="table-data"
+						component="div"
+						sx={{ fontSize: "12px !important" }}
+					>
+						This domain cannot be deleted because it has associated leads.
+					</Typography>
+				</Box>
+			}
+			componentsProps={{
+				tooltip: {
+					sx: {
+						backgroundColor: "#fff",
+						color: "#000",
+						boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+						border: " 0.2px solid rgba(255, 255, 255, 1)",
+						borderRadius: "4px",
+						maxHeight: "100%",
+						maxWidth: "500px",
+						minWidth: "200px",
+						padding: "11px 10px",
+					},
+				},
+			}}
+			placement="right"
+		>
+			<span>{button}</span>
+		</Tooltip>
+	) : (
+		button
 	);
 };
 
@@ -329,6 +389,12 @@ const DomainButton: React.FC = () => {
 	};
 
 	const handleDeleteDomain = async (domain: Domain) => {
+		if (domain.contacts_resolving) {
+			showErrorToast(
+				"Domain cannot be deleted because it has associated leads",
+			);
+			return;
+		}
 		try {
 			setLoading(true);
 
@@ -526,6 +592,11 @@ const DomainButton: React.FC = () => {
 										srcHover="/trash-03-active.svg"
 										alt="Remove"
 										onClick={() => handleShowDelete(domain)}
+										disabled={
+											!(
+												domains.length > 1 && domain.contacts_resolving !== true
+											)
+										}
 									/>
 								)}
 							</Box>
@@ -588,12 +659,6 @@ const DomainButton: React.FC = () => {
 				</Box>
 			)}
 			{deleteDomainPopup && deleteDomain && (
-				// <ConfirmDeleteDomain
-				// 	open={deleteDomainPopup}
-				// 	domain={deleteDomain}
-				// 	handleClose={() => setDeleteDomainPopup(false)}
-				// 	handleDelete={handleDeleteDomain}
-				// />
 				<Dialog
 					open={deleteDomainPopup}
 					onClose={() => setDeleteDomainPopup(false)}

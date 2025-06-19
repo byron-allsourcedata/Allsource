@@ -129,7 +129,10 @@ export const SettingsBilling: React.FC = () => {
 					response.data.usages_credits.premium_source_credits,
 				);
 				setSmartAudienceCollected(
-					response.data.usages_credits.smart_audience_quota,
+					response.data.usages_credits.smart_audience_quota.value,
+				);
+				setIsAvailableSmartAudience(
+					response.data.usages_credits.smart_audience_quota.available,
 				);
 				setValidationFundsLimitedData(
 					response.data.usages_credits.validation_funds_limit,
@@ -165,14 +168,16 @@ export const SettingsBilling: React.FC = () => {
 		if (value?.current_value === -1 || value?.limit_value === -1) {
 			return "Unlimited";
 		}
+		const { limit_value, current_value } = value;
+		const limit = current_value > limit_value ? current_value : limit_value;
 
 		switch (value?.detail_type) {
 			case "funds":
-				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
+				return `$${value.current_value?.toLocaleString("en-US")}/$${limit?.toLocaleString("en-US")}`;
 			case "as_is":
 				return value.value;
 			case "limited":
-				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
+				return `${value.current_value?.toLocaleString("en-US")}/${limit?.toLocaleString("en-US")}`;
 			case "time":
 				return (
 					`${dayjs(value.plan_start).format("MMM D, YYYY")}` +
@@ -621,13 +626,21 @@ export const SettingsBilling: React.FC = () => {
 								<>
 									<UsageItem
 										title="Contacts Downloaded"
-										limitValue={planContactsCollected}
+										limitValue={
+											contactsCollected > planContactsCollected
+												? contactsCollected
+												: planContactsCollected
+										}
 										currentValue={contactsCollected}
 										needButton={false}
 									/>
 									<UsageItem
 										title="Smart Audience"
-										limitValue={planSmartAudienceCollected}
+										limitValue={
+											smartAudienceCollected > planSmartAudienceCollected
+												? smartAudienceCollected
+												: planSmartAudienceCollected
+										}
 										currentValue={smartAudienceCollected}
 										needButton={false}
 										available={isAvailableSmartAudience}
@@ -1012,12 +1025,20 @@ export const SettingsBilling: React.FC = () => {
 								<>
 									<UsageItem
 										title="Validation funds"
-										limitValue={validationLimitFundsCollected}
+										limitValue={
+											validationFundsCollected > validationLimitFundsCollected
+												? validationFundsCollected
+												: validationLimitFundsCollected
+										}
 										currentValue={validationFundsCollected}
 									/>
 									<UsageItem
 										title="Premium Source funds"
-										limitValue={planPremiumSourceCollected}
+										limitValue={
+											premiumSourceCollected > planPremiumSourceCollected
+												? premiumSourceCollected
+												: planPremiumSourceCollected
+										}
 										currentValue={premiumSourceCollected}
 										commingSoon={true}
 									/>

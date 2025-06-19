@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import List
+from typing import List, Tuple
 
-from models import UserIntegration
+from models import UserIntegration, LeadUser
 from utils import format_phone_number, get_valid_email
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
@@ -106,33 +106,39 @@ class ZapierIntegrationService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
-        profile = self.__create_profile(
-            five_x_five_users, integration_data_sync
-        )
-        if profile in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return profile
-
-        return ProccessDataSyncResult.SUCCESS.value
-
-    def __create_profile(
-        self, five_x_five_users: List[FiveXFiveUser], sync: IntegrationUserSync
-    ):
-        for five_x_five_user in five_x_five_users:
+        results = []
+        for lead_user, five_x_five_user in user_data:
             data = self.__mapped_lead(five_x_five_user)
             if data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
+                results.append({"lead_id": lead_user.id, "status": data})
                 continue
-            response = self.client.post(url=sync.hook_url, json=data)
-            if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            else:
+                results.append(
+                    {
+                        "lead_id": lead_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
+            profile = self.__create_profile(data, integration_data_sync)
+            if profile == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
+                for result in results:
+                    result["status"] = (
+                        ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+                    )
+                return results
+
+        return results
+
+    def __create_profile(self, data: dict, sync: IntegrationUserSync):
+        response = self.client.post(url=sync.hook_url, json=data)
+        if response.status_code == 401:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         return ProccessDataSyncResult.SUCCESS.value
 
     def __mapped_leads_type(self, lead_type):

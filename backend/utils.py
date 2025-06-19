@@ -4,7 +4,7 @@ import os
 import hashlib
 import json
 from typing import Optional, Any
-
+import calendar
 import regex
 from urllib.parse import urlparse, parse_qs
 import logging
@@ -35,6 +35,13 @@ def get_utc_aware_date_for_postgres():
 
 def timestamp_to_date(timestamp):
     return datetime.fromtimestamp(timestamp)
+
+
+def end_of_month(dt: datetime) -> datetime:
+    last_day = calendar.monthrange(dt.year, dt.month)[1]
+    return dt.replace(
+        day=last_day, hour=23, minute=59, second=59, microsecond=999999
+    )
 
 
 def get_valid_email(

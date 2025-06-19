@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 from datetime import datetime, timezone, timedelta
-from typing import List
+from typing import List, Tuple
 from uuid import UUID
 
 import httpx
@@ -18,7 +18,7 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
-from models import FiveXFiveUser
+from models import FiveXFiveUser, LeadUser
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -507,31 +507,28 @@ class MetaIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        five_x_five_users: List[FiveXFiveUser],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
         profiles = []
         results = []
-        for five_x_five_user in five_x_five_users:
+        for lead_user, five_x_five_user in user_data:
             profile = self.__hash_mapped_meta_user_lead(five_x_five_user)
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append(
-                    {"lead_id": five_x_five_user.id, "status": profile}
-                )
+                results.append({"lead_id": lead_user.id, "status": profile})
                 continue
             else:
                 results.append(
                     {
-                        "lead_id": five_x_five_user.id,
+                        "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
 
-            if profile:
-                profiles.append(profile)
+            profiles.append(profile)
 
         if not profiles:
             return results

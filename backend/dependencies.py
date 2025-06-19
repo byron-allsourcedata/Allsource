@@ -82,7 +82,6 @@ from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from services.payouts import PayoutsService
 from services.pixel_installation import PixelInstallationService
-from services.pixel_management import PixelManagementService
 from services.plans import PlansService
 from services.settings import SettingsService
 from services.sse_events import SseEventsService
@@ -685,18 +684,6 @@ def get_leads_service(
     )
 
 
-def get_pixel_management_service(
-    lead_persistence: LeadsPersistence,
-    user_domains_service: UserDomainsService = Depends(get_domain_service),
-    integration_service: IntegrationService = Depends(get_integration_service),
-):
-    return PixelManagementService(
-        user_domains_service=user_domains_service,
-        integration_service=integration_service,
-        lead_persistence=lead_persistence,
-    )
-
-
 def get_companies_service(
     domain: UserDomains = Depends(check_pixel_install_domain),
     companies_persistence_service: CompanyPersistence = Depends(
@@ -780,6 +767,7 @@ def get_pixel_installation_service(
 
 
 def get_settings_service(
+    user_domains_service: UserDomainsService,
     plan_persistence: PlansPersistence,
     user_persistence: UserPersistence,
     subscription_service: SubscriptionService,
@@ -790,7 +778,6 @@ def get_settings_service(
     send_grid_persistence: SendgridPersistence = Depends(
         get_send_grid_persistence_service
     ),
-    user_domains_service: UserDomainsService = Depends(get_domain_service),
 ):
     return SettingsService(
         settings_persistence=settings_persistence,

@@ -85,8 +85,8 @@ def download_value_calculation(
 
 @router.get("/domains-with-leads", response_model=List[DomainsLeads])
 def get_domains_with_leads(
+    domains_service: UserDomainsService,
     user=Depends(check_user_authorization_without_pixel),
-    domains_service: UserDomainsService = Depends(get_domain_service),
 ):
     return domains_service.get_domains_with_leads(user=user)
 

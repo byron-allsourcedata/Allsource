@@ -1490,3 +1490,11 @@ class LeadsPersistence:
 
         self.db.add(user)
         self.db.commit()
+
+    def exists_leads_by_domain_id(self, domain_id: int) -> bool:
+        return (
+            self.db.query(LeadUser)
+            .filter(LeadUser.domain_id == domain_id)
+            .first()
+            is not None
+        )
