@@ -124,7 +124,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         in_list = ", ".join(f"'{i}'" for i in ids)
         sql = f"""
             SELECT {cols}
-            FROM maximiz_local.enrichment_users
+            FROM enrichment_users
             WHERE asid IN ({in_list})
             LIMIT {sent_contacts}
         """
@@ -146,7 +146,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         sql = f"""
             SELECT
               {cols}
-            FROM maximiz_local.enrichment_users
+            FROM enrichment_users
             WHERE asid IN ({in_list})
         """
         q = self.client.query(sql)
@@ -167,7 +167,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         sql = f"""
         SELECT count(*) 
-        FROM maximiz_local.enrichment_users 
+        FROM enrichment_users 
         WHERE asid IN ({in_list})
         {linkedin_filter}
         """

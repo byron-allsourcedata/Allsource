@@ -68,7 +68,7 @@ class SourceAgentService:
 
         sql = """
                 SELECT email, asid
-                FROM maximiz_local.enrichment_users
+                FROM enrichment_users
                 WHERE email IN %(ids)s
                 """
 
@@ -103,7 +103,7 @@ class SourceAgentService:
                business_email,
                business_email_validation_status,
                linkedin_url
-        FROM maximiz_local.enrichment_users
+        FROM enrichment_users
         WHERE asid IN %(ids)s
         """
 
@@ -135,3 +135,19 @@ class SourceAgentService:
             len(asid_list),
         )
         return contacts
+
+    def fetch_fields_by_asids(
+        self,
+        asids: Iterable[UUID | str],
+        columns: list[str],
+    ) -> list[tuple]:
+        if not asids:
+            return []
+
+        sql = (
+            f"SELECT {', '.join(columns)} "
+            "FROM enrichment_users "
+            "WHERE asid IN %(ids)s"
+        )
+
+        return self._run_query(sql, {"ids": asids})

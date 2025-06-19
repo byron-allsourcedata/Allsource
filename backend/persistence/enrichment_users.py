@@ -1,3 +1,4 @@
+import logging
 from typing import List
 from uuid import UUID
 
@@ -7,6 +8,8 @@ from db_dependencies import Db, Clickhouse
 from models import EnrichmentUser
 from resolver import injectable
 
+
+logger = logging.getLogger(__name__)
 
 @injectable
 class EnrichmentUsersPersistence:
@@ -23,6 +26,14 @@ class EnrichmentUsersPersistence:
         query = select(EnrichmentUser).where(EnrichmentUser.asid.in_(asids))
         rows = self.db.execute(query).scalars().all()
 
-        print(f"enrichment user ids rows: {len(rows)}")
+        sql = (
+            "SELECT asid "
+            "FROM enrichment_users "
+            "WHERE asid IN %(ids)s"
+        )
 
-        return [row.id for row in rows]
+        result = self.clickhouse.query(sql, {"ids": [str(a) for a in asids]})
+
+        found = [row[0] for row in result.result_rows]
+        logger.info(f"enrichment user ids rows: {len(found)}")
+        return found

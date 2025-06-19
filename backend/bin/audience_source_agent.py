@@ -13,8 +13,13 @@ from typing import List, Union, Optional, Tuple
 import boto3
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Connection
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
+
+
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
 
 from services.source_agent.agent import (
     SourceAgentService,
@@ -22,14 +27,9 @@ from services.source_agent.agent import (
     ProfContact,
 )
 
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
-
 from db_dependencies import Db
 from resolver import Resolver
 
-from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
@@ -37,12 +37,7 @@ from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, EmailType, BusinessType
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
-from models.enrichment import (
-    EnrichmentUsersEmails,
-    EnrichmentUser,
-    EnrichmentProfessionalProfile,
-)
-from models.enrichment.enrichment_emails import EnrichmentEmails
+
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import (
     PersonEntry,
@@ -61,7 +56,7 @@ from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
 )
 from services.lookalikes import AudienceLookalikesService
-from persistence.audience_lookalikes import AudienceLookalikesPersistence
+
 
 load_dotenv()
 
