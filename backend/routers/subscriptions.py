@@ -224,6 +224,7 @@ async def checkout_completed(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
     )
 
+
 @router.post("/update-payment")
 async def update_payment(
     request: fastRequest,
@@ -232,7 +233,7 @@ async def update_payment(
 ):
     event = await request.json()
     evt = event["type"]
-    match(evt):
+    match evt:
         case "invoice.created":
             return subscription_webhooks.save_new_invoice_payment()
         case "invoice.payment_failed":

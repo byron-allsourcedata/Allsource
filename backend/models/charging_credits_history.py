@@ -29,4 +29,3 @@ class ChargingCreditsHistory(Base):
     )
     users_count = Column(Integer, nullable=False)
     users_ids = Column(JSON, nullable=True)
-

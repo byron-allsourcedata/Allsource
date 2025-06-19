@@ -6,7 +6,6 @@ from datetime import datetime, timezone
 from typing import List
 
 
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -41,6 +40,7 @@ async def send_leads_to_queue(rmq_connection, processed_lead):
         message_body=processed_lead,
     )
 
+
 def is_credits_not_charged_this_month(session: Session) -> bool:
     latest_entry = (
         session.query(ChargingCreditsHistory)
@@ -50,7 +50,9 @@ def is_credits_not_charged_this_month(session: Session) -> bool:
     )
 
     if not latest_entry:
-        logging.info("No previous ChargingCreditsHistory entries found. Credits have not been charged this month.")
+        logging.info(
+            "No previous ChargingCreditsHistory entries found. Credits have not been charged this month."
+        )
         return True
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -58,21 +60,23 @@ def is_credits_not_charged_this_month(session: Session) -> bool:
     logging.debug(f"Last credit charge date: {entry_date.isoformat()}")
 
     if entry_date.year != now.year or entry_date.month != now.month:
-        logging.info(f"Last charge was in a different month: {entry_date.strftime('%Y-%m')}. Should charge credits.")
+        logging.info(
+            f"Last charge was in a different month: {entry_date.strftime('%Y-%m')}. Should charge credits."
+        )
         return True
 
-    logging.info(f"Credits were already charged this month: {entry_date.strftime('%Y-%m')}.")
+    logging.info(
+        f"Credits were already charged this month: {entry_date.strftime('%Y-%m')}."
+    )
     return False
 
+
 def save_credits_charge_history(
-    session: Session,
-    users_count: int,
-    users_ids: List[int]
+    session: Session, users_count: int, users_ids: List[int]
 ) -> ChargingCreditsHistory:
     json_users = [{"user_id": user_id} for user_id in users_ids]
     new_entry = ChargingCreditsHistory(
-        users_count=users_count,
-        users_ids=json_users
+        users_count=users_count, users_ids=json_users
     )
 
     session.add(new_entry)
@@ -86,7 +90,6 @@ def save_credits_charge_history(
     return new_entry
 
 
-
 async def prepare_users_for_billing(
     rmq_connection: RabbitMQConnection, session: Session
 ):
@@ -95,7 +98,11 @@ async def prepare_users_for_billing(
 
     logging.info("Preparing users for billing...")
     results = (
-        session.query(Users.id.label("id"), Users.customer_id.label('customer_id'), Users.overage_leads_count.label("overage_leads_count"))
+        session.query(
+            Users.id.label("id"),
+            Users.customer_id.label("customer_id"),
+            Users.overage_leads_count.label("overage_leads_count"),
+        )
         .join(
             UserSubscriptions,
             UserSubscriptions.id == Users.current_subscription_id,
@@ -103,9 +110,7 @@ async def prepare_users_for_billing(
         .join(
             SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id
         )
-        .filter(
-            SubscriptionPlan.alias == PlanAlias.BASIC.value
-        )
+        .filter(SubscriptionPlan.alias == PlanAlias.BASIC.value)
         .all()
     )
     user_ids = []
@@ -113,13 +118,19 @@ async def prepare_users_for_billing(
         if result.overage_leads_count <= 0:
             continue
         user_ids.append(result.id)
-        msg = {"user_id": result.id, 'overage_leads_count': result.overage_leads_count, 'customer_id': result.customer_id}
+        msg = {
+            "user_id": result.id,
+            "overage_leads_count": result.overage_leads_count,
+            "customer_id": result.customer_id,
+        }
         await send_leads_to_queue(rmq_connection, msg)
 
     logging.info(
         f"Successfully sent {len(user_ids)} user IDs to billing queue."
     )
-    save_credits_charge_history(session=session, users_count=len(user_ids), users_ids=user_ids)
+    save_credits_charge_history(
+        session=session, users_count=len(user_ids), users_ids=user_ids
+    )
 
 
 async def main():
