@@ -83,7 +83,10 @@ class UserSubscriptionsPersistence:
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
-            .filter(SubscriptionPlan.alias == alias, UserSubscriptions.status == PaymentStatus.ACTIVE.value)
+            .filter(
+                SubscriptionPlan.alias == alias,
+                UserSubscriptions.status == PaymentStatus.ACTIVE.value,
+            )
             .scalar_subquery()
         )
         return subquery_user_sub_ids
@@ -107,9 +110,7 @@ class UserSubscriptionsPersistence:
     def get_subscription_by_customer_id(self, customer_id: str):
         user_subscription = (
             self.db.query(UserSubscriptions)
-            .join(
-                Users, Users.current_subscription_id == UserSubscriptions.id
-            )
+            .join(Users, Users.current_subscription_id == UserSubscriptions.id)
             .filter(Users.customer_id == customer_id)
             .first()
         )

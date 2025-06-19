@@ -16,7 +16,7 @@ class InvoiceService:
         db: Db,
         users: UserPersistence,
         user_subscriptions: UserSubscriptionsService,
-        stripe_invoices_logs: StripeInvoicesLogsPersistence
+        stripe_invoices_logs: StripeInvoicesLogsPersistence,
     ):
         self.db = db
         self.users = users
@@ -24,5 +24,6 @@ class InvoiceService:
         self.stripe_invoices_logs = stripe_invoices_logs
 
     def save_invoice_payment(self, event_type: str, invoices_data: dict):
-        self.stripe_invoices_logs.save_model(event_type=event_type, customer_data=invoices_data)
-
+        self.stripe_invoices_logs.save_model(
+            event_type=event_type, customer_data=invoices_data
+        )

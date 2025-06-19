@@ -224,6 +224,7 @@ async def checkout_completed(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
     )
 
+
 @router.post("/checkout-deleted")
 async def checkout_deleted(
     request: fastRequest,
@@ -243,8 +244,6 @@ async def checkout_deleted(
 
     logger.warning(f"Unknown event type: {event_type}")
 
-
-
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
     )
@@ -259,10 +258,14 @@ async def update_payment(
     event_type = event["type"]
     match event_type:
         case "invoice.payment_succeeded":
-            return subscription_webhooks.save_invoice_payment(event_type=event_type, event=event)
+            return subscription_webhooks.save_invoice_payment(
+                event_type=event_type, event=event
+            )
 
         case "invoice.payment_failed":
-            return subscription_webhooks.invoice_payment_failed(event_type=event_type, event=event)
+            return subscription_webhooks.invoice_payment_failed(
+                event_type=event_type, event=event
+            )
 
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"

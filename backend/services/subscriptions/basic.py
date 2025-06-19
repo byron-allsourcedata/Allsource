@@ -60,7 +60,10 @@ class BasicPlanService:
         self.user_subscriptions.move_to_plan(user_id, "basic")
         basic_records = self.plans.get_plan_by_alias("basic_records")
         if not basic_records:
-            logger.error('Basic records not found!')
+            logger.error("Basic records not found!")
             return
 
-        self.stripe.create_basic_plan_subscription(customer_id=customer_id, stripe_price_id=basic_records.stripe_price_id)
+        self.stripe.create_basic_plan_subscription(
+            customer_id=customer_id,
+            stripe_price_id=basic_records.stripe_price_id,
+        )

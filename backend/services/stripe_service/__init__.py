@@ -54,7 +54,9 @@ class StripeService:
             logging.error(f"Authentication error: {e.user_message}")
             return None
 
-    def create_basic_plan_subscription(self, customer_id: str, stripe_price_id: str):
+    def create_basic_plan_subscription(
+        self, customer_id: str, stripe_price_id: str
+    ):
         subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{"price": stripe_price_id}],

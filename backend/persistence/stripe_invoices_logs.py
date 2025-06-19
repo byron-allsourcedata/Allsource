@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 @injectable
 class StripeInvoicesLogsPersistence:
-
     def __init__(self, db: Db):
         self.db = db
 
@@ -30,6 +29,3 @@ class StripeInvoicesLogsPersistence:
         saved = result.scalar_one()
         self.db.commit()
         return saved
-
-
-
