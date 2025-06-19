@@ -103,9 +103,7 @@ class PixelManagementService:
         result["button"] = None
         result["default"] = None
         for name in script_names:
-            script_path = os.path.join(
-            data_path, "additional_pixels", name
-            )
+            script_path = os.path.join(data_path, "additional_pixels", name)
             if os.path.isfile(script_path):
                 with open(script_path, "r", encoding="utf-8") as f:
                     content = f.read()
