@@ -1,60 +1,33 @@
+import asyncio
 import logging
 import os
 import sys
-from datetime import datetime, timezone
-from sqlalchemy import update, select
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from models import Users, UserSubscriptions, SubscriptionPlan
-from utils import end_of_month
+from persistence.user_persistence import UserPersistence
+from persistence.user_subscriptions import UserSubscriptionsPersistence
+from resolver import Resolver
+from db_dependencies import Db
+
 from enums import PlanAlias
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 
 logging.basicConfig(level=logging.INFO)
 
 
-def refresh_free_trail_lead_credits(db_session: Session):
-    credits = (
-        db_session.query(SubscriptionPlan.leads_credits)
-        .filter(SubscriptionPlan.is_free_trial == True)
-        .scalar()
-    )
+def refresh_free_trail_lead_credits(db_session: Session, user_subscriptions_persistence: UserSubscriptionsPersistence, user_persistence: UserPersistence):
+    credits = user_subscriptions_persistence.get_lead_credits(PlanAlias.FREE_TRIAL.value)
 
     if credits is None:
         logging.error("Free trial plan not found")
         return
 
-    subquery_user_sub_ids = (
-        select(Users.current_subscription_id)
-        .join(
-            UserSubscriptions,
-            Users.current_subscription_id == UserSubscriptions.id,
-        )
-        .join(
-            SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id
-        )
-        .filter(SubscriptionPlan.is_free_trial == True)
-        .scalar_subquery()
-    )
-
-    stmt_users = (
-        update(Users)
-        .where(Users.current_subscription_id.in_(subquery_user_sub_ids))
-        .values(leads_credits=credits)
-    )
-    result_users = db_session.execute(stmt_users)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    stmt_subs = (
-        update(UserSubscriptions)
-        .where(UserSubscriptions.id.in_(subquery_user_sub_ids))
-        .values(plan_end=end_of_month(now))
-    )
-
-    result_subs = db_session.execute(stmt_subs)
+    subquery_user_sub_ids = user_subscriptions_persistence.subquery_current_free_trial_sub_ids(PlanAlias.FREE_TRIAL.value)
+    result_users = user_persistence.update_users_credits(subquery_user_sub_ids, credits)
+    result_subs= user_persistence.update_subscriptions_dates(subquery_user_sub_ids)
     db_session.commit()
 
     logging.info(
@@ -62,44 +35,20 @@ def refresh_free_trail_lead_credits(db_session: Session):
     )
 
 
-def refresh_basic_lead_credits(db_session: Session):
-    credits = (
-        db_session.query(SubscriptionPlan.leads_credits)
-        .filter(SubscriptionPlan.alias == PlanAlias.BASIC.value)
-        .scalar()
-    )
+def refresh_basic_lead_credits(db_session: Session, user_subscriptions_persistence: UserSubscriptionsPersistence, user_persistence: UserPersistence):
+    credits = user_subscriptions_persistence.get_lead_credits(PlanAlias.BASIC.value)
 
     if credits is None:
         logging.error("Basic plan not found")
         return
 
-    subquery_user_sub_ids = (
-        select(Users.current_subscription_id)
-        .join(
-            UserSubscriptions,
-            Users.current_subscription_id == UserSubscriptions.id,
-        )
-        .join(
-            SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id
-        )
-        .filter(SubscriptionPlan.alias == PlanAlias.BASIC.value)
-        .scalar_subquery()
+    subquery_user_sub_ids = user_subscriptions_persistence.subquery_current_free_trial_sub_ids(
+        PlanAlias.BASIC.value
     )
 
-    stmt_users = (
-        update(Users)
-        .where(Users.current_subscription_id.in_(subquery_user_sub_ids))
-        .values(leads_credits=credits)
-    )
-    result_users = db_session.execute(stmt_users)
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
-    stmt_subs = (
-        update(UserSubscriptions)
-        .where(UserSubscriptions.id.in_(subquery_user_sub_ids))
-        .values(plan_end=end_of_month(now))
-    )
+    result_users = user_persistence.update_users_credits(subquery_user_sub_ids, credits)
+    result_subs = user_persistence.update_subscriptions_dates(subquery_user_sub_ids)
 
-    result_subs = db_session.execute(stmt_subs)
     db_session.commit()
 
     logging.info(
@@ -107,18 +56,19 @@ def refresh_basic_lead_credits(db_session: Session):
     )
 
 
-def main():
+async def main():
     logging.info("Started")
     db_session = None
+
+    resolver = Resolver()
     try:
-        engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
-            pool_pre_ping=True,
+        db_session = await resolver.resolve(Db)
+        user_subscriptions_persistence = await resolver.resolve(UserSubscriptionsPersistence)
+        user_persistence = await resolver.resolve(
+            UserPersistence
         )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-        refresh_free_trail_lead_credits(db_session=db_session)
-        refresh_basic_lead_credits(db_session=db_session)
+        refresh_free_trail_lead_credits(db_session=db_session, user_subscriptions_persistence=user_subscriptions_persistence, user_persistence=user_persistence)
+        refresh_basic_lead_credits(db_session=db_session, user_subscriptions_persistence=user_subscriptions_persistence, user_persistence=user_persistence)
 
     except Exception as err:
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
@@ -131,4 +81,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
