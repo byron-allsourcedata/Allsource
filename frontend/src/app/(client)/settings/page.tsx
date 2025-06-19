@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import { planStyles } from "./settingsStyles";
@@ -12,22 +12,21 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
+import axios from "axios";
 
 const Settings: React.FC = () => {
 	const { hasNotification } = useNotification();
 	const [activeSection, setActiveSection] = useState<string>("accountDetails");
 	const [accountDetails, setAccountDetails] = useState<any>(null);
-	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const [isLoading, setIsLoading] = useState(true);
 
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	const fetchAccountDetails = async () => {
+	const fetchAccountDetails = useCallback(async () => {
 		try {
 			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				"/settings/account-details",
-			);
+			const response = await axios.get("/settings/account-details");
 			const data = response.data;
 			setAccountDetails(data);
 		} catch (error) {
@@ -35,7 +34,7 @@ const Settings: React.FC = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		const sectionFromUrl = searchParams.get("section");
@@ -43,7 +42,7 @@ const Settings: React.FC = () => {
 			setActiveSection(sectionFromUrl);
 		}
 		fetchAccountDetails();
-	}, [searchParams]);
+	}, []);
 
 	const handleTabChange = (section: string) => {
 		setActiveSection(section);
