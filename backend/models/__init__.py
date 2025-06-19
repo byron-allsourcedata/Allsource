@@ -89,6 +89,7 @@ from .usa_zip_codes import UsaZipCode
 from .audience_postals_verification import AudiencePostalVerification
 from .admin_invitations import AdminInvitation
 from .transaction_history import TransactionHistory
+from .charging_credits_history import ChargingCreditsHistory
 
 
 __all__ = [
@@ -98,6 +99,7 @@ __all__ = [
     "LeadsSupperssion",
     "TransactionHistory",
     "SuppressedContact",
+    "ChargingCreditsHistory",
     "UserIntegration",
     "Integration",
     "AccountNotification",

@@ -60,6 +60,7 @@ class BasicPlanService:
         user_id = user.id
 
         self.user_subscriptions.move_to_plan(user_id, "basic")
+        self.create_basic_plan_subscription(customer_id)
 
     def create_basic_plan_subscription(self, customer_id: str):
         basic_records = self.plans.get_plan_by_alias("basic_records")
@@ -67,9 +68,14 @@ class BasicPlanService:
         subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{"price": basic_records.stripe_price_id}],
-            collection_method="send_invoice",
+            collection_method="charge_automatically",
             days_until_due=0,
-            billing_cycle_anchor_config={"day_of_month": 31},
+            billing_cycle_anchor_config={
+                "day_of_month": 31,
+                "hour": 23,
+                "minute": 59,
+                "second": 59,
+            },
             off_session=True,
         )
 

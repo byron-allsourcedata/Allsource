@@ -1,31 +1,25 @@
 import asyncio
+import functools
 import json
 import logging
 import os
 import sys
-import functools
 from datetime import datetime
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-
+from db_dependencies import Db
+from resolver import Resolver
 from utils import send_sse
 from services.stripe_service import StripeService
 from models import (
-    Users,
-    UserSubscriptions,
-    SubscriptionPlan,
     TransactionHistory,
 )
 from aio_pika import IncomingMessage, Channel
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-from sqlalchemy import create_engine
 from dotenv import load_dotenv
-from sqlalchemy.orm import sessionmaker, Session
-from enums import (
-    PlanAlias,
-)
+from sqlalchemy.orm import Session
 
 load_dotenv()
 
@@ -67,30 +61,24 @@ async def process_rmq_message(
 ):
     try:
         body = json.loads(message.body)
-        user_ids = body.get("user_ids")
-        result_users = (
-            db_session.query(
-                Users.id, Users.customer_id, Users.overage_leads_count
-            )
-            .filter(Users.id.in_(user_ids))
-            .all()
+        user_id = body.get("user_id")
+        overage_leads_count = body.get("overage_leads_count")
+        customer_id = body.get("customer_id")
+        event_data = StripeService.record_usage(
+            customer_id=customer_id, quantity=overage_leads_count
         )
-        for user_id, customer_id, overage_leads_count in result_users:
-            event_data = StripeService.record_usage(
-                customer_id=customer_id, quantity=overage_leads_count
-            )
-            save_transaction(db_session=db_session, event_data=event_data)
-            await send_sse(
-                channel=channel,
-                user_id=user_id,
-                data={
-                    "data": user_id,
-                },
-            )
-            logging.info("sent sse with total count")
+        save_transaction(db_session=db_session, event_data=event_data)
+        await send_sse(
+            channel=channel,
+            user_id=user_id,
+            data={
+                "data": user_id,
+            },
+        )
+        logging.info("sent sse with total count")
 
         db_session.commit()
-        # await message.ack()
+        await message.ack()
 
     except Exception as e:
         logging.error(f"Error processing validation: {e}", exc_info=True)
@@ -111,17 +99,8 @@ async def main():
 
     setup_logging(log_level)
 
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
-    engine = create_engine(
-        f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-        pool_pre_ping=True,
-    )
-    Session = sessionmaker(bind=engine)
-    db_session = None
+    resolver = Resolver()
+    db_session = await resolver.resolve(Db)
     rabbitmq_connection = None
     try:
         logging.info("Starting processing...")
@@ -134,7 +113,6 @@ async def main():
             name=CHARGE_CREDITS_FILLER,
             durable=True,
         )
-        db_session = Session()
 
         await queue.consume(
             functools.partial(

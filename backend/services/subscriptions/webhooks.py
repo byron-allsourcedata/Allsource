@@ -15,3 +15,12 @@ class SubscriptionWebhookService:
 
     def move_to_basic_plan(self, customer_id: str):
         self.basic_plan_service.move_to_basic_plan(customer_id)
+
+    def save_new_invoice_payment(self):
+        pass
+
+    def invoice_payment_success(self):
+        pass
+
+    def invoice_payment_failed(self):
+        pass
