@@ -80,7 +80,7 @@ class UsersService:
                 "business_type": team_member.get("business_type"),
                 "source": team_member.get("source_platform"),
                 "leads_credits": team_member.get("leads_credits"),
-                "validation_funds": team_member.get("validation_funds")
+                "validation_funds": team_member.get("validation_funds"),
             }
         return {
             "email": self.user.get("email"),
@@ -89,7 +89,7 @@ class UsersService:
             "business_type": self.user.get("business_type"),
             "source_platform": self.user.get("source_platform"),
             "leads_credits": self.user.get("leads_credits"),
-            "validation_funds": self.user.get("validation_funds")
+            "validation_funds": self.user.get("validation_funds"),
         }
 
     def get_domain_with_stats(
