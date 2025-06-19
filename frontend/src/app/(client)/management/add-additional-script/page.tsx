@@ -52,7 +52,8 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 		imageSrc: "/view_product.svg",
 		popupTitle: "View Product Script Installation",
 		secondStepText: {
-			button: "",
+			button:
+				"Insert this script just before the closing </body> tag on all product pages.",
 			default:
 				"Insert this script just before the closing </body> tag on all product pages.",
 		},
@@ -79,7 +80,7 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 		key: "converted_sale",
 		title: "Converted Sales",
 		subtitle:
-			"This script tracks completed purchases and capturing order values.",
+			"This script tracks completed purchases and captures order values.",
 		imageSrc: "/converted_sale.svg",
 		popupTitle: "Converted Sales Script Installation",
 		secondStepText: {
@@ -434,11 +435,11 @@ const AddAdditionalScript: React.FC = () => {
 			<ScriptsPopup
 				open={openmanually}
 				handleClose={() => setOpen(false)}
-				pixelCode={pixelCode || ""}
-				secondPixelCode={secondPixelCode || ""}
-				title={selectedTitle || ""}
-				secondStepText={selectedSecondText || { button: "", default: "" }}
-				thirdStepText={selectedThirdText || ""}
+				pixelCode={pixelCode ?? ""}
+				secondPixelCode={secondPixelCode ?? ""}
+				title={selectedTitle ?? ""}
+				secondStepText={selectedSecondText ?? { button: "", default: "" }}
+				thirdStepText={selectedThirdText ?? ""}
 			/>
 		</Box>
 	);

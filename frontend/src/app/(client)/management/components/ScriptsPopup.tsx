@@ -32,6 +32,7 @@ const style = {
 	flexDirection: "column",
 	transition: "transform 0.3s ease-in-out",
 	transform: "translateX(100%)",
+	pb: 2,
 	"@media (max-width: 600px)": {
 		width: "100%",
 		height: "100%",
