@@ -401,8 +401,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 										</Box>
 									</TableCell>
 									<TableCell>
-										{Array.isArray(row.resolutions) &&
-										row.resolutions.length > 0 ? (
+										{row.pixel_status ? (
 											<Box
 												sx={{
 													display: "flex",
@@ -435,7 +434,6 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 																/>
 															</linearGradient>
 														</defs>
-
 														<Area
 															type="monotone"
 															dataKey="lead_count"
