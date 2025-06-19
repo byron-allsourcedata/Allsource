@@ -144,7 +144,7 @@ const FreeTrialLabel: React.FC = () => {
 								textWrap: "nowrap",
 							}}
 						>
-							<Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
+							{/* <Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
 								<DomainVerificationIcon
 									fontSize="small"
 									sx={{
@@ -183,7 +183,7 @@ const FreeTrialLabel: React.FC = () => {
 										1 Domains
 									</Typography>
 								</Box>
-							</Box>
+							</Box> */}
 
 							<Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
 								<AllInboxIcon
