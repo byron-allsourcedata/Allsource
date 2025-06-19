@@ -207,12 +207,14 @@ class SubscriptionService:
                 price,
                 alias,
                 lead_credits,
+                validation_funds,
             ) = result
             result_dict["subscription"] = user_subscription
             result_dict["artificial_trial_days"] = trail_days
             result_dict["is_artificial_status"] = is_free_trial
             result_dict["alias"] = alias
             result_dict["lead_credits"] = lead_credits
+            result_dict["validation_funds"] = validation_funds
 
         return result_dict
 

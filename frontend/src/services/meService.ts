@@ -1,5 +1,4 @@
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
-import { useSidebar } from "@/context/SidebarContext";
 
 export const fetchUserData = async (
 	setIsGetStartedPage?: (val: boolean) => void,
