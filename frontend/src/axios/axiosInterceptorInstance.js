@@ -93,6 +93,9 @@ axiosInterceptorInstance.interceptors.response.use(
 						case "PAYMENT_NEEDED":
 							navigateTo(`${error.response.data.stripe_payment_url}`);
 							break;
+						case "PAYMENT_FAILED":
+							navigateTo("/settings?section=billing&payment_failed=true");
+							break;
 						case "FORBIDDEN":
 							break;
 					}

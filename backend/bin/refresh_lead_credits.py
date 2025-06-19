@@ -32,7 +32,7 @@ def refresh_free_trail_lead_credits(
         return
 
     subquery_user_sub_ids = (
-        user_subscriptions_persistence.subquery_current_free_trial_sub_ids(
+        user_subscriptions_persistence.subquery_current_sub_ids(
             PlanAlias.FREE_TRIAL.value
         )
     )
@@ -63,7 +63,7 @@ def refresh_basic_lead_credits(
         return
 
     subquery_user_sub_ids = (
-        user_subscriptions_persistence.subquery_current_free_trial_sub_ids(
+        user_subscriptions_persistence.subquery_active_current_sub_ids_by_plan(
             PlanAlias.BASIC.value
         )
     )
