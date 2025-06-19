@@ -142,7 +142,8 @@ def get_card_details_by_customer_id(customer_id):
 def add_card_to_customer(customer_id, payment_method_id, is_default: bool):
     try:
         payment_method = stripe.PaymentMethod.attach(
-            payment_method_id, customer=customer_id, 
+            payment_method_id,
+            customer=customer_id,
         )
         if is_default:
             stripe.Customer.modify(

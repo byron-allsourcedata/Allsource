@@ -192,7 +192,9 @@ def add_card(
                 detail="Access denied. Admins only.",
             )
     return settings_service.add_card(
-        user=user, payment_method_id=payment_card.payment_method_id, is_default=payment_card.is_default,
+        user=user,
+        payment_method_id=payment_card.payment_method_id,
+        is_default=payment_card.is_default,
     )
 
 

@@ -22,12 +22,12 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
 
 interface CardDetails {
-	id: string
-	last4: string,
-	brand: string,
-	exp_month: number,
-	exp_year: number,
-	is_default: boolean,
+	id: string;
+	last4: string;
+	brand: string;
+	exp_month: number;
+	exp_year: number;
+	is_default: boolean;
 }
 
 interface PaymentPopupProps {
@@ -36,7 +36,7 @@ interface PaymentPopupProps {
 	open: boolean;
 	onClose: () => void;
 	onSuccess: (cardDetails: CardDetails) => void;
-};
+}
 
 const addCardStyles = {
 	switchStyle: {
@@ -64,9 +64,11 @@ const addCardStyles = {
 		backgroundImage: "url(/bank_card.svg)",
 	},
 	wrapStripeInput: {
-		border: "1px solid #ddd", borderRadius: "4px", padding: "10px"
-	}
-}
+		border: "1px solid #ddd",
+		borderRadius: "4px",
+		padding: "10px",
+	},
+};
 
 const stripeStyles = {
 	style: {
@@ -89,9 +91,15 @@ const stripeStyles = {
 			color: "#4CAF50",
 		},
 	},
-}
+};
 
-const AddCardPopup: React.FC<PaymentPopupProps> = ({ title, confirmButtonName, open, onClose, onSuccess }) => {
+const AddCardPopup: React.FC<PaymentPopupProps> = ({
+	title,
+	confirmButtonName,
+	open,
+	onClose,
+	onSuccess,
+}) => {
 	const [isDefault, setIsDefault] = useState(false);
 	const elements = useElements();
 	const stripe = useStripe();
@@ -159,32 +167,50 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({ title, confirmButtonName, o
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle sx={{padding: 3}} className="first-sub-title">{title}</DialogTitle>
+			<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
+				{title}
+			</DialogTitle>
 			<Divider />
 			<DialogContent>
 				<Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
 					<Box sx={addCardStyles.imageStyle} />
 				</Box>
-					<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-						<Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-							<Typography className="table-heading">Card Number</Typography>
-							<Box sx={addCardStyles.wrapStripeInput}>
-								<CardNumberElement options={stripeStyles} />
-							</Box>
-						 </Box>
+				<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+						<Typography className="table-heading">Card Number</Typography>
+						<Box sx={addCardStyles.wrapStripeInput}>
+							<CardNumberElement options={stripeStyles} />
+						</Box>
+					</Box>
 					<Box sx={{ display: "flex", gap: 2 }}>
-					<Box sx={{ display: "flex", flex: "1", flexDirection: "column", gap: 1  }}>
-						<Typography className="table-heading">Exp. Date</Typography>
-						<Box sx={addCardStyles.wrapStripeInput}>
-							<CardExpiryElement options={stripeStyles} />
+						<Box
+							sx={{
+								display: "flex",
+								flex: "1",
+								flexDirection: "column",
+								gap: 1,
+							}}
+						>
+							<Typography className="table-heading">Exp. Date</Typography>
+							<Box sx={addCardStyles.wrapStripeInput}>
+								<CardExpiryElement options={stripeStyles} />
+							</Box>
 						</Box>
-					</Box>
-					<Box sx={{ display: "flex", flex: "1", flexDirection: "column", gap: 1 }}>
-						<Typography className="table-heading">CVV/CVC</Typography>
-						<Box sx={addCardStyles.wrapStripeInput}>
-							<CardCvcElement options={{...stripeStyles, placeholder: "123"}} />
+						<Box
+							sx={{
+								display: "flex",
+								flex: "1",
+								flexDirection: "column",
+								gap: 1,
+							}}
+						>
+							<Typography className="table-heading">CVV/CVC</Typography>
+							<Box sx={addCardStyles.wrapStripeInput}>
+								<CardCvcElement
+									options={{ ...stripeStyles, placeholder: "123" }}
+								/>
+							</Box>
 						</Box>
-					</Box>
 					</Box>
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 						<Switch
@@ -197,8 +223,12 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({ title, confirmButtonName, o
 				</Box>
 			</DialogContent>
 			<DialogActions>
-				<CustomButton variant="outlined" onClick={onClose}>Back</CustomButton>
-				<CustomButton variant="contained" onClick={handleButtonClick}>{confirmButtonName}</CustomButton>
+				<CustomButton variant="outlined" onClick={onClose}>
+					Back
+				</CustomButton>
+				<CustomButton variant="contained" onClick={handleButtonClick}>
+					{confirmButtonName}
+				</CustomButton>
 			</DialogActions>
 		</Dialog>
 	);

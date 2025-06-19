@@ -597,7 +597,9 @@ class SettingsService:
         return result
 
     def add_card(self, user: User, payment_method_id, is_default: bool):
-        return add_card_to_customer(user.get("customer_id"), payment_method_id, is_default=is_default)
+        return add_card_to_customer(
+            user.get("customer_id"), payment_method_id, is_default=is_default
+        )
 
     def switch_overage(self, user: dict):
         inactive_leads_user = self.lead_persistence.get_inactive_leads_user(

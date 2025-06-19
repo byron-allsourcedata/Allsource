@@ -561,8 +561,14 @@ export const SettingsBilling: React.FC = () => {
 								))}
 						</Grid>
 
-						<Elements stripe={stripePromise}> 
-							<AddCardPopup title="Add Card" confirmButtonName="Save Card" open={open} onClose={handleClose} onSuccess={handleCheckoutSuccess} />
+						<Elements stripe={stripePromise}>
+							<AddCardPopup
+								title="Add Card"
+								confirmButtonName="Save Card"
+								open={open}
+								onClose={handleClose}
+								onSuccess={handleCheckoutSuccess}
+							/>
 						</Elements>
 					</Box>
 				</Box>
