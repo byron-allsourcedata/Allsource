@@ -41,7 +41,7 @@ const Settings: React.FC = () => {
 	useEffect(() => {
 		const sectionFromUrl = searchParams.get("section");
 		const paymentFailed = searchParams.get("payment_failed");
-		console.log({sectionFromUrl, paymentFailed})
+		console.log({ sectionFromUrl, paymentFailed });
 		if (paymentFailed) {
 			setPaymentFailed(true);
 		}
@@ -195,7 +195,9 @@ const Settings: React.FC = () => {
 
 					{activeSection === "teams" && <SettingsTeams />}
 
-					{activeSection === "billing" && <SettingsBilling paymentFailed={paymentFailed}/>}
+					{activeSection === "billing" && (
+						<SettingsBilling paymentFailed={paymentFailed} />
+					)}
 
 					{activeSection === "subscription" && <SettingsSubscription />}
 

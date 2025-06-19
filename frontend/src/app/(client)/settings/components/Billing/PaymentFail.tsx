@@ -22,19 +22,15 @@ import CustomButton from "@/components/ui/CustomButton";
 
 interface PaymentPopupProps {
 	open: boolean;
-	cardDetails: any
+	cardDetails: any;
 }
 
-const PaymentFail: React.FC<PaymentPopupProps> = ({
-	open,
-	cardDetails
-}) => {
+const PaymentFail: React.FC<PaymentPopupProps> = ({ open, cardDetails }) => {
 	const router = useRouter();
-	console.log({open})
+	console.log({ open });
 
-
-	const handlePay = () => {}
-	const onClose = () => {}
+	const handlePay = () => {};
+	const onClose = () => {};
 
 	const addCardStyles = {
 		switchStyle: {
@@ -70,7 +66,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	const [selectedCard, setSelectedCard] = useState<string>("visa");
 
 	const handleCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-	  setSelectedCard(event.target.value);
+		setSelectedCard(event.target.value);
 	};
 
 	return (
@@ -80,21 +76,60 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			</DialogTitle>
 			<Divider />
 			<DialogContent>
-				<Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: "20px", my: 2 }}>
-					<Box sx={{display: "flex", justifyContent: "center"}}><Box sx={addCardStyles.imageStyle} /></Box>
-					<Typography className="hyperlink-red" sx={{textAlign: "center"}}>Your access has been paused because your last payment failed. To restore full functionality, please complete the payment below.</Typography>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: "column",
+						justifyContent: "center",
+						gap: "20px",
+						my: 2,
+					}}
+				>
+					<Box sx={{ display: "flex", justifyContent: "center" }}>
+						<Box sx={addCardStyles.imageStyle} />
+					</Box>
+					<Typography className="hyperlink-red" sx={{ textAlign: "center" }}>
+						Your access has been paused because your last payment failed. To
+						restore full functionality, please complete the payment below.
+					</Typography>
 				</Box>
 				<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 						<Typography className="first-sub-title">Payment Method:</Typography>
 					</Box>
-					<Box sx={{ display: "flex", gap: 2}}>
-						<RadioGroup value={selectedCard} onChange={handleCardChange} sx={{width: "100%", gap: 2}}>
-							<Box sx={{ display: "flex", alignItems: "start", width: "100%", gap: 2, border: "1px solid #ddd", borderRadius: 2, p: 2 }}>
+					<Box sx={{ display: "flex", gap: 2 }}>
+						<RadioGroup
+							value={selectedCard}
+							onChange={handleCardChange}
+							sx={{ width: "100%", gap: 2 }}
+						>
+							<Box
+								sx={{
+									display: "flex",
+									alignItems: "start",
+									width: "100%",
+									gap: 2,
+									border: "1px solid #ddd",
+									borderRadius: 2,
+									p: 2,
+								}}
+							>
 								<Radio value="visa" />
-								<Box sx={{ display: "flex", flexDirection: "column", width: "100%", justifyContent: "center", flexGrow: 1 }}>
-									<Typography sx={{ fontWeight: 600 }}>Visa (**** 5555)</Typography>
-									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>Expire date: 08/29</Typography>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										width: "100%",
+										justifyContent: "center",
+										flexGrow: 1,
+									}}
+								>
+									<Typography sx={{ fontWeight: 600 }}>
+										Visa (**** 5555)
+									</Typography>
+									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>
+										Expire date: 08/29
+									</Typography>
 								</Box>
 								<Typography
 									className="main-text"
@@ -110,17 +145,31 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 									Default
 								</Typography>
 							</Box>
-							<Box sx={{ display: "flex", alignItems: "center", gap: 2, border: "1px solid #ddd", borderRadius: 2, p: 2 }}>
+							<Box
+								sx={{
+									display: "flex",
+									alignItems: "center",
+									gap: 2,
+									border: "1px solid #ddd",
+									borderRadius: 2,
+									p: 2,
+								}}
+							>
 								<Radio value="amex" />
-								<Box sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
-									<Typography sx={{ fontWeight: 600 }}>American Express (**** 5555)</Typography>
-									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>Expire date: 05/30</Typography>
+								<Box
+									sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
+								>
+									<Typography sx={{ fontWeight: 600 }}>
+										American Express (**** 5555)
+									</Typography>
+									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>
+										Expire date: 05/30
+									</Typography>
 								</Box>
 							</Box>
 						</RadioGroup>
 					</Box>
-					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-					</Box>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}></Box>
 				</Box>
 			</DialogContent>
 			<DialogActions>

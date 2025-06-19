@@ -110,10 +110,8 @@ class UsersAuth:
                     user.get("id")
                 )
             )
-            subscription_plan_is_inactive_on_basic = (
-                self.subscription_service.is_user_has_inactive_subscription_on_basic(
-                    user.get("id")
-                )
+            subscription_plan_is_inactive_on_basic = self.subscription_service.is_user_has_inactive_subscription_on_basic(
+                user.get("id")
             )
             if subscription_plan_is_active:
                 return UserAuthorizationStatus.SUCCESS

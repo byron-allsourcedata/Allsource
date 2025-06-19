@@ -200,14 +200,17 @@ class UserAuthorizationStatus(Enum):
     TEAM_TOKEN_EXPIRED = "TEAM_TOKEN_EXPIRED"
     INVALID_API_KEY = "INVALID_API_KEY"
 
+
 class SubscriptionPlanAlias(Enum):
     BASIC = "basic"
     BASIC_RECORDS = "basic_records"
+
 
 class UserSubscriptionsStatus(Enum):
     ACTIVE = "active"
     CANCELED = "canceled"
     INACTIVE = "inactive"
+
 
 class MiddleWareEnum(Enum):
     NEED_EMAIL_CONFIRMATION = "NEED_EMAIL_CONFIRMATION"

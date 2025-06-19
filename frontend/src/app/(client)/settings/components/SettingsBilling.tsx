@@ -76,7 +76,7 @@ const cardBrandImages: Record<CardBrand, string> = {
 	unionpay: "/unionpay-icon.svg",
 };
 
-export const SettingsBilling: React.FC<{paymentFailed: boolean}> = ({
+export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 	paymentFailed,
 }) => {
 	const [contactsCollected, setContactsCollected] = useState(0);
@@ -1033,10 +1033,7 @@ export const SettingsBilling: React.FC<{paymentFailed: boolean}> = ({
 				}}
 			/>
 
-			<PaymentFail
-			 	open={paymentFailed}
-				cardDetails={cardDetails}
-			 />
+			<PaymentFail open={paymentFailed} cardDetails={cardDetails} />
 
 			<BillingHistory
 				setIsLoading={setIsLoading}
