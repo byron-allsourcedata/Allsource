@@ -6,48 +6,59 @@ import {
 	DialogActions,
 	Divider,
 	Typography,
-	Switch,
 	Box,
 	Radio,
 	RadioGroup,
-	Grid,
-	CardActions,
-	Card,
 } from "@mui/material";
-import { useRouter } from "next/navigation";
-import CloseIcon from "@mui/icons-material/Close";
-import LegendToggleOutlinedIcon from "@mui/icons-material/LegendToggleOutlined";
-import AllInboxOutlinedIcon from "@mui/icons-material/AllInboxOutlined";
+import Image from "next/image";
 import CustomButton from "@/components/ui/CustomButton";
+import { Elements } from "@stripe/react-stripe-js";
+import AddCardPopup from "./AddCard";
+import { loadStripe } from "@stripe/stripe-js";
+
+interface CardDetails {
+	id: string;
+	brand: string;
+	last4: string;
+	exp_month: number;
+	exp_year: number;
+	is_default: boolean;
+}
+
 
 interface PaymentPopupProps {
 	open: boolean;
-	cardDetails: any;
+	cardDetails: CardDetails[];
+	handleCheckoutSuccess: (item: CardDetails) => void;
 }
 
-const PaymentFail: React.FC<PaymentPopupProps> = ({ open, cardDetails }) => {
-	const router = useRouter();
-	console.log({ open });
+type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
+
+const cardBrandImages: Record<CardBrand, string> = {
+	visa: "/visa-icon.svg",
+	mastercard: "/mastercard-icon.svg",
+	amex: "/american-express.svg",
+	discover: "/discover-icon.svg",
+	unionpay: "/unionpay-icon.svg",
+};
+
+const PaymentFail: React.FC<PaymentPopupProps> = ({ open, cardDetails, handleCheckoutSuccess }) => {
+	const stripePromise = loadStripe(
+		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
+	);
+	const [openAddCard, setOpenAddCard] = useState(false);
 
 	const handlePay = () => {};
 	const onClose = () => {};
 
-	const addCardStyles = {
-		switchStyle: {
-			"& .MuiSwitch-switchBase": {
-				"&+.MuiSwitch-track": {
-					backgroundColor: "rgba(163, 176, 194, 1)",
-					opacity: 1,
-				},
-				"&.Mui-checked": {
-					color: "#fff",
-					"&+.MuiSwitch-track": {
-						backgroundColor: "rgba(56, 152, 252, 1)",
-						opacity: 1,
-					},
-				},
-			},
-		},
+	const handleAddCard = () => {
+		setOpenAddCard(true);
+	}
+	
+
+	const handleCloseAddCard = () => setOpenAddCard(false);
+
+	const paymentFailStyles = {
 		imageStyle: {
 			width: 87,
 			height: 78,
@@ -56,20 +67,16 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({ open, cardDetails }) => {
 			backgroundRepeat: "no-repeat",
 			backgroundImage: "url(/danger-fill-icon.svg)",
 		},
-		wrapStripeInput: {
-			border: "1px solid #ddd",
-			borderRadius: "4px",
-			padding: "10px",
-		},
 	};
 
-	const [selectedCard, setSelectedCard] = useState<string>("visa");
+	const [selectedCard, setSelectedCard] = useState<string>("");
 
 	const handleCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSelectedCard(event.target.value);
 	};
 
 	return (
+		<>
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
 			<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
 				Complete Your Payment
@@ -86,7 +93,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({ open, cardDetails }) => {
 					}}
 				>
 					<Box sx={{ display: "flex", justifyContent: "center" }}>
-						<Box sx={addCardStyles.imageStyle} />
+						<Box sx={paymentFailStyles.imageStyle} />
 					</Box>
 					<Typography className="hyperlink-red" sx={{ textAlign: "center" }}>
 						Your access has been paused because your last payment failed. To
@@ -103,81 +110,118 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({ open, cardDetails }) => {
 							onChange={handleCardChange}
 							sx={{ width: "100%", gap: 2 }}
 						>
-							<Box
-								sx={{
-									display: "flex",
-									alignItems: "start",
-									width: "100%",
-									gap: 2,
-									border: "1px solid #ddd",
-									borderRadius: 2,
-									p: 2,
-								}}
-							>
-								<Radio value="visa" />
+							{cardDetails?.map((card: CardDetails, index: number) => (
 								<Box
 									sx={{
 										display: "flex",
-										flexDirection: "column",
+										alignItems: "center",
 										width: "100%",
-										justifyContent: "center",
-										flexGrow: 1,
-									}}
-								>
-									<Typography sx={{ fontWeight: 600 }}>
-										Visa (**** 5555)
-									</Typography>
-									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>
-										Expire date: 08/29
-									</Typography>
-								</Box>
-								<Typography
-									className="main-text"
-									sx={{
+										gap: 2,
+										border: "1px solid #ddd",
 										borderRadius: "4px",
-										background: "#eaf8dd",
-										color: "#2b5b00",
-										fontSize: "12px",
-										fontWeight: "600",
-										padding: "2px 12px",
+										p: 2,
 									}}
 								>
-									Default
-								</Typography>
-							</Box>
-							<Box
-								sx={{
-									display: "flex",
-									alignItems: "center",
-									gap: 2,
-									border: "1px solid #ddd",
-									borderRadius: 2,
-									p: 2,
-								}}
-							>
-								<Radio value="amex" />
-								<Box
-									sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
-								>
-									<Typography sx={{ fontWeight: 600 }}>
-										American Express (**** 5555)
-									</Typography>
-									<Typography sx={{ fontSize: "0.875rem", color: "gray" }}>
-										Expire date: 05/30
-									</Typography>
+									<Radio value={index} />
+									<Box
+										sx={{
+											display: "flex",
+											width: "100%",
+											gap: 2,
+											alignItems: "center",											
+										}}
+									>
+										<Box
+											sx={{
+												width: "62px",
+												height: "62px",
+												borderRadius: "4px",
+												border: "1px solid #f0f0f0",
+												display: "flex",
+												justifyContent: "center",
+												alignItems: "center",
+											}}
+										>
+											<Image
+												src={
+													cardBrandImages[card.brand as CardBrand] ||
+													"/default-card-icon.svg"
+												}
+												alt={`${card.brand}-icon`}
+												height={54}
+												width={54}
+											/>
+										</Box>
+										<Box>
+											<Typography sx={{ fontWeight: 600 }}>
+												{card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** {card.last4})
+											</Typography>
+											<Typography className="table-data" sx={{ color: "#5F6368" }}>
+												Expire date:{" "}
+												{`${card.exp_month < 10 ? "0" : ""}${card.exp_month}/${card.exp_year}`}
+											</Typography>
+										</Box>
+									</Box>
+									{card.is_default && <Typography
+										className="main-text"
+										sx={{
+											borderRadius: "4px",
+											background: "#eaf8dd",
+											color: "#2b5b00",
+											fontSize: "12px",
+											fontWeight: "600",
+											padding: "2px 12px",
+										}}
+									>
+										Default
+									</Typography>}
 								</Box>
-							</Box>
+							))}
 						</RadioGroup>
-					</Box>
+						</Box>
+						<Box sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }} onClick={handleAddCard}>
+							<Box sx={{
+									border: "1px dashed rgba(56, 152, 252, 1)",
+									borderRadius: "4px",
+									width: "24px",
+									height: "24px",
+									display: "flex",
+									justifyContent: "center",
+									alignItems: "center",
+									}}>
+									<Image
+										src="/add-square.svg"
+										alt="add-square"
+										height={24}
+										width={24}
+										onClick={handleAddCard}
+									/>
+							</Box>
+							<Typography sx={{ color: "#3898FC" }}>Add New Card</Typography>
+						</Box>
+						<Typography className="third-sub-title" sx={{ color: "#787878" }}>
+							*Successful payment will automatically reactivate your account within 2 minutes
+						</Typography>
 					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}></Box>
 				</Box>
 			</DialogContent>
-			<DialogActions>
-				<CustomButton variant="contained" onClick={handlePay}>
+			<DialogActions sx={{p: 3}}>
+				<CustomButton variant="contained" onClick={handlePay} sx={{padding: "10px 48px"}} disabled={selectedCard === ""}>
 					Pay
 				</CustomButton>
 			</DialogActions>
 		</Dialog>
+
+		<Elements stripe={stripePromise}>
+		<AddCardPopup
+			title="Add Card"
+			confirmButtonName="Save Card"
+			open={openAddCard}
+			onClose={handleCloseAddCard}
+			onSuccess={handleCheckoutSuccess}
+		/>
+		</Elements>
+		</>
 	);
 };
 

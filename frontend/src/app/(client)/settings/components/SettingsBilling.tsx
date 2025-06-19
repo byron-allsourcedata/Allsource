@@ -118,7 +118,6 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.get("/settings/billing");
-			console.log(response.data);
 			if (response.data.status == "hide") {
 				setHide(true);
 			} else {
@@ -1033,7 +1032,7 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 				}}
 			/>
 
-			<PaymentFail open={paymentFailed} cardDetails={cardDetails} />
+			<PaymentFail open={paymentFailed} cardDetails={cardDetails} handleCheckoutSuccess={handleCheckoutSuccess}/>
 
 			<BillingHistory
 				setIsLoading={setIsLoading}
