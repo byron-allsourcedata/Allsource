@@ -30,6 +30,7 @@ import { UsageItem } from "./Billing/UsageItem";
 import { billingStyles } from "./Billing/billingStyles";
 import AddCardPopup from "./Billing/AddCard";
 import PaymentFail from "./Billing/PaymentFail";
+import { useSearchParams } from "next/navigation";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
 
@@ -76,8 +77,7 @@ const cardBrandImages: Record<CardBrand, string> = {
 	unionpay: "/unionpay-icon.svg",
 };
 
-export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
-	paymentFailed,
+export const SettingsBilling: React.FC<{}> = ({
 }) => {
 	const [contactsCollected, setContactsCollected] = useState(0);
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
@@ -113,6 +113,9 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 
 	const handleOpen = () => setOpen(true);
 	const handleClose = () => setOpen(false);
+	const [paymentFailed, setPaymentFailed] = useState(false);
+	const searchParams = useSearchParams();
+	const paymentFailedSearch = searchParams.get("payment_failed");
 
 	const fetchCardData = async () => {
 		try {
@@ -152,6 +155,12 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 			setIsLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		if (paymentFailedSearch) {
+			setPaymentFailed(true);
+		}
+	}, []);
 
 	useEffect(() => {
 		fetchCardData();
@@ -345,6 +354,7 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 	}
 
 	return (
+		<>
 		<Box sx={{ pr: 2, pt: 1 }}>
 			<Box
 				sx={{
@@ -1032,12 +1042,6 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 				}}
 			/>
 
-			<PaymentFail
-				open={paymentFailed}
-				cardDetails={cardDetails}
-				handleCheckoutSuccess={handleCheckoutSuccess}
-			/>
-
 			<BillingHistory
 				setIsLoading={setIsLoading}
 				handleSendInvoicePopupOpen={handleSendInvoicePopupOpen}
@@ -1058,5 +1062,11 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 				setCardDetails={setCardDetails}
 			/>
 		</Box>
+		<PaymentFail
+			open={paymentFailed}
+			cardDetails={cardDetails}
+			handleCheckoutSuccess={handleCheckoutSuccess}
+		/>
+		</>
 	);
 };
