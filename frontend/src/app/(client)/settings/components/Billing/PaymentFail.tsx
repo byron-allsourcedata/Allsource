@@ -116,6 +116,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 							>
 								{cardDetails?.map((card: CardDetails, index: number) => (
 									<Box
+										key={card.id}
 										sx={{
 											display: "flex",
 											alignItems: "center",
