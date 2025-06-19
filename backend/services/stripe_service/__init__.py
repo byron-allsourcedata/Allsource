@@ -54,6 +54,22 @@ class StripeService:
             logging.error(f"Authentication error: {e.user_message}")
             return None
 
+    def create_basic_plan_subscription(self, customer_id: str, stripe_price_id: str):
+        subscription = stripe.Subscription.create(
+            customer=customer_id,
+            items=[{"price": stripe_price_id}],
+            collection_method="charge_automatically",
+            billing_cycle_anchor_config={
+                "day_of_month": 31,
+                "hour": 23,
+                "minute": 59,
+                "second": 59,
+            },
+            off_session=True,
+        )
+
+        return subscription
+
     @staticmethod
     def record_usage(customer_id: str, quantity: int):
         resp = stripe.billing.MeterEvent.create(

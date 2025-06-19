@@ -61,21 +61,12 @@ async def process_rmq_message(
 ):
     try:
         body = json.loads(message.body)
-        user_id = body.get("user_id")
         overage_leads_count = body.get("overage_leads_count")
         customer_id = body.get("customer_id")
         event_data = StripeService.record_usage(
             customer_id=customer_id, quantity=overage_leads_count
         )
         save_transaction(db_session=db_session, event_data=event_data)
-        await send_sse(
-            channel=channel,
-            user_id=user_id,
-            data={
-                "data": user_id,
-            },
-        )
-        logging.info("sent sse with total count")
 
         db_session.commit()
         await message.ack()

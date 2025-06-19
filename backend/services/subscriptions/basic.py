@@ -1,7 +1,5 @@
 import logging
 
-import stripe
-
 from db_dependencies import Db
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
@@ -60,23 +58,9 @@ class BasicPlanService:
         user_id = user.id
 
         self.user_subscriptions.move_to_plan(user_id, "basic")
-        self.create_basic_plan_subscription(customer_id)
-
-    def create_basic_plan_subscription(self, customer_id: str):
         basic_records = self.plans.get_plan_by_alias("basic_records")
+        if not basic_records:
+            logger.error('Basic records not found!')
+            return
 
-        subscription = stripe.Subscription.create(
-            customer=customer_id,
-            items=[{"price": basic_records.stripe_price_id}],
-            collection_method="charge_automatically",
-            days_until_due=0,
-            billing_cycle_anchor_config={
-                "day_of_month": 31,
-                "hour": 23,
-                "minute": 59,
-                "second": 59,
-            },
-            off_session=True,
-        )
-
-        return subscription
+        self.stripe.create_basic_plan_subscription(customer_id=customer_id, stripe_price_id=basic_records.stripe_price_id)

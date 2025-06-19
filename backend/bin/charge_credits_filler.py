@@ -119,7 +119,6 @@ async def prepare_users_for_billing(
             continue
         user_ids.append(result.id)
         msg = {
-            "user_id": result.id,
             "overage_leads_count": result.overage_leads_count,
             "customer_id": result.customer_id,
         }

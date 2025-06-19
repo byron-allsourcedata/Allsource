@@ -1,6 +1,10 @@
+from enums import PaymentStatus
 from persistence.user_persistence import UserPersistence
+from persistence.user_subscriptions import UserSubscriptionsPersistence
 from resolver import injectable
+from services.stripe_service import StripeService
 from services.subscriptions.basic import BasicPlanService
+from services.subscriptions.invoice import InvoiceService
 
 
 @injectable
@@ -9,18 +13,51 @@ class SubscriptionWebhookService:
         self,
         user_persistence: UserPersistence,
         basic_plan_service: BasicPlanService,
+        stripe: StripeService,
+        user_subscriptions_persistence: UserSubscriptionsPersistence,
+        invoice_service: InvoiceService
     ):
         self.user_persistence = user_persistence
         self.basic_plan_service = basic_plan_service
+        self.invoice_service = invoice_service
+        self.stripe = stripe
+        self.user_subscriptions_persistence = user_subscriptions_persistence
 
     def move_to_basic_plan(self, customer_id: str):
         self.basic_plan_service.move_to_basic_plan(customer_id)
 
-    def save_new_invoice_payment(self):
-        pass
+    def update_subscription_status(self, customer_id: str, status: str):
+        subscription = self.user_subscriptions_persistence.get_subscription_by_customer_id(customer_id=customer_id)
+        if subscription.status == PaymentStatus.INACTIVE.value:
+            record_subscription = (
+                self.user_subscriptions_persistence.get_subscription_plan_by_id(
+                    id=subscription.contact_credit_plan_id
+                )
+            )
+            self.stripe.create_basic_plan_subscription(
+                customer_id=customer_id,
+                stripe_price_id=record_subscription.stripe_price_id,
+            )
+        self.user_subscriptions_persistence.install_payment_status(customer_id=customer_id , status=status)
 
-    def invoice_payment_success(self):
-        pass
+    def save_invoice_payment(self, event_type: str, event: dict):
+        customer_id = event["data"]["object"]["customer"]
+        self.invoice_service.save_invoice_payment(event_type=event_type, invoices_data=event)
+        self.user_persistence.decrease_overage_leads_count(customer_id=customer_id, quantity=event["data"]["object"]["lines"]["data"][0]["quantity"])
+        self.update_subscription_status(customer_id=customer_id, status=PaymentStatus.ACTIVE.value)
+        return 'SUCCESS'
 
-    def invoice_payment_failed(self):
-        pass
+    def invoice_payment_failed(self, event_type: str, event: dict):
+        self.invoice_service.save_invoice_payment(
+            event_type=event_type, invoices_data=event
+        )
+        self.user_subscriptions_persistence.install_payment_status(customer_id=event['data']['object']['customer'], status=PaymentStatus.INACTIVE.value)
+        return "SUCCESS"
+
+
+    def cancel_subscription(self, event: dict):
+        self.user_subscriptions_persistence.install_payment_status(
+            customer_id=event["data"]["object"]["customer"],
+            status=PaymentStatus.CANCELED.value,
+        )
+        return 'SUCCESS'

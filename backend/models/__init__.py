@@ -74,6 +74,7 @@ from .referral_payouts import ReferralPayouts
 from .referral_users import ReferralUser
 from .sendgrid_template import SendgridTemplate
 from .state import States
+from .stripe_invoices_logs import StripeInvoiceLogs
 from .subscription_transactions import SubscriptionTransactions
 from .subscriptions import UserSubscriptions
 from .suppression_rule import SuppressionRule
@@ -100,6 +101,7 @@ __all__ = [
     "TransactionHistory",
     "SuppressedContact",
     "ChargingCreditsHistory",
+    "StripeInvoiceLogs",
     "UserIntegration",
     "Integration",
     "AccountNotification",
