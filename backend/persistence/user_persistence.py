@@ -2,11 +2,10 @@ import json
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from urllib.parse import uses_query
 from decimal import Decimal
 
 import pytz
-from sqlalchemy import func, desc, asc, case, or_, select, update
+from sqlalchemy import func, desc, asc, or_, select, update
 from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
@@ -692,3 +691,17 @@ class UserPersistence:
         )
         result = self.db.execute(stmt_subs)
         return result
+
+    def decrease_overage_leads_count(self, customer_id: str, quantity: int):
+        stmt_users = (
+            update(Users)
+            .where(Users.customer_id == customer_id)
+            .values(
+                overage_leads_count=func.greatest(
+                    Users.overage_leads_count - quantity, 0
+                )
+            )
+        )
+        result = self.db.execute(stmt_users)
+        self.db.commit()
+        return result.rowcount

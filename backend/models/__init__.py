@@ -74,6 +74,7 @@ from .referral_payouts import ReferralPayouts
 from .referral_users import ReferralUser
 from .sendgrid_template import SendgridTemplate
 from .state import States
+from .stripe_invoices_logs import StripeInvoiceLogs
 from .subscription_transactions import SubscriptionTransactions
 from .subscriptions import UserSubscriptions
 from .suppression_rule import SuppressionRule
@@ -88,6 +89,8 @@ from .audience_smarts_validations import AudienceSmartValidation
 from .usa_zip_codes import UsaZipCode
 from .audience_postals_verification import AudiencePostalVerification
 from .admin_invitations import AdminInvitation
+from .transaction_history import TransactionHistory
+from .charging_credits_history import ChargingCreditsHistory
 
 
 __all__ = [
@@ -95,7 +98,10 @@ __all__ = [
     "ExternalAppsInstall",
     "IntegrationUserSync",
     "LeadsSupperssion",
+    "TransactionHistory",
     "SuppressedContact",
+    "ChargingCreditsHistory",
+    "StripeInvoiceLogs",
     "UserIntegration",
     "Integration",
     "AccountNotification",

@@ -426,3 +426,9 @@ class PayOutReferralsStatus(Enum):
     SUCCESS = "SUCCESS"
     NO_USERS_FOR_PAYOUT = "NO_USERS_FOR_PAYOUT"
     PAYMENT_ERROR = "PAYMENT_ERROR"
+
+
+class PaymentStatus(Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    CANCELED = "canceled"

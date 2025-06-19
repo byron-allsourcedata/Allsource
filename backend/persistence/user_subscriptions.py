@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from db_dependencies import Db
+from enums import PaymentStatus
 from models import UserSubscriptions, Users, SubscriptionPlan, LeadUser
 from resolver import injectable
 from utils import end_of_month
@@ -55,7 +56,7 @@ class UserSubscriptionsPersistence:
         user.smart_audience_quota = plan.smart_audience_quota
         self.db.add(user)
 
-    def subquery_current_free_trial_sub_ids(self, alias):
+    def subquery_current_sub_ids(self, alias):
         subquery_user_sub_ids = (
             select(Users.current_subscription_id)
             .join(
@@ -71,6 +72,25 @@ class UserSubscriptionsPersistence:
         )
         return subquery_user_sub_ids
 
+    def subquery_active_current_sub_ids_by_plan(self, alias):
+        subquery_user_sub_ids = (
+            select(Users.current_subscription_id)
+            .join(
+                UserSubscriptions,
+                Users.current_subscription_id == UserSubscriptions.id,
+            )
+            .join(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .filter(
+                SubscriptionPlan.alias == alias,
+                UserSubscriptions.status == PaymentStatus.ACTIVE.value,
+            )
+            .scalar_subquery()
+        )
+        return subquery_user_sub_ids
+
     def get_lead_credits(self, alias):
         credits = (
             self.db.query(SubscriptionPlan.leads_credits)
@@ -78,3 +98,37 @@ class UserSubscriptionsPersistence:
             .scalar()
         )
         return credits
+
+    def get_subscription_plan_by_id(self, id: int):
+        subscription_plan = (
+            self.db.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.id == id)
+            .first()
+        )
+        return subscription_plan
+
+    def get_subscription_by_customer_id(self, customer_id: str):
+        user_subscription = (
+            self.db.query(UserSubscriptions)
+            .join(Users, Users.current_subscription_id == UserSubscriptions.id)
+            .filter(Users.customer_id == customer_id)
+            .first()
+        )
+        return user_subscription
+
+    def install_payment_status(self, customer_id: str, status):
+        subquery = (
+            select(Users.current_subscription_id)
+            .where(Users.customer_id == customer_id)
+            .scalar_subquery()
+        )
+
+        stmt_subs = (
+            update(UserSubscriptions)
+            .where(UserSubscriptions.id == subquery)
+            .values(status=status)
+        )
+
+        result = self.db.execute(stmt_subs)
+        self.db.commit()
+        return result

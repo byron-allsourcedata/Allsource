@@ -82,7 +82,7 @@ async def test(
 
 
 @router.post("/update-subscription-webhook")
-async def update_payment_confirmation(
+async def update_subscription_webhook(
     request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)
 ):
     payload = await request.json()
@@ -122,7 +122,7 @@ async def update_payment_confirmation(
 
 
 @router.post("/cancel-subscription-webhook")
-async def update_payment_confirmation(
+async def cancel_subscription_webhook(
     request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)
 ):
     payload = await request.json()
@@ -225,8 +225,55 @@ async def checkout_completed(
     )
 
 
+@router.post("/checkout-deleted")
+async def checkout_deleted(
+    request: fastRequest,
+    subscription_webhooks: SubscriptionWebhookService,
+):
+    event = await request.json()
+    object_type = event["object"]
+
+    if object_type != "event":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid object type",
+        )
+    event_type = event["type"]
+    if event_type == "customer.subscription.deleted":
+        return subscription_webhooks.cancel_subscription(event)
+
+    logger.warning(f"Unknown event type: {event_type}")
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
+    )
+
+
+@router.post("/update-payment")
+async def update_payment(
+    request: fastRequest,
+    subscription_webhooks: SubscriptionWebhookService,
+):
+    event = await request.json()
+    event_type = event["type"]
+    match event_type:
+        case "invoice.payment_succeeded":
+            return subscription_webhooks.save_invoice_payment(
+                event_type=event_type, event=event
+            )
+
+        case "invoice.payment_failed":
+            return subscription_webhooks.invoice_payment_failed(
+                event_type=event_type, event=event
+            )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
+    )
+
+
 @router.post("/update-payment-webhook")
-async def update_payment_confirmation(
+async def update_payment_webhook(
     request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)
 ):
     payload = await request.json()

@@ -19,10 +19,6 @@ from .base import Base
 
 class Users(Base):
     __tablename__ = "users"
-    __table_args__ = (
-        Index("users_email_idx", "email", unique=True),
-        Index("users_data_provider_id_idx", "data_provider_id", unique=True),
-    )
 
     id = Column(
         BigInteger,
@@ -59,7 +55,7 @@ class Users(Base):
         nullable=True,
         server_default=text("'PENDING'::character varying"),
     )
-    customer_id = Column(VARCHAR, nullable=True)
+    customer_id = Column(VARCHAR(32), nullable=False)
     company_website = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
     is_with_card = Column(Boolean, nullable=True, server_default=text("false"))
@@ -129,6 +125,12 @@ class Users(Base):
     )
     stripe_connected_email = Column(VARCHAR, nullable=True)
     stripe_connected_currently_due = Column(JSON, nullable=True)
+
+    __table_args__ = (
+        Index("users_email_idx", email, unique=True),
+        Index("users_data_provider_id_idx", data_provider_id, unique=True),
+        Index("users_overage_leads_count_idx", overage_leads_count),
+    )
 
 
 User = Users
