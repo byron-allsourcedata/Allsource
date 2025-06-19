@@ -1032,7 +1032,11 @@ export const SettingsBilling: React.FC<{ paymentFailed: boolean }> = ({
 				}}
 			/>
 
-			<PaymentFail open={paymentFailed} cardDetails={cardDetails} handleCheckoutSuccess={handleCheckoutSuccess}/>
+			<PaymentFail
+				open={paymentFailed}
+				cardDetails={cardDetails}
+				handleCheckoutSuccess={handleCheckoutSuccess}
+			/>
 
 			<BillingHistory
 				setIsLoading={setIsLoading}
