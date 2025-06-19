@@ -58,7 +58,7 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 				"Insert this script just before the closing </body> tag on all product pages.",
 		},
 		thirdStepText:
-			'Once the "View Product" pixel is added to your product pages, please wait 10–15 minutes. The pixel will be automatically marked as "Installed" after a visitor lands on a product page and is recognized in our system.',
+			'Once the "View Product" pixel is added to your product pages, it will be automatically marked as "Installed" after a visitor lands on a product page and their activity is registered by Allsource.',
 	},
 	{
 		key: "add_to_cart",
@@ -74,7 +74,7 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 				"Place this script just before the closing </body> tag on all pages that include an 'Add to Cart' button to track events triggered on page load.",
 		},
 		thirdStepText:
-			'Once the "Add to Cart" pixel is placed on your website, please wait 10–15 minutes. The pixel will be automatically marked as "Installed" after a user clicks an "Add to Cart" button and the event is registered in our system.',
+			'Once the "Add to Cart" pixel is placed on your website, it will be automatically marked as "Installed" after Allsource receives the first contact with an "Add to Cart" event from your site.',
 	},
 	{
 		key: "converted_sale",
@@ -90,7 +90,7 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 				"Place this script inside the <body> tag on the order confirmation (Thank You) page to track completed purchases on page load.",
 		},
 		thirdStepText:
-			'Once the "Converted Sale" pixel is added to your order confirmation (Thank You) page, please wait 10–15 minutes. The pixel will be automatically marked as "Installed" after a purchase is completed and the conversion is tracked in our system.',
+			'Once the "Converted Sale" pixel is added to your order confirmation (Thank You) page, it will be automatically marked as "Installed" after a completed purchase is recorded by Allsource.',
 	},
 ];
 
