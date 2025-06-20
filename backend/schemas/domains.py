@@ -29,3 +29,9 @@ class UpdateDomain(BaseModel):
 
 class UpdateDomainRequest(BaseModel):
     domain_name: str
+
+
+class AdditionalScriptsInfo(BaseModel):
+    view_product: bool
+    add_to_cart: bool
+    converted_sale: bool
