@@ -274,38 +274,51 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 						component="pre"
 						sx={{
 							backgroundColor: "#ffffff",
-							gap: 2,
 							position: "relative",
-							wordWrap: "break-word",
-							whiteSpace: "pre-wrap",
 							border: "1px solid rgba(228, 228, 228, 1)",
 							borderRadius: "10px",
 							marginLeft: "3em",
-							maxHeight: "14em",
-							overflowY: "auto",
-							overflowX: "hidden",
+							pl: "12px",
+
+							pb: "12px",
 						}}
 					>
 						<IconButton
 							onClick={() => {
 								navigator.clipboard.writeText(displayedCode ?? "");
-								alert("Copied to clipboard");
+								showToast("Copied to clipboard");
 							}}
-							sx={{ position: "absolute", right: "10px", top: "10px" }}
+							sx={{
+								position: "absolute",
+								right: "2px",
+								top: "2px",
+								zIndex: 10,
+							}}
 						>
 							<ContentCopyIcon />
 						</IconButton>
-						<code
-							style={{
-								color: "rgba(95, 99, 104, 1)",
-								fontSize: "12px",
-								margin: 0,
-								fontWeight: 400,
-								fontFamily: "Nunito Sans",
+
+						{/* Отдельный scroll-блок */}
+						<Box
+							sx={{
+								maxHeight: "14em",
+								overflowY: "auto",
+								overflowX: "hidden",
+								pr: "12px",
 							}}
 						>
-							{displayedCode?.trim()}
-						</code>
+							<code
+								style={{
+									color: "rgba(95, 99, 104, 1)",
+									fontSize: "12px",
+									fontWeight: 400,
+									fontFamily: "Nunito Sans",
+									whiteSpace: "pre-wrap",
+								}}
+							>
+								{displayedCode?.trim()}
+							</code>
+						</Box>
 					</Box>
 
 					<Box
