@@ -25,6 +25,10 @@ from schemas.settings import (
     TotalKey,
     ActivePlan,
     DowngradePlan,
+    PlansResponse,
+    Plan,
+    Price,
+    Advantage,
 )
 from services.domains import UserDomainsService
 from services.subscriptions import SubscriptionService
@@ -791,3 +795,110 @@ class SettingsService:
             return {"success": True}
 
         return result
+
+    def get_all_plans(self) -> PlansResponse:
+        FREE_TRAIL_PLAN = Plan(
+            title="Free Trial",
+            alias="free_trial",
+            price=Price(value="$0", y="month"),
+            permanent_limits=[
+                Advantage(good=True, name="Domains monitored:", value="1")
+            ],
+            monthly_limits=[
+                Advantage(
+                    good=True, name="Contact Downloads:", value="Up to 1,000"
+                ),
+                Advantage(good=False, name="Smart Audience:", value="0"),
+            ],
+            gifted_funds=[
+                Advantage(good=True, name="Validation funds:", value="$250"),
+                Advantage(
+                    good=True, name="Premium Source funds:", value="$250"
+                ),
+            ],
+        )
+
+        BASIC = Plan(
+            title="Basic",
+            alias="basic",
+            price=Price(value="$0,08", y="record"),
+            permanent_limits=[
+                Advantage(good=True, name="Domains monitored:", value="1")
+            ],
+            monthly_limits=[
+                Advantage(
+                    good=True, name="Contact Downloads:", value="1,000 – 65,000"
+                ),
+                Advantage(good=False, name="Smart Audience:", value="0"),
+            ],
+            gifted_funds=[
+                Advantage(good=True, name="Validation funds:", value="$500"),
+                Advantage(
+                    good=True, name="Premium Source funds:", value="$500"
+                ),
+            ],
+        )
+
+        SMART_AUDIENCE_YEARLY = Plan(
+            title="Smart Audience",
+            alias="smart_audience",
+            price=Price(value="$5,000", y="month"),
+            permanent_limits=[
+                Advantage(good=True, name="Domains monitored:", value="3")
+            ],
+            monthly_limits=[
+                Advantage(
+                    good=True, name="Contact Downloads:", value="Unlimited"
+                ),
+                Advantage(good=True, name="Smart Audience:", value="200,000"),
+            ],
+            gifted_funds=[
+                Advantage(good=True, name="Validation funds:", value="$2,500"),
+                Advantage(
+                    good=True, name="Premium Source funds:", value="$2,500"
+                ),
+            ],
+        )
+
+        SMART_AUDIENCE_MONTHLY = SMART_AUDIENCE_YEARLY.model_copy(
+            update={"price": Price(value="$7,500", y="month")}
+        )
+
+        PRO_YEARLY = Plan(
+            title="Pro",
+            alias="pro",
+            price=Price(value="$10,000", y="month"),
+            permanent_limits=[
+                Advantage(good=True, name="Domains monitored:", value="5")
+            ],
+            monthly_limits=[
+                Advantage(
+                    good=True, name="Contact Downloads:", value="Unlimited"
+                ),
+                Advantage(good=True, name="Smart Audience:", value="Unlimited"),
+            ],
+            gifted_funds=[
+                Advantage(good=True, name="Validation funds:", value="$5,000"),
+                Advantage(
+                    good=True, name="Premium Source funds:", value="$5,000"
+                ),
+            ],
+        )
+
+        PRO_MONTHLY = PRO_YEARLY.model_copy(
+            update={"price": Price(value="$15,000", y="month")}
+        )
+
+        YEARLY_PLANS = [
+            FREE_TRAIL_PLAN,
+            BASIC,
+            SMART_AUDIENCE_YEARLY,
+            PRO_YEARLY,
+        ]
+        MONTHLY_PLANS = [
+            FREE_TRAIL_PLAN,
+            BASIC,
+            SMART_AUDIENCE_MONTHLY,
+            PRO_MONTHLY,
+        ]
+        return PlansResponse(monthly=MONTHLY_PLANS, yearly=YEARLY_PLANS)
