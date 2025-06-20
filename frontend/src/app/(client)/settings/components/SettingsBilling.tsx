@@ -103,6 +103,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
+	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
+		useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
@@ -133,7 +135,10 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 					response.data.usages_credits.premium_source_credits,
 				);
 				setSmartAudienceCollected(
-					response.data.usages_credits.smart_audience_quota,
+					response.data.usages_credits.smart_audience_quota.value,
+				);
+				setIsAvailableSmartAudience(
+					response.data.usages_credits.smart_audience_quota.available,
 				);
 				setValidationFundsLimitedData(
 					response.data.usages_credits.validation_funds_limit,
@@ -171,26 +176,54 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			.replace(/\b\w/g, (char) => char.toUpperCase());
 	};
 
+	const printBillingCycle = (
+		planStart: string | null,
+		planEnd: string | null,
+	) => {
+		if (planStart && planEnd) {
+			return (
+				`${dayjs(planStart).format("MMM D, YYYY")}` +
+				` to ${dayjs(planEnd).format("MMM D, YYYY")}`
+			);
+		} else if (planEnd) {
+			return `N/A` + ` to ${dayjs(planEnd).format("MMM D, YYYY")}`;
+		} else {
+			return "Unlimited";
+		}
+	};
+
+	const printNextBillingDate = (billinDate: string | null) => {
+		if (billinDate) {
+			return `On ${billinDate}`;
+		}
+		return "Unlimited";
+	};
+
 	const renderValue = (value: any) => {
-		if (value?.current_value === -1 || value?.limit_value === -1) {
+		console.log(value);
+		if (
+			value?.current_value === -1 ||
+			value?.limit_value === -1 ||
+			value?.limit_value === null ||
+			value?.current_value === null
+		) {
 			return "Unlimited";
 		}
 
+		const { limit_value, current_value } = value;
+		const limit = current_value > limit_value ? current_value : limit_value;
+
 		switch (value?.detail_type) {
 			case "funds":
-				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
+				return `$${value.current_value?.toLocaleString("en-US")}/$${limit?.toLocaleString("en-US")}`;
 			case "as_is":
 				return value.value;
 			case "limited":
-				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
-			case "time":
-				return (
-					`${dayjs(value.plan_start).format("MMM D, YYYY")}` +
-					(value.plan_end
-						? ` to ${dayjs(value.plan_end).format("MMM D, YYYY")}`
-						: "")
-				);
-
+				return `${value.current_value?.toLocaleString("en-US")}/${limit?.toLocaleString("en-US")}`;
+			case "billing_cycle":
+				return printBillingCycle(value.plan_start, value.plan_end);
+			case "next_billing_date":
+				return printNextBillingDate(value.value);
 			default:
 				return "Coming soon";
 		}
@@ -627,16 +660,24 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 									<>
 										<UsageItem
 											title="Contacts Downloaded"
-											limitValue={planContactsCollected}
+											limitValue={
+												contactsCollected > planContactsCollected
+													? contactsCollected
+													: planContactsCollected
+											}
 											currentValue={contactsCollected}
 											needButton={false}
 										/>
 										<UsageItem
 											title="Smart Audience"
-											limitValue={planSmartAudienceCollected}
+											limitValue={
+												smartAudienceCollected > planSmartAudienceCollected
+													? smartAudienceCollected
+													: planSmartAudienceCollected
+											}
 											currentValue={smartAudienceCollected}
+											available={isAvailableSmartAudience}
 											needButton={false}
-											commingSoon={true}
 										/>
 									</>
 								)}
@@ -855,7 +896,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 																				},
 																			}}
 																		>
-																			On {renderValue(value)}
+																			{renderValue(value)}
 																		</Typography>
 																	</Box>
 																</Box>
@@ -1020,12 +1061,20 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 									<>
 										<UsageItem
 											title="Validation funds"
-											limitValue={validationLimitFundsCollected}
+											limitValue={
+												validationFundsCollected > validationLimitFundsCollected
+													? validationFundsCollected
+													: validationLimitFundsCollected
+											}
 											currentValue={validationFundsCollected}
 										/>
 										<UsageItem
 											title="Premium Source funds"
-											limitValue={planPremiumSourceCollected}
+											limitValue={
+												premiumSourceCollected > planPremiumSourceCollected
+													? premiumSourceCollected
+													: planPremiumSourceCollected
+											}
 											currentValue={premiumSourceCollected}
 											commingSoon={true}
 										/>

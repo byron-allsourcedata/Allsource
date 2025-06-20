@@ -417,7 +417,7 @@ class SettingsService:
 
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
-                detail_type="time",
+                detail_type="billing_cycle",
                 plan_start=user_subscription.plan_start,
                 plan_end=user_subscription.plan_end,
             ),
@@ -444,7 +444,7 @@ class SettingsService:
             ),
             premium_sources_funds="Coming soon",
             next_billing_date=NextBillingDate(
-                detail_type="as_is", value=next_billing_date
+                detail_type="next_billing_date", value=next_billing_date
             ),
             active=ActivePlan(detail_type="as_is", value=is_active),
         )
