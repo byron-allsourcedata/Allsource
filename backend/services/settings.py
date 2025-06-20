@@ -44,7 +44,7 @@ from .stripe_service import (
     detach_card_from_customer,
     get_billing_by_invoice_id,
     set_default_card_for_customer,
-    purchase_product
+    purchase_product,
 )
 
 logger = logging.getLogger(__name__)
@@ -760,10 +760,18 @@ class SettingsService:
         return SettingStatus.SUCCESS
 
     def pay_credits(self, user: dict):
-        user_subscription = self.subscription_service.get_user_subscription(user_id=user.get('id'))
+        user_subscription = self.subscription_service.get_user_subscription(
+            user_id=user.get("id")
+        )
         if not user_subscription:
             logger.error(f"Subscription not found for user {user.get('id')}")
             return
-        credit_plan = self.plan_persistence.get_subscription_plan_by_id(id=user_subscription.contact_credit_plan_id)
-        a = purchase_product(customer_id=user.get('customer_id'), price_id=credit_plan.stripe_price_id, quantity=user.get('overage_leads_count'))
+        credit_plan = self.plan_persistence.get_subscription_plan_by_id(
+            id=user_subscription.contact_credit_plan_id
+        )
+        a = purchase_product(
+            customer_id=user.get("customer_id"),
+            price_id=credit_plan.stripe_price_id,
+            quantity=user.get("overage_leads_count"),
+        )
         print(a)

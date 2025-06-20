@@ -60,7 +60,8 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 		try {
 			setLoading(true);
 			const response = await axiosInterceptorInstance.post(
-				"/settings/billing/pay-credits",{},
+				"/settings/billing/pay-credits",
+				{},
 			);
 			if (response.status === 200) {
 				const { status } = response.data;
@@ -116,7 +117,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<>
-		{loading && <ProgressBar />}
+			{loading && <ProgressBar />}
 			<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
 				<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
 					Complete Your Payment

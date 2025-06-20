@@ -373,10 +373,10 @@ def change_api_details(
         user=user, api_keys_request=api_keys_request
     )
 
+
 @router.post("/billing/pay-credits")
 def pay_credits(
     settings_service: SettingsService = Depends(get_settings_service),
-    user: dict = Depends(check_team_access_owner_user)):
-    return settings_service.pay_credits(
-        user=user
-    )
+    user: dict = Depends(check_team_access_owner_user),
+):
+    return settings_service.pay_credits(user=user)

@@ -665,6 +665,7 @@ def check_team_access_standard_user(
             )
     return user
 
+
 def check_team_access_owner_user(
     user: dict = Depends(check_user_authentication),
 ):
