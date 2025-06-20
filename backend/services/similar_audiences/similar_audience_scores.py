@@ -214,6 +214,27 @@ class SimilarAudiencesScoresService:
         result = model.predict(df_normed)
         return result.tolist()
 
+    def calculate_batch_scores_v2(
+        self,
+        asids: List[UUID],
+        batch: list[dict[str, Any]],
+        model: CatBoostRegressor,
+        lookalike_id: UUID,
+        config: NormalizationConfig
+    ) -> tuple[float, float]:
+        scores, duration = measure(
+            lambda _: self.calculate_score_dict_batch(model, batch, config)
+        )
+
+        _, insert_time = measure(
+            lambda _: self.enrichment_lookalike_scores_persistence.bulk_insert(
+                lookalike_id, list(zip(asids, scores))
+            )
+        )
+
+        return duration, insert_time
+
+    @deprecated
     def calculate_batch_scores(
         self,
         asids: List[UUID],
@@ -221,16 +242,19 @@ class SimilarAudiencesScoresService:
         model: CatBoostRegressor,
         lookalike_id: UUID,
     ) -> tuple[float, float]:
+        config = self.prepare_config(lookalike_id)
+        return self.calculate_batch_scores_v2(
+            asids=asids,
+            batch=batch,
+            model=model,
+            lookalike_id=lookalike_id,
+            config=config
+        )
+
+    def prepare_config(self, lookalike_id: UUID) -> NormalizationConfig:
         lookalike = self.lookalikes.get_lookalike(lookalike_id)
-        config = self.get_config(lookalike.significant_fields)
+        return self.get_config(lookalike.significant_fields)
 
-        scores, duration = measure(lambda _: self.calculate_score_dict_batch(model, batch, config))
-
-        _, insert_time = measure(lambda _: self.enrichment_lookalike_scores_persistence.bulk_insert(
-            lookalike_id, list(zip(asids, scores))
-        ))
-
-        return duration, insert_time
 
     def get_config(self, significant_fields: dict):
         column_names = self.column_selector.clickhouse_columns(

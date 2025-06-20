@@ -168,6 +168,7 @@ class LookalikeFillerService:
         count = 0
         batch_buffer = []
 
+        config = self.audiences_scores.prepare_config(lookalike_id)
         with rows_stream:
             fetch_start = time.perf_counter()
             for batch in rows_stream:
@@ -189,14 +190,19 @@ class LookalikeFillerService:
                 logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
 
 
+                prepare_asids_start = time.perf_counter()
                 asids = [doc["asid"] for doc in batch_buffer]
+                prepare_asids_end = time.perf_counter()
+
+                logger.info(f"prepare asids time: {prepare_asids_end - prepare_asids_start:.3f}")
 
                 times, duration = measure(
-                    lambda _: self.audiences_scores.calculate_batch_scores(
+                    lambda _: self.audiences_scores.calculate_batch_scores_v2(
                         model=model,
                         asids=asids,
                         lookalike_id=lookalike_id,
                         batch=batch_buffer,
+                        config=config
                     )
                 )
 
