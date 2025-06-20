@@ -15,7 +15,7 @@ import {
 	TableHead,
 	TableRow,
 } from "@mui/material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
@@ -25,12 +25,16 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
 import { MenuIconButton } from "@/components/table";
+import { usePagination } from "@/hooks/usePagination";
 import {
 	MoreVert,
 	SwapVertIcon,
 	ArrowDownwardIcon,
 	ArrowUpwardIcon,
 } from "@/icon";
+import { Paginator } from "@/components/PaginationComponent";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface UserData {
 	id: number;
@@ -72,7 +76,13 @@ const TableHeader: React.FC<{
 }> = ({ onSort, sortField, sortOrder, tableHeaders }) => {
 	return (
 		<TableHead>
-			<TableRow>
+			<TableRow
+				sx={{
+					position: "sticky",
+					top: 0,
+					zIndex: 97,
+				}}
+			>
 				{tableHeaders.map(({ key, label, sortable }) => (
 					<TableCell
 						key={key}
@@ -81,7 +91,6 @@ const TableHeader: React.FC<{
 							backgroundColor: "#fff",
 							textWrap: "wrap",
 							textAlign: "center",
-							position: "relative",
 							whiteSpace: "nowrap",
 							overflow: "hidden",
 							textOverflow: "ellipsis",
@@ -586,6 +595,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 						"&:hover": {
 							backgroundColor: "rgba(247, 247, 247, 1)",
 						},
+						"&:last-of-type .MuiTableCell-root": {
+							borderBottom: "none",
+						},
 					}}
 				>
 					{tableHeaders.map(({ key }) => (
@@ -596,6 +608,12 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 								textAlign: "left",
 								position: "relative",
 								padding: "8px",
+								"&:last-of-type::after": {
+									display:
+										key === "subscription_plan" || key === "access_level"
+											? "none"
+											: "block",
+								},
 							}}
 						>
 							{renderCellContent(key, row)}
@@ -656,6 +674,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setOrder,
 	setOrderBy,
 }) => {
+	const [count_data, setCountData] = useState<number | null>(null);
 	const tableHeaders = is_admin
 		? [
 				{ key: "name", label: "Account name", sortable: false },
@@ -695,6 +714,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	const handleRowsPerPageChange = (
 		event: React.ChangeEvent<{ value: unknown }>,
 	) => {
+		setCountData(userData.length || 0);
 		setRowsPerPage(Number.parseInt(event.target.value as string, 10));
 		setPage(0);
 	};
@@ -705,6 +725,16 @@ const Account: React.FC<PartnersAccountsProps> = ({
 		setOrderBy(property);
 	};
 
+	const tableContainerRef = useRef<HTMLDivElement>(null);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 131);
+	const paginationProps = {
+		countRows: totalCount ?? 0,
+		page,
+		rowsPerPage,
+		onPageChange: handlePageChange,
+		onRowsPerPageChange: handleRowsPerPageChange,
+		rowsPerPageOptions,
+	};
 	return (
 		<>
 			<Box
@@ -716,8 +746,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					display: "flex",
 					flexDirection: "column",
 					justifyContent: "space-between",
-					minHeight: "77vh",
-					"@media (max-width: 600px)": { margin: "0rem auto 0rem" },
 				}}
 			>
 				<Grid
@@ -725,15 +753,14 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					direction="column"
 					justifyContent="flex-start"
 					spacing={2}
-					sx={{ minHeight: "100vh" }}
 				>
 					<Grid item xs={12} sx={{ pl: 1, mt: 0 }}>
 						<TableContainer
 							component={Paper}
+							ref={tableContainerRef}
 							sx={{
 								border: "1px solid rgba(235, 235, 235, 1)",
-								maxHeight: "calc(100vh - 400px)",
-								overflowY: "auto",
+								borderBottom: "none",
 								overflowX: "auto",
 							}}
 						>
@@ -752,15 +779,11 @@ const Account: React.FC<PartnersAccountsProps> = ({
 								/>
 							</Table>
 						</TableContainer>
-						<Box sx={{ display: "flex", justifyContent: "flex-end", p: 2 }}>
-							<CustomTablePagination
-								count={totalCount ?? 0}
-								page={page}
-								rowsPerPage={rowsPerPage}
-								onPageChange={handlePageChange}
-								onRowsPerPageChange={handleRowsPerPageChange}
-								rowsPerPageOptions={rowsPerPageOptions}
-							/>
+						<Box
+							ref={paginatorRef}
+							sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+						>
+							<Paginator tableMode {...paginationProps} />
 						</Box>
 					</Grid>
 				</Grid>
