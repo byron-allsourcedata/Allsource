@@ -361,9 +361,16 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			setIsLoading(false);
 		}
 	};
-
-	const handleCheckoutSuccess = (data: any) => {
-		setCardDetails((prevDetails) => [...prevDetails, data]);
+	
+	const handleCheckoutSuccess = (data: CardDetails) => {
+		setCardDetails((prevDetails) =>
+			data.is_default
+				? prevDetails.map((card) => ({
+						...card,
+						is_default: false,
+				  })).concat(data)
+				: [...prevDetails, data]
+		);
 	};
 
 	const handleRedirectSubscription = () => {
