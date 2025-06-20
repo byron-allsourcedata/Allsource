@@ -482,7 +482,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											alt="add-square"
 											height={24}
 											width={24}
-											style={{cursor: "pointer"}}
+											style={{ cursor: "pointer" }}
 										/>
 									</Box>
 								</Box>
