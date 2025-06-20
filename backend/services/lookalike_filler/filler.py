@@ -301,10 +301,10 @@ class LookalikeFillerService:
         }
 
     async def inform_lookalike_agent(
-        self, connection, lookalike_id: UUID, user_id: int, persons: list[UUID]
+        self, channel, lookalike_id: UUID, user_id: int, persons: list[UUID]
     ):
         await self.rabbit.inform_lookalike_agent(
-            connection=connection,
+            channel=channel,
             lookalike_id=lookalike_id,
             user_id=user_id,
             persons=persons,

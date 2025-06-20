@@ -5,7 +5,10 @@ from schemas.pixel_installation import PixelInstallationRequest
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
 from dependencies import get_pixel_installation_service
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,14 +30,15 @@ async def check_pixel_installation(
         queue_name = f"sse_events_{str(result['user_id'])}"
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         message_body = {
             "status": PixelStatus.PIXEL_CODE_INSTALLED.value,
             "need_reload_page": pixel_installation_request.need_reload_page,
         }
 
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body=message_body,
             )

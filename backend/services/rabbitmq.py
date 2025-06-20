@@ -4,6 +4,7 @@ import logging
 from aio_pika import Message
 from pydantic import BaseModel
 
+from config.rmq_connection import publish_rabbitmq_message_with_channel
 from resolver import injectable
 from schemas.scripts.audience_source import MessageBody
 
@@ -38,3 +39,13 @@ class RabbitmqService:
             await channel.close()
         finally:
             await channel.close()
+
+
+    async def publish_rabbitmq_message_with_channel(
+        self, channel, queue_name: str, message_body: MessageBody | dict
+    ):
+        return await publish_rabbitmq_message_with_channel(
+            channel=channel,
+            queue_name=queue_name,
+            message_body=message_body,
+        )

@@ -285,23 +285,17 @@ class InsightsUtils:
         source_agent: SourceAgentService = None,
     ) -> InsightsByCategory:
         insights = InsightsByCategory()
-        user_ids = [
+        asids = [
             uid
             for (uid,) in db_session.query(
-                AudienceLookalikesPerson.enrichment_user_id
+                AudienceLookalikesPerson.enrichment_user_asid
             )
             .filter(AudienceLookalikesPerson.lookalike_id == lookalike_id)
             .all()
         ]
-        if not user_ids:
-            return insights
 
-        asids = [
-            asid
-            for (asid,) in db_session.query(EnrichmentUser.asid)
-            .filter(EnrichmentUser.id.in_(user_ids))
-            .all()
-        ]
+        if not asids:
+            return insights
 
         return InsightsUtils.process_insights_for_asids(
             insights=insights,

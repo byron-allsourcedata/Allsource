@@ -19,7 +19,13 @@ from resolver import Resolver
 
 from services.lookalike_filler import LookalikeFillerService
 
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
+from sqlalchemy.orm import Session
+
 
 load_dotenv()
 
@@ -38,11 +44,11 @@ def setup_logging(level):
     )
 
 
-async def send_sse(connection, user_id: int, data: dict):
+async def send_sse(channel, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=f"sse_events_{str(user_id)}",
             message_body={"status": AUDIENCE_LOOKALIKES_PROGRESS, "data": data},
         )
@@ -68,7 +74,7 @@ def get_max_size(lookalike_size):
 async def aud_sources_reader(
     message: IncomingMessage,
     db_session: Session,
-    connection,
+    channel,
     filler: LookalikeFillerService,
 ):
     try:
@@ -90,7 +96,7 @@ async def aud_sources_reader(
         )
 
         await send_sse(
-            connection,
+            channel,
             audience_lookalike.user_id,
             {
                 "lookalike_id": str(audience_lookalike.id),
@@ -109,7 +115,7 @@ async def aud_sources_reader(
         audience_lookalike = db_session.merge(audience_lookalike)
 
         await filler.inform_lookalike_agent(
-            connection,
+            channel,
             lookalike_id=audience_lookalike.id,
             user_id=audience_lookalike.user_id,
             persons=user_ids,
@@ -156,7 +162,7 @@ async def main():
             functools.partial(
                 aud_sources_reader,
                 db_session=db_session,
-                connection=connection,
+                channel=channel,
                 filler=filler,
             )
         )

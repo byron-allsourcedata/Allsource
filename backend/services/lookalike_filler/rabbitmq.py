@@ -12,7 +12,7 @@ class RabbitFillerService:
         self.rabbit = rabbit
 
     async def inform_lookalike_agent(
-        self, connection, lookalike_id: UUID, user_id: int, persons: list[UUID]
+        self, channel, lookalike_id: UUID, user_id: int, persons: list[UUID]
     ):
         persons_ids = [str(id) for id in persons]
         message_body = {
@@ -21,8 +21,8 @@ class RabbitFillerService:
             "enrichment_user": persons_ids,
         }
 
-        await self.rabbit.publish_rabbitmq_message(
-            connection=connection,
+        await self.rabbit.publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=self.AUDIENCE_LOOKALIKES_MATCHING,
             message_body=message_body,
         )
