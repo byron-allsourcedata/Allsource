@@ -17,7 +17,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
 
@@ -34,11 +34,11 @@ def setup_logging(level):
     )
 
 
-async def send_sse(connection, user_id: int, data: dict):
+async def send_sse(channel, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=f"sse_events_{str(user_id)}",
             message_body={"status": AUDIENCE_SMARTS_PROGRESS, "data": data},
         )
@@ -47,7 +47,7 @@ async def send_sse(connection, user_id: int, data: dict):
 
 
 async def aud_smarts_matching(
-    message: IncomingMessage, db_session: Session, connection
+    message: IncomingMessage, db_session: Session, channel
 ):
     try:
         message_body = json.loads(message.body)
@@ -92,7 +92,7 @@ async def aud_smarts_matching(
             )
 
             await send_sse(
-                connection,
+                channel,
                 user_id,
                 {
                     "smart_audience_id": aud_smart_id,
@@ -107,8 +107,8 @@ async def aud_smarts_matching(
                     "user_id": user_id,
                     "validation_params": validation_params,
                 }
-                await publish_rabbitmq_message(
-                    connection=connection,
+                await publish_rabbitmq_message_with_channel(
+                    channel=channel,
                     queue_name=AUDIENCE_VALIDATION_FILLER,
                     message_body=message_body,
                 )
@@ -163,7 +163,7 @@ async def main():
         await queue.consume(
             functools.partial(
                 aud_smarts_matching,
-                connection=connection,
+                channel=channel,
                 db_session=db_session,
             )
         )

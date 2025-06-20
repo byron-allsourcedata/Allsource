@@ -14,7 +14,7 @@ from sqlalchemy import create_engine
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 
@@ -38,7 +38,7 @@ def format_ids(ids):
 
 
 async def aud_smarts_reader(
-    message: IncomingMessage, db_session: Session, connection
+    message: IncomingMessage, db_session: Session, channel
 ):
     try:
         message_body = json.loads(message.body)
@@ -169,8 +169,8 @@ async def aud_smarts_reader(
                         str(person_id) for person_id in persons
                     ],
                 }
-                await publish_rabbitmq_message(
-                    connection=connection,
+                await publish_rabbitmq_message_with_channel(
+                    channel=channel,
                     queue_name=AUDIENCE_SMARTS_AGENT,
                     message_body=message_body,
                 )
@@ -227,7 +227,7 @@ async def main():
         )
         await reader_queue.consume(
             functools.partial(
-                aud_smarts_reader, db_session=db_session, connection=connection
+                aud_smarts_reader, db_session=db_session, channel=channel
             )
         )
 

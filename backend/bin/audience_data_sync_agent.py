@@ -17,7 +17,7 @@ from models.enrichment.enrichment_users import EnrichmentUser
 from utils import get_utc_aware_date
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import publish_rabbitmq_message_with_channel, RabbitMQConnection
 from config.aws import get_s3_client
 from enums import (
     ProccessDataSyncResult,
@@ -244,7 +244,8 @@ async def send_error_msg(
         return
 
     rabbitmq_connection = RabbitMQConnection()
-    connection = await rabbitmq_connection.connect()
+    rmq_connection = await rabbitmq_connection.connect()
+    channel = await rmq_connection.channel()
     queue_name = f"sse_events_{str(user_id)}"
     notification_text = account_notification.text.format(service_name)
     save_account_notification = (
@@ -255,8 +256,8 @@ async def send_error_msg(
         )
     )
     try:
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=queue_name,
             message_body={
                 "notification_text": notification_text,
