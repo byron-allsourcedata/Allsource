@@ -1,5 +1,6 @@
 import logging
 import statistics
+import time
 from typing import Tuple, Dict, List, TypedDict
 from uuid import UUID
 
@@ -168,6 +169,7 @@ class LookalikeFillerService:
         batch_buffer = []
 
         with rows_stream:
+            fetch_start = time.perf_counter()
             for batch in rows_stream:
                 dict_batch = [
                     {
@@ -183,10 +185,13 @@ class LookalikeFillerService:
 
                 if len(batch_buffer) < 100000:
                     continue
+                fetch_end = time.perf_counter()
+                logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
+
 
                 asids = [doc["asid"] for doc in batch_buffer]
 
-                _, duration = measure(
+                times, duration = measure(
                     lambda _: self.audiences_scores.calculate_batch_scores(
                         model=model,
                         asids=asids,
@@ -194,7 +199,10 @@ class LookalikeFillerService:
                         batch=batch_buffer,
                     )
                 )
-                print(f"lookalike calculation time: {duration:.3f}")
+
+                calc, inserts = times
+                logger.info(f"batch calculation time: {calc:.3f}")
+                logger.info(f"batch insert time: {inserts:.3f}")
 
                 count += len(asids)
                 _, duration = measure(
@@ -206,10 +214,15 @@ class LookalikeFillerService:
                         )
                     )
                 )
-                print(f"lookalike update time: {duration:.3f}")
+
                 self.db.commit()
-                print(f"processed users = {count}")
+                logger.info(f"lookalike update time: {duration:.3f}")
+                logger.info(f"processed users = {count}")
                 batch_buffer = []
+
+                total_batch_time = time.perf_counter() - fetch_start
+                logger.info(f"total batch time: {total_batch_time:.3f}")
+                fetch_start = time.perf_counter()
 
         self.db_workaround(lookalike_id=lookalike_id)
 
