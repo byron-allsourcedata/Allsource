@@ -43,7 +43,7 @@ from decimal import Decimal
 
 
 class SettingsService:
-    COST_CONTACT_ON_BASIC_PLAN = 0.8
+    COST_CONTACT_ON_BASIC_PLAN = Decimal(0.08)
 
     def __init__(
         self,
@@ -364,9 +364,7 @@ class SettingsService:
         return datetime.fromtimestamp(timestamp)
 
     def calculate_money_contacts_overage(self, user: User) -> Decimal:
-        return Decimal(
-            user.get("overage_leads_count") * self.COST_CONTACT_ON_BASIC_PLAN
-        )
+        return Decimal(user.get("overage_leads_count")) * self.COST_CONTACT_ON_BASIC_PLAN
 
     def extract_subscription_details(
         self, user: User
