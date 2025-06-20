@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field, root_validator
-from typing import Optional, Dict, Any
+from pydantic import BaseModel, Field
+from typing import Optional, Any
+from decimal import Decimal
 
 
 class ChangePassword(BaseModel):

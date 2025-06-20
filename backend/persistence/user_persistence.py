@@ -184,6 +184,7 @@ class UserPersistence:
                 "partner_is_active": partner_is_active,
                 "premium_source_credits": user.premium_source_credits,
                 "smart_audience_quota": user.smart_audience_quota,
+                "overage_leads_count": user.overage_leads_count,
             }
         self.db.rollback()
         if result_as_object:
