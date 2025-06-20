@@ -11,10 +11,15 @@ import {
 	RadioGroup,
 } from "@mui/material";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import ProgressBar from "@/components/ProgressBar";
 import CustomButton from "@/components/ui/CustomButton";
 import { Elements } from "@stripe/react-stripe-js";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import AddCardPopup from "./AddCard";
 import { loadStripe } from "@stripe/stripe-js";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axios from "axios";
 
 interface CardDetails {
 	id: string;
@@ -50,8 +55,38 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
 	const [openAddCard, setOpenAddCard] = useState(false);
+	const [loading, setLoading] = useState(false);
+	const router = useRouter();
 
-	const handlePay = () => {};
+	const handlePay = async () => {
+		try {
+			setLoading(true);
+			const response = await axiosInterceptorInstance.post(
+				"/settings/billing/pay-credits",
+				{},
+			);
+			if (response.data.success == true) {
+				showToast("Credits successfully purchased!");
+				router.push("/settings");
+			} else {
+				showErrorToast(response.data.error);
+			}
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				if (error.response) {
+					showErrorToast(
+						`Error: ${error.response.status} - ${error.response.data.message || "An error occurred."}`,
+					);
+				} else {
+					showErrorToast("Network error or no response received.");
+				}
+			} else {
+				showErrorToast("An unexpected error occurred.");
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 	const onClose = () => {};
 
 	const handleAddCard = () => {
@@ -69,6 +104,15 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			backgroundRepeat: "no-repeat",
 			backgroundImage: "url(/danger-fill-icon.svg)",
 		},
+		cardImageContainer: {
+			width: "62px",
+			height: "62px",
+			borderRadius: "4px",
+			border: "1px solid #f0f0f0",
+			display: "flex",
+			justifyContent: "center",
+			alignItems: "center",
+		},
 	};
 
 	const [selectedCard, setSelectedCard] = useState<string>("");
@@ -79,6 +123,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<>
+			{loading && <ProgressBar />}
 			<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
 				<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
 					Complete Your Payment
@@ -123,8 +168,11 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 											width: "100%",
 											gap: 2,
 											border: "1px solid #ddd",
+											borderColor:
+												selectedCard === String(index) ? "#3898FC" : "#ddd",
 											borderRadius: "4px",
 											p: 2,
+											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 										}}
 									>
 										<Radio value={index} />
@@ -136,17 +184,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 												alignItems: "center",
 											}}
 										>
-											<Box
-												sx={{
-													width: "62px",
-													height: "62px",
-													borderRadius: "4px",
-													border: "1px solid #f0f0f0",
-													display: "flex",
-													justifyContent: "center",
-													alignItems: "center",
-												}}
-											>
+											<Box sx={paymentFailStyles.cardImageContainer}>
 												<Image
 													src={
 														cardBrandImages[card.brand as CardBrand] ||
@@ -243,7 +281,6 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			<Elements stripe={stripePromise}>
 				<AddCardPopup
 					title="Add Card"
-					confirmButtonName="Save Card"
 					open={openAddCard}
 					onClose={handleCloseAddCard}
 					onSuccess={handleCheckoutSuccess}

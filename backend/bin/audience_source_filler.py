@@ -13,7 +13,8 @@ import io
 import csv
 import boto3
 import aioboto3
-from aio_pika import IncomingMessage, Connection
+from aio_pika import IncomingMessage, Connection, Channel
+
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 from itertools import islice
@@ -33,7 +34,10 @@ from models.audience_sources import AudienceSource
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.five_x_five_users import FiveXFiveUser
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 
 load_dotenv()
 
@@ -109,6 +113,7 @@ def parse_date(date_str: str) -> str | None:
 async def parse_csv_file(
     *,
     data: Dict,
+    channel: Channel,
     source_id: str,
     db_session: Session,
     s3_session: Session,
@@ -233,8 +238,8 @@ async def parse_csv_file(
                 status=status,
             )
 
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=AUDIENCE_SOURCES_MATCHING,
                 message_body=message_body,
             )
@@ -441,7 +446,11 @@ async def send_pixel_contacts(
 
 
 async def aud_sources_reader(
-    message: IncomingMessage, db_session: Session, s3_session, connection
+    message: IncomingMessage,
+    db_session: Session,
+    s3_session,
+    connection,
+    channel: Channel,
 ):
     try:
         message_body = json.loads(message.body)
@@ -455,6 +464,7 @@ async def aud_sources_reader(
         source_id = str(data.get("source_id"))
         if type == SourceType.CSV.value:
             await parse_csv_file(
+                channel=channel,
                 data=data,
                 source_id=source_id,
                 db_session=db_session,
@@ -537,6 +547,7 @@ async def main():
                 db_session=db_session,
                 s3_session=s3_session,
                 connection=connection,
+                channel=channel,
             )
         )
 

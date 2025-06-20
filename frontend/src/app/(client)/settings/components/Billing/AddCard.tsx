@@ -8,6 +8,7 @@ import {
 	Divider,
 	Box,
 	Typography,
+	LinearProgress,
 } from "@mui/material";
 import CustomButton from "@/components/ui/CustomButton";
 import {
@@ -20,6 +21,7 @@ import {
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
+import { styled } from "@mui/material/styles";
 
 interface CardDetails {
 	id: string;
@@ -32,10 +34,10 @@ interface CardDetails {
 
 interface PaymentPopupProps {
 	title: string;
-	confirmButtonName: string;
 	open: boolean;
 	onClose: () => void;
 	onSuccess: (cardDetails: CardDetails) => void;
+	confirmButtonSx: { p: string };
 }
 
 const addCardStyles = {
@@ -93,12 +95,22 @@ const stripeStyles = {
 	},
 };
 
+const BorderLinearProgress = styled(LinearProgress)(({}) => ({
+	height: 4,
+	borderRadius: 0,
+	backgroundColor: "#c6dafc",
+	"& .MuiLinearProgress-bar": {
+		borderRadius: 5,
+		backgroundColor: "#4285f4",
+	},
+}));
+
 const AddCardPopup: React.FC<PaymentPopupProps> = ({
 	title,
-	confirmButtonName,
 	open,
 	onClose,
 	onSuccess,
+	confirmButtonSx,
 }) => {
 	const [isDefault, setIsDefault] = useState(false);
 	const elements = useElements();
@@ -167,10 +179,29 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
+			<DialogTitle
+				sx={{ padding: 3, lineHeight: "22px" }}
+				className="first-sub-title"
+			>
 				{title}
 			</DialogTitle>
 			<Divider />
+			{loading && (
+				<Box
+					sx={{
+						width: "100%",
+						position: "absolute",
+						top: 70,
+						left: 0,
+						zIndex: 1200,
+					}}
+				>
+					<BorderLinearProgress
+						variant="indeterminate"
+						sx={{ borderRadius: "6px" }}
+					/>
+				</Box>
+			)}
 			<DialogContent>
 				<Box sx={{ display: "flex", justifyContent: "center", my: 2 }}>
 					<Box sx={addCardStyles.imageStyle} />
@@ -222,12 +253,20 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 					</Box>
 				</Box>
 			</DialogContent>
-			<DialogActions>
-				<CustomButton variant="outlined" onClick={onClose}>
+			<DialogActions sx={{ gap: 1 }}>
+				<CustomButton
+					variant="outlined"
+					onClick={onClose}
+					sx={{ p: "10px 44px" }}
+				>
 					Back
 				</CustomButton>
-				<CustomButton variant="contained" onClick={handleButtonClick}>
-					{confirmButtonName}
+				<CustomButton
+					variant="contained"
+					onClick={handleButtonClick}
+					sx={{ p: "10px 27.5px" }}
+				>
+					Save Card
 				</CustomButton>
 			</DialogActions>
 		</Dialog>

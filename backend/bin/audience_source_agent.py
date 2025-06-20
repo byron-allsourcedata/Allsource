@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import List, Union, Optional, Tuple
 import boto3
 from sqlalchemy import update, func
-from aio_pika import IncomingMessage, Connection
+from aio_pika import IncomingMessage, Connection, Channel
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
@@ -50,7 +50,10 @@ from schemas.scripts.audience_source import (
 from services.audience_sources import AudienceSourceMath
 from models.audience_sources import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
@@ -91,11 +94,11 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def send_sse(connection, user_id: int, data: dict):
+async def send_sse(channel, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=f"sse_events_{str(user_id)}",
             message_body={"status": SOURCE_PROCESSING_PROGRESS, "data": data},
         )
@@ -514,6 +517,7 @@ async def process_user_id(
 
 
 async def process_and_send_chunks(
+    channel: Channel,
     db_session: Session,
     source_id: str,
     batch_size: int,
@@ -615,8 +619,8 @@ async def process_and_send_chunks(
             outgoing.append((queue_name, msg))
 
     for queue, msg in outgoing:
-        await publish_rabbitmq_message(
-            connection=connection, queue_name=queue, message_body=msg
+        await publish_rabbitmq_message_with_channel(
+            channel=channel, queue_name=queue, message_body=msg
         )
         logging.info(
             f"Sent chunk to {queue}: {msg.data.data_for_normalize.matched_size}/{total_count}"
@@ -1071,6 +1075,7 @@ async def aud_sources_matching(
     message: IncomingMessage,
     db_session: Session,
     connection: Connection,
+    channel: Channel,
     similar_audience_service: SimilarAudienceService,
     audience_lookalikes_service: AudienceLookalikesService,
     source_agent_service: SourceAgentService,
@@ -1232,6 +1237,7 @@ async def aud_sources_matching(
 
         if type == "emails" and processed_records >= total_records:
             await process_and_send_chunks(
+                channel=channel,
                 db_session=db_session,
                 source_id=source_id,
                 batch_size=BATCH_SIZE,
@@ -1242,7 +1248,7 @@ async def aud_sources_matching(
 
         db_session.commit()
         await send_sse(
-            connection,
+            channel,
             user_id,
             {
                 "source_id": source_id,
@@ -1304,6 +1310,7 @@ async def main():
             functools.partial(
                 aud_sources_matching,
                 connection=connection,
+                channel=channel,
                 db_session=db_session,
                 similar_audience_service=similar_audience_service,
                 audience_lookalikes_service=audience_lookalikes_service,

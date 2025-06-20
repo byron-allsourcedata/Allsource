@@ -5,6 +5,7 @@ from dependencies import (
     check_user_authorization_without_pixel,
     check_user_authentication,
     check_user_setting_access,
+    check_team_access_owner_user,
 )
 from enums import TeamAccessLevel
 from models.users import User
@@ -371,3 +372,11 @@ def change_api_details(
     return settings_service.delete_api_details(
         user=user, api_keys_request=api_keys_request
     )
+
+
+@router.post("/billing/pay-credits")
+def pay_credits(
+    settings_service: SettingsService = Depends(get_settings_service),
+    user: dict = Depends(check_team_access_owner_user),
+):
+    return settings_service.pay_credits(user=user)

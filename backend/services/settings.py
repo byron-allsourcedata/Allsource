@@ -1,22 +1,15 @@
 import logging
-import os
 
-from models import UserSubscriptions
-from persistence.leads_persistence import LeadsPersistence
-from persistence.settings_persistence import SettingsPersistence
-from models.users import User
-from persistence.sendgrid_persistence import SendgridPersistence
-from persistence.user_persistence import UserPersistence
-from persistence.plans_persistence import PlansPersistence
-from services.subscriptions import SubscriptionService
-from services.domains import UserDomainsService
 from fastapi import HTTPException, status
-from .jwt_service import (
-    get_password_hash,
-    create_access_token,
-    decode_jwt_data,
-    verify_password,
-)
+
+from enums import VerifyToken, PaymentStatus
+from models import UserSubscriptions
+from models.users import User
+from persistence.leads_persistence import LeadsPersistence
+from persistence.plans_persistence import PlansPersistence
+from persistence.sendgrid_persistence import SendgridPersistence
+from persistence.settings_persistence import SettingsPersistence
+from persistence.user_persistence import UserPersistence
 from schemas.settings import (
     AccountDetailsRequest,
     BillingSubscriptionDetails,
@@ -30,7 +23,14 @@ from schemas.settings import (
     ActivePlan,
     DowngradePlan,
 )
-from enums import VerifyToken
+from services.domains import UserDomainsService
+from services.subscriptions import SubscriptionService
+from .jwt_service import (
+    get_password_hash,
+    create_access_token,
+    decode_jwt_data,
+    verify_password,
+)
 
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
@@ -39,9 +39,12 @@ from enums import SettingStatus, SendgridTemplate, TeamAccessLevel
 import hashlib
 import json
 from services.stripe_service import *
+from decimal import Decimal
 
 
 class SettingsService:
+    COST_CONTACT_ON_BASIC_PLAN = Decimal(0.08)
+
     def __init__(
         self,
         settings_persistence: SettingsPersistence,
@@ -360,6 +363,12 @@ class SettingsService:
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
 
+    def calculate_money_contacts_overage(self, user: User) -> Decimal:
+        return (
+            Decimal(user.get("overage_leads_count"))
+            * self.COST_CONTACT_ON_BASIC_PLAN
+        )
+
     def extract_subscription_details(
         self, user: User
     ) -> BillingSubscriptionDetails:
@@ -380,6 +389,9 @@ class SettingsService:
         validation_funds_limit = current_plan.validation_funds
         leads_credits_limit = current_plan.leads_credits
         smart_audience_quota_limit = current_plan.smart_audience_quota
+        money_contacts_overage = self.calculate_money_contacts_overage(
+            user=user
+        )
         total_key = (
             "monthly_total"
             if current_plan.interval == "month"
@@ -405,7 +417,7 @@ class SettingsService:
             else (
                 self.calculate_final_price(subscription, user_subscription)
                 if subscription and user_subscription
-                else "$0"
+                else f"${money_contacts_overage.quantize(Decimal('0.01'))}"
             )
         )
 
@@ -417,7 +429,7 @@ class SettingsService:
 
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
-                detail_type="time",
+                detail_type="billing_cycle",
                 plan_start=user_subscription.plan_start,
                 plan_end=user_subscription.plan_end,
             ),
@@ -444,7 +456,7 @@ class SettingsService:
             ),
             premium_sources_funds="Coming soon",
             next_billing_date=NextBillingDate(
-                detail_type="as_is", value=next_billing_date
+                detail_type="next_billing_date", value=next_billing_date
             ),
             active=ActivePlan(detail_type="as_is", value=is_active),
         )
@@ -533,6 +545,9 @@ class SettingsService:
             "leads_credits": user.get("leads_credits"),
             "validation_funds": user.get("validation_funds"),
             "premium_source_credits": user.get("premium_source_credits"),
+            "money_because_of_overage": self.calculate_money_contacts_overage(
+                user=user
+            ),
             "smart_audience_quota": {
                 "available": user.get("smart_audience_quota") != 0
                 and (
@@ -744,3 +759,32 @@ class SettingsService:
                 api_keys_id=api_keys_request.id,
             )
         return SettingStatus.SUCCESS
+
+    def pay_credits(self, user: dict):
+        user_subscription = self.subscription_service.get_user_subscription(
+            user_id=user.get("id")
+        )
+        if not user_subscription:
+            logger.error(f"Subscription not found for user {user.get('id')}")
+            return
+        credit_plan = self.plan_persistence.get_subscription_plan_by_id(
+            id=user_subscription.contact_credit_plan_id
+        )
+        result = purchase_product(
+            customer_id=user.get("customer_id"),
+            price_id=credit_plan.stripe_price_id,
+            quantity=user.get("overage_leads_count"),
+        )
+        if result["success"]:
+            event = result["stripe_payload"]
+            customer_id = event["customer"]
+            self.user_persistence.decrease_overage_leads_count(
+                customer_id=customer_id,
+                quantity=event["metadata"]["quantity"],
+            )
+            self.subscription_service.update_subscription_status(
+                customer_id=customer_id, status=PaymentStatus.ACTIVE.value
+            )
+            return {"success": True}
+
+        return result

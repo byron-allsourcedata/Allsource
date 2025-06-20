@@ -11,19 +11,18 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from db_dependencies import Db
 from resolver import Resolver
-from utils import send_sse
 from services.stripe_service import StripeService
 from models import (
     TransactionHistory,
 )
 from aio_pika import IncomingMessage, Channel
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import RabbitMQConnection
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
 load_dotenv()
 
-CHARGE_CREDITS_FILLER = "charge_credits_filler"
+CHARGE_CREDITS = "charge_credits"
 
 
 def setup_logging(level):
@@ -31,14 +30,6 @@ def setup_logging(level):
         level=level,
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-
-async def send_leads_to_queue(rmq_connection, processed_lead):
-    await publish_rabbitmq_message(
-        connection=rmq_connection,
-        queue_name=CHARGE_CREDITS_FILLER,
-        message_body=processed_lead,
     )
 
 
@@ -66,6 +57,7 @@ async def process_rmq_message(
         event_data = StripeService.record_usage(
             customer_id=customer_id, quantity=overage_leads_count
         )
+        logging.info(f"event sent{event_data}")
         save_transaction(db_session=db_session, event_data=event_data)
 
         db_session.commit()
@@ -101,7 +93,7 @@ async def main():
         channel = await rmq_connection.channel()
         await channel.set_qos(prefetch_count=1)
         queue = await channel.declare_queue(
-            name=CHARGE_CREDITS_FILLER,
+            name=CHARGE_CREDITS,
             durable=True,
         )
 

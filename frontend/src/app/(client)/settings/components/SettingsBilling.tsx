@@ -45,8 +45,16 @@ interface CardDetails {
 
 interface SubscriptionDetails {
 	active: { detail_type: string; value: boolean };
-	billing_cycle: { detail_type: string; plan_start: string; plan_end: string };
-	contacts_downloads: { detail_type: string; value: string };
+	billing_cycle: {
+		detail_type: string;
+		plan_start: string | null;
+		plan_end: string | null;
+	};
+	contacts_downloads: {
+		detail_type: string;
+		limit_value: number;
+		current_value: number;
+	};
 	next_billing_date: { detail_type: string; value: string };
 	plan_name: { detail_type: string; value: string };
 	yearly_total?: { detail_type: string; value: string };
@@ -58,7 +66,11 @@ interface SubscriptionDetails {
 		limit_value: number;
 	};
 	premium_sources_funds: string;
-	smart_audience: string;
+	smart_audience: {
+		detail_type: string;
+		current_value: number;
+		limit_value: number;
+	};
 }
 
 interface BillingDetails {
@@ -82,6 +94,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
 	const [smartAudienceCollected, setSmartAudienceCollected] = useState(0);
+	const [moneyContactsOverage, setMoneyContactsOverage] = useState(0);
 	const [planPremiumSourceCollected, setPlanPremiumSourceCollected] =
 		useState(0);
 	const [premiumSourceCollected, setPremiumSourceCollected] = useState(0);
@@ -103,6 +116,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
+	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
+		useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
@@ -125,6 +140,9 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			} else {
 				setCardDetails([...response.data.card_details]);
 				setContactsCollected(response.data.usages_credits.leads_credits);
+				setMoneyContactsOverage(
+					response.data.usages_credits.money_because_of_overage,
+				);
 				setPlanContactsCollected(
 					response.data.usages_credits.plan_leads_credits,
 				);
@@ -133,7 +151,10 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 					response.data.usages_credits.premium_source_credits,
 				);
 				setSmartAudienceCollected(
-					response.data.usages_credits.smart_audience_quota,
+					response.data.usages_credits.smart_audience_quota.value,
+				);
+				setIsAvailableSmartAudience(
+					response.data.usages_credits.smart_audience_quota.available,
 				);
 				setValidationFundsLimitedData(
 					response.data.usages_credits.validation_funds_limit,
@@ -171,26 +192,53 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			.replace(/\b\w/g, (char) => char.toUpperCase());
 	};
 
+	const printBillingCycle = (
+		planStart: string | null,
+		planEnd: string | null,
+	) => {
+		if (planStart && planEnd) {
+			return (
+				`${dayjs(planStart).format("MMM D, YYYY")}` +
+				` to ${dayjs(planEnd).format("MMM D, YYYY")}`
+			);
+		} else if (planEnd) {
+			return `N/A` + ` to ${dayjs(planEnd).format("MMM D, YYYY")}`;
+		} else {
+			return "Unlimited";
+		}
+	};
+
+	const printNextBillingDate = (billinDate: string | null) => {
+		if (billinDate) {
+			return `On ${billinDate}`;
+		}
+		return "Unlimited";
+	};
+
 	const renderValue = (value: any) => {
-		if (value?.current_value === -1 || value?.limit_value === -1) {
+		if (
+			value?.current_value === -1 ||
+			value?.limit_value === -1 ||
+			value?.limit_value === null ||
+			value?.current_value === null
+		) {
 			return "Unlimited";
 		}
 
+		const { limit_value, current_value } = value;
+		const limit = current_value > limit_value ? current_value : limit_value;
+
 		switch (value?.detail_type) {
 			case "funds":
-				return `$${value.current_value?.toLocaleString("en-US")}/$${value.limit_value?.toLocaleString("en-US")}`;
+				return `$${value.current_value?.toLocaleString("en-US")}/$${limit?.toLocaleString("en-US")}`;
 			case "as_is":
 				return value.value;
 			case "limited":
-				return `${value.current_value?.toLocaleString("en-US")}/${value.limit_value?.toLocaleString("en-US")}`;
-			case "time":
-				return (
-					`${dayjs(value.plan_start).format("MMM D, YYYY")}` +
-					(value.plan_end
-						? ` to ${dayjs(value.plan_end).format("MMM D, YYYY")}`
-						: "")
-				);
-
+				return `${value.current_value?.toLocaleString("en-US")}/${limit?.toLocaleString("en-US")}`;
+			case "billing_cycle":
+				return printBillingCycle(value.plan_start, value.plan_end);
+			case "next_billing_date":
+				return printNextBillingDate(value.value);
 			default:
 				return "Coming soon";
 		}
@@ -314,8 +362,17 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 		}
 	};
 
-	const handleCheckoutSuccess = (data: any) => {
-		setCardDetails((prevDetails) => [...prevDetails, data]);
+	const handleCheckoutSuccess = (data: CardDetails) => {
+		setCardDetails((prevDetails) =>
+			data.is_default
+				? prevDetails
+						.map((card) => ({
+							...card,
+							is_default: false,
+						}))
+						.concat(data)
+				: [...prevDetails, data],
+		);
 	};
 
 	const handleRedirectSubscription = () => {
@@ -419,14 +476,14 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											alignItems: "center",
 										}}
 									>
-										<Button onClick={handleOpen} sx={{ padding: 2 }}>
-											<Image
-												src="/add-square.svg"
-												alt="add-square"
-												height={24}
-												width={24}
-											/>
-										</Button>
+										<Image
+											onClick={handleOpen}
+											src="/add-square.svg"
+											alt="add-square"
+											height={24}
+											width={24}
+											style={{ cursor: "pointer" }}
+										/>
 									</Box>
 								</Box>
 							)}
@@ -579,10 +636,10 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 							<Elements stripe={stripePromise}>
 								<AddCardPopup
 									title="Add Card"
-									confirmButtonName="Save Card"
 									open={open}
 									onClose={handleClose}
 									onSuccess={handleCheckoutSuccess}
+									confirmButtonSx={{ p: "10px 27.5px" }}
 								/>
 							</Elements>
 						</Box>
@@ -627,16 +684,26 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 									<>
 										<UsageItem
 											title="Contacts Downloaded"
-											limitValue={planContactsCollected}
+											limitValue={
+												contactsCollected > planContactsCollected &&
+												moneyContactsOverage === 0
+													? contactsCollected
+													: planContactsCollected
+											}
 											currentValue={contactsCollected}
 											needButton={false}
+											moneyContactsOverage={moneyContactsOverage}
 										/>
 										<UsageItem
 											title="Smart Audience"
-											limitValue={planSmartAudienceCollected}
+											limitValue={
+												smartAudienceCollected > planSmartAudienceCollected
+													? smartAudienceCollected
+													: planSmartAudienceCollected
+											}
 											currentValue={smartAudienceCollected}
+											available={isAvailableSmartAudience}
 											needButton={false}
-											commingSoon={true}
 										/>
 									</>
 								)}
@@ -855,7 +922,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 																				},
 																			}}
 																		>
-																			On {renderValue(value)}
+																			{renderValue(value)}
 																		</Typography>
 																	</Box>
 																</Box>
@@ -879,7 +946,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 																			if (
 																				(nextValue &&
 																					nextKey === "monthly_total") ||
-																				nextKey === "yearly_total"
+																				(nextValue &&
+																					nextKey === "yearly_total")
 																			) {
 																				return (
 																					<Box
@@ -1020,12 +1088,20 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 									<>
 										<UsageItem
 											title="Validation funds"
-											limitValue={validationLimitFundsCollected}
+											limitValue={
+												validationFundsCollected > validationLimitFundsCollected
+													? validationFundsCollected
+													: validationLimitFundsCollected
+											}
 											currentValue={validationFundsCollected}
 										/>
 										<UsageItem
 											title="Premium Source funds"
-											limitValue={planPremiumSourceCollected}
+											limitValue={
+												premiumSourceCollected > planPremiumSourceCollected
+													? premiumSourceCollected
+													: planPremiumSourceCollected
+											}
 											currentValue={premiumSourceCollected}
 											commingSoon={true}
 										/>

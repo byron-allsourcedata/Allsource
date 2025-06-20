@@ -2,7 +2,10 @@ from enums import PaymentStatus
 from persistence.user_persistence import UserPersistence
 from persistence.user_subscriptions import UserSubscriptionsPersistence
 from resolver import injectable
-from services.stripe_service import StripeService
+from services.stripe_service import (
+    StripeService,
+    save_payment_details_in_stripe,
+)
 from services.subscriptions.basic import BasicPlanService
 from services.subscriptions.invoice import InvoiceService
 
@@ -25,6 +28,7 @@ class SubscriptionWebhookService:
 
     def move_to_basic_plan(self, customer_id: str):
         self.basic_plan_service.move_to_basic_plan(customer_id)
+        save_payment_details_in_stripe(customer_id=customer_id)
 
     def update_subscription_status(self, customer_id: str, status: str):
         subscription = (
@@ -57,6 +61,12 @@ class SubscriptionWebhookService:
         )
         self.update_subscription_status(
             customer_id=customer_id, status=PaymentStatus.ACTIVE.value
+        )
+        return "SUCCESS"
+
+    def save_intent_payment(self, event_type: str, event: dict):
+        self.invoice_service.save_invoice_payment(
+            event_type=event_type, invoices_data=event
         )
         return "SUCCESS"
 

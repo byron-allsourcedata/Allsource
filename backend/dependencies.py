@@ -628,6 +628,21 @@ def check_team_access_standard_user(
     return user
 
 
+def check_team_access_owner_user(
+    user: dict = Depends(check_user_authentication),
+):
+    if user.get("team_member"):
+        team_member = user.get("team_member")
+        if team_member.get("team_access_level") not in {
+            TeamAccessLevel.OWNER.value,
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Owner only.",
+            )
+    return user
+
+
 def get_users_service(
     user_persistence: UserPersistence,
     meeting_schedule: MeetingScheduleService,
