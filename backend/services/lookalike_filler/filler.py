@@ -183,7 +183,7 @@ class LookalikeFillerService:
 
                 batch_buffer.extend(dict_batch)
 
-                if len(batch_buffer) < 500_000:
+                if len(batch_buffer) < 1_000_000:
                     continue
                 fetch_end = time.perf_counter()
                 logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
