@@ -361,15 +361,17 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			setIsLoading(false);
 		}
 	};
-	
+
 	const handleCheckoutSuccess = (data: CardDetails) => {
 		setCardDetails((prevDetails) =>
 			data.is_default
-				? prevDetails.map((card) => ({
-						...card,
-						is_default: false,
-				  })).concat(data)
-				: [...prevDetails, data]
+				? prevDetails
+						.map((card) => ({
+							...card,
+							is_default: false,
+						}))
+						.concat(data)
+				: [...prevDetails, data],
 		);
 	};
 
