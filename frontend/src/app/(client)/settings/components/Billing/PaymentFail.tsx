@@ -83,7 +83,6 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	const [selectedCard, setSelectedCard] = useState<string>("");
 
 	const handleCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		console.log("Selected card index:", event.target.value);
 		setSelectedCard(event.target.value);
 	};
 
