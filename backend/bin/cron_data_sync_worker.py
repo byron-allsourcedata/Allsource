@@ -12,7 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from utils import get_utc_aware_date
-from config.rmq_connection import publish_rabbitmq_message
+from config.rmq_connection import publish_rabbitmq_message_with_channel
 from config.aws import get_s3_client
 from enums import (
     ProccessDataSyncResult,
@@ -187,6 +187,7 @@ async def send_error_msg(
 ):
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
+    channel = await connection.channel()
     queue_name = f"sse_events_{str(user_id)}"
     account_notification = (
         notification_persistence.get_account_notification_by_title(title)
@@ -204,8 +205,8 @@ async def send_error_msg(
             )
         )
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "notification_text": notification_text,
