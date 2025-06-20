@@ -231,7 +231,7 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 				<CustomButton
 					variant="contained"
 					onClick={handleButtonClick}
-					sx={{p: "10px 27.5px"}}
+					sx={{ p: "10px 27.5px" }}
 				>
 					Save Card
 				</CustomButton>
