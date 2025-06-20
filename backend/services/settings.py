@@ -364,7 +364,10 @@ class SettingsService:
         return datetime.fromtimestamp(timestamp)
 
     def calculate_money_contacts_overage(self, user: User) -> Decimal:
-        return Decimal(user.get("overage_leads_count")) * self.COST_CONTACT_ON_BASIC_PLAN
+        return (
+            Decimal(user.get("overage_leads_count"))
+            * self.COST_CONTACT_ON_BASIC_PLAN
+        )
 
     def extract_subscription_details(
         self, user: User

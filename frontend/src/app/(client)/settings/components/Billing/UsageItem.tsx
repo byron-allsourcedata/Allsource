@@ -69,7 +69,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 						sx={{ lineHeight: "20px !important" }}
 					>
 						${moneyContactsOverage}
-					</Typography>	
+					</Typography>
 				)}
 				{needButton && (
 					<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
