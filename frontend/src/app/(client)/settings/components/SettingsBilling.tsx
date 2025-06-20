@@ -285,7 +285,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 		);
 	};
 
-
 	const deleteOpen = Boolean(deleteAnchorEl);
 	const deleteId = deleteOpen ? "delete-popover" : undefined;
 
@@ -595,7 +594,10 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 					</Box>
 
 					<Box sx={{ gridArea: "details", padding: "0px" }}>
-						<BillingDetails billingDetails={billingDetails} canceledAt={canceled_at || ""}/>
+						<BillingDetails
+							billingDetails={billingDetails}
+							canceledAt={canceled_at || ""}
+						/>
 					</Box>
 
 					<Box sx={{ gridArea: "funds", padding: "0px" }}>
