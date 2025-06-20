@@ -234,7 +234,7 @@ class SimilarAudiencesScoresService:
 
         return duration, insert_time
 
-    @deprecated
+    @deprecated("deprecated")
     def calculate_batch_scores(
         self,
         asids: List[UUID],
