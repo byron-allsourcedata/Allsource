@@ -639,7 +639,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 									open={open}
 									onClose={handleClose}
 									onSuccess={handleCheckoutSuccess}
-									confirmButtonSx={{ p: "10px 27.5px" }}
 								/>
 							</Elements>
 						</Box>

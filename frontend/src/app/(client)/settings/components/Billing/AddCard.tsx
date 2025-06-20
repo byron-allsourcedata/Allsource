@@ -37,7 +37,6 @@ interface PaymentPopupProps {
 	open: boolean;
 	onClose: () => void;
 	onSuccess: (cardDetails: CardDetails) => void;
-	confirmButtonSx: { p: string };
 }
 
 const addCardStyles = {
@@ -110,7 +109,6 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 	open,
 	onClose,
 	onSuccess,
-	confirmButtonSx,
 }) => {
 	const [isDefault, setIsDefault] = useState(false);
 	const elements = useElements();
