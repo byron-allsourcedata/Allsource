@@ -89,7 +89,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			setLoading(false);
 		}
 	};
-	const onClose = () => { };
+	const onClose = () => {};
 
 	const handleAddCard = () => {
 		setOpenAddCard(true);
