@@ -14,7 +14,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from dotenv import load_dotenv
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 
 # Load environment variables
 load_dotenv()
@@ -48,9 +51,7 @@ def assume_role(role_arn, sts_client):
 file_list = []
 
 
-async def on_message_received(
-    message_body, s3_session, sts_client, rmq_connection
-):
+async def on_message_received(message_body, s3_session, sts_client, channel):
     message_body_json = json.loads(message_body)
     file_name = message_body_json["file_name"]
     logging.info(f"{file_name}")
@@ -77,8 +78,8 @@ async def on_message_received(
                     with gzip.open(temp_file.name, "rt", encoding="utf-8") as f:
                         df = pd.read_csv(f)
                     for _, row in df.iterrows():
-                        await publish_rabbitmq_message(
-                            connection=rmq_connection,
+                        await publish_rabbitmq_message_with_channel(
+                            channel=channel,
                             queue_name=QUEUE_HEMS_EXPORT,
                             message_body={"hem": row.to_dict()},
                         )
@@ -114,7 +115,7 @@ async def main():
             if message:
                 await message.ack()
                 await on_message_received(
-                    message.body, session, sts_client, connection
+                    message.body, session, sts_client, channel
                 )
             else:
                 logging.info("No message returned")
