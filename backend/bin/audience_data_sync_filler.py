@@ -3,9 +3,13 @@ import logging
 import os
 import sys
 
+
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from resolver import Resolver
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
@@ -32,7 +36,7 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
-from dependencies import PlansPersistence
+from dependencies import PlansPersistence, Db
 
 load_dotenv()
 
@@ -373,20 +377,11 @@ async def main():
 
     setup_logging(log_level)
     logging.info("Started")
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
-    engine = create_engine(
-        f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-        pool_pre_ping=True,
-    )
-    Session = sessionmaker(bind=engine)
     sleep_interval = SHORT_SLEEP
     while True:
         db_session = None
         rabbitmq_connection = None
+        resolver = Resolver()
         try:
             rabbitmq_connection = RabbitMQConnection()
             rmq_connection = await rabbitmq_connection.connect()
@@ -397,13 +392,9 @@ async def main():
                 durable=True,
             )
             if queue.declaration_result.message_count == 0:
-                db_session = Session()
-                subscription_service = SubscriptionService(
-                    plans_persistence=PlansPersistence(db_session),
-                    user_persistence_service=None,
-                    referral_service=None,
-                    partners_persistence=None,
-                    db=db_session,
+                db_session = await resolver.resolve(Db)
+                subscription_service = await resolver.resolve(
+                    SubscriptionService
                 )
                 await process_user_integrations(
                     channel, db_session, subscription_service
