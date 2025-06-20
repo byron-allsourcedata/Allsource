@@ -183,7 +183,7 @@ class LookalikeFillerService:
 
                 batch_buffer.extend(dict_batch)
 
-                if len(batch_buffer) < 100000:
+                if len(batch_buffer) < 500_000:
                     continue
                 fetch_end = time.perf_counter()
                 logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
@@ -211,11 +211,12 @@ class LookalikeFillerService:
                             update(AudienceLookalikes)
                             .where(AudienceLookalikes.id == lookalike_id)
                             .values(processed_train_model_size=count)
-                        )
+                        ),
+                        self.db.commit(),
                     )
                 )
 
-                self.db.commit()
+
                 logger.info(f"lookalike update time: {duration:.3f}")
                 logger.info(f"processed users = {count}")
                 batch_buffer = []
