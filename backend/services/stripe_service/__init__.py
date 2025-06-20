@@ -324,7 +324,7 @@ def get_last_payment_intent(customer_id):
     return None
 
 
-def purchase_product(customer_id, price_id, quantity, product_description):
+def purchase_product(customer_id, price_id, quantity, product_description=None):
     result = {"success": False}
     try:
         customer = stripe.Customer.retrieve(customer_id)
@@ -333,10 +333,11 @@ def purchase_product(customer_id, price_id, quantity, product_description):
         )
 
         if not default_payment_method_id:
-            result["error"] = (
-                "The customer doesn't have a default payment method."
-            )
+            result["error"] = "The customer doesn't have a default payment method."
             return result
+
+        if not product_description:
+            product_description = 'Charge overage credits'
 
         price = stripe.Price.retrieve(price_id)
         amount = price.unit_amount * quantity

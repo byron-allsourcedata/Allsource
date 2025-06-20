@@ -60,6 +60,20 @@ class SubscriptionWebhookService:
         )
         return "SUCCESS"
 
+    def save_intent_payment(self, event_type: str, event: dict):
+        customer_id = event["data"]["object"]["customer"]
+        self.invoice_service.save_invoice_payment(
+            event_type=event_type, invoices_data=event
+        )
+        self.user_persistence.decrease_overage_leads_count(
+            customer_id=customer_id,
+            quantity=event["data"]["object"]["lines"]["data"][0]["quantity"],
+        )
+        self.update_subscription_status(
+            customer_id=customer_id, status=PaymentStatus.ACTIVE.value
+        )
+        return "SUCCESS"
+
     def invoice_payment_failed(self, event_type: str, event: dict):
         self.invoice_service.save_invoice_payment(
             event_type=event_type, invoices_data=event

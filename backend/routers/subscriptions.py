@@ -271,6 +271,10 @@ async def update_payment(
             return subscription_webhooks.invoice_payment_failed(
                 event_type=event_type, event=event
             )
+        case "payment_intent.succeeded":
+            return subscription_webhooks.save_intent_payment(
+                event_type=event_type, event=event
+            )
 
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"

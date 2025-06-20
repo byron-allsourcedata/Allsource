@@ -1,5 +1,8 @@
 import logging
 import os
+from typing import Optional
+
+import stripe
 
 from models import UserSubscriptions
 from persistence.leads_persistence import LeadsPersistence
@@ -31,6 +34,18 @@ from schemas.settings import (
     DowngradePlan,
 )
 from enums import VerifyToken
+from .stripe_service import (
+    get_billing_details_by_userid,
+    get_product_from_price_id,
+    get_price_from_price_id,
+    get_card_details_by_customer_id,
+    get_billing_history_by_userid,
+    add_card_to_customer,
+    detach_card_from_customer,
+    get_billing_by_invoice_id,
+    set_default_card_for_customer,
+    purchase_product
+)
 
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
@@ -38,7 +53,6 @@ from .sendgrid import SendgridHandler
 from enums import SettingStatus, SendgridTemplate, TeamAccessLevel
 import hashlib
 import json
-from services.stripe_service import *
 
 
 class SettingsService:
@@ -744,3 +758,12 @@ class SettingsService:
                 api_keys_id=api_keys_request.id,
             )
         return SettingStatus.SUCCESS
+
+    def pay_credits(self, user: dict):
+        user_subscription = self.subscription_service.get_user_subscription(user_id=user.get('id'))
+        if not user_subscription:
+            logger.error(f"Subscription not found for user {user.get('id')}")
+            return
+        credit_plan = self.plan_persistence.get_subscription_plan_by_id(id=user_subscription.contact_credit_plan_id)
+        a = purchase_product(customer_id=user.get('customer_id'), price_id=credit_plan.stripe_price_id, quantity=user.get('overage_leads_count'))
+        print(a)

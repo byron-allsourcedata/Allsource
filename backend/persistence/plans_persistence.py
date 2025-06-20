@@ -32,6 +32,14 @@ class PlansPersistence:
         )
         return query.all()
 
+    def get_subscription_plan_by_id(self, id: int):
+        subscription_plan = (
+            self.db.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.id == id)
+            .first()
+        )
+        return subscription_plan
+
     def save_reason_unsubscribe(
         self, reason_unsubscribe, user_id, cancel_scheduled_at
     ):

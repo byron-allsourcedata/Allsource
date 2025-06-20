@@ -11,10 +11,14 @@ import {
 	RadioGroup,
 } from "@mui/material";
 import Image from "next/image";
+import ProgressBar from "@/components/ProgressBar";
 import CustomButton from "@/components/ui/CustomButton";
 import { Elements } from "@stripe/react-stripe-js";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import AddCardPopup from "./AddCard";
 import { loadStripe } from "@stripe/stripe-js";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axios from "axios";
 
 interface CardDetails {
 	id: string;
@@ -50,8 +54,41 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
 	const [openAddCard, setOpenAddCard] = useState(false);
+	const [loading, setLoading] = useState(false);
 
-	const handlePay = () => {};
+	const handlePay = async () => {
+		try {
+			setLoading(true);
+			const response = await axiosInterceptorInstance.post(
+				"/settings/billing/pay-credits",{},
+			);
+			if (response.status === 200) {
+				const { status } = response.data;
+				if (status === "SUCCESS") {
+					showToast("Card added successfully!");
+					onClose();
+				} else {
+					showErrorToast("Unknown response received.");
+				}
+			} else {
+				showErrorToast("Unexpected response status: " + response.status);
+			}
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				if (error.response) {
+					showErrorToast(
+						`Error: ${error.response.status} - ${error.response.data.message || "An error occurred."}`,
+					);
+				} else {
+					showErrorToast("Network error or no response received.");
+				}
+			} else {
+				showErrorToast("An unexpected error occurred.");
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 	const onClose = () => {};
 
 	const handleAddCard = () => {
@@ -79,6 +116,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<>
+		{loading && <ProgressBar />}
 			<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
 				<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
 					Complete Your Payment
