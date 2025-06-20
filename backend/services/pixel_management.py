@@ -117,3 +117,8 @@ class PixelManagementService:
                     )
 
         return result
+
+    def get_additional_scripts_info(self, user_id: int, domain_id: int):
+        return self.domain_persistence.get_additional_scripts_info(
+            user_id=user_id, domain_id=domain_id
+        )
