@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 
 from dependencies import (
@@ -14,6 +16,7 @@ from schemas.settings import (
     SendBilling,
     PaymentCard,
     ApiKeysRequest,
+    PlansResponse,
 )
 from schemas.users import VerifyTokenResponse
 from services.settings import SettingsService
@@ -396,7 +399,6 @@ def pay_credits(
 
 @router.get(
     "/plans",
-    response_model=PlansResponse,
     summary="Get list of subscription plans",
     tags=["Plans"],
 )

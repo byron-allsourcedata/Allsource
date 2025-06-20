@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Any
+from typing import Optional, Any, List
 from decimal import Decimal
 
 
@@ -117,3 +117,28 @@ class BillingSubscriptionDetails(BaseModel):
     subscription_details: Optional[SubscriptionDetails]
     downgrade_plan: Optional[DowngradePlan]
     canceled_at: Optional[str]
+
+
+class Advantage(BaseModel):
+    good: bool
+    name: str
+    value: str
+
+
+class Price(BaseModel):
+    value: str
+    y: str
+
+
+class Plan(BaseModel):
+    title: str
+    alias: str
+    price: Price
+    permanent_limits: List[Advantage]
+    monthly_limits: List[Advantage]
+    gifted_funds: List[Advantage]
+
+
+class PlansResponse(BaseModel):
+    monthly: List[Plan]
+    yearly: List[Plan]
