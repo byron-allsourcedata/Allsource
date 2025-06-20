@@ -417,7 +417,7 @@ class SettingsService:
             else (
                 self.calculate_final_price(subscription, user_subscription)
                 if subscription and user_subscription
-                else f"${money_contacts_overage.quantize(Decimal('0.1'))}"
+                else f"${money_contacts_overage.quantize(Decimal('0.01'))}"
             )
         )
 
