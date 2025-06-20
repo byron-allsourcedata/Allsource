@@ -6,7 +6,10 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from sqlalchemy import create_engine, and_, or_, select
 from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
@@ -43,9 +46,9 @@ def setup_logging(level):
     )
 
 
-async def send_leads_to_queue(rmq_connection, processed_lead):
-    await publish_rabbitmq_message(
-        connection=rmq_connection,
+async def send_leads_to_queue(channel, processed_lead):
+    await publish_rabbitmq_message_with_channel(
+        channel=channel,
         queue_name=CRON_DATA_SYNC_LEADS,
         message_body=processed_lead,
     )
@@ -213,7 +216,7 @@ def get_previous_imported_leads(session, data_sync_id):
 
 async def send_leads_to_rmq(
     session,
-    rmq_connection,
+    channel,
     lead_users,
     data_sync,
     user_integrations_service_name,
@@ -254,10 +257,10 @@ async def send_leads_to_rmq(
         "users_id": users_id,
         "service_name": user_integrations_service_name,
     }
-    await send_leads_to_queue(rmq_connection, processed_lead)
+    await send_leads_to_queue(channel, processed_lead)
 
 
-async def process_user_integrations(rmq_connection, session):
+async def process_user_integrations(channel, session):
     user_integrations, data_syncs = fetch_data_syncs(session)
     for i, data_sync in enumerate(data_syncs):
         if (
@@ -317,7 +320,7 @@ async def process_user_integrations(rmq_connection, session):
         lead_users = sorted(lead_users, key=lambda x: x.id)
         await send_leads_to_rmq(
             session,
-            rmq_connection,
+            channel,
             lead_users,
             data_sync,
             user_integrations[i].service_name,
@@ -369,7 +372,7 @@ async def main():
             )
             db_session = Session()
 
-            await process_user_integrations(rmq_connection, db_session)
+            await process_user_integrations(channel, db_session)
 
             logging.info("Processing completed. Sleeping for 10 minutes...")
         except Exception:
