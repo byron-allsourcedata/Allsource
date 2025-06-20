@@ -8,7 +8,7 @@ import {
 	Divider,
 	Box,
 	Typography,
-	LinearProgress
+	LinearProgress,
 } from "@mui/material";
 import CustomButton from "@/components/ui/CustomButton";
 import {
@@ -177,7 +177,10 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-			<DialogTitle sx={{ padding: 3, lineHeight: "22px" }} className="first-sub-title">
+			<DialogTitle
+				sx={{ padding: 3, lineHeight: "22px" }}
+				className="first-sub-title"
+			>
 				{title}
 			</DialogTitle>
 			<Divider />
