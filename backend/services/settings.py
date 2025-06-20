@@ -404,12 +404,10 @@ class SettingsService:
 
         next_billing_date = (
             user_subscription.plan_end.strftime("%b %d, %Y")
-            if user.get("source_platform") == "shopify" and user_subscription
+            if user.get("source_platform") == "shopify" and user_subscription and hasattr(user_subscription.plan_end, 'strftime')
             else (
-                self.timestamp_to_date(
-                    subscription["items"]["data"][0]["current_period_end"]
-                ).strftime("%b %d, %Y")
-                if subscription and user_subscription
+                user_subscription.plan_end.strftime("%b %d, %Y")
+                if subscription and user_subscription and hasattr(user_subscription.plan_end, 'strftime')
                 else None
             )
         )
