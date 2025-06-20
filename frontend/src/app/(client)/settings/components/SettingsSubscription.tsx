@@ -555,7 +555,7 @@ export const SettingsSubscription: React.FC = () => {
 				<Box
 					sx={{
 						...subscriptionStyles.formContainer,
-						overflowX: "scroll",
+						overflowX: "auto",
 					}}
 				>
 					{filteredPlans.length > 0 ? (

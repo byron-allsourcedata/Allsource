@@ -41,7 +41,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
-import PaginationComponent from "@/components/PaginationComponent";
+import PaginationComponent, {
+	Paginator,
+} from "@/components/PaginationComponent";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
@@ -55,6 +57,7 @@ import { employeesTableCards } from "./context/hintsCardsContent";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
+import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -129,6 +132,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 		tableContainerRef,
 		data.length,
 	);
+	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 134, [
+		data.length,
+	]);
 
 	const handleOpenPopover = (
 		event: React.MouseEvent<HTMLElement>,
@@ -761,6 +767,15 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 		},
 	];
 
+	const paginationProps = {
+		countRows: count_companies ?? 0,
+		page,
+		rowsPerPage,
+		onPageChange: handleChangePage,
+		onRowsPerPageChange: handleChangeRowsPerPage,
+		rowsPerPageOptions,
+	};
+
 	return (
 		<>
 			{loading && <CustomizedProgressBar />}
@@ -1154,32 +1169,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 									<TableContainer
 										ref={tableContainerRef}
 										sx={{
-											height: "70vh",
-											overflowX: "scroll",
-											maxHeight:
-												selectedFilters.length > 0
-													? hasNotification
-														? "63vh"
-														: "70vh"
-													: "70vh",
-											"@media (max-height: 800px)": {
-												height: "60vh",
-												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "53vh"
-															: "60vh"
-														: "70vh",
-											},
-											"@media (max-width: 400px)": {
-												height: "50vh",
-												maxHeight:
-													selectedFilters.length > 0
-														? hasNotification
-															? "53vh"
-															: "50vh"
-														: "70vh",
-											},
+											overflowX: "auto",
 										}}
 									>
 										<Table
@@ -1654,14 +1644,12 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 											</TableBody>
 										</Table>
 									</TableContainer>
-									<PaginationComponent
-										countRows={count_companies ?? 0}
-										page={page}
-										rowsPerPage={rowsPerPage}
-										onPageChange={handleChangePage}
-										onRowsPerPageChange={handleChangeRowsPerPage}
-										rowsPerPageOptions={rowsPerPageOptions}
-									/>
+									<Box
+										ref={paginatorRef}
+										sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
+									>
+										<Paginator tableMode {...paginationProps} />
+									</Box>
 								</Grid>
 							</Grid>
 						)}
