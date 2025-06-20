@@ -476,14 +476,14 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											alignItems: "center",
 										}}
 									>
-										<Button onClick={handleOpen} sx={{ padding: 2 }}>
-											<Image
-												src="/add-square.svg"
-												alt="add-square"
-												height={24}
-												width={24}
-											/>
-										</Button>
+										<Image
+											onClick={handleOpen}
+											src="/add-square.svg"
+											alt="add-square"
+											height={24}
+											width={24}
+											style={{cursor: "pointer"}}
+										/>
 									</Box>
 								</Box>
 							)}
