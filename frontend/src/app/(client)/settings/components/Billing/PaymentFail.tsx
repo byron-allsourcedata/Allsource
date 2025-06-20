@@ -11,6 +11,7 @@ import {
 	RadioGroup,
 } from "@mui/material";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
 import CustomButton from "@/components/ui/CustomButton";
 import { Elements } from "@stripe/react-stripe-js";
@@ -55,6 +56,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	);
 	const [openAddCard, setOpenAddCard] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const router = useRouter();
 
 	const handlePay = async () => {
 		try {
@@ -63,16 +65,11 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 				"/settings/billing/pay-credits",
 				{},
 			);
-			if (response.status === 200) {
-				const { status } = response.data;
-				if (status === "SUCCESS") {
-					showToast("Card added successfully!");
-					onClose();
-				} else {
-					showErrorToast("Unknown response received.");
-				}
+			if (response.data.success == true) {
+				showToast("Credits successfully purchased!");
+				router.push("/settings");
 			} else {
-				showErrorToast("Unexpected response status: " + response.status);
+				showErrorToast(response.data.error);
 			}
 		} catch (error) {
 			if (axios.isAxiosError(error)) {

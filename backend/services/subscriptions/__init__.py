@@ -9,7 +9,7 @@ from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 
 from db_dependencies import Db
-from enums import CreditsStatus
+from enums import CreditsStatus, PaymentStatus
 from enums import PlanAlias
 from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
@@ -23,9 +23,13 @@ from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from persistence.partners_persistence import PartnersPersistence
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
+from persistence.user_subscriptions import UserSubscriptionsPersistence
 from resolver import injectable
 from services.referral import ReferralService
-from services.stripe_service import determine_plan_name_from_product_id
+from services.stripe_service import (
+    determine_plan_name_from_product_id,
+    StripeService,
+)
 from utils import get_utc_aware_date_for_postgres, end_of_month
 
 load_dotenv()
@@ -44,12 +48,16 @@ class SubscriptionService:
         user_persistence_service: UserPersistence,
         plans_persistence: PlansPersistence,
         referral_service: ReferralService,
+        stripe_service: StripeService,
+        user_subscriptions_persistence: UserSubscriptionsPersistence,
         partners_persistence: PartnersPersistence,
     ):
         self.plans_persistence = plans_persistence
         self.db = db
         self.user_persistence_service = user_persistence_service
         self.UNLIMITED = -1
+        self.stripe_service = stripe_service
+        self.user_subscriptions_persistence = user_subscriptions_persistence
         self.referral_service = referral_service
         self.partners_persistence = partners_persistence
 
@@ -972,4 +980,24 @@ class SubscriptionService:
         self.user_persistence_service.charge_credit(user.get("id"))
         leads_persistence.add_unlocked_user(
             user.get("id"), domain.id, five_x_five_id
+        )
+
+    def update_subscription_status(self, customer_id: str, status: str):
+        subscription = (
+            self.user_subscriptions_persistence.get_subscription_by_customer_id(
+                customer_id=customer_id
+            )
+        )
+        if subscription.status == PaymentStatus.INACTIVE.value:
+            record_subscription = (
+                self.user_subscriptions_persistence.get_subscription_plan_by_id(
+                    id=subscription.contact_credit_plan_id
+                )
+            )
+            self.stripe_service.create_basic_plan_subscription(
+                customer_id=customer_id,
+                stripe_price_id=record_subscription.stripe_price_id,
+            )
+        self.user_subscriptions_persistence.install_payment_status(
+            customer_id=customer_id, status=status
         )

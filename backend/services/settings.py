@@ -3,23 +3,16 @@ import os
 from typing import Optional
 
 import stripe
-
-from models import UserSubscriptions
-from persistence.leads_persistence import LeadsPersistence
-from persistence.settings_persistence import SettingsPersistence
-from models.users import User
-from persistence.sendgrid_persistence import SendgridPersistence
-from persistence.user_persistence import UserPersistence
-from persistence.plans_persistence import PlansPersistence
-from services.subscriptions import SubscriptionService
-from services.domains import UserDomainsService
 from fastapi import HTTPException, status
-from .jwt_service import (
-    get_password_hash,
-    create_access_token,
-    decode_jwt_data,
-    verify_password,
-)
+
+from enums import VerifyToken, PaymentStatus
+from models import UserSubscriptions
+from models.users import User
+from persistence.leads_persistence import LeadsPersistence
+from persistence.plans_persistence import PlansPersistence
+from persistence.sendgrid_persistence import SendgridPersistence
+from persistence.settings_persistence import SettingsPersistence
+from persistence.user_persistence import UserPersistence
 from schemas.settings import (
     AccountDetailsRequest,
     BillingSubscriptionDetails,
@@ -33,18 +26,13 @@ from schemas.settings import (
     ActivePlan,
     DowngradePlan,
 )
-from enums import VerifyToken
-from .stripe_service import (
-    get_billing_details_by_userid,
-    get_product_from_price_id,
-    get_price_from_price_id,
-    get_card_details_by_customer_id,
-    get_billing_history_by_userid,
-    add_card_to_customer,
-    detach_card_from_customer,
-    get_billing_by_invoice_id,
-    set_default_card_for_customer,
-    purchase_product,
+from services.domains import UserDomainsService
+from services.subscriptions import SubscriptionService
+from .jwt_service import (
+    get_password_hash,
+    create_access_token,
+    decode_jwt_data,
+    verify_password,
 )
 
 logger = logging.getLogger(__name__)
@@ -785,9 +773,21 @@ class SettingsService:
         credit_plan = self.plan_persistence.get_subscription_plan_by_id(
             id=user_subscription.contact_credit_plan_id
         )
-        a = purchase_product(
+        result = purchase_product(
             customer_id=user.get("customer_id"),
             price_id=credit_plan.stripe_price_id,
             quantity=user.get("overage_leads_count"),
         )
-        print(a)
+        if result["success"]:
+            event = result["stripe_payload"]
+            customer_id = event["customer"]
+            self.user_persistence.decrease_overage_leads_count(
+                customer_id=customer_id,
+                quantity=event["metadata"]["quantity"],
+            )
+            self.subscription_service.update_subscription_status(
+                customer_id=customer_id, status=PaymentStatus.ACTIVE.value
+            )
+            return {"success": True}
+
+        return result
