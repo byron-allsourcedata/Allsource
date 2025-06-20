@@ -451,20 +451,19 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     billing_history = []
 
     invoices = stripe.Invoice.list(customer=customer_id, limit=per_page)
-    billing_history.extend(invoices.data)
+    for invoice in invoices.data:
+        if invoice.amount_due > 0:
+            billing_history.append(invoice)
 
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
-    non_subscription_charges = [
-        charge
-        for charge in charges
-        if getattr(charge, "invoice", None) is None
-        and getattr(charge, "metadata", {}).get("product_description")
-        == "leads_credits"
-    ]
-    billing_history.extend(non_subscription_charges)
+    for charge in charges:
+        if getattr(charge, "invoice", None) is None and getattr(charge, "metadata", {}).get("product_description") == "leads_credits":
+            if charge.amount > 0:
+                billing_history.append(charge)
 
     count = len(billing_history)
     max_page = math.ceil(count / per_page)
     start = (page - 1) * per_page
     end = min(page * per_page, count)
     return billing_history[start:end], count, max_page
+
