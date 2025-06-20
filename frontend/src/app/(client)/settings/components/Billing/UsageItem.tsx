@@ -35,15 +35,13 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 
 	const valueLinearProgress = () => {
 		if (limitValue === -1) {
-			return 100 
+			return 100;
+		} else if (!available || moneyContactsOverage !== 0) {
+			return 0;
+		} else {
+			return 100 - limit;
 		}
-		else if (!available || moneyContactsOverage !== 0) {
-			return 0 
-		}
-		else {
-			return 100 - limit
-		}
-	}
+	};
 
 	const valueText =
 		limitValue === -1
@@ -66,14 +64,14 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				>
 					{title}
 				</Typography>
-				{moneyContactsOverage !== 0 && 
+				{moneyContactsOverage !== 0 && (
 					<Typography
 						className="second-sub-title"
 						sx={{ lineHeight: "20px !important" }}
 					>
 						{`$${moneyContactsOverage}`}
 					</Typography>
-				}
+				)}
 				{needButton && (
 					<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
 						<Tooltip title="Coming Soon" arrow>
@@ -149,14 +147,17 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 						</Typography>
 					</Box>
 				)}
-				{limitValue !== -1 && available && moneyContactsOverage === 0 && !commingSoon && (
-					<Typography
-						className="second-sub-title"
-						sx={{ lineHeight: "20px !important" }}
-					>
-						{limit}% Used
-					</Typography>
-				)}
+				{limitValue !== -1 &&
+					available &&
+					moneyContactsOverage === 0 &&
+					!commingSoon && (
+						<Typography
+							className="second-sub-title"
+							sx={{ lineHeight: "20px !important" }}
+						>
+							{limit}% Used
+						</Typography>
+					)}
 			</Box>
 		</Box>
 	);

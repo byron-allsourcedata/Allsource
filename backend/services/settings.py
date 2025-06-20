@@ -536,7 +536,10 @@ class SettingsService:
             "leads_credits": user.get("leads_credits"),
             "validation_funds": user.get("validation_funds"),
             "premium_source_credits": user.get("premium_source_credits"),
-            "money_because_of_overage": Decimal(user.get("overage_leads_count") * self.COST_CONTACT_ON_BASIC_PLAN),
+            "money_because_of_overage": Decimal(
+                user.get("overage_leads_count")
+                * self.COST_CONTACT_ON_BASIC_PLAN
+            ),
             "smart_audience_quota": {
                 "available": user.get("smart_audience_quota") != 0
                 and (

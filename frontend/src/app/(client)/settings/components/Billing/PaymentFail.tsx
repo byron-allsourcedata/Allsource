@@ -77,7 +77,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			display: "flex",
 			justifyContent: "center",
 			alignItems: "center",
-		}
+		},
 	};
 
 	const [selectedCard, setSelectedCard] = useState<string>("");
@@ -145,9 +145,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 												alignItems: "center",
 											}}
 										>
-											<Box
-												sx={paymentFailStyles.cardImageContainer}
-											>
+											<Box sx={paymentFailStyles.cardImageContainer}>
 												<Image
 													src={
 														cardBrandImages[card.brand as CardBrand] ||
@@ -246,7 +244,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 					title="Add Card"
 					confirmButtonName="Pay"
 					open={openAddCard}
-					confirmButtonSx={{p: "10px 48px"}}
+					confirmButtonSx={{ p: "10px 48px" }}
 					onClose={handleCloseAddCard}
 					onSuccess={handleCheckoutSuccess}
 				/>
