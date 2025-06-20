@@ -6,14 +6,16 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from sqlalchemy import create_engine, select
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone
 from enums import (
     DataSyncImportedStatus,
-    ProccessDataSyncResult,
     AudienceSmartStatuses,
     DataSyncType,
 )
@@ -47,9 +49,9 @@ def setup_logging(level):
     )
 
 
-async def send_leads_to_queue(rmq_connection, msg):
-    await publish_rabbitmq_message(
-        connection=rmq_connection,
+async def send_leads_to_queue(channel, msg):
+    await publish_rabbitmq_message_with_channel(
+        channel=channel,
         queue_name=AUDIENCE_DATA_SYNC_PERSONS,
         message_body=msg,
     )
@@ -219,7 +221,7 @@ def get_previous_imported_encrhment_users(
 
 async def send_leads_to_rmq(
     session,
-    rmq_connection,
+    channel,
     encrhment_users,
     data_sync,
     user_integrations_service_name,
@@ -280,11 +282,11 @@ async def send_leads_to_rmq(
         "data_sync_id": data_sync.id,
         "arr_enrichment_users": arr_enrichment_users,
     }
-    await send_leads_to_queue(rmq_connection, msg)
+    await send_leads_to_queue(channel, msg)
 
 
 async def process_user_integrations(
-    rmq_connection, session, subscription_service: SubscriptionService
+    channel, session, subscription_service: SubscriptionService
 ):
     user_integrations, data_syncs = fetch_data_syncs(session)
     for i, data_sync in enumerate(data_syncs):
@@ -344,7 +346,7 @@ async def process_user_integrations(
         encrhment_users = sorted(encrhment_users, key=lambda x: x.id)
         await send_leads_to_rmq(
             session,
-            rmq_connection,
+            channel,
             encrhment_users,
             data_sync,
             user_integrations[i].service_name,
@@ -404,7 +406,7 @@ async def main():
                     db=db_session,
                 )
                 await process_user_integrations(
-                    rmq_connection, db_session, subscription_service
+                    channel, db_session, subscription_service
                 )
                 logging.info("Processing completed. Sleeping for 10 sec...")
             else:
