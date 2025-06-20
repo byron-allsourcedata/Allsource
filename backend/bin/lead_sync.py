@@ -56,7 +56,7 @@ from models.leads_orders import LeadOrders
 from models.integrations.leads_suppresions import LeadsSupperssion
 from models.integrations.users_domains_integrations import UserIntegration
 
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import publish_rabbitmq_message_with_channel, RabbitMQConnection
 from services.referral import ReferralService
 from dependencies import (
     SubscriptionService,
@@ -232,6 +232,7 @@ async def handle_payment_notification(
         queue_name = f"sse_events_{str(user.id)}"
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
 
         save_account_notification = (
             notification_persistence.save_account_notification(
@@ -241,8 +242,8 @@ async def handle_payment_notification(
             )
         )
 
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=queue_name,
             message_body={
                 "notification_text": notification_text,
@@ -269,13 +270,14 @@ async def send_overage_leads_notification(
     queue_name = f"sse_events_{str(user.id)}"
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
+    channel = await connection.channel()
     save_account_notification = (
         notification_persistence.save_account_notification(
             user.id, account_notification.id
         )
     )
-    await publish_rabbitmq_message(
-        connection=connection,
+    await publish_rabbitmq_message_with_channel(
+        channel=channel,
         queue_name=queue_name,
         message_body={
             "notification_text": account_notification.text,
@@ -307,8 +309,9 @@ async def send_inactive_leads_notification(
             user.id, account_notification.id
         )
     )
-    await publish_rabbitmq_message(
-        connection=connection,
+    channel = await connection.channel()
+    await publish_rabbitmq_message_with_channel(
+        channel=channel,
         queue_name=queue_name,
         message_body={
             "notification_text": account_notification.text,
@@ -331,9 +334,9 @@ async def notify_missing_plan(notification_persistence, user):
             user.id, account_notification.id
         )
     )
-
-    await publish_rabbitmq_message(
-        connection=connection,
+    channel = await connection.channel()
+    await publish_rabbitmq_message_with_channel(
+        channel=channel,
         queue_name=queue_name,
         message_body={
             "notification_text": account_notification.text,
@@ -486,6 +489,7 @@ def process_root_user_behavior(lead_user, behavior_type, requested_at, session):
 async def dispatch_leads_to_rabbitmq(
     session, user, rabbitmq_connection, plan_id
 ):
+    channel = await rabbitmq_connection.channel()
     user_ids = (
         session.query(LeadUser)
         .filter_by(user_id=user.id, is_active=False)
@@ -493,8 +497,8 @@ async def dispatch_leads_to_rabbitmq(
     )
 
     if user_ids and len(user_ids) % 100 == 0:
-        await publish_rabbitmq_message(
-            connection=rabbitmq_connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=QUEUE_CREDITS_CHARGING,
             message_body={"customer_id": user.customer_id, "plan_id": plan_id},
         )

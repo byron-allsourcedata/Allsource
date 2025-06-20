@@ -17,7 +17,7 @@ from fastapi.responses import RedirectResponse
 from typing_extensions import Annotated
 
 from config.bigcommerce import BigcommerceConfig
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from dependencies import (
     get_integration_service,
     IntegrationService,
@@ -524,10 +524,11 @@ async def subscribe_zapier_webhook(
         )
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         queue_name = f"sse_events_{str(user.get('id'))}"
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={"status": CreateDataSync.ZAPIER_CONNECTED.value},
             )

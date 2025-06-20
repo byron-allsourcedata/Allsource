@@ -3,7 +3,7 @@ import logging
 from enums import AudienceInfoEnum
 from typing import List
 from schemas.audience import AudienceResponse
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from persistence.audience_persistence import AudiencePersistence
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ class AudienceService:
         )
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         try:
             message_text = {
                 "audience_id": audience.id,
@@ -39,8 +40,8 @@ class AudienceService:
                 "audience_type": audience_type,
                 "audience_threshold": audience_threshold,
             }
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=self.AUDIENCE_SYNC,
                 message_body=message_text,
             )

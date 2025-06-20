@@ -16,7 +16,7 @@ from schemas.audience import (
 )
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from models.users import User
 from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
@@ -180,6 +180,7 @@ class AudienceSmartsService:
         queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         data = {
             "aud_smart_id": str(aud_smart_id),
             "user_id": user_id,
@@ -191,8 +192,8 @@ class AudienceSmartsService:
 
         try:
             message_body = {"data": data}
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body=message_body,
             )

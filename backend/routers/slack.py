@@ -7,7 +7,7 @@ from dependencies import (
     verify_signature,
 )
 from services.integrations.slack import SlackService
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from config.slack import SlackConfig
 from starlette.status import HTTP_200_OK
 from schemas.integrations.slack import SlackCreateListRequest
@@ -26,10 +26,11 @@ async def slack_oauth_callback(
     if result["status"] == "SUCCESS":
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         queue_name = f"sse_events_{str(result['user_id'])}"
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "status": "Integration with slack was successful"

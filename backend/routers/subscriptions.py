@@ -9,7 +9,7 @@ from fastapi import (
     status,
 )
 
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from db_dependencies import Db
 from dependencies import (
     get_plans_service,
@@ -93,18 +93,19 @@ async def update_subscription_webhook(
     if user:
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         queue_name = f"sse_events_{str(user.id)}"
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "status": result_update_subscription.get("status"),
                     "update_subscription": True,
                 },
             )
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={
                     "customer_id": user.customer_id,
@@ -137,13 +138,14 @@ async def cancel_subscription_webhook(
         queue_name = f"sse_events_{str(user.id)}"
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         try:
             message_text = (
                 "It looks like your payment didn’t go through. Kindly check your payment card, go to - "
                 "billing"
             )
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "notification_text": message_text,
@@ -153,8 +155,8 @@ async def cancel_subscription_webhook(
                 },
             )
 
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=EMAIL_NOTIFICATIONS,
                 message_body={
                     "email": user.email,
@@ -378,9 +380,10 @@ async def shopify_billing_update_webhook(
         user = result_update_subscription["user"]
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={
                     "customer_id": user.customer_id,

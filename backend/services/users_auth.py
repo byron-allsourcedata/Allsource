@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
 from persistence.admin import AdminPersistence
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from enums import (
     SignUpStatus,
     LoginStatus,
@@ -157,9 +157,10 @@ class UsersAuth:
         queue_name = f"sse_events_{str(user_id)}"
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "notification_text": account_notification.text,

@@ -36,7 +36,7 @@ from services.similar_audiences import SimilarAudienceService
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
 from models import EnrichmentEmploymentHistory, EnrichmentProfessionalProfile
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
 )
@@ -72,11 +72,11 @@ def setup_logging(level):
     )
 
 
-async def send_sse(connection, user_id: int, data: dict):
+async def send_sse(channel, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=f"sse_events_{str(user_id)}",
             message_body={"status": AUDIENCE_LOOKALIKES_PROGRESS, "data": data},
         )
@@ -451,7 +451,7 @@ def process_lookalike_pipeline(
 async def aud_sources_reader(
     message: IncomingMessage,
     db_session: Session,
-    connection,
+    channel,
     similar_audiences_scores_service: SimilarAudiencesScoresService,
     similar_audience_service: SimilarAudienceService,
 ):
@@ -528,7 +528,7 @@ async def aud_sources_reader(
         db_session.add(audience_lookalike)
         db_session.flush()
         await send_sse(
-            connection,
+            channel,
             audience_lookalike.user_id,
             {
                 "lookalike_id": str(audience_lookalike.id),
@@ -553,8 +553,8 @@ async def aud_sources_reader(
             "enrichment_user": persons,
         }
 
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=AUDIENCE_LOOKALIKES_MATCHING,
             message_body=message_body,
         )
@@ -621,7 +621,7 @@ async def main():
             functools.partial(
                 aud_sources_reader,
                 db_session=db_session,
-                connection=connection,
+                channel=channel ,
                 similar_audience_service=similar_audience_service,
                 similar_audiences_scores_service=similar_audiences_scores_service,
             )

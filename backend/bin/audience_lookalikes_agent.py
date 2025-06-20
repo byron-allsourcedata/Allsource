@@ -22,7 +22,7 @@ from models.enrichment.enrichment_lookalike_scores import (
     EnrichmentLookalikeScore,
 )
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
 
@@ -38,11 +38,11 @@ def setup_logging(level):
     )
 
 
-async def send_sse(connection, user_id: int, data: dict):
+async def send_sse(channel, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=f"sse_events_{str(user_id)}",
             message_body={"status": AUDIENCE_LOOKALIKES_PROGRESS, "data": data},
         )
@@ -51,7 +51,7 @@ async def send_sse(connection, user_id: int, data: dict):
 
 
 async def aud_sources_matching(
-    message: IncomingMessage, db_session: Session, connection
+    message: IncomingMessage, db_session: Session, channel
 ):
     try:
         message_body = json.loads(message.body)
@@ -115,7 +115,7 @@ async def aud_sources_matching(
         db_session.commit()
 
         await send_sse(
-            connection,
+            channel,
             user_id,
             {
                 "lookalike_id": lookalike_id,
@@ -168,7 +168,7 @@ async def main():
         await queue.consume(
             functools.partial(
                 aud_sources_matching,
-                connection=connection,
+                channel=channel,
                 db_session=db_session,
             )
         )
