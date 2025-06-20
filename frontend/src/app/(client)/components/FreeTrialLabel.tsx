@@ -219,7 +219,7 @@ const FreeTrialLabel: React.FC = () => {
 											color: "rgba(50, 54, 62, 1)",
 										}}
 									>
-										{validationsFundsLimit?.toLocaleString()} Validations
+										${validationsFundsLimit?.toLocaleString()} Validations
 									</Typography>
 								</Box>
 							</Box>

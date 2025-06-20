@@ -9,7 +9,7 @@ export const style: { [key: string]: SxProps<Theme> } = {
 		fontSize: "14px",
 		color: "rgba(32, 33, 36, 1)",
 		justifyContent: "flex-start",
-		width: "100%", // можно убрать для автоширины, оставить — если хочешь выравнивание по левому краю
+		width: "100%",
 		textAlign: "left",
 		padding: "6px 12px",
 	},
