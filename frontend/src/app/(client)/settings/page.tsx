@@ -12,7 +12,6 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
-import axios from "axios";
 
 const Settings: React.FC = () => {
 	const { hasNotification } = useNotification();
@@ -23,10 +22,12 @@ const Settings: React.FC = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	const fetchAccountDetails = useCallback(async () => {
+	const fetchAccountDetails = async () => {
 		try {
 			setIsLoading(true);
-			const response = await axios.get("/settings/account-details");
+			const response = await axiosInterceptorInstance.get(
+				"/settings/account-details",
+			);
 			const data = response.data;
 			setAccountDetails(data);
 		} catch (error) {
@@ -34,7 +35,7 @@ const Settings: React.FC = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, []);
+	};
 
 	useEffect(() => {
 		const sectionFromUrl = searchParams.get("section");
@@ -42,7 +43,7 @@ const Settings: React.FC = () => {
 			setActiveSection(sectionFromUrl);
 		}
 		fetchAccountDetails();
-	}, []);
+	}, [searchParams]);
 
 	const handleTabChange = (section: string) => {
 		setActiveSection(section);
