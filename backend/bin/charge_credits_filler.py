@@ -13,7 +13,10 @@ from resolver import Resolver
 from db_dependencies import Db
 from models.charging_credits_history import ChargingCreditsHistory
 from models import Users, UserSubscriptions, SubscriptionPlan
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from enums import (
@@ -22,7 +25,7 @@ from enums import (
 
 load_dotenv()
 
-CHARGE_CREDITS_FILLER = "charge_credits_filler"
+CHARGE_CREDITS = "charge_credits"
 
 
 def setup_logging(level):
@@ -33,10 +36,10 @@ def setup_logging(level):
     )
 
 
-async def send_leads_to_queue(rmq_connection, processed_lead):
-    await publish_rabbitmq_message(
-        connection=rmq_connection,
-        queue_name=CHARGE_CREDITS_FILLER,
+async def send_leads_to_queue(channel, processed_lead):
+    await publish_rabbitmq_message_with_channel(
+        channel=channel,
+        queue_name=CHARGE_CREDITS,
         message_body=processed_lead,
     )
 
@@ -90,9 +93,7 @@ def save_credits_charge_history(
     return new_entry
 
 
-async def prepare_users_for_billing(
-    rmq_connection: RabbitMQConnection, session: Session
-):
+async def prepare_users_for_billing(channel, session: Session):
     if not is_credits_not_charged_this_month(session=session):
         return
 
@@ -122,7 +123,7 @@ async def prepare_users_for_billing(
             "overage_leads_count": result.overage_leads_count,
             "customer_id": result.customer_id,
         }
-        await send_leads_to_queue(rmq_connection, msg)
+        await send_leads_to_queue(channel, msg)
 
     logging.info(
         f"Successfully sent {len(user_ids)} user IDs to billing queue."
@@ -153,11 +154,11 @@ async def main():
         channel = await rmq_connection.channel()
         await channel.set_qos(prefetch_count=1)
         await channel.declare_queue(
-            name=CHARGE_CREDITS_FILLER,
+            name=CHARGE_CREDITS,
             durable=True,
         )
 
-        await prepare_users_for_billing(rmq_connection, db_session)
+        await prepare_users_for_billing(channel, db_session)
 
         logging.info("Processing completed. Sleeping for 10 minutes...")
     except Exception:
