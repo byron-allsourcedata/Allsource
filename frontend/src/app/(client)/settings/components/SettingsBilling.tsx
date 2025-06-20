@@ -45,8 +45,8 @@ interface CardDetails {
 
 interface SubscriptionDetails {
 	active: { detail_type: string; value: boolean };
-	billing_cycle: { detail_type: string; plan_start: string; plan_end: string };
-	contacts_downloads: { detail_type: string; value: string };
+	billing_cycle: { detail_type: string; plan_start: string | null; plan_end: string | null };
+	contacts_downloads: { detail_type: string; limit_value: number, current_value: number };
 	next_billing_date: { detail_type: string; value: string };
 	plan_name: { detail_type: string; value: string };
 	yearly_total?: { detail_type: string; value: string };
@@ -58,7 +58,7 @@ interface SubscriptionDetails {
 		limit_value: number;
 	};
 	premium_sources_funds: string;
-	smart_audience: string;
+	smart_audience: { detail_type: string; current_value: number; limit_value: number };
 }
 
 interface BillingDetails {
@@ -82,6 +82,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
 	const [smartAudienceCollected, setSmartAudienceCollected] = useState(0);
+	const [moneyContactsOverage, setMoneyContactsOverage] = useState(0);
 	const [planPremiumSourceCollected, setPlanPremiumSourceCollected] =
 		useState(0);
 	const [premiumSourceCollected, setPremiumSourceCollected] = useState(0);
@@ -126,7 +127,9 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 				setHide(true);
 			} else {
 				setCardDetails([...response.data.card_details]);
+				console.log(response.data);
 				setContactsCollected(response.data.usages_credits.leads_credits);
+				setMoneyContactsOverage(response.data.usages_credits.money_because_of_overage);
 				setPlanContactsCollected(
 					response.data.usages_credits.plan_leads_credits,
 				);
@@ -616,6 +619,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 									open={open}
 									onClose={handleClose}
 									onSuccess={handleCheckoutSuccess}
+									confirmButtonSx={{p: "10px 27.5px"}}
 								/>
 							</Elements>
 						</Box>
@@ -661,12 +665,13 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 										<UsageItem
 											title="Contacts Downloaded"
 											limitValue={
-												contactsCollected > planContactsCollected
+												contactsCollected > planContactsCollected && moneyContactsOverage === 0
 													? contactsCollected
 													: planContactsCollected
 											}
 											currentValue={contactsCollected}
 											needButton={false}
+											moneyContactsOverage={moneyContactsOverage}
 										/>
 										<UsageItem
 											title="Smart Audience"

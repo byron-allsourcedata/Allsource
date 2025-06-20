@@ -36,6 +36,7 @@ interface PaymentPopupProps {
 	open: boolean;
 	onClose: () => void;
 	onSuccess: (cardDetails: CardDetails) => void;
+	confirmButtonSx: { p: string }
 }
 
 const addCardStyles = {
@@ -99,6 +100,7 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 	open,
 	onClose,
 	onSuccess,
+	confirmButtonSx
 }) => {
 	const [isDefault, setIsDefault] = useState(false);
 	const elements = useElements();
@@ -222,11 +224,11 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 					</Box>
 				</Box>
 			</DialogContent>
-			<DialogActions>
-				<CustomButton variant="outlined" onClick={onClose}>
+			<DialogActions sx={{gap: 1}}>
+				<CustomButton variant="outlined" onClick={onClose} sx={{p: "10px 44px"}}>
 					Back
 				</CustomButton>
-				<CustomButton variant="contained" onClick={handleButtonClick}>
+				<CustomButton variant="contained" onClick={handleButtonClick} sx={confirmButtonSx}>
 					{confirmButtonName}
 				</CustomButton>
 			</DialogActions>

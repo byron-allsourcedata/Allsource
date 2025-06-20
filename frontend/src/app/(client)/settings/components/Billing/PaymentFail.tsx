@@ -69,6 +69,15 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			backgroundRepeat: "no-repeat",
 			backgroundImage: "url(/danger-fill-icon.svg)",
 		},
+		cardImageContainer: {
+			width: "62px",
+			height: "62px",
+			borderRadius: "4px",
+			border: "1px solid #f0f0f0",
+			display: "flex",
+			justifyContent: "center",
+			alignItems: "center",
+		}
 	};
 
 	const [selectedCard, setSelectedCard] = useState<string>("");
@@ -137,15 +146,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 											}}
 										>
 											<Box
-												sx={{
-													width: "62px",
-													height: "62px",
-													borderRadius: "4px",
-													border: "1px solid #f0f0f0",
-													display: "flex",
-													justifyContent: "center",
-													alignItems: "center",
-												}}
+												sx={paymentFailStyles.cardImageContainer}
 											>
 												<Image
 													src={
@@ -243,8 +244,9 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			<Elements stripe={stripePromise}>
 				<AddCardPopup
 					title="Add Card"
-					confirmButtonName="Save Card"
+					confirmButtonName="Pay"
 					open={openAddCard}
+					confirmButtonSx={{p: "10px 48px"}}
 					onClose={handleCloseAddCard}
 					onSuccess={handleCheckoutSuccess}
 				/>

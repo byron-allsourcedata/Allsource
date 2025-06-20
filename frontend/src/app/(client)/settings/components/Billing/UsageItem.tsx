@@ -19,6 +19,7 @@ interface UsageItemProps {
 	available?: boolean;
 	needButton?: boolean;
 	commingSoon?: boolean;
+	moneyContactsOverage?: number;
 }
 
 export const UsageItem: React.FC<UsageItemProps> = ({
@@ -28,8 +29,21 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	available = true,
 	needButton = true,
 	commingSoon = false,
+	moneyContactsOverage = 0,
 }) => {
 	const limit = Math.round(((limitValue - currentValue) / limitValue) * 100);
+
+	const valueLinearProgress = () => {
+		if (limitValue === -1) {
+			return 100 
+		}
+		else if (!available || moneyContactsOverage !== 0) {
+			return 0 
+		}
+		else {
+			return 100 - limit
+		}
+	}
 
 	const valueText =
 		limitValue === -1
@@ -52,6 +66,14 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				>
 					{title}
 				</Typography>
+				{moneyContactsOverage !== 0 && 
+					<Typography
+						className="second-sub-title"
+						sx={{ lineHeight: "20px !important" }}
+					>
+						{`$${moneyContactsOverage}`}
+					</Typography>
+				}
 				{needButton && (
 					<Box sx={{ flexShrink: 0, opacity: 0.6 }}>
 						<Tooltip title="Coming Soon" arrow>
@@ -87,7 +109,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 			</Box>
 			<LinearProgress
 				variant="determinate"
-				value={limitValue === -1 ? 100 : !available ? 0 : 100 - limit}
+				value={valueLinearProgress()}
 				sx={{
 					height: "8px",
 					borderRadius: "4px",
@@ -127,7 +149,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 						</Typography>
 					</Box>
 				)}
-				{limitValue !== -1 && available && !commingSoon && (
+				{limitValue !== -1 && available && moneyContactsOverage === 0 && !commingSoon && (
 					<Typography
 						className="second-sub-title"
 						sx={{ lineHeight: "20px !important" }}

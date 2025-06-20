@@ -39,9 +39,12 @@ from enums import SettingStatus, SendgridTemplate, TeamAccessLevel
 import hashlib
 import json
 from services.stripe_service import *
+from decimal import Decimal
 
 
 class SettingsService:
+    COST_CONTACT_ON_BASIC_PLAN = 0.8
+
     def __init__(
         self,
         settings_persistence: SettingsPersistence,
@@ -533,6 +536,7 @@ class SettingsService:
             "leads_credits": user.get("leads_credits"),
             "validation_funds": user.get("validation_funds"),
             "premium_source_credits": user.get("premium_source_credits"),
+            "money_because_of_overage": Decimal(user.get("overage_leads_count") * self.COST_CONTACT_ON_BASIC_PLAN),
             "smart_audience_quota": {
                 "available": user.get("smart_audience_quota") != 0
                 and (
