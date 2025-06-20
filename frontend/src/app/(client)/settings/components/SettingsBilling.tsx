@@ -5,7 +5,6 @@ import {
 	Box,
 	Typography,
 	Button,
-	Modal,
 	Grid,
 	IconButton,
 	Divider,
@@ -21,8 +20,6 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
 import CustomTooltip from "@/components/customToolTip";
 import { MoreVert } from "@mui/icons-material";
-import DateRangeIcon from "@mui/icons-material/DateRange";
-import PaymentIcon from "@mui/icons-material/Payment";
 import { SendInvoicePopup } from "./Billing/SendInvoice";
 import { RemoveCardPopup } from "./Billing/RemoveCard";
 import { BillingHistory } from "./Billing/BillingHistory";
@@ -30,6 +27,7 @@ import { UsageItem } from "./Billing/UsageItem";
 import { billingStyles } from "./Billing/billingStyles";
 import AddCardPopup from "./Billing/AddCard";
 import PaymentFail from "./Billing/PaymentFail";
+import { BillingDetails } from "./Billing/BillingDetails";
 import { useSearchParams } from "next/navigation";
 
 type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
@@ -77,7 +75,7 @@ interface BillingDetails {
 	subscription_details: SubscriptionDetails;
 	downgrade_plan: { downgrade_at: string | null; plan_name: string | null };
 	is_leads_auto_charging: boolean;
-	canceled_at: any;
+	canceled_at: string;
 	active?: boolean;
 }
 
@@ -113,7 +111,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [selectedCardId, setSelectedCardId] = useState<string | null>();
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
 	const [removePopupOpen, setRemovePopupOpen] = useState(false);
-	const [downgrade_plan, setDowngrade_plan] = useState<any | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
@@ -139,6 +136,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 				setHide(true);
 			} else {
 				setCardDetails([...response.data.card_details]);
+				console.log(response.data);
 				setContactsCollected(response.data.usages_credits.leads_credits);
 				setMoneyContactsOverage(
 					response.data.usages_credits.money_because_of_overage,
@@ -168,7 +166,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			}
 			setChecked(response.data.billing_details.is_leads_auto_charging);
 			setBillingDetails(response.data.billing_details.subscription_details);
-			setDowngrade_plan(response.data.billing_details.downgrade_plan);
 			setCanceled_at(response.data.billing_details.canceled_at);
 		} catch (error) {
 		} finally {
@@ -185,64 +182,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	useEffect(() => {
 		fetchCardData();
 	}, []);
-
-	const formatKey = (key: string) => {
-		return key
-			.replace(/_/g, " ")
-			.replace(/\b\w/g, (char) => char.toUpperCase());
-	};
-
-	const printBillingCycle = (
-		planStart: string | null,
-		planEnd: string | null,
-	) => {
-		if (planStart && planEnd) {
-			return (
-				`${dayjs(planStart).format("MMM D, YYYY")}` +
-				` to ${dayjs(planEnd).format("MMM D, YYYY")}`
-			);
-		} else if (planEnd) {
-			return `N/A` + ` to ${dayjs(planEnd).format("MMM D, YYYY")}`;
-		} else {
-			return "Unlimited";
-		}
-	};
-
-	const printNextBillingDate = (billinDate: string | null) => {
-		if (billinDate) {
-			return `On ${billinDate}`;
-		}
-		return "Unlimited";
-	};
-
-	const renderValue = (value: any) => {
-		if (
-			value?.current_value === -1 ||
-			value?.limit_value === -1 ||
-			value?.limit_value === null ||
-			value?.current_value === null
-		) {
-			return "Unlimited";
-		}
-
-		const { limit_value, current_value } = value;
-		const limit = current_value > limit_value ? current_value : limit_value;
-
-		switch (value?.detail_type) {
-			case "funds":
-				return `$${value.current_value?.toLocaleString("en-US")}/$${limit?.toLocaleString("en-US")}`;
-			case "as_is":
-				return value.value;
-			case "limited":
-				return `${value.current_value?.toLocaleString("en-US")}/${limit?.toLocaleString("en-US")}`;
-			case "billing_cycle":
-				return printBillingCycle(value.plan_start, value.plan_end);
-			case "next_billing_date":
-				return printNextBillingDate(value.value);
-			default:
-				return "Coming soon";
-		}
-	};
 
 	const handleClickOpen = (
 		event: React.MouseEvent<HTMLElement>,
@@ -333,35 +272,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 		setselectedInvoiceId(null);
 	};
 
-	const handleBuyCredits = async () => {
-		try {
-			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				`/subscriptions/buy-credits?credits_used=${10}`,
-			);
-			if (response && response.data.status) {
-				showToast(response.data.status);
-				if (response.data.status == "Payment success") {
-					// setProspectData(prospectData + 10);
-				}
-			} else if (response.data.link) {
-				window.location.href = response.data.link;
-			} else {
-				showErrorToast("Payment link not found.");
-			}
-		} catch (error: unknown) {
-			if (axios.isAxiosError(error)) {
-				showErrorToast(error.message);
-			} else if (error instanceof Error) {
-				showErrorToast(error.message);
-			} else {
-				showErrorToast("An unexpected error occurred.");
-			}
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
 	const handleCheckoutSuccess = (data: CardDetails) => {
 		setCardDetails((prevDetails) =>
 			data.is_default
@@ -375,32 +285,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 		);
 	};
 
-	const handleRedirectSubscription = () => {
-		window.location.href = "/settings?section=subscription";
-	};
-
-	const handleCancel = async () => {
-		try {
-			setIsLoading(false);
-			const response = await axiosInterceptorInstance.get(
-				`/subscriptions/cancel-downgrade`,
-			);
-			if (response && response.data) {
-				showToast(response.data);
-			}
-		} catch (error: unknown) {
-			if (axios.isAxiosError(error)) {
-				showErrorToast(error.message);
-			} else if (error instanceof Error) {
-				showErrorToast(error.message);
-			} else {
-				showErrorToast("An unexpected error occurred.");
-			}
-		} finally {
-			setIsLoading(false);
-		}
-		window.location.reload();
-	};
 
 	const deleteOpen = Boolean(deleteAnchorEl);
 	const deleteId = deleteOpen ? "delete-popover" : undefined;
@@ -711,341 +595,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 					</Box>
 
 					<Box sx={{ gridArea: "details", padding: "0px" }}>
-						<Box
-							sx={{
-								border: "1px solid #f0f0f0",
-								borderRadius: "4px",
-								boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-								p: 3,
-							}}
-						>
-							<Box
-								sx={{
-									display: "flex",
-									justifyContent: "space-between",
-									pb: 2,
-								}}
-							>
-								<Typography className="first-sub-title">
-									Billing Details
-								</Typography>
-								{billingDetails?.active ? (
-									canceled_at ? (
-										<Box
-											sx={{
-												display: "flex",
-												borderRadius: "4px",
-												background: "#FCDBDC",
-												padding: "2px 12px",
-												gap: "3px",
-												alignItems: "center",
-											}}
-										>
-											<Typography
-												className="main-text"
-												sx={{
-													borderRadius: "4px",
-													color: "#4E0110",
-													fontSize: "12px",
-													fontWeight: "600",
-													lineHeight: "16px",
-												}}
-											>
-												Subscription Cancelled
-											</Typography>
-											<Image
-												src={"danger.svg"}
-												alt="danger"
-												width={14}
-												height={13.5}
-											/>
-										</Box>
-									) : downgrade_plan?.plan_name ? (
-										<Box
-											sx={{
-												display: "flex",
-												borderRadius: "4px",
-												background: "#FDF2CA",
-												padding: "2px 12px",
-												gap: "3px",
-												alignItems: "center",
-											}}
-										>
-											<Typography
-												className="main-text"
-												sx={{
-													borderRadius: "4px",
-													color: "#795E00",
-													fontSize: "12px",
-													fontWeight: "600",
-													lineHeight: "16px",
-												}}
-											>
-												Downgrade pending - {downgrade_plan.plan_name}{" "}
-												{downgrade_plan.downgrade_at}.{" "}
-												<span
-													onClick={handleCancel}
-													style={{
-														color: "blue",
-														cursor: "pointer",
-													}}
-												>
-													Cancel
-												</span>
-											</Typography>
-										</Box>
-									) : (
-										<Box
-											sx={{
-												display: "flex",
-												borderRadius: "4px",
-												background: "#eaf8dd",
-												padding: "2px 12px",
-												gap: "3px",
-											}}
-										>
-											<Typography
-												className="main-text"
-												sx={{
-													borderRadius: "4px",
-													color: "#2b5b00",
-													fontSize: "12px",
-													fontWeight: "600",
-													lineHeight: "16px",
-												}}
-											>
-												Active
-											</Typography>
-										</Box>
-									)
-								) : (
-									<Box
-										sx={{
-											display: "flex",
-											borderRadius: "4px",
-											background: "#f8dede",
-											padding: "2px 12px",
-											gap: "3px",
-										}}
-									>
-										<Typography
-											className="main-text"
-											sx={{
-												borderRadius: "4px",
-												color: "#b00000",
-												fontSize: "12px",
-												fontWeight: "600",
-												lineHeight: "16px",
-												cursor: "pointer",
-											}}
-										>
-											Subscription Cancelled.{" "}
-											<span
-												onClick={handleRedirectSubscription}
-												style={{
-													color: "#146EF6",
-													cursor: "pointer",
-												}}
-												onMouseEnter={(e) =>
-													(e.currentTarget.style.color = "darkblue")
-												}
-												onMouseLeave={(e) =>
-													(e.currentTarget.style.color = "#146EF6")
-												}
-											>
-												Choose Plan
-											</span>
-										</Typography>
-									</Box>
-								)}
-							</Box>
-							<Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-								<Grid container spacing={2}>
-									{billingDetails &&
-										Object.entries(billingDetails).map(
-											([key, value], index) => {
-												if (key === "next_billing_date" && value) {
-													return (
-														<Grid
-															item
-															xs={12}
-															key={index}
-															sx={{
-																display: "flex",
-																alignItems: "center",
-																gap: "16px",
-																"@media (max-width: 600px)": {
-																	gap: "12px",
-																},
-															}}
-														>
-															{/* Next Billing Date */}
-															<Grid item xs={5.95} md={5.95}>
-																<Box
-																	sx={{
-																		display: "flex",
-																		alignItems: "center",
-																		justifyContent: "center",
-																		background: "#fafaf6",
-																		borderRadius: "4px",
-																		margin: "0 5%",
-																		border: "1px solid #F0F0F0",
-																		padding: "8px 16px",
-																		gap: "16px",
-																		"@media (max-width: 600px)": {
-																			padding: "8px 10px",
-																			gap: "8px",
-																		},
-																	}}
-																>
-																	<DateRangeIcon />
-																	<Box>
-																		<Typography
-																			className="main-text"
-																			sx={{
-																				fontSize: "12px",
-																				fontWeight: "600",
-																				lineHeight: "16px",
-																				color: "#4a4a4a",
-																			}}
-																		>
-																			{canceled_at
-																				? `Cancellation Date`
-																				: "Next Billing Date"}
-																		</Typography>
-																		<Typography
-																			className="first-sub-title"
-																			sx={{
-																				"@media (max-width: 600px)": {
-																					fontSize: "12px !important",
-																				},
-																			}}
-																		>
-																			{renderValue(value)}
-																		</Typography>
-																	</Box>
-																</Box>
-															</Grid>
-
-															{/* Divider */}
-															<Grid item xs={0.01} md={0.01}>
-																<Divider
-																	orientation="vertical"
-																	flexItem
-																	sx={{ height: "32px", alignSelf: "center" }}
-																/>
-															</Grid>
-
-															{/* Monthly Total - find it in the next iteration */}
-															<Grid item xs={5.95} md={5.95}>
-																{billingDetails &&
-																	typeof billingDetails === "object" &&
-																	Object.entries(billingDetails).map(
-																		([nextKey, nextValue], nextIndex) => {
-																			if (
-																				(nextValue &&
-																					nextKey === "monthly_total") ||
-																				(nextValue &&
-																					nextKey === "yearly_total")
-																			) {
-																				return (
-																					<Box
-																						key={nextIndex}
-																						sx={{
-																							display: "flex",
-																							justifyContent: "center",
-																							gap: "16px",
-																							alignItems: "center",
-																							margin: "0 5%",
-																							border: "1px solid #F0F0F0",
-																							padding: "8px 16px",
-																						}}
-																					>
-																						<PaymentIcon />
-																						<Box>
-																							<Typography
-																								className="main-text"
-																								sx={{
-																									fontSize: "12px",
-																									fontWeight: "600",
-																									lineHeight: "16px",
-																									color: "#4a4a4a",
-																								}}
-																							>
-																								{nextKey === "monthly_total" &&
-																									"Monthly Total"}
-																								{nextKey === "yearly_total" &&
-																									"Yearly Total"}
-																							</Typography>
-																							<Typography className="first-sub-title">
-																								{renderValue(nextValue)}
-																							</Typography>
-																						</Box>
-																					</Box>
-																				);
-																			}
-																			return null;
-																		},
-																	)}
-															</Grid>
-														</Grid>
-													);
-												}
-
-												// Skip rendering 'Monthly Total' in its own row, since it's already handled
-												if (
-													key === "monthly_total" ||
-													key === "active" ||
-													key === "yearly_total"
-												) {
-													return null;
-												}
-
-												// Default layout for other billing details
-												return (
-													<Grid
-														item
-														xs={12}
-														md={key === "billing_cycle" ? 12 : 6}
-														key={index}
-														sx={{
-															display: "flex",
-															flexDirection: "row",
-															gap: "26px",
-															"@media (max-width: 600px)": {
-																gap: "12px",
-															},
-														}}
-													>
-														<Typography
-															className="first-sub-title"
-															sx={{
-																width: "140px",
-																fontSize: "12px !important",
-																lineHeight: "16px !important",
-																"@media (max-width: 600px)": {
-																	width: "110px",
-																},
-															}}
-														>
-															{formatKey(key)}
-														</Typography>
-														<Typography
-															className="paragraph"
-															sx={{
-																lineHeight: "16px !important",
-																color: "#5f6368 !important",
-															}}
-														>
-															{renderValue(value)}
-														</Typography>
-													</Grid>
-												);
-											},
-										)}
-								</Grid>
-							</Box>
-						</Box>
+						<BillingDetails billingDetails={billingDetails} canceledAt={canceled_at || ""}/>
 					</Box>
 
 					<Box sx={{ gridArea: "funds", padding: "0px" }}>

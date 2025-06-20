@@ -115,5 +115,4 @@ class DowngradePlan(BaseModel):
 
 class BillingSubscriptionDetails(BaseModel):
     subscription_details: Optional[SubscriptionDetails]
-    downgrade_plan: Optional[DowngradePlan]
     canceled_at: Optional[str]

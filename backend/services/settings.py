@@ -469,7 +469,6 @@ class SettingsService:
 
         billing_detail = BillingSubscriptionDetails(
             subscription_details=subscription_details,
-            downgrade_plan=self.get_downgrade_plan(user_subscription),
             canceled_at=user_subscription.cancel_scheduled_at,
         )
 
