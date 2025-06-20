@@ -32,11 +32,9 @@ interface CardDetails {
 
 interface PaymentPopupProps {
 	title: string;
-	confirmButtonName: string;
 	open: boolean;
 	onClose: () => void;
 	onSuccess: (cardDetails: CardDetails) => void;
-	confirmButtonSx: { p: string };
 }
 
 const addCardStyles = {
@@ -96,11 +94,9 @@ const stripeStyles = {
 
 const AddCardPopup: React.FC<PaymentPopupProps> = ({
 	title,
-	confirmButtonName,
 	open,
 	onClose,
 	onSuccess,
-	confirmButtonSx,
 }) => {
 	const [isDefault, setIsDefault] = useState(false);
 	const elements = useElements();
@@ -235,9 +231,9 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 				<CustomButton
 					variant="contained"
 					onClick={handleButtonClick}
-					sx={confirmButtonSx}
+					sx={{p: "10px 27.5px"}}
 				>
-					{confirmButtonName}
+					Save Card
 				</CustomButton>
 			</DialogActions>
 		</Dialog>

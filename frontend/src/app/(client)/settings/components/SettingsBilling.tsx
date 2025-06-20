@@ -636,11 +636,9 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 							<Elements stripe={stripePromise}>
 								<AddCardPopup
 									title="Add Card"
-									confirmButtonName="Save Card"
 									open={open}
 									onClose={handleClose}
 									onSuccess={handleCheckoutSuccess}
-									confirmButtonSx={{ p: "10px 27.5px" }}
 								/>
 							</Elements>
 						</Box>

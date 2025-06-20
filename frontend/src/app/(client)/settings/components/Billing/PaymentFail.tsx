@@ -246,9 +246,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			<Elements stripe={stripePromise}>
 				<AddCardPopup
 					title="Add Card"
-					confirmButtonName="Pay"
 					open={openAddCard}
-					confirmButtonSx={{ p: "10px 48px" }}
 					onClose={handleCloseAddCard}
 					onSuccess={handleCheckoutSuccess}
 				/>
