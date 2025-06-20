@@ -133,7 +133,8 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 											width: "100%",
 											gap: 2,
 											border: "1px solid #ddd",
-											borderColor: selectedCard === String(index) ? "#3898FC" : "#ddd",
+											borderColor:
+												selectedCard === String(index) ? "#3898FC" : "#ddd",
 											borderRadius: "4px",
 											p: 2,
 											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
