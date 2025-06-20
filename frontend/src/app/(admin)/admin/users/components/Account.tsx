@@ -674,7 +674,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setOrder,
 	setOrderBy,
 }) => {
-	const [count_data, setCountData] = useState<number | null>(null);
 	const tableHeaders = is_admin
 		? [
 				{ key: "name", label: "Account name", sortable: false },
@@ -714,7 +713,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	const handleRowsPerPageChange = (
 		event: React.ChangeEvent<{ value: unknown }>,
 	) => {
-		setCountData(userData.length || 0);
 		setRowsPerPage(Number.parseInt(event.target.value as string, 10));
 		setPage(0);
 	};
