@@ -56,7 +56,10 @@ from models.leads_orders import LeadOrders
 from models.integrations.leads_suppresions import LeadsSupperssion
 from models.integrations.users_domains_integrations import UserIntegration
 
-from config.rmq_connection import publish_rabbitmq_message_with_channel, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from services.referral import ReferralService
 from dependencies import (
     SubscriptionService,

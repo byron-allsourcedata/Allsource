@@ -10,7 +10,10 @@ from sqlalchemy.orm import Session
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
 from persistence.admin import AdminPersistence
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from enums import (
     SignUpStatus,
     LoginStatus,

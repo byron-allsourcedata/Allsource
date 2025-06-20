@@ -34,6 +34,7 @@ class RabbitMQConnection:
         if self._connection:
             await self._connection.close()
 
+
 async def publish_rabbitmq_message_with_channel(
     channel, queue_name: str, message_body: Union[MessageBody, dict]
 ):

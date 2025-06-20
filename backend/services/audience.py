@@ -3,7 +3,10 @@ import logging
 from enums import AudienceInfoEnum
 from typing import List
 from schemas.audience import AudienceResponse
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from persistence.audience_persistence import AudiencePersistence
 
 logger = logging.getLogger(__name__)

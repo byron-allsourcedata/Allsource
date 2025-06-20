@@ -22,7 +22,10 @@ from enums import NotificationTitles
 from models.account_notification import AccountNotification
 from models.users_account_notification import UserAccountNotification
 from models.leads_users import LeadUser
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, aliased
 from services.subscriptions import SubscriptionService

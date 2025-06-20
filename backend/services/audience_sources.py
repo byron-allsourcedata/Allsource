@@ -23,7 +23,10 @@ from enums import TypeOfCustomer, TypeOfSourceOrigin, BusinessType
 from persistence.audience_sources_matched_persons import (
     AudienceSourcesMatchedPersonsPersistence,
 )
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from enums import QueueName, SourceType
 from models.users import User
 

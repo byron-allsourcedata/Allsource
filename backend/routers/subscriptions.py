@@ -9,7 +9,10 @@ from fastapi import (
     status,
 )
 
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from db_dependencies import Db
 from dependencies import (
     get_plans_service,

@@ -7,7 +7,10 @@ from dependencies import (
     verify_signature,
 )
 from services.integrations.slack import SlackService
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from config.slack import SlackConfig
 from starlette.status import HTTP_200_OK
 from schemas.integrations.slack import SlackCreateListRequest

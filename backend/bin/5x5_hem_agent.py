@@ -14,7 +14,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from dotenv import load_dotenv
-from config.rmq_connection import publish_rabbitmq_message_with_channel, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 
 # Load environment variables
 load_dotenv()
@@ -48,9 +51,7 @@ def assume_role(role_arn, sts_client):
 file_list = []
 
 
-async def on_message_received(
-    message_body, s3_session, sts_client, channel
-):
+async def on_message_received(message_body, s3_session, sts_client, channel):
     message_body_json = json.loads(message_body)
     file_name = message_body_json["file_name"]
     logging.info(f"{file_name}")

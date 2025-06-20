@@ -17,7 +17,10 @@ from fastapi.responses import RedirectResponse
 from typing_extensions import Annotated
 
 from config.bigcommerce import BigcommerceConfig
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from dependencies import (
     get_integration_service,
     IntegrationService,

@@ -15,7 +15,10 @@ from schemas.lookalikes import (
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from fastapi import Body
 
 from services.similar_audiences import SimilarAudienceService

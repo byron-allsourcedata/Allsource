@@ -10,7 +10,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from dotenv import load_dotenv
-from config.rmq_connection import publish_rabbitmq_message_with_channel, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)

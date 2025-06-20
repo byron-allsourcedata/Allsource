@@ -22,7 +22,10 @@ from models.enrichment.enrichment_lookalike_scores import (
     EnrichmentLookalikeScore,
 )
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 
 load_dotenv()
 

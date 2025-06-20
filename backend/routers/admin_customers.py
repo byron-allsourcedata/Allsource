@@ -5,7 +5,10 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from schemas.admin import InviteDetailsRequest
 from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
-from config.rmq_connection import publish_rabbitmq_message_with_channel, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from schemas.users import UpdateUserRequest, UpdateUserResponse
 
 router = APIRouter()

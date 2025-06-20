@@ -36,7 +36,10 @@ from services.similar_audiences import SimilarAudienceService
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
 from models import EnrichmentEmploymentHistory, EnrichmentProfessionalProfile
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
 )
@@ -621,7 +624,7 @@ async def main():
             functools.partial(
                 aud_sources_reader,
                 db_session=db_session,
-                channel=channel ,
+                channel=channel,
                 similar_audience_service=similar_audience_service,
                 similar_audiences_scores_service=similar_audiences_scores_service,
             )

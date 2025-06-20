@@ -16,7 +16,10 @@ from schemas.audience import (
 )
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from models.users import User
 from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
