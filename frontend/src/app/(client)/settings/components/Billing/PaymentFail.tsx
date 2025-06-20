@@ -83,6 +83,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	const [selectedCard, setSelectedCard] = useState<string>("");
 
 	const handleCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		console.log("Selected card index:", event.target.value);
 		setSelectedCard(event.target.value);
 	};
 
@@ -132,8 +133,10 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 											width: "100%",
 											gap: 2,
 											border: "1px solid #ddd",
+											borderColor: selectedCard === String(index) ? "#3898FC" : "#ddd",
 											borderRadius: "4px",
 											p: 2,
+											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 										}}
 									>
 										<Radio value={index} />
