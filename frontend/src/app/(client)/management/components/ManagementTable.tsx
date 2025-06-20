@@ -110,9 +110,9 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 		router.push("/data-sync-pixel");
 	};
 
-	const handleAdditionalPixelClick = (domain: string) => {
+	const handleAdditionalPixelClick = (domain: string, domain_id: number) => {
 		sessionStorage.setItem("current_domain", domain);
-		router.push("/management/add-additional-script");
+		router.push(`/management/add-additional-script?domain_id=${domain_id}`);
 	};
 
 	const handleCheckPixelHealthClick = (domain: string) => {
@@ -385,7 +385,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 										>
 											<Typography
 												onClick={() =>
-													handleAdditionalPixelClick(row.domain_name)
+													handleAdditionalPixelClick(row.domain_name, row.id)
 												}
 												sx={{
 													color: "rgba(56, 152, 252, 1)",
@@ -570,7 +570,10 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														<Button
 															sx={style.actionButtonText}
 															onClick={() =>
-																handleAdditionalPixelClick(row.domain_name)
+																handleAdditionalPixelClick(
+																	row.domain_name,
+																	row.id,
+																)
 															}
 														>
 															Add Additional Pixel Script

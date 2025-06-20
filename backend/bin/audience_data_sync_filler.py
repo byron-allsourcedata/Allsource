@@ -3,17 +3,22 @@ import logging
 import os
 import sys
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+
+from resolver import Resolver
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from sqlalchemy import create_engine, select
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone
 from enums import (
     DataSyncImportedStatus,
-    ProccessDataSyncResult,
     AudienceSmartStatuses,
     DataSyncType,
 )
@@ -30,7 +35,7 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
-from dependencies import PlansPersistence
+from dependencies import PlansPersistence, Db
 
 load_dotenv()
 
@@ -47,9 +52,9 @@ def setup_logging(level):
     )
 
 
-async def send_leads_to_queue(rmq_connection, msg):
-    await publish_rabbitmq_message(
-        connection=rmq_connection,
+async def send_leads_to_queue(channel, msg):
+    await publish_rabbitmq_message_with_channel(
+        channel=channel,
         queue_name=AUDIENCE_DATA_SYNC_PERSONS,
         message_body=msg,
     )
@@ -219,7 +224,7 @@ def get_previous_imported_encrhment_users(
 
 async def send_leads_to_rmq(
     session,
-    rmq_connection,
+    channel,
     encrhment_users,
     data_sync,
     user_integrations_service_name,
@@ -280,11 +285,11 @@ async def send_leads_to_rmq(
         "data_sync_id": data_sync.id,
         "arr_enrichment_users": arr_enrichment_users,
     }
-    await send_leads_to_queue(rmq_connection, msg)
+    await send_leads_to_queue(channel, msg)
 
 
 async def process_user_integrations(
-    rmq_connection, session, subscription_service: SubscriptionService
+    channel, session, subscription_service: SubscriptionService
 ):
     user_integrations, data_syncs = fetch_data_syncs(session)
     for i, data_sync in enumerate(data_syncs):
@@ -344,7 +349,7 @@ async def process_user_integrations(
         encrhment_users = sorted(encrhment_users, key=lambda x: x.id)
         await send_leads_to_rmq(
             session,
-            rmq_connection,
+            channel,
             encrhment_users,
             data_sync,
             user_integrations[i].service_name,
@@ -371,20 +376,11 @@ async def main():
 
     setup_logging(log_level)
     logging.info("Started")
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
-    engine = create_engine(
-        f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-        pool_pre_ping=True,
-    )
-    Session = sessionmaker(bind=engine)
     sleep_interval = SHORT_SLEEP
     while True:
         db_session = None
         rabbitmq_connection = None
+        resolver = Resolver()
         try:
             rabbitmq_connection = RabbitMQConnection()
             rmq_connection = await rabbitmq_connection.connect()
@@ -395,16 +391,12 @@ async def main():
                 durable=True,
             )
             if queue.declaration_result.message_count == 0:
-                db_session = Session()
-                subscription_service = SubscriptionService(
-                    plans_persistence=PlansPersistence(db_session),
-                    user_persistence_service=None,
-                    referral_service=None,
-                    partners_persistence=None,
-                    db=db_session,
+                db_session = await resolver.resolve(Db)
+                subscription_service = await resolver.resolve(
+                    SubscriptionService
                 )
                 await process_user_integrations(
-                    rmq_connection, db_session, subscription_service
+                    channel, db_session, subscription_service
                 )
                 logging.info("Processing completed. Sleeping for 10 sec...")
             else:

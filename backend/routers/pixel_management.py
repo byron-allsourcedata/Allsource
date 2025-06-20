@@ -19,6 +19,17 @@ async def get_pixel_management_data(
     )
 
 
+@router.get("/additional_scripts")
+async def get_additional_scripts_info(
+    domain_id: int,
+    pixel_management_service: PixelManagementService,
+    user: dict = Depends(check_user_authorization_without_pixel),
+):
+    return pixel_management_service.get_additional_scripts_info(
+        user_id=user.get("id"), domain_id=domain_id
+    )
+
+
 @router.get("/{action}/{domain_id}")
 async def get_pixel_script(
     action: str,
