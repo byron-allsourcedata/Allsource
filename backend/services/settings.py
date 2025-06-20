@@ -363,6 +363,11 @@ class SettingsService:
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
 
+    def calculate_money_contacts_overage(self, user: User) -> Decimal:
+        return Decimal(user.get("overage_leads_count")
+                * self.COST_CONTACT_ON_BASIC_PLAN
+            )
+
     def extract_subscription_details(
         self, user: User
     ) -> BillingSubscriptionDetails:
@@ -383,6 +388,7 @@ class SettingsService:
         validation_funds_limit = current_plan.validation_funds
         leads_credits_limit = current_plan.leads_credits
         smart_audience_quota_limit = current_plan.smart_audience_quota
+        money_contacts_overage = self.calculate_money_contacts_overage(user=user)
         total_key = (
             "monthly_total"
             if current_plan.interval == "month"
@@ -408,7 +414,7 @@ class SettingsService:
             else (
                 self.calculate_final_price(subscription, user_subscription)
                 if subscription and user_subscription
-                else "$0"
+                else f"${money_contacts_overage.quantize(Decimal('0.1'))}"
             )
         )
 
@@ -536,10 +542,7 @@ class SettingsService:
             "leads_credits": user.get("leads_credits"),
             "validation_funds": user.get("validation_funds"),
             "premium_source_credits": user.get("premium_source_credits"),
-            "money_because_of_overage": Decimal(
-                user.get("overage_leads_count")
-                * self.COST_CONTACT_ON_BASIC_PLAN
-            ),
+            "money_because_of_overage": self.calculate_money_contacts_overage(user=user),
             "smart_audience_quota": {
                 "available": user.get("smart_audience_quota") != 0
                 and (

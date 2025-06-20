@@ -139,7 +139,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 				setHide(true);
 			} else {
 				setCardDetails([...response.data.card_details]);
-				console.log(response.data);
 				setContactsCollected(response.data.usages_credits.leads_credits);
 				setMoneyContactsOverage(
 					response.data.usages_credits.money_because_of_overage,
@@ -217,7 +216,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	};
 
 	const renderValue = (value: any) => {
-		console.log(value);
 		if (
 			value?.current_value === -1 ||
 			value?.limit_value === -1 ||
@@ -938,9 +936,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 																	Object.entries(billingDetails).map(
 																		([nextKey, nextValue], nextIndex) => {
 																			if (
-																				(nextValue &&
-																					nextKey === "monthly_total") ||
-																				nextKey === "yearly_total"
+																				(nextValue && nextKey === "monthly_total") ||
+																				(nextValue && nextKey === "yearly_total")
 																			) {
 																				return (
 																					<Box

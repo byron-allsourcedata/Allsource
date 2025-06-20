@@ -10,7 +10,6 @@ import {
 } from "@mui/material";
 import { billingStyles } from "./billingStyles";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-// import Link from "next/link";
 
 interface UsageItemProps {
 	title: string;
