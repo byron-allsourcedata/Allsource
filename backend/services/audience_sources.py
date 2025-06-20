@@ -23,7 +23,10 @@ from enums import TypeOfCustomer, TypeOfSourceOrigin, BusinessType
 from persistence.audience_sources_matched_persons import (
     AudienceSourcesMatchedPersonsPersistence,
 )
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from enums import QueueName, SourceType
 from models.users import User
 
@@ -625,6 +628,7 @@ class AudienceSourceService:
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         data = {
             "source_id": str(source_id),
             "user_id": user_id,
@@ -640,8 +644,8 @@ class AudienceSourceService:
 
         try:
             message_body = {"type": type, "data": data}
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body=message_body,
             )

@@ -6,12 +6,15 @@ import AllInboxIcon from "@mui/icons-material/AllInbox";
 import useAxios from "axios-hooks";
 import { BookACallPopup } from "./BookACallPopup";
 import ProgressBar from "../sources/components/BlueProgressLoader";
+import CompareIcon from "@mui/icons-material/Compare";
 
 const FreeTrialLabel: React.FC = () => {
 	const [accessToken, setAccessToken] = useState<string | null>(null);
 	const [domainCount, setDomainCount] = useState<number>(0);
 	const [creditsCount, setCreditsCount] = useState<number>(0);
+	const [validationsFunds, setValidationsFunds] = useState<number>(0);
 	const [creditsLimitCount, setCreditsLimitCount] = useState<number>(0);
+	const [validationsFundsLimit, setValidationsFundsLimit] = useState<number>(0);
 	const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 
 	useEffect(() => {
@@ -48,6 +51,8 @@ const FreeTrialLabel: React.FC = () => {
 			if (user_info && user_plan) {
 				setCreditsCount(user_info.leads_credits);
 				setDomainCount(user_domains.length);
+				setValidationsFunds(user_info.validation_funds);
+				setValidationsFundsLimit(user_plan.validation_funds);
 				setCreditsLimitCount(user_plan.lead_credits);
 			}
 		}
@@ -144,7 +149,7 @@ const FreeTrialLabel: React.FC = () => {
 								textWrap: "nowrap",
 							}}
 						>
-							<Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
+							{/* <Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
 								<DomainVerificationIcon
 									fontSize="small"
 									sx={{
@@ -181,6 +186,40 @@ const FreeTrialLabel: React.FC = () => {
 										}}
 									>
 										1 Domains
+									</Typography>
+								</Box>
+							</Box> */}
+
+							<Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
+								<CompareIcon
+									fontSize="small"
+									sx={{ color: "#3898FC", fontSize: "17px" }}
+								/>
+								<Box
+									sx={{ display: "flex", width: "100%", alignItems: "center" }}
+								>
+									<Typography
+										sx={{
+											fontFamily: "Nunito Sans",
+											fontWeight: "400",
+											fontSize: "12px",
+											color: "rgba(50, 54, 62, 0.5)",
+										}}
+									>
+										{(
+											(validationsFundsLimit ?? 0) - (validationsFunds ?? 0)
+										).toLocaleString()}
+										/
+									</Typography>
+									<Typography
+										sx={{
+											fontFamily: "Nunito Sans",
+											fontWeight: "400",
+											fontSize: "12px",
+											color: "rgba(50, 54, 62, 1)",
+										}}
+									>
+										{validationsFundsLimit?.toLocaleString()} Validations
 									</Typography>
 								</Box>
 							</Box>

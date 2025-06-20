@@ -30,6 +30,7 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
+import DeleteIcon from "@mui/icons-material/Delete";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
@@ -63,7 +64,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 		null,
 	);
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-	const [newListName, setNewListName] = useState<string>(data?.name || "");
+	const [newListName, setNewListName] = useState<string>(data?.list_name || "");
 	const [tagName, setTagName] = useState<string>("");
 	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
@@ -1351,12 +1352,17 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 													container
 													justifyContent="center"
 												>
-													<IconButton onClick={() => handleDeleteField(index)}>
-														<Image
-															src="/trash-icon-filled.svg"
-															alt="trash-icon-filled"
-															height={18}
-															width={18}
+													<IconButton
+														onClick={() => handleDeleteField(index)}
+														disabled={customFields.length === 1}
+													>
+														<DeleteIcon
+															sx={{
+																color:
+																	customFields.length === 1
+																		? "grey.400"
+																		: "inherit",
+															}}
 														/>
 													</IconButton>
 												</Grid>

@@ -9,7 +9,10 @@ from fastapi import (
     status,
 )
 
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from db_dependencies import Db
 from dependencies import (
     get_plans_service,
@@ -82,7 +85,7 @@ async def test(
 
 
 @router.post("/update-subscription-webhook")
-async def update_payment_confirmation(
+async def update_subscription_webhook(
     request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)
 ):
     payload = await request.json()
@@ -93,18 +96,19 @@ async def update_payment_confirmation(
     if user:
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         queue_name = f"sse_events_{str(user.id)}"
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "status": result_update_subscription.get("status"),
                     "update_subscription": True,
                 },
             )
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={
                     "customer_id": user.customer_id,
@@ -122,7 +126,7 @@ async def update_payment_confirmation(
 
 
 @router.post("/cancel-subscription-webhook")
-async def update_payment_confirmation(
+async def cancel_subscription_webhook(
     request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)
 ):
     payload = await request.json()
@@ -137,13 +141,14 @@ async def update_payment_confirmation(
         queue_name = f"sse_events_{str(user.id)}"
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         try:
             message_text = (
                 "It looks like your payment didn’t go through. Kindly check your payment card, go to - "
                 "billing"
             )
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "notification_text": message_text,
@@ -153,8 +158,8 @@ async def update_payment_confirmation(
                 },
             )
 
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=EMAIL_NOTIFICATIONS,
                 message_body={
                     "email": user.email,
@@ -225,8 +230,55 @@ async def checkout_completed(
     )
 
 
+@router.post("/checkout-deleted")
+async def checkout_deleted(
+    request: fastRequest,
+    subscription_webhooks: SubscriptionWebhookService,
+):
+    event = await request.json()
+    object_type = event["object"]
+
+    if object_type != "event":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid object type",
+        )
+    event_type = event["type"]
+    if event_type == "customer.subscription.deleted":
+        return subscription_webhooks.cancel_subscription(event)
+
+    logger.warning(f"Unknown event type: {event_type}")
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
+    )
+
+
+@router.post("/update-payment")
+async def update_payment(
+    request: fastRequest,
+    subscription_webhooks: SubscriptionWebhookService,
+):
+    event = await request.json()
+    event_type = event["type"]
+    match event_type:
+        case "invoice.payment_succeeded":
+            return subscription_webhooks.save_invoice_payment(
+                event_type=event_type, event=event
+            )
+
+        case "invoice.payment_failed":
+            return subscription_webhooks.invoice_payment_failed(
+                event_type=event_type, event=event
+            )
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
+    )
+
+
 @router.post("/update-payment-webhook")
-async def update_payment_confirmation(
+async def update_payment_webhook(
     request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)
 ):
     payload = await request.json()
@@ -331,9 +383,10 @@ async def shopify_billing_update_webhook(
         user = result_update_subscription["user"]
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=QUEUE_CREDITS_CHARGING,
                 message_body={
                     "customer_id": user.customer_id,

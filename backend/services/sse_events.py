@@ -1,7 +1,7 @@
 import json
 import logging
 
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection
 from enums import VerifyToken
 from persistence.user_persistence import UserPersistence
 from .jwt_service import decode_jwt_data

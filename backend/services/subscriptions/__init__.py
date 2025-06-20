@@ -1,35 +1,32 @@
 import logging
-from datetime import datetime, timezone, timedelta
-
-from db_dependencies import Db
-from enums import PlanAlias
-from dateutil.relativedelta import relativedelta
-from sqlalchemy.orm import Session
 import os
+from datetime import datetime, timezone
+from decimal import *
+from urllib.parse import urlencode
+
+import requests
 from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
-from enums import NotificationTitles, CreditsStatus
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+
+from db_dependencies import Db
+from enums import CreditsStatus
+from enums import PlanAlias
 from models.leads_users import LeadUser
 from models.plans import SubscriptionPlan
+from models.referral_payouts import ReferralPayouts
+from models.referral_users import ReferralUser
 from models.subscription_transactions import SubscriptionTransactions
 from models.subscriptions import Subscription, UserSubscriptions
 from models.users import Users, User
-from persistence.leads_persistence import LeadsPersistence
-from persistence.partners_persistence import PartnersPersistence
 from models.users_domains import UserDomains
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
+from persistence.partners_persistence import PartnersPersistence
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
 from resolver import injectable
-from utils import get_utc_aware_date_for_postgres, end_of_month
-from decimal import *
-from models.referral_payouts import ReferralPayouts
-from models.referral_users import ReferralUser
-from services.stripe_service import determine_plan_name_from_product_id
-from urllib.parse import urlencode
-import requests
 from services.referral import ReferralService
+from services.stripe_service import determine_plan_name_from_product_id
+from utils import get_utc_aware_date_for_postgres, end_of_month
 
 load_dotenv()
 
@@ -207,18 +204,27 @@ class SubscriptionService:
                 price,
                 alias,
                 lead_credits,
+                validation_funds,
             ) = result
             result_dict["subscription"] = user_subscription
             result_dict["artificial_trial_days"] = trail_days
             result_dict["is_artificial_status"] = is_free_trial
             result_dict["alias"] = alias
             result_dict["lead_credits"] = lead_credits
+            result_dict["validation_funds"] = validation_funds
 
         return result_dict
 
     def is_user_has_active_subscription(self, user_id):
         result = self.get_user_subscription_with_trial_status(user_id=user_id)
         return self.is_subscription_active(result)
+
+    def is_user_has_inactive_subscription_on_basic(self, user_id):
+        return (
+            self.plans_persistence.is_user_has_inactive_subscription_on_basic(
+                user_id=user_id
+            )
+        )
 
     def is_subscription_active(self, subscription_with_trial):
         if not subscription_with_trial["subscription"]:

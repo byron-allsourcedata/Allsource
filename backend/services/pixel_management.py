@@ -15,8 +15,12 @@ from resolver import injectable
 from schemas.pixel_management import ManagementResult
 from services.domains import UserDomainsService
 from services.integrations.base import IntegrationService
+from dotenv import load_dotenv
+from config.util import getenv
 
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 
 @injectable
@@ -75,7 +79,7 @@ class PixelManagementService:
 
         return result
 
-    def get_pixel_script(self, action: str, domain_id: int):
+    def get_pixel_scripts(self, action: str, domain_id: int):
         domain = self.user_domains_service.get_domain_by_id(domain_id=domain_id)
         if not domain:
             return {"status": DomainStatus.DOMAIN_NOT_FOUND}
@@ -89,18 +93,27 @@ class PixelManagementService:
                 domain_id=domain_id, data_provider_id=client_id
             )
 
-        base_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..")
-        )
-        script_path = os.path.join(
-            base_path, "data", "additional_pixels", f"{action}.js"
-        )
-        if not os.path.isfile(script_path):
-            return {"status": "script_not_found"}
+        data_path = getenv("DATA_FOLDER")
+        script_names = [f"{action}.js"]
+        if action != "view_product":
+            script_names.append(f"{action}_button.js")
 
-        with open(script_path, "r", encoding="utf-8") as f:
-            script_template = f.read()
+        result: dict[str, str | None] = {}
 
-        script = script_template.replace("{{client_id}}", client_id)
+        result["button"] = None
+        result["default"] = None
+        for name in script_names:
+            script_path = os.path.join(data_path, "additional_pixels", name)
+            if os.path.isfile(script_path):
+                with open(script_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                if name.endswith("_button.js"):
+                    result["button"] = content.replace(
+                        "{{client_id}}", client_id
+                    )
+                else:
+                    result["default"] = content.replace(
+                        "{{client_id}}", client_id
+                    )
 
-        return script
+        return result

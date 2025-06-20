@@ -137,9 +137,9 @@ class IntegrationsUserSyncPersistence:
         service_name: str = None,
         integrations_users_sync_id: str = None,
     ):
-        success_synced_persons_query = (
+        validated_persons_query = (
             select(
-                count(DataSyncImportedLead.id).label("successful"),
+                count(DataSyncImportedLead.id).label("validated"),
                 IntegrationUserSync.id,
             )
             .select_from(DataSyncImportedLead)
@@ -147,34 +147,7 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
-            .where(DataSyncImportedLead.status == "success")
-            .group_by(IntegrationUserSync.id)
-        ).subquery()
-
-        queued_synced_persons_query = (
-            select(
-                count(DataSyncImportedLead.id).label("queued"),
-                IntegrationUserSync.id,
-            )
-            .select_from(DataSyncImportedLead)
-            .join(
-                IntegrationUserSync,
-                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
-            )
-            .where(DataSyncImportedLead.status == "sent")
-        ).subquery()
-
-        failed_synced_persons_query = (
-            select(
-                count(DataSyncImportedLead.id).label("failed"),
-                IntegrationUserSync.id,
-            )
-            .select_from(DataSyncImportedLead)
-            .join(
-                IntegrationUserSync,
-                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
-            )
-            .where(DataSyncImportedLead.status == "failed")
+            .where(DataSyncImportedLead.status != "sent")
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
@@ -210,14 +183,11 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync.campaign_name,
                 IntegrationUserSync.hook_url,
                 IntegrationUserSync.method,
-                coalesce(success_synced_persons_query.c.successful, 0).label(
-                    "successful"
-                ),
-                coalesce(failed_synced_persons_query.c.failed, 0).label(
-                    "failed"
-                ),
                 coalesce(all_synced_persons_query.c.all_contacts, 0).label(
                     "all_contacts"
+                ),
+                coalesce(validated_persons_query.c.validated, 0).label(
+                    "validated"
                 ),
                 UserIntegration.service_name,
                 UserIntegration.is_with_suppression,
@@ -230,12 +200,8 @@ class IntegrationsUserSyncPersistence:
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
             .outerjoin(
-                success_synced_persons_query,
-                IntegrationUserSync.id == success_synced_persons_query.c.id,
-            )
-            .outerjoin(
-                failed_synced_persons_query,
-                IntegrationUserSync.id == failed_synced_persons_query.c.id,
+                validated_persons_query,
+                IntegrationUserSync.id == validated_persons_query.c.id,
             )
             .outerjoin(
                 all_synced_persons_query,
@@ -271,8 +237,8 @@ class IntegrationsUserSyncPersistence:
                     "dataSync": sync.is_active,
                     "suppression": sync.is_with_suppression,
                     "contacts": sync.all_contacts,
-                    "successful_contacts": sync.successful,
-                    "processed_contacts": sync.failed + sync.successful,
+                    "processed_contacts": sync.validated,
+                    "successful_contacts": sync.no_of_contacts,
                     "createdBy": sync.created_by,
                     "accountId": sync.platform_user_id,
                     "data_map": sync.data_map,
@@ -307,8 +273,8 @@ class IntegrationsUserSyncPersistence:
                 "dataSync": sync.is_active,
                 "suppression": sync.is_with_suppression,
                 "contacts": sync.all_contacts,
-                "successful_contacts": sync.successful,
-                "processed_contacts": sync.failed + sync.successful,
+                "processed_contacts": sync.validated,
+                "successful_contacts": sync.no_of_contacts,
                 "createdBy": sync.created_by,
                 "status": "Syncing",
                 "accountId": sync.platform_user_id,

@@ -1,5 +1,7 @@
 import math
 import os
+import uuid
+
 import certifi
 from typing import List, Optional
 
@@ -18,6 +20,15 @@ stripe.api_key = StripeConfig.api_key
 
 logging.getLogger("stripe").setLevel(logging.WARNING)
 TRIAL_PERIOD_WITH_COUPON = 7
+
+
+def create_stripe_transfer(amount: int, destination_account: str):
+    transfer = stripe.Transfer.create(
+        amount=int(amount * 100),
+        currency="usd",
+        destination=destination_account,
+    )
+    return transfer
 
 
 @injectable
@@ -43,13 +54,35 @@ class StripeService:
             logging.error(f"Authentication error: {e.user_message}")
             return None
 
-    def create_stripe_transfer(self, amount: int, destination_account: str):
-        transfer = stripe.Transfer.create(
-            amount=int(amount * 100),
-            currency="usd",
-            destination=destination_account,
+    def create_basic_plan_subscription(
+        self, customer_id: str, stripe_price_id: str
+    ):
+        subscription = stripe.Subscription.create(
+            customer=customer_id,
+            items=[{"price": stripe_price_id}],
+            collection_method="charge_automatically",
+            billing_cycle_anchor_config={
+                "day_of_month": 31,
+                "hour": 23,
+                "minute": 59,
+                "second": 59,
+            },
+            off_session=True,
         )
-        return transfer
+
+        return subscription
+
+    @staticmethod
+    def record_usage(customer_id: str, quantity: int):
+        resp = stripe.billing.MeterEvent.create(
+            event_name="records",
+            identifier=str(uuid.uuid4()),
+            payload={
+                "stripe_customer_id": customer_id,
+                "value": quantity,
+            },
+        )
+        return resp
 
     def create_checkout_session(
         self,
@@ -139,11 +172,17 @@ def get_card_details_by_customer_id(customer_id):
     return card_details
 
 
-def add_card_to_customer(customer_id, payment_method_id):
+def add_card_to_customer(customer_id, payment_method_id, is_default: bool):
     try:
         payment_method = stripe.PaymentMethod.attach(
-            payment_method_id, customer=customer_id
+            payment_method_id,
+            customer=customer_id,
         )
+        if is_default:
+            stripe.Customer.modify(
+                customer_id,
+                invoice_settings={"default_payment_method": payment_method_id},
+            )
         return {
             "status": "SUCCESS",
             "card_details": {
@@ -152,7 +191,7 @@ def add_card_to_customer(customer_id, payment_method_id):
                 "brand": payment_method.card.brand,
                 "exp_month": payment_method.card.exp_month,
                 "exp_year": payment_method.card.exp_year,
-                "is_default": False,
+                "is_default": is_default,
             },
         }
     except stripe.error.StripeError as e:

@@ -1,12 +1,11 @@
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
-from urllib.parse import uses_query
 from decimal import Decimal
 
 import pytz
-from sqlalchemy import func, desc, asc, case, or_, select
+from sqlalchemy import func, desc, asc, or_, select, update
 from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
@@ -25,6 +24,7 @@ from models.users import Users
 from models.users_domains import UserDomains
 from models.audience_sources import AudienceSource
 from resolver import injectable
+from utils import end_of_month
 
 logger = logging.getLogger(__name__)
 
@@ -672,3 +672,36 @@ class UserPersistence:
         return self.db.execute(
             select(Users).where(Users.email == email)
         ).scalar()
+
+    def update_users_credits(self, subscription_ids: any, credits: int):
+        stmt_users = (
+            update(Users)
+            .where(Users.current_subscription_id.in_(subscription_ids))
+            .values(leads_credits=credits)
+        )
+        result = self.db.execute(stmt_users)
+        return result
+
+    def update_subscriptions_dates(self, subscription_ids: any):
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        stmt_subs = (
+            update(UserSubscriptions)
+            .where(UserSubscriptions.id.in_(subscription_ids))
+            .values(plan_start=now, plan_end=end_of_month(now))
+        )
+        result = self.db.execute(stmt_subs)
+        return result
+
+    def decrease_overage_leads_count(self, customer_id: str, quantity: int):
+        stmt_users = (
+            update(Users)
+            .where(Users.customer_id == customer_id)
+            .values(
+                overage_leads_count=func.greatest(
+                    Users.overage_leads_count - quantity, 0
+                )
+            )
+        )
+        result = self.db.execute(stmt_users)
+        self.db.commit()
+        return result.rowcount

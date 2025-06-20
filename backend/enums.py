@@ -195,9 +195,21 @@ class UserAuthorizationStatus(Enum):
     FILL_COMPANY_DETAILS = "FILL_COMPANY_DETAILS"
     NEED_BOOK_CALL = "NEED_BOOK_CALL"
     PAYMENT_NEEDED = "PAYMENT_NEEDED"
+    PAYMENT_FAILED = "PAYMENT_FAILED"
     PIXEL_INSTALLATION_NEEDED = "PIXEL_INSTALLATION_NEEDED"
     TEAM_TOKEN_EXPIRED = "TEAM_TOKEN_EXPIRED"
     INVALID_API_KEY = "INVALID_API_KEY"
+
+
+class SubscriptionPlanAlias(Enum):
+    BASIC = "basic"
+    BASIC_RECORDS = "basic_records"
+
+
+class UserSubscriptionsStatus(Enum):
+    ACTIVE = "active"
+    CANCELED = "canceled"
+    INACTIVE = "inactive"
 
 
 class MiddleWareEnum(Enum):
@@ -390,6 +402,8 @@ class ProccessDataSyncResult(Enum):
 class PlanAlias(Enum):
     PARTNERS = "partners"
     SHOPIFY = "shopify"
+    BASIC = "basic"
+    FREE_TRIAL = "free_trial_monthly"
 
 
 class ProgramType(Enum):
@@ -412,3 +426,9 @@ class PayOutReferralsStatus(Enum):
     SUCCESS = "SUCCESS"
     NO_USERS_FOR_PAYOUT = "NO_USERS_FOR_PAYOUT"
     PAYMENT_ERROR = "PAYMENT_ERROR"
+
+
+class PaymentStatus(Enum):
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    CANCELED = "canceled"

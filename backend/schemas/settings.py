@@ -39,6 +39,7 @@ class TeamsDetailsRequest(BaseModel):
 class PaymentCard(BaseModel):
     payment_method_id: str = Field(...)
     email: Optional[str] = None
+    is_default: Optional[bool] = False
 
 
 class SendBilling(BaseModel):

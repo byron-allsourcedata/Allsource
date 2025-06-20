@@ -5,7 +5,10 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from schemas.admin import InviteDetailsRequest
 from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from schemas.users import UpdateUserRequest, UpdateUserResponse
 
 router = APIRouter()
@@ -24,9 +27,10 @@ async def verify_token(
     queue_name = f"sse_events_{str(user.id)}"
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
+    channel = await connection.channel()
     try:
-        await publish_rabbitmq_message(
-            connection=connection,
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=queue_name,
             message_body={"status": "BOOK_CALL_PASSED", "percent": 50},
         )

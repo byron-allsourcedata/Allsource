@@ -10,7 +10,10 @@ from sqlalchemy.orm import Session
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
 from persistence.admin import AdminPersistence
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from enums import (
     SignUpStatus,
     LoginStatus,
@@ -110,10 +113,15 @@ class UsersAuth:
                     user.get("id")
                 )
             )
+            subscription_plan_is_inactive_on_basic = self.subscription_service.is_user_has_inactive_subscription_on_basic(
+                user.get("id")
+            )
             if subscription_plan_is_active:
                 return UserAuthorizationStatus.SUCCESS
             if user.get("stripe_payment_url"):
                 return UserAuthorizationStatus.PAYMENT_NEEDED
+            if subscription_plan_is_inactive_on_basic:
+                return UserAuthorizationStatus.PAYMENT_FAILED
             return UserAuthorizationStatus.NEED_CHOOSE_PLAN
         if user.get("is_email_confirmed"):
             if user.get("is_book_call_passed"):
@@ -122,10 +130,15 @@ class UsersAuth:
                         user.get("id")
                     )
                 )
+                subscription_plan_is_inactive_on_basic = self.subscription_service.is_user_has_inactive_subscription_on_basic(
+                    user.get("id")
+                )
                 if subscription_plan_is_active:
                     return UserAuthorizationStatus.SUCCESS
                 if user.get("stripe_payment_url"):
                     return UserAuthorizationStatus.PAYMENT_NEEDED
+                if subscription_plan_is_inactive_on_basic:
+                    return UserAuthorizationStatus.PAYMENT_FAILED
                 return UserAuthorizationStatus.NEED_CHOOSE_PLAN
             return UserAuthorizationStatus.NEED_BOOK_CALL
         return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
@@ -147,9 +160,10 @@ class UsersAuth:
         queue_name = f"sse_events_{str(user_id)}"
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
+        channel = await connection.channel()
         try:
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=queue_name,
                 message_body={
                     "notification_text": account_notification.text,

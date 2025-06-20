@@ -199,11 +199,7 @@ class WebhookIntegrationService:
                 five_x_five_user=five_x_five_user,
                 data_map=integration_data_sync.data_map,
             )
-            if data in (
-                ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-            ):
+            if data == ProccessDataSyncResult.INCORRECT_FORMAT.value:
                 results.append({"lead_id": lead_user.id, "status": data})
                 continue
             else:

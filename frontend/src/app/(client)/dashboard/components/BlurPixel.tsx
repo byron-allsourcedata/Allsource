@@ -13,7 +13,7 @@ const BlurPixel = ({}) => {
 	const router = useRouter();
 
 	const navigateToDashboardPage = () => {
-		router.push("./dashboard");
+		router.push("/get-started?pixel=true");
 	};
 
 	return (

@@ -15,7 +15,10 @@ from schemas.lookalikes import (
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from fastapi import Body
 
 from services.similar_audiences import SimilarAudienceService
@@ -110,10 +113,11 @@ async def create_lookalike(
     )
     if result["status"] == "SUCCESS":
         msg_body = {"lookalike_id": str(result["lookalike"]["id"])}
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        await publish_rabbitmq_message(
-            connection=connection,
+        rmq_connection = RabbitMQConnection()
+        connection = await rmq_connection.connect()
+        channel = await connection.channel()
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
             queue_name=AUDIENCE_LOOKALIKES_READER,
             message_body=msg_body,
         )

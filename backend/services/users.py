@@ -65,6 +65,7 @@ class UsersService:
                 "is_trial": result["subscription"].is_trial,
                 "plan_end": result["subscription"].plan_end,
                 "lead_credits": result["lead_credits"],
+                "validation_funds": result["validation_funds"],
                 "plan_alias": result["alias"],
             }
         return {"is_trial_pending": True}
@@ -78,7 +79,8 @@ class UsersService:
                 "is_partner": team_member.get("is_partner"),
                 "business_type": team_member.get("business_type"),
                 "source": team_member.get("source_platform"),
-                "leads_credits": self.user.get("leads_credits"),
+                "leads_credits": team_member.get("leads_credits"),
+                "validation_funds": team_member.get("validation_funds"),
             }
         return {
             "email": self.user.get("email"),
@@ -87,6 +89,7 @@ class UsersService:
             "business_type": self.user.get("business_type"),
             "source_platform": self.user.get("source_platform"),
             "leads_credits": self.user.get("leads_credits"),
+            "validation_funds": self.user.get("validation_funds"),
         }
 
     def get_domain_with_stats(

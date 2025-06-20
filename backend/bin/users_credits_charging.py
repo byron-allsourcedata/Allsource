@@ -22,7 +22,10 @@ from enums import NotificationTitles
 from models.account_notification import AccountNotification
 from models.users_account_notification import UserAccountNotification
 from models.leads_users import LeadUser
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, aliased
 from services.subscriptions import SubscriptionService
@@ -252,9 +255,10 @@ async def on_message_received(message, session, subscription_service):
                         queue_name = f"sse_events_{str(user.id)}"
                         rabbitmq_connection = RabbitMQConnection()
                         connection = await rabbitmq_connection.connect()
+                        channel = await connection.channel()
                         try:
-                            await publish_rabbitmq_message(
-                                connection=connection,
+                            await publish_rabbitmq_message_with_channel(
+                                channel=channel,
                                 queue_name=queue_name,
                                 message_body={
                                     "notification_text": account_notification.text,
