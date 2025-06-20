@@ -17,7 +17,10 @@ from models.enrichment.enrichment_users import EnrichmentUser
 from utils import get_utc_aware_date
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
-from config.rmq_connection import publish_rabbitmq_message_with_channel, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 from config.aws import get_s3_client
 from enums import (
     ProccessDataSyncResult,

@@ -17,7 +17,10 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 
 load_dotenv()
 

@@ -318,9 +318,7 @@ def get_max_ids(db_session, domain_id, statuses):
     return max_id, total_count
 
 
-async def send_pixel_contacts(
-    *, data, source_id, db_session, channel, user_id
-):
+async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
     domain_id = data.get("domain_id")
     statuses = data.get("statuses")
     logging.info(f"Processing AudienceSource with ID: {source_id}")
