@@ -157,8 +157,8 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 							<Typography color="textSecondary">
 								$
 								{new Intl.NumberFormat("en-US", {
-									minimumFractionDigits: 0,
-									maximumFractionDigits: 0,
+									minimumFractionDigits: 2,
+									maximumFractionDigits: 2,
 								}).format(moneyContactsOverage)}
 							</Typography>
 						</Box>
