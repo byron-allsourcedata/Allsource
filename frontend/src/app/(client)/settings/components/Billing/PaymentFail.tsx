@@ -33,6 +33,7 @@ interface CardDetails {
 interface PaymentPopupProps {
 	open: boolean;
 	cardDetails: CardDetails[];
+	moneyContactsOverage: number;
 	handleCheckoutSuccess: (item: CardDetails) => void;
 }
 
@@ -49,6 +50,7 @@ const cardBrandImages: Record<CardBrand, string> = {
 const PaymentFail: React.FC<PaymentPopupProps> = ({
 	open,
 	cardDetails,
+	moneyContactsOverage,
 	handleCheckoutSuccess,
 }) => {
 	const stripePromise = loadStripe(
@@ -87,7 +89,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			setLoading(false);
 		}
 	};
-	const onClose = () => {};
+	const onClose = () => { };
 
 	const handleAddCard = () => {
 		setOpenAddCard(true);
@@ -148,6 +150,18 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 						</Typography>
 					</Box>
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+							<Typography className="first-sub-title">
+								Outstanding Balance:
+							</Typography>
+							<Typography color="textSecondary">
+								$
+								{new Intl.NumberFormat('en-US', {
+									minimumFractionDigits: 0,
+									maximumFractionDigits: 0
+								}).format(moneyContactsOverage)}
+							</Typography>
+						</Box>
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 							<Typography className="first-sub-title">
 								Payment Method:
