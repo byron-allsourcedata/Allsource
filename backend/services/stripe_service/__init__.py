@@ -457,7 +457,11 @@ def get_billing_history_by_userid(customer_id, page, per_page):
 
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     for charge in charges:
-        if getattr(charge, "invoice", None) is None and getattr(charge, "metadata", {}).get("product_description") == "leads_credits":
+        if (
+            getattr(charge, "invoice", None) is None
+            and getattr(charge, "metadata", {}).get("product_description")
+            == "leads_credits"
+        ):
             if charge.amount > 0:
                 billing_history.append(charge)
 
@@ -466,4 +470,3 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     start = (page - 1) * per_page
     end = min(page * per_page, count)
     return billing_history[start:end], count, max_page
-
