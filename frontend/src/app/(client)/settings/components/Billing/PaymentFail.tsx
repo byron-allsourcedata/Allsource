@@ -89,7 +89,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			setLoading(false);
 		}
 	};
-	const onClose = () => { };
+	const onClose = () => {};
 
 	const handleAddCard = () => {
 		setOpenAddCard(true);
@@ -156,9 +156,9 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 							</Typography>
 							<Typography color="textSecondary">
 								$
-								{new Intl.NumberFormat('en-US', {
+								{new Intl.NumberFormat("en-US", {
 									minimumFractionDigits: 0,
-									maximumFractionDigits: 0
+									maximumFractionDigits: 0,
 								}).format(moneyContactsOverage)}
 							</Typography>
 						</Box>
