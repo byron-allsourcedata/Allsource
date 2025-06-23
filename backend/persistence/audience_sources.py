@@ -53,7 +53,7 @@ class AudienceSourcesPersistence:
             )
             .join(Users, Users.id == AudienceSource.created_by_user_id)
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
-            .filter(AudienceSource.user_id == user_id)
+            .filter(AudienceSource.user_id == user_id, AudienceSource.matched_records_status == 'complete', AudienceSource.matched_records > 0)
         )
 
         source_type_list = source_type.split(",") if source_type else []

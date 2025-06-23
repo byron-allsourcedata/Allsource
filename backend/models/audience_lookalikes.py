@@ -18,17 +18,6 @@ from .base import Base
 
 class AudienceLookalikes(Base):
     __tablename__ = "audience_lookalikes"
-    __table_args__ = (
-        Index(
-            "audience_lookalikes_user_id_created_date_idx",
-            "user_id",
-            "created_date",
-        ),
-        Index("audience_lookalikes_user_id_idx", "user_id"),
-        Index("audience_lookalikes_created_date_idx", "created_date"),
-        Index("audience_lookalikes_name_idx", "name"),
-        Index("audience_lookalikes_user_id_uuid_idx", "user_id", "id"),
-    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -63,3 +52,16 @@ class AudienceLookalikes(Base):
         Integer, server_default="0", nullable=False
     )
     train_model_size = Column(Integer, server_default="0", nullable=False)
+
+    __table_args__ = (
+        Index(
+            "audience_lookalikes_user_id_created_date_idx",
+            user_id,
+            created_date,
+        ),
+        Index("audience_lookalikes_user_id_idx", user_id),
+        Index("audience_lookalikes_created_date_idx", created_date),
+        Index("audience_lookalikes_name_idx", name),
+        Index("audience_lookalikes_user_id_uuid_idx", user_id, id),
+        Index("audience_lookalikes_size_processed_size_idx", size, processed_size),
+    )

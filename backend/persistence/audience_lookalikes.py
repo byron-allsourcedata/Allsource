@@ -102,7 +102,7 @@ class AudienceLookalikesPersistence:
             )
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
             .join(Users, Users.id == AudienceSource.created_by_user_id)
-            .filter(AudienceLookalikes.user_id == user_id)
+            .filter(AudienceLookalikes.user_id == user_id, AudienceLookalikes.size == AudienceLookalikes.processed_size)
         )
 
         source_count = (
