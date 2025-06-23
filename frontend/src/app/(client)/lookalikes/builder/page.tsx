@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState, useRef } from "react";
 
 import {
 	ReadonlyURLSearchParams,
@@ -38,6 +38,9 @@ import { ResetProvider } from "@/context/ResetContext";
 import HintCard from "../../components/HintCard";
 import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import { ExpandLessIcon, ExpandMoreIcon, SearchIcon } from "@/icon";
+import scrollToBlock from "@/utils/autoscroll"
+
+
 export const dynamic = "force-dynamic";
 
 const CreateLookalikePage: React.FC = () => {
@@ -69,7 +72,17 @@ const CreateLookalikePage: React.FC = () => {
 		setSelectedSourceId(row.id);
 		setSelectSourceData([row]);
 		setCurrentStep(1);
+		setTimeout(() => {
+			scrollToBlock(blocks.lookalikeSize);
+		}, 0);
 	};
+
+	const blocks: any = {
+		"source": useRef<HTMLDivElement | null>(null),
+		"lookalikeSize": useRef<HTMLDivElement | null>(null),
+		"predictableFields": useRef<HTMLDivElement | null>(null),
+		"name": useRef<HTMLDivElement | null>(null),
+	}
 
 	const getFilteredData = (data: any[]) =>
 		data.filter((item) =>
@@ -137,6 +150,9 @@ const CreateLookalikePage: React.FC = () => {
 			if (response.data) {
 				setCalculatedResults(response.data);
 				setCurrentStep(2);
+				setTimeout(() => {
+					scrollToBlock(blocks.predictableFields);
+				}, 100);
 			}
 		} catch {
 			showErrorToast(
@@ -164,6 +180,9 @@ const CreateLookalikePage: React.FC = () => {
 	};
 	const handleNextStep = () => {
 		setCurrentStep(currentStep + 1);
+		setTimeout(() => {
+			scrollToBlock(blocks.name);
+		}, 0);
 	};
 	const handleGenerateLookalike = async () => {
 		try {
@@ -310,6 +329,7 @@ const CreateLookalikePage: React.FC = () => {
 								{/* "Choose your source" block */}
 								{!preselectedUuid && currentStep === 0 && (
 									<Box
+										ref={blocks.source}
 										sx={{
 											textAlign: "left",
 											padding: "16px 20px 20px 20px",
@@ -562,6 +582,7 @@ const CreateLookalikePage: React.FC = () => {
 								{/* Audience size selector */}
 								{currentStep >= 1 && (
 									<Box
+										ref={blocks.lookalikeSize}
 										sx={{
 											textAlign: "left",
 											padding: "16px 20px 20px 20px",
@@ -659,7 +680,7 @@ const CreateLookalikePage: React.FC = () => {
 								)}
 
 								{calculatedResults && currentStep >= 2 && (
-									<Box sx={{ mt: 2 }}>
+									<Box sx={{ mt: 2 }} ref={blocks.predictableFields}>
 										<CalculatedSteps
 											handleSetCanProceed={setCanProceed}
 											calculatedResults={calculatedResults}
@@ -673,6 +694,7 @@ const CreateLookalikePage: React.FC = () => {
 								{/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
 								{currentStep >= 3 && (
 									<Box
+										ref={blocks.name}
 										sx={{
 											display: "flex",
 											alignItems: "center",
