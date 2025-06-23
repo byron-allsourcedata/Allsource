@@ -18,9 +18,7 @@ router = APIRouter()
 @router.post("/check-pixel-installed", response_model=PixelFormResponse)
 async def check_pixel_installation(
     pixel_installation_request: PixelInstallationRequest,
-    pixel_installation_service: PixelInstallationService = Depends(
-        get_pixel_installation_service
-    ),
+    pixel_installation_service: PixelInstallationService,
 ):
     result = pixel_installation_service.verify_and_mark_pixel(
         pixel_installation_request.pixelClientId, pixel_installation_request.url

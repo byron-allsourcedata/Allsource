@@ -17,6 +17,7 @@ from models.users import Users, User
 from models.users_domains import UserDomains
 from datetime import datetime, timedelta
 
+from resolver import injectable
 from schemas.pixel_installation import PixelInstallationResponse
 from utils import normalize_url
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -25,9 +26,12 @@ from services.sendgrid import SendgridHandler
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class PixelInstallationService:
     def __init__(
-        self, db: Session, send_grid_persistence_service: SendgridPersistence
+        self,
+        db: Session,
+        send_grid_persistence_service: SendgridPersistence,
     ):
         self.db = db
         self.send_grid_persistence_service = send_grid_persistence_service
@@ -76,6 +80,19 @@ class PixelInstallationService:
         )
 
         return script, client_id
+
+    def get_view_product_script(self, user, domain) -> str:
+        return (
+            f"""<script>/* view_product code for {domain.domain} */</script>"""
+        )
+
+    def get_add_to_cart_script(self, user, domain) -> str:
+        return (
+            f"""<script>/* add_to_cart code for {domain.domain} */</script>"""
+        )
+
+    def get_converted_sale_script(self, user, domain) -> str:
+        return f"""<script>/* converted_sale code for {domain.domain} */</script>"""
 
     def send_pixel_code_in_email(self, email, user, domain):
         message_expiration_time = user.get("pixel_code_sent_at", None)
@@ -180,3 +197,56 @@ class PixelInstallationService:
 
         installed_flag = bool(row[0])
         return PixelInstallationResponse(pixel_installation=installed_flag)
+
+    def send_additional_pixel_code_in_email(
+        self, email: str, script_type: str, user, domain
+    ):
+        from datetime import timedelta
+
+        message_expiration_time = user.get("pixel_code_sent_at", None)
+        time_now = datetime.now()
+
+        if (
+            message_expiration_time is not None
+            and (message_expiration_time + timedelta(minutes=1)) > time_now
+        ):
+            return BaseEnum.SUCCESS
+
+        script_config = {
+            "view_product": (
+                self.get_view_product_script,
+                SendgridTemplate.SEND_VIEW_PRODUCT_PIXEL_TEMPLATE.value,
+            ),
+            "add_to_cart": (
+                self.get_add_to_cart_script,
+                SendgridTemplate.SEND_ADD_TO_CART_PIXEL_TEMPLATE.value,
+            ),
+            "converted_sale": (
+                self.get_converted_sale_script,
+                SendgridTemplate.SEND_CONVERTED_SALE_PIXEL_TEMPLATE.value,
+            ),
+        }
+
+        if script_type not in script_config:
+            raise HTTPException(status_code=400, detail="Unknown script type")
+
+        get_script_func, template_alias = script_config[script_type]
+        pixel_code = get_script_func(user, domain)
+
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+            template_alias
+        )
+
+        full_name = email.split("@")[0]
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={
+                "full_name": full_name,
+                "pixel_code": pixel_code,
+                "email": email,
+            },
+        )
+
+        return BaseEnum.SUCCESS

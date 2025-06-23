@@ -18,6 +18,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
+import { ScriptKey } from "../add-additional-script/page";
 
 const style = {
 	position: "fixed" as "fixed",
@@ -62,6 +63,7 @@ const subtext = {
 };
 
 interface PopupProps {
+	type: ScriptKey | undefined;
 	open: boolean;
 	handleClose: () => void;
 	pixelCode: string;
@@ -75,6 +77,7 @@ interface PopupProps {
 }
 
 const ScriptsPopup: React.FC<PopupProps> = ({
+	type,
 	open,
 	handleClose,
 	pixelCode,
@@ -99,11 +102,16 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 
 	const handleButtonClick = () => {
 		axiosInstance
-			.post("/install-pixel/send-pixel-code", { email })
-			.then((response) => {
-				showToast("Successfully send email");
+			.post("/pixel-management/send-pixel-code", {
+				email,
+				type: type,
 			})
-			.catch((error) => {});
+			.then((response) => {
+				showToast("Successfully sent email");
+			})
+			.catch((error) => {
+				showToast("Failed to send email");
+			});
 	};
 
 	useEffect(() => {
@@ -357,7 +365,7 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 								mt: 3,
 								border: "1px solid #e4e4e4",
 								borderRadius: "8px",
-								backgroundColor: "rgba(247, 247, 247, 1)",
+								backgroundColor: "rgba(255, 255, 255, 1)",
 								boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
 								"@media (max-width: 600px)": { m: 2 },
 							}}
