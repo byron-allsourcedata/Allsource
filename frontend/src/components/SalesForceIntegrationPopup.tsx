@@ -16,6 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import TabList from "@mui/lab/TabList";
+import { CustomButton } from "./ui";
 
 interface CreateSalesForceProps {
 	handleClose: () => void;
@@ -285,10 +286,10 @@ const SalesForceIntegrationPopup = ({
 										</Typography>
 									</Box>
 									<Box>
-										<Button
-											fullWidth
+										<CustomButton
 											onClick={handleLogin}
 											variant="contained"
+											fullWidth
 											startIcon={
 												<Image
 													src="/salesforce-icon.svg"
@@ -297,25 +298,9 @@ const SalesForceIntegrationPopup = ({
 													width={24}
 												/>
 											}
-											sx={{
-												backgroundColor: "#f24e1e",
-												fontFamily: "Nunito Sans",
-												fontSize: "14px",
-												fontWeight: "600",
-												lineHeight: "17px",
-												letterSpacing: "0.25px",
-												color: "#fff",
-												textTransform: "none",
-												padding: "14.5px 24px",
-												"&:hover": {
-													backgroundColor: "#f24e1e",
-												},
-												borderRadius: "6px",
-												border: "1px solid #f24e1e",
-											}}
 										>
 											Connect to Sales Force
-										</Button>
+										</CustomButton>
 										{invalid_api_key && (
 											<Typography
 												color="error"
