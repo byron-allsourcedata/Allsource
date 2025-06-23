@@ -1,3 +1,5 @@
+from typing import Optional
+
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import count, coalesce
@@ -137,9 +139,9 @@ class IntegrationsUserSyncPersistence:
 
     def get_filter_by(
         self,
-        domain_id,
-        service_name: str = None,
-        integrations_users_sync_id: str = None,
+        domain_id: int,
+        service_name: Optional[str] = None,
+        integrations_users_sync_id: Optional[str] = None,
     ):
         processed_persons_query = (
             select(
