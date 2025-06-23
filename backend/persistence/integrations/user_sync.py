@@ -6,7 +6,12 @@ from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import Integration
 from sqlalchemy.orm import Session, aliased
 from models.users import Users
-from enums import SourcePlatformEnum, DataSyncType
+from enums import (
+    SourcePlatformEnum,
+    DataSyncType,
+    ProccessDataSyncResult,
+    DataSyncImportedStatus,
+)
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
 from models.audience_data_sync_imported_persons import (
@@ -137,9 +142,9 @@ class IntegrationsUserSyncPersistence:
         service_name: str = None,
         integrations_users_sync_id: str = None,
     ):
-        validated_persons_query = (
+        processed_persons_query = (
             select(
-                count(DataSyncImportedLead.id).label("validated"),
+                count(DataSyncImportedLead.id).label("processed"),
                 IntegrationUserSync.id,
             )
             .select_from(DataSyncImportedLead)
@@ -147,7 +152,21 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
-            .where(DataSyncImportedLead.status != "sent")
+            .where(DataSyncImportedLead.status != DataSyncImportedStatus.SENT.value)
+            .group_by(IntegrationUserSync.id)
+        ).subquery()
+
+        validation_persons_query = (
+            select(
+                count(DataSyncImportedLead.id).label("validation"),
+                IntegrationUserSync.id,
+            )
+            .select_from(DataSyncImportedLead)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
+            )
+            .where(DataSyncImportedLead.status == DataSyncImportedStatus.SUCCESS.value)
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
@@ -186,8 +205,11 @@ class IntegrationsUserSyncPersistence:
                 coalesce(all_synced_persons_query.c.all_contacts, 0).label(
                     "all_contacts"
                 ),
-                coalesce(validated_persons_query.c.validated, 0).label(
-                    "validated"
+                coalesce(processed_persons_query.c.processed, 0).label(
+                    "processed"
+                ),
+                coalesce(validation_persons_query.c.validation, 0).label(
+                    "validation"
                 ),
                 UserIntegration.service_name,
                 UserIntegration.is_with_suppression,
@@ -200,8 +222,12 @@ class IntegrationsUserSyncPersistence:
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
             .outerjoin(
-                validated_persons_query,
-                IntegrationUserSync.id == validated_persons_query.c.id,
+                processed_persons_query,
+                IntegrationUserSync.id == processed_persons_query.c.id,
+            )
+            .outerjoin(
+                validation_persons_query,
+                IntegrationUserSync.id == validation_persons_query.c.id,
             )
             .outerjoin(
                 all_synced_persons_query,
@@ -237,8 +263,9 @@ class IntegrationsUserSyncPersistence:
                     "dataSync": sync.is_active,
                     "suppression": sync.is_with_suppression,
                     "contacts": sync.all_contacts,
-                    "processed_contacts": sync.validated,
+                    "processed_contacts": sync.processed,
                     "successful_contacts": sync.no_of_contacts,
+                    "validation_contacts": sync.validation,
                     "createdBy": sync.created_by,
                     "accountId": sync.platform_user_id,
                     "data_map": sync.data_map,
@@ -273,8 +300,9 @@ class IntegrationsUserSyncPersistence:
                 "dataSync": sync.is_active,
                 "suppression": sync.is_with_suppression,
                 "contacts": sync.all_contacts,
-                "processed_contacts": sync.validated,
+                "processed_contacts": sync.processed,
                 "successful_contacts": sync.no_of_contacts,
+                "validation_contacts": sync.validation,
                 "createdBy": sync.created_by,
                 "status": "Syncing",
                 "accountId": sync.platform_user_id,

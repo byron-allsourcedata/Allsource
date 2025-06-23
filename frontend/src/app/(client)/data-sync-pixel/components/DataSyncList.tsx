@@ -405,9 +405,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							prevData.map((item) =>
 								item.id === selectedId
 									? {
-											...item,
-											dataSync: response.data.data_sync,
-										}
+										...item,
+										dataSync: response.data.data_sync,
+									}
 									: item,
 							),
 						);
@@ -449,7 +449,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					),
 				);
 			}
-		} catch (error) {}
+		} catch (error) { }
 	};
 
 	const handleSalesForceIconPopupClose = async () => {
@@ -467,7 +467,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					),
 				);
 			}
-		} catch (error) {}
+		} catch (error) { }
 	};
 
 	const handleMetaIconPopupClose = async () => {
@@ -484,7 +484,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					),
 				);
 			}
-		} catch (error) {}
+		} catch (error) { }
 	};
 
 	const handleMailchimpIconPopupClose = async () => {
@@ -501,7 +501,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					),
 				);
 			}
-		} catch (error) {}
+		} catch (error) { }
 	};
 
 	const handleOmnisendIconPopupClose = async () => {
@@ -518,7 +518,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					),
 				);
 			}
-		} catch (error) {}
+		} catch (error) { }
 	};
 
 	const handleEdit = async () => {
@@ -710,7 +710,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					setAnchorEl(null);
 				}
 			}
-		} catch (error) {}
+		} catch (error) { }
 	};
 
 	if (Loading) {
@@ -850,8 +850,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "120px", minWidth: "120px", maxWidth: "12vw" },
 		},
 		{
-			key: "processed_contacts",
-			label: "Validated",
+			key: "validation_contacts",
+			label: "Valid emails",
 			widths: {
 				width: "100px",
 				minWidth: "100px",
@@ -859,7 +859,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			},
 		},
 		{
-			key: "successful_contacts",
+			key: "synced_contacts",
 			label: "Synced",
 			widths: {
 				width: "80px",
@@ -1261,8 +1261,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														row.active_segments === -1
 															? "unlimit"
 															: new Intl.NumberFormat("en-US").format(
-																	row.active_segments,
-																) || "--",
+																row.active_segments,
+															) || "--",
 												}}
 											>
 												{row.contacts}
@@ -1278,11 +1278,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														row.active_segments === -1
 															? "unlimit"
 															: new Intl.NumberFormat("en-US").format(
-																	row.active_segments,
-																) || "--",
+																row.active_segments,
+															) || "--",
 												}}
 											>
-												{row.processed_contacts}
+												{row.validation_contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1295,8 +1295,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														row.active_segments === -1
 															? "unlimit"
 															: new Intl.NumberFormat("en-US").format(
-																	row.active_segments,
-																) || "--",
+																row.active_segments,
+															) || "--",
 												}}
 											>
 												{row.successful_contacts}
@@ -1536,25 +1536,25 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							</Button>
 							{data.find((row) => row.id === selectedId)?.syncStatus ===
 								false && (
-								<Button
-									sx={{
-										justifyContent: "flex-start",
-										width: "100%",
-										color: "rgba(32, 33, 36, 1)",
-										textTransform: "none",
-										fontFamily: "Nunito Sans",
-										fontSize: "14px",
-										fontWeight: 600,
-										":hover": {
-											color: "rgba(56, 152, 252, 1)",
-											backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-										},
-									}}
-									onClick={handleRepairSync}
-								>
-									Repair Sync
-								</Button>
-							)}
+									<Button
+										sx={{
+											justifyContent: "flex-start",
+											width: "100%",
+											color: "rgba(32, 33, 36, 1)",
+											textTransform: "none",
+											fontFamily: "Nunito Sans",
+											fontSize: "14px",
+											fontWeight: 600,
+											":hover": {
+												color: "rgba(56, 152, 252, 1)",
+												backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+											},
+										}}
+										onClick={handleRepairSync}
+									>
+										Repair Sync
+									</Button>
+								)}
 						</Box>
 						<Popover
 							open={openConfirmDialog}
