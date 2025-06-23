@@ -9,7 +9,7 @@ import {
 	Box,
 	Radio,
 	RadioGroup,
-	LinearProgress
+	LinearProgress,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -20,7 +20,7 @@ import AddCardPopup from "./AddCard";
 import { loadStripe } from "@stripe/stripe-js";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
-import { CardDetails, CardBrand } from "./types"
+import { CardDetails, CardBrand } from "./types";
 import { styled } from "@mui/material/styles";
 import { billingStyles } from "./billingStyles";
 
@@ -66,7 +66,7 @@ const paymentFailStyles = {
 		borderRadius: "4px",
 		p: 2,
 		boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-	}
+	},
 };
 
 const BorderLinearProgress = styled(LinearProgress)(({}) => ({
@@ -203,7 +203,8 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 								{cardDetails?.map((card: CardDetails, index: number) => (
 									<Box
 										key={card.id}
-										sx={{...paymentFailStyles.cardItemWrapper,
+										sx={{
+											...paymentFailStyles.cardItemWrapper,
 											borderColor:
 												selectedCard === String(index) ? "#3898FC" : "#ddd",
 										}}
@@ -264,9 +265,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 							}}
 							onClick={handleAddCard}
 						>
-							<Box
-								sx={billingStyles.squareImg}
-							>
+							<Box sx={billingStyles.squareImg}>
 								<Image
 									src="/add-square.svg"
 									alt="add-square"

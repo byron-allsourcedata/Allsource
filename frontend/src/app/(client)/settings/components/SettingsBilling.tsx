@@ -1,10 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
-	Box,
-	Typography,
-	Divider,
-} from "@mui/material";
+import { Box, Typography, Divider } from "@mui/material";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { SendInvoicePopup } from "./Billing/SendInvoice";
@@ -15,7 +11,7 @@ import { BillingDetails } from "./Billing/BillingDetails";
 import { BillingCards } from "./Billing/BillingCards";
 import { useSearchParams } from "next/navigation";
 import { billingStyles } from "./Billing/billingStyles";
-import { CardDetails, BillingDetailsInterface } from "./Billing/types"
+import { CardDetails, BillingDetailsInterface } from "./Billing/types";
 
 export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [contactsCollected, setContactsCollected] = useState(0);
@@ -31,9 +27,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [validationLimitFundsCollected, setValidationFundsLimitedData] =
 		useState(0);
 	const [cardDetails, setCardDetails] = useState<CardDetails[]>([]);
-	const [billingDetails, setBillingDetails] = useState<BillingDetailsInterface | null>(
-		null,
-	);
+	const [billingDetails, setBillingDetails] =
+		useState<BillingDetailsInterface | null>(null);
 	const [checked, setChecked] = useState(false);
 	const [selectedInvoiceId, setselectedInvoiceId] = useState<string | null>();
 	const [canceled_at, setCanceled_at] = useState<string | null>();
@@ -124,7 +119,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 				: [...prevDetails, data],
 		);
 	};
-
 
 	if (isLoading) {
 		return <CustomizedProgressBar />;
@@ -242,9 +236,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 					</Box>
 				</Box>
 
-				<Divider
-					sx={billingStyles.divider}
-				/>
+				<Divider sx={billingStyles.divider} />
 
 				<BillingHistory
 					setIsLoading={setIsLoading}
@@ -257,7 +249,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 					setIsLoading={setIsLoading}
 					selectedInvoiceId={selectedInvoiceId ?? ""}
 				/>
-
 			</Box>
 			<PaymentFail
 				open={paymentFailed}

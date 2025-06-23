@@ -5,7 +5,7 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import PaymentIcon from "@mui/icons-material/Payment";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-import { BillingDetailsInterface } from "./types"
+import { BillingDetailsInterface } from "./types";
 
 interface BillingDetailsProps {
 	billingDetails: BillingDetailsInterface | null;

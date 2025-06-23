@@ -22,7 +22,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
 import { styled } from "@mui/material/styles";
-import { CardDetails } from "./types"
+import { CardDetails } from "./types";
 
 interface PaymentPopupProps {
 	title: string;
@@ -234,7 +234,7 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 							</Box>
 						</Box>
 					</Box>
-					<Box sx={{ display: "flex", alignItems: "center"}}>
+					<Box sx={{ display: "flex", alignItems: "center" }}>
 						<Switch
 							checked={isDefault}
 							onChange={() => setIsDefault((prev) => !prev)}
