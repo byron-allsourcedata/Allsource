@@ -14,34 +14,25 @@ export interface CardDetails {
 	is_default: boolean;
 }
 
+type Detail<T> = { detail_type: string; value: T };
+type LimitDetail = { detail_type: string; current_value: number; limit_value: number };
+
 export interface SubscriptionDetails {
-	active: { detail_type: string; value: boolean };
-	billing_cycle: {
-		detail_type: string;
-		plan_start: string | null;
-		plan_end: string | null;
-	};
-	contacts_downloads: {
-		detail_type: string;
-		limit_value: number;
-		current_value: number;
-	};
-	next_billing_date: { detail_type: string; value: string };
-	plan_name: { detail_type: string; value: string };
-	yearly_total?: { detail_type: string; value: string };
-	monthly_total?: { detail_type: string; value: string };
-	domains: { detail_type: string; current_value: number; limit_value: number };
-	validation_funds: {
-		detail_type: string;
-		current_value: number;
-		limit_value: number;
-	};
-	premium_sources_funds: string;
-	smart_audience: {
-		detail_type: string;
-		current_value: number;
-		limit_value: number;
-	};
+  active: Detail<boolean>;
+  billing_cycle: {
+    detail_type: string;
+    plan_start: string | null;
+    plan_end: string | null;
+  };
+  contacts_downloads: LimitDetail;
+  next_billing_date: Detail<string>;
+  plan_name: Detail<string>;
+  yearly_total?: Detail<string>;
+  monthly_total?: Detail<string>;
+  domains: LimitDetail;
+  validation_funds: LimitDetail;
+  premium_sources_funds: string;
+  smart_audience: LimitDetail;
 }
 
 export interface BillingDetailsInterface {

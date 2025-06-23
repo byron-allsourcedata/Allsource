@@ -288,7 +288,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 						variant="contained"
 						onClick={handlePay}
 						sx={{ padding: "10px 48px" }}
-						disabled={selectedCard === "" && loading}
+						disabled={selectedCard === "" || loading}
 					>
 						Pay
 					</CustomButton>
