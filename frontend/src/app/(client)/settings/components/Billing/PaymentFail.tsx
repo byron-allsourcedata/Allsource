@@ -13,7 +13,7 @@ import {
 	RadioGroup,
 } from "@mui/material";
 import Image from "next/image";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
 import CustomButton from "@/components/ui/CustomButton";
@@ -94,7 +94,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			setLoading(false);
 		}
 	};
-	const onClose = () => { };
+	const onClose = () => {};
 
 	const handleAddCard = () => {
 		setOpenAddCard(true);
@@ -195,7 +195,14 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 							Return to Admin
 						</Button>
 					)}
-					<DialogTitle sx={{ fontSize: "16px", fontFamily: "Nunito Sans", fontWeight: 600, pl: 0.5 }}>
+					<DialogTitle
+						sx={{
+							fontSize: "16px",
+							fontFamily: "Nunito Sans",
+							fontWeight: 600,
+							pl: 0.5,
+						}}
+					>
 						Complete Your Payment
 					</DialogTitle>
 				</Box>
