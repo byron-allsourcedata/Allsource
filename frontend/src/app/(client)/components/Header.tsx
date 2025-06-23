@@ -93,7 +93,6 @@ const Header: React.FC<HeaderProps> = ({
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const [visibleButton, setVisibleButton] = useState(false);
 	const { showHints, toggleHints } = useHints();
-	const urlParams = new URLSearchParams(window.location.search);
 	const handleSignOut = () => {
 		localStorage.clear();
 		sessionStorage.clear();
@@ -109,6 +108,7 @@ const Header: React.FC<HeaderProps> = ({
 	}, [newNotification]);
 
 	useEffect(() => {
+		const urlParams = new URLSearchParams(window.location.search);
 		let token = localStorage.getItem("parent_token");
 		const isPaymentFailed = urlParams.get("payment_failed") === "true";
 		if ((backButton || token) && !isPaymentFailed) {
