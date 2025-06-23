@@ -453,7 +453,9 @@ const CreateLookalikePage: React.FC = () => {
 																	>
 																		Type
 																	</TableCell>
-																	<TableCell sx={{ flex: 1, textAlign: "start" }}>
+																	<TableCell
+																		sx={{ flex: 1, textAlign: "start" }}
+																	>
 																		Size
 																	</TableCell>
 																</TableRow>
