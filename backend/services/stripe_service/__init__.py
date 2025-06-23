@@ -331,7 +331,9 @@ def get_last_payment_intent(customer_id):
     return None
 
 
-def purchase_product(customer_id, price_id, quantity, product_description, charge_type):
+def purchase_product(
+    customer_id, price_id, quantity, product_description, charge_type
+):
     result = {"success": False}
     try:
         customer = stripe.Customer.retrieve(customer_id)
