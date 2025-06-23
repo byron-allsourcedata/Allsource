@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, Suspense, useCallback } from "react";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, AppBar } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import { planStyles } from "./settingsStyles";
 import { SettingsAccountDetails } from "./components/SettingsAccountDetails";
@@ -52,9 +52,11 @@ const Settings: React.FC = () => {
 
 	return (
 		<Box sx={{ position: "relative", width: "100%" }}>
-			<Box
-				sx={{ width: "100%", position: "sticky", top: 0, zIndex: 9, pl: 0.5 }}
-			>
+			<AppBar
+				position="sticky"
+				color="inherit"
+				sx={{ boxShadow: 'none', pl: 0.5 }}
+				> 
 				<Box
 					sx={{
 						display: "flex",
@@ -170,7 +172,7 @@ const Settings: React.FC = () => {
                 </Button> */}
 					</Box>
 				</Box>
-			</Box>
+			</AppBar>
 
 			{isLoading ? (
 				<CustomizedProgressBar />

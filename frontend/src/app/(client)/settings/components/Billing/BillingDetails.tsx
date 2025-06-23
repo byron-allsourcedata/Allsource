@@ -250,7 +250,7 @@ export const BillingDetails: React.FC<BillingDetailsProps> = ({
 																		justifyContent: "center",
 																		gap: "16px",
 																		alignItems: "center",
-																		// margin: "0 5%",
+																		margin: "0 5%",
 																		border: "1px solid #F0F0F0",
 																		padding: "8px 16px",
 																	}}
@@ -298,7 +298,7 @@ export const BillingDetails: React.FC<BillingDetailsProps> = ({
 								<Grid
 									item
 									xs={12}
-									md={key === "billing_cycle" ? 12 : 5.9}
+									md={key === "billing_cycle" ? 12 : 6}
 									key={index}
 									sx={{
 										display: "flex",
