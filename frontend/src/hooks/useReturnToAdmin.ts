@@ -39,7 +39,7 @@ export const useReturnToAdmin = () => {
 			router.push("/admin");
 			router.refresh();
 		},
-		[router]
+		[router],
 	);
 
 	return returnToAdmin;

@@ -148,9 +148,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 					}}
 				>
 					{visibleButton && (
-						<ReturnToAdminButton
-						setVisibleButton={setVisibleButton}
-					/>
+						<ReturnToAdminButton setVisibleButton={setVisibleButton} />
 					)}
 					<DialogTitle
 						sx={{

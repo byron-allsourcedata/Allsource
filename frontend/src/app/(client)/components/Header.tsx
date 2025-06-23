@@ -125,7 +125,7 @@ const Header: React.FC<HeaderProps> = ({
 			onAfterUserData: () => {
 				setBackButton(false);
 				setVisibleButton(false);
-			}
+			},
 		});
 	};
 

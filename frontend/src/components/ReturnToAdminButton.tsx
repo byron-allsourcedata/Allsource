@@ -7,7 +7,10 @@ type Props = {
 	setBackButton?: (value: boolean) => void;
 };
 
-export const ReturnToAdminButton = ({ setVisibleButton, setBackButton }: Props) => {
+export const ReturnToAdminButton = ({
+	setVisibleButton,
+	setBackButton,
+}: Props) => {
 	const returnToAdmin = useReturnToAdmin();
 
 	const handleClick = async () => {
