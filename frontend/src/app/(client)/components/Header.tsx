@@ -242,7 +242,7 @@ const Header: React.FC<HeaderProps> = ({
 									},
 								}}
 							>
-								Return to admin
+								Return to Admin
 							</Button>
 						)}
 						{/* <Box sx={{ display: "flex", ml: 1 }}>
