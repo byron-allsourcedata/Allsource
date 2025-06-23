@@ -93,6 +93,7 @@ const Header: React.FC<HeaderProps> = ({
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const [visibleButton, setVisibleButton] = useState(false);
 	const { showHints, toggleHints } = useHints();
+	const urlParams = new URLSearchParams(window.location.search);
 	const handleSignOut = () => {
 		localStorage.clear();
 		sessionStorage.clear();
@@ -109,7 +110,8 @@ const Header: React.FC<HeaderProps> = ({
 
 	useEffect(() => {
 		let token = localStorage.getItem("parent_token");
-		if (backButton || token) {
+		const isPaymentFailed = urlParams.get("payment_failed") === "true";
+		if ((backButton || token) && !isPaymentFailed) {
 			setVisibleButton(true);
 		} else {
 			setVisibleButton(false);
@@ -240,7 +242,7 @@ const Header: React.FC<HeaderProps> = ({
 									},
 								}}
 							>
-								Return to main
+								Return to admin
 							</Button>
 						)}
 						{/* <Box sx={{ display: "flex", ml: 1 }}>
