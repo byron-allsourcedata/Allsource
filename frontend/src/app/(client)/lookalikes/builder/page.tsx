@@ -39,6 +39,7 @@ import HintCard from "../../components/HintCard";
 import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import { ExpandLessIcon, ExpandMoreIcon, SearchIcon } from "@/icon";
 import scrollToBlock from "@/utils/autoscroll";
+import CustomButton from "@/components/ui/CustomButton";
 
 export const dynamic = "force-dynamic";
 
@@ -76,7 +77,7 @@ const CreateLookalikePage: React.FC = () => {
 		}, 0);
 	};
 
-	const blocks: any = {
+	const blocks: Record<string, React.RefObject<HTMLDivElement>> = {
 		source: useRef<HTMLDivElement | null>(null),
 		lookalikeSize: useRef<HTMLDivElement | null>(null),
 		predictableFields: useRef<HTMLDivElement | null>(null),
@@ -418,6 +419,9 @@ const CreateLookalikePage: React.FC = () => {
 														),
 													}}
 													sx={{
+														"& input": {
+															paddingLeft: 0,
+														},
 														pb: "2px",
 														cursor: "pointer",
 														"& .MuiInputBase-input": {
@@ -445,11 +449,11 @@ const CreateLookalikePage: React.FC = () => {
 																		Name
 																	</TableCell>
 																	<TableCell
-																		sx={{ flex: 1, textAlign: "start" }}
+																		sx={{ flex: 1.5, textAlign: "start" }}
 																	>
 																		Type
 																	</TableCell>
-																	<TableCell sx={{ flex: 1, textAlign: "end" }}>
+																	<TableCell sx={{ flex: 1, textAlign: "start" }}>
 																		Size
 																	</TableCell>
 																</TableRow>
@@ -485,12 +489,12 @@ const CreateLookalikePage: React.FC = () => {
 																				{row.name}
 																			</TableCell>
 																			<TableCell
-																				sx={{ flex: 1, textAlign: "start" }}
+																				sx={{ flex: 1.5, textAlign: "start" }}
 																			>
 																				{toNormalText(row.type)}
 																			</TableCell>
 																			<TableCell
-																				sx={{ flex: 1, textAlign: "right" }}
+																				sx={{ flex: 1, textAlign: "start" }}
 																			>
 																				{row.matched_records.toLocaleString(
 																					"en-US",
@@ -554,25 +558,13 @@ const CreateLookalikePage: React.FC = () => {
 													alignItems: "center",
 												}}
 											>
-												<Button
-													onClick={handleEdit}
+												<CustomButton
 													variant="outlined"
-													sx={{
-														...smartAudiences.buttonform,
-														borderColor: "rgba(56, 152, 252, 1)",
-														width: "92px",
-														":hover": { backgroundColor: "#fff" },
-													}}
+													onClick={handleEdit}
+													sx={{ padding: "10px 47px" }}
 												>
-													<Typography
-														sx={{
-															...smartAudiences.textButton,
-															color: "rgba(56, 152, 252, 1)",
-														}}
-													>
-														Edit
-													</Typography>
-												</Button>
+													Edit
+												</CustomButton>
 											</Box>
 										</Box>
 									</Box>
@@ -752,8 +744,8 @@ const CreateLookalikePage: React.FC = () => {
 											onChange={handleInputChange}
 											sx={{
 												"& .MuiOutlinedInput-root": {
-													borderRadius: "8px",
-													paddingLeft: "8px",
+													borderRadius: "4px",
+													paddingLeft: 0,
 													width: "300px",
 													height: "40px",
 													"@media (max-width: 1080px)": { width: "250px" },
@@ -785,60 +777,21 @@ const CreateLookalikePage: React.FC = () => {
 										pb: 1,
 									}}
 								>
-									<Button
-										sx={{
-											border: "1px rgba(56, 152, 252, 1) solid",
-											color: "rgba(56, 152, 252, 1)",
-											backgroundColor: "#FFFFFF",
-											textTransform: "none",
-											mt: 1,
-											"&:hover": {
-												border: "1px rgba(56, 152, 252, 1) solid",
-												backgroundColor: "#FFFFFF",
-											},
-										}}
+									<CustomButton
 										variant="outlined"
 										onClick={handlePrevStep}
+										sx={{ padding: "10px 31px" }}
 									>
-										<Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
-											Go Back
-										</Typography>
-									</Button>
-									<Button
-										sx={{
-											border: "1px rgba(56, 152, 252, 1) solid",
-											color: "#FFFFFF",
-											backgroundColor: "rgba(56, 152, 252, 1)",
-											textTransform: "none",
-											gap: 0,
-											mt: 1,
-											"&:hover": {
-												border: "1px rgba(56, 152, 252, 1) solid",
-												backgroundColor: "rgba(56, 152, 252, 1)",
-											},
-											"&.Mui-disabled": {
-												color: "#FFFFFF",
-												border: "1px rgba(56, 152, 252, 1) solid",
-												backgroundColor: "rgba(56, 152, 252, 1)",
-												opacity: 0.6,
-											},
-										}}
-										variant="outlined"
-										disabled={!canProceed}
+										Go Back
+									</CustomButton>
+									<CustomButton
+										variant="contained"
 										onClick={handleNextStep}
+										disabled={!canProceed}
+										sx={{ padding: "10px 31px" }}
 									>
-										<Box
-											sx={{
-												display: "flex",
-												flexDirection: "row",
-												alignItems: "center",
-												padding: "0.5rem 1rem",
-												gap: 1,
-											}}
-										>
-											<Typography fontSize={"0.8rem"}>Continue</Typography>
-										</Box>
-									</Button>
+										Continue
+									</CustomButton>
 								</Box>
 							)}
 							{currentStep >= 3 && (
@@ -856,55 +809,24 @@ const CreateLookalikePage: React.FC = () => {
 										pb: 1,
 									}}
 								>
-									<Button
-										sx={{
-											border: "1px rgba(56, 152, 252, 1) solid",
-											color: "rgba(56, 152, 252, 1)",
-											backgroundColor: "#FFFFFF",
-											textTransform: "none",
-											mt: 1,
-											"&:hover": {
-												border: "1px rgba(56, 152, 252, 1) solid",
-												backgroundColor: "#FFFFFF",
-											},
-										}}
+									<CustomButton
 										variant="outlined"
 										onClick={handlePrevStep}
+										sx={{ padding: "10px 31px" }}
 									>
-										<Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
-											Go Back
-										</Typography>
-									</Button>
-									<Button
-										sx={{
-											border: "1px rgba(56, 152, 252, 1) solid",
-											color: "#FFFFFF",
-											backgroundColor: "rgba(56, 152, 252, 1)",
-											textTransform: "none",
-											gap: 0,
-											mt: 1,
-											opacity: sourceName.trim() === "" ? 0.6 : 1,
-											"&:hover": {
-												border: "1px rgba(56, 152, 252, 1) solid",
-												backgroundColor: "rgba(56, 152, 252, 1)",
-											},
-											"&.Mui-disabled": {
-												color: "#FFFFFF",
-												border: "1px rgba(56, 152, 252, 1) solid",
-												backgroundColor: "rgba(56, 152, 252, 1)",
-												opacity: 0.6,
-											},
-										}}
-										variant="outlined"
-										disabled={sourceName.trim() === ""}
+										Go Back
+									</CustomButton>
+									<CustomButton
+										variant="contained"
 										onClick={handleGenerateLookalike}
+										disabled={sourceName.trim() === ""}
+										sx={{ padding: "10px 18px" }}
 									>
 										<Box
 											sx={{
 												display: "flex",
 												flexDirection: "row",
 												alignItems: "center",
-												padding: "0.5rem 1rem",
 												gap: 1,
 											}}
 										>
@@ -918,7 +840,7 @@ const CreateLookalikePage: React.FC = () => {
 												Generate lookalike
 											</Typography>
 										</Box>
-									</Button>
+									</CustomButton>
 								</Box>
 							)}
 						</Box>
