@@ -152,7 +152,9 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
-            .where(DataSyncImportedLead.status != DataSyncImportedStatus.SENT.value)
+            .where(
+                DataSyncImportedLead.status != DataSyncImportedStatus.SENT.value
+            )
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
@@ -166,7 +168,10 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
-            .where(DataSyncImportedLead.status == DataSyncImportedStatus.SUCCESS.value)
+            .where(
+                DataSyncImportedLead.status
+                == DataSyncImportedStatus.SUCCESS.value
+            )
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
