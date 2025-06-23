@@ -409,8 +409,7 @@ class SettingsService:
             and hasattr(user_subscription.plan_end, "strftime")
             else (
                 user_subscription.plan_end.strftime("%b %d, %Y")
-                if subscription
-                and user_subscription
+                if user_subscription
                 and hasattr(user_subscription.plan_end, "strftime")
                 else None
             )
