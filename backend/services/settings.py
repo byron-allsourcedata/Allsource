@@ -594,15 +594,12 @@ class SettingsService:
                     billing_data.created
                 )
                 billing_hash["invoice_id"] = billing_data.id
-                billing_hash["pricing_plan"] = "Overage"
+                billing_hash["pricing_plan"] = "Overage charge"
                 billing_hash["total"] = billing_data.amount / 100
                 billing_hash["status"] = self.map_status(billing_data.status)
 
             result.append(billing_hash)
-
         result.sort(key=lambda x: x["date"], reverse=True)
-        for item in result:
-            item["date"] = item["date"].strftime("%b %d, %Y")
 
         return result, count, max_page
 

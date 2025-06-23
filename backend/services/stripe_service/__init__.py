@@ -57,6 +57,13 @@ class StripeService:
     def create_basic_plan_subscription(
         self, customer_id: str, stripe_price_id: str
     ):
+        active_subs = stripe.Subscription.list(
+            customer=customer_id, status="active"
+        )
+        active_count = len(active_subs["data"])
+        if active_count >= 1:
+            return None
+
         subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{"price": stripe_price_id}],
@@ -457,13 +464,8 @@ def get_billing_history_by_userid(customer_id, page, per_page):
 
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     for charge in charges:
-        if (
-            getattr(charge, "invoice", None) is None
-            and getattr(charge, "metadata", {}).get("product_description")
-            == "leads_credits"
-        ):
-            if charge.amount > 0:
-                billing_history.append(charge)
+        if getattr(charge, "metadata", {}).get("product_description") == "Charge overage credits":
+            billing_history.append(charge)
 
     count = len(billing_history)
     max_page = math.ceil(count / per_page)
