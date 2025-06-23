@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 import {
 	Dialog,
 	DialogTitle,
@@ -23,6 +24,7 @@ import axios from "axios";
 import { CardDetails, CardBrand } from "./types";
 import { styled } from "@mui/material/styles";
 import { billingStyles } from "./billingStyles";
+import { ReturnToAdminButton } from "@/components/ReturnToAdminButton";
 
 interface PaymentPopupProps {
 	open: boolean;
@@ -90,6 +92,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	);
 	const [openAddCard, setOpenAddCard] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [visibleButton, setVisibleButton] = useState(false);
 	const router = useRouter();
 
 	const handlePay = async () => {
@@ -127,6 +130,15 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 		setOpenAddCard(true);
 	};
 
+	useEffect(() => {
+		const token = localStorage.getItem("parent_token");
+		if (token) {
+			setVisibleButton(true);
+		} else {
+			setVisibleButton(false);
+		}
+	}, []);
+
 	const handleCloseAddCard = () => setOpenAddCard(false);
 
 	const [selectedCard, setSelectedCard] = useState<string>("");
@@ -138,9 +150,28 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	return (
 		<>
 			<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-				<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
-					Complete Your Payment
-				</DialogTitle>
+				<Box
+					sx={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "flex-start",
+						paddingLeft: "2%",
+					}}
+				>
+					{visibleButton && (
+						<ReturnToAdminButton setVisibleButton={setVisibleButton} />
+					)}
+					<DialogTitle
+						sx={{
+							fontSize: "16px",
+							fontFamily: "Nunito Sans",
+							fontWeight: 600,
+							pl: 0.5,
+						}}
+					>
+						Complete Your Payment
+					</DialogTitle>
+				</Box>
 				<Divider />
 				{loading && (
 					<Box
