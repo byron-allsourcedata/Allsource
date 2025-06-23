@@ -9,11 +9,9 @@ import {
 	Typography,
 	Box,
 	Radio,
-	Button,
 	RadioGroup,
 } from "@mui/material";
 import Image from "next/image";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
 import CustomButton from "@/components/ui/CustomButton";
@@ -23,7 +21,7 @@ import AddCardPopup from "./AddCard";
 import { loadStripe } from "@stripe/stripe-js";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
-import { fetchUserData } from "@/services/meService";
+import { ReturnToAdminButton } from "@/components/ReturnToAdminButton";
 
 interface CardDetails {
 	id: string;
@@ -133,29 +131,6 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 
 	const [selectedCard, setSelectedCard] = useState<string>("");
 
-	const handleReturnToMain = async () => {
-		const parent_token = localStorage.getItem("parent_token");
-		const parent_domain = sessionStorage.getItem("parent_domain");
-		if (parent_token) {
-			await new Promise<void>(async (resolve) => {
-				sessionStorage.clear();
-				sessionStorage.setItem("admin", "true");
-				localStorage.removeItem("parent_token");
-				sessionStorage.removeItem("parent_domain");
-				localStorage.setItem("token", parent_token);
-				sessionStorage.setItem("current_domain", parent_domain || "");
-				await fetchUserData();
-				setVisibleButton(false);
-				setTimeout(() => {
-					resolve();
-				}, 0);
-			});
-		}
-
-		router.push("/admin");
-		router.refresh();
-	};
-
 	const handleCardChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSelectedCard(event.target.value);
 	};
@@ -173,27 +148,9 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 					}}
 				>
 					{visibleButton && (
-						<Button
-							onClick={handleReturnToMain}
-							variant="text"
-							startIcon={<ArrowBackIcon />}
-							sx={{
-								fontFamily: "Nunito Sans",
-								fontSize: "16px",
-								fontWeight: 600,
-								textTransform: "none",
-								color: "#3898FC",
-								backgroundColor: "transparent",
-								boxShadow: "none",
-								"&:hover": {
-									backgroundColor: "transparent",
-									color: "#3898FC",
-									boxShadow: "none",
-								},
-							}}
-						>
-							Return to Admin
-						</Button>
+						<ReturnToAdminButton
+						setVisibleButton={setVisibleButton}
+					/>
 					)}
 					<DialogTitle
 						sx={{

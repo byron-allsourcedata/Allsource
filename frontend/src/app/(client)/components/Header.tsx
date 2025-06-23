@@ -26,6 +26,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { fetchUserData } from "@/services/meService";
 import CustomNotification from "@/components/CustomNotification";
 import { usePathname } from "next/navigation";
+import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
 
 const headerStyles = {
 	headers: {
@@ -92,6 +93,7 @@ const Header: React.FC<HeaderProps> = ({
 		useState<boolean>(false);
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const [visibleButton, setVisibleButton] = useState(false);
+	const returnToAdmin = useReturnToAdmin();
 	const { showHints, toggleHints } = useHints();
 	const handleSignOut = () => {
 		localStorage.clear();
@@ -119,27 +121,12 @@ const Header: React.FC<HeaderProps> = ({
 	}, [backButton, setBackButton]);
 
 	const handleReturnToMain = async () => {
-		const parent_token = localStorage.getItem("parent_token");
-		const parent_domain = sessionStorage.getItem("parent_domain");
-		if (parent_token) {
-			await new Promise<void>(async (resolve) => {
-				sessionStorage.clear();
-				sessionStorage.setItem("admin", "true");
-				localStorage.removeItem("parent_token");
-				sessionStorage.removeItem("parent_domain");
-				localStorage.setItem("token", parent_token);
-				sessionStorage.setItem("current_domain", parent_domain || "");
-				await fetchUserData();
+		await returnToAdmin({
+			onAfterUserData: () => {
 				setBackButton(false);
 				setVisibleButton(false);
-				setTimeout(() => {
-					resolve();
-				}, 0);
-			});
-		}
-
-		router.push("/admin");
-		router.refresh();
+			}
+		});
 	};
 
 	const handleSupportButton = () => {
