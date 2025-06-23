@@ -1,26 +1,25 @@
+from sqlalchemy import func, desc, select
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import count, coalesce
 
-from models import DataSyncImportedLead
-from models.audience_smarts import AudienceSmart
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from models.integrations.users_domains_integrations import Integration
-from sqlalchemy.orm import Session, aliased
-from models.users import Users
 from enums import (
     SourcePlatformEnum,
     DataSyncType,
-    ProccessDataSyncResult,
     DataSyncImportedStatus,
 )
-from models.users_domains import UserDomains
-from models.subscriptions import UserSubscriptions
+from models import DataSyncImportedLead
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
-from models.audience_smarts_validations import AudienceSmartValidation
+from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
-from sqlalchemy import func, desc, select
+from models.audience_smarts_validations import AudienceSmartValidation
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import Integration
 from models.integrations.users_domains_integrations import UserIntegration
+from models.subscriptions import UserSubscriptions
+from models.users import Users
+from models.users_domains import UserDomains
 
 
 class IntegrationsUserSyncPersistence:
