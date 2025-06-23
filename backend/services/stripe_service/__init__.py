@@ -57,6 +57,13 @@ class StripeService:
     def create_basic_plan_subscription(
         self, customer_id: str, stripe_price_id: str
     ):
+        active_subs = stripe.Subscription.list(
+            customer=customer_id, status="active"
+        )
+        active_count = len(active_subs["data"])
+        if active_count >= 1:
+            return None
+
         subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{"price": stripe_price_id}],
@@ -324,7 +331,9 @@ def get_last_payment_intent(customer_id):
     return None
 
 
-def purchase_product(customer_id, price_id, quantity, product_description=None):
+def purchase_product(
+    customer_id, price_id, quantity, product_description, charge_type
+):
     result = {"success": False}
     try:
         customer = stripe.Customer.retrieve(customer_id)
@@ -337,9 +346,6 @@ def purchase_product(customer_id, price_id, quantity, product_description=None):
                 "The customer doesn't have a default payment method."
             )
             return result
-
-        if not product_description:
-            product_description = "Charge overage credits"
 
         price = stripe.Price.retrieve(price_id)
         amount = price.unit_amount * quantity
@@ -354,7 +360,7 @@ def purchase_product(customer_id, price_id, quantity, product_description=None):
                 "allow_redirects": "never",
             },
             metadata={
-                "product_description": product_description,
+                "charge_type": charge_type,
                 "quantity": quantity,
             },
             description=f"Purchase of {quantity} x {product_description}",
@@ -458,12 +464,10 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     for charge in charges:
         if (
-            getattr(charge, "invoice", None) is None
-            and getattr(charge, "metadata", {}).get("product_description")
-            == "leads_credits"
+            getattr(charge, "metadata", {}).get("charge_type")
+            == "contacts_overage"
         ):
-            if charge.amount > 0:
-                billing_history.append(charge)
+            billing_history.append(charge)
 
     count = len(billing_history)
     max_page = math.ceil(count / per_page)

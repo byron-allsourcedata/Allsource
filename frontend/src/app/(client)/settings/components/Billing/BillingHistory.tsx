@@ -14,6 +14,7 @@ import {
 import { showErrorToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
+import dayjs from "dayjs";
 import CustomTooltip from "@/components/customToolTip";
 import { billingStyles } from "./billingStyles";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -279,7 +280,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 												backgroundColor: "#fff",
 											}}
 										>
-											{history.date}
+											{dayjs(history.date).format("MMM D, YYYY")}
 										</TableCell>
 
 										<TableCell
