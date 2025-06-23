@@ -110,9 +110,9 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 		router.push("/data-sync-pixel");
 	};
 
-	const handleAdditionalPixelClick = (domain: string) => {
+	const handleAdditionalPixelClick = (domain: string, domain_id: number) => {
 		sessionStorage.setItem("current_domain", domain);
-		router.push("/management/add-additional-script");
+		router.push(`/management/add-additional-script?domain_id=${domain_id}`);
 	};
 
 	const handleCheckPixelHealthClick = (domain: string) => {
@@ -179,7 +179,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 							</TableCell>
 							<TableCell>
 								<Typography className="management-table-header">
-									Additional Pixel
+									Additional Pixels
 								</Typography>
 							</TableCell>
 							<TableCell>
@@ -191,7 +191,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 							<TableCell>
 								<Typography className="management-table-header">
 									{" "}
-									Data sync
+									Data syncs
 								</Typography>
 							</TableCell>
 							<TableCell>
@@ -385,7 +385,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 										>
 											<Typography
 												onClick={() =>
-													handleAdditionalPixelClick(row.domain_name)
+													handleAdditionalPixelClick(row.domain_name, row.id)
 												}
 												sx={{
 													color: "rgba(56, 152, 252, 1)",
@@ -394,6 +394,10 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 													fontWeight: 400,
 													lineHeight: "140%",
 													cursor: "pointer",
+													textDecoration: "underline",
+													"&:hover": {
+														textDecoration: "none",
+													},
 												}}
 											>
 												{trueCount}/3
@@ -405,14 +409,14 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 											<Box
 												sx={{
 													display: "flex",
-													alignItems: "flex-end",
+													alignItems: "center",
 													maxWidth: "120px",
 												}}
 											>
 												<ResponsiveContainer width={80} height={30}>
 													<AreaChart
 														data={getResolvedGraphData(row.resolutions)}
-														margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+														margin={{ top: 0, right: 0, bottom: 1, left: 0 }}
 													>
 														<defs>
 															<linearGradient
@@ -442,10 +446,10 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 															fill="url(#colorGradient)"
 														/>
 														<XAxis dataKey="date" hide />
-														<YAxis hide domain={[0, "dataMax"]} />
+														<YAxis hide domain={[0, 2]} />
 													</AreaChart>
 												</ResponsiveContainer>
-												<Box ml={0.5}>
+												<Box ml={0.75}>
 													<Typography
 														sx={{
 															fontFamily: "Roboto",
@@ -461,18 +465,23 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												</Box>
 											</Box>
 										) : (
-											<Typography
+											<Box
 												sx={{
-													fontFamily: "Roboto",
-													fontWeight: "400",
-													fontSize: "14px",
-													lineHeight: "140%",
-													letterSpacing: "0%",
-													color: "rgba(32, 33, 36, 0.7)",
+													display: "flex",
 												}}
 											>
-												Pending Pixel
-											</Typography>
+												<Typography
+													sx={{
+														fontFamily: "Roboto",
+														fontWeight: "400",
+														fontSize: "14px",
+														letterSpacing: "0%",
+														color: "rgba(32, 33, 36, 0.7)",
+													}}
+												>
+													Pending Pixel
+												</Typography>
+											</Box>
 										)}
 									</TableCell>
 
@@ -501,7 +510,9 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 											</Typography>
 										</Box>
 									</TableCell>
-									<TableCell sx={{ width: 20, height: 20 }}>
+									<TableCell
+										sx={{ width: 20, height: 20, textAlign: "center" }}
+									>
 										<IconButton
 											onClick={(e) => handleOpenMenu(e, row.id)}
 											size="small"
@@ -559,7 +570,10 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														<Button
 															sx={style.actionButtonText}
 															onClick={() =>
-																handleAdditionalPixelClick(row.domain_name)
+																handleAdditionalPixelClick(
+																	row.domain_name,
+																	row.id,
+																)
 															}
 														>
 															Add Additional Pixel Script

@@ -14,7 +14,7 @@ import pandas as pd
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from config.rmq_connection import publish_rabbitmq_message
+from config.rmq_connection import publish_rabbitmq_message_with_channel
 from config.rmq_connection import RabbitMQConnection
 from dotenv import load_dotenv
 
@@ -43,7 +43,7 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def on_message_received(message, s3_session, rmq_connection):
+async def on_message_received(message, s3_session, channel):
     try:
         sts_client = create_sts_client(
             os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
@@ -69,8 +69,8 @@ async def on_message_received(message, s3_session, rmq_connection):
                     df = pd.read_parquet(temp_file.name, engine="pyarrow")
                     rows_counter = 0
                     for _, row in df.iterrows():
-                        await publish_rabbitmq_message(
-                            connection=rmq_connection,
+                        await publish_rabbitmq_message_with_channel(
+                            channel=channel,
                             queue_name=QUEUE_USERS_ROWS,
                             message_body={"interest": row.to_dict()},
                         )
@@ -110,7 +110,7 @@ async def main():
             functools.partial(
                 on_message_received,
                 s3_session=session,
-                rmq_connection=connection,
+                channel=channel,
             )
         )
         await asyncio.Future()

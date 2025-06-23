@@ -346,7 +346,8 @@ const Users: React.FC = () => {
 					flexDirection: "column",
 					pr: 2,
 					width: "100%",
-					overflowX: "scroll",
+					overflow: "auto",
+					height: "100%",
 				}}
 			>
 				<Box

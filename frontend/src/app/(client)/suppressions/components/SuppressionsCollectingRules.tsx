@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "@/components/customToolTip";
+import { CustomButton } from "@/components/ui";
 
 const CollectionRules: React.FC = () => {
 	const [pageViews, setPageViews] = useState<string>("");
@@ -359,33 +360,16 @@ const CollectionRules: React.FC = () => {
 				>
 					Cancel
 				</Button>
-				<Button
+				<CustomButton
 					variant="contained"
 					disabled={isDisabled}
 					onClick={handleSave}
 					sx={{
-						backgroundColor: "rgba(56, 152, 252, 1)",
-						fontFamily: "Nunito Sans",
-						textTransform: "none",
-						lineHeight: "22.4px",
-						fontWeight: "700",
-						padding: "1em 5em",
-						textWrap: "nowrap",
-						maxWidth: "120px",
-						"&:hover": {
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
-						},
-						cursor: isDisabled ? "not-allowed" : "pointer",
-						"&.Mui-disabled": {
-							backgroundColor: "rgba(80, 82, 178, 0.6)",
-							color: "white",
-							cursor: "not-allowed",
-						},
+						width: "140px",
 					}}
 				>
 					Save
-				</Button>
+				</CustomButton>
 			</Box>
 			{loading && <CustomizedProgressBar />}
 		</Box>

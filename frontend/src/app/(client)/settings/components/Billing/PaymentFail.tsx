@@ -11,10 +11,15 @@ import {
 	RadioGroup,
 } from "@mui/material";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import ProgressBar from "@/components/ProgressBar";
 import CustomButton from "@/components/ui/CustomButton";
 import { Elements } from "@stripe/react-stripe-js";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import AddCardPopup from "./AddCard";
 import { loadStripe } from "@stripe/stripe-js";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axios from "axios";
 
 interface CardDetails {
 	id: string;
@@ -28,6 +33,7 @@ interface CardDetails {
 interface PaymentPopupProps {
 	open: boolean;
 	cardDetails: CardDetails[];
+	moneyContactsOverage: number;
 	handleCheckoutSuccess: (item: CardDetails) => void;
 }
 
@@ -44,14 +50,45 @@ const cardBrandImages: Record<CardBrand, string> = {
 const PaymentFail: React.FC<PaymentPopupProps> = ({
 	open,
 	cardDetails,
+	moneyContactsOverage,
 	handleCheckoutSuccess,
 }) => {
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
 	const [openAddCard, setOpenAddCard] = useState(false);
+	const [loading, setLoading] = useState(false);
+	const router = useRouter();
 
-	const handlePay = () => {};
+	const handlePay = async () => {
+		try {
+			setLoading(true);
+			const response = await axiosInterceptorInstance.post(
+				"/settings/billing/pay-credits",
+				{},
+			);
+			if (response.data.success == true) {
+				showToast("Credits successfully purchased!");
+				router.push("/settings");
+			} else {
+				showErrorToast(response.data.error);
+			}
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				if (error.response) {
+					showErrorToast(
+						`Error: ${error.response.status} - ${error.response.data.message || "An error occurred."}`,
+					);
+				} else {
+					showErrorToast("Network error or no response received.");
+				}
+			} else {
+				showErrorToast("An unexpected error occurred.");
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 	const onClose = () => {};
 
 	const handleAddCard = () => {
@@ -88,6 +125,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<>
+			{loading && <ProgressBar />}
 			<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
 				<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
 					Complete Your Payment
@@ -112,6 +150,18 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 						</Typography>
 					</Box>
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+							<Typography className="first-sub-title">
+								Outstanding Balance:
+							</Typography>
+							<Typography color="textSecondary">
+								$
+								{new Intl.NumberFormat("en-US", {
+									minimumFractionDigits: 2,
+									maximumFractionDigits: 2,
+								}).format(moneyContactsOverage)}
+							</Typography>
+						</Box>
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 							<Typography className="first-sub-title">
 								Payment Method:

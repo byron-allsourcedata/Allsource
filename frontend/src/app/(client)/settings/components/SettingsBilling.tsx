@@ -576,6 +576,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											needButton={false}
 											moneyContactsOverage={moneyContactsOverage}
 										/>
+
 										<UsageItem
 											title="Smart Audience"
 											limitValue={
@@ -598,6 +599,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 							billingDetails={billingDetails}
 							canceledAt={canceled_at || ""}
 						/>
+
 					</Box>
 
 					<Box sx={{ gridArea: "funds", padding: "0px" }}>
@@ -697,6 +699,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			<PaymentFail
 				open={paymentFailed}
 				cardDetails={cardDetails}
+				moneyContactsOverage={moneyContactsOverage}
 				handleCheckoutSuccess={handleCheckoutSuccess}
 			/>
 		</>

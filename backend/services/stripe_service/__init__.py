@@ -324,7 +324,7 @@ def get_last_payment_intent(customer_id):
     return None
 
 
-def purchase_product(customer_id, price_id, quantity, product_description):
+def purchase_product(customer_id, price_id, quantity, product_description=None):
     result = {"success": False}
     try:
         customer = stripe.Customer.retrieve(customer_id)
@@ -337,6 +337,9 @@ def purchase_product(customer_id, price_id, quantity, product_description):
                 "The customer doesn't have a default payment method."
             )
             return result
+
+        if not product_description:
+            product_description = "Charge overage credits"
 
         price = stripe.Price.retrieve(price_id)
         amount = price.unit_amount * quantity
@@ -448,17 +451,19 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     billing_history = []
 
     invoices = stripe.Invoice.list(customer=customer_id, limit=per_page)
-    billing_history.extend(invoices.data)
+    for invoice in invoices.data:
+        if invoice.amount_due > 0:
+            billing_history.append(invoice)
 
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
-    non_subscription_charges = [
-        charge
-        for charge in charges
-        if getattr(charge, "invoice", None) is None
-        and getattr(charge, "metadata", {}).get("product_description")
-        == "leads_credits"
-    ]
-    billing_history.extend(non_subscription_charges)
+    for charge in charges:
+        if (
+            getattr(charge, "invoice", None) is None
+            and getattr(charge, "metadata", {}).get("product_description")
+            == "leads_credits"
+        ):
+            if charge.amount > 0:
+                billing_history.append(charge)
 
     count = len(billing_history)
     max_page = math.ceil(count / per_page)

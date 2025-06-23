@@ -1,22 +1,18 @@
 import logging
 import os
+from typing import Optional
 
-from models import UserSubscriptions
-from persistence.leads_persistence import LeadsPersistence
-from persistence.settings_persistence import SettingsPersistence
-from models.users import User
-from persistence.sendgrid_persistence import SendgridPersistence
-from persistence.user_persistence import UserPersistence
-from persistence.plans_persistence import PlansPersistence
-from services.subscriptions import SubscriptionService
-from services.domains import UserDomainsService
+import stripe
 from fastapi import HTTPException, status
-from .jwt_service import (
-    get_password_hash,
-    create_access_token,
-    decode_jwt_data,
-    verify_password,
-)
+
+from enums import VerifyToken, PaymentStatus
+from models import UserSubscriptions
+from models.users import User
+from persistence.leads_persistence import LeadsPersistence
+from persistence.plans_persistence import PlansPersistence
+from persistence.sendgrid_persistence import SendgridPersistence
+from persistence.settings_persistence import SettingsPersistence
+from persistence.user_persistence import UserPersistence
 from schemas.settings import (
     AccountDetailsRequest,
     BillingSubscriptionDetails,
@@ -30,7 +26,14 @@ from schemas.settings import (
     ActivePlan,
     DowngradePlan,
 )
-from enums import VerifyToken
+from services.domains import UserDomainsService
+from services.subscriptions import SubscriptionService
+from .jwt_service import (
+    get_password_hash,
+    create_access_token,
+    decode_jwt_data,
+    verify_password,
+)
 
 logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
@@ -401,12 +404,14 @@ class SettingsService:
 
         next_billing_date = (
             user_subscription.plan_end.strftime("%b %d, %Y")
-            if user.get("source_platform") == "shopify" and user_subscription
+            if user.get("source_platform") == "shopify"
+            and user_subscription
+            and hasattr(user_subscription.plan_end, "strftime")
             else (
-                self.timestamp_to_date(
-                    subscription["items"]["data"][0]["current_period_end"]
-                ).strftime("%b %d, %Y")
-                if subscription and user_subscription
+                user_subscription.plan_end.strftime("%b %d, %Y")
+                if subscription
+                and user_subscription
+                and hasattr(user_subscription.plan_end, "strftime")
                 else None
             )
         )
@@ -758,3 +763,32 @@ class SettingsService:
                 api_keys_id=api_keys_request.id,
             )
         return SettingStatus.SUCCESS
+
+    def pay_credits(self, user: dict):
+        user_subscription = self.subscription_service.get_user_subscription(
+            user_id=user.get("id")
+        )
+        if not user_subscription:
+            logger.error(f"Subscription not found for user {user.get('id')}")
+            return
+        credit_plan = self.plan_persistence.get_subscription_plan_by_id(
+            id=user_subscription.contact_credit_plan_id
+        )
+        result = purchase_product(
+            customer_id=user.get("customer_id"),
+            price_id=credit_plan.stripe_price_id,
+            quantity=user.get("overage_leads_count"),
+        )
+        if result["success"]:
+            event = result["stripe_payload"]
+            customer_id = event["customer"]
+            self.user_persistence.decrease_overage_leads_count(
+                customer_id=customer_id,
+                quantity=event["metadata"]["quantity"],
+            )
+            self.subscription_service.update_subscription_status(
+                customer_id=customer_id, status=PaymentStatus.ACTIVE.value
+            )
+            return {"success": True}
+
+        return result

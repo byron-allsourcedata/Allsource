@@ -7,7 +7,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast } from "@/components/ToastNotification";
+import { showErrorToast, showInfoToast } from "@/components/ToastNotification";
 import { SliderProvider } from "@/context/SliderContext";
 import {
 	CardsSection,
@@ -19,6 +19,7 @@ import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { PixelManagementItem } from "../page";
 import ScriptsPopup from "../components/ScriptsPopup";
+import { useSearchParams } from "next/navigation";
 
 type Domain = {
 	id: number;
@@ -29,8 +30,11 @@ type Me = {
 	domains: Domain[];
 };
 
-type ScriptCardConfig = {
-	key: string;
+export type ScriptKey = "view_product" | "add_to_cart" | "converted_sale";
+export type AdditionalScriptsInfo = Record<ScriptKey, boolean>;
+
+export interface ScriptCardConfig {
+	key: ScriptKey;
 	title: string;
 	subtitle: string;
 	imageSrc: string;
@@ -41,7 +45,7 @@ type ScriptCardConfig = {
 	};
 	thirdStepText: string;
 	showInstalled?: boolean;
-};
+}
 
 const scriptCardConfigs: ScriptCardConfig[] = [
 	{
@@ -95,7 +99,13 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 ];
 
 const AddAdditionalScript: React.FC = () => {
-	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
+	const [installedStatus, setInstalledStatus] = useState<AdditionalScriptsInfo>(
+		{
+			view_product: false,
+			add_to_cart: false,
+			converted_sale: false,
+		},
+	);
 	const [openmanually, setOpen] = useState(false);
 	const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
 	const [selectedSecondText, setSelectedSecondText] = useState<{
@@ -108,6 +118,9 @@ const AddAdditionalScript: React.FC = () => {
 	const [pixelCode, setPixelCode] = useState<string | null>(null);
 	const [secondPixelCode, setSecondPixelCode] = useState<string | null>(null);
 	const router = useRouter();
+	const searchParams = useSearchParams();
+	const domainIdParam = searchParams.get("domain_id");
+	const parsedDomainId = domainIdParam ? parseInt(domainIdParam, 10) : null;
 	const [loading, setLoading] = useState(true);
 	const [isLoading, setIsLoading] = useState(false);
 	const [status, setStatus] = useState("");
@@ -129,7 +142,7 @@ const AddAdditionalScript: React.FC = () => {
 	};
 
 	const fetchScriptByType = async (
-		type: string,
+		type: ScriptKey,
 		popupTitle: string,
 		secondStepText: {
 			button: string;
@@ -141,6 +154,11 @@ const AddAdditionalScript: React.FC = () => {
 
 		if (!domainId) {
 			showErrorToast("Error fetching pixel script(no domain find)");
+			return;
+		}
+
+		if (installedStatus[type]) {
+			showInfoToast(`Script ${type} is already installed, aborting...`);
 			return;
 		}
 
@@ -172,43 +190,30 @@ const AddAdditionalScript: React.FC = () => {
 		}
 	};
 
-	const checkPixel = async () => {
-		try {
-			const response = await axiosInstance.get("/check-user-authorization");
-			if (response.data.status === "NEED_BOOK_CALL") {
-				sessionStorage?.setItem("is_slider_opened", "true");
-			}
-		} catch (error) {
-			if (error instanceof AxiosError && error.response?.status === 403) {
-				if (error.response.data.status === "PIXEL_INSTALLATION_NEEDED") {
-					setStatus(error.response.data.status);
-				}
-			} else {
-				showErrorToast(`Error fetching data:${error}`);
-			}
-		} finally {
-			setLoading(false);
-		}
-	};
-
 	const fetchData = async () => {
+		if (!parsedDomainId) return;
+
 		try {
 			setLoading(true);
-			const response = await axiosInstance.get("/pixel-management");
-			if (response.status === 200) {
-				setPixelData(response.data);
+			const response = await axiosInstance.get<AdditionalScriptsInfo>(
+				`/pixel-management/additional_scripts?domain_id=${parsedDomainId}`,
+			);
+
+			if (response.status === 200 && response.data) {
+				setInstalledStatus(response.data);
 			}
 		} catch (error) {
-			showErrorToast(`Error fetching data:${error}`);
+			showErrorToast(`Error fetching data: ${error}`);
 		} finally {
 			setLoading(false);
 		}
 	};
 
 	useEffect(() => {
-		checkPixel();
-		fetchData();
-	}, []);
+		if (parsedDomainId) {
+			fetchData();
+		}
+	}, [parsedDomainId]);
 
 	if (loading) {
 		return <CustomizedProgressBar />;
@@ -217,6 +222,13 @@ const AddAdditionalScript: React.FC = () => {
 	const onBack = () => {
 		router.push("/management");
 	};
+
+	const configsWithStatus: ScriptCardConfig[] = scriptCardConfigs.map(
+		(config) => ({
+			...config,
+			showInstalled: installedStatus[config.key],
+		}),
+	);
 
 	return (
 		<Box sx={{ ...managementStyle.mainContent }}>
@@ -342,17 +354,19 @@ const AddAdditionalScript: React.FC = () => {
 						}}
 						Content={
 							<CardsSection
-								items={scriptCardConfigs.map((card) => ({
+								items={configsWithStatus.map((card) => ({
 									title: card.title,
 									subtitle: card.subtitle,
 									imageSrc: card.imageSrc,
-									onClick: () =>
-										fetchScriptByType(
-											card.key,
-											card.popupTitle,
-											card.secondStepText,
-											card.thirdStepText,
-										),
+									onClick: card.showInstalled
+										? undefined
+										: () =>
+												fetchScriptByType(
+													card.key,
+													card.popupTitle,
+													card.secondStepText,
+													card.thirdStepText,
+												),
 									showRecommended: false,
 									showInstalled: card.showInstalled,
 								}))}

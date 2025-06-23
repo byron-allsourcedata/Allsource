@@ -779,7 +779,7 @@ const SourcesImport: React.FC = () => {
 		setMatchedLeads(totalLeads);
 	};
 
-	const renderSkeleton = (arg: BuilderKey) => {
+	const renderSkeleton = (arg: BuilderKey, height: string = "20vh") => {
 		if (!skeletons[arg]) return null;
 		return (
 			<Skeleton
@@ -787,7 +787,7 @@ const SourcesImport: React.FC = () => {
 				variant="rectangular"
 				animation="wave"
 				width="100%"
-				height="20vh"
+				height={height}
 				sx={{ borderRadius: "4px" }}
 			/>
 		);
@@ -1241,7 +1241,7 @@ const SourcesImport: React.FC = () => {
 											)}
 										</Box>
 									)}
-									{renderSkeleton("sourceFile")}
+									{renderSkeleton("sourceFile", "231px")}
 								</Box>
 							)}
 
@@ -2171,7 +2171,7 @@ const SourcesImport: React.FC = () => {
 												</Box>
 											</Box>
 										)}
-										{renderSkeleton("targetType")}
+										{renderSkeleton("targetType", "146px")}
 									</Box>
 								)}
 
@@ -2281,7 +2281,7 @@ const SourcesImport: React.FC = () => {
 												</Box>
 											</Box>
 										)}
-										{renderSkeleton("name")}
+										{renderSkeleton("name", "82px")}
 									</Box>
 									<Box
 										sx={{

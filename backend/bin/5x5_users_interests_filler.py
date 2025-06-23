@@ -10,7 +10,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from dotenv import load_dotenv
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from config.rmq_connection import (
+    publish_rabbitmq_message_with_channel,
+    RabbitMQConnection,
+)
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -39,7 +42,7 @@ def assume_role(role_arn, sts_client):
     return credentials
 
 
-async def process_files(sts_client, rmq_conn):
+async def process_files(sts_client, channel):
     credentials = assume_role(os.getenv("S3_ROLE_ARN"), sts_client)
     session = aioboto3.Session()
     async with session.resource(
@@ -51,8 +54,8 @@ async def process_files(sts_client, rmq_conn):
     ) as s3:
         bucket = await s3.Bucket(BUCKET_NAME)
         async for s3_object in bucket.objects.filter(Prefix=FILE_PATH):
-            await publish_rabbitmq_message(
-                connection=rmq_conn,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=QUEUE_USERS_FILES,
                 message_body={"file_name": s3_object.key},
             )
@@ -74,7 +77,7 @@ async def main():
             "x-consumer-timeout": 3600000,
         },
     )
-    await process_files(sts_client, connection)
+    await process_files(sts_client, channel)
 
 
 asyncio.run(main())

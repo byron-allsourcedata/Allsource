@@ -153,7 +153,7 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 					onClose();
 					onSuccess(response.data.card_details);
 				} else {
-					showErrorToast("Unknown response received.");
+					showErrorToast(response.data.message);
 				}
 			} else {
 				showErrorToast("Unexpected response status: " + response.status);

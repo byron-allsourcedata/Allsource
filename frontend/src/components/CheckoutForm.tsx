@@ -69,7 +69,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 					handleClose();
 					onSuccess(response.data.card_details);
 				} else {
-					showErrorToast("Unknown response received.");
+					showErrorToast(response.data.message);
 				}
 			} else {
 				showErrorToast("Unexpected response status: " + response.status);
