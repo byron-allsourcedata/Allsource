@@ -61,6 +61,11 @@ export const freeTrialPlan: Plan = {
 
 export type PlanPeriod = "month" | "year";
 
+type PlanResponse = {
+	monthly: Plan[],
+	yearly: Plan[]
+}
+
 export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const [visiblePlans, setVisiblePlans] = useState<Plan[]>([]);
 
@@ -68,7 +73,7 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const freeTrial = useIsFreeTrial();
 
 	const getPlans = async () => {
-		const response = await axiosInstance.get<{monthly: Plan[], yearly: Plan[]}>("/settings/plans");
+		const response = await axiosInstance.get<PlanResponse>("/settings/plans");
 		if (response.status === 200) {
 			const { monthly, yearly } = response.data;
 			let plans = period === "month" ? monthly : yearly;
