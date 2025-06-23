@@ -424,9 +424,9 @@ const SourcesList: React.FC = () => {
 											onClick={(e) =>
 												createdData?.source_type
 													? handleOpenPopoverFullName(
-															e,
-															setSourceType(createdData?.source_type),
-														)
+														e,
+														setSourceType(createdData?.source_type),
+													)
 													: {}
 											}
 										>
@@ -522,10 +522,10 @@ const SourcesList: React.FC = () => {
 										</Typography>
 										<Typography variant="subtitle1" className="table-data">
 											{createdData.matched_records_status === "complete" &&
-											createdData?.total_records === 0 ? (
+												createdData?.total_records === 0 ? (
 												"0"
 											) : (sourceProgress[createdData.id]?.total &&
-													sourceProgress[createdData.id]?.total > 0) ||
+												sourceProgress[createdData.id]?.total > 0) ||
 												createdData?.total_records > 0 ? (
 												sourceProgress[createdData.id]?.total > 0 ? (
 													sourceProgress[createdData.id]?.total.toLocaleString(
@@ -551,17 +551,17 @@ const SourcesList: React.FC = () => {
 										</Typography>
 										<Typography variant="subtitle1" className="table-data">
 											{createdData.matched_records_status === "complete" &&
-											createdData?.total_records === 0 ? (
+												createdData?.total_records === 0 ? (
 												"0"
 											) : (createdData?.id &&
-													sourceProgress[createdData.id]?.processed &&
-													sourceProgress[createdData.id]?.processed ==
-														sourceProgress[createdData.id]?.total) ||
+												sourceProgress[createdData.id]?.processed &&
+												sourceProgress[createdData.id]?.processed ==
+												sourceProgress[createdData.id]?.total) ||
 												(createdData?.processed_records ==
 													createdData?.total_records &&
 													createdData?.processed_records !== 0) ? (
 												sourceProgress[createdData.id]?.matched >
-												createdData?.matched_records ? (
+													createdData?.matched_records ? (
 													sourceProgress[
 														createdData.id
 													]?.matched.toLocaleString("en-US")
@@ -680,7 +680,7 @@ const SourcesList: React.FC = () => {
 								<Box sx={{ position: "relative" }}>
 									<Button
 										variant="contained" /* need chnage < on !== */
-										disabled={false}
+										disabled={isCreateDisabled}
 										onClick={() =>
 											router.push(
 												`/lookalikes/builder?source_uuid=${createdData?.id}`,
