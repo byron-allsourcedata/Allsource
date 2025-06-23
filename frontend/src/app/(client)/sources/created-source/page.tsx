@@ -680,7 +680,7 @@ const SourcesList: React.FC = () => {
 								<Box sx={{ position: "relative" }}>
 									<Button
 										variant="contained" /* need chnage < on !== */
-										disabled={false}
+										disabled={isCreateDisabled}
 										onClick={() =>
 											router.push(
 												`/lookalikes/builder?source_uuid=${createdData?.id}`,
