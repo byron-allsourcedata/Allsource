@@ -54,7 +54,6 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 				setHide(true);
 			} else {
 				const { billing_history, count } = response.data;
-				console.log(billingHistory);
 				setBillingHistory(billing_history);
 				setTotalRows(count);
 				let newRowsPerPageOptions: number[] = [];
@@ -83,7 +82,6 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 	};
 
 	useEffect(() => {
-		console.log("dfdfrf");
 		fetchBillingHistoryData(page, rowsPerPage);
 	}, [page, rowsPerPage]);
 

@@ -55,8 +55,8 @@ const Settings: React.FC = () => {
 			<AppBar
 				position="sticky"
 				color="inherit"
-				sx={{ boxShadow: 'none', pl: 0.5 }}
-				> 
+				sx={{ boxShadow: "none", pl: 0.5 }}
+			>
 				<Box
 					sx={{
 						display: "flex",

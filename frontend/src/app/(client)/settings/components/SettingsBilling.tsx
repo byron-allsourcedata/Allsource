@@ -50,7 +50,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 				setHide(true);
 			} else {
 				setCardDetails([...response.data.card_details]);
-				console.log(response.data);
 				setContactsCollected(response.data.usages_credits.leads_credits);
 				setMoneyContactsOverage(
 					response.data.usages_credits.money_because_of_overage,
@@ -160,7 +159,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 					<Box sx={{ gridArea: "usage", padding: "0px" }}>
 						<Box sx={billingStyles.usageWrapper}>
 							<Box sx={billingStyles.usageTitle}>
-								<Typography className="first-sub-title">Funds</Typography>
+								<Typography className="first-sub-title">Usages</Typography>
 							</Box>
 							<Box sx={billingStyles.usageBody}>
 								{!hide && (
