@@ -19,18 +19,11 @@ import { billingStyles } from "./billingStyles";
 import DownloadIcon from "@mui/icons-material/Download";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import CustomTablePagination from "@/components/CustomTablePagination";
+import { BillingHistoryItem } from "./types"
 
 interface BillingHistoryProps {
 	setIsLoading: (state: boolean) => void;
 	handleSendInvoicePopupOpen: (id: string) => void;
-}
-
-interface BillingHistoryItem {
-	invoice_id: string;
-	pricing_plan: string;
-	date: string;
-	status: string;
-	total: number;
 }
 
 export const BillingHistory: React.FC<BillingHistoryProps> = ({
@@ -61,6 +54,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 				setHide(true);
 			} else {
 				const { billing_history, count } = response.data;
+				console.log(billingHistory)
 				setBillingHistory(billing_history);
 				setTotalRows(count);
 				let newRowsPerPageOptions: number[] = [];
@@ -89,6 +83,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 	};
 
 	useEffect(() => {
+		console.log('dfdfrf')
 		fetchBillingHistoryData(page, rowsPerPage);
 	}, [page, rowsPerPage]);
 

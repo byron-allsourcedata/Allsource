@@ -22,15 +22,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
 import { styled } from "@mui/material/styles";
-
-interface CardDetails {
-	id: string;
-	last4: string;
-	brand: string;
-	exp_month: number;
-	exp_year: number;
-	is_default: boolean;
-}
+import { CardDetails } from "./types"
 
 interface PaymentPopupProps {
 	title: string;
@@ -41,6 +33,7 @@ interface PaymentPopupProps {
 
 const addCardStyles = {
 	switchStyle: {
+		left: -9,
 		"& .MuiSwitch-switchBase": {
 			"&+.MuiSwitch-track": {
 				backgroundColor: "rgba(163, 176, 194, 1)",
@@ -241,7 +234,7 @@ const AddCardPopup: React.FC<PaymentPopupProps> = ({
 							</Box>
 						</Box>
 					</Box>
-					<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+					<Box sx={{ display: "flex", alignItems: "center"}}>
 						<Switch
 							checked={isDefault}
 							onChange={() => setIsDefault((prev) => !prev)}

@@ -105,4 +105,55 @@ export const billingStyles = {
 			color: "rgba(56, 152, 252, 1) !important",
 		},
 	},
+	usageWrapper: {
+		display: "flex",
+		flexDirection: "column",
+		borderRadius: "4px",
+		border: "1px solid #f0f0f0",
+		boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+		p: 3,
+	},
+	usageTitle: {
+		display: "flex",
+		flexDirection: "row",
+		justifyContent: "space-between",
+		alignItems: "start",
+		mb: 4,
+	},
+	usageBody: {
+		display: "flex",
+		flexDirection: "column",
+		justifyContent: "space-between",
+		gap: 4,
+		"@media (max-width: 600px)": {
+			gap: 3,
+			flexDirection: "column",
+			alignItems: "center",
+		},
+	},
+	divider: {
+		borderColor: "#e4e4e4",
+		maxWidth: "100%",
+		"@media (max-width: 600px)": {
+			marginLeft: "-16px",
+			marginRight: "-16px",
+		},
+	},
+	defaultLabel: {
+		borderRadius: "4px",
+		background: "#eaf8dd",
+		color: "#2b5b00",
+		fontSize: "12px",
+		fontWeight: "600",
+		padding: "2px 12px",
+	},
+	squareImg: {
+		border: "1px dashed rgba(56, 152, 252, 1)",
+		borderRadius: "4px",
+		width: "24px",
+		height: "24px",
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+	}
 };

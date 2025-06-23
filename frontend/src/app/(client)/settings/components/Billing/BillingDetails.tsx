@@ -5,47 +5,10 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import PaymentIcon from "@mui/icons-material/Payment";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
-
-interface SubscriptionDetails {
-	active: { detail_type: string; value: boolean };
-	billing_cycle: {
-		detail_type: string;
-		plan_start: string | null;
-		plan_end: string | null;
-	};
-	contacts_downloads: {
-		detail_type: string;
-		limit_value: number;
-		current_value: number;
-	};
-	next_billing_date: { detail_type: string; value: string };
-	plan_name: { detail_type: string; value: string };
-	yearly_total?: { detail_type: string; value: string };
-	monthly_total?: { detail_type: string; value: string };
-	domains: { detail_type: string; current_value: number; limit_value: number };
-	validation_funds: {
-		detail_type: string;
-		current_value: number;
-		limit_value: number;
-	};
-	premium_sources_funds: string;
-	smart_audience: {
-		detail_type: string;
-		current_value: number;
-		limit_value: number;
-	};
-}
-
-interface BillingDetails {
-	subscription_details: SubscriptionDetails;
-	downgrade_plan: { downgrade_at: string | null; plan_name: string | null };
-	is_leads_auto_charging: boolean;
-	canceled_at: string;
-	active?: boolean;
-}
+import { BillingDetailsInterface } from "./types"
 
 interface BillingDetailsProps {
-	billingDetails: BillingDetails | null;
+	billingDetails: BillingDetailsInterface | null;
 	canceledAt: string;
 }
 
@@ -287,7 +250,7 @@ export const BillingDetails: React.FC<BillingDetailsProps> = ({
 																		justifyContent: "center",
 																		gap: "16px",
 																		alignItems: "center",
-																		margin: "0 5%",
+																		// margin: "0 5%",
 																		border: "1px solid #F0F0F0",
 																		padding: "8px 16px",
 																	}}
@@ -335,7 +298,7 @@ export const BillingDetails: React.FC<BillingDetailsProps> = ({
 								<Grid
 									item
 									xs={12}
-									md={key === "billing_cycle" ? 12 : 6}
+									md={key === "billing_cycle" ? 12 : 5.9}
 									key={index}
 									sx={{
 										display: "flex",
