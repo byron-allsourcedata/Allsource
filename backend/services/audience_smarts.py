@@ -369,14 +369,14 @@ class AudienceSmartsService:
         return AccessCheckResponse(allowed=allowed)
 
     def get_datasource(self, user: dict):
-        lookalikes = (
-            self.lookalikes_persistence_service.get_processed_lookalikes_by_user(
-                user_id=user.get("id")
-            )
+        lookalikes = self.lookalikes_persistence_service.get_processed_lookalikes_by_user(
+            user_id=user.get("id")
         )
 
-        sources = self.audience_sources_persistence.get_completed_sources_by_user(
-            user_id=user.get("id")
+        sources = (
+            self.audience_sources_persistence.get_completed_sources_by_user(
+                user_id=user.get("id")
+            )
         )
 
         source_list = [

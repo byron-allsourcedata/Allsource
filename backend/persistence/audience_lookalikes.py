@@ -167,10 +167,7 @@ class AudienceLookalikesPersistence:
         max_page = math.ceil(count / per_page)
         return result_query, count, max_page, source_count
 
-    def get_processed_lookalikes_by_user(
-        self,
-        user_id: int
-    ):
+    def get_processed_lookalikes_by_user(self, user_id: int):
         columns = [
             AudienceLookalikes.id,
             AudienceLookalikes.name,
@@ -203,7 +200,10 @@ class AudienceLookalikesPersistence:
         )
 
         result_query = [
-            row._asdict() for row in query.order_by(desc(AudienceLookalikes.created_date)).all()
+            row._asdict()
+            for row in query.order_by(
+                desc(AudienceLookalikes.created_date)
+            ).all()
         ]
         return result_query
 
