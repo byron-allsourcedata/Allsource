@@ -68,17 +68,17 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const freeTrial = useIsFreeTrial();
 
 	const getPlans = async () => {
-		const response = await axiosInstance.get("/settings/plans");
+		const response = await axiosInstance.get<{monthly: Plan[], yearly: Plan[]}>("/settings/plans");
 		if (response.status === 200) {
 			const { monthly, yearly } = response.data;
 			let plans = period === "month" ? monthly : yearly;
 
 			if (freeTrial) {
-				plans = [{ ...freeTrialPlan, isActive: true }, ...plans];
+				plans = [{ ...freeTrialPlan, is_active: true }, ...plans];
 			}
 
 			const planIndex = plans.findIndex(
-				(plan: any) => plan.alias === currentPlanAlias,
+				(plan: Plan) => plan.alias === currentPlanAlias,
 			);
 
 			if (planIndex === -1) {
@@ -88,7 +88,7 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 			const newPlans = [
 				{
 					...plans[planIndex],
-					isActive: true,
+					is_active: true,
 				},
 				...plans.slice(planIndex + 1),
 			];

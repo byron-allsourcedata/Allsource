@@ -27,8 +27,6 @@ const Title = styled(Typography)`
 export const PlanProperties: FC<Props> = (props) => {
 	const { icon, title, showLastDivider, advantages } = props;
 
-	console.log({ advantages });
-
 	return (
 		<Column gap="1rem">
 			<Row gap="0.5rem">
