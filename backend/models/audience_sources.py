@@ -21,16 +21,6 @@ target_schemas = ENUM("b2c", "b2b", name="target_schemas", create_type=False)
 
 class AudienceSource(Base):
     __tablename__ = "audience_sources"
-    __table_args__ = (
-        # Index('audience_sources_pkey', 'id', unique=True),
-        Index("audience_sources_user_id_idx", "user_id"),
-        Index("audience_sources_matched_records_idx", "matched_records"),
-        Index("audience_sources_total_records_idx", "total_records"),
-        Index("audience_sources_created_at_idx", "created_at"),
-        Index("audience_sources_user_id_uuid_idx", "user_id", "id"),
-        Index("audience_sources_name_idx", "name"),
-        Index("audience_sources_matched_records_idx", "matched_records"),
-    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -78,6 +68,19 @@ class AudienceSource(Base):
     )
     insights = Column(JSON, nullable=True)
     significant_fields = Column(JSON, nullable=True)
+
+    __table_args__ = (
+        Index("audience_sources_user_id_idx", user_id),
+        Index("audience_sources_matched_records_idx", matched_records),
+        Index("audience_sources_total_records_idx", total_records),
+        Index("audience_sources_created_at_idx", created_at),
+        Index("audience_sources_user_id_uuid_idx", user_id, id),
+        Index("audience_sources_name_idx", name),
+        Index(
+            "audience_sources_matched_records_status_idx",
+            matched_records_status,
+        ),
+    )
 
 
 event.listen(AudienceSource, "before_update", update_timestamps)
