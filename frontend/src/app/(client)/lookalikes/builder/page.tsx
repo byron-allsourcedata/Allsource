@@ -38,8 +38,7 @@ import { ResetProvider } from "@/context/ResetContext";
 import HintCard from "../../components/HintCard";
 import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import { ExpandLessIcon, ExpandMoreIcon, SearchIcon } from "@/icon";
-import scrollToBlock from "@/utils/autoscroll"
-
+import scrollToBlock from "@/utils/autoscroll";
 
 export const dynamic = "force-dynamic";
 
@@ -78,11 +77,11 @@ const CreateLookalikePage: React.FC = () => {
 	};
 
 	const blocks: any = {
-		"source": useRef<HTMLDivElement | null>(null),
-		"lookalikeSize": useRef<HTMLDivElement | null>(null),
-		"predictableFields": useRef<HTMLDivElement | null>(null),
-		"name": useRef<HTMLDivElement | null>(null),
-	}
+		source: useRef<HTMLDivElement | null>(null),
+		lookalikeSize: useRef<HTMLDivElement | null>(null),
+		predictableFields: useRef<HTMLDivElement | null>(null),
+		name: useRef<HTMLDivElement | null>(null),
+	};
 
 	const getFilteredData = (data: any[]) =>
 		data.filter((item) =>
