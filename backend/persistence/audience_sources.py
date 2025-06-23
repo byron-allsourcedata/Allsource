@@ -55,8 +55,6 @@ class AudienceSourcesPersistence:
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
             .filter(
                 AudienceSource.user_id == user_id,
-                AudienceSource.matched_records_status == "complete",
-                AudienceSource.matched_records > 0,
             )
         )
 
@@ -92,6 +90,37 @@ class AudienceSourcesPersistence:
         count = query.count()
 
         return sources, count
+
+    def get_completed_sources_by_user(
+        self,
+        user_id: int,
+    ) -> Tuple[List[Row], int]:
+        query = (
+            self.db.query(
+                AudienceSource.id,
+                AudienceSource.name,
+                AudienceSource.target_schema,
+                AudienceSource.source_type,
+                AudienceSource.source_origin,
+                Users.full_name,
+                AudienceSource.created_at,
+                UserDomains.domain,
+                AudienceSource.total_records,
+                AudienceSource.matched_records,
+                AudienceSource.matched_records_status,
+                AudienceSource.processed_records,
+            )
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .filter(
+                AudienceSource.user_id == user_id,
+                AudienceSource.matched_records_status == "complete",
+                AudienceSource.matched_records > 0,
+            )
+        )
+
+        sources = query.order_by(AudienceSource.created_at.desc()).all()
+        return sources
 
     def get_source_by_id(self, source_id) -> Optional[AudienceSource]:
         return (
