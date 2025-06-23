@@ -63,5 +63,7 @@ class AudienceLookalikes(Base):
         Index("audience_lookalikes_created_date_idx", created_date),
         Index("audience_lookalikes_name_idx", name),
         Index("audience_lookalikes_user_id_uuid_idx", user_id, id),
-        Index("audience_lookalikes_size_processed_size_idx", size, processed_size),
+        Index(
+            "audience_lookalikes_size_processed_size_idx", size, processed_size
+        ),
     )

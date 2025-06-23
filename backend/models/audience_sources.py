@@ -76,7 +76,10 @@ class AudienceSource(Base):
         Index("audience_sources_created_at_idx", created_at),
         Index("audience_sources_user_id_uuid_idx", user_id, id),
         Index("audience_sources_name_idx", name),
-        Index("audience_sources_matched_records_status_idx", matched_records_status),
+        Index(
+            "audience_sources_matched_records_status_idx",
+            matched_records_status,
+        ),
     )
 
 
