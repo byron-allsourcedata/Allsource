@@ -452,7 +452,7 @@ def get_billing_history_by_userid(customer_id, page, per_page):
 
     invoices = stripe.Invoice.list(customer=customer_id, limit=per_page)
     for invoice in invoices.data:
-        if invoice.amount_due >= 0:
+        if invoice.amount_due > 0:
             billing_history.append(invoice)
 
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
