@@ -965,6 +965,7 @@ const CreateLookalikePage: React.FC = () => {
 								>
 									<Button
 										variant="contained"
+										disabled={!isLookalikeCreated}
 										onClick={() => router.push("/smart-audiences/builder")}
 										sx={{
 											backgroundColor: "rgba(56, 152, 252, 1)",
