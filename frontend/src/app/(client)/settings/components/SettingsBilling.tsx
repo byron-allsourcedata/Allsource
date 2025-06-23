@@ -599,7 +599,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 							billingDetails={billingDetails}
 							canceledAt={canceled_at || ""}
 						/>
-
 					</Box>
 
 					<Box sx={{ gridArea: "funds", padding: "0px" }}>
