@@ -331,7 +331,7 @@ def get_last_payment_intent(customer_id):
     return None
 
 
-def purchase_product(customer_id, price_id, quantity, product_description=None):
+def purchase_product(customer_id, price_id, quantity, product_description, charge_type):
     result = {"success": False}
     try:
         customer = stripe.Customer.retrieve(customer_id)
@@ -344,9 +344,6 @@ def purchase_product(customer_id, price_id, quantity, product_description=None):
                 "The customer doesn't have a default payment method."
             )
             return result
-
-        if not product_description:
-            product_description = "Charge overage credits"
 
         price = stripe.Price.retrieve(price_id)
         amount = price.unit_amount * quantity
@@ -361,7 +358,7 @@ def purchase_product(customer_id, price_id, quantity, product_description=None):
                 "allow_redirects": "never",
             },
             metadata={
-                "product_description": product_description,
+                "charge_type": charge_type,
                 "quantity": quantity,
             },
             description=f"Purchase of {quantity} x {product_description}",
@@ -465,8 +462,8 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     for charge in charges:
         if (
-            getattr(charge, "metadata", {}).get("product_description")
-            == "Charge overage credits"
+            getattr(charge, "metadata", {}).get("charge_type")
+            == "contacts_overage"
         ):
             billing_history.append(charge)
 

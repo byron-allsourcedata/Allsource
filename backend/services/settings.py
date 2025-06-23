@@ -594,7 +594,7 @@ class SettingsService:
                     billing_data.created
                 )
                 billing_hash["invoice_id"] = billing_data.id
-                billing_hash["pricing_plan"] = "Overage charge"
+                billing_hash["pricing_plan"] = billing_data.metadata.charge_type.replace("_", " ").title()
                 billing_hash["total"] = billing_data.amount / 100
                 billing_hash["status"] = self.map_status(billing_data.status)
 
@@ -776,6 +776,8 @@ class SettingsService:
             customer_id=user.get("customer_id"),
             price_id=credit_plan.stripe_price_id,
             quantity=user.get("overage_leads_count"),
+            product_description='Charge overage credits',
+            charge_type='contacts_overage'
         )
         if result["success"]:
             event = result["stripe_payload"]
