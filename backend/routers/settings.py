@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 
 from dependencies import (
-    get_settings_service,
     check_user_authorization_without_pixel,
     check_user_authentication,
     check_user_setting_access,
@@ -24,7 +23,7 @@ router = APIRouter(dependencies=[Depends(check_user_setting_access)])
 
 @router.get("/account-details")
 def get_account_details(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: User = Depends(check_user_authentication),
 ):
     return settings_service.get_account_details(user=user)
@@ -33,7 +32,7 @@ def get_account_details(
 @router.put("/account-details")
 def change_account_details(
     account_details: AccountDetailsRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.change_account_details(
@@ -43,7 +42,7 @@ def change_account_details(
 
 @router.get("/account-details/change-email")
 def change_email_account_details(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     token: str = Query(...),
     mail: str = Query(...),
 ):
@@ -57,7 +56,7 @@ def change_email_account_details(
 
 @router.get("/teams")
 def get_teams(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.get_team_members(user=user)
@@ -65,7 +64,7 @@ def get_teams(
 
 @router.get("/teams/pending-invations")
 def get_pending_invations(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.get_pending_invations(user=user)
@@ -74,7 +73,7 @@ def get_pending_invations(
 @router.put("/teams")
 def change_teams(
     teams_details: TeamsDetailsRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -94,7 +93,7 @@ def change_teams(
 @router.post("/teams")
 def invite_user(
     teams_details: TeamsDetailsRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -114,10 +113,23 @@ def invite_user(
     )
 
 
+@router.post("/teams/resend-invitation")
+def resend_invitation(
+    resend_request: TeamsDetailsRequest,
+    settings_service: SettingsService,
+    user: dict = Depends(check_user_authorization_without_pixel),
+):
+    return settings_service.resend_invitation_email(
+        user=user,
+        invite_user=resend_request.invite_user,
+        access_level=resend_request.access_level,
+    )
+
+
 @router.post("/teams/change-user-role")
 def change_user_role(
     teams_details: TeamsDetailsRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -138,7 +150,7 @@ def change_user_role(
 
 @router.get("/teams/check-team-invitations-limit")
 def check_team_invitations_limit(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -156,7 +168,7 @@ def check_team_invitations_limit(
 
 @router.get("/billing")
 def get_billing(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: User = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.get_billing(user=user)
@@ -164,11 +176,11 @@ def get_billing(
 
 @router.get("/billing-history")
 def get_billing_history(
+    settings_service: SettingsService,
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
         15, alias="per_page", ge=1, le=100, description="Items per page"
     ),
-    settings_service: SettingsService = Depends(get_settings_service),
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.get_billing_history(
@@ -179,7 +191,7 @@ def get_billing_history(
 @router.post("/billing/add-card")
 def add_card(
     payment_card: PaymentCard,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -201,7 +213,7 @@ def add_card(
 
 @router.post("/billing/switch-overage")
 def switch_overage(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -220,7 +232,7 @@ def switch_overage(
 @router.delete("/billing/delete-card")
 def delete_card(
     payment_card: PaymentCard,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -241,7 +253,7 @@ def delete_card(
 
 @router.post("/billing/overage")
 def billing_overage(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -260,8 +272,8 @@ def billing_overage(
 
 @router.get("/billing/download-billing")
 def download_billing(
+    settings_service: SettingsService,
     invoice_id: str = Query(...),
-    settings_service: SettingsService = Depends(get_settings_service),
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -281,7 +293,7 @@ def download_billing(
 @router.post("/billing/send-billing")
 def send_billing(
     send_billing: SendBilling,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -303,7 +315,7 @@ def send_billing(
 @router.put("/billing/default-card")
 def default_card(
     payment_card: PaymentCard,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
@@ -324,7 +336,7 @@ def default_card(
 
 @router.get("/api-details")
 def get_api_details(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.get_api_details(user=user)
@@ -333,7 +345,7 @@ def get_api_details(
 @router.put("/api-details")
 def change_api_details(
     api_keys_request: ApiKeysRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.change_api_details(
@@ -344,7 +356,7 @@ def change_api_details(
 @router.put("/api-details/usage")
 def change_api_details(
     api_keys_request: ApiKeysRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.change_api_details(
@@ -355,7 +367,7 @@ def change_api_details(
 @router.post("/api-details")
 def change_api_details(
     api_keys_request: ApiKeysRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.insert_api_details(
@@ -366,7 +378,7 @@ def change_api_details(
 @router.delete("/api-details")
 def change_api_details(
     api_keys_request: ApiKeysRequest,
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return settings_service.delete_api_details(
@@ -376,7 +388,20 @@ def change_api_details(
 
 @router.post("/billing/pay-credits")
 def pay_credits(
-    settings_service: SettingsService = Depends(get_settings_service),
+    settings_service: SettingsService,
     user: dict = Depends(check_team_access_owner_user),
 ):
     return settings_service.pay_credits(user=user)
+
+
+@router.get(
+    "/plans",
+    response_model=PlansResponse,
+    summary="Get list of subscription plans",
+    tags=["Plans"],
+)
+def get_all_plans(
+    settings_service: SettingsService,
+    user: dict = Depends(check_user_authorization_without_pixel),
+):
+    return settings_service.get_all_plans()

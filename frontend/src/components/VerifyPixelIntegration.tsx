@@ -238,6 +238,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 				justifyContent="end"
 				position="relative"
 				sx={{
+					pt: 2,
 					"@media (max-width: 600px)": {
 						alignItems: "flex-start",
 						gap: "16px",

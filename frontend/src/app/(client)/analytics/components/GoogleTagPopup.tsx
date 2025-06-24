@@ -93,6 +93,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 					headers: { Authorization: `Bearer ${accessToken}` },
 				},
 			);
+			console.log(response.data);
 			setUserInfo(response.data);
 		} catch (e) {
 			if (axios.isAxiosError(e)) {

@@ -1,5 +1,5 @@
 "use client";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography, IconButton, Link } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import { managementStyle } from "../management";
 import CustomToolTip from "@/components/customToolTip";
@@ -22,7 +22,9 @@ import {
 } from "@/components/first-time-screens";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import { EmptyAnalyticsPlaceholder } from "../../analytics/components/placeholders/EmptyPlaceholder";
-import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import Image from "next/image";
+import InfoIcon from "@mui/icons-material/Info";
+import { OpenInNewIcon } from "@/icon";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { PixelManagementItem } from "../page";
 import FeatureCardWithButton from "@/components/first-time-screens/FeatureCardWithButton";
@@ -30,54 +32,39 @@ import FeatureCardWithButton from "@/components/first-time-screens/FeatureCardWi
 const Management: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
 	const router = useRouter();
-	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState("");
 	const [popupOpen, setPopupOpen] = useState(false);
-
-	const checkPixel = async () => {
-		try {
-			const response = await axiosInstance.get("/check-user-authorization");
-			if (response.data.status === "NEED_BOOK_CALL") {
-				sessionStorage?.setItem("is_slider_opened", "true");
-			}
-		} catch (error) {
-			if (error instanceof AxiosError && error.response?.status === 403) {
-				if (error.response.data.status === "PIXEL_INSTALLATION_NEEDED") {
-					setStatus(error.response.data.status);
-				}
-			} else {
-				showErrorToast(`Error fetching data:${error}`);
-			}
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const fetchData = async () => {
-		try {
-			setLoading(true);
-			const response = await axiosInstance.get("/pixel-management");
-			if (response.status === 200) {
-				setPixelData(response.data);
-			}
-		} catch (error) {
-			showErrorToast(`Error fetching data:${error}`);
-		} finally {
-			setLoading(false);
-		}
-	};
+	const [inputValue, setInputValue] = useState<string>("");
+	const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
 
 	useEffect(() => {
-		checkPixel();
-		fetchData();
+		const storedValue = sessionStorage.getItem("current_domain");
+		if (storedValue !== null) {
+			setInputValue(storedValue);
+		}
 	}, []);
-
-	if (loading) {
-		return <CustomizedProgressBar />;
-	}
 
 	const onBack = () => {
 		router.push("/management");
+	};
+
+	const handleButtonClick = () => {
+		let url = inputValue.trim();
+
+		if (url) {
+			if (!/^https?:\/\//i.test(url)) {
+				url = "http://" + url;
+			}
+
+			const hasQuery = url.includes("?");
+			const newUrl =
+				url +
+				(hasQuery ? "&" : "?") +
+				"mff=true" +
+				`&api=${apiUrl}` +
+				`&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads`;
+			window.open(newUrl, "_blank");
+		}
 	};
 
 	return (
