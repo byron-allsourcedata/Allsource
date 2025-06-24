@@ -56,7 +56,7 @@ export const PlanCard: React.FC<{
 	isRecommended,
 }) => {
 	const getButtonLabel = () => {
-		if (plan.isActive) return "Current Plan";
+		if (plan.is_active) return "Current Plan";
 
 		if (activePlanTitle === "") {
 			return "Choose Plan";
@@ -207,19 +207,19 @@ export const PlanCard: React.FC<{
 						<PlanProperties
 							icon={<HistoryToggleOff />}
 							title="Permanent Limits"
-							advantages={plan.permanentLimits}
+							advantages={plan.permanent_limits}
 							showLastDivider={true}
 						/>
 						<PlanProperties
 							icon={<Update />}
 							title="Monthly Limits"
-							advantages={plan.monthlyLimits}
+							advantages={plan.monthly_limits}
 							showLastDivider={true}
 						/>
 						<PlanProperties
 							icon={<CardGiftcard />}
 							title="Gifted Funds"
-							advantages={plan.giftedFunds}
+							advantages={plan.gifted_funds}
 							showLastDivider={false}
 						/>
 					</Column>

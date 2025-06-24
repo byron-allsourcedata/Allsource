@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 import {
 	Dialog,
 	DialogTitle,
@@ -9,10 +10,10 @@ import {
 	Box,
 	Radio,
 	RadioGroup,
+	LinearProgress,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import ProgressBar from "@/components/ProgressBar";
 import CustomButton from "@/components/ui/CustomButton";
 import { Elements } from "@stripe/react-stripe-js";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
@@ -20,15 +21,10 @@ import AddCardPopup from "./AddCard";
 import { loadStripe } from "@stripe/stripe-js";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
-
-interface CardDetails {
-	id: string;
-	brand: string;
-	last4: string;
-	exp_month: number;
-	exp_year: number;
-	is_default: boolean;
-}
+import { CardDetails, CardBrand } from "./types";
+import { styled } from "@mui/material/styles";
+import { billingStyles } from "./billingStyles";
+import { ReturnToAdminButton } from "@/components/ReturnToAdminButton";
 
 interface PaymentPopupProps {
 	open: boolean;
@@ -37,8 +33,6 @@ interface PaymentPopupProps {
 	handleCheckoutSuccess: (item: CardDetails) => void;
 }
 
-type CardBrand = "visa" | "mastercard" | "amex" | "discover" | "unionpay";
-
 const cardBrandImages: Record<CardBrand, string> = {
 	visa: "/visa-icon.svg",
 	mastercard: "/mastercard-icon.svg",
@@ -46,6 +40,46 @@ const cardBrandImages: Record<CardBrand, string> = {
 	discover: "/discover-icon.svg",
 	unionpay: "/unionpay-icon.svg",
 };
+
+const paymentFailStyles = {
+	imageStyle: {
+		width: 87,
+		height: 78,
+		borderRadius: "4px",
+		backgroundPosition: "center",
+		backgroundRepeat: "no-repeat",
+		backgroundImage: "url(/danger-fill-icon.svg)",
+	},
+	cardImageContainer: {
+		width: "62px",
+		height: "62px",
+		borderRadius: "4px",
+		border: "1px solid #f0f0f0",
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	cardItemWrapper: {
+		display: "flex",
+		alignItems: "center",
+		width: "100%",
+		gap: 2,
+		border: "1px solid #ddd",
+		borderRadius: "4px",
+		p: 2,
+		boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+	},
+};
+
+const BorderLinearProgress = styled(LinearProgress)(({}) => ({
+	height: 4,
+	borderRadius: 0,
+	backgroundColor: "#c6dafc",
+	"& .MuiLinearProgress-bar": {
+		borderRadius: 5,
+		backgroundColor: "#4285f4",
+	},
+}));
 
 const PaymentFail: React.FC<PaymentPopupProps> = ({
 	open,
@@ -58,6 +92,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	);
 	const [openAddCard, setOpenAddCard] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [visibleButton, setVisibleButton] = useState(false);
 	const router = useRouter();
 
 	const handlePay = async () => {
@@ -95,27 +130,16 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 		setOpenAddCard(true);
 	};
 
-	const handleCloseAddCard = () => setOpenAddCard(false);
+	useEffect(() => {
+		const token = localStorage.getItem("parent_token");
+		if (token) {
+			setVisibleButton(true);
+		} else {
+			setVisibleButton(false);
+		}
+	}, []);
 
-	const paymentFailStyles = {
-		imageStyle: {
-			width: 87,
-			height: 78,
-			borderRadius: "4px",
-			backgroundPosition: "center",
-			backgroundRepeat: "no-repeat",
-			backgroundImage: "url(/danger-fill-icon.svg)",
-		},
-		cardImageContainer: {
-			width: "62px",
-			height: "62px",
-			borderRadius: "4px",
-			border: "1px solid #f0f0f0",
-			display: "flex",
-			justifyContent: "center",
-			alignItems: "center",
-		},
-	};
+	const handleCloseAddCard = () => setOpenAddCard(false);
 
 	const [selectedCard, setSelectedCard] = useState<string>("");
 
@@ -125,12 +149,46 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<>
-			{loading && <ProgressBar />}
 			<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-				<DialogTitle sx={{ padding: 3 }} className="first-sub-title">
-					Complete Your Payment
-				</DialogTitle>
+				<Box
+					sx={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "flex-start",
+						paddingLeft: "2%",
+					}}
+				>
+					{visibleButton && (
+						<ReturnToAdminButton setVisibleButton={setVisibleButton} />
+					)}
+					<DialogTitle
+						sx={{
+							fontSize: "16px",
+							fontFamily: "Nunito Sans",
+							fontWeight: 600,
+							pl: 0.5,
+						}}
+					>
+						Complete Your Payment
+					</DialogTitle>
+				</Box>
 				<Divider />
+				{loading && (
+					<Box
+						sx={{
+							width: "100%",
+							position: "absolute",
+							top: 70,
+							left: 0,
+							zIndex: 1200,
+						}}
+					>
+						<BorderLinearProgress
+							variant="indeterminate"
+							sx={{ borderRadius: "6px" }}
+						/>
+					</Box>
+				)}
 				<DialogContent>
 					<Box
 						sx={{
@@ -177,16 +235,9 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 									<Box
 										key={card.id}
 										sx={{
-											display: "flex",
-											alignItems: "center",
-											width: "100%",
-											gap: 2,
-											border: "1px solid #ddd",
+											...paymentFailStyles.cardItemWrapper,
 											borderColor:
 												selectedCard === String(index) ? "#3898FC" : "#ddd",
-											borderRadius: "4px",
-											p: 2,
-											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 										}}
 									>
 										<Radio value={index} />
@@ -227,14 +278,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 										{card.is_default && (
 											<Typography
 												className="main-text"
-												sx={{
-													borderRadius: "4px",
-													background: "#eaf8dd",
-													color: "#2b5b00",
-													fontSize: "12px",
-													fontWeight: "600",
-													padding: "2px 12px",
-												}}
+												sx={billingStyles.defaultLabel}
 											>
 												Default
 											</Typography>
@@ -252,17 +296,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 							}}
 							onClick={handleAddCard}
 						>
-							<Box
-								sx={{
-									border: "1px dashed rgba(56, 152, 252, 1)",
-									borderRadius: "4px",
-									width: "24px",
-									height: "24px",
-									display: "flex",
-									justifyContent: "center",
-									alignItems: "center",
-								}}
-							>
+							<Box sx={billingStyles.squareImg}>
 								<Image
 									src="/add-square.svg"
 									alt="add-square"
@@ -285,7 +319,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 						variant="contained"
 						onClick={handlePay}
 						sx={{ padding: "10px 48px" }}
-						disabled={selectedCard === ""}
+						disabled={selectedCard === "" || loading}
 					>
 						Pay
 					</CustomButton>

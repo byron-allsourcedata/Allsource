@@ -4,7 +4,6 @@ from enums import PixelStatus
 from schemas.pixel_installation import PixelInstallationRequest
 from schemas.users import PixelFormResponse
 from services.pixel_installation import PixelInstallationService
-from dependencies import get_pixel_installation_service
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,

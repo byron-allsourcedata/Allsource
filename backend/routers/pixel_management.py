@@ -54,5 +54,9 @@ async def send_pixel_code_in_email(
     domain=Depends(check_domain),
 ):
     return pixel_installation_service.send_additional_pixel_code_in_email(
-        email_form.email, email_form.type, user, domain
+        email_form.email,
+        email_form.script_type,
+        email_form.install_type,
+        user,
+        domain,
     )

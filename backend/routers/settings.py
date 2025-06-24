@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 
 from dependencies import (
@@ -15,6 +17,7 @@ from schemas.settings import (
     SendBilling,
     PaymentCard,
     ApiKeysRequest,
+    PlansResponse,
 )
 from schemas.users import VerifyTokenResponse
 from services.settings import SettingsService
@@ -380,3 +383,16 @@ def pay_credits(
     user: dict = Depends(check_team_access_owner_user),
 ):
     return settings_service.pay_credits(user=user)
+
+
+@router.get(
+    "/plans",
+    response_model=PlansResponse,
+    summary="Get list of subscription plans",
+    tags=["Plans"],
+)
+def get_all_plans(
+    user: dict = Depends(check_user_authorization_without_pixel),
+    settings_service: SettingsService = Depends(get_settings_service),
+):
+    return settings_service.get_all_plans()

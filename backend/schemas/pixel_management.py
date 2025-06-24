@@ -36,4 +36,5 @@ class ManagementResult(BaseModel):
 
 class EmailFormRequest(BaseModel):
     email: str
-    type: Literal["view_product", "add_to_cart", "converted_sale"]
+    script_type: Literal["view_product", "add_to_cart", "converted_sale"]
+    install_type: Literal["button", "default"]

@@ -4,11 +4,9 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 import os
 
 from dependencies import (
-    get_pixel_installation_service,
     check_user_authorization_without_pixel,
     check_user_authentication,
     check_domain,
-    get_domain_service,
     UserDomainsService,
 )
 from enums import PixelStatus, BaseEnum

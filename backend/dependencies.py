@@ -83,7 +83,6 @@ from services.partners_assets import PartnersAssetService
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from services.payouts import PayoutsService
-from services.pixel_installation import PixelInstallationService
 from services.plans import PlansService
 from services.settings import SettingsService
 from services.similar_audiences import SimilarAudienceService

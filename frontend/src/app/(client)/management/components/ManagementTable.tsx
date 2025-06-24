@@ -551,14 +551,14 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														flexDirection="column"
 														alignItems="flex-start"
 													>
-														<Button
+														{/* <Button
 															sx={style.actionButtonText}
 															onClick={() =>
 																handleCheckPixelHealthClick(row.domain_name)
 															}
 														>
 															Check Health
-														</Button>
+														</Button> */}
 														<Button
 															sx={style.actionButtonText}
 															onClick={() =>
