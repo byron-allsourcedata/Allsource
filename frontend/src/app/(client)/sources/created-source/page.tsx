@@ -554,7 +554,8 @@ const SourcesList: React.FC = () => {
 											{createdData.matched_records_status === "complete" &&
 											createdData?.total_records === 0 ? (
 												"0"
-											) : (createdData?.id && createdData.matched_records_status === "comlete" && 
+											) : (createdData?.id &&
+													createdData.matched_records_status === "comlete" &&
 													sourceProgress[createdData.id]?.processed &&
 													sourceProgress[createdData.id]?.processed ==
 														sourceProgress[createdData.id]?.total) ||

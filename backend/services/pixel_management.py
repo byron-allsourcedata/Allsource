@@ -7,7 +7,7 @@ from fastapi import HTTPException, Depends
 from starlette import status
 from typing_extensions import Annotated
 
-from dependencies import get_domain_service, get_integration_service
+from dependencies import get_integration_service
 from enums import DomainStatus
 from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
