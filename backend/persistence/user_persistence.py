@@ -359,47 +359,58 @@ class UserPersistence:
     ):
         status_case = case(
             [
-                (Users.is_email_confirmed == False, UserStatusInAdmin.NEED_CONFIRM_EMAIL.value),
+                (
+                    Users.is_email_confirmed == False,
+                    UserStatusInAdmin.NEED_CONFIRM_EMAIL.value,
+                ),
                 (
                     or_(
                         UserDomains.id.is_(None),
                         UserDomains.is_pixel_installed == False,
                     ),
-                    UserStatusInAdmin.PIXEL_NOT_INSTALLED.value
+                    UserStatusInAdmin.PIXEL_NOT_INSTALLED.value,
                 ),
                 (
                     and_(
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install <= timedelta(hours=24),
+                        func.now() - UserDomains.date_pixel_install
+                        <= timedelta(hours=24),
                         ~exists().where(LeadUser.domain_id == UserDomains.id),
                     ),
-                    UserStatusInAdmin.WAITING_CONTACTS.value
+                    UserStatusInAdmin.WAITING_CONTACTS.value,
                 ),
                 (
                     and_(
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install > timedelta(hours=24),
+                        func.now() - UserDomains.date_pixel_install
+                        > timedelta(hours=24),
                         ~exists().where(LeadUser.domain_id == UserDomains.id),
                     ),
-                    UserStatusInAdmin.RESOLUTION_FAILED.value
+                    UserStatusInAdmin.RESOLUTION_FAILED.value,
                 ),
                 (
                     and_(
                         exists().where(LeadUser.domain_id == UserDomains.id),
-                        ~exists().where(IntegrationUserSync.domain_id == UserDomains.id),
+                        ~exists().where(
+                            IntegrationUserSync.domain_id == UserDomains.id
+                        ),
                     ),
-                    UserStatusInAdmin.SYNC_NOT_COMPLETED.value
+                    UserStatusInAdmin.SYNC_NOT_COMPLETED.value,
                 ),
                 (
                     and_(
-                        exists().where(IntegrationUserSync.domain_id == UserDomains.id),
-                        ~exists().where(IntegrationUserSync.sync_status == True),
+                        exists().where(
+                            IntegrationUserSync.domain_id == UserDomains.id
+                        ),
+                        ~exists().where(
+                            IntegrationUserSync.sync_status == True
+                        ),
                     ),
-                    UserStatusInAdmin.SYNC_ERROR.value
+                    UserStatusInAdmin.SYNC_ERROR.value,
                 ),
                 (
                     exists().where(IntegrationUserSync.sync_status == True),
-                    UserStatusInAdmin.DATA_SYNCING.value
+                    UserStatusInAdmin.DATA_SYNCING.value,
                 ),
             ]
         )
@@ -430,7 +441,10 @@ class UserPersistence:
             )
             .outerjoin(UserDomains, UserDomains.user_id == Users.id)
             .outerjoin(LeadUser, LeadUser.domain_id == UserDomains.id)
-            .outerjoin(IntegrationUserSync, IntegrationUserSync.domain_id == UserDomains.id)
+            .outerjoin(
+                IntegrationUserSync,
+                IntegrationUserSync.domain_id == UserDomains.id,
+            )
             .filter(Users.role.any("customer"))
         )
 
