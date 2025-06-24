@@ -232,7 +232,6 @@ class AdminCustomersService:
             agg = aggregates.get(user_id, {})
 
             pixel_installed_count = agg.get("pixel_installed_count", 0)
-            contacts_count = agg.get("contacts_count", 0)
             sources_count = agg.get("sources_count", 0)
             lookalikes_count = agg.get("lookalikes_count", 0)
 
@@ -248,7 +247,7 @@ class AdminCustomersService:
                 "subscription_plan": user.subscription_plan,
                 "credits_count": user.credits_count,
                 "pixel_installed_count": pixel_installed_count,
-                "contacts_count": contacts_count,
+                "contacts_count": user.total_leads,
                 "sources_count": sources_count,
                 "lookalikes_count": lookalikes_count,
             }
@@ -291,7 +290,7 @@ class AdminCustomersService:
                     "role": user.role,
                     "pixel_installed_count": pixel_installed_count,
                     "sources_count": sources_count,
-                    "contacts_count": contacts_count,
+                    "contacts_count": user.total_leads,
                     "subscription_plan": user.subscription_plan,
                     "lookalikes_count": lookalikes_count,
                     "type": "user",
