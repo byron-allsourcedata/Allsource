@@ -38,6 +38,7 @@ from dependencies import (
 from enums import CreateDataSync, TeamAccessLevel
 from persistence.domains import UserDomains
 from persistence.settings_persistence import SettingsPersistence
+from persistence.team_invitation_persistence import TeamInvitationPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.shopify import (
     ShopifyLandingResponse,
@@ -444,6 +445,7 @@ def oauth_bigcommerce_uninstall(
 def oauth_bigcommerce_load(
     user_persistence: UserPersistence,
     settings_persistence: SettingsPersistence,
+    team_invitation_persistence: TeamInvitationPersistence,
     signed_payload: Annotated[str, Query()],
     signed_payload_jwt: Annotated[str, Query()],
     integration_service: IntegrationService = Depends(get_integration_service),
@@ -460,9 +462,7 @@ def oauth_bigcommerce_load(
     if user:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
 
-    team_invitation = settings_persistence.get_team_invitation_by_email(
-        user_email
-    )
+    team_invitation = team_invitation_persistence.get_by_email(user_email)
     if team_invitation:
         return RedirectResponse(
             f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={team_invitation.token}&user_mail={user_email}"
@@ -484,12 +484,12 @@ def oauth_bigcommerce_load(
     }
     json_string = json.dumps(md5_token_info, sort_keys=True)
     md5_hash = hashlib.md5(json_string.encode()).hexdigest()
-    settings_persistence.save_pending_invations_by_userid(
+    team_invitation_persistence.create(
         team_owner_id=owner.id,
         user_mail=user_email,
         invited_by_id=owner.id,
         access_level=TeamAccessLevel.STANDARD.value,
-        md5_hash=md5_hash,
+        token=md5_hash,
     )
 
     return RedirectResponse(

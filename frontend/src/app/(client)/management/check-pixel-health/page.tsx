@@ -304,7 +304,7 @@ const Management: React.FC = () => {
 																	color: "rgba(56, 152, 252, 1)",
 																}}
 															>
-																Learn more{" "}
+																Learn more
 																<OpenInNewIcon sx={{ fontSize: 14 }} />
 															</Link>
 														</Box>
