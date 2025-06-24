@@ -223,16 +223,40 @@ const Popup: React.FC<PopupProps> = ({
 						"@media (max-width: 600px)": { m: 2 },
 					}}
 				>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+						<Typography
+							className="first-sub-title"
+							sx={{
+								textAlign: "left",
+							}}
+						>
+							*Send this to my developer
+						</Typography>
+						<Typography
+							className="paragraph"
+							sx={{
+								backgroundColor: "rgba(254, 243, 205, 1)",
+								color: "rgba(179, 151, 9, 1) !important",
+								padding: ".1563rem 1rem",
+							}}
+						>
+							Optional
+						</Typography>
+					</Box>
 					<Typography
-						variant="h6"
-						component="div"
-						mb={2}
-						className="first-sub-title"
 						sx={{
+							fontFamily: "Nunito Sans",
+							fontSize: "14px",
+							fontWeight: "400",
+							lineHeight: "16.8px",
 							textAlign: "left",
+							color: "rgba(0, 0, 0, 1)",
+							paddingTop: "0.25em",
+							pt: 2,
+							pb: 1,
 						}}
 					>
-						Send this to my developer
+						Send install instructions to this email:
 					</Typography>
 					<Box
 						ref={verifyRef}

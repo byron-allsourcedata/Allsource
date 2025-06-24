@@ -5,6 +5,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 type FeatureCardWithButtonProps = {
 	buttonLabel?: string;
 	img_width: number;
+	mainContent?: React.ReactNode | React.ComponentType;
 } & FeatureCardProps;
 
 const FeatureCardWithButton: React.FC<FeatureCardWithButtonProps> = ({
@@ -17,6 +18,7 @@ const FeatureCardWithButton: React.FC<FeatureCardWithButtonProps> = ({
 	showInstalled = false,
 	buttonLabel,
 	img_width = 140,
+	mainContent,
 }) => {
 	return (
 		<Card
@@ -116,6 +118,10 @@ const FeatureCardWithButton: React.FC<FeatureCardWithButtonProps> = ({
 						alt=""
 						style={{ maxHeight: "100%", maxWidth: "100%" }}
 					/>
+				</Box>
+
+				<Box>
+					<>{mainContent}</>
 				</Box>
 
 				<Box sx={{ display: "flex", justifyContent: "flex-end" }}>

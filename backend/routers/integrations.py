@@ -34,7 +34,6 @@ from dependencies import (
     UserPersistence,
     UserDomainsPersistence,
     check_api_key,
-    get_settings_persistence,
 )
 from enums import CreateDataSync, TeamAccessLevel
 from persistence.domains import UserDomains
@@ -444,12 +443,10 @@ def oauth_bigcommerce_uninstall(
 @router.get("/bigcommerce/load", status_code=status.HTTP_200_OK)
 def oauth_bigcommerce_load(
     user_persistence: UserPersistence,
+    settings_persistence: SettingsPersistence,
     signed_payload: Annotated[str, Query()],
     signed_payload_jwt: Annotated[str, Query()],
     integration_service: IntegrationService = Depends(get_integration_service),
-    settings_persistence: SettingsPersistence = Depends(
-        get_settings_persistence
-    ),
 ):
     with integration_service as service:
         result = service.bigcommerce.oauth_bigcommerce_load(
