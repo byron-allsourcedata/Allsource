@@ -292,7 +292,7 @@ async def update_payment_webhook(
     return result_update_subscription
 
 
-@router.post("/cancel-plan", response_model=None)
+@router.post("/cancel-plan")
 def cancel_user_subscription(
     unsubscribe_request: UnsubscribeRequest,
     payments_service: PaymentsService = Depends(get_payments_service),

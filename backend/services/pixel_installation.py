@@ -36,7 +36,7 @@ class PixelInstallationService:
         self.send_grid_persistence_service = send_grid_persistence_service
         self.pixel_management_service = pixel_management_service
 
-    def _get_or_create_client_id(self, user, domain) -> str:
+    def _get_or_create_client_id(self, user: dict, domain: UserDomains) -> str:
         if domain is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -59,7 +59,7 @@ class PixelInstallationService:
 
         return client_id
 
-    def get_manual(self, user, domain):
+    def get_manual(self, user: dict, domain: UserDomains):
         client_id = self._get_or_create_client_id(user, domain)
 
         script = (
@@ -86,27 +86,37 @@ class PixelInstallationService:
 
         return script, client_id
 
-    def get_view_product_script(self, user, domain) -> str:
+    def get_view_product_script(self, user: dict, domain: UserDomains) -> str:
         client_id = self._get_or_create_client_id(user, domain)
         return f"""<script>/* view_product code for {domain.domain} with ID {client_id} */</script>"""
 
-    def get_add_to_cart_script_on_click(self, user, domain) -> str:
+    def get_add_to_cart_script_on_click(
+        self, user: dict, domain: UserDomains
+    ) -> str:
         client_id = self._get_or_create_client_id(user, domain)
         return f"""<script>/* add_to_cart code for {domain.domain} with ID {client_id} */</script>"""
 
-    def get_converted_sale_script_on_click(self, user, domain) -> str:
+    def get_converted_sale_script_on_click(
+        self, user: dict, domain: UserDomains
+    ) -> str:
         client_id = self._get_or_create_client_id(user, domain)
         return f"""<script>/* converted_sale code for {domain.domain} with ID {client_id} */</script>"""
 
-    def get_add_to_cart_script_on_load(self, user, domain) -> str:
+    def get_add_to_cart_script_on_load(
+        self, user: dict, domain: UserDomains
+    ) -> str:
         client_id = self._get_or_create_client_id(user, domain)
         return f"""<script>/* add_to_cart code for {domain.domain} with ID {client_id} */</script>"""
 
-    def get_converted_sale_script_on_load(self, user, domain) -> str:
+    def get_converted_sale_script_on_load(
+        self, user: dict, domain: UserDomains
+    ) -> str:
         client_id = self._get_or_create_client_id(user, domain)
         return f"""<script>/* converted_sale code for {domain.domain} with ID {client_id} */</script>"""
 
-    def send_pixel_code_in_email(self, email, user, domain):
+    def send_pixel_code_in_email(
+        self, email: str, user: dict, domain: UserDomains
+    ):
         message_expiration_time = user.get("pixel_code_sent_at", None)
         time_now = datetime.now()
         if message_expiration_time is not None:
@@ -211,8 +221,13 @@ class PixelInstallationService:
         return PixelInstallationResponse(pixel_installation=installed_flag)
 
     def send_additional_pixel_code_in_email(
-        self, email: str, script_type: str, install_type: str, user, domain
-    ):
+        self,
+        email: str,
+        script_type: str,
+        install_type: str,
+        user: dict,
+        domain: UserDomains,
+    ) -> BaseEnum:
         message_expiration_time = user.get("pixel_code_sent_at", None)
         time_now = datetime.now()
 
@@ -260,6 +275,7 @@ class PixelInstallationService:
 
         full_name = email.split("@")[0]
         mail_object = SendgridHandler()
+        print(template_id)
         mail_object.send_sign_up_mail(
             to_emails=email,
             template_id=template_id,
