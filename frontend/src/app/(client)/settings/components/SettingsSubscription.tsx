@@ -589,7 +589,7 @@ export const SettingsSubscription: React.FC = () => {
 								}
 							}
 
-							if (plan.isActive) {
+							if (plan.is_active) {
 								buttonText = "Current Plan";
 								disabled = true;
 							}
@@ -607,7 +607,7 @@ export const SettingsSubscription: React.FC = () => {
 										activePlanTitle={activePlan?.title || ""}
 										activePlanPeriod={activePlan?.interval || ""}
 										tabValue={tabValue}
-										isRecommended={plan.isRecommended}
+										isRecommended={plan.is_recommended}
 										buttonProps={{
 											onChoose: handle,
 											text: buttonText,

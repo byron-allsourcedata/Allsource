@@ -200,6 +200,7 @@ const SourcesList: React.FC = () => {
 	};
 
 	const isCreateDisabled =
+		createdData?.matched_records_status !== "complete" ||
 		createdData?.processed_records === 0 ||
 		createdData?.processed_records !== createdData?.total_records ||
 		createdData?.matched_records === 0;
@@ -554,6 +555,7 @@ const SourcesList: React.FC = () => {
 											createdData?.total_records === 0 ? (
 												"0"
 											) : (createdData?.id &&
+													createdData.matched_records_status === "comlete" &&
 													sourceProgress[createdData.id]?.processed &&
 													sourceProgress[createdData.id]?.processed ==
 														sourceProgress[createdData.id]?.total) ||
@@ -680,7 +682,7 @@ const SourcesList: React.FC = () => {
 								<Box sx={{ position: "relative" }}>
 									<Button
 										variant="contained" /* need chnage < on !== */
-										disabled={false}
+										disabled={isCreateDisabled}
 										onClick={() =>
 											router.push(
 												`/lookalikes/builder?source_uuid=${createdData?.id}`,

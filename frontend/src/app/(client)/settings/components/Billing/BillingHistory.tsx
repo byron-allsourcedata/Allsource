@@ -14,23 +14,17 @@ import {
 import { showErrorToast } from "@/components/ToastNotification";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios from "axios";
+import dayjs from "dayjs";
 import CustomTooltip from "@/components/customToolTip";
 import { billingStyles } from "./billingStyles";
 import DownloadIcon from "@mui/icons-material/Download";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import CustomTablePagination from "@/components/CustomTablePagination";
+import { BillingHistoryItem } from "./types";
 
 interface BillingHistoryProps {
 	setIsLoading: (state: boolean) => void;
 	handleSendInvoicePopupOpen: (id: string) => void;
-}
-
-interface BillingHistoryItem {
-	invoice_id: string;
-	pricing_plan: string;
-	date: string;
-	status: string;
-	total: number;
 }
 
 export const BillingHistory: React.FC<BillingHistoryProps> = ({
@@ -279,7 +273,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 												backgroundColor: "#fff",
 											}}
 										>
-											{history.date}
+											{dayjs(history.date).format("MMM D, YYYY")}
 										</TableCell>
 
 										<TableCell

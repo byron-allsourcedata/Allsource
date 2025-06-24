@@ -36,6 +36,9 @@ class SubscriptionWebhookService:
                 customer_id=customer_id
             )
         )
+        if not subscription:
+            return
+
         if subscription.status == PaymentStatus.INACTIVE.value:
             record_subscription = (
                 self.user_subscriptions_persistence.get_subscription_plan_by_id(

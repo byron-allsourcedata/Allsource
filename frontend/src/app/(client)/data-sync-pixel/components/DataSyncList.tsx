@@ -850,8 +850,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "120px", minWidth: "120px", maxWidth: "12vw" },
 		},
 		{
-			key: "processed_contacts",
-			label: "Validated",
+			key: "validation_contacts",
+			label: "Valid emails",
 			widths: {
 				width: "100px",
 				minWidth: "100px",
@@ -859,7 +859,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			},
 		},
 		{
-			key: "successful_contacts",
+			key: "synced_contacts",
 			label: "Synced",
 			widths: {
 				width: "80px",
@@ -1282,7 +1282,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.processed_contacts}
+												{row.validation_contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
