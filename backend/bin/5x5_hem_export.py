@@ -26,7 +26,7 @@ def clickhouse_bulk_insert(hems: list[dict], ch_session: Clickhouse):
     rows = [(hem["UP_ID"], hem["SHA256_LC_HEM"]) for hem in hems]
     columns = ["up_id", "sha256_lc_hem"]
     query_result = ch_session.insert("five_x_five_hems", rows, columns)
-    logging.info(f"Written rows to scores: {query_result.written_rows}")
+    logging.info(f"Written rows to hems: {query_result.written_rows}")
 
 
 async def on_message_received(message, ch_session):
