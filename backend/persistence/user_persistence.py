@@ -5,11 +5,11 @@ from typing import Optional
 from decimal import Decimal
 
 import pytz
-from sqlalchemy import func, desc, asc, or_, select, update
+from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
 from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
-from enums import TeamsInvitationStatus, SignUpStatus
+from enums import TeamsInvitationStatus, SignUpStatus, UserStatusInAdmin
 from models import (
     AudienceLookalikes,
     LeadUser,
@@ -21,6 +21,8 @@ from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
 from models.teams_invitations import TeamInvitation
 from models.users import Users
+from models.leads_users import LeadUser
+from models.integrations import IntegrationUserSync
 from models.users_domains import UserDomains
 from models.audience_sources import AudienceSource
 from resolver import injectable
@@ -355,6 +357,52 @@ class UserPersistence:
         test_users,
         filters,
     ):
+        status_case = case(
+            [
+                (Users.is_email_confirmed == False, UserStatusInAdmin.NEED_CONFIRM_EMAIL.value),
+                (
+                    or_(
+                        UserDomains.id.is_(None),
+                        UserDomains.is_pixel_installed == False,
+                    ),
+                    UserStatusInAdmin.PIXEL_NOT_INSTALLED.value
+                ),
+                (
+                    and_(
+                        UserDomains.is_pixel_installed == True,
+                        func.now() - UserDomains.date_pixel_install <= timedelta(hours=24),
+                        ~exists().where(LeadUser.domain_id == UserDomains.id),
+                    ),
+                    UserStatusInAdmin.WAITING_CONTACTS.value
+                ),
+                (
+                    and_(
+                        UserDomains.is_pixel_installed == True,
+                        func.now() - UserDomains.date_pixel_install > timedelta(hours=24),
+                        ~exists().where(LeadUser.domain_id == UserDomains.id),
+                    ),
+                    UserStatusInAdmin.RESOLUTION_FAILED.value
+                ),
+                (
+                    and_(
+                        exists().where(LeadUser.domain_id == UserDomains.id),
+                        ~exists().where(IntegrationUserSync.domain_id == UserDomains.id),
+                    ),
+                    UserStatusInAdmin.SYNC_NOT_COMPLETED.value
+                ),
+                (
+                    and_(
+                        exists().where(IntegrationUserSync.domain_id == UserDomains.id),
+                        ~exists().where(IntegrationUserSync.sync_status == True),
+                    ),
+                    UserStatusInAdmin.SYNC_ERROR.value
+                ),
+                (
+                    exists().where(IntegrationUserSync.sync_status == True),
+                    UserStatusInAdmin.DATA_SYNCING.value
+                ),
+            ]
+        )
         query = (
             self.db.query(
                 Users.id,
@@ -370,6 +418,7 @@ class UserPersistence:
                     "is_email_validation_enabled"
                 ),
                 SubscriptionPlan.title.label("subscription_plan"),
+                status_case.label("user_status"),
             )
             .join(
                 UserSubscriptions,
@@ -379,6 +428,9 @@ class UserPersistence:
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
+            .outerjoin(UserDomains, UserDomains.user_id == Users.id)
+            .outerjoin(LeadUser, LeadUser.domain_id == UserDomains.id)
+            .outerjoin(IntegrationUserSync, IntegrationUserSync.domain_id == UserDomains.id)
             .filter(Users.role.any("customer"))
         )
 
