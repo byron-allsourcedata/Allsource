@@ -22,7 +22,7 @@ import FilterPopup from "./components/FilterPopup";
 import CustomizedProgressBar from "@/components/ProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
-import CustomSwitch from "@/components/ui/CustomSwitch"
+import CustomSwitch from "@/components/ui/CustomSwitch";
 
 interface CustomCardsProps {
 	users: number;
@@ -206,7 +206,7 @@ const Users: React.FC = () => {
 
 			if (isTestUser) {
 				url += `&test_users=true`;
-			}	
+			}
 
 			if (search.trim() !== "") {
 				url += `&search_query=${encodeURIComponent(search.trim())}`;
@@ -504,7 +504,9 @@ const Users: React.FC = () => {
 
 						<Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
 							<Box sx={{ display: "flex", alignItems: "center" }}>
-								<Typography className="black-table-header">Exclude test users</Typography>
+								<Typography className="black-table-header">
+									Exclude test users
+								</Typography>
 								<CustomSwitch
 									stateSwitch={isTestUser}
 									changeState={() => setIsTestUser((prev) => !prev)}

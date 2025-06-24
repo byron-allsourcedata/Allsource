@@ -345,7 +345,14 @@ class UserPersistence:
         return query.all()
 
     def get_base_customers(
-        self, search_query, page, per_page, sort_by, sort_order, test_users, filters
+        self,
+        search_query,
+        page,
+        per_page,
+        sort_by,
+        sort_order,
+        test_users,
+        filters,
     ):
         query = (
             self.db.query(
