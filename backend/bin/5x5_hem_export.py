@@ -1,24 +1,18 @@
 import asyncio
 import functools
-import gzip
 import json
 import logging
 import os
 import sys
-import tempfile
-import aioboto3
-import boto3
-import pandas as pd
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from resolver import Resolver
 from dotenv import load_dotenv
 from config.rmq_connection import RabbitMQConnection
-from models.five_x_five_hems import FiveXFiveHems
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.dialects.postgresql import insert
+from db_dependencies import Clickhouse
 
 # Load environment variables
 load_dotenv()
@@ -28,23 +22,18 @@ logging.basicConfig(level=logging.INFO)
 QUEUE_HEMS_EXPORT = "5x5_hems_export"
 
 
-async def on_message_received(message, db_session):
+def clickhouse_bulk_insert(hems: list[dict], ch_session: Clickhouse):
+    rows = [(hem["UP_ID"], hem["SHA256_LC_HEM"]) for hem in hems]
+    columns = ["up_id", "sha256_lc_hem"]
+    query_result = ch_session.insert("five_x_five_hems", rows, columns)
+    logging.info(f"Written rows to scores: {query_result.written_rows}")
+
+
+async def on_message_received(message, ch_session):
     try:
         message_json = json.loads(message.body)
-        hem_json = message_json["hem"]
-        five_x_five_hems = (
-            insert(FiveXFiveHems)
-            .values(
-                up_id=str(hem_json.get("UP_ID", None)),
-                sha256_lc_hem=str(hem_json.get("SHA256_LC_HEM", None)),
-                md5_lc_hem=str(hem_json.get("MD5_LC_HEM", None)),
-                sha1_lc_hem=str(hem_json.get("SHA1_LC_HEM", None)),
-            )
-            .on_conflict_do_nothing()
-        )
-        db_session.execute(five_x_five_hems)
-        db_session.commit()
-
+        hems = message_json["hems"]
+        clickhouse_bulk_insert(hems, ch_session)
         await message.ack()
     except Exception as e:
         await message.reject(requeue=True)
@@ -53,6 +42,7 @@ async def on_message_received(message, db_session):
 
 async def main():
     logging.info("Started")
+    resolver = Resolver()
     try:
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -65,21 +55,17 @@ async def main():
                 "x-consumer-timeout": 7200000,
             },
         )
-
-        engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
+        ch_session = await resolver.resolve(Clickhouse)
 
         await queue.consume(
-            functools.partial(on_message_received, db_session=db_session)
+            functools.partial(on_message_received, ch_session=ch_session)
         )
         await asyncio.Future()
     except Exception as err:
-        logging.error("Unhandled Exception:", exc_info=True)
+        logging.error(f"Unhandled Exception: {err}", exc_info=True)
     finally:
         logging.info("Shutting down...")
+        await resolver.cleanup()
         await rabbitmq_connection.close()
 
 

@@ -7,18 +7,14 @@ import sys
 import time
 import traceback
 import urllib.parse
+from datetime import datetime, timedelta, timezone
 
 import pytz
 import regex
-from dateutil.relativedelta import relativedelta
-
-from sqlalchemy import create_engine, desc
-from sqlalchemy.orm import sessionmaker, Session, aliased
-
 from dotenv import load_dotenv
+from sqlalchemy import desc
 from sqlalchemy.dialects.postgresql import insert
-from datetime import datetime, timedelta, timezone
-
+from sqlalchemy.orm import Session, aliased
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -27,13 +23,14 @@ sys.path.append(parent_dir)
 
 from persistence.user_subscriptions import UserSubscriptionsPersistence
 from utils import normalize_url, get_url_params_list, check_certain_urls
-from enums import NotificationTitles, PlanAlias
+from enums import NotificationTitles
+from db_dependencies import Clickhouse
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
 
 from utils import create_company_alias
 from urllib.parse import urlparse, parse_qs
-
+from resolver import Resolver
 from models.plans import SubscriptionPlan
 from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from models.leads_requests import LeadsRequests
@@ -46,7 +43,6 @@ from models.five_x_five_locations import FiveXFiveLocations
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.leads_visits import LeadsVisits
-from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from models.integrations.suppressed_contact import SuppressedContact
@@ -61,16 +57,9 @@ from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from services.referral import ReferralService
 from dependencies import (
     SubscriptionService,
-    UserPersistence,
-    PlansPersistence,
-    PartnersPersistence,
-    ReferralDiscountCodesPersistence,
-    StripeService,
-    ReferralPayoutsPersistence,
-    ReferralUserPersistence,
+    Db,
 )
 
 load_dotenv()
@@ -136,27 +125,36 @@ def get_all_five_x_user_emails(
     return list(emails)
 
 
+def get_up_ids_by_sha256(ch_session, sha256_value: str):
+    query = """
+        SELECT up_id
+        FROM five_x_five_hems
+        WHERE sha256_lc_hem = %(sha256)s
+    """
+    result = ch_session.query(query, params={"sha256": sha256_value})
+    print(result)
+    up_ids = [row[0] for row in result.result_rows]
+    return up_ids
+
+
 async def process_table(
-    session,
-    states_dict,
+    ch_session: Clickhouse,
+    session: Session,
+    states_dict: dict,
     groupped_requests,
-    rabbitmq_connection,
-    subscription_service,
-    leads_persistence,
-    notification_persistence,
+    rabbitmq_connection: RabbitMQConnection,
+    subscription_service: SubscriptionService,
+    leads_persistence: LeadsPersistence,
+    notification_persistence: NotificationPersistence,
     root_user=None,
 ):
     for key, possible_leads in groupped_requests.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead["UP_ID"]
             if up_id is None or up_id == "None":
-                up_ids = (
-                    session.query(FiveXFiveHems.up_id)
-                    .filter(
-                        FiveXFiveHems.sha256_lc_hem
-                        == str(possible_lead["SHA256_LOWER_CASE"])
-                    )
-                    .all()
+                up_ids = get_up_ids_by_sha256(
+                    ch_session=ch_session,
+                    sha256_value=str(possible_lead["SHA256_LOWER_CASE"]),
                 )
                 if len(up_ids) == 0:
                     logging.debug(
@@ -1121,32 +1119,20 @@ def update_last_processed_file(file_key):
         file.write(file_key)
 
 
-async def process_files(session, rabbitmq_connection, root_user):
-    stripe_service = StripeService()
-    user_subscription_persistence = UserSubscriptionsPersistence(session)
+def get_all_states(db_session: Session):
+    return db_session.query(States).all()
 
-    subscription_service = SubscriptionService(
-        db=session,
-        user_persistence_service=UserPersistence(session),
-        plans_persistence=PlansPersistence(session),
-        referral_service=ReferralService(
-            referral_persistence_discount_code_service=ReferralDiscountCodesPersistence(
-                session
-            ),
-            user_persistence=UserPersistence(session),
-            referral_persistence_service=ReferralUserPersistence(session),
-            stripe_service=StripeService(),
-            referral_payouts_persistence=ReferralPayoutsPersistence(session),
-        ),
-        partners_persistence=PartnersPersistence(session),
-        stripe_service=stripe_service,
-        user_subscriptions_persistence=user_subscription_persistence,
-    )
-    notification_persistence = NotificationPersistence(db=session)
 
-    leads_persistence = LeadsPersistence(db=session)
-
-    states = session.query(States).all()
+async def process_files(
+    ch_session: Clickhouse,
+    subscription_service: SubscriptionService,
+    notification_persistence: NotificationPersistence,
+    leads_persistence: LeadsPersistence,
+    db_session: Session,
+    rabbitmq_connection: RabbitMQConnection,
+    root_user: Users,
+):
+    states = get_all_states(db_session)
     states_dict = {state.state_code: state.id for state in states}
 
     while True:
@@ -1156,7 +1142,7 @@ async def process_files(session, rabbitmq_connection, root_user):
         except FileNotFoundError:
             last_processed_file = None
 
-        five_x_five_cookie_sync_event_date = session.query(
+        five_x_five_cookie_sync_event_date = db_session.query(
             FiveXFiveCookieSyncFile.event_date
         )
 
@@ -1187,9 +1173,9 @@ async def process_files(session, rabbitmq_connection, root_user):
 
         new_dt = event_date + timedelta(hours=1)
 
-        cookie_sync_files_query = session.query(FiveXFiveCookieSyncFile).filter(
-            FiveXFiveCookieSyncFile.event_date.between(event_date, new_dt)
-        )
+        cookie_sync_files_query = db_session.query(
+            FiveXFiveCookieSyncFile
+        ).filter(FiveXFiveCookieSyncFile.event_date.between(event_date, new_dt))
         cookie_sync_files = cookie_sync_files_query.order_by(
             FiveXFiveCookieSyncFile.event_date
         ).all()
@@ -1202,7 +1188,8 @@ async def process_files(session, rabbitmq_connection, root_user):
             logging.info("All 5x5 files processed")
             return
         await process_table(
-            session,
+            ch_session,
+            db_session,
             states_dict,
             groupped_requests,
             rabbitmq_connection,
@@ -1213,7 +1200,8 @@ async def process_files(session, rabbitmq_connection, root_user):
         )
         if root_user:
             await process_table(
-                session,
+                ch_session,
+                db_session,
                 states_dict,
                 groupped_requests,
                 rabbitmq_connection,
@@ -1309,13 +1297,26 @@ def process_confirmed(session: Session):
     logging.info("Lead confirmed")
 
 
-async def main():
-    engine = create_engine(
-        f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
-        pool_pre_ping=True,
+def get_root_user(db_session: Db):
+    result = (
+        db_session.query(Users, UserDomains)
+        .join(UserDomains, UserDomains.user_id == Users.id)
+        .filter(
+            (UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN)
+            & (Users.email == ROOT_BOT_CLIENT_EMAIL)
+        )
+        .first()
     )
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    return result
+
+
+async def main():
+    resolver = Resolver()
+    db_session = await resolver.resolve(Db)
+    subscription_service = await resolver.resolve(SubscriptionService)
+    notification_persistence = await resolver.resolve(NotificationPersistence)
+    leads_persistence = await resolver.resolve(LeadsPersistence)
+    ch_session = await resolver.resolve(Clickhouse)
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
@@ -1342,32 +1343,29 @@ async def main():
     await channel.declare_queue(name=EMAIL_NOTIFICATIONS, durable=True)
 
     logging.info("Started")
-    result = (
-        session.query(Users, UserDomains)
-        .join(UserDomains, UserDomains.user_id == Users.id)
-        .filter(
-            (UserDomains.domain == ROOT_BOT_CLIENT_DOMAIN)
-            & (Users.email == ROOT_BOT_CLIENT_EMAIL)
-        )
-        .first()
-    )
+    result = get_root_user(db_session=db_session)
     while True:
         try:
             await process_files(
-                session=session,
+                ch_session=ch_session,
+                subscription_service=subscription_service,
+                notification_persistence=notification_persistence,
+                leads_persistence=leads_persistence,
+                db_session=db_session,
                 rabbitmq_connection=connection,
                 root_user=result,
             )
             await connection.close()
-            process_confirmed(session=session)
+            process_confirmed(session=db_session)
             logging.info("Sleeping for 10 minutes...")
             time.sleep(60 * 10)
             connection = await rabbitmq_connection.connect()
             logging.info("Reconnected to RabbitMQ")
         except Exception as e:
-            session.rollback()
+            db_session.rollback()
             logging.error(f"An error occurred: {str(e)}")
             traceback.print_exc()
+            await resolver.cleanup()
             time.sleep(30)
 
 
