@@ -1,8 +1,9 @@
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, TypedDict
 from decimal import Decimal
+import typing
 
 import pytz
 from sqlalchemy import func, desc, asc, or_, select, update
@@ -27,6 +28,16 @@ from resolver import injectable
 from utils import end_of_month
 
 logger = logging.getLogger(__name__)
+
+
+class UserDict(TypedDict):
+    """
+    UserDict is incomplete type for object, used across the application
+    when you add new fields, add them to this type also
+    """
+
+    id: int
+    random_seed: int
 
 
 @injectable
@@ -130,15 +141,19 @@ class UserPersistence:
             select(Users).where(Users.customer_id == customer_id)
         ).scalar()
 
-    def get_user_by_id(self, user_id, result_as_object=False):
+    def get_user_by_id(
+        self, user_id, result_as_object=False
+    ) -> Optional[UserDict]:
         user, partner_is_active = (
             self.db.query(Users, Partner.is_active)
             .filter(Users.id == user_id)
             .outerjoin(Partner, Partner.user_id == user_id)
             .first()
         )
+
         result_user = None
         if user:
+            user: Users = typing.cast(Users, user)
             result_user = {
                 "id": user.id,
                 "email": user.email,
@@ -186,6 +201,7 @@ class UserPersistence:
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
                 "is_email_validation_enabled": user.is_email_validation_enabled,
+                "random_seed": user.random_seed,
             }
         self.db.rollback()
         if result_as_object:

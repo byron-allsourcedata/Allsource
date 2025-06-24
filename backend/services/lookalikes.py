@@ -1,16 +1,14 @@
 from typing import List, Tuple, Dict, Set
 from uuid import UUID
 
-from pydantic.v1 import UUID4
-
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
+from persistence.user_persistence import UserDict
 from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
 from schemas.similar_audiences import (
-    AudienceFeatureImportance,
     NormalizationConfig,
 )
 from services.similar_audiences import SimilarAudienceService
@@ -356,6 +354,7 @@ class AudienceLookalikesService:
         audience_data: List[dict],
         similar_audience_service: SimilarAudienceService,
         audience_type: BusinessType = BusinessType.ALL,
+        random_seed: int = 42,
     ) -> CalculateRequest:
         try:
             if len(audience_data) < 2:
@@ -366,7 +365,9 @@ class AudienceLookalikesService:
             )
 
             audience_feature_dict = similar_audience_service.get_audience_feature_importance_with_config(
-                audience_data=audience_data, config=normalization_config
+                audience_data=audience_data,
+                config=normalization_config,
+                random_seed=random_seed,
             )
 
             rounded_feature = {
@@ -387,10 +388,11 @@ class AudienceLookalikesService:
     def calculate_lookalike(
         self,
         similar_audience_service: SimilarAudienceService,
-        user: dict,
+        user: UserDict,
         uuid_of_source: UUID,
         lookalike_size: str,
     ) -> CalculateRequest:
+        random_seed = int(user.get("random_seed", 42))
         audience_data = (
             self.lookalikes_persistence_service.calculate_lookalikes(
                 user_id=user.get("id"),
@@ -401,6 +403,7 @@ class AudienceLookalikesService:
         b2c_insights, b2b_insights, other = self.calculate_insights(
             audience_data=audience_data,
             similar_audience_service=similar_audience_service,
+            random_seed=random_seed,
         )
         return CalculateRequest(
             count_matched_persons=len(audience_data),

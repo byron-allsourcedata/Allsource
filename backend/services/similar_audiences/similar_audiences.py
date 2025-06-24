@@ -43,7 +43,10 @@ class SimilarAudienceService:
         return self.audience_importance(model)
 
     def get_trained_model(
-        self, audience_data: List[dict], config: NormalizationConfig
+        self,
+        audience_data: List[dict],
+        config: NormalizationConfig,
+        random_seed: int = 42,
     ) -> CatBoostRegressor:
         if len(audience_data) == 0:
             raise EmptyTrainDataset("Empty train dataset")
@@ -54,13 +57,20 @@ class SimilarAudienceService:
                 df, config
             )
         )
-        model = self.train_catboost(data, customer_value)
+        model = self.train_catboost(
+            data, customer_value, random_seed=random_seed
+        )
         return model
 
     def get_audience_feature_importance_with_config(
-        self, audience_data: List[dict], config: NormalizationConfig
+        self,
+        audience_data: List[dict],
+        config: NormalizationConfig,
+        random_seed: int = 42,
     ) -> Dict[str, float]:
-        model, x_train = self.get_trained_model(audience_data, config)
+        model, x_train = self.get_trained_model(
+            audience_data, config, random_seed=random_seed
+        )
 
         feature_importance = pd.DataFrame(
             {
@@ -89,7 +99,7 @@ class SimilarAudienceService:
         return df
 
     def train_catboost(
-        self, df: DataFrame, amount: DataFrame
+        self, df: DataFrame, amount: DataFrame, random_seed: int = 42
     ) -> CatBoostRegressor:
         x = df
         y = amount
@@ -105,7 +115,9 @@ class SimilarAudienceService:
                 .infer_objects(copy=False)
             )
 
-        x_train, x_test, y_train, y_test = train_test_split(x, y)
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y, test_size=0.05, random_state=42, shuffle=False
+        )
         train_pool = Pool(x_train, label=y_train, cat_features=cat_features)
         model = CatBoostRegressor(
             iterations=100,
@@ -113,6 +125,7 @@ class SimilarAudienceService:
             depth=6,
             cat_features=cat_features,
             verbose=0,
+            random_seed=random_seed,
         )
 
         try:
