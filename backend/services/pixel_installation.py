@@ -275,7 +275,6 @@ class PixelInstallationService:
 
         full_name = email.split("@")[0]
         mail_object = SendgridHandler()
-        print(template_id)
         mail_object.send_sign_up_mail(
             to_emails=email,
             template_id=template_id,
