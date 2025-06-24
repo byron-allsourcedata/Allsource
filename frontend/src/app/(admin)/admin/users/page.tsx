@@ -55,6 +55,7 @@ interface UserData {
 	lookalikes_count?: number;
 	credits_count?: number;
 	type?: string;
+	is_email_validation_enabled: boolean;
 }
 
 const Users: React.FC = () => {
@@ -338,6 +339,29 @@ const Users: React.FC = () => {
 	) => {
 		setTabIndex(newIndex);
 	};
+
+	const changeUserIsEmailValidation = (userId: number) => {
+		axiosInstance
+			.put(`/admin/change-email-validation?user_id=${userId}`)
+			.then((response) => {
+				if (response.status === 200) {
+					const updatedUserData = userData.map((user) => {
+						if (user.id === userId) {
+							return {
+								...user,
+								is_email_validation_enabled:
+									!user.is_email_validation_enabled,
+							};
+						}
+						return user;
+					});
+					setUserData(updatedUserData);
+				}
+			})
+			.catch(() => {
+				showErrorToast("Error changing email validation");
+			});
+	}
 
 	if (loading) {
 		return <CustomizedProgressBar />;
@@ -654,6 +678,7 @@ const Users: React.FC = () => {
 						setOrder={setOrder}
 						setOrderBy={setOrderBy}
 						setLoading={setLoading}
+						changeUserIsEmailValidation={changeUserIsEmailValidation}
 					/>
 				</Box>
 			</Box>
