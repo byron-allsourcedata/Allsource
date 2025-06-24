@@ -1,9 +1,12 @@
 "use client";
-import { Box, Typography, Button, BoxClassKey } from "@mui/material";
+import { Box, Typography, Button, BoxClassKey, Link } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import HintCard from "@/app/(client)/components/HintCard";
 import { verifyPixelIntegrationHintCards } from "@/app/(client)/analytics/components/context/hintsCardsContent";
 import { useGetStartedHints } from "@/app/(client)/analytics/components/context/PixelInstallHintsContext";
+import Image from "next/image";
+import InfoIcon from "@mui/icons-material/Info";
+import { OpenInNewIcon } from "@/icon";
 
 type VerifyPixelIntegrationProps = {
 	domain: string;
@@ -98,12 +101,143 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 			>
 				{step ? step : 3}. Verify pixel integration on your website
 			</Typography>
+			<Typography className="paragraph">
+				When you click "Verify Installation," a new tab will open your website.
+				Status will display top-right after 5-60 seconds - keep tab open.
+			</Typography>
+			<Box
+				sx={{
+					display: "flex",
+					alignItems: "center",
+					textAlign: "center",
+					justifyContent: "center",
+					gap: 1,
+					mt: 3,
+					mb: 3,
+					pl: 3,
+					position: "relative",
+					flexDirection: "column",
+					width: "100%",
+				}}
+			>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: "row",
+						width: "100%",
+						alignItems: "center",
+						gap: 1,
+					}}
+				>
+					<Image
+						src="/confirm-icon.svg"
+						width={16}
+						height={16}
+						alt="confirm-icon"
+					/>
+					<Typography className="second-sub-title">
+						If the pixel is installed correctly, you&apos;ll see a green
+						checkmark.
+					</Typography>
+				</Box>
+
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: "row",
+						width: "100%",
+						alignItems: "center",
+						gap: 1,
+					}}
+				>
+					<Image src="/close.svg" width={16} height={16} alt="fail-icon" />
+					<Typography className="second-sub-title">
+						If the pixel cannot be found, a red X icon will display with the
+						warning "Provider id not found"
+					</Typography>
+				</Box>
+			</Box>
+
+			<Box
+				sx={{
+					backgroundColor: "rgba(254, 247, 223, 1)",
+					border: "1px solid rgba(250, 202, 106, 0.5)",
+					borderRadius: "6px",
+					padding: "16px",
+					display: "flex",
+					gap: 2,
+					position: "relative",
+				}}
+			>
+				<Box sx={{ mt: "2px" }}>
+					<InfoIcon sx={{ color: "rgba(235, 193, 46, 1)", fontSize: "20px" }} />
+				</Box>
+
+				<Box sx={{ flex: 1 }}>
+					<Box
+						sx={{
+							display: "flex",
+							justifyContent: "space-between",
+							width: "100%",
+						}}
+					>
+						<Typography className="first-subtitle">
+							Concise reasons for pixel installation failure:
+						</Typography>
+
+						<Box>
+							<Link
+								href="https://allsourceio.zohodesk.com/portal/en/kb/articles/verify-pixel"
+								underline="hover"
+								target="_blank"
+								sx={{
+									display: "flex",
+									alignItems: "center",
+									gap: 0.5,
+									fontWeight: 300,
+									fontSize: "14px",
+									fontFamily: "Nunito Sans",
+									color: "rgba(56, 152, 252, 1)",
+								}}
+							>
+								Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
+							</Link>
+						</Box>
+					</Box>
+
+					<Box
+						component="ul"
+						sx={{
+							pl: 2,
+							mb: 0,
+							display: "flex",
+							flexDirection: "column",
+							gap: 1,
+						}}
+					>
+						<Typography component="li" className="paragraph-description">
+							<b>Incorrect code placement</b> – Pixel not installed in website
+							header/footer.
+						</Typography>
+						<Typography component="li" className="paragraph-description">
+							<b>Ad blockers or privacy extensions</b> – Browser plugins
+							blocking tracking scripts.
+						</Typography>
+						<Typography component="li" className="paragraph-description">
+							<b>Multiple conflicting pixels</b> – Other tracking codes
+							interfering with installation.
+						</Typography>
+					</Box>
+				</Box>
+			</Box>
+
 			<Box
 				display="flex"
 				alignItems="center"
 				justifyContent="end"
 				position="relative"
 				sx={{
+					pt: 2,
 					"@media (max-width: 600px)": {
 						alignItems: "flex-start",
 						gap: "16px",

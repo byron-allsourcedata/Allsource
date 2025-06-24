@@ -12,6 +12,7 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
+from persistence.team_invitation_persistence import TeamInvitationPersistence
 from persistence.user_persistence import UserPersistence
 from schemas.settings import (
     AccountDetailsRequest,
@@ -49,6 +50,7 @@ from services.stripe_service import *
 from decimal import Decimal
 
 
+@injectable
 class SettingsService:
     COST_CONTACT_ON_BASIC_PLAN = Decimal(0.08)
 
@@ -61,6 +63,7 @@ class SettingsService:
         subscription_service: SubscriptionService,
         user_domains_service: UserDomainsService,
         lead_persistence: LeadsPersistence,
+        team_invitation_persistence: TeamInvitationPersistence,
     ):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
@@ -69,6 +72,7 @@ class SettingsService:
         self.send_grid_persistence = send_grid_persistence
         self.user_domains_service = user_domains_service
         self.lead_persistence = lead_persistence
+        self.team_invitation_persistence = team_invitation_persistence
 
     def get_account_details(self, user):
         member_id = None
@@ -246,10 +250,8 @@ class SettingsService:
 
     def get_pending_invations(self, user: dict):
         result = []
-        invations_data = (
-            self.settings_persistence.get_pending_invations_by_userid(
-                user_id=user.get("id")
-            )
+        invations_data = self.team_invitation_persistence.get_all_by_user_id(
+            user_id=user.get("id")
         )
         for invation_data in invations_data:
             team_info = {
@@ -279,14 +281,53 @@ class SettingsService:
             "status": SettingStatus.SUCCESS,
         }
 
-    def invite_user(
-        self, user: dict, invite_user, access_level=TeamAccessLevel.READ_ONLY
-    ):
-        user_limit = self.subscription_service.check_invitation_limit(
-            user_id=user.get("id")
+    def _get_invitation_template_id(self) -> Optional[str]:
+        template_id = self.send_grid_persistence.get_template_by_alias(
+            SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value
         )
-        if user_limit is False:
+        if not template_id:
+            logger.info("template_id is None")
+        return template_id
+
+    def _generate_invitation_link(
+        self, user_id: str, invite_user: str
+    ) -> tuple[str, str]:
+        md5_token_info = {
+            "id": user_id,
+            "user_mail": invite_user,
+            "salt": os.getenv("SECRET_SALT"),
+        }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
+        return confirm_email_url, md5_hash
+
+    def _send_invitation_email(
+        self, to_email: str, link: str, company_name: str, template_id: str
+    ):
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=to_email,
+            template_id=template_id,
+            template_placeholder={
+                "full_name": to_email,
+                "link": link,
+                "company_name": company_name,
+            },
+        )
+
+    def invite_user(
+        self,
+        user: dict,
+        invite_user,
+        access_level=TeamAccessLevel.READ_ONLY,
+    ):
+        user_id = user.get("id")
+        if not self.subscription_service.check_invitation_limit(
+            user_id=user_id
+        ):
             return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
+
         if access_level not in {
             TeamAccessLevel.ADMIN.value,
             TeamAccessLevel.OWNER.value,
@@ -297,56 +338,83 @@ class SettingsService:
                 status_code=500,
                 detail={"error": SettingStatus.INVALID_ACCESS_LEVEL.value},
             )
-        exists_team_member = self.settings_persistence.exists_team_member(
-            user_id=user.get("id"), user_mail=invite_user
-        )
-        if exists_team_member:
+
+        if self.team_invitation_persistence.exists(
+            user_id=user_id, email=invite_user
+        ):
             return {"status": SettingStatus.ALREADY_INVITED}
-        template_id = self.send_grid_persistence.get_template_by_alias(
-            SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value
-        )
+
+        template_id = self._get_invitation_template_id()
         if not template_id:
-            logger.info("template_id is None")
             return {"status": SettingStatus.FAILED}
 
-        md5_token_info = {
-            "id": user.get("id"),
-            "user_mail": invite_user,
-            "salt": os.getenv("SECRET_SALT"),
-        }
-        json_string = json.dumps(md5_token_info, sort_keys=True)
-        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
-        mail_object = SendgridHandler()
-        mail_object.send_sign_up_mail(
-            to_emails=invite_user,
-            template_id=template_id,
-            template_placeholder={
-                "full_name": invite_user,
-                "link": confirm_email_url,
-                "company_name": user["full_name"],
-            },
+        confirm_link, md5_hash = self._generate_invitation_link(
+            user_id, invite_user
         )
-        invited_by_id = (
-            user.get("team_member").get("id")
-            if user.get("team_member")
-            else user.get("id")
+        self._send_invitation_email(
+            invite_user, confirm_link, user["full_name"], template_id
         )
-        self.settings_persistence.save_pending_invations_by_userid(
-            team_owner_id=user.get("id"),
+
+        invited_by_id = user.get("team_member", {}).get("id") or user_id
+        self.team_invitation_persistence.create(
+            team_owner_id=user_id,
             user_mail=invite_user,
             invited_by_id=invited_by_id,
             access_level=access_level,
-            md5_hash=md5_hash,
+            token=md5_hash,
         )
+
+        return {"status": SettingStatus.SUCCESS}
+
+    def resend_invitation_email(
+        self,
+        user: dict,
+        invite_user: str,
+        access_level: str = TeamAccessLevel.READ_ONLY,
+    ):
+        if user.get("team_member") and user["team_member"].get(
+            "team_access_level"
+        ) not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only.",
+            )
+
+        last_invite = self.team_invitation_persistence.get_by_user_and_email(
+            user_id=user["id"], email=invite_user
+        )
+        if last_invite and last_invite.date_invited_at:
+            time_diff = datetime.utcnow() - last_invite.date_invited_at
+            if time_diff.total_seconds() < 300:
+                return {"status": SettingStatus.TOO_SOON}
+
+        template_id = self._get_invitation_template_id()
+        if not template_id:
+            return {"status": SettingStatus.FAILED}
+
+        confirm_link, _ = self._generate_invitation_link(
+            user["id"], invite_user
+        )
+        self._send_invitation_email(
+            invite_user, confirm_link, user["full_name"], template_id
+        )
+
+        self.team_invitation_persistence.update_timestamp(
+            user_id=user["id"],
+            email=invite_user,
+        )
+
         return {"status": SettingStatus.SUCCESS}
 
     def change_teams(self, user: dict, teams_details):
         pending_invitation_revoke = teams_details.pending_invitation_revoke
         remove_user = teams_details.remove_user
         if pending_invitation_revoke:
-            self.settings_persistence.pending_invitation_revoke(
-                user_id=user.get("id"), mail=pending_invitation_revoke
+            self.team_invitation_persistence.delete(
+                user_id=user.get("id"), email=pending_invitation_revoke
             )
         if remove_user:
             mail = (
