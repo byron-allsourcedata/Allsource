@@ -37,6 +37,7 @@ def get_clickhouse_inserter_db():
     finally:
         ch.close()
 
+
 Clickhouse = Annotated[
     clickhouse_connect.driver.Client, Depends(get_clickhouse_db)
 ]

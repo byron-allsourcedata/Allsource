@@ -1,13 +1,15 @@
 from sqlalchemy import desc
-from sqlalchemy.orm import Session
 
+from db_dependencies import Db
 from models.account_notification import AccountNotification
 from models.users import Users
 from models.users_account_notification import UserAccountNotification
+from resolver import injectable
 
 
+@injectable
 class NotificationPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_account_notification_by_title(self, title: str) -> str:

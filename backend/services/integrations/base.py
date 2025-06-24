@@ -1,14 +1,11 @@
-from typing import Optional
-
 import httpx
 import ssl
 import truststore
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from models import UserDomains, FiveXFiveUser
+from models import UserDomains
 from services.aws import AWSService
-from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
