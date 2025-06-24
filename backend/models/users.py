@@ -125,6 +125,7 @@ class Users(Base):
     )
     stripe_connected_email = Column(VARCHAR, nullable=True)
     stripe_connected_currently_due = Column(JSON, nullable=True)
+    total_leads = Column(Integer, nullable=False, server_default=text("0"))
 
     __table_args__ = (
         Index("users_email_idx", email, unique=True),
