@@ -291,6 +291,7 @@ class AdminCustomersService:
                     ),
                     "last_login": user.last_login,
                     "role": user.role,
+                    "is_email_validation_enabled": user.is_email_validation_enabled,
                     "pixel_installed_count": pixel_installed_count,
                     "sources_count": sources_count,
                     "contacts_count": contacts_count,
@@ -436,3 +437,7 @@ class AdminCustomersService:
             self.subscription_service.remove_trial(user_data.id)
 
         return user_data
+
+    def change_email_validation(self, user_id: int) -> bool:
+        updated_row = self.user_persistence.change_email_validation(user_id)
+        return updated_row > 0
