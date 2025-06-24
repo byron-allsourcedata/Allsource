@@ -122,6 +122,9 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
 
         return result
 
+    def get_processed_lookalikes_by_user(self, user_id: int):
+        return self.postgres.get_processed_lookalikes_by_user(user_id)
+
     def retrieve_source_insights(
         self,
         source_uuid: UUID,
