@@ -342,9 +342,9 @@ const Users: React.FC = () => {
 
 	const changeUserIsEmailValidation = (userId: number) => {
 		axiosInstance
-			.put(`/admin/change-email-validation?user_id=${userId}`)
+			.put<boolean>(`/admin/change-email-validation?user_id=${userId}`)
 			.then((response) => {
-				if (response.status === 200) {
+				if (response.status === 200 && response.data) {
 					const updatedUserData = userData.map((user) => {
 						if (user.id === userId) {
 							return {
