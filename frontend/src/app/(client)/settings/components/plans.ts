@@ -210,6 +210,11 @@ export const monthlyPlans: Plan[] = [
 
 export type PlanPeriod = "month" | "year";
 
+type PlanResponse = {
+	monthly: Plan[];
+	yearly: Plan[];
+};
+
 export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const [visiblePlans, setVisiblePlans] = useState<Plan[]>([]);
 

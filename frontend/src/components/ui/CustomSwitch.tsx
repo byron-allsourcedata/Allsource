@@ -12,7 +12,6 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 	stateSwitch,
 	sx,
 }) => {
-
 	const switchStyle = {
 		"& .MuiSwitch-switchBase": {
 			"&+.MuiSwitch-track": {
@@ -27,7 +26,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 				},
 			},
 		},
-	}
+	};
 
 	const combinedSx: SxProps<Theme> = {
 		...switchStyle,
@@ -35,13 +34,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 	};
 
 	return (
-		<Switch
-            onChange={changeState}
-			checked={stateSwitch}
-			sx={combinedSx}
-		/>
-        
-            
+		<Switch onChange={changeState} checked={stateSwitch} sx={combinedSx} />
 	);
 };
 
