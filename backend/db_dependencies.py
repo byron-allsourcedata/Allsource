@@ -1,8 +1,12 @@
 from typing import Annotated
 
-from config.database import SessionLocal
+import clickhouse_connect
+
 from sqlalchemy.orm import Session
 from fastapi import Depends
+
+from config import ClickhouseConfig
+from config.database import SessionLocal
 
 
 def get_db():
@@ -14,3 +18,30 @@ def get_db():
 
 
 Db = Annotated[Session, Depends(get_db)]
+
+
+def get_clickhouse_db():
+    ch = ClickhouseConfig.get_client()
+
+    try:
+        yield ch
+    finally:
+        ch.close()
+
+
+def get_clickhouse_inserter_db():
+    ch = ClickhouseConfig.get_client()
+
+    try:
+        yield ch
+    finally:
+        ch.close()
+
+
+Clickhouse = Annotated[
+    clickhouse_connect.driver.Client, Depends(get_clickhouse_db)
+]
+
+ClickhouseInserter = Annotated[
+    clickhouse_connect.driver.Client, Depends(get_clickhouse_inserter_db)
+]

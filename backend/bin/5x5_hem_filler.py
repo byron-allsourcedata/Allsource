@@ -19,7 +19,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 BUCKET_NAME = "trovo-coop-shakespeare"
-FILES_PATH = "outgoing/upid_hem_1_8_0"
+FILES_PATH = "outgoing/upid_hem_1_17_0"
 QUEUE_HEMS_FILES = "5x5_hems_files"
 
 
