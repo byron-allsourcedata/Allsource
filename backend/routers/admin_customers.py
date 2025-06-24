@@ -126,6 +126,7 @@ async def get_admins(
     )
     return users
 
+
 @router.put("/change-email-validation", response_model=bool)
 def change_email_validation(
     user: dict = Depends(check_user_admin),

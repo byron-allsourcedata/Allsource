@@ -164,7 +164,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	tableHeaders,
 	setLoading,
 	currentPage,
-	changeUserIsEmailValidation
+	changeUserIsEmailValidation,
 }) => {
 	const router = useRouter();
 	const { setBackButton, triggerBackButton } = useUser();
@@ -479,7 +479,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 					<Box
 						sx={{ display: "flex", justifyContent: "center", width: "100%" }}
 					>
-						<CustomSwitch stateSwitch={row.is_email_validation_enabled} changeState={() => changeUserIsEmailValidation(row.id)}/>
+						<CustomSwitch
+							stateSwitch={row.is_email_validation_enabled}
+							changeState={() => changeUserIsEmailValidation(row.id)}
+						/>
 					</Box>
 				);
 
@@ -670,7 +673,7 @@ interface AccountData {
 	lookalikes_count?: number;
 	credits_count?: number;
 	type?: string;
-	is_email_validation_enabled: boolean
+	is_email_validation_enabled: boolean;
 }
 
 const Account: React.FC<PartnersAccountsProps> = ({
@@ -687,7 +690,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setLoading,
 	setOrder,
 	setOrderBy,
-	changeUserIsEmailValidation
+	changeUserIsEmailValidation,
 }) => {
 	const tableHeaders = is_admin
 		? [
@@ -715,7 +718,11 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					label: "Plan",
 					sortable: false,
 				},
-				{ key: "is_email_validation_enabled", label: "Email Validation", sortable: false },
+				{
+					key: "is_email_validation_enabled",
+					label: "Email Validation",
+					sortable: false,
+				},
 				// { key: "actions", label: "Actions", sortable: false },
 			];
 

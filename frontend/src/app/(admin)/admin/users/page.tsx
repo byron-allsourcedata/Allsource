@@ -349,8 +349,7 @@ const Users: React.FC = () => {
 						if (user.id === userId) {
 							return {
 								...user,
-								is_email_validation_enabled:
-									!user.is_email_validation_enabled,
+								is_email_validation_enabled: !user.is_email_validation_enabled,
 							};
 						}
 						return user;
@@ -361,7 +360,7 @@ const Users: React.FC = () => {
 			.catch(() => {
 				showErrorToast("Error changing email validation");
 			});
-	}
+	};
 
 	if (loading) {
 		return <CustomizedProgressBar />;
