@@ -71,7 +71,7 @@ const Users: React.FC = () => {
 	const [orderBy, setOrderBy] = useState<string>("");
 	const [isSliderOpen, setSliderOpen] = useState(false);
 	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-	const [isTestUser, setIsTestUser] = useState(true);
+	const [showTestUsers, setShowTestUsers] = useState(true);
 	const [selectedFilters, setSelectedFilters] = useState<
 		{ label: string; value: string }[]
 	>([]);
@@ -99,7 +99,7 @@ const Users: React.FC = () => {
 
 	useEffect(() => {
 		fetchUserData();
-	}, [tabIndex, page, rowsPerPage, order, isTestUser, selectedFilters]);
+	}, [tabIndex, page, rowsPerPage, order, showTestUsers, selectedFilters]);
 
 	const handleSearchChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -205,7 +205,7 @@ const Users: React.FC = () => {
 				}
 			}
 
-			if (isTestUser) {
+			if (showTestUsers) {
 				url += `&test_users=true`;
 			}
 
@@ -531,8 +531,8 @@ const Users: React.FC = () => {
 									Exclude test users
 								</Typography>
 								<CustomSwitch
-									stateSwitch={isTestUser}
-									changeState={() => setIsTestUser((prev) => !prev)}
+									stateSwitch={showTestUsers}
+									changeState={() => setShowTestUsers((prev) => !prev)}
 								/>
 							</Box>
 							<TextField
