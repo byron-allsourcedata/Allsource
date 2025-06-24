@@ -1325,8 +1325,6 @@ def process_confirmed(session: Session):
 
 
 def update_total_leads(db_session: Db, domain_count_list: List[dict]):
-    print("----")
-    print(domain_count_list)
     totals = defaultdict(int)
     for item in domain_count_list:
         totals[item["user_id"]] += item["count"]
