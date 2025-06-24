@@ -25,7 +25,7 @@ fi
 if [ -n "$BACKEND_STAGED_FILES" ]; then
     cd backend
 
-    source .venv/bin/activate
+    source venv/bin/activate
 
     BACKEND_PATHS=$(echo "$BACKEND_STAGED_FILES" | sed 's|^backend/||')
 

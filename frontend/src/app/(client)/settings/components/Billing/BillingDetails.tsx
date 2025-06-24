@@ -42,12 +42,13 @@ export const BillingDetails: React.FC<BillingDetailsProps> = ({
 	};
 
 	const renderValue = (value: {
-		current_value?: number, 
-		limit_value?: number, 
+		current_value?: number;
+		limit_value?: number;
 		plan_start?: string | null;
 		plan_end?: string | null;
 		value?: string | null;
-		detail_type?: string, }) => {
+		detail_type?: string;
+	}) => {
 		if (
 			value?.current_value === -1 ||
 			value?.limit_value === -1 ||
@@ -68,7 +69,10 @@ export const BillingDetails: React.FC<BillingDetailsProps> = ({
 			case "limited":
 				return `${value.current_value?.toLocaleString("en-US")}/${limit?.toLocaleString("en-US")}`;
 			case "billing_cycle":
-				return printBillingCycle(value.plan_start ?? null, value.plan_end ?? null);
+				return printBillingCycle(
+					value.plan_start ?? null,
+					value.plan_end ?? null,
+				);
 			case "next_billing_date":
 				return printNextBillingDate(value.value ?? null);
 			default:

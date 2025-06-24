@@ -83,7 +83,6 @@ from services.partners_assets import PartnersAssetService
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from services.payouts import PayoutsService
-from services.pixel_installation import PixelInstallationService
 from services.plans import PlansService
 from services.settings import SettingsService
 from services.similar_audiences import SimilarAudienceService
@@ -179,10 +178,6 @@ def get_suppression_persistence(
     db: Session = Depends(get_db),
 ) -> SuppressionPersistence:
     return SuppressionPersistence(db)
-
-
-def get_send_grid_persistence_service(db: Session = Depends(get_db)):
-    return SendgridPersistence(db=db)
 
 
 def get_settings_persistence(db: Session = Depends(get_db)):
@@ -465,9 +460,7 @@ def get_partners_service(
     user_persistence: UserPersistence,
     plans_persistence: PlansPersistence,
     partners_persistence: PartnersPersistence,
-    send_grid_persistence: SendgridPersistence = Depends(
-        get_send_grid_persistence_service
-    ),
+    send_grid_persistence: SendgridPersistence,
 ):
     return PartnersService(
         partners_persistence=partners_persistence,
@@ -484,12 +477,10 @@ def get_users_auth_service(
     plans_persistence: PlansPersistence,
     subscription_service: SubscriptionService,
     domain_persistence: UserDomainsPersistence,
+    send_grid_persistence_service: SendgridPersistence,
     referral_persistence_service: ReferralDiscountCodesPersistence,
     db: Session = Depends(get_db),
     payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
-    send_grid_persistence_service: SendgridPersistence = Depends(
-        get_send_grid_persistence_service
-    ),
     integration_service: IntegrationService = Depends(get_integration_service),
     partners_service: PartnersService = Depends(get_partners_service),
     admin_persistence: AdminPersistence = Depends(get_admin_persistence),
@@ -516,11 +507,9 @@ def get_admin_customers_service(
     plans_presistence: PlansPersistence,
     subscription_service: SubscriptionService,
     partners_persistence: PartnersPersistence,
+    send_grid_persistence: SendgridPersistence,
     db: Session = Depends(get_db),
     users_auth_service: UsersAuth = Depends(get_users_auth_service),
-    send_grid_persistence: SendgridPersistence = Depends(
-        get_send_grid_persistence_service
-    ),
     dashboard_audience_persistence: DashboardAudiencePersistence = Depends(
         get_dashboard_audience_persistence
     ),
@@ -705,9 +694,7 @@ def get_notification_service(
     plan_persistence: PlansPersistence,
     subscription_service: SubscriptionService,
     leads_persistence: LeadsPersistence,
-    notification_persistence: NotificationPersistence = Depends(
-        get_notification_persistence
-    ),
+    notification_persistence: NotificationPersistence,
 ):
     return Notification(
         notification_persistence=notification_persistence,
@@ -810,28 +797,15 @@ def get_payouts_service(
     )
 
 
-def get_pixel_installation_service(
-    db: Session = Depends(get_db),
-    send_grid_persistence_service: SendgridPersistence = Depends(
-        get_send_grid_persistence_service
-    ),
-):
-    return PixelInstallationService(
-        db=db, send_grid_persistence_service=send_grid_persistence_service
-    )
-
-
 def get_settings_service(
     user_domains_service: UserDomainsService,
     plan_persistence: PlansPersistence,
     user_persistence: UserPersistence,
     subscription_service: SubscriptionService,
     lead_persistence: LeadsPersistence,
+    send_grid_persistence: SendgridPersistence,
     settings_persistence: SettingsPersistence = Depends(
         get_settings_persistence
-    ),
-    send_grid_persistence: SendgridPersistence = Depends(
-        get_send_grid_persistence_service
     ),
 ):
     return SettingsService(
@@ -869,9 +843,7 @@ def get_plans_service(
 
 def get_webhook(
     subscription_service: SubscriptionService,
-    notification_persistence: NotificationPersistence = Depends(
-        get_notification_persistence
-    ),
+    notification_persistence: NotificationPersistence,
     integration_service: IntegrationService = Depends(get_integration_service),
 ):
     return WebhookService(
@@ -913,10 +885,8 @@ def get_company_info_service(
 
 def get_users_email_verification_service(
     user_persistence_service: UserPersistence,
+    sendgrid_persistence_service: SendgridPersistence,
     user=Depends(check_user_authentication),
-    sendgrid_persistence_service: SendgridPersistence = Depends(
-        get_send_grid_persistence_service
-    ),
 ):
     return UsersEmailVerificationService(
         user=user,
