@@ -694,9 +694,7 @@ def get_notification_service(
     plan_persistence: PlansPersistence,
     subscription_service: SubscriptionService,
     leads_persistence: LeadsPersistence,
-    notification_persistence: NotificationPersistence = Depends(
-        get_notification_persistence
-    ),
+    notification_persistence: NotificationPersistence,
 ):
     return Notification(
         notification_persistence=notification_persistence,
@@ -845,9 +843,7 @@ def get_plans_service(
 
 def get_webhook(
     subscription_service: SubscriptionService,
-    notification_persistence: NotificationPersistence = Depends(
-        get_notification_persistence
-    ),
+    notification_persistence: NotificationPersistence,
     integration_service: IntegrationService = Depends(get_integration_service),
 ):
     return WebhookService(
