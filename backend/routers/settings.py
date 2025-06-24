@@ -387,7 +387,7 @@ def pay_credits(
 
 @router.get(
     "/plans",
-    response_model=List[PlansResponse],
+    response_model=PlansResponse,
     summary="Get list of subscription plans",
     tags=["Plans"],
 )

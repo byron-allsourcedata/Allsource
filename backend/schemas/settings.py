@@ -133,6 +133,8 @@ class Price(BaseModel):
 class Plan(BaseModel):
     title: str
     alias: str
+    is_recommended: Optional[bool] = False
+    is_active: Optional[bool] = False
     price: Price
     permanent_limits: List[Advantage]
     monthly_limits: List[Advantage]

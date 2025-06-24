@@ -1,6 +1,7 @@
 import { useIsFreeTrial, usePlanAlias } from "@/hooks/subscriptions";
 import type { Advantage } from "./PlanCard/Advantages";
 import { useEffect, useState } from "react";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 export type Plan = {
 	title: string;
@@ -9,30 +10,30 @@ export type Plan = {
 		value: string;
 		y: string;
 	};
-	isActive: boolean;
-	isRecommended: boolean;
-	permanentLimits: Advantage[];
-	monthlyLimits: Advantage[];
-	giftedFunds: Advantage[];
+	is_active: boolean;
+	is_recommended: boolean;
+	permanent_limits: Advantage[];
+	monthly_limits: Advantage[];
+	gifted_funds: Advantage[];
 };
 
 export const freeTrialPlan: Plan = {
 	title: "Free Trial",
 	alias: "free_trial",
-	isActive: false,
+	is_active: false,
 	price: {
 		value: "$0",
 		y: "month",
 	},
-	isRecommended: false,
-	permanentLimits: [
+	is_recommended: false,
+	permanent_limits: [
 		{
 			good: true,
 			name: "Domains monitored:",
 			value: "1",
 		},
 	],
-	monthlyLimits: [
+	monthly_limits: [
 		{
 			good: true,
 			name: "Contact Downloads:",
@@ -44,7 +45,7 @@ export const freeTrialPlan: Plan = {
 			value: "0",
 		},
 	],
-	giftedFunds: [
+	gifted_funds: [
 		{
 			good: true,
 			name: "Validation funds:",
@@ -57,158 +58,13 @@ export const freeTrialPlan: Plan = {
 		},
 	],
 };
-
-export const basicPlan: Plan = {
-	title: "Basic",
-	alias: "basic",
-	isActive: false,
-	price: {
-		value: "$0,08",
-		y: "record",
-	},
-	isRecommended: true,
-	permanentLimits: [
-		{
-			good: true,
-			name: "Domains monitored:",
-			value: "1",
-		},
-	],
-	monthlyLimits: [
-		{
-			good: true,
-			name: "Contact Downloads:",
-			value: "1,000 - 65,000",
-		},
-		{
-			good: false,
-			name: "Smart Audience:",
-			value: "0",
-		},
-	],
-	giftedFunds: [
-		{
-			good: true,
-			name: "Validation funds:",
-			value: "$500",
-		},
-		{
-			good: true,
-			name: "Premium Source funds:",
-			value: "$500",
-		},
-	],
-};
-
-export const smartAudienceYearly: Plan = {
-	title: "Smart Audience",
-	alias: "smart_audience",
-	isActive: false,
-	price: {
-		value: "$5,000",
-		y: "month",
-	},
-	isRecommended: false,
-	permanentLimits: [
-		{
-			good: true,
-			name: "Domains monitored:",
-			value: "3",
-		},
-	],
-	monthlyLimits: [
-		{
-			good: true,
-			name: "Contact Downloads:",
-			value: "Unlimited",
-		},
-		{
-			good: true,
-			name: "Smart Audience:",
-			value: "200,000",
-		},
-	],
-	giftedFunds: [
-		{
-			good: true,
-			name: "Validation funds:",
-			value: "$2,500",
-		},
-		{
-			good: true,
-			name: "Premium Source funds:",
-			value: "$2,500",
-		},
-	],
-};
-
-const smartAudienceMonthly = {
-	...smartAudienceYearly,
-	price: {
-		value: "$7,500",
-		y: "month",
-	},
-};
-
-const proYearly: Plan = {
-	title: "Pro",
-	alias: "pro",
-	price: {
-		value: "$10,000",
-		y: "month",
-	},
-	isActive: false,
-	isRecommended: false,
-	permanentLimits: [
-		{
-			good: true,
-			name: "Domains monitored:",
-			value: "5",
-		},
-	],
-	monthlyLimits: [
-		{
-			good: true,
-			name: "Contact Downloads:",
-			value: "Unlimited",
-		},
-		{
-			good: true,
-			name: "Smart Audience:",
-			value: "Unlimited",
-		},
-	],
-	giftedFunds: [
-		{
-			good: true,
-			name: "Validation funds:",
-			value: "$5,000",
-		},
-		{
-			good: true,
-			name: "Premium Source funds:",
-			value: "$5,000",
-		},
-	],
-};
-
-const proMonthly: Plan = {
-	...proYearly,
-	price: {
-		value: "$15,000",
-		y: "month",
-	},
-};
-
-export const yearlyPlans: Plan[] = [basicPlan, smartAudienceYearly, proYearly];
-
-export const monthlyPlans: Plan[] = [
-	basicPlan,
-	smartAudienceMonthly,
-	proMonthly,
-];
 
 export type PlanPeriod = "month" | "year";
+
+type PlanResponse = {
+	monthly: Plan[],
+	yearly: Plan[]
+}
 
 export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const [visiblePlans, setVisiblePlans] = useState<Plan[]>([]);
@@ -216,30 +72,38 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const currentPlanAlias = usePlanAlias();
 	const freeTrial = useIsFreeTrial();
 
+	const getPlans = async () => {
+		const response = await axiosInstance.get<PlanResponse>("/settings/plans");
+		if (response.status === 200) {
+			const { monthly, yearly } = response.data;
+			let plans = period === "month" ? monthly : yearly;
+
+			if (freeTrial) {
+				plans = [{ ...freeTrialPlan, is_active: true }, ...plans];
+			}
+
+			const planIndex = plans.findIndex(
+				(plan: Plan) => plan.alias === currentPlanAlias,
+			);
+
+			if (planIndex === -1) {
+				return setVisiblePlans(plans);
+			}
+
+			const newPlans = [
+				{
+					...plans[planIndex],
+					is_active: true,
+				},
+				...plans.slice(planIndex + 1),
+			];
+
+			setVisiblePlans(newPlans);
+		}
+	};
+
 	useEffect(() => {
-		let plans = period === "month" ? monthlyPlans : yearlyPlans;
-
-		if (freeTrial) {
-			plans = [{ ...freeTrialPlan, isActive: true }, ...plans];
-		}
-
-		const planIndex = plans.findIndex(
-			(plan) => plan.alias === currentPlanAlias,
-		);
-
-		if (planIndex === -1) {
-			return setVisiblePlans(plans);
-		}
-
-		const newPlans = [
-			{
-				...plans[planIndex],
-				isActive: true,
-			},
-			...plans.slice(planIndex + 1),
-		];
-
-		setVisiblePlans(newPlans);
+		getPlans();
 	}, [currentPlanAlias, freeTrial, period]);
 
 	return [visiblePlans, currentPlanAlias];

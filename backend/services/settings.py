@@ -805,7 +805,9 @@ class SettingsService:
             alias="free_trial",
             price=Price(value="$0", y="month"),
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="1")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(
@@ -825,8 +827,12 @@ class SettingsService:
             title="Basic",
             alias="basic",
             price=Price(value="$0,08", y="record"),
+            is_recommended=True,
+            is_active=True,
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="1")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(
@@ -847,7 +853,9 @@ class SettingsService:
             alias="smart_audience",
             price=Price(value="$5,000", y="month"),
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="3")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(
@@ -872,7 +880,9 @@ class SettingsService:
             alias="pro",
             price=Price(value="$10,000", y="month"),
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="5")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(
