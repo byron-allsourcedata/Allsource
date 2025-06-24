@@ -7,10 +7,17 @@ import sys
 import time
 import traceback
 import urllib.parse
+from collections import defaultdict
+from typing import List
 from datetime import datetime, timedelta, timezone
 
 import pytz
 import regex
+from dateutil.relativedelta import relativedelta
+
+from sqlalchemy import create_engine, desc, update
+from sqlalchemy.orm import sessionmaker, Session, aliased
+
 from dotenv import load_dotenv
 from sqlalchemy import desc
 from sqlalchemy.dialects.postgresql import insert
@@ -1294,6 +1301,52 @@ def process_confirmed(session: Session):
 
     session.commit()
     logging.info("Lead confirmed")
+
+
+def update_total_leads(session: Session, domain_count_list: List[dict]):
+    totals = defaultdict(int)
+    for item in domain_count_list:
+        totals[item["user_id"]] += item["count"]
+
+    processed = {}
+    for user_id, count, domain_id in domain_count_list.items():
+        stmt = (
+            update(AudienceSmart)
+            .where(AudienceSmart.user_id == user_id)
+            .values(
+                processed_active_segment_records=AudienceSmart.processed_active_segment_records
+                + add_count
+            )
+        )
+        result = session.execute(stmt)
+        row = result.fetchone()
+        if row:
+            processed[row[0]] = row[1]
+    session.commit()
+    return processed
+
+
+def update_total_leads(session: Session, domain_count_list: List[dict]):
+    totals = defaultdict(int)
+    for item in domain_count_list:
+        totals[item["user_id"]] += item["count"]
+
+    processed = {}
+    for user_id, count, domain_id in domain_count_list.items():
+        stmt = (
+            update(AudienceSmart)
+            .where(AudienceSmart.user_id == user_id)
+            .values(
+                processed_active_segment_records=AudienceSmart.processed_active_segment_records
+                + add_count
+            )
+        )
+        result = session.execute(stmt)
+        row = result.fetchone()
+        if row:
+            processed[row[0]] = row[1]
+    session.commit()
+    return processed
 
 
 def get_root_user(db_session: Db):
