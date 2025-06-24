@@ -366,7 +366,9 @@ class UserPersistence:
                 Users.is_email_confirmed,
                 Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
-                Users.is_email_validation_enabled.label("is_email_validation_enabled"),
+                Users.is_email_validation_enabled.label(
+                    "is_email_validation_enabled"
+                ),
                 SubscriptionPlan.title.label("subscription_plan"),
             )
             .join(
@@ -723,7 +725,12 @@ class UserPersistence:
         updated_count = (
             self.db.query(Users)
             .filter(Users.id == user_id)
-            .update({Users.is_email_validation_enabled: ~Users.is_email_validation_enabled}, synchronize_session=False)
+            .update(
+                {
+                    Users.is_email_validation_enabled: ~Users.is_email_validation_enabled
+                },
+                synchronize_session=False,
+            )
         )
         self.db.commit()
         return updated_count
