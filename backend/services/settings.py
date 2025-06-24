@@ -413,8 +413,7 @@ class SettingsService:
             and hasattr(user_subscription.plan_end, "strftime")
             else (
                 user_subscription.plan_end.strftime("%b %d, %Y")
-                if subscription
-                and user_subscription
+                if user_subscription
                 and hasattr(user_subscription.plan_end, "strftime")
                 else None
             )
@@ -478,7 +477,6 @@ class SettingsService:
 
         billing_detail = BillingSubscriptionDetails(
             subscription_details=subscription_details,
-            downgrade_plan=self.get_downgrade_plan(user_subscription),
             canceled_at=user_subscription.cancel_scheduled_at,
         )
 
