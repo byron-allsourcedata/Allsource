@@ -25,6 +25,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 
+from persistence.user_subscriptions import UserSubscriptionsPersistence
 from utils import normalize_url, get_url_params_list, check_certain_urls
 from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
@@ -1121,6 +1122,9 @@ def update_last_processed_file(file_key):
 
 
 async def process_files(session, rabbitmq_connection, root_user):
+    stripe_service = StripeService()
+    user_subscription_persistence = UserSubscriptionsPersistence(session)
+
     subscription_service = SubscriptionService(
         db=session,
         user_persistence_service=UserPersistence(session),
@@ -1135,6 +1139,8 @@ async def process_files(session, rabbitmq_connection, root_user):
             referral_payouts_persistence=ReferralPayoutsPersistence(session),
         ),
         partners_persistence=PartnersPersistence(session),
+        stripe_service=stripe_service,
+        user_subscriptions_persistence=user_subscription_persistence,
     )
     notification_persistence = NotificationPersistence(db=session)
 
