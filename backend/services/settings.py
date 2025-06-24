@@ -320,7 +320,7 @@ class SettingsService:
         self,
         user: dict,
         invite_user,
-        access_level: TeamAccessLevel = TeamAccessLevel.READ_ONLY,
+        access_level=TeamAccessLevel.READ_ONLY,
     ):
         user_id = user.get("id")
         if not self.subscription_service.check_invitation_limit(
@@ -328,7 +328,7 @@ class SettingsService:
         ):
             return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
 
-        if access_level.value not in {
+        if access_level not in {
             TeamAccessLevel.ADMIN.value,
             TeamAccessLevel.OWNER.value,
             TeamAccessLevel.STANDARD.value,
@@ -360,7 +360,7 @@ class SettingsService:
             team_owner_id=user_id,
             user_mail=invite_user,
             invited_by_id=invited_by_id,
-            access_level=access_level.value,
+            access_level=access_level,
             token=md5_hash,
         )
 

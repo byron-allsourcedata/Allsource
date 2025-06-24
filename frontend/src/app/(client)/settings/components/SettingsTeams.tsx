@@ -355,6 +355,8 @@ export const SettingsTeams: React.FC = () => {
 			}
 		} catch (err) {
 			showErrorToast("Error sending invitation.");
+		} finally {
+			handleCloseMenu();
 		}
 	};
 
