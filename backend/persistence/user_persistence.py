@@ -185,6 +185,7 @@ class UserPersistence:
                 "premium_source_credits": user.premium_source_credits,
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
+                "is_email_validation_enabled": user.is_email_validation_enabled,
             }
         self.db.rollback()
         if result_as_object:
@@ -345,7 +346,14 @@ class UserPersistence:
         return query.all()
 
     def get_base_customers(
-        self, search_query, page, per_page, sort_by, sort_order, filters
+        self,
+        search_query,
+        page,
+        per_page,
+        sort_by,
+        sort_order,
+        test_users,
+        filters,
     ):
         query = (
             self.db.query(
@@ -358,6 +366,9 @@ class UserPersistence:
                 Users.is_email_confirmed,
                 Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
+                Users.is_email_validation_enabled.label(
+                    "is_email_validation_enabled"
+                ),
                 SubscriptionPlan.title.label("subscription_plan"),
             )
             .join(
@@ -370,6 +381,9 @@ class UserPersistence:
             )
             .filter(Users.role.any("customer"))
         )
+
+        if not test_users:
+            query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(
@@ -706,3 +720,17 @@ class UserPersistence:
         result = self.db.execute(stmt_users)
         self.db.commit()
         return result.rowcount
+
+    def change_email_validation(self, user_id: int) -> int:
+        updated_count = (
+            self.db.query(Users)
+            .filter(Users.id == user_id)
+            .update(
+                {
+                    Users.is_email_validation_enabled: ~Users.is_email_validation_enabled
+                },
+                synchronize_session=False,
+            )
+        )
+        self.db.commit()
+        return updated_count
