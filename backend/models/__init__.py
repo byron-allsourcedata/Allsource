@@ -42,7 +42,6 @@ from .enrichment import (
 from .audience_phones_verification import AudiencePhoneVerification
 from .five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from .five_x_five_emails import FiveXFiveEmails
-from .five_x_five_hems import FiveXFiveHems
 from .five_x_five_interests import FiveXFiveInterest
 from .five_x_five_locations import FiveXFiveLocations
 from .five_x_five_names import FiveXFiveNames
@@ -134,7 +133,6 @@ __all__ = [
     "AudiencePhoneVerification",
     "FiveXFiveCookieSyncFile",
     "FiveXFiveEmails",
-    "FiveXFiveHems",
     "FiveXFiveInterest",
     "FiveXFiveLocations",
     "FiveXFiveNames",
