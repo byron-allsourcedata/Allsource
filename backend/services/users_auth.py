@@ -3,6 +3,7 @@ import os
 import json
 from datetime import datetime, timedelta
 from datetime import timezone
+import random
 
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
@@ -257,6 +258,7 @@ class UsersAuth:
             shop_domain=shop_domain,
             is_with_card=is_with_card,
             utm_params=utm_params_json,
+            random_seed=random.randint(1, 100_000_000),
         )
         self.db.add(user_object)
         self.db.commit()

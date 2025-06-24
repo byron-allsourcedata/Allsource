@@ -35,6 +35,7 @@ import {
 import { Paginator } from "@/components/PaginationComponent";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import CustomSwitch from "@/components/ui/CustomSwitch";
 
 interface UserData {
 	id: number;
@@ -53,6 +54,7 @@ interface UserData {
 	lookalikes_count?: number;
 	credits_count?: number;
 	type?: string;
+	is_email_validation_enabled: boolean;
 }
 
 interface tableHeaders {
@@ -66,6 +68,7 @@ interface TableBodyUserProps {
 	currentPage: number;
 	tableHeaders: tableHeaders[];
 	setLoading: (state: boolean) => void;
+	changeUserIsEmailValidation: (userId: number) => void;
 }
 
 const TableHeader: React.FC<{
@@ -161,6 +164,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	tableHeaders,
 	setLoading,
 	currentPage,
+	changeUserIsEmailValidation,
 }) => {
 	const router = useRouter();
 	const { setBackButton, triggerBackButton } = useUser();
@@ -470,6 +474,17 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 						{row.subscription_plan || "--"}
 					</Box>
 				);
+			case "is_email_validation_enabled":
+				return (
+					<Box
+						sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+					>
+						<CustomSwitch
+							stateSwitch={row.is_email_validation_enabled}
+							changeState={() => changeUserIsEmailValidation(row.id)}
+						/>
+					</Box>
+				);
 
 				// case "actions":
 				// 	if (currentPage === 0) {
@@ -640,6 +655,7 @@ interface PartnersAccountsProps {
 	setRowsPerPage?: any;
 	setOrder?: any;
 	setOrderBy?: any;
+	changeUserIsEmailValidation: (userId: number) => void;
 }
 
 interface AccountData {
@@ -657,6 +673,7 @@ interface AccountData {
 	lookalikes_count?: number;
 	credits_count?: number;
 	type?: string;
+	is_email_validation_enabled: boolean;
 }
 
 const Account: React.FC<PartnersAccountsProps> = ({
@@ -673,6 +690,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setLoading,
 	setOrder,
 	setOrderBy,
+	changeUserIsEmailValidation,
 }) => {
 	const tableHeaders = is_admin
 		? [
@@ -698,6 +716,11 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{
 					key: "subscription_plan",
 					label: "Plan",
+					sortable: false,
+				},
+				{
+					key: "is_email_validation_enabled",
+					label: "Email Validation",
 					sortable: false,
 				},
 				// { key: "actions", label: "Actions", sortable: false },
@@ -774,6 +797,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 									tableHeaders={tableHeaders}
 									setLoading={setLoading}
 									currentPage={page}
+									changeUserIsEmailValidation={changeUserIsEmailValidation}
 								/>
 							</Table>
 						</TableContainer>

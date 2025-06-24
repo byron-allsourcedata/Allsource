@@ -22,6 +22,7 @@ import FilterPopup from "./components/FilterPopup";
 import CustomizedProgressBar from "@/components/ProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
+import CustomSwitch from "@/components/ui/CustomSwitch";
 
 interface CustomCardsProps {
 	users: number;
@@ -54,6 +55,7 @@ interface UserData {
 	lookalikes_count?: number;
 	credits_count?: number;
 	type?: string;
+	is_email_validation_enabled: boolean;
 }
 
 const Users: React.FC = () => {
@@ -69,6 +71,7 @@ const Users: React.FC = () => {
 	const [orderBy, setOrderBy] = useState<string>("");
 	const [isSliderOpen, setSliderOpen] = useState(false);
 	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
+	const [showTestUsers, setShowTestUsers] = useState(true);
 	const [selectedFilters, setSelectedFilters] = useState<
 		{ label: string; value: string }[]
 	>([]);
@@ -96,7 +99,7 @@ const Users: React.FC = () => {
 
 	useEffect(() => {
 		fetchUserData();
-	}, [tabIndex, page, rowsPerPage, order, selectedFilters]);
+	}, [tabIndex, page, rowsPerPage, order, showTestUsers, selectedFilters]);
 
 	const handleSearchChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -200,6 +203,10 @@ const Users: React.FC = () => {
 				for (const filter of selectedFilters) {
 					url += `&${filter.label}=${filter.value}`;
 				}
+			}
+
+			if (showTestUsers) {
+				url += `&test_users=true`;
 			}
 
 			if (search.trim() !== "") {
@@ -331,6 +338,28 @@ const Users: React.FC = () => {
 		newIndex: number,
 	) => {
 		setTabIndex(newIndex);
+	};
+
+	const changeUserIsEmailValidation = (userId: number) => {
+		axiosInstance
+			.put<boolean>(`/admin/change-email-validation?user_id=${userId}`)
+			.then((response) => {
+				if (response.status === 200 && response.data) {
+					const updatedUserData = userData.map((user) => {
+						if (user.id === userId) {
+							return {
+								...user,
+								is_email_validation_enabled: !user.is_email_validation_enabled,
+							};
+						}
+						return user;
+					});
+					setUserData(updatedUserData);
+				}
+			})
+			.catch(() => {
+				showErrorToast("Error changing email validation");
+			});
 	};
 
 	if (loading) {
@@ -496,7 +525,16 @@ const Users: React.FC = () => {
 							</Box>
 						</Box>
 
-						<Box sx={{ display: "flex", gap: "16px" }}>
+						<Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
+							<Box sx={{ display: "flex", alignItems: "center" }}>
+								<Typography className="black-table-header">
+									Exclude test users
+								</Typography>
+								<CustomSwitch
+									stateSwitch={showTestUsers}
+									changeState={() => setShowTestUsers((prev) => !prev)}
+								/>
+							</Box>
 							<TextField
 								id="input-with-icon-textfield"
 								placeholder="Search by account name, emails"
@@ -639,6 +677,7 @@ const Users: React.FC = () => {
 						setOrder={setOrder}
 						setOrderBy={setOrderBy}
 						setLoading={setLoading}
+						changeUserIsEmailValidation={changeUserIsEmailValidation}
 					/>
 				</Box>
 			</Box>
