@@ -125,6 +125,9 @@ class Users(Base):
     )
     stripe_connected_email = Column(VARCHAR, nullable=True)
     stripe_connected_currently_due = Column(JSON, nullable=True)
+    is_email_validation_enabled = Column(
+        Boolean, nullable=False, server_default=text("true")
+    )
 
     __table_args__ = (
         Index("users_email_idx", email, unique=True),
