@@ -22,6 +22,7 @@ import FilterPopup from "./components/FilterPopup";
 import CustomizedProgressBar from "@/components/ProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
+import CustomSwitch from "@/components/ui/CustomSwitch"
 
 interface CustomCardsProps {
 	users: number;
@@ -69,6 +70,7 @@ const Users: React.FC = () => {
 	const [orderBy, setOrderBy] = useState<string>("");
 	const [isSliderOpen, setSliderOpen] = useState(false);
 	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
+	const [isTestUser, setIsTestUser] = useState(true);
 	const [selectedFilters, setSelectedFilters] = useState<
 		{ label: string; value: string }[]
 	>([]);
@@ -96,7 +98,7 @@ const Users: React.FC = () => {
 
 	useEffect(() => {
 		fetchUserData();
-	}, [tabIndex, page, rowsPerPage, order, selectedFilters]);
+	}, [tabIndex, page, rowsPerPage, order, isTestUser, selectedFilters]);
 
 	const handleSearchChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -201,6 +203,10 @@ const Users: React.FC = () => {
 					url += `&${filter.label}=${filter.value}`;
 				}
 			}
+
+			if (isTestUser) {
+				url += `&test_users=true`;
+			}	
 
 			if (search.trim() !== "") {
 				url += `&search_query=${encodeURIComponent(search.trim())}`;
@@ -496,7 +502,14 @@ const Users: React.FC = () => {
 							</Box>
 						</Box>
 
-						<Box sx={{ display: "flex", gap: "16px" }}>
+						<Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
+							<Box sx={{ display: "flex", alignItems: "center" }}>
+								<Typography className="black-table-header">Exclude test users</Typography>
+								<CustomSwitch
+									stateSwitch={isTestUser}
+									changeState={() => setIsTestUser((prev) => !prev)}
+								/>
+							</Box>
 							<TextField
 								id="input-with-icon-textfield"
 								placeholder="Search by account name, emails"

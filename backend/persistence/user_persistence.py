@@ -345,7 +345,7 @@ class UserPersistence:
         return query.all()
 
     def get_base_customers(
-        self, search_query, page, per_page, sort_by, sort_order, filters
+        self, search_query, page, per_page, sort_by, sort_order, test_users, filters
     ):
         query = (
             self.db.query(
@@ -370,6 +370,9 @@ class UserPersistence:
             )
             .filter(Users.role.any("customer"))
         )
+
+        if not test_users:
+            query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(
