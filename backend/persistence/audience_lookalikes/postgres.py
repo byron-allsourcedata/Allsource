@@ -445,6 +445,7 @@ class AudienceLookalikesPostgresPersistence(
                 AudienceSourcesMatchedPerson.enrichment_user_id
                 == EnrichmentUser.id,
             )
+            .order_by(EnrichmentUser.asid)
         )
 
         for model in enrichment_models:
