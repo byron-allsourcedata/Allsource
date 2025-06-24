@@ -366,6 +366,7 @@ class UserPersistence:
                 Users.is_email_confirmed,
                 Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
+                Users.total_leads,
                 Users.is_email_validation_enabled.label(
                     "is_email_validation_enabled"
                 ),
@@ -421,6 +422,7 @@ class UserPersistence:
             "id": Users.id,
             "join_date": Users.created_at,
             "last_login_date": Users.last_login,
+            "contacts_count": Users.total_leads,
         }
         sort_column = sort_options.get(sort_by, Users.created_at)
         query = query.order_by(
@@ -439,13 +441,6 @@ class UserPersistence:
                 UserDomains.is_pixel_installed == True,
             )
             .group_by(UserDomains.user_id)
-            .all()
-        )
-
-        contacts_counts = dict(
-            self.db.query(LeadUser.user_id, func.count(LeadUser.id))
-            .filter(LeadUser.user_id.in_(user_ids))
-            .group_by(LeadUser.user_id)
             .all()
         )
 
@@ -468,7 +463,6 @@ class UserPersistence:
         return {
             user_id: {
                 "pixel_installed_count": pixel_counts.get(user_id, 0),
-                "contacts_count": contacts_counts.get(user_id, 0),
                 "sources_count": sources_counts.get(user_id, 0),
                 "lookalikes_count": lookalikes_counts.get(user_id, 0),
             }
