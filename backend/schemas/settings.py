@@ -75,8 +75,8 @@ class LimitedDetail(BaseModel):
 
 class FundsDetail(BaseModel):
     detail_type: str
-    limit_value: int
-    current_value: int
+    limit_value: Decimal
+    current_value: Decimal
 
 
 class NextBillingDate(BaseModel):
