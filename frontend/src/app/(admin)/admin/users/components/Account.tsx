@@ -708,7 +708,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "join_date", label: "Join date", sortable: true },
 				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
-				{ key: "contacts_count", label: "Contacts", sortable: false },
+				{ key: "contacts_count", label: "Contacts", sortable: true },
 				{ key: "sources_count", label: "Sources", sortable: false },
 				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
 				{ key: "credits_count", label: "Credits", sortable: false },

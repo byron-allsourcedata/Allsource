@@ -125,6 +125,7 @@ class Users(Base):
     )
     stripe_connected_email = Column(VARCHAR, nullable=True)
     stripe_connected_currently_due = Column(JSON, nullable=True)
+    total_leads = Column(Integer, nullable=False, server_default=text("0"))
     is_email_validation_enabled = Column(
         Boolean, nullable=False, server_default=text("true")
     )
