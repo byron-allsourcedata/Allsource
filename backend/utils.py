@@ -3,6 +3,7 @@ import re
 import os
 import hashlib
 import json
+import httpx
 from typing import Optional, Any
 import calendar
 import regex
@@ -20,6 +21,10 @@ logger = logging.getLogger(__name__)
 
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
+
+
+def get_http_client() -> httpx.Client:
+    return httpx.Client()
 
 
 def get_md5_hash(email):

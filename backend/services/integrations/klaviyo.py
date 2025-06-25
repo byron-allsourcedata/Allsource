@@ -2,10 +2,10 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Tuple
+from typing import Tuple, Annotated
 
 import httpx
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from enums import (
     IntegrationsStatus,
@@ -21,12 +21,13 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
+from resolver import injectable
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import get_valid_email
+from utils import get_valid_email, get_http_client
 from utils import validate_and_format_phone, format_phone_number
 
 logging.basicConfig(
@@ -39,6 +40,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
+@injectable
 class KlaviyoIntegrationsService:
     def __init__(
         self,
@@ -46,7 +48,7 @@ class KlaviyoIntegrationsService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

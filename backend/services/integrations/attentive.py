@@ -1,22 +1,25 @@
-from typing import List
+from typing import List, Annotated
 
-from fastapi import HTTPException
-from httpx import Client
+from fastapi import HTTPException, Depends
+import httpx
 import os
 from enums import IntegrationsStatus, SourcePlatformEnum
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from resolver import injectable
 from schemas.integrations.integrations import IntegrationCredentials, DataMap
+from utils import get_http_client
 
 
+@injectable
 class AttentiveIntegrationsService:
     def __init__(
         self,
         integrations_persistence: IntegrationsPresistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
     ):
         self.integrations_persistence = integrations_persistence
         self.sync_persistence = sync_persistence

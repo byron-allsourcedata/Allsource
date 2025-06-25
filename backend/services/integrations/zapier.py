@@ -1,31 +1,32 @@
 from datetime import datetime
-from typing import List, Tuple
+from typing import List, Tuple, Annotated
 
-from models import UserIntegration, LeadUser
-from utils import format_phone_number, get_valid_email
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from persistence.domains import UserDomainsPersistence
-from persistence.leads_persistence import LeadsPersistence
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from datetime import datetime, timedelta
-from models.five_x_five_users import FiveXFiveUser
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
+import httpx
+
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
     ProccessDataSyncResult,
     DataSyncType,
 )
-from httpx import Client
-from utils import extract_first_email
+from models import UserIntegration, LeadUser
+from models.five_x_five_users import FiveXFiveUser
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import format_phone_number, get_valid_email, get_http_client
 
 
+@injectable
 class ZapierIntegrationService:
     def __init__(
         self,
@@ -33,7 +34,7 @@ class ZapierIntegrationService:
         domain_persistence: UserDomainsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         integration_persistence: IntegrationsPresistence,
-        client: Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.leads_persistence = lead_persistence

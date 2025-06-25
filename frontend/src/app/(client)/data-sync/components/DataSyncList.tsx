@@ -322,6 +322,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				return (
 					<Image src={"/hubspot.svg"} alt="hubspot" width={18} height={18} />
 				);
+			case "go_high_level":
+				return (
+					<Image
+						src="./go-high-level-icon.svg"
+						alt="goHighLevel icon"
+						width={20}
+						height={20}
+					/>
+				);
 			case "google_ads":
 				return (
 					<Image
@@ -1621,12 +1630,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					handlePopupClose={() => {
 						setOpenGoHighLevelConnect(false), setIsInvalidApiKey(false);
 					}}
-					initApiKey={
-						integrationsCredentials.find(
-							(integartion) => integartion.service_name === "go_high_level",
-						)?.access_token
-					}
-					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
 				<WebhookConnectPopup

@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, status
 from jose import jwt, JWTError
+from sentry_sdk.integrations import httpx
 from slack_sdk.signature import SignatureVerifier
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException
@@ -32,12 +33,6 @@ from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from persistence.integrations.suppression import (
-    IntegrationsSuppressionPersistence,
-)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -58,7 +53,6 @@ from persistence.user_persistence import UserPersistence
 from schemas.auth_token import Token
 from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
-from services.audience import AudienceService
 from services.audience_dashboard import DashboardAudienceService
 from services.audience_insights import AudienceInsightsService
 from services.audience_smarts import AudienceSmartsService
@@ -73,7 +67,6 @@ from services.integrations.base import IntegrationService
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from services.integrations.slack import SlackService
 from services.leads import LeadsService
 from services.lookalikes import AudienceLookalikesService
 from services.meeting_schedule import MeetingScheduleService
@@ -140,6 +133,10 @@ def get_audience_smarts_persistence(db: Session = Depends(get_db)):
     return AudienceSmartsPersistence(db)
 
 
+def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
+    return AWSService(s3_client)
+
+
 def get_partners_asset_persistence(
     db: Session = Depends(get_db),
 ) -> PartnersAssetPersistence:
@@ -196,12 +193,6 @@ def get_audience_persistence(db: Session = Depends(get_db)):
     return AudiencePersistence(db=db)
 
 
-def get_user_integrations_presistence(
-    db: Session = Depends(get_db),
-) -> IntegrationsPresistence:
-    return IntegrationsPresistence(db)
-
-
 def get_lead_orders_persistence(
     db: Session = Depends(get_db),
 ) -> LeadsPersistence:
@@ -240,10 +231,6 @@ def get_accounts_service(
     )
 
 
-def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
-    return AWSService(s3_client)
-
-
 def get_audience_sources_service(
     domain_persistence: UserDomainsPersistence,
     audience_sources_persistence: AudienceSourcesPersistence = Depends(
@@ -279,28 +266,6 @@ def get_audience_smarts_service(
         lookalikes_persistence_service=lookalikes_persistence_service,
         audience_sources_persistence=audience_sources_persistence,
         audience_settings_persistence=audience_settings_persistence,
-    )
-
-
-def get_slack_service(
-    user_persistence: UserPersistence,
-    lead_persistence: LeadsPersistence,
-    user_integrations_persistence: IntegrationsPresistence = Depends(
-        get_user_integrations_presistence
-    ),
-    sync_persistence: IntegrationsUserSyncPersistence = Depends(
-        get_integrations_user_sync_persistence
-    ),
-    million_verifier_integrations: MillionVerifierIntegrationsService = Depends(
-        get_million_verifier_service
-    ),
-):
-    return SlackService(
-        user_persistence=user_persistence,
-        user_integrations_persistence=user_integrations_persistence,
-        sync_persistence=sync_persistence,
-        lead_persistence=lead_persistence,
-        million_verifier_integrations=million_verifier_integrations,
     )
 
 
@@ -390,66 +355,12 @@ def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
 
 
 def get_partners_assets_service(
+    aws_service: AWSService = Depends(get_aws_service),
     partners_asset_persistence: PartnersAssetPersistence = Depends(
         get_partners_asset_persistence
     ),
-    aws_service: AWSService = Depends(get_aws_service),
 ):
     return PartnersAssetService(partners_asset_persistence, aws_service)
-
-
-def get_payments_plans_service(
-    user_persistence_service: UserPersistence,
-    subscription_service: SubscriptionService,
-    db: Session = Depends(get_db),
-):
-    return PaymentsPlans(
-        db=db,
-        subscription_service=subscription_service,
-        user_persistence_service=user_persistence_service,
-    )
-
-
-def get_integration_service(
-    user_persistence: UserPersistence,
-    lead_presistence: LeadsPersistence,
-    domain_persistence: UserDomainsPersistence,
-    db: Session = Depends(get_db),
-    audience_persistence=Depends(get_audience_persistence),
-    integration_presistence: IntegrationsPresistence = Depends(
-        get_user_integrations_presistence
-    ),
-    lead_orders_persistence: LeadOrdersPersistence = Depends(
-        get_lead_orders_persistence
-    ),
-    integrations_user_sync_persistence: IntegrationsUserSyncPersistence = Depends(
-        get_integrations_user_sync_persistence
-    ),
-    aws_service: AWSService = Depends(get_aws_service),
-    suppression_persitence: IntegrationsSuppressionPersistence = Depends(
-        get_suppression_persistence
-    ),
-    epi_persistence: ExternalAppsInstallationsPersistence = Depends(
-        get_epi_persistence
-    ),
-    million_verifier_integrations: MillionVerifierIntegrationsService = Depends(
-        get_million_verifier_service
-    ),
-):
-    return IntegrationService(
-        db=db,
-        integration_persistence=integration_presistence,
-        lead_persistence=lead_presistence,
-        audience_persistence=audience_persistence,
-        lead_orders_persistence=lead_orders_persistence,
-        integrations_user_sync_persistence=integrations_user_sync_persistence,
-        aws_service=aws_service,
-        domain_persistence=domain_persistence,
-        user_persistence=user_persistence,
-        suppression_persistence=suppression_persitence,
-        epi_persistence=epi_persistence,
-        million_verifier_integrations=million_verifier_integrations,
-    )
 
 
 def get_partners_service(
@@ -471,13 +382,13 @@ def get_users_auth_service(
     user_persistence_service: UserPersistence,
     user_names: UserNamesService,
     plans_persistence: PlansPersistence,
+    integration_service: IntegrationService,
     subscription_service: SubscriptionService,
     domain_persistence: UserDomainsPersistence,
+    payments_plans: PaymentsPlans,
     send_grid_persistence_service: SendgridPersistence,
     referral_persistence_service: ReferralDiscountCodesPersistence,
     db: Session = Depends(get_db),
-    payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
-    integration_service: IntegrationService = Depends(get_integration_service),
     partners_service: PartnersService = Depends(get_partners_service),
     admin_persistence: AdminPersistence = Depends(get_admin_persistence),
 ):
@@ -733,16 +644,6 @@ def get_companies_service(
     )
 
 
-def get_audience_service(
-    audience_persistence_service: AudiencePersistence = Depends(
-        get_audience_persistence
-    ),
-):
-    return AudienceService(
-        audience_persistence_service=audience_persistence_service
-    )
-
-
 def get_sse_events_service(user_persistence_service: UserPersistence):
     return SseEventsService(user_persistence_service=user_persistence_service)
 
@@ -838,7 +739,7 @@ def get_plans_service(
 def get_webhook(
     subscription_service: SubscriptionService,
     notification_persistence: NotificationPersistence,
-    integration_service: IntegrationService = Depends(get_integration_service),
+    integration_service: IntegrationService,
 ):
     return WebhookService(
         subscription_service=subscription_service,
@@ -852,7 +753,7 @@ def get_payments_service(
     plans_service: PlansService,
     subscription_service: SubscriptionService,
     referral_discount_codes_persistence: ReferralDiscountCodesPersistence,
-    integration_service: IntegrationService = Depends(get_integration_service),
+    integration_service: IntegrationService,
 ):
     return PaymentsService(
         plans_service=plans_service,

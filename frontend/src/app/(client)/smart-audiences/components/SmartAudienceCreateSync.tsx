@@ -2311,12 +2311,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			<GoHighLevelConnectPopup
 				open={createGoogleAds}
 				handlePopupClose={handleCreateGoHighLevelClose}
-				onSave={handleSaveSettings}
-				initApiKey={
-					integrationsCredentials.find(
-						(integartion) => integartion.service_name === "go_high_level",
-					)?.access_token
-				}
 			/>
 			<SalesForceIntegrationPopup
 				open={createSalesForce}

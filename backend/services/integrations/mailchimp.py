@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Tuple
+from typing import Tuple
 
 import mailchimp_marketing as MailchimpMarketing
 from fastapi import HTTPException
@@ -26,6 +26,7 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
+from resolver import injectable
 from schemas.integrations.integrations import *
 from services.integrations.commonIntegration import *
 from services.integrations.million_verifier import (
@@ -34,6 +35,7 @@ from services.integrations.million_verifier import (
 from utils import format_phone_number, get_valid_email
 
 
+@injectable
 class MailchimpIntegrationsService:
     def __init__(
         self,

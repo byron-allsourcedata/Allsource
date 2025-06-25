@@ -1,18 +1,19 @@
 import logging
 
-from sqlalchemy.orm import Session
-
+from db_dependencies import Db
 from persistence.user_persistence import UserPersistence
+from resolver import injectable
 from .subscriptions import SubscriptionService
 
 logger = logging.getLogger(__name__)
 WITHOUT_CARD_PLAN_ID = 15
 
 
+@injectable
 class PaymentsPlans:
     def __init__(
         self,
-        db: Session,
+        db: Db,
         subscription_service: SubscriptionService,
         user_persistence_service: UserPersistence,
     ):

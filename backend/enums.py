@@ -65,6 +65,7 @@ class IntegrationLimit(Enum):
     S3 = 10000
     KLAVIYO = 1000
     LINKEDIN = 100
+    GO_HIGH_LEVEL = 100
 
 
 class BusinessType(Enum):
@@ -132,6 +133,7 @@ class SourcePlatformEnum(Enum):
     BING_ADS = "bing_ads"
     S3 = "s3"
     LINKEDIN = "linkedin"
+    GO_HIGH_LEVEL = "go_high_level"
 
 
 class UserPaymentStatusEnum(Enum):

@@ -1167,11 +1167,6 @@ const UserIntegrationsList = ({
 				<GoHighLevelConnectPopup
 					open={true}
 					handlePopupClose={handleClose}
-					invalid_api_key={
-						integrationsCredentials.find(
-							(integration) => integration.service_name === "go_high_level",
-						)?.is_failed === true
-					}
 					boxShadow="rgba(0, 0, 0, 0.1)"
 				/>
 			)}

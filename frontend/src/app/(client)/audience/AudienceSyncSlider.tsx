@@ -40,6 +40,8 @@ import SendlaneDatasync from "@/app/(client)/data-sync/components/SendlaneDatasy
 import S3Datasync from "@/app/(client)/data-sync/components/S3Datasync";
 import BingAdsDataSync from "@/app/(client)/data-sync/components/BingAdsDataSync";
 import ZapierDataSync from "@/app/(client)/data-sync/components/ZapierDataSync";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
+import GoHighLevelDataSync from "../data-sync/components/GoHighLevelDataSync";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -561,6 +563,12 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				isEdit={false}
 				data={null}
 			/>
+			<GoHighLevelDataSync
+				open={omnisendIconPopupOpen}
+				onClose={handleOmnisendIconPopupOpenClose}
+				isEdit={false}
+				data={null}
+			/>
 			<BingAdsDataSync
 				open={bingAdsIconPopupOpen}
 				onClose={handleBingAdsIconPopupOpenClose}
@@ -661,6 +669,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 						(integartion) => integartion.service_name === "google_ads",
 					)?.access_token
 				}
+			/>
+			<GoHighLevelConnectPopup
+				open={createGoogleADS}
+				handlePopupClose={handleCreateADSClose}
 			/>
 			<KlaviyoIntegrationPopup
 				open={createKlaviyo}

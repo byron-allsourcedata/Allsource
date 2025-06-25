@@ -1,35 +1,35 @@
+import base64
+import json
 import logging
+import os
+from typing import List, Tuple
+
+from fastapi import HTTPException
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from config.slack import SlackConfig
-from fastapi import HTTPException
-import json
-from typing import List, Tuple
-from urllib.parse import unquote
-import base64
-import os
-from datetime import datetime, timedelta
-
-from models import UserIntegration, IntegrationUserSync, LeadUser
-from utils import extract_first_email, get_valid_email
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from schemas.integrations.integrations import DataMap
 from slack_sdk.oauth import AuthorizeUrlGenerator
-from models.five_x_five_users import FiveXFiveUser
-from persistence.user_persistence import UserPersistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+
+from config.slack import SlackConfig
 from enums import (
     SourcePlatformEnum,
     IntegrationsStatus,
     ProccessDataSyncResult,
     DataSyncType,
 )
+from models import UserIntegration, IntegrationUserSync, LeadUser
+from models.five_x_five_users import FiveXFiveUser
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+from persistence.user_persistence import UserPersistence
+from resolver import injectable
+from schemas.integrations.integrations import DataMap
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import get_valid_email
 
 logger = logging.getLogger("slack")
 logger.setLevel(logging.INFO)
@@ -41,6 +41,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
+@injectable
 class SlackService:
     def __init__(
         self,

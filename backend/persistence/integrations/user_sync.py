@@ -4,6 +4,7 @@ from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import count, coalesce
 
+from db_dependencies import Db
 from enums import (
     SourcePlatformEnum,
     DataSyncType,
@@ -22,10 +23,12 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from models.users_domains import UserDomains
+from resolver import injectable
 
 
+@injectable
 class IntegrationsUserSyncPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
         self.UNLIMITED = -1
 

@@ -49,6 +49,7 @@ import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
 import IntegrationBox from "../app/(client)/smart-audiences/components/IntegrationBox";
 import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
 import GoHighLevelConnectPopup from "./GoHighLevelConnectPopup";
+import GoHighLevelDataSync from "@/app/(client)/data-sync/components/GoHighLevelDataSync";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -105,6 +106,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
 	const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
 	const [bingAdsIconPopupOpen, setBingAdsIconPopupOpen] = useState(false);
+	const [goHightLevelIconPopupOpen, setgoHightLevelPopupOpen] = useState(false);
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
@@ -205,6 +207,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleBingAdsIconPopupClose = () => {
 		setBingAdsIconPopupOpen(false);
+	};
+
+	const handleGoHightLevelIconPopupOpen = () => {
+		setgoHightLevelPopupOpen(true);
+	};
+
+	const handleGoHightLevelIconPopupClose = () => {
+		setgoHightLevelPopupOpen(false);
 	};
 
 	const handleSalesForceIconPopupOpen = () => {
@@ -502,6 +512,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		{ image: "mailchimp-icon.svg", service_name: "mailchimp" },
 		{ image: "hubspot.svg", service_name: "hubspot" },
 		{ image: "google-ads.svg", service_name: "google_ads" },
+		{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
 		{ image: "bing.svg", service_name: "bing_ads" },
 		{ image: "salesforce-icon.svg", service_name: "sales_force" },
 		{ image: "webhook-icon.svg", service_name: "webhook" },
@@ -573,6 +584,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		linkedin: handleLinkedinIconPopupIconOpen,
 		meta: handleMetaIconPopupOpen,
 		bing_ads: handleBingAdsIconPopupOpen,
+		go_high_level: handleGoHightLevelIconPopupOpen,
 	};
 
 	return (
@@ -1640,6 +1652,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				isEdit={false}
 				data={null}
 			/>
+
+			<GoHighLevelDataSync
+				open={goHightLevelIconPopupOpen}
+				onClose={handleGoHightLevelIconPopupClose}
+				isEdit={false}
+				data={null}
+			/>
+
 			<ConnectSalesForce
 				data={null}
 				open={salesForceIconPopupOpen}
@@ -1754,13 +1774,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			<GoHighLevelConnectPopup
 				open={createGoHighLevel}
 				handlePopupClose={handleCreateGoHighLevelClose}
-				onSave={handleSaveSettings}
-				invalid_api_key={isInvalidApiKey}
-				initApiKey={
-					integrationsCredentials.find(
-						(integartion) => integartion.service_name === "go_high_level",
-					)?.access_token
-				}
 			/>
 			<LinkedinConnectPopup
 				open={createLinkedin}

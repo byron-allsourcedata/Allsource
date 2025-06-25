@@ -1,19 +1,23 @@
-from models import UserDomains, IntegrationUserSync
+from typing import Optional
+
+from sqlalchemy import or_
+
+from db_dependencies import Db
+from enums import DataSyncType
+from models import IntegrationUserSync
+from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.integrations.users_domains_integrations import (
     UserIntegration,
     Integration,
 )
-from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.kajabi import Kajabi
 from models.leads_users import LeadUser
-from sqlalchemy.orm import Session
-from typing import Optional
-from enums import DataSyncType
-from sqlalchemy import and_, or_
+from resolver import injectable
 
 
+@injectable
 class IntegrationsPresistence:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Db) -> None:
         self.db = db
 
     def create_integration(self, data: dict) -> UserIntegration:

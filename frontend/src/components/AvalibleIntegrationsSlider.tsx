@@ -1350,7 +1350,6 @@ const AlivbleIntagrationsSlider = ({
 			<GoHighLevelConnectPopup
 				open={openGoHighLevelConnect}
 				handlePopupClose={() => setOpenGoHighLevelConnect(false)}
-				onSave={saveIntegration}
 			/>
 			<LinkedinConnectPopup
 				open={openLinkedInConnect}
