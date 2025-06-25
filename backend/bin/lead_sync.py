@@ -129,7 +129,7 @@ def get_up_ids_by_sha256(ch_session, sha256_value: str) -> list[str]:
     query = """
         SELECT up_id
         FROM five_x_five_hems
-        WHERE sha256_lc_hem = lower(unhex({sha256:String}))
+        WHERE sha256_lc_hem = unhex({sha256:String})
     """
     result = ch_session.query(query, parameters={"sha256": sha256_value})
     up_ids = [row[0] for row in result.result_rows]
