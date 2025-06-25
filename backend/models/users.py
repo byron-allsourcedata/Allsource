@@ -131,7 +131,7 @@ class Users(Base):
     )
 
     random_seed: Column[int] = Column(
-        Integer, nullable=True, server_default=text("42")
+        Integer, nullable=False, server_default=text("42")
     )
     """
         stored random seed for each user
