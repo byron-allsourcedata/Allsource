@@ -18,8 +18,9 @@ import TabList from "@mui/lab/TabList";
 import TabContext from "@mui/lab/TabContext";
 import { useState } from "react";
 import CustomizedProgressBar from "@/components/ProgressBar";
+import { CustomButton } from "./ui";
 
-const linkedinStyles = {
+const GoHighLevelStyles = {
 	tabHeading: {
 		fontFamily: "Nunito Sans",
 		fontSize: "14px",
@@ -36,7 +37,7 @@ const linkedinStyles = {
 			p: 0,
 		},
 		"&.Mui-selected": {
-			color: "#5052b2",
+			color: "rgba(56, 152, 252, 1)",
 			fontWeight: "700",
 		},
 	},
@@ -80,7 +81,7 @@ const linkedinStyles = {
 	},
 };
 
-interface LinkedinConnectProps {
+interface GoHighLevelConnectProps {
 	handlePopupClose: () => void;
 	onSave?: (new_integration: any) => void;
 	open: boolean;
@@ -89,12 +90,12 @@ interface LinkedinConnectProps {
 	invalid_api_key?: boolean;
 }
 
-const LinkedinConnectPopup = ({
+const GoHighLevelConnectPopup = ({
 	open,
 	handlePopupClose,
 	boxShadow,
 	invalid_api_key,
-}: LinkedinConnectProps) => {
+}: GoHighLevelConnectProps) => {
 	const [value, setValue] = useState("1");
 	const [loading, setLoading] = useState(false);
 
@@ -102,26 +103,10 @@ const LinkedinConnectPopup = ({
 		setValue(newValue);
 	};
 
-	function generateState(length = 16) {
-		const chars =
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-		return Array.from({ length }, () =>
-			chars.charAt(Math.floor(Math.random() * chars.length)),
-		).join("");
-	}
-
 	const handleLogin = async () => {
-		const CLIENT_ID = `${process.env.NEXT_PUBLIC_LINKEDIN_CLIENT_ID}`;
-		const REDIRECT_URI = `${process.env.NEXT_PUBLIC_BASE_URL}/linkedin-landing`;
-		const SCOPE = "r_liteprofile r_emailaddress";
-		const params = new URLSearchParams({
-			response_type: "code",
-			client_id: CLIENT_ID,
-			redirect_uri: REDIRECT_URI,
-			scope: SCOPE,
-			state: generateState(),
-		});
-		const authUrl = `https://www.linkedin.com/oauth/v2/authorization?${params.toString()}`;
+		const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+		const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/go-high-level-landing`;
+		const authUrl = `https://authserver.com/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=contacts.readonly`;
 		window.open(authUrl, "_blank", "noopener,noreferrer");
 	};
 
@@ -190,7 +175,7 @@ const LinkedinConnectPopup = ({
 						lineHeight: "normal",
 					}}
 				>
-					Connect to Linkedin
+					Connect to Go High Level
 				</Typography>
 				<Box
 					sx={{
@@ -200,7 +185,7 @@ const LinkedinConnectPopup = ({
 					}}
 				>
 					<Link
-						href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-linkedin"
+						href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-gohighlevel"
 						target="_blank"
 						rel="noopener noreferrer"
 						sx={{
@@ -208,8 +193,8 @@ const LinkedinConnectPopup = ({
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
-							color: "#5052b2",
-							textDecorationColor: "#5052b2",
+							color: "rgba(56, 152, 252, 1)",
+							textDecorationColor: "rgba(56, 152, 252, 1)",
 						}}
 					>
 						Tutorial
@@ -239,8 +224,10 @@ const LinkedinConnectPopup = ({
 						<Box sx={{ pb: 4 }}>
 							<TabList
 								centered
-								aria-label="Connect to Slack Tabs"
-								TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+								aria-label="Connect to GoHighlevel Tabs"
+								TabIndicatorProps={{
+									sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
+								}}
 								sx={{
 									"& .MuiTabs-scroller": {
 										overflowX: "auto !important",
@@ -259,7 +246,7 @@ const LinkedinConnectPopup = ({
 									label="Connection"
 									value="1"
 									className="tab-heading"
-									sx={linkedinStyles.tabHeading}
+									sx={GoHighLevelStyles.tabHeading}
 									onClick={() => setValue("1")}
 								/>
 							</TabList>
@@ -279,8 +266,8 @@ const LinkedinConnectPopup = ({
 									mb={2}
 								>
 									<Image
-										src="/linkedin-icon.svg"
-										alt="linkedin"
+										src="/go-high-level-icon.svg"
+										alt="gohighlevel"
 										height={24}
 										width={24}
 									/>
@@ -294,41 +281,25 @@ const LinkedinConnectPopup = ({
 											lineHeight: "normal",
 										}}
 									>
-										Login to your Linkedin
+										Login to your Go High Level account
 									</Typography>
 								</Box>
 								<Box>
-									<Button
-										fullWidth
+									<CustomButton
 										onClick={handleLogin}
 										variant="contained"
+										fullWidth
 										startIcon={
 											<Image
-												src="/linkedin-icon.svg"
-												alt="linkedin"
+												src="/go-high-level-icon.svg"
+												alt="gohighlevel"
 												height={24}
 												width={24}
 											/>
 										}
-										sx={{
-											backgroundColor: "#5052B2",
-											fontFamily: "Nunito Sans",
-											fontSize: "14px",
-											fontWeight: "600",
-											lineHeight: "17px",
-											letterSpacing: "0.25px",
-											color: "#fff",
-											textTransform: "none",
-											padding: "14.5px 24px",
-											"&:hover": {
-												backgroundColor: "#2F3076",
-											},
-											borderRadius: "6px",
-											border: "1px solid #5052B2",
-										}}
 									>
-										Connect to Linkedin
-									</Button>
+										Connect to Go High Level
+									</CustomButton>
 									{invalid_api_key && (
 										<Typography
 											color="error"
@@ -340,8 +311,8 @@ const LinkedinConnectPopup = ({
 												marginTop: "10px",
 											}}
 										>
-											Invalid API Key detected. Please reconnect to Linkedin and
-											try again
+											Invalid API Key detected. Please reconnect to GoogleAds
+											and try again
 										</Typography>
 									)}
 								</Box>
@@ -427,9 +398,9 @@ const LinkedinConnectPopup = ({
 													fontSize: "14px",
 													fontWeight: "600",
 													lineHeight: "20px",
-													color: "#5052b2",
+													color: "rgba(56, 152, 252, 1)",
 													cursor: "pointer",
-													textDecorationColor: "#5052b2",
+													textDecorationColor: "rgba(56, 152, 252, 1)",
 												}}
 											>
 												Tutorial
@@ -475,39 +446,9 @@ const LinkedinConnectPopup = ({
 						</TabPanel>
 					</TabContext>
 				</Box>
-				<Box
-					sx={{ px: 2, py: 2, width: "100%", borderTop: "1px solid #e4e4e4" }}
-				>
-					<Box
-						sx={{ width: "100%", display: "flex", justifyContent: "flex-end" }}
-					>
-						<Button
-							variant="contained"
-							onClick={handlePopupClose}
-							sx={{
-								backgroundColor: "#5052B2",
-								fontFamily: "Nunito Sans",
-								fontSize: "14px",
-								fontWeight: "600",
-								lineHeight: "20px",
-								letterSpacing: "normal",
-								color: "#fff",
-								textTransform: "none",
-								padding: "10px 24px",
-								boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-								"&:hover": {
-									backgroundColor: "#5052B2",
-								},
-								borderRadius: "4px",
-							}}
-						>
-							Close
-						</Button>
-					</Box>
-				</Box>
 			</Box>
 		</Drawer>
 	);
 };
 
-export default LinkedinConnectPopup;
+export default GoHighLevelConnectPopup;

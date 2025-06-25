@@ -754,7 +754,7 @@ const LinkedinDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 						className="first-sub-title"
 						sx={{ textAlign: "center" }}
 					>
-						Connect to GoogleAds
+						Connect to Linkedin
 					</Typography>
 					<Box
 						sx={{
@@ -836,7 +836,7 @@ const LinkedinDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 								<Box sx={{ pb: 4 }}>
 									<TabList
 										centered
-										aria-label="Connect to GoogleAds Tabs"
+										aria-label="Connect to Linkedin Tabs"
 										TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
 										sx={{
 											"& .MuiTabs-scroller": {

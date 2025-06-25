@@ -48,6 +48,7 @@ import HubspotDataSync from "../app/(client)/data-sync/components/HubspotDataSyn
 import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
 import IntegrationBox from "../app/(client)/smart-audiences/components/IntegrationBox";
 import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
+import GoHighLevelConnectPopup from "./GoHighLevelConnectPopup";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -93,6 +94,7 @@ type ServiceHandlers = {
 	linkedin: () => void;
 	meta: () => void;
 	bing_ads: () => void;
+	go_high_level: () => void;
 };
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({
@@ -119,6 +121,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [createWebhook, setCreateWebhook] = useState<boolean>(false);
 	const [createSlack, setCreateSlack] = useState<boolean>(false);
 	const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false);
+	const [createGoHighLevel, setCreateGoHighLevel] = useState<boolean>(false);
 	const [createLinkedin, setCreateLinkedin] = useState<boolean>(false);
 	const [integrations, setIntegrations] = useState<Integrations[]>([]);
 	const [metaConnectApp, setMetaConnectApp] = useState(false);
@@ -260,6 +263,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleCreateGoogleAdsOpen = () => {
 		setCreateGoogleAds(true);
+	};
+
+	const handleGoHightLevelOpen = () => {
+		setCreateGoHighLevel(true);
 	};
 
 	const handleCreateLinkedinOpen = () => {
@@ -445,6 +452,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		setCreateGoogleAds(false);
 	};
 
+	const handleCreateGoHighLevelClose = () => {
+		setCreateGoHighLevel(false);
+	};
+
 	const handleCreateLinkedinClose = () => {
 		setCreateLinkedin(false);
 	};
@@ -534,6 +545,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		mailchimp: handleOpenMailchimpConnect,
 		sales_force: handleCreateSalesForceOpen,
 		google_ads: handleCreateGoogleAdsOpen,
+		go_high_level: handleGoHightLevelOpen,
 		s3: handleS3ConnectOpen,
 		slack: handleCreateSlackOpen,
 		klaviyo: handleCreateKlaviyoOpen,
@@ -1736,6 +1748,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				initApiKey={
 					integrationsCredentials.find(
 						(integartion) => integartion.service_name === "google_ads",
+					)?.access_token
+				}
+			/>
+			<GoHighLevelConnectPopup
+				open={createGoHighLevel}
+				handlePopupClose={handleCreateGoHighLevelClose}
+				onSave={handleSaveSettings}
+				invalid_api_key={isInvalidApiKey}
+				initApiKey={
+					integrationsCredentials.find(
+						(integartion) => integartion.service_name === "go_high_level",
 					)?.access_token
 				}
 			/>

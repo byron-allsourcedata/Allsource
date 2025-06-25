@@ -78,6 +78,7 @@ import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
 import { width } from "@mui/system";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -139,6 +140,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
 	const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
+	const [openGoHighLevelConnect, setOpenGoHighLevelConnect] = useState(false);
 	const [openLinkedinConnect, setOpenLinkedinConnect] = useState(false);
 	const [openZapierConnect, setOPenZapierComnect] = useState(false);
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
@@ -671,6 +673,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenS3Connect(true);
 					} else if (dataSyncPlatform === "google_ads") {
 						setOpenGoogleADSConnect(true);
+					} else if (dataSyncPlatform === "go_high_level") {
+						setOpenGoHighLevelConnect(true);
 					} else if (dataSyncPlatform === "linkedin") {
 						setOpenLinkedinConnect(true);
 					} else if (dataSyncPlatform === "webhook") {
@@ -1913,6 +1917,19 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					initApiKey={
 						integrationsCredentials.find(
 							(integartion) => integartion.service_name === "google_ads",
+						)?.access_token
+					}
+					invalid_api_key={isInvalidApiKey}
+					boxShadow="rgba(0, 0, 0, 0.01)"
+				/>
+				<GoHighLevelConnectPopup
+					open={openGoHighLevelConnect}
+					handlePopupClose={() => {
+						setOpenGoHighLevelConnect(false), setIsInvalidApiKey(false);
+					}}
+					initApiKey={
+						integrationsCredentials.find(
+							(integartion) => integartion.service_name === "go_high_level",
 						)?.access_token
 					}
 					invalid_api_key={isInvalidApiKey}

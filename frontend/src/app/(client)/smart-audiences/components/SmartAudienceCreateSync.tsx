@@ -45,6 +45,7 @@ import {
 	LeftMenuProps,
 } from "@/app/(client)/components/BookACallPopup";
 import { AxiosError } from "axios";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -138,6 +139,7 @@ type ServiceHandlers = {
 	mailchimp: () => void;
 	sales_force: () => void;
 	google_ads: () => void;
+	go_high_level: () => void;
 	s3: () => void;
 };
 
@@ -354,6 +356,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	const [createHubspot, setCreateHubspot] = useState<boolean>(false);
 	const [createSalesForce, setCreateSalesForce] = useState<boolean>(false);
 	const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false);
+	const [CreateGoHighLevel, setCreateGoHighLevel] = useState<boolean>(false);
 	const [integrations, setIntegrations] = useState<Integrations[]>([]);
 	const [metaConnectApp, setMetaConnectApp] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
@@ -998,6 +1001,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		setCreateGoogleAds(false);
 	};
 
+	const handleCreateGoHighLevelOpen = () => {
+		setCreateGoHighLevel(true);
+	};
+
+	const handleCreateGoHighLevelClose = () => {
+		setCreateGoHighLevel(false);
+	};
+
 	const handleCloseMetaConnectApp = () => {
 		setIntegrationsCredentials((prevIntegratiosn) => [
 			...prevIntegratiosn,
@@ -1014,6 +1025,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		mailchimp: handleOpenMailchimpConnect,
 		sales_force: handleCreateSalesForceOpen,
 		google_ads: handleCreateGoogleAdsOpen,
+		go_high_level: handleCreateGoHighLevelOpen,
 		s3: handleCreateS3Open,
 	};
 
@@ -2293,6 +2305,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				initApiKey={
 					integrationsCredentials.find(
 						(integartion) => integartion.service_name === "google_ads",
+					)?.access_token
+				}
+			/>
+			<GoHighLevelConnectPopup
+				open={createGoogleAds}
+				handlePopupClose={handleCreateGoHighLevelClose}
+				onSave={handleSaveSettings}
+				initApiKey={
+					integrationsCredentials.find(
+						(integartion) => integartion.service_name === "go_high_level",
 					)?.access_token
 				}
 			/>
