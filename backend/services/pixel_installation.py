@@ -137,7 +137,9 @@ class PixelInstallationService:
                 {
                     UserDomains.domain: normalize_url(url),
                     UserDomains.is_pixel_installed: True,
-                    UserDomains.date_pixel_install: datetime.now(timezone.utc).replace(tzinfo=None),
+                    UserDomains.date_pixel_install: datetime.now(
+                        timezone.utc
+                    ).replace(tzinfo=None),
                 },
                 synchronize_session=False,
             )

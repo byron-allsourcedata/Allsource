@@ -346,8 +346,8 @@ class UserPersistence:
             query = query.filter(func.DATE(Users.created_at) <= end_date)
 
         return query.all()
-    
-    def calculate_user_status(): 
+
+    def calculate_user_status():
         return case(
             [
                 (
@@ -454,7 +454,7 @@ class UserPersistence:
 
         if not test_users:
             query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
-        
+
         if filters.get("statuses"):
             query = query.filter(status_case.in_(filters["statuses"]))
 
