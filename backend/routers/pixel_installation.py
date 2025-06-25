@@ -4,11 +4,9 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 import os
 
 from dependencies import (
-    get_pixel_installation_service,
     check_user_authorization_without_pixel,
     check_user_authentication,
     check_domain,
-    get_domain_service,
     UserDomainsService,
 )
 from enums import PixelStatus, BaseEnum
@@ -32,9 +30,7 @@ SECRET_PIXEL_KEY = os.getenv("SECRET_PIXEL_KEY")
 
 @router.get("/manually", response_model=ManualFormResponse)
 async def manual(
-    pixel_installation_service: PixelInstallationService = Depends(
-        get_pixel_installation_service
-    ),
+    pixel_installation_service: PixelInstallationService,
     user: User = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
@@ -49,9 +45,7 @@ async def manual(
 @router.post("/send-pixel-code")
 async def send_pixel_code_in_email(
     email_form: EmailFormRequest,
-    pixel_installation_service: PixelInstallationService = Depends(
-        get_pixel_installation_service
-    ),
+    pixel_installation_service: PixelInstallationService,
     user: User = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
@@ -80,9 +74,7 @@ async def google_tag(
 
 @router.get("/cms", response_model=ManualFormResponse)
 async def cms(
-    pixel_installation_service: PixelInstallationService = Depends(
-        get_pixel_installation_service
-    ),
+    pixel_installation_service: PixelInstallationService,
     user: User = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
@@ -99,11 +91,9 @@ async def cms(
     response_model=Optional[PixelInstallationResponse],
 )
 async def check_pixel_installation_status(
+    pixel_installation_service: PixelInstallationService,
     domain: str = Query(
         ..., description="The exact domain to check, e.g. example.com"
-    ),
-    pixel_installation_service: PixelInstallationService = Depends(
-        get_pixel_installation_service
     ),
     user: dict = Depends(check_user_authorization_without_pixel),
 ):

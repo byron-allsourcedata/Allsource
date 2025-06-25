@@ -182,6 +182,7 @@ class SettingStatus(Enum):
     INVITATION_LIMIT_NOT_REACHED = "INVITATION_LIMIT_NOT_REACHED"
     INVALID_ACCESS_LEVEL = "INVALID_ACCESS_LEVEL"
     OWNER_ROLE_CHANGE_NOT_ALLOWED = "OWNER_ROLE_CHANGE_NOT_ALLOWED"
+    TOO_SOON = "TOO_SOON"
 
 
 class AdminStatus(Enum):
@@ -285,6 +286,11 @@ class SendgridTemplate(Enum):
     EMAIL_VERIFICATION_TEMPLATE = "email_verification_template"
     FORGOT_PASSWORD_TEMPLATE = "forgot_password_template"
     SEND_PIXEL_CODE_TEMPLATE = "send_pixel_code_template"
+    SEND_VIEW_PRODUCT_PIXEL_TEMPLATE_ON_LOAD = "send_view_product_load"
+    SEND_ADD_TO_CART_PIXEL_TEMPLATE_ON_CLICK = "send_add_to_cart_click"
+    SEND_ADD_TO_CART_PIXEL_TEMPLATE_ON_LOAD = "send_add_to_cart_load"
+    SEND_CONVERTED_SALE_PIXEL_TEMPLATE_ON_CLICK = "send_converted_sale_click"
+    SEND_CONVERTED_SALE_PIXEL_TEMPLATE_ON_LOAD = "send_converted_sale_load"
     CHANGE_EMAIL_TEMPLATE = "change_email_template"
     TEAM_MEMBERS_TEMPLATE = "team_members_template"
     ADMIN_INVITATION_TEMPLATE = "admin_invitation_template"

@@ -58,6 +58,8 @@ async def on_message_received(message_body, s3_session, sts_client, channel):
     if file_name in file_list:
         return
     credentials = assume_role(os.getenv("S3_ROLE_ARN"), sts_client)
+    batch = []
+    BATCH_SIZE = 5000
     try:
         message_json = json.loads(message_body)
         async with s3_session.client(
@@ -78,11 +80,20 @@ async def on_message_received(message_body, s3_session, sts_client, channel):
                     with gzip.open(temp_file.name, "rt", encoding="utf-8") as f:
                         df = pd.read_csv(f)
                     for _, row in df.iterrows():
-                        await publish_rabbitmq_message_with_channel(
-                            channel=channel,
-                            queue_name=QUEUE_HEMS_EXPORT,
-                            message_body={"hem": row.to_dict()},
-                        )
+                        batch.append(row.to_dict())
+                        if len(batch) >= BATCH_SIZE:
+                            await publish_rabbitmq_message_with_channel(
+                                channel=channel,
+                                queue_name=QUEUE_HEMS_EXPORT,
+                                message_body={"hems": batch},
+                            )
+                            batch.clear()
+        if batch:
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
+                queue_name=QUEUE_HEMS_EXPORT,
+                message_body={"hems": batch},
+            )
         logging.info(f"{message_json['file_name']} processed")
     except Exception as e:
         logging.error(f"Error processing message: {e}", exc_info=True)

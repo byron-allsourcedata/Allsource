@@ -1,8 +1,9 @@
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, TypedDict
 from decimal import Decimal
+import typing
 
 import pytz
 from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
@@ -29,6 +30,16 @@ from resolver import injectable
 from utils import end_of_month
 
 logger = logging.getLogger(__name__)
+
+
+class UserDict(TypedDict):
+    """
+    UserDict is incomplete type for object, used across the application
+    when you add new fields, add them to this type also
+    """
+
+    id: int
+    random_seed: int
 
 
 @injectable
@@ -132,15 +143,19 @@ class UserPersistence:
             select(Users).where(Users.customer_id == customer_id)
         ).scalar()
 
-    def get_user_by_id(self, user_id, result_as_object=False):
+    def get_user_by_id(
+        self, user_id, result_as_object=False
+    ) -> Optional[UserDict]:
         user, partner_is_active = (
             self.db.query(Users, Partner.is_active)
             .filter(Users.id == user_id)
             .outerjoin(Partner, Partner.user_id == user_id)
             .first()
         )
+
         result_user = None
         if user:
+            user: Users = typing.cast(Users, user)
             result_user = {
                 "id": user.id,
                 "email": user.email,
@@ -188,6 +203,7 @@ class UserPersistence:
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
                 "is_email_validation_enabled": user.is_email_validation_enabled,
+                "random_seed": user.random_seed,
             }
         self.db.rollback()
         if result_as_object:
@@ -456,6 +472,7 @@ class UserPersistence:
                 Users.last_login,
                 Users.role,
                 Users.leads_credits.label("credits_count"),
+                Users.total_leads,
                 Users.is_email_validation_enabled.label(
                     "is_email_validation_enabled"
                 ),
@@ -519,6 +536,7 @@ class UserPersistence:
             "id": Users.id,
             "join_date": Users.created_at,
             "last_login_date": Users.last_login,
+            "contacts_count": Users.total_leads,
         }
         sort_column = sort_options.get(sort_by, Users.created_at)
         query = query.order_by(
@@ -537,13 +555,6 @@ class UserPersistence:
                 UserDomains.is_pixel_installed == True,
             )
             .group_by(UserDomains.user_id)
-            .all()
-        )
-
-        contacts_counts = dict(
-            self.db.query(LeadUser.user_id, func.count(LeadUser.id))
-            .filter(LeadUser.user_id.in_(user_ids))
-            .group_by(LeadUser.user_id)
             .all()
         )
 
@@ -566,7 +577,6 @@ class UserPersistence:
         return {
             user_id: {
                 "pixel_installed_count": pixel_counts.get(user_id, 0),
-                "contacts_count": contacts_counts.get(user_id, 0),
                 "sources_count": sources_counts.get(user_id, 0),
                 "lookalikes_count": lookalikes_counts.get(user_id, 0),
             }

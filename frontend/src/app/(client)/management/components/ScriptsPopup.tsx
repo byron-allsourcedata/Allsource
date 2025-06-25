@@ -18,6 +18,7 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
+import { ScriptKey } from "../add-additional-script/page";
 
 const style = {
 	position: "fixed" as "fixed",
@@ -32,7 +33,7 @@ const style = {
 	flexDirection: "column",
 	transition: "transform 0.3s ease-in-out",
 	transform: "translateX(100%)",
-	pb: 2,
+
 	"@media (max-width: 600px)": {
 		width: "100%",
 		height: "100%",
@@ -62,6 +63,7 @@ const subtext = {
 };
 
 interface PopupProps {
+	type: ScriptKey | undefined;
 	open: boolean;
 	handleClose: () => void;
 	pixelCode: string;
@@ -75,6 +77,7 @@ interface PopupProps {
 }
 
 const ScriptsPopup: React.FC<PopupProps> = ({
+	type,
 	open,
 	handleClose,
 	pixelCode,
@@ -88,7 +91,7 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 		setTabIndex(newValue);
 	};
 
-	const tabToKeyMap: { [key: number]: "button" | "default" } = {
+	const tabToKeyMap: Record<number, "button" | "default"> = {
 		0: "button",
 		1: "default",
 	};
@@ -96,14 +99,32 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 	const displayedCode = tabIndex === 0 ? pixelCode : (secondPixelCode ?? "");
 
 	const [email, setEmail] = useState("");
+	const [emailError, setEmailError] = useState(false);
 
 	const handleButtonClick = () => {
+		const installType =
+			type === "view_product" ? "default" : tabToKeyMap[tabIndex];
+
 		axiosInstance
-			.post("/install-pixel/send-pixel-code", { email })
-			.then((response) => {
-				showToast("Successfully send email");
+			.post("/pixel-management/send-pixel-code", {
+				email: email,
+				script_type: type, // "view_product" | "add_to_cart" | "converted_sale"
+				install_type: installType,
 			})
-			.catch((error) => {});
+			.then(() => {
+				showToast("Successfully sent email");
+			})
+			.catch(() => {
+				showToast("Failed to send email");
+			});
+	};
+
+	const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setEmail(value);
+
+		const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+		setEmailError(!isValidEmail && value.length > 0);
 	};
 
 	useEffect(() => {
@@ -131,7 +152,7 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 						alignItems: "center",
 						padding: 3,
 						pt: 2,
-						pb: 1.35,
+						pb: 0,
 					}}
 				>
 					<Typography
@@ -357,25 +378,45 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 								mt: 3,
 								border: "1px solid #e4e4e4",
 								borderRadius: "8px",
-								backgroundColor: "rgba(247, 247, 247, 1)",
+								backgroundColor: "rgba(255, 255, 255, 1)",
 								boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
 								"@media (max-width: 600px)": { m: 2 },
 							}}
 						>
-							<Typography
-								variant="h6"
-								component="div"
-								mb={2}
-								className="first-sub-title"
-								sx={{
-									textAlign: "left",
-								}}
+							<Box
+								sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}
 							>
-								Send this to my developer
-							</Typography>
+								<Typography
+									className="first-sub-title"
+									sx={{
+										textAlign: "left",
+									}}
+								>
+									*Send this to my developer
+								</Typography>
+								<Typography
+									className="paragraph"
+									sx={{
+										backgroundColor: "rgba(254, 243, 205, 1)",
+										color: "rgba(179, 151, 9, 1) !important",
+										padding: ".1563rem 1rem",
+									}}
+								>
+									Optional
+								</Typography>
+							</Box>
 							<Typography sx={{ ...subtext, pt: 2, pb: 1 }}>
-								Enter your email to receive the script by email:
+								Send install instructions to this email:
 							</Typography>
+							{emailError && (
+								<Typography
+									variant="caption"
+									color="error"
+									sx={{ marginTop: "0.5em" }}
+								>
+									Invalid email address
+								</Typography>
+							)}
 							<Box
 								display="flex"
 								alignItems="center"
@@ -396,7 +437,7 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 									type="text"
 									placeholder="Enter Email ID"
 									value={email}
-									onChange={(e) => setEmail(e.target.value)}
+									onChange={handleEmailChange}
 									className="paragraph"
 									sx={{
 										padding: "0.5rem 2em 0.5em 1em",
@@ -410,7 +451,7 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 										boxShadow: "none",
 										outline: "none",
 										"&:focus": {
-											borderColor: "#3f51b5",
+											borderColor: emailError ? "red" : "#3f51b5",
 										},
 										"@media (max-width: 600px)": {
 											width: "100%",

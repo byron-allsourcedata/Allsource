@@ -11,6 +11,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
     Sequence,
+    Integer,
 )
 
 from .base import Base
@@ -18,15 +19,6 @@ from .base import Base
 
 class UserDomains(Base):
     __tablename__ = "users_domains"
-    __table_args__ = (
-        Index(
-            "users_domains_data_provider_id_idx",
-            "data_provider_id",
-            unique=True,
-        ),
-        Index("users_domains_is_enable_idx", "is_enable"),
-        UniqueConstraint("api_key", name="users_domains_unique"),
-    )
 
     id = Column(
         BigInteger,
@@ -60,4 +52,15 @@ class UserDomains(Base):
     )
     is_add_to_cart_installed = Column(
         Boolean, nullable=False, server_default=text("false")
+    )
+    total_leads = Column(Integer, nullable=False, server_default=text("0"))
+
+    __table_args__ = (
+        Index(
+            "users_domains_data_provider_id_idx",
+            data_provider_id,
+            unique=True,
+        ),
+        Index("users_domains_is_enable_idx", is_enable),
+        UniqueConstraint("api_key", name="users_domains_unique"),
     )

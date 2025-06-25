@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
@@ -146,13 +148,46 @@ async def get_seniority(
     return company_service.get_uniq_primary__job_titles(company_id)
 
 
-@router.post("/download-company")
-async def download_company(
-    companies_request: CompaniesRequest,
+@router.get("/download-companies")
+async def download_companies(
+    company_id: Optional[int] = Query(None),
+    page: int = Query(1, alias="page", ge=1, description="Page number"),
+    per_page: int = Query(
+        10, alias="per_page", ge=1, le=500, description="Items per page"
+    ),
+    from_date: Optional[int] = Query(
+        None, description="Start date in integer format"
+    ),
+    to_date: Optional[int] = Query(
+        None, description="End date in integer format"
+    ),
+    regions: str = Query(None, description="Company regions "),
+    employees_range: str = Query(
+        None, description="Number of employees in the company"
+    ),
+    employee_visits: str = Query(
+        None, description="Number of employees who visited the site"
+    ),
+    revenue_range: str = Query(None, description="Company income range"),
+    industry: str = Query(None, description="Company industry "),
+    search_query: Optional[str] = Query(
+        None,
+        description="Search for email, first name, lastname and phone number",
+    ),
     company_service: CompanyService = Depends(get_companies_service),
 ):
     result = company_service.download_companies(
-        companies_ids=companies_request.companies_ids
+        company_id=company_id,
+        from_date=from_date,
+        to_date=to_date,
+        employee_visits=employee_visits,
+        revenue_range=revenue_range,
+        search_query=search_query,
+        page=page,
+        per_page=per_page,
+        regions=regions,
+        employees_range=employees_range,
+        industry=industry,
     )
     if result:
         return StreamingResponse(

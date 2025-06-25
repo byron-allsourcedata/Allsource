@@ -125,9 +125,19 @@ class Users(Base):
     )
     stripe_connected_email = Column(VARCHAR, nullable=True)
     stripe_connected_currently_due = Column(JSON, nullable=True)
+    total_leads = Column(Integer, nullable=False, server_default=text("0"))
     is_email_validation_enabled = Column(
         Boolean, nullable=False, server_default=text("true")
     )
+
+    random_seed: Column[int] = Column(
+        Integer, nullable=False, server_default=text("42")
+    )
+    """
+        stored random seed for each user
+
+        required for stability of significant fields detection in case of repetable file uploads
+    """
 
     __table_args__ = (
         Index("users_email_idx", email, unique=True),

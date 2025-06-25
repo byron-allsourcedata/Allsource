@@ -32,6 +32,7 @@ import {
 	MenuItem,
 	OutlinedInput,
 	SelectChangeEvent,
+	Popover,
 } from "@mui/material";
 import axios from "axios";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
@@ -45,6 +46,7 @@ import {
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "../../../../components/customToolTip";
 import CloseIcon from "@mui/icons-material/Close";
+import { MoreVert } from "@/icon";
 import SortIcon from "@mui/icons-material/Sort"; // Import the sort icon
 
 const teamsStyles = {
@@ -113,6 +115,7 @@ const roleOptions = [
 ];
 
 export const SettingsTeams: React.FC = () => {
+	const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 	const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
 	const [teamMembers, setTeamMembers] = useState<any[]>([]);
 	const [inviteUsersPopupOpen, setInviteUsersPopupOpen] = useState(false);
@@ -333,6 +336,30 @@ export const SettingsTeams: React.FC = () => {
 		return results;
 	};
 
+	const handleResendInvitation = async (email: string, role: string) => {
+		try {
+			const res = await axiosInterceptorInstance.post(
+				"/settings/teams/resend-invitation",
+				{
+					invite_user: email,
+					access_level: role,
+				},
+			);
+
+			if (res.data.status === "SUCCESS") {
+				showToast("Invitation resent successfully");
+			} else if (res.data.status === "TOO_SOON") {
+				showErrorToast("You can resend the invitation after a few minutes.");
+			} else {
+				showErrorToast("Failed to resend invitation");
+			}
+		} catch (err) {
+			showErrorToast("Error sending invitation.");
+		} finally {
+			handleCloseMenu();
+		}
+	};
+
 	const handleRevokeInvitation = async (email: string) => {
 		try {
 			setIsLoading(true);
@@ -459,6 +486,19 @@ export const SettingsTeams: React.FC = () => {
 
 	const handleRemovePopupClose = () => {
 		setRemovePopupOpen(false);
+	};
+
+	const handleOpenMenu = (
+		event: React.MouseEvent<HTMLElement>,
+		rowId: string,
+	) => {
+		setMenuAnchor(event.currentTarget);
+		setSelectedRowId(rowId);
+	};
+
+	const handleCloseMenu = () => {
+		setMenuAnchor(null);
+		setSelectedRowId(null);
 	};
 
 	const handleSort = (field: string) => {
@@ -639,29 +679,83 @@ export const SettingsTeams: React.FC = () => {
 													className="table-data"
 													sx={teamsStyles.tableBodyColumn}
 												>
-													<Button
-														className="table-data"
-														onClick={() =>
-															handleRevokePopupOpen(invitation.email)
+													<IconButton
+														onClick={(e) => handleOpenMenu(e, invitation.id)}
+														size="small"
+													>
+														<MoreVert
+															fontSize="small"
+															sx={{ color: "rgba(32, 33, 36, 1)" }}
+														/>
+													</IconButton>
+
+													<Popover
+														open={
+															menuAnchor !== null &&
+															selectedRowId === invitation.id
 														}
-														// onClick={() => {
-														//     const confirmed = window.confirm('Are you sure you want to revoke this invitation?');
-														//     if (confirmed) {
-														//         handleRevoke(invitation.email);
-														//     }
-														// }}
-														sx={{
-															lineHeight: "16px !important",
-															position: "relative",
-															textAlign: "center",
-															textTransform: "none",
-															"&:hover": {
-																background: "transparent",
+														anchorEl={menuAnchor}
+														onClose={handleCloseMenu}
+														anchorOrigin={{
+															vertical: "bottom",
+															horizontal: "left",
+														}}
+														transformOrigin={{
+															vertical: "top",
+															horizontal: "right",
+														}}
+														PaperProps={{
+															sx: {
+																boxShadow: 2,
+																borderRadius: 1,
+																maxWidth: 240,
+																width: "auto",
 															},
 														}}
 													>
-														Revoke
-													</Button>
+														<Box display="flex" flexDirection="column" p={1}>
+															<Button
+																sx={{
+																	textTransform: "none",
+																	fontFamily: "Roboto",
+																	fontWeight: 400,
+																	fontSize: "14px",
+																	color: "rgba(32, 33, 36, 1)",
+																	justifyContent: "flex-start",
+																	width: "100%",
+																	textAlign: "left",
+																	padding: "6px 12px",
+																}}
+																onClick={() => {
+																	handleRevokePopupOpen(invitation.email);
+																	handleCloseMenu();
+																}}
+															>
+																Revoke
+															</Button>
+															<Button
+																sx={{
+																	textTransform: "none",
+																	fontFamily: "Roboto",
+																	fontWeight: 400,
+																	fontSize: "14px",
+																	color: "rgba(32, 33, 36, 1)",
+																	justifyContent: "flex-start",
+																	width: "100%",
+																	textAlign: "left",
+																	padding: "6px 12px",
+																}}
+																onClick={() =>
+																	handleResendInvitation(
+																		invitation.email,
+																		invitation.role,
+																	)
+																}
+															>
+																Resend invitation
+															</Button>
+														</Box>
+													</Popover>
 												</TableCell>
 											</TableRow>
 										))

@@ -7,19 +7,18 @@ from typing import Optional
 from datetime import timezone
 
 from fastapi import HTTPException, status
-from ffmpeg import run_async
-from sqlalchemy.orm import Session
-from sqlalchemy import or_, select
+from sqlalchemy import or_
 from bs4 import BeautifulSoup
 import requests
 
 from enums import BaseEnum, SendgridTemplate, PixelStatus, DomainStatus
-from models.subscriptions import UserSubscriptions
-from models.users import Users, User
+from models.users import Users
 from models.users_domains import UserDomains
 from datetime import datetime, timedelta
-
+from db_dependencies import Db
+from resolver import injectable
 from schemas.pixel_installation import PixelInstallationResponse
+from services.pixel_management import PixelManagementService
 from utils import normalize_url
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.sendgrid import SendgridHandler
@@ -27,14 +26,19 @@ from services.sendgrid import SendgridHandler
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class PixelInstallationService:
     def __init__(
-        self, db: Session, send_grid_persistence_service: SendgridPersistence
+        self,
+        db: Db,
+        send_grid_persistence_service: SendgridPersistence,
+        pixel_management_service: PixelManagementService,
     ):
         self.db = db
         self.send_grid_persistence_service = send_grid_persistence_service
+        self.pixel_management_service = pixel_management_service
 
-    def get_manual(self, user, domain):
+    def _get_or_create_client_id(self, user: dict, domain: UserDomains) -> str:
         if domain is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -54,6 +58,11 @@ class PixelInstallationService:
                 synchronize_session=False,
             )
             self.db.commit()
+
+        return client_id
+
+    def get_manual(self, user: dict, domain: UserDomains):
+        client_id = self._get_or_create_client_id(user, domain)
 
         script = (
             f'<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>'
@@ -79,7 +88,37 @@ class PixelInstallationService:
 
         return script, client_id
 
-    def send_pixel_code_in_email(self, email, user, domain):
+    def get_view_product_script(self, user: dict, domain: UserDomains) -> str:
+        client_id = self._get_or_create_client_id(user, domain)
+        return f"""<script>/* view_product code for {domain.domain} with ID {client_id} */</script>"""
+
+    def get_add_to_cart_script_on_click(
+        self, user: dict, domain: UserDomains
+    ) -> str:
+        client_id = self._get_or_create_client_id(user, domain)
+        return f"""<script>/* add_to_cart code for {domain.domain} with ID {client_id} */</script>"""
+
+    def get_converted_sale_script_on_click(
+        self, user: dict, domain: UserDomains
+    ) -> str:
+        client_id = self._get_or_create_client_id(user, domain)
+        return f"""<script>/* converted_sale code for {domain.domain} with ID {client_id} */</script>"""
+
+    def get_add_to_cart_script_on_load(
+        self, user: dict, domain: UserDomains
+    ) -> str:
+        client_id = self._get_or_create_client_id(user, domain)
+        return f"""<script>/* add_to_cart code for {domain.domain} with ID {client_id} */</script>"""
+
+    def get_converted_sale_script_on_load(
+        self, user: dict, domain: UserDomains
+    ) -> str:
+        client_id = self._get_or_create_client_id(user, domain)
+        return f"""<script>/* converted_sale code for {domain.domain} with ID {client_id} */</script>"""
+
+    def send_pixel_code_in_email(
+        self, email: str, user: dict, domain: UserDomains
+    ):
         message_expiration_time = user.get("pixel_code_sent_at", None)
         time_now = datetime.now()
         if message_expiration_time is not None:
@@ -185,3 +224,70 @@ class PixelInstallationService:
 
         installed_flag = bool(row[0])
         return PixelInstallationResponse(pixel_installation=installed_flag)
+
+    def send_additional_pixel_code_in_email(
+        self,
+        email: str,
+        script_type: str,
+        install_type: str,
+        user: dict,
+        domain: UserDomains,
+    ) -> BaseEnum:
+        message_expiration_time = user.get("pixel_code_sent_at", None)
+        time_now = datetime.now()
+
+        if (
+            message_expiration_time is not None
+            and (message_expiration_time + timedelta(minutes=1)) > time_now
+        ):
+            return BaseEnum.SUCCESS
+
+        script_map = {
+            "view_product": {
+                "default": SendgridTemplate.SEND_VIEW_PRODUCT_PIXEL_TEMPLATE_ON_LOAD.value,
+            },
+            "add_to_cart": {
+                "default": SendgridTemplate.SEND_ADD_TO_CART_PIXEL_TEMPLATE_ON_LOAD.value,
+                "button": SendgridTemplate.SEND_ADD_TO_CART_PIXEL_TEMPLATE_ON_CLICK.value,
+            },
+            "converted_sale": {
+                "default": SendgridTemplate.SEND_CONVERTED_SALE_PIXEL_TEMPLATE_ON_LOAD.value,
+                "button": SendgridTemplate.SEND_CONVERTED_SALE_PIXEL_TEMPLATE_ON_CLICK.value,
+            },
+        }
+
+        if (
+            script_type not in script_map
+            or install_type not in script_map[script_type]
+        ):
+            raise HTTPException(
+                status_code=400, detail="Unknown script type or install type"
+            )
+
+        pixel_scripts = self.pixel_management_service.get_pixel_scripts(
+            action=script_type, domain_id=domain.id
+        )
+
+        pixel_code = pixel_scripts.get(install_type)
+        if not pixel_code:
+            raise HTTPException(
+                status_code=404, detail="Pixel script not found"
+            )
+
+        template_id = self.send_grid_persistence_service.get_template_by_alias(
+            script_map[script_type][install_type]
+        )
+
+        full_name = email.split("@")[0]
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={
+                "full_name": full_name,
+                "pixel_code": pixel_code,
+                "email": email,
+            },
+        )
+
+        return BaseEnum.SUCCESS
