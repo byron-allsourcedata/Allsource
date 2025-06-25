@@ -1,5 +1,7 @@
 import csv
 import io
+from typing import Optional
+
 from utils import format_phone_number
 from persistence.company_persistence import CompanyPersistence
 from datetime import datetime, timedelta
@@ -565,28 +567,38 @@ class CompanyService:
 
     def download_companies(
         self,
-        from_date=None,
-        to_date=None,
-        regions=None,
-        search_query=None,
-        companies_ids=0,
-        timezone_offset=None,
+        company_id: Optional[int] = None,
+        from_date: Optional[int] = None,
+        to_date: Optional[int] = None,
+        employee_visits: Optional[int] = None,
+        revenue_range: Optional[str] = None,
+        regions: Optional[str] = None,
+        employees_range: Optional[str] = None,
+        industry: Optional[str] = None,
+        search_query: Optional[str] = None,
+        page: Optional[int] = None,
+        per_page: Optional[int] = None,
     ):
-        if companies_ids == 0:
-            leads = self.company_persistence_service.get_full_information_companies_by_filters(
+        if company_id:
+            company = self.company_persistence_service.get_company_by_id(
+                domain_id=self.domain.id, company_id=company_id
+            )
+            companies = [company] if company else []
+        else:
+            companies = self.company_persistence_service.get_full_information_companies_by_filters(
                 domain_id=self.domain.id,
                 from_date=from_date,
                 to_date=to_date,
-                regions=regions,
                 search_query=search_query,
-                timezone_offset=timezone_offset,
+                page=page,
+                per_page=per_page,
+                employee_visits=employee_visits,
+                revenue_range=revenue_range,
+                regions=regions,
+                employees_range=employees_range,
+                industry=industry,
             )
-        else:
-            leads = self.company_persistence_service.get_full_companies_by_ids(
-                self.domain.id, companies_ids
-            )
-        if len(leads) == 0:
-            return None
+
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(
@@ -608,23 +620,23 @@ class CompanyService:
                 "Last company update",
             ]
         )
-        for lead in leads:
+        for company in companies:
             relevant_data = [
-                lead.name or "None",
-                format_phone_number(lead.phone) or "None",
-                lead.linkedin_url or "None",
-                lead.number_of_employees or "None",
-                lead.visited_date or "None",
-                lead.revenue or "None",
-                lead.employee_count or "None",
-                lead.address or "None",
-                lead.primary_industry or "None",
-                lead.domain or "None",
-                lead.zip or "None",
-                lead.description or "None",
-                lead.city or "None",
-                lead.state_name or "None",
-                lead.last_updated or "None",
+                company.name or "None",
+                format_phone_number(company.phone) or "None",
+                company.linkedin_url or "None",
+                company.number_of_employees or "None",
+                company.visited_date or "None",
+                company.revenue or "None",
+                company.employee_count or "None",
+                company.address or "None",
+                company.primary_industry or "None",
+                company.domain or "None",
+                company.zip or "None",
+                company.description or "None",
+                company.city or "None",
+                company.state_name or "None",
+                company.last_updated or "None",
             ]
             writer.writerow(relevant_data)
 
