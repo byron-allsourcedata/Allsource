@@ -471,7 +471,6 @@ const Leads: React.FC = () => {
 	const handleDownload = async () => {
 		setLoading(true);
 		try {
-			// Processing "Date Calendly"
 			const startEpoch = appliedDates.start
 				? Math.floor(appliedDates.start.getTime() / 1000)
 				: null;
@@ -479,148 +478,41 @@ const Leads: React.FC = () => {
 				? Math.floor(appliedDates.end.getTime() / 1000)
 				: null;
 
-			let url = "/company/download-companies";
-			let params = [];
+			let url = `/company/download-companies?page=${page + 1}&per_page=${rowsPerPage}`;
+			const params = [];
 
 			if (startEpoch !== null && endEpoch !== null) {
 				params.push(`from_date=${startEpoch}&to_date=${endEpoch}`);
 			}
 
-			if (selectedFilters.some((filter) => filter.label === "Visitor Type")) {
-				const status =
-					selectedFilters
-						.find((filter) => filter.label === "Visitor Type")
-						?.value?.split(", ") || [];
-				if (status.length > 0) {
-					const formattedStatus = status.map((status) =>
-						status.toLowerCase().replace(/\s+/g, "_"),
-					);
-					params.push(
-						`behavior_type=${encodeURIComponent(formattedStatus.join(","))}`,
-					);
-				}
+			const employeeVisits = selectedFilters.find(
+				(filter) => filter.label === "Employee Visits",
+			)?.value;
+			if (employeeVisits) {
+				url += `&employee_visits=${encodeURIComponent(employeeVisits)}`;
 			}
 
-			if (selectedFilters.some((filter) => filter.label === "Regions")) {
-				const regions =
-					selectedFilters
-						.find((filter) => filter.label === "Regions")
-						?.value?.split(", ") || [];
-				if (regions.length > 0) {
-					params.push(`regions=${encodeURIComponent(regions.join(","))}`);
+			const processMultiFilter = (label: string, paramName: string) => {
+				const filter = selectedFilters.find(
+					(filter) => filter.label === label,
+				)?.value;
+				if (filter) {
+					url += `&${paramName}=${encodeURIComponent(filter?.split(", ").join(","))}`;
 				}
+			};
+
+			processMultiFilter("Regions", "regions");
+			processMultiFilter("Number of Employees", "employees_range");
+			processMultiFilter("Revenue", "revenue_range");
+			processMultiFilter("Industry", "industry");
+
+			const searchQuery = selectedFilters.find(
+				(filter) => filter.label === "Search",
+			)?.value;
+			if (searchQuery) {
+				url += `&search_query=${encodeURIComponent(searchQuery)}`;
 			}
 
-			if (selectedFilters.some((filter) => filter.label === "From Date")) {
-				const fromDate =
-					selectedFilters.find((filter) => filter.label === "From Date")
-						?.value || "";
-				if (fromDate) {
-					const fromDateEpoch = Math.floor(new Date(fromDate).getTime() / 1000);
-					params.push(`from_date=${fromDateEpoch}`);
-				}
-			}
-
-			if (selectedFilters.some((filter) => filter.label === "To Date")) {
-				const toDate =
-					selectedFilters.find((filter) => filter.label === "To Date")?.value ||
-					"";
-				if (toDate) {
-					const toDateEpoch = Math.floor(new Date(toDate).getTime() / 1000);
-					params.push(`to_date=${toDateEpoch}`);
-				}
-			}
-
-			if (selectedFilters.some((filter) => filter.label === "Lead Status")) {
-				const funnels =
-					selectedFilters
-						.find((filter) => filter.label === "Lead Status")
-						?.value?.split(", ") || [];
-				if (funnels.length > 0) {
-					const formattedFunnels = funnels.map((funnel) =>
-						funnel.toLowerCase().replace(/\s+/g, "_"),
-					);
-					params.push(
-						`status=${encodeURIComponent(formattedFunnels.join(","))}`,
-					);
-				}
-			}
-
-			if (selectedFilters.some((filter) => filter.label === "Search")) {
-				const searchQuery =
-					selectedFilters.find((filter) => filter.label === "Search")?.value ||
-					"";
-				if (searchQuery) {
-					params.push(`search_query=${encodeURIComponent(searchQuery)}`);
-				}
-			}
-
-			if (selectedFilters.some((filter) => filter.label === "From Time")) {
-				const fromTime =
-					selectedFilters.find((filter) => filter.label === "From Time")
-						?.value || "";
-				if (fromTime) {
-					params.push(`from_time=${encodeURIComponent(fromTime)}`);
-				}
-			}
-
-			if (selectedFilters.some((filter) => filter.label === "To Time")) {
-				const toTime =
-					selectedFilters.find((filter) => filter.label === "To Time")?.value ||
-					"";
-				if (toTime) {
-					params.push(`to_time=${encodeURIComponent(toTime)}`);
-				}
-			}
-
-			if (selectedFilters.some((filter) => filter.label === "Time Spent")) {
-				const timeSpent =
-					selectedFilters
-						.find((filter) => filter.label === "Time Spent")
-						?.value?.split(", ") || [];
-				if (timeSpent.length > 0) {
-					const formattedTimeSpent = timeSpent.map((value) =>
-						value.replace(/\s+/g, "_"),
-					);
-					params.push(
-						`average_time_sec=${encodeURIComponent(formattedTimeSpent.join(","))}`,
-					);
-				}
-			}
-
-			if (
-				selectedFilters.some((filter) => filter.label === "Recurring Visits")
-			) {
-				const recurringVisits =
-					selectedFilters
-						.find((filter) => filter.label === "Recurring Visits")
-						?.value?.split(", ") || [];
-				if (recurringVisits.length > 0) {
-					const formattedRecurringVisits = recurringVisits.map((value) =>
-						value.replace(/\s+/g, "_"),
-					);
-					params.push(
-						`recurring_visits=${encodeURIComponent(formattedRecurringVisits.join(","))}`,
-					);
-				}
-			}
-
-			if (selectedFilters.some((filter) => filter.label === "Page Visits")) {
-				const pageVisits =
-					selectedFilters
-						.find((filter) => filter.label === "Page Visits")
-						?.value?.split(", ") || [];
-				if (pageVisits.length > 0) {
-					const formattedPageVisits = pageVisits.map((value) =>
-						value.replace(/\s+/g, "_"),
-					);
-					params.push(
-						`page_visits=${encodeURIComponent(formattedPageVisits.join(","))}`,
-					);
-				}
-			}
-
-			// Join all parameters into a single query string
 			if (params.length > 0) {
 				url += `?${params.join("&")}`;
 			}
@@ -646,10 +538,6 @@ const Leads: React.FC = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
-
-	const truncateText = (text: string, maxLength: number) => {
-		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 	};
 
 	const handleApplyFilters = (filters: FilterParams) => {
