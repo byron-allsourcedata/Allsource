@@ -66,6 +66,7 @@ async def get_users(
         9, alias="per_page", ge=1, le=500, description="Items per page"
     ),
     test_users: bool = Query(False),
+    statuses: str = Query(None),
     admin_customers_service: AdminCustomersService = Depends(
         get_admin_customers_service
     ),
@@ -81,6 +82,7 @@ async def get_users(
         join_date_start=join_date_start,
         join_date_end=join_date_end,
         test_users=test_users,
+        statuses=statuses
     )
     return users
 

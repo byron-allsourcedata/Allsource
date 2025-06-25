@@ -455,8 +455,6 @@ class UserPersistence:
                 Users.created_at,
                 Users.last_login,
                 Users.role,
-                Users.is_email_confirmed,
-                Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
                 Users.is_email_validation_enabled.label(
                     "is_email_validation_enabled"
@@ -479,7 +477,8 @@ class UserPersistence:
             query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
 
         if filters.get("statuses"):
-            query = query.filter(status_case.in_(filters["statuses"]))
+            statuses = [status.strip().lower() for status in filters["statuses"].split(",")]
+            query = query.filter(func.lower(status_case).in_(statuses))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(

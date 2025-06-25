@@ -3,10 +3,12 @@ import { Box, Button, SxProps, Theme } from "@mui/material";
 
 interface ToggleButtonsProps {
 	buttonNames?: string[];
+	dotColors: string[];
 	buttonMapping: Record<string, string>;
 	selectedButton: string[];
 	handleButtonButtonClick: (label: string) => void;
 	sx?: SxProps<Theme>;
+	multiColorDot?: React.ReactNode
 }
 /**
  * ToggleButtons Component
@@ -37,14 +39,15 @@ interface ToggleButtonsProps {
  */
 const ToggleButtons: React.FC<ToggleButtonsProps> = ({
 	buttonNames = ["Exaple1", "Exaple2", "Exaple3"],
+	dotColors = [],
 	buttonMapping,
 	selectedButton,
 	handleButtonButtonClick,
-	sx = {},
+	sx = {}
 }) => {
 	return (
 		<Box sx={sx}>
-			{buttonNames.map((label) => {
+			{buttonNames.map((label, index) => {
 				const mappedSource = buttonMapping[label];
 				const isSelected = selectedButton.includes(mappedSource);
 				return (
@@ -58,7 +61,7 @@ const ToggleButtons: React.FC<ToggleButtonsProps> = ({
 							textTransform: "none",
 							textWrap: "nowrap",
 							padding: "5px 0px",
-							gap: "10px",
+							gap: "8px",
 							textAlign: "center",
 							borderRadius: "4px",
 							display: "flex",
@@ -76,6 +79,7 @@ const ToggleButtons: React.FC<ToggleButtonsProps> = ({
 							lineHeight: "20px !important",
 						}}
 					>
+						{dotColors.length > 0 && <Box sx={{borderRadius: "50%", width: "8px", height: "8px", backgroundColor: dotColors[index]}}/>}
 						{label}
 					</Button>
 				);

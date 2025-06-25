@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, List
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -202,6 +202,7 @@ class AdminCustomersService:
         last_login_date_end: Optional[int] = None,
         join_date_start: Optional[int] = None,
         join_date_end: Optional[int] = None,
+        statuses: Optional[str] = None,
     ):
         filters = {}
         if last_login_date_start is not None:
@@ -212,6 +213,8 @@ class AdminCustomersService:
             filters["join_date_start"] = join_date_start
         if join_date_end is not None:
             filters["join_date_end"] = join_date_end
+        if statuses is not None:
+            filters["statuses"] = statuses
 
         users, total_count = self.user_persistence.get_base_customers(
             search_query=search_query,
@@ -237,47 +240,6 @@ class AdminCustomersService:
             contacts_count = agg.get("contacts_count", 0)
             sources_count = agg.get("sources_count", 0)
             lookalikes_count = agg.get("lookalikes_count", 0)
-
-            # user_dict = {
-            #     "id": user_id,
-            #     "email": user.email,
-            #     "full_name": user.full_name,
-            #     "created_at": user.created_at,
-            #     "last_login": user.last_login,
-            #     "role": user.role,
-            #     "is_email_confirmed": user.is_email_confirmed,
-            #     "is_book_call_passed": user.is_book_call_passed,
-            #     "subscription_plan": user.subscription_plan,
-            #     "credits_count": user.credits_count,
-            #     "pixel_installed_count": pixel_installed_count,
-            #     "contacts_count": contacts_count,
-            #     "sources_count": sources_count,
-            #     "lookalikes_count": lookalikes_count,
-            # }
-
-            # payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(
-            #     user_dict
-            # )
-            # if payment_status == UserAuthorizationStatus.SUCCESS:
-            #     user_plan = (
-            #         self.db.query(
-            #             UserSubscriptions.is_trial, UserSubscriptions.plan_end
-            #         )
-            #         .filter(
-            #             UserSubscriptions.user_id == user_id,
-            #             UserSubscriptions.status.in_(("active", "canceled")),
-            #         )
-            #         .order_by(
-            #             UserSubscriptions.status,
-            #             UserSubscriptions.plan_end.desc(),
-            #         )
-            #         .first()
-            #     )
-            #     if user_plan:
-            #         if pixel_installed_count >= 1:
-            #             payment_status = "PIXEL_VERIFIED"
-            #         else:
-            #             payment_status = "USER_AUTHENTICATED"
 
             result.append(
                 {
