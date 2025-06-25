@@ -1,10 +1,12 @@
 import { FeatureCardProps } from "@/types/first_time_screens";
 import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import React from "react";
 
 type FeatureCardWithButtonProps = {
 	buttonLabel?: string;
 	img_width: number;
+	mainContent?: React.ReactNode | React.ComponentType;
 } & FeatureCardProps;
 
 const FeatureCardWithButton: React.FC<FeatureCardWithButtonProps> = ({
@@ -17,7 +19,12 @@ const FeatureCardWithButton: React.FC<FeatureCardWithButtonProps> = ({
 	showInstalled = false,
 	buttonLabel,
 	img_width = 140,
+	mainContent,
 }) => {
+	const isComponent =
+		typeof mainContent === "function" ||
+		(typeof mainContent === "object" &&
+			(mainContent as any)?.prototype?.isReactComponent);
 	return (
 		<Card
 			variant="outlined"
@@ -117,6 +124,14 @@ const FeatureCardWithButton: React.FC<FeatureCardWithButtonProps> = ({
 						style={{ maxHeight: "100%", maxWidth: "100%" }}
 					/>
 				</Box>
+
+				{mainContent && (
+					<Box>
+						{isComponent
+							? React.createElement(mainContent as React.ComponentType)
+							: mainContent}
+					</Box>
+				)}
 
 				<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
 					<Button

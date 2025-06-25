@@ -148,10 +148,6 @@ def get_suppression_persistence(
     return SuppressionPersistence(db)
 
 
-def get_settings_persistence(db: Session = Depends(get_db)):
-    return SettingsPersistence(db=db)
-
-
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
@@ -766,9 +762,7 @@ def get_settings_service(
     subscription_service: SubscriptionService,
     lead_persistence: LeadsPersistence,
     send_grid_persistence: SendgridPersistence,
-    settings_persistence: SettingsPersistence = Depends(
-        get_settings_persistence
-    ),
+    settings_persistence: SettingsPersistence,
 ):
     return SettingsService(
         settings_persistence=settings_persistence,

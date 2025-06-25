@@ -231,6 +231,14 @@ body {
 	letter-spacing: 0.06px;
 }
 
+.paragraph-description {
+	font-family: "Roboto";
+	font-size: 14px;
+	line-height: normal;
+	font-weight: 400;
+	color: rgba(95, 99, 104, 1);
+}
+
 .button {
 	font-family: "Nunito Sans";
 	font-size: 14px;

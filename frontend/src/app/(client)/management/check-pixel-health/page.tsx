@@ -1,5 +1,5 @@
 "use client";
-import { Box, Typography, IconButton } from "@mui/material";
+import { Box, Typography, IconButton, Link } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import { managementStyle } from "../management";
 import CustomToolTip from "@/components/customToolTip";
@@ -22,7 +22,9 @@ import {
 } from "@/components/first-time-screens";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import { EmptyAnalyticsPlaceholder } from "../../analytics/components/placeholders/EmptyPlaceholder";
-import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import Image from "next/image";
+import InfoIcon from "@mui/icons-material/Info";
+import { OpenInNewIcon } from "@/icon";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { PixelManagementItem } from "../page";
 import FeatureCardWithButton from "@/components/first-time-screens/FeatureCardWithButton";
@@ -30,54 +32,39 @@ import FeatureCardWithButton from "@/components/first-time-screens/FeatureCardWi
 const Management: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
 	const router = useRouter();
-	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState("");
 	const [popupOpen, setPopupOpen] = useState(false);
-
-	const checkPixel = async () => {
-		try {
-			const response = await axiosInstance.get("/check-user-authorization");
-			if (response.data.status === "NEED_BOOK_CALL") {
-				sessionStorage?.setItem("is_slider_opened", "true");
-			}
-		} catch (error) {
-			if (error instanceof AxiosError && error.response?.status === 403) {
-				if (error.response.data.status === "PIXEL_INSTALLATION_NEEDED") {
-					setStatus(error.response.data.status);
-				}
-			} else {
-				showErrorToast(`Error fetching data:${error}`);
-			}
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	const fetchData = async () => {
-		try {
-			setLoading(true);
-			const response = await axiosInstance.get("/pixel-management");
-			if (response.status === 200) {
-				setPixelData(response.data);
-			}
-		} catch (error) {
-			showErrorToast(`Error fetching data:${error}`);
-		} finally {
-			setLoading(false);
-		}
-	};
+	const [inputValue, setInputValue] = useState<string>("");
+	const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
 
 	useEffect(() => {
-		checkPixel();
-		fetchData();
+		const storedValue = sessionStorage.getItem("current_domain");
+		if (storedValue !== null) {
+			setInputValue(storedValue);
+		}
 	}, []);
-
-	if (loading) {
-		return <CustomizedProgressBar />;
-	}
 
 	const onBack = () => {
 		router.push("/management");
+	};
+
+	const handleButtonClick = () => {
+		let url = inputValue.trim();
+
+		if (url) {
+			if (!/^https?:\/\//i.test(url)) {
+				url = "http://" + url;
+			}
+
+			const hasQuery = url.includes("?");
+			const newUrl =
+				url +
+				(hasQuery ? "&" : "?") +
+				"mff=true" +
+				`&api=${apiUrl}` +
+				`&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads`;
+			window.open(newUrl, "_blank");
+		}
 	};
 
 	return (
@@ -197,16 +184,170 @@ const Management: React.FC = () => {
 							},
 						}}
 						Content={
-							<FeatureCardWithButton
-								title={"Check Pixel Health "}
-								subtitle={"Test if your pixel works properly across all pages."}
-								imageSrc={"/check-pixel-health.svg"}
-								img_height={203}
-								img_width={373}
-								onClick={() => {}}
-								buttonLabel={"Test"}
-								showRecommended={false}
-							/>
+							<>
+								<FeatureCardWithButton
+									title={"Check Pixel Health "}
+									subtitle={
+										'When you click "Verify Installation," a new tab will open your website. Status will display top-right after 5-60 seconds - keep tab open.'
+									}
+									imageSrc={"/check-pixel-health.svg"}
+									img_height={203}
+									img_width={373}
+									onClick={() => {
+										handleButtonClick();
+									}}
+									buttonLabel={"Test"}
+									showRecommended={false}
+									mainContent={
+										<>
+											<Box
+												sx={{
+													display: "flex",
+													alignItems: "center",
+													textAlign: "center",
+													justifyContent: "center",
+													gap: 1,
+													mt: 3,
+													mb: 3,
+													pl: 3,
+													position: "relative",
+													flexDirection: "column",
+													width: "100%",
+												}}
+											>
+												<Box
+													sx={{
+														display: "flex",
+														flexDirection: "row",
+														width: "100%",
+														alignItems: "center",
+														gap: 1,
+													}}
+												>
+													<Image
+														src="/confirm-icon.svg"
+														width={16}
+														height={16}
+														alt="confirm-icon"
+													/>
+													<Typography className="second-sub-title">
+														If the pixel is installed correctly, you&apos;ll see
+														a green checkmark.
+													</Typography>
+												</Box>
+
+												<Box
+													sx={{
+														display: "flex",
+														flexDirection: "row",
+														width: "100%",
+														alignItems: "center",
+														gap: 1,
+													}}
+												>
+													<Image
+														src="/close.svg"
+														width={16}
+														height={16}
+														alt="fail-icon"
+													/>
+													<Typography className="second-sub-title">
+														If the pixel cannot be found, a red X icon will
+														display with the warning "Provider id not found"
+													</Typography>
+												</Box>
+											</Box>
+											<Box
+												sx={{
+													backgroundColor: "rgba(254, 247, 223, 1)",
+													border: "1px solid rgba(250, 202, 106, 0.5)",
+													borderRadius: "6px",
+													padding: "16px",
+													display: "flex",
+													gap: 2,
+													position: "relative",
+												}}
+											>
+												<Box sx={{ mt: "2px" }}>
+													<InfoIcon
+														sx={{
+															color: "rgba(235, 193, 46, 1)",
+															fontSize: "20px",
+														}}
+													/>
+												</Box>
+
+												<Box sx={{ flex: 1 }}>
+													<Box
+														sx={{
+															display: "flex",
+															justifyContent: "space-between",
+															width: "100%",
+														}}
+													>
+														<Typography className="first-subtitle">
+															Concise reasons for pixel installation failure:
+														</Typography>
+
+														<Box>
+															<Link
+																href="https://allsourceio.zohodesk.com/portal/en/kb/articles/verify-pixel"
+																underline="hover"
+																target="_blank"
+																sx={{
+																	display: "flex",
+																	alignItems: "center",
+																	gap: 0.5,
+																	fontWeight: 300,
+																	fontSize: "14px",
+																	fontFamily: "Nunito Sans",
+																	color: "rgba(56, 152, 252, 1)",
+																}}
+															>
+																Learn more
+																<OpenInNewIcon sx={{ fontSize: 14 }} />
+															</Link>
+														</Box>
+													</Box>
+
+													<Box
+														component="ul"
+														sx={{
+															pl: 2,
+															mb: 0,
+															display: "flex",
+															flexDirection: "column",
+															gap: 1,
+														}}
+													>
+														<Typography
+															component="li"
+															className="paragraph-description"
+														>
+															<b>Incorrect code placement</b> – Pixel not
+															installed in website header/footer.
+														</Typography>
+														<Typography
+															component="li"
+															className="paragraph-description"
+														>
+															<b>Ad blockers or privacy extensions</b> – Browser
+															plugins blocking tracking scripts.
+														</Typography>
+														<Typography
+															component="li"
+															className="paragraph-description"
+														>
+															<b>Multiple conflicting pixels</b> – Other
+															tracking codes interfering with installation.
+														</Typography>
+													</Box>
+												</Box>
+											</Box>{" "}
+										</>
+									}
+								/>
+							</>
 						}
 						MainBoxStyleSX={{ width: "100%" }}
 						ContentStyleSX={{
