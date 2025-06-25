@@ -1,4 +1,5 @@
 "use client";
+
 import { Box, Typography, Button, BoxClassKey, Link } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import HintCard from "@/app/(client)/components/HintCard";
@@ -102,8 +103,9 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 				{step ? step : 3}. Verify pixel integration on your website
 			</Typography>
 			<Typography className="paragraph">
-				When you click "Verify Installation," a new tab will open your website.
-				Status will display top-right after 5-60 seconds - keep tab open.
+				When you click &quot;Verify Installation,&quot; a new tab will open your
+				website. Status will display top-right after 5-60 seconds - keep tab
+				open.
 			</Typography>
 			<Box
 				sx={{
@@ -153,7 +155,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 					<Image src="/close.svg" width={16} height={16} alt="fail-icon" />
 					<Typography className="second-sub-title">
 						If the pixel cannot be found, a red X icon will display with the
-						warning "Provider id not found"
+						warning &quot;Provider id not found&quot;
 					</Typography>
 				</Box>
 			</Box>
