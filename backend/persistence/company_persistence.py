@@ -1,6 +1,7 @@
 import logging
 import math
 from datetime import datetime, timedelta
+from typing import Optional
 
 import pytz
 from urllib.parse import unquote
@@ -37,12 +38,17 @@ class CompanyPersistence:
 
     def get_full_information_companies_by_filters(
         self,
-        domain_id,
-        from_date,
-        to_date,
-        regions,
-        search_query,
-        timezone_offset,
+        domain_id: int,
+        from_date: Optional[int] = None,
+        to_date: Optional[int] = None,
+        search_query: Optional[str] = None,
+        page: Optional[int] = None,
+        per_page: Optional[int] = None,
+        employee_visits: Optional[str] = None,
+        revenue_range: Optional[str] = None,
+        regions: Optional[str] = None,
+        employees_range: Optional[str] = None,
+        industry: Optional[str] = None,
     ):
         first_visit_subquery = (
             self.db.query(
@@ -53,6 +59,9 @@ class CompanyPersistence:
             .group_by(LeadUser.company_id)
             .subquery()
         )
+        number_of_employees = func.count(LeadUser.id).label(
+            "number_of_employees"
+        )
 
         query = (
             self.db.query(
@@ -60,7 +69,7 @@ class CompanyPersistence:
                 LeadCompany.name,
                 LeadCompany.phone,
                 LeadCompany.linkedin_url,
-                func.count(LeadUser.id).label("number_of_employees"),
+                number_of_employees,
                 first_visit_subquery.c.visited_date,
                 LeadCompany.revenue,
                 LeadCompany.employee_count,
@@ -74,7 +83,7 @@ class CompanyPersistence:
                 LeadCompany.last_updated,
             )
             .join(LeadUser, LeadUser.company_id == LeadCompany.id)
-            .outerjoin(
+            .join(
                 first_visit_subquery,
                 first_visit_subquery.c.company_id == LeadCompany.id,
             )
@@ -94,20 +103,6 @@ class CompanyPersistence:
                 asc(LeadCompany.name), desc(first_visit_subquery.c.visited_date)
             )
         )
-
-        sort_options = {
-            "company_name": FiveXFiveUser.first_name,
-            "phone_name": FiveXFiveUser.business_email,
-            "linkedln": FiveXFiveUser.personal_emails,
-            "empl": FiveXFiveUser.mobile_phone,
-            "gender": FiveXFiveUser.gender,
-            "state": FiveXFiveLocations.state_id,
-            "city": FiveXFiveLocations.city,
-            "age": FiveXFiveUser.age_min,
-            "average_time_sec": LeadUser.avarage_visit_time,
-            "status": LeadUser.is_returning_visitor,
-            "funnel": LeadUser.behavior_type,
-        }
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
@@ -131,6 +126,73 @@ class CompanyPersistence:
                 )
             )
 
+        if employee_visits:
+            min_visits = int(employee_visits.rstrip("+"))
+            if employee_visits.endswith("+"):
+                query = query.having(number_of_employees >= min_visits)
+            else:
+                query = query.having(number_of_employees == min_visits)
+
+        if revenue_range:
+            revenue_map = {
+                "Under 1M": "Under 1 Million",
+                "$1M - $5M": "1 Million to 5 Million",
+                "$5M - $10M": "5 Million to 10 Million",
+                "$10M - $25M": "10 Million to 25 Million",
+                "$25M - $50M": "25 Million to 50 Million",
+                "$50M - $100M": "50 Million to 100 Million",
+                "$100M - $250M": "100 Million to 250 Million",
+                "$250M - $500M": "250 Million to 500 Million",
+                "$500M - $1B": "500 Million to 1 Billion",
+                "$1 Billion +": "1 Billion and Over",
+            }
+
+            revenue = [
+                revenue_map.get(unquote(i.strip()), None)
+                for i in revenue_range.split(",")
+            ]
+
+            revenue_list = [e for e in revenue if e]
+            filters = []
+            if revenue_list:
+                filters.append(LeadCompany.revenue.in_(revenue_list))
+            if "unknown" in revenue_range:
+                filters.append(LeadCompany.revenue.is_(None))
+            if filters:
+                query = query.filter(or_(*filters))
+
+        if employees_range:
+            employees_map = {
+                "1-10": "1 to 10",
+                "11-25": "11 to 25",
+                "26-50": "26 to 50",
+                "51-100": "51 to 100",
+                "101-250": "101 to 250",
+                "251-500": "251 to 500",
+                "501-1000": "501 to 1000",
+                "1001-5000": "1001 to 5000",
+                "2001-5000": "2001 to 5000",
+                "5001-10000": "5001 to 10000",
+                "10000+": "10000+",
+            }
+
+            employees = [
+                employees_map.get(unquote(i.strip()), None)
+                for i in employees_range.split(",")
+            ]
+            employees_list = [e for e in employees if e]
+            filters = []
+            if employees_list:
+                filters.append(LeadCompany.employee_count.in_(employees_list))
+            if "unknown" in employees_range:
+                filters.append(LeadCompany.employee_count.is_(None))
+            if filters:
+                query = query.filter(or_(*filters))
+
+        if industry:
+            industries = [unquote(i.strip()) for i in industry.split(",")]
+            query = query.filter(LeadCompany.primary_industry.in_(industries))
+
         if regions:
             filters = []
             region_list = regions.split(",")
@@ -148,38 +210,18 @@ class CompanyPersistence:
             query = query.filter(or_(*filters))
 
         if search_query:
-            query = (
-                query.outerjoin(
-                    FiveXFiveUsersEmails,
-                    FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
-                )
-                .outerjoin(
-                    FiveXFiveEmails,
-                    FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
-                )
-                .outerjoin(
-                    FiveXFiveUsersPhones,
-                    FiveXFiveUsersPhones.user_id == FiveXFiveUser.id,
-                )
-                .outerjoin(
-                    FiveXFivePhones,
-                    FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id,
-                )
-            )
-
             filters = [
-                FiveXFiveEmails.email.ilike(f"{search_query}%"),
-                FiveXFiveEmails.email_host.ilike(f"{search_query}%"),
-                FiveXFivePhones.number.ilike(f"{search_query}%"),
+                LeadCompany.name.ilike(f"{search_query}%"),
+                LeadCompany.phone.ilike(f"%{search_query.replace('+', '')}%"),
             ]
-            search_query = search_query.split()
 
             query = query.filter(or_(*filters))
 
-        leads = query.limit(1000).all()
-        return leads
+        offset = (page - 1) * per_page
+        companies = query.limit(per_page).offset(offset).all()
+        return companies
 
-    def get_full_companies_by_ids(self, domain_id, companies_ids):
+    def get_company_by_id(self, domain_id: int, company_id: int):
         first_visit_subquery = (
             self.db.query(
                 LeadUser.company_id,
@@ -189,14 +231,16 @@ class CompanyPersistence:
             .group_by(LeadUser.company_id)
             .subquery()
         )
-
+        number_of_employees = func.count(LeadUser.id).label(
+            "number_of_employees"
+        )
         query = (
             self.db.query(
                 LeadCompany.id,
                 LeadCompany.name,
                 LeadCompany.phone,
                 LeadCompany.linkedin_url,
-                func.count(LeadUser.id).label("number_of_employees"),
+                number_of_employees,
                 first_visit_subquery.c.visited_date,
                 LeadCompany.revenue,
                 LeadCompany.employee_count,
@@ -226,13 +270,10 @@ class CompanyPersistence:
                 FiveXFiveLocations.city,
                 States.state_name,
             )
-            .order_by(
-                asc(LeadCompany.name), desc(first_visit_subquery.c.visited_date)
-            )
-            .filter(LeadCompany.id.in_(companies_ids))
+            .filter(LeadCompany.id == company_id)
         )
 
-        leads = query.all()
+        leads = query.first()
         return leads
 
     def get_full_information_employee(self, domain_id, company_id, employee_id):
@@ -323,13 +364,16 @@ class CompanyPersistence:
         LeadUserCompanyAlias = aliased(LeadUserCompany)
         FirstLeadUserAlias = aliased(LeadUser)
         LeadUserAlias = aliased(LeadUser)
+        number_of_employees = func.count(LeadUserAlias.id).label(
+            "number_of_employees"
+        )
         query = (
             self.db.query(
                 LeadCompany.id,
                 LeadCompany.name,
                 LeadCompany.phone,
                 LeadCompany.linkedin_url,
-                func.count(LeadUserAlias.id).label("number_of_employees"),
+                number_of_employees,
                 LeadsVisits.start_date.label("visited_date"),
                 LeadsVisits.start_time.label("visited_time"),
                 LeadCompany.revenue,
@@ -354,7 +398,7 @@ class CompanyPersistence:
                 == FirstLeadUserAlias.id,
             )
             .join(LeadUserAlias, LeadUserAlias.company_id == LeadCompany.id)
-            .outerjoin(
+            .join(
                 LeadsVisits, LeadsVisits.id == FirstLeadUserAlias.first_visit_id
             )
             .outerjoin(
@@ -516,10 +560,10 @@ class CompanyPersistence:
 
         if employee_visits:
             min_visits = int(employee_visits.rstrip("+"))
-            if employee_visits == "+5":
-                query = query.having(func.count(LeadUser.id) >= min_visits)
+            if employee_visits.endswith("+"):
+                query = query.having(number_of_employees >= min_visits)
             else:
-                query = query.having(func.count(LeadUser.id) == min_visits)
+                query = query.having(number_of_employees == min_visits)
 
         if regions:
             filters = []
