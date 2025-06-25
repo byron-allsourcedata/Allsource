@@ -491,7 +491,7 @@ class UserPersistence:
         )
 
         if not test_users:
-            query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
+            query = query.filter(Users.full_name.ilike("%#test_allsource%"))
 
         if filters.get("statuses"):
             statuses = [
