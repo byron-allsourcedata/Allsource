@@ -476,8 +476,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							fontSize: "12px",
 							fontWeight: "400",
 							lineHeight: "normal",
-							backgroundColor: getStatusStyle(row.status ?? "")
-								.background,
+							backgroundColor: getStatusStyle(row.status ?? "").background,
 							color: "#4A4A4A",
 							justifyContent: "center",
 							minWidth: "130px",

@@ -373,7 +373,8 @@ class UserPersistence:
                     .filter(
                         UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install <= timedelta(hours=24),
+                        func.now() - UserDomains.date_pixel_install
+                        <= timedelta(hours=24),
                     )
                     .exists(),
                     ~self.db.query(LeadUser.id)
@@ -388,7 +389,8 @@ class UserPersistence:
                     .filter(
                         UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install > timedelta(hours=24),
+                        func.now() - UserDomains.date_pixel_install
+                        > timedelta(hours=24),
                     )
                     .exists(),
                     ~self.db.query(LeadUser.id)
