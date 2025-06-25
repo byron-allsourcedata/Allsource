@@ -3,7 +3,7 @@ import { Box, Button, SxProps, Theme } from "@mui/material";
 
 interface ToggleButtonsProps {
 	buttonNames?: string[];
-	dotColors: string[];
+	dotColors?: string[];
 	buttonMapping: Record<string, string>;
 	selectedButton: string[];
 	handleButtonButtonClick: (label: string) => void;
