@@ -253,7 +253,8 @@ const Management: React.FC = () => {
 													/>
 													<Typography className="second-sub-title">
 														If the pixel cannot be found, a red X icon will
-														display with the warning "Provider id not found"
+														display with the warning &quot;Provider id not
+														found&quot;
 													</Typography>
 												</Box>
 											</Box>
