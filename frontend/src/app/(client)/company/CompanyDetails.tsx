@@ -77,17 +77,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 	};
 
 	const handleDownload = async () => {
-		const requestBody = {
-			companies_ids: company.id ? [company.id] : [],
-		};
 		try {
-			const response = await axiosInstance.post(
-				"/company/download-company",
-				requestBody,
-				{
-					responseType: "blob",
+			const response = await axiosInstance.get("/company/download-companies", {
+				params: {
+					company_id: company.id,
 				},
-			);
+				responseType: "blob",
+			});
 
 			if (response.status === 200) {
 				const url = window.URL.createObjectURL(new Blob([response.data]));
