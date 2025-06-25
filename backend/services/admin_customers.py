@@ -238,46 +238,46 @@ class AdminCustomersService:
             sources_count = agg.get("sources_count", 0)
             lookalikes_count = agg.get("lookalikes_count", 0)
 
-            user_dict = {
-                "id": user_id,
-                "email": user.email,
-                "full_name": user.full_name,
-                "created_at": user.created_at,
-                "last_login": user.last_login,
-                "role": user.role,
-                "is_email_confirmed": user.is_email_confirmed,
-                "is_book_call_passed": user.is_book_call_passed,
-                "subscription_plan": user.subscription_plan,
-                "credits_count": user.credits_count,
-                "pixel_installed_count": pixel_installed_count,
-                "contacts_count": contacts_count,
-                "sources_count": sources_count,
-                "lookalikes_count": lookalikes_count,
-            }
+            # user_dict = {
+            #     "id": user_id,
+            #     "email": user.email,
+            #     "full_name": user.full_name,
+            #     "created_at": user.created_at,
+            #     "last_login": user.last_login,
+            #     "role": user.role,
+            #     "is_email_confirmed": user.is_email_confirmed,
+            #     "is_book_call_passed": user.is_book_call_passed,
+            #     "subscription_plan": user.subscription_plan,
+            #     "credits_count": user.credits_count,
+            #     "pixel_installed_count": pixel_installed_count,
+            #     "contacts_count": contacts_count,
+            #     "sources_count": sources_count,
+            #     "lookalikes_count": lookalikes_count,
+            # }
 
-            payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(
-                user_dict
-            )
-            if payment_status == UserAuthorizationStatus.SUCCESS:
-                user_plan = (
-                    self.db.query(
-                        UserSubscriptions.is_trial, UserSubscriptions.plan_end
-                    )
-                    .filter(
-                        UserSubscriptions.user_id == user_id,
-                        UserSubscriptions.status.in_(("active", "canceled")),
-                    )
-                    .order_by(
-                        UserSubscriptions.status,
-                        UserSubscriptions.plan_end.desc(),
-                    )
-                    .first()
-                )
-                if user_plan:
-                    if pixel_installed_count >= 1:
-                        payment_status = "PIXEL_VERIFIED"
-                    else:
-                        payment_status = "USER_AUTHENTICATED"
+            # payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(
+            #     user_dict
+            # )
+            # if payment_status == UserAuthorizationStatus.SUCCESS:
+            #     user_plan = (
+            #         self.db.query(
+            #             UserSubscriptions.is_trial, UserSubscriptions.plan_end
+            #         )
+            #         .filter(
+            #             UserSubscriptions.user_id == user_id,
+            #             UserSubscriptions.status.in_(("active", "canceled")),
+            #         )
+            #         .order_by(
+            #             UserSubscriptions.status,
+            #             UserSubscriptions.plan_end.desc(),
+            #         )
+            #         .first()
+            #     )
+            #     if user_plan:
+            #         if pixel_installed_count >= 1:
+            #             payment_status = "PIXEL_VERIFIED"
+            #         else:
+            #             payment_status = "USER_AUTHENTICATED"
 
             result.append(
                 {
@@ -285,7 +285,7 @@ class AdminCustomersService:
                     "email": user.email,
                     "full_name": user.full_name,
                     "created_at": user.created_at,
-                    "payment_status": payment_status,
+                    "status": user.user_status,
                     "is_trial": self.plans_persistence.get_trial_status_by_user_id(
                         user_id
                     ),

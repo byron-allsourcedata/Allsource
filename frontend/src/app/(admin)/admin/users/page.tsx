@@ -43,7 +43,7 @@ interface UserData {
 	full_name: string;
 	email: string;
 	created_at: string;
-	payment_status?: string;
+	status?: string;
 	is_trial?: boolean;
 	last_login: string;
 	invited_by_email?: string;

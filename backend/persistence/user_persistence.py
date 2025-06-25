@@ -347,63 +347,90 @@ class UserPersistence:
 
         return query.all()
 
-    def calculate_user_status():
+    def calculate_user_status(self):
         return case(
-            [
-                (
-                    Users.is_email_confirmed == False,
-                    UserStatusInAdmin.NEED_CONFIRM_EMAIL.value,
-                ),
-                (
-                    or_(
-                        UserDomains.id.is_(None),
-                        UserDomains.is_pixel_installed == False,
-                    ),
-                    UserStatusInAdmin.PIXEL_NOT_INSTALLED.value,
-                ),
-                (
-                    and_(
+            (
+                Users.is_email_confirmed == False,
+                UserStatusInAdmin.NEED_CONFIRM_EMAIL.value,
+            ),
+            (
+                or_(
+                    ~self.db.query(UserDomains.id)
+                    .filter(UserDomains.user_id == Users.id)
+                    .exists(),
+                    ~self.db.query(UserDomains.id)
+                    .filter(
+                        UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install
-                        <= timedelta(hours=24),
-                        ~exists().where(LeadUser.domain_id == UserDomains.id),
-                    ),
-                    UserStatusInAdmin.WAITING_CONTACTS.value,
+                    )
+                    .exists(),
                 ),
-                (
-                    and_(
+                UserStatusInAdmin.PIXEL_NOT_INSTALLED.value,
+            ),
+            (
+                and_(
+                    self.db.query(UserDomains.id)
+                    .filter(
+                        UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install
-                        > timedelta(hours=24),
-                        ~exists().where(LeadUser.domain_id == UserDomains.id),
-                    ),
-                    UserStatusInAdmin.RESOLUTION_FAILED.value,
+                        func.now() - UserDomains.date_pixel_install <= timedelta(hours=24),
+                    )
+                    .exists(),
+                    ~self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
                 ),
-                (
-                    and_(
-                        exists().where(LeadUser.domain_id == UserDomains.id),
-                        ~exists().where(
-                            IntegrationUserSync.domain_id == UserDomains.id
-                        ),
-                    ),
-                    UserStatusInAdmin.SYNC_NOT_COMPLETED.value,
+                UserStatusInAdmin.WAITING_CONTACTS.value,
+            ),
+            (
+                and_(
+                    self.db.query(UserDomains.id)
+                    .filter(
+                        UserDomains.user_id == Users.id,
+                        UserDomains.is_pixel_installed == True,
+                        func.now() - UserDomains.date_pixel_install > timedelta(hours=24),
+                    )
+                    .exists(),
+                    ~self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
                 ),
-                (
-                    and_(
-                        exists().where(
-                            IntegrationUserSync.domain_id == UserDomains.id
-                        ),
-                        ~exists().where(
-                            IntegrationUserSync.sync_status == True
-                        ),
-                    ),
-                    UserStatusInAdmin.SYNC_ERROR.value,
+                UserStatusInAdmin.RESOLUTION_FAILED.value,
+            ),
+            (
+                and_(
+                    self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
+                    ~self.db.query(IntegrationUserSync.id)
+                    .filter(IntegrationUserSync.domain_id == UserDomains.id)
+                    .exists(),
                 ),
-                (
-                    exists().where(IntegrationUserSync.sync_status == True),
-                    UserStatusInAdmin.DATA_SYNCING.value,
+                UserStatusInAdmin.SYNC_NOT_COMPLETED.value,
+            ),
+            (
+                and_(
+                    self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
+                    ~self.db.query(IntegrationUserSync.id)
+                    .filter(
+                        IntegrationUserSync.domain_id == UserDomains.id,
+                        IntegrationUserSync.sync_status == True,
+                    )
+                    .exists(),
                 ),
-            ]
+                UserStatusInAdmin.SYNC_ERROR.value,
+            ),
+            (
+                self.db.query(IntegrationUserSync.id)
+                .filter(
+                    IntegrationUserSync.domain_id == UserDomains.id,
+                    IntegrationUserSync.sync_status == True,
+                )
+                .exists(),
+                UserStatusInAdmin.DATA_SYNCING.value,
+            ),
         )
 
     def get_base_customers(
@@ -442,12 +469,6 @@ class UserPersistence:
             .join(
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
-            )
-            .outerjoin(UserDomains, UserDomains.user_id == Users.id)
-            .outerjoin(LeadUser, LeadUser.domain_id == UserDomains.id)
-            .outerjoin(
-                IntegrationUserSync,
-                IntegrationUserSync.domain_id == UserDomains.id,
             )
             .filter(Users.role.any("customer"))
         )
