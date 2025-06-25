@@ -82,7 +82,7 @@ async def get_users(
         join_date_start=join_date_start,
         join_date_end=join_date_end,
         test_users=test_users,
-        statuses=statuses
+        statuses=statuses,
     )
     return users
 

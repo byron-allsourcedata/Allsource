@@ -206,7 +206,6 @@ const Users: React.FC = () => {
 				}
 			}
 
-
 			if (showTestUsers) {
 				url += `&test_users=true`;
 			}

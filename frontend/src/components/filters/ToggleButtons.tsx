@@ -8,7 +8,7 @@ interface ToggleButtonsProps {
 	selectedButton: string[];
 	handleButtonButtonClick: (label: string) => void;
 	sx?: SxProps<Theme>;
-	multiColorDot?: React.ReactNode
+	multiColorDot?: React.ReactNode;
 }
 /**
  * ToggleButtons Component
@@ -43,7 +43,7 @@ const ToggleButtons: React.FC<ToggleButtonsProps> = ({
 	buttonMapping,
 	selectedButton,
 	handleButtonButtonClick,
-	sx = {}
+	sx = {},
 }) => {
 	return (
 		<Box sx={sx}>
@@ -79,7 +79,16 @@ const ToggleButtons: React.FC<ToggleButtonsProps> = ({
 							lineHeight: "20px !important",
 						}}
 					>
-						{dotColors.length > 0 && <Box sx={{borderRadius: "50%", width: "8px", height: "8px", backgroundColor: dotColors[index]}}/>}
+						{dotColors.length > 0 && (
+							<Box
+								sx={{
+									borderRadius: "50%",
+									width: "8px",
+									height: "8px",
+									backgroundColor: dotColors[index],
+								}}
+							/>
+						)}
 						{label}
 					</Button>
 				);

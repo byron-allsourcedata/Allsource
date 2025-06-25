@@ -477,7 +477,10 @@ class UserPersistence:
             query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
 
         if filters.get("statuses"):
-            statuses = [status.strip().lower() for status in filters["statuses"].split(",")]
+            statuses = [
+                status.strip().lower()
+                for status in filters["statuses"].split(",")
+            ]
             query = query.filter(func.lower(status_case).in_(statuses))
 
         if filters.get("last_login_date_start"):

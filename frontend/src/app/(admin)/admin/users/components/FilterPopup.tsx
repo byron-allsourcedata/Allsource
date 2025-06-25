@@ -85,13 +85,15 @@ const dateTypes: Record<string, string> = {
 };
 
 const statusMapping: Record<string, string[]> = {
-	negative: ["Need confirm email",
+	negative: [
+		"Need confirm email",
 		"Pixel Not Installed",
 		"Resolution Failed",
-		"Sync Error"],
+		"Sync Error",
+	],
 	neutral: ["Waiting Contacts", "Sync Not Complited"],
-	positive: ["Data Syncing"]
-}
+	positive: ["Data Syncing"],
+};
 
 const FilterPopup: React.FC<FilterPopupProps> = ({
 	open,
@@ -506,14 +508,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 
 		const newSelectedStatuses: string[] = [];
 
-
 		Object.entries(statusMapping).forEach(([key, statuses]) => {
-		  const allActive = statuses.every((status) => filters.statuses[status]);
-		  if (allActive) {
-			newSelectedStatuses.push(key.charAt(0).toUpperCase() + key.slice(1));
-		  }
+			const allActive = statuses.every((status) => filters.statuses[status]);
+			if (allActive) {
+				newSelectedStatuses.push(key.charAt(0).toUpperCase() + key.slice(1));
+			}
 		});
-	  
+
 		setSelectedStatusTarget((prev) => [...prev, ...newSelectedStatuses]);
 	};
 
@@ -666,7 +667,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		setIsCreatedDateOpen(false);
 		setIsJoinDateOpen(false);
 
-		setCheckedFiltersStatuses({})
+		setCheckedFiltersStatuses({});
 		setDateRange({
 			fromDate: null,
 			toDate: null,
@@ -720,10 +721,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		Positive: "Positive",
 	};
 
-	const [selectedStatusTarget, setSelectedStatusTarget] = useState<string[]>([]);
+	const [selectedStatusTarget, setSelectedStatusTarget] = useState<string[]>(
+		[],
+	);
 
 	const handleStatusTarget = (label: string) => {
-		handleStatusChange(statusMapping[label.toLowerCase()])
+		handleStatusChange(statusMapping[label.toLowerCase()]);
 
 		const mappedStatusTarget = statusTargetMapping[label];
 		setSelectedStatusTarget((prev) =>
@@ -869,12 +872,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 										display: "flex",
 										flexDirection: "column",
 										gap: 0,
-										width: "70%"
+										width: "70%",
 									}}
 								>
 									<ToggleButtons
 										buttonNames={["Negative", "Neutral", "Positive"]}
-										dotColors={["rgba(244, 87, 69, 1)", "rgba(224, 176, 5, 1)", "rgba(110, 193, 37, 1)"]}
+										dotColors={[
+											"rgba(244, 87, 69, 1)",
+											"rgba(224, 176, 5, 1)",
+											"rgba(110, 193, 37, 1)",
+										]}
 										buttonMapping={statusTargetMapping}
 										selectedButton={selectedStatusTarget}
 										handleButtonButtonClick={handleStatusTarget}
