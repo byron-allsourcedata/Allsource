@@ -346,18 +346,9 @@ class UserPersistence:
             query = query.filter(func.DATE(Users.created_at) <= end_date)
 
         return query.all()
-
-    def get_base_customers(
-        self,
-        search_query,
-        page,
-        per_page,
-        sort_by,
-        sort_order,
-        test_users,
-        filters,
-    ):
-        status_case = case(
+    
+    def calculate_user_status(): 
+        return case(
             [
                 (
                     Users.is_email_confirmed == False,
@@ -414,6 +405,19 @@ class UserPersistence:
                 ),
             ]
         )
+
+    def get_base_customers(
+        self,
+        search_query,
+        page,
+        per_page,
+        sort_by,
+        sort_order,
+        test_users,
+        filters,
+    ):
+        status_case = self.calculate_user_status()
+
         query = (
             self.db.query(
                 Users.id,
@@ -450,6 +454,9 @@ class UserPersistence:
 
         if not test_users:
             query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
+        
+        if filters.get("statuses"):
+            query = query.filter(status_case.in_(filters["statuses"]))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(

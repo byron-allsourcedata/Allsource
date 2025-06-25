@@ -48,6 +48,11 @@ class UserDomains(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
+    date_pixel_install = Column(
+        TIMESTAMP,
+        nullable=True,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     api_key = Column(VARCHAR, nullable=True)
     viewed_product_part_url = Column(VARCHAR, nullable=True)
     is_converted_sales_installed = Column(

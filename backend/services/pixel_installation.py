@@ -4,6 +4,8 @@ import os
 import re
 from typing import Optional
 
+from datetime import timezone
+
 from fastapi import HTTPException, status
 from ffmpeg import run_async
 from sqlalchemy.orm import Session
@@ -135,6 +137,7 @@ class PixelInstallationService:
                 {
                     UserDomains.domain: normalize_url(url),
                     UserDomains.is_pixel_installed: True,
+                    UserDomains.date_pixel_install: datetime.now(timezone.utc).replace(tzinfo=None),
                 },
                 synchronize_session=False,
             )

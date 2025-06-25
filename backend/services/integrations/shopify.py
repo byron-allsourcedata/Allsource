@@ -437,7 +437,7 @@ class ShopifyIntegrationService:
                 self.db.query(UserDomains).filter(
                     UserDomains.id == user_integration.domain_id
                 ).update(
-                    {UserDomains.is_pixel_installed: False},
+                    {UserDomains.is_pixel_installed: False, UserDomains.date_pixel_install: None},
                     synchronize_session=False,
                 )
             self.db.query(User).filter(User.shop_id == str(shop_id)).update(
