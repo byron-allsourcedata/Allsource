@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import json
 import logging
@@ -1385,6 +1386,13 @@ def get_root_user(db_session: Db):
     return result
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--log", choices=["INFO", "DEBUG"], default="INFO")
+    parser.add_argument("--update-total-leads", action="store_true")
+    return parser.parse_args()
+
+
 async def main():
     resolver = Resolver()
     db_session = await resolver.resolve(Db)
@@ -1395,6 +1403,7 @@ async def main():
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
+    args = parse_args()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
