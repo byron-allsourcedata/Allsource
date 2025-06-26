@@ -112,6 +112,7 @@ class ExportLeads(BaseModel):
 class DataMap(BaseModel):
     type: str
     value: str
+    is_constant: Optional[bool] = None
 
 
 class Campaign(BaseModel):

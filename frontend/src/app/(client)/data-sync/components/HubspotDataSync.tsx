@@ -37,6 +37,12 @@ interface OnmisendDataSyncProps {
 	boxShadow?: string;
 }
 
+interface CustomRow {
+	type: string;
+	value: string;
+	is_constant?: boolean;
+}
+
 const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 	open,
 	onClose,
@@ -48,32 +54,16 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = React.useState("1");
-	const [checked, setChecked] = useState(false);
 	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
 	const [tagName, setTagName] = useState<string>("");
-	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
-	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-	const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
-		null,
-	);
-	const [apiKeyError, setApiKeyError] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
-	const [listNameError, setListNameError] = useState(false);
-	const [tagNameError, setTagNameError] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [newMapListName, setNewMapListName] = useState<string>("");
-	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-	const [maplistNameError, setMapListNameError] = useState(false);
 	const [customFieldsList, setCustomFieldsList] = useState([
 		{ type: "company", value: "company_name" },
 		{ type: "website", value: "company_domain" },
@@ -87,8 +77,12 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		{ type: "zip", value: "personal_zip" },
 	]);
 	const [customFields, setCustomFields] = useState<
-		{ type: string; value: string }[]
+		{ type: string; value: string; is_constant?: boolean }[]
 	>([]);
+	const extendedCustomFieldsList = [
+		{ value: "__constant__", type: "Constant field" },
+		...customFieldsList,
+	];
 
 	useEffect(() => {
 		if (data?.data_map) {
@@ -111,36 +105,31 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		setCustomFields(customFields.filter((_, i) => i !== index));
 	};
 
-	const handleChangeField = (index: number, field: string, value: string) => {
-		setCustomFields(
-			customFields.map((item, i) =>
-				i === index ? { ...item, [field]: value } : item,
-			),
-		);
+	const handleChangeField = (
+		index: number,
+		key: keyof CustomRow,
+		value: string | boolean | undefined,
+	) => {
+		setCustomFields((prev) => {
+			const updated = [...prev];
+			updated[index] = {
+				...updated[index],
+				[key]: value,
+			};
+			return updated;
+		});
 	};
+
 	const resetToDefaultValues = () => {
 		setLoading(false);
 		setValue("1");
-		setChecked(false);
 		setSelectedRadioValue("");
-		setAnchorEl(null);
-		setShowCreateForm(false);
 		setNewListName("");
 		setTagName("");
-		setIsShrunk(false);
-		setIsDropdownOpen(false);
-		setOpenDropdown(null);
-		setOpenDropdownMaximiz(null);
-		setApiKeyError(false);
 		setTab2Error(false);
 		setIsDropdownValid(false);
-		setListNameError(false);
-		setTagNameError(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
-		setNewMapListName("");
-		setShowCreateMapForm(false);
-		setMapListNameError(false);
 	};
 
 	useEffect(() => {
@@ -199,61 +188,11 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		}
 	};
 
-	// Handle dropdown toggle specifically when clicking on the arrow
-	const handleDropdownToggle = (event: React.MouseEvent) => {
-		event.stopPropagation(); // Prevent triggering the input field click
-		setIsDropdownOpen((prev) => !prev);
-		setAnchorEl(textFieldRef.current);
-	};
-
-	// Handle menu close
-	const handleClose = () => {
-		setAnchorEl(null);
-		setShowCreateForm(false);
-		setIsDropdownOpen(false);
-		setNewListName(""); // Clear new list name when closing
-	};
-
-	const handleMapClose = () => {
-		setValue("1");
-		setShowCreateMapForm(false);
-		setNewMapListName("");
-	};
-
-	// Handle Save action for the create new list form
-	const handleSave = async () => {
-		let valid = true;
-
-		// Validate List Name
-		if (newListName.trim() === "") {
-			setListNameError(true);
-			valid = false;
-		} else {
-			setListNameError(false);
-		}
-
-		// Validate Tag Name
-		if (tagName.trim() === "") {
-			setTagNameError(true);
-			valid = false;
-		} else {
-			setTagNameError(false);
-		}
-
-		// If valid, save and close
-		if (valid) {
-			handleClose();
-		}
-	};
-
-	const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setChecked(event.target.checked);
-	};
-
-	const label = { inputProps: { "aria-label": "Switch demo" } };
-
-	const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-		setValue(newValue);
+	const isDuplicate = (value: string, currentIndex: number) => {
+		return (
+			customFields.filter((f, idx) => f.type === value && idx !== currentIndex)
+				.length > 0
+		);
 	};
 
 	const hubspotStyles = {
@@ -309,63 +248,6 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 
 	type HighlightConfig = {
 		[keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
-	};
-
-	const highlightText = (text: string, highlightConfig: HighlightConfig) => {
-		// Start with the whole text as a single part.
-		let parts: (string | JSX.Element)[] = [text];
-
-		// For each keyword, split the text and insert the highlighted part.
-		Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
-			const { color, fontWeight } = highlightConfig[keyword];
-			parts = parts.flatMap(
-				(part, partIndex) =>
-					// Only split if the part is a string and contains the keyword.
-					typeof part === "string" && part.includes(keyword)
-						? part.split(keyword).flatMap((segment, index, array) =>
-								index < array.length - 1
-									? [
-											segment,
-											<span
-												style={{
-													color: color || "inherit",
-													fontWeight: fontWeight || "normal",
-												}}
-												key={`highlight-${keywordIndex}-${partIndex}-${index}`}
-											>
-												{keyword}
-											</span>,
-										]
-									: [segment],
-							)
-						: [part], // Otherwise, just keep the part as is (could be JSX).
-			);
-		});
-
-		return <>{parts}</>; // Return the array wrapped in a fragment.
-	};
-
-	const instructions = [
-		{
-			id: "unique-id-1",
-			text: "Go to the Hubspot website and log into your account.",
-		},
-	];
-
-	// Define the keywords and their styles
-	const highlightConfig: HighlightConfig = {
-		Hubspot: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" }, // Blue and bold
-		Settings: { color: "#707071", fontWeight: "500" }, // Bold only
-		"Create Private API Key": { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Lists: { color: "#707071", fontWeight: "500" }, // Bold only
-		Profiles: { color: "#707071", fontWeight: "500" }, // Bold only
-		Metrics: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Events: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Templates: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Create: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		"API Key": { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Connect: { color: "#707071", fontWeight: "500" }, // Bold only
-		Export: { color: "#707071", fontWeight: "500" }, // Blue and bold
 	};
 
 	// Define buttons for each tab
@@ -506,21 +388,6 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 			canDelete: true, // This new row can be deleted
 		};
 		setRows([...rows, newRow]);
-	};
-	const handleDropdownOpen = (id: number) => {
-		setOpenDropdown(id); // Set the open state for the current dropdown
-	};
-
-	const handleDropdownMaximizOpen = (id: number) => {
-		setOpenDropdownMaximiz(id);
-	};
-
-	const handleDropdownClose = () => {
-		setOpenDropdown(null); // Reset when dropdown closes
-	};
-
-	const handleDropdownMaximizClose = () => {
-		setOpenDropdownMaximiz(null);
 	};
 
 	const validateTab2 = () => {
@@ -986,19 +853,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 										<Grid
 											item
 											xs="auto"
-											sm={1}
-											sx={{
-												"@media (max-width:599px)": {
-													minWidth: "50px",
-												},
-											}}
-										>
-											&nbsp;
-										</Grid>
-										<Grid
-											item
-											xs="auto"
-											sm={5}
+											sm={7}
 											sx={{
 												textAlign: "center",
 												"@media (max-width:599px)": {
@@ -1012,9 +867,6 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 												height={20}
 												width={24}
 											/>
-										</Grid>
-										<Grid item xs="auto" sm={1}>
-											&nbsp;
 										</Grid>
 									</Grid>
 
@@ -1318,73 +1170,158 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 												key={index}
 											>
 												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														select
-														fullWidth
-														variant="outlined"
-														label="Custom Field"
-														value={field.type}
-														onChange={(e) =>
-															handleChangeField(index, "type", e.target.value)
-														}
-														InputLabelProps={{
-															sx: {
-																fontFamily: "Nunito Sans",
-																fontSize: "14px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																left: "3px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
+													{field.is_constant ? (
+														<TextField
+															fullWidth
+															variant="outlined"
+															label="Field Name"
+															value={field.type}
+															onChange={(e) =>
+																handleChangeField(index, "type", e.target.value)
+															}
+															placeholder="Enter field name"
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "Nunito Sans",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
 																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
-														}}
-														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "Roboto",
-																		color: "#202124",
-																		fontSize: "12px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "Roboto",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
 																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
 																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
+															}}
+														/>
+													) : (
+														<TextField
+															select
+															fullWidth
+															variant="outlined"
+															label="Custom Field"
+															value={field.type}
+															onChange={(e) => {
+																const selected = e.target.value;
+																if (selected === "__constant__") {
+																	setCustomFields((prev) => {
+																		const updated = [...prev];
+																		updated[index] = {
+																			...updated[index],
+																			type: "",
+																			is_constant: true,
+																		};
+																		return updated;
+																	});
+																} else {
+																	handleChangeField(index, "type", selected);
+																	handleChangeField(
+																		index,
+																		"is_constant",
+																		undefined,
+																	);
+																}
+															}}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "Nunito Sans",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
 																},
-															},
-														}}
-													>
-														{customFieldsList.map((item) => (
-															<MenuItem
-																key={item.value}
-																value={item.value}
-																disabled={customFields.some(
-																	(f) => f.type === item.value,
-																)} // Дизейблим выбранные
-															>
-																{item.type}
-															</MenuItem>
-														))}
-													</TextField>
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "Roboto",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+															error={isDuplicate(field.type, index)}
+															helperText={
+																isDuplicate(field.type, index)
+																	? "This field name already exists"
+																	: ""
+															}
+														>
+															{extendedCustomFieldsList.map((item) => (
+																<MenuItem
+																	key={item.value}
+																	value={item.value}
+																	disabled={
+																		item.value !== "__constant__" &&
+																		customFields.some(
+																			(f) => f.type === item.value,
+																		)
+																	}
+																>
+																	{item.type}
+																</MenuItem>
+															))}
+														</TextField>
+													)}
 												</Grid>
 												<Grid
 													item
@@ -1510,7 +1447,6 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 								</Box>
 							</TabPanel>
 						</TabContext>
-						{/* Button based on selected tab */}
 					</Box>
 					<Box
 						sx={{
