@@ -1321,7 +1321,30 @@ def process_confirmed(session: Session):
     logging.info("Lead confirmed")
 
 
-def update_total_leads(db_session: Db, domain_count_list: List[dict]):
+def update_total_leads(db_session: Db):
+    users = db_session.query(Users).all()
+
+    for user in users:
+        total_leads = 0
+        domains = db_session.query(UserDomains).filter_by(user_id=user.id).all()
+
+        for domain in domains:
+            domain_leads = (
+                db_session.query(LeadUser)
+                .filter_by(domain_id=domain.id)
+                .count()
+            )
+            domain.total_leads = domain_leads
+            total_leads += domain_leads
+            db_session.add(domain)
+
+        user.total_leads = total_leads
+        db_session.add(user)
+
+    db_session.commit()
+
+
+def update_hash_leads(db_session: Db, domain_count_list: List[dict]):
     totals = defaultdict(int)
     for item in domain_count_list:
         totals[item["user_id"]] += item["count"]
@@ -1393,6 +1416,8 @@ async def main():
 
     logging.info("Started")
     result = get_root_user(db_session=db_session)
+    if args.update_total_leads:
+        update_total_leads(db_session=db_session)
     while True:
         try:
             domain_count_list = await process_files(
@@ -1406,8 +1431,8 @@ async def main():
             )
             await connection.close()
             process_confirmed(session=db_session)
-            if args.update_total_leads and domain_count_list:
-                update_total_leads(
+            if domain_count_list:
+                update_hash_leads(
                     db_session=db_session, domain_count_list=domain_count_list
                 )
             logging.info("Sleeping for 10 minutes...")
