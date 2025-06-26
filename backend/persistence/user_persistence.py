@@ -493,7 +493,7 @@ class UserPersistence:
         )
 
         if test_users:
-            query = query.filter(~Users.full_name.like("%#test%"))
+            query = query.filter(~Users.full_name.like("#test%"))
 
         if filters.get("statuses"):
             statuses = [
