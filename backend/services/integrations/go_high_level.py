@@ -4,8 +4,6 @@ from typing import Tuple, Annotated
 
 import httpx
 from fastapi import HTTPException, Depends
-from gohighlevel import GoHighLevel
-from gohighlevel.classes.auth.credentials import Credentials
 
 from config.util import getenv
 from enums import (
@@ -58,6 +56,7 @@ class GoHighLevelIntegrationsService:
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
+        self.TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token"
 
     def __handle_request(
         self,
@@ -67,7 +66,6 @@ class GoHighLevelIntegrationsService:
         json: dict = None,
         data: dict = None,
         params: dict = None,
-        api_key: str = None,
     ):
         if not headers:
             headers = {
@@ -77,24 +75,35 @@ class GoHighLevelIntegrationsService:
         response = self.client.request(
             method, url, headers=headers, json=json, data=data, params=params
         )
-        if response.is_redirect:
-            redirect_url = response.headers.get("Location")
-            if redirect_url:
-                response = self.client.request(
-                    method,
-                    redirect_url,
-                    headers=headers,
-                    json=json,
-                    data=data,
-                    params=params,
-                )
         return response
+
+    def refresh_ghl_token(self, refresh_token: str) -> dict:
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        data = {
+            "grant_type": "refresh_token",
+            "refresh_token": refresh_token,
+            "client_id": os.getenv("CLIENT_GO_HIGH_LEVEL_ID"),
+            "client_secret": os.getenv("CLIENT_GO_HIGH_LEVEL_SECRET"),
+        }
+
+        response = self.__handle_request(
+            method="POST", url=self.TOKEN_URL, data=data, headers=headers
+        )
+
+        tokens = response.json()
+        return {
+            "access_token": tokens["access_token"],
+            "refresh_token": tokens["refresh_token"],
+        }
 
     def get_credentials(self, domain_id: int, user_id: int):
         credential = self.integrations_persistence.get_credentials_for_service(
             domain_id=domain_id,
             user_id=user_id,
-            service_name=SourcePlatformEnum.GOOGLE_ADS.value,
+            service_name=SourcePlatformEnum.GO_HIGH_LEVEL.value,
         )
         return credential
 
@@ -102,7 +111,7 @@ class GoHighLevelIntegrationsService:
         credential = (
             self.integrations_persistence.get_smart_credentials_for_service(
                 user_id=user_id,
-                service_name=SourcePlatformEnum.GOOGLE_ADS.value,
+                service_name=SourcePlatformEnum.GO_HIGH_LEVEL.value,
             )
         )
         return credential
@@ -168,22 +177,29 @@ class GoHighLevelIntegrationsService:
         domain: UserDomains,
         user: dict,
     ):
-        creds = Credentials(
-            client_id=getenv("CLIENT_GO_HIGH_LEVEL_ID"),
-            client_secret=getenv("CLIENT_GO_HIGH_LEVEL_SECRET"),
+        code = credentials.go_high_level.code
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": getenv("CLIENT_GO_HIGH_LEVEL_ID"),
+            "client_secret": getenv("CLIENT_GO_HIGH_LEVEL_SECRET"),
+            "code": code,
+            "redirect_uri": f"{getenv('SITE_HOST_URL')}/high-landing",
+        }
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+        }
+        response = self.__handle_request(
+            method="POST", url=self.TOKEN_URL, data=data, headers=headers
         )
-        ghl = GoHighLevel(credentials=creds)
-        tokens = ghl.exchange_code(
-            code=credentials.go_high_level.code,
-            redirect_uri=f"{os.getenv('SITE_HOST_URL')}/high-landing",
-        )
-        print(tokens)
-        if not tokens:
+        result = response.json()
+        refresh_token = result["refresh_token"]
+        if not refresh_token:
             raise HTTPException(
                 status_code=400, detail="Failed to get access token"
             )
 
-        integrations = self.__save_integrations(tokens, domain.id, user)
+        integrations = self.__save_integrations(refresh_token, domain.id, user)
         return {
             "integrations": integrations,
             "status": IntegrationsStatus.SUCCESS.value,
