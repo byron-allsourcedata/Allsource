@@ -698,11 +698,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		sessionStorage.removeItem("filtersByAdmin");
 	};
 
-	const handleStatusChange = (options: string[]) => {
+	const handleStatusChange = (options: string[], isActive: boolean | null = null) => {
 		setCheckedFiltersStatuses((prev) => {
 			const updatedStatuses = { ...prev };
 			options.forEach((option) => {
-				updatedStatuses[option] = !updatedStatuses[option];
+				updatedStatuses[option] = isActive ?? !updatedStatuses[option]; 
+
 			});
 			return updatedStatuses;
 		});
@@ -726,9 +727,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 	);
 
 	const handleStatusTarget = (label: string) => {
-		handleStatusChange(statusMapping[label.toLowerCase()]);
-
 		const mappedStatusTarget = statusTargetMapping[label];
+		const isActive = !selectedStatusTarget.includes(mappedStatusTarget)
+
+		handleStatusChange(statusMapping[label.toLowerCase()], isActive);
+
 		setSelectedStatusTarget((prev) =>
 			prev.includes(mappedStatusTarget)
 				? prev.filter((item) => item !== mappedStatusTarget)
