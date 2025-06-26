@@ -1,9 +1,12 @@
+from db_dependencies import Db
 from models.sendgrid_template import SendgridTemplate
-from sqlalchemy.orm import Session
+
+from resolver import injectable
 
 
+@injectable
 class SendgridPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_template_by_alias(self, alias):
