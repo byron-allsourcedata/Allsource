@@ -621,6 +621,15 @@ def get_subscription_plan_info(session, plan_id):
     )
 
 
+def set_behavior_flag(user_domain: UserDomains, behavior_type: str):
+    if behavior_type == "viewed_product":
+        user_domain.is_view_product_installed = True
+    elif behavior_type == "product_added_to_cart":
+        user_domain.is_add_to_cart_installed = True
+    elif behavior_type == "checkout_completed":
+        user_domain.is_converted_sales_installed = True
+
+
 async def process_user_data(
     states_dict,
     possible_lead,
@@ -683,6 +692,8 @@ async def process_user_data(
         if not partner_uid_dict.get("action")
         else partner_uid_dict.get("action")
     )
+    set_behavior_flag(user_domain=user_domain, behavior_type=behavior_type)
+
     if root_user:
         if count % 12 == 0:
             behavior_type = "visitor"
