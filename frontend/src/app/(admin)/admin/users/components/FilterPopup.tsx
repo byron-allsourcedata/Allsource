@@ -91,7 +91,7 @@ const statusMapping: Record<string, string[]> = {
 		"Resolution Failed",
 		"Sync Error",
 	],
-	neutral: ["Waiting Contacts", "Sync Not Complited"],
+	neutral: ["Waiting Contacts", "Sync Not Completed"],
 	positive: ["Data Syncing"],
 };
 
@@ -921,7 +921,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									"Pixel Not Installed",
 									"Waiting Contacts",
 									"Resolution Failed",
-									"Sync Not Complited",
+									"Sync Not Completed",
 									"Sync Error",
 									"Data Syncing",
 								]}

@@ -297,7 +297,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			return "Resolution Failed";
 		}
 		if (text === "SYNC_NOT_COMPLETED") {
-			return "Sync Not Complited";
+			return "Sync Not Completed";
 		}
 		if (text === "SYNC_ERROR") {
 			return "Sync Error";

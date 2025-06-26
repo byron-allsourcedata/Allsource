@@ -439,7 +439,7 @@ class ShopifyIntegrationService:
                 ).update(
                     {
                         UserDomains.is_pixel_installed: False,
-                        UserDomains.date_pixel_install: None,
+                        UserDomains.pixel_installation_date: None,
                     },
                     synchronize_session=False,
                 )

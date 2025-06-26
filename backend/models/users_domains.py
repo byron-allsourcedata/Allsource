@@ -40,7 +40,7 @@ class UserDomains(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    date_pixel_install = Column(
+    pixel_installation_date = Column(
         TIMESTAMP,
         nullable=True,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),

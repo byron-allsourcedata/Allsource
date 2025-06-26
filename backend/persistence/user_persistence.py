@@ -389,7 +389,7 @@ class UserPersistence:
                     .filter(
                         UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install
+                        func.timezone('UTC', func.now()) - UserDomains.pixel_installation_date
                         <= timedelta(hours=24),
                     )
                     .exists(),
@@ -405,7 +405,7 @@ class UserPersistence:
                     .filter(
                         UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.now() - UserDomains.date_pixel_install
+                        func.timezone('UTC', func.now())- UserDomains.pixel_installation_date
                         > timedelta(hours=24),
                     )
                     .exists(),
@@ -490,8 +490,8 @@ class UserPersistence:
             .filter(Users.role.any("customer"))
         )
 
-        if not test_users:
-            query = query.filter(Users.full_name.ilike("%#test_allsource%"))
+        if test_users:
+            query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
 
         if filters.get("statuses"):
             statuses = [
