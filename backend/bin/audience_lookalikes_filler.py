@@ -19,6 +19,7 @@ from resolver import Resolver
 
 from services.lookalike_filler import LookalikeFillerService
 
+from config.sentry import SentryConfig
 from config.rmq_connection import publish_rabbitmq_message_with_channel
 from config.rmq_connection import (
     RabbitMQConnection,
@@ -130,6 +131,7 @@ async def aud_sources_reader(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -169,10 +171,10 @@ async def main():
 
         await asyncio.Future()
 
-    except BaseException:
+    except BaseException as e:
         db_session.rollback()
         logging.error("Unhandled Exception:", exc_info=True)
-
+        SentryConfig.capture(e)
     finally:
         if db_session:
             logging.info("Closing the database session...")

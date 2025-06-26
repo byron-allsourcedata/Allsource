@@ -16,6 +16,7 @@ from typing import List
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from config.sentry import SentryConfig
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
@@ -474,6 +475,7 @@ async def aud_email_validation(
 
 
 async def main():
+    await SentryConfig.async_initialize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -519,8 +521,9 @@ async def main():
 
         await asyncio.Future()
 
-    except Exception:
+    except Exception as e:
         logging.error("Unhandled Exception:", exc_info=True)
+        await SentryConfig.capture(e)
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()

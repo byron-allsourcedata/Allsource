@@ -9,6 +9,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.sentry import SentryConfig
 from resolver import Resolver
 from dotenv import load_dotenv
 from config.rmq_connection import RabbitMQConnection
@@ -41,6 +42,7 @@ async def on_message_received(message, ch_session):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     resolver = Resolver()
     try:
@@ -62,6 +64,7 @@ async def main():
         )
         await asyncio.Future()
     except Exception as err:
+        SentryConfig.capture(err)
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
     finally:
         logging.info("Shutting down...")

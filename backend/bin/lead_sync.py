@@ -24,6 +24,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 
+from config.sentry import SentryConfig
 from utils import normalize_url, get_url_params_list, check_certain_urls
 from enums import NotificationTitles
 from db_dependencies import Db, Clickhouse
@@ -924,6 +925,9 @@ async def process_user_data(
             session.flush()
             if not user_domain.is_pixel_installed:
                 user_domain.is_pixel_installed = True
+                user_domain.pixel_installation_date = datetime.now(
+                    timezone.utc
+                ).replace(tzinfo=None)
                 session.flush()
         else:
             if not lead_user.is_returning_visitor:
@@ -1391,6 +1395,7 @@ def parse_args():
 
 
 async def main():
+    await SentryConfig.async_initilize()
     resolver = Resolver()
     db_session = await resolver.resolve(Db)
     subscription_service = await resolver.resolve(SubscriptionService)
@@ -1442,6 +1447,7 @@ async def main():
         except Exception as e:
             db_session.rollback()
             logging.error(f"An error occurred: {str(e)}")
+            SentryConfig.capture(e)
             traceback.print_exc()
             await resolver.cleanup()
             time.sleep(30)

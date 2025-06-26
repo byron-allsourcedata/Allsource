@@ -10,10 +10,12 @@ from collections import defaultdict
 import aiohttp
 import requests
 from aio_pika import IncomingMessage
+import sentry_sdk
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
+from config.sentry import SentryConfig
 from models.audience import Audience
 from models.integrations.users_domains_integrations import UserIntegration
 from config.rmq_connection import RabbitMQConnection
@@ -324,6 +326,7 @@ async def audience_process(message: IncomingMessage, session: Session):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -361,6 +364,7 @@ async def main():
 
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
 
     finally:
         if session:

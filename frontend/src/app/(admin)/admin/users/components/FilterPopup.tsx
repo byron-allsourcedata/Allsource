@@ -14,15 +14,19 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AnnouncementOutlinedIcon from "@mui/icons-material/AnnouncementOutlined";
 import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs, { type Dayjs } from "dayjs";
 import { filterStyles } from "@/css/filterSlider";
+import ExpandableCheckboxFilter from "@/components/filters/ExpandableCheckboxFilter";
+import ToggleButtons from "@/components/filters/ToggleButtons";
 
 interface FilterParams {
 	joinDate: { fromDate: number | null; toDate: number | null };
 	lastLoginDate: { fromDate: number | null; toDate: number | null };
+	statuses: Record<string, boolean>;
 }
 
 interface FilterPopupProps {
@@ -80,6 +84,17 @@ const dateTypes: Record<string, string> = {
 	last6Months: "Last 6 months",
 };
 
+const statusMapping: Record<string, string[]> = {
+	negative: [
+		"Need confirm email",
+		"Pixel Not Installed",
+		"Resolution Failed",
+		"Sync Error",
+	],
+	neutral: ["Waiting Contacts", "Sync Not Completed"],
+	positive: ["Data Syncing"],
+};
+
 const FilterPopup: React.FC<FilterPopupProps> = ({
 	open,
 	onClose,
@@ -117,6 +132,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 			createdDate: [],
 		},
 	);
+	const [checkedFiltersStatuses, setCheckedFiltersStatuses] = useState<
+		Record<string, boolean>
+	>({});
+
+	const [isStatus, setIsStatuses] = useState(false);
 
 	const handleRadioChange = (event: { target: { name: string } }) => {
 		const { name } = event.target;
@@ -483,6 +503,19 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 				? dayjs.unix(filters.lastLoginDate.toDate)
 				: null,
 		});
+
+		setCheckedFiltersStatuses(filters.statuses || {});
+
+		const newSelectedStatuses: string[] = [];
+
+		Object.entries(statusMapping).forEach(([key, statuses]) => {
+			const allActive = statuses.every((status) => filters.statuses[status]);
+			if (allActive) {
+				newSelectedStatuses.push(key.charAt(0).toUpperCase() + key.slice(1));
+			}
+		});
+
+		setSelectedStatusTarget((prev) => [...prev, ...newSelectedStatuses]);
 	};
 
 	const getFilterDates = () => {
@@ -569,6 +602,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		}
 
 		const filters = {
+			statuses: checkedFiltersStatuses,
 			lastLoginDate: {
 				fromDate: fromDateTime,
 				toDate: toDateTime,
@@ -633,6 +667,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		setIsCreatedDateOpen(false);
 		setIsJoinDateOpen(false);
 
+		setCheckedFiltersStatuses({});
 		setDateRange({
 			fromDate: null,
 			toDate: null,
@@ -661,6 +696,53 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		});
 
 		sessionStorage.removeItem("filtersByAdmin");
+	};
+
+	const handleStatusChange = (
+		options: string[],
+		isActive: boolean | null = null,
+	) => {
+		setCheckedFiltersStatuses((prev) => {
+			const updatedStatuses = { ...prev };
+			options.forEach((option) => {
+				updatedStatuses[option] = isActive ?? !updatedStatuses[option];
+			});
+			return updatedStatuses;
+		});
+	};
+
+	const handleMenuStatusItemClick = (item: string) => {
+		setCheckedFiltersStatuses((prevState) => ({
+			...prevState,
+			[item]: !prevState[item],
+		}));
+	};
+
+	const statusTargetMapping: Record<string, string> = {
+		Negative: "Negative",
+		Neutral: "Neutral",
+		Positive: "Positive",
+	};
+
+	const [selectedStatusTarget, setSelectedStatusTarget] = useState<string[]>(
+		[],
+	);
+
+	const handleStatusTarget = (label: string) => {
+		const mappedStatusTarget = statusTargetMapping[label];
+		const isActive = !selectedStatusTarget.includes(mappedStatusTarget);
+
+		handleStatusChange(statusMapping[label.toLowerCase()], isActive);
+
+		setSelectedStatusTarget((prev) =>
+			prev.includes(mappedStatusTarget)
+				? prev.filter((item) => item !== mappedStatusTarget)
+				: [...prev, mappedStatusTarget],
+		);
+	};
+
+	const isStatusesFilterActive = () => {
+		return Object.values(checkedFiltersStatuses).some((value) => value);
 	};
 
 	return (
@@ -728,6 +810,132 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 						width: "100%",
 					}}
 				>
+					{/* Status */}
+					<Box sx={filterStyles.main_filter_form}>
+						<Box
+							sx={filterStyles.filter_form}
+							onClick={() => setIsStatuses(!isStatus)}
+						>
+							<Box
+								sx={{
+									...filterStyles.active_filter_dote,
+									visibility: isStatusesFilterActive() ? "visible" : "hidden",
+								}}
+							/>
+							<AnnouncementOutlinedIcon
+								sx={{
+									width: "18px",
+									height: "18px",
+									color: "rgba(95, 99, 104, 1)",
+								}}
+							/>
+							<Typography
+								sx={{
+									...filterStyles.filter_name,
+								}}
+							>
+								Status
+							</Typography>
+							{Object.keys(checkedFiltersStatuses).some(
+								(key) => checkedFiltersStatuses[key],
+							) && (
+								<Box
+									sx={{
+										display: "flex",
+										flexWrap: "wrap",
+										gap: 1,
+										mt: 1,
+										mb: 2,
+									}}
+								>
+									{Object.keys(checkedFiltersStatuses)
+										.filter((key) => checkedFiltersStatuses[key])
+										.map((tag, index) => (
+											<CustomChip
+												key={index}
+												label={tag}
+												onDelete={() => handleMenuStatusItemClick(tag)}
+											/>
+										))}
+								</Box>
+							)}
+							<IconButton
+								onClick={() => setIsStatuses(!isStatus)}
+								aria-label="toggle-content"
+							>
+								{isStatus ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+							</IconButton>
+						</Box>
+						<Collapse in={isStatus}>
+							<Box
+								sx={{
+									...filterStyles.filter_dropdown,
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										gap: 0,
+										width: "70%",
+									}}
+								>
+									<ToggleButtons
+										buttonNames={["Negative", "Neutral", "Positive"]}
+										dotColors={[
+											"rgba(244, 87, 69, 1)",
+											"rgba(224, 176, 5, 1)",
+											"rgba(110, 193, 37, 1)",
+										]}
+										buttonMapping={statusTargetMapping}
+										selectedButton={selectedStatusTarget}
+										handleButtonButtonClick={handleStatusTarget}
+										sx={{
+											display: "flex",
+											flexWrap: "wrap",
+											gap: 2,
+											pt: 1,
+											pb: 0.75,
+										}}
+									/>
+								</Box>
+							</Box>
+							<Box sx={filterStyles.date_time_formatted}>
+								<Box
+									sx={{
+										borderBottom: "1px solid #e4e4e4",
+										flexGrow: 1,
+									}}
+								/>
+								<Typography variant="body1" sx={filterStyles.or_text}>
+									OR
+								</Typography>
+								<Box
+									sx={{
+										borderBottom: "1px solid #e4e4e4",
+										flexGrow: 1,
+									}}
+								/>
+							</Box>
+							<ExpandableCheckboxFilter
+								selectedOptions={Object.keys(checkedFiltersStatuses).filter(
+									(key) => checkedFiltersStatuses[key],
+								)}
+								allowedOptions={[
+									"Need confirm email",
+									"Pixel Not Installed",
+									"Waiting Contacts",
+									"Resolution Failed",
+									"Sync Not Completed",
+									"Sync Error",
+									"Data Syncing",
+								]}
+								onOptionToggle={(status) => handleStatusChange([status])}
+								placeholder="Select Status"
+								sx={{ pt: 1, pl: 2 }}
+							/>
+						</Collapse>
+					</Box>
 					{/* join Date */}
 					<Box
 						sx={{

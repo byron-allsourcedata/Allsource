@@ -9,11 +9,13 @@ import tempfile
 import aioboto3
 import boto3
 import pandas as pd
+from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from dotenv import load_dotenv
+
+from config.sentry import SentryConfig
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
@@ -100,6 +102,7 @@ async def on_message_received(message_body, s3_session, sts_client, channel):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     try:
         sts_client = create_sts_client(
@@ -134,8 +137,8 @@ async def main():
                 break
             await channel.close()
         await connection.close()
-
     except Exception as err:
+        SentryConfig.capture(err)
         logging.error("Unhandled Exception:", exc_info=True)
     finally:
         logging.info("Shutting down...")

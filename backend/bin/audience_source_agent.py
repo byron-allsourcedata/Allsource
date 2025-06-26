@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Union, Optional, Tuple
 import boto3
+import sentry_sdk
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Connection, Channel
 from sqlalchemy.orm import Session
@@ -30,6 +31,8 @@ from services.source_agent.agent import (
 from db_dependencies import Db
 from resolver import Resolver
 
+from config.sentry import SentryConfig
+from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
@@ -1271,6 +1274,7 @@ async def aud_sources_matching(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -1320,8 +1324,9 @@ async def main():
 
         await asyncio.Future()
 
-    except Exception:
+    except Exception as e:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(e)
 
     finally:
         if db_session:

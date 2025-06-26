@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
 
@@ -134,6 +135,7 @@ async def aud_sources_matching(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -176,9 +178,9 @@ async def main():
 
         await asyncio.Future()
 
-    except Exception:
+    except Exception as e:
         logging.error("Unhandled Exception:", exc_info=True)
-
+        SentryConfig.capture(e)
     finally:
         if db_session:
             logging.info("Closing the database session...")
