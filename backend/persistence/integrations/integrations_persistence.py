@@ -250,3 +250,9 @@ class IntegrationsPresistence:
             .filter_by(service_name=service_name)
             .first()
         )
+
+    def update_refresh_token(self, integration_id: int, refresh_token: str):
+        self.db.query(UserIntegration).filter(
+            UserIntegration.id == integration_id
+        ).update({"access_token": refresh_token}, synchronize_session="fetch")
+        self.db.commit()

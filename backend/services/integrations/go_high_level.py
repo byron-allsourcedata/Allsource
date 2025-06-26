@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime
 from typing import Tuple, Annotated
 
 import httpx
@@ -25,7 +26,10 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from resolver import injectable
 from schemas.integrations.google_ads import GoogleAdsProfile
 from schemas.integrations.integrations import *
-from services.integrations.commonIntegration import resolve_main_email_and_phone
+from services.integrations.commonIntegration import (
+    resolve_main_email_and_phone,
+    FIELD_FILLERS,
+)
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
@@ -57,6 +61,7 @@ class GoHighLevelIntegrationsService:
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
         self.TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token"
+        self.VERSION = "2021-07-28"
 
     def __handle_request(
         self,
@@ -77,7 +82,9 @@ class GoHighLevelIntegrationsService:
         )
         return response
 
-    def refresh_ghl_token(self, refresh_token: str) -> dict:
+    def refresh_ghl_token(
+        self, integration_id: int, refresh_token: str
+    ) -> dict:
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
@@ -94,10 +101,15 @@ class GoHighLevelIntegrationsService:
         )
 
         tokens = response.json()
-        return {
-            "access_token": tokens["access_token"],
-            "refresh_token": tokens["refresh_token"],
-        }
+        if not tokens.get("refresh_token"):
+            raise HTTPException(
+                status_code=409,
+                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+            )
+        self.integrations_persistence.update_refresh_token(
+            integration_id=integration_id, refresh_token=tokens["refresh_token"]
+        )
+        return tokens["access_token"]
 
     def get_credentials(self, domain_id: int, user_id: int):
         credential = self.integrations_persistence.get_credentials_for_service(
@@ -117,11 +129,12 @@ class GoHighLevelIntegrationsService:
         return credential
 
     def __save_integrations(
-        self, access_token: str, domain_id: int, user: dict
+        self, refresh_token: str, domain_id: int, user: dict, location_id: str
     ):
         credential = self.get_credentials(domain_id, user.get("id"))
         if credential:
-            credential.access_token = access_token
+            credential.access_token = refresh_token
+            credential.location_id = location_id
             credential.is_failed = False
             credential.error_message = None
             self.integrations_persistence.db.commit()
@@ -129,8 +142,9 @@ class GoHighLevelIntegrationsService:
 
         common_integration = os.getenv("COMMON_INTEGRATION") == "True"
         integration_data = {
-            "access_token": access_token,
+            "access_token": refresh_token,
             "full_name": user.get("full_name"),
+            "location_id": location_id,
             "service_name": SourcePlatformEnum.GO_HIGH_LEVEL.value,
             "limit": IntegrationLimit.GO_HIGH_LEVEL.value,
         }
@@ -159,12 +173,14 @@ class GoHighLevelIntegrationsService:
         domain_id: int,
         created_by: str,
         user_id: int,
+        data_map: List[DataMap] = [],
     ):
         credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync(
             {
                 "integration_id": credentials.id,
                 "leads_type": leads_type,
+                "data_map": data_map,
                 "created_by": created_by,
             },
             integrations_users_sync_id,
@@ -194,12 +210,18 @@ class GoHighLevelIntegrationsService:
         )
         result = response.json()
         refresh_token = result["refresh_token"]
+        location_id = result["locationId"]
         if not refresh_token:
             raise HTTPException(
                 status_code=400, detail="Failed to get access token"
             )
 
-        integrations = self.__save_integrations(refresh_token, domain.id, user)
+        integrations = self.__save_integrations(
+            refresh_token=refresh_token,
+            domain_id=domain.id,
+            user=user,
+            location_id=location_id,
+        )
         return {
             "integrations": integrations,
             "status": IntegrationsStatus.SUCCESS.value,
@@ -208,10 +230,7 @@ class GoHighLevelIntegrationsService:
     async def create_sync(
         self,
         domain_id: int,
-        customer_id: str,
         leads_type: str,
-        list_id: str,
-        list_name: str,
         created_by: str,
         user: dict,
         data_map: List[DataMap] = [],
@@ -222,26 +241,20 @@ class GoHighLevelIntegrationsService:
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
-                "list_id": list_id,
-                "list_name": list_name,
                 "sent_contacts": -1,
                 "sync_type": DataSyncType.CONTACT.value,
                 "leads_type": leads_type,
                 "data_map": data_map,
                 "domain_id": domain_id,
                 "created_by": created_by,
-                "customer_id": customer_id,
             }
         )
         return sync
 
     def create_smart_audience_sync(
         self,
-        customer_id: str,
         smart_audience_id: UUID,
         sent_contacts: int,
-        list_id: str,
-        list_name: str,
         created_by: str,
         user: dict,
         data_map: List[DataMap] = [],
@@ -251,17 +264,77 @@ class GoHighLevelIntegrationsService:
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
-                "list_id": list_id,
-                "list_name": list_name,
                 "data_map": data_map,
                 "sent_contacts": sent_contacts,
                 "sync_type": DataSyncType.AUDIENCE.value,
                 "smart_audience_id": smart_audience_id,
                 "created_by": created_by,
-                "customer_id": customer_id,
             }
         )
         return sync
+
+    def upsert_contact(self, access_token: str, contact_data: dict) -> dict:
+        url = "https://services.leadconnectorhq.com/contacts/upsert"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+            "Version": self.VERSION,
+        }
+
+        response = self.__handle_request(
+            method="POST", url=url, json=contact_data, headers=headers
+        )
+        print("----")
+        print(response.status_code)
+        print(response.text)
+        if response.status_code in (200, 201, 202):
+            return ProccessDataSyncResult.SUCCESS.value
+
+        return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+    def list_custom_fields(self, access_token: str, location_id: str):
+        url = f"https://services.leadconnectorhq.com/locations/{location_id}/customFields"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+            "Version": self.VERSION,
+        }
+        response = self.__handle_request(method="GET", url=url, headers=headers)
+        result = response.json()
+        if not result.get("customFields"):
+            raise HTTPException(
+                status_code=409,
+                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+            )
+        return result
+
+    def create_custom_field(
+        self,
+        access_token: str,
+        location_id: str,
+        key: str,
+        field_type: str = "TEXT",
+    ):
+        url = f"https://services.leadconnectorhq.com/locations/{location_id}/customFields"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+            "Version": self.VERSION,
+        }
+        response = self.__handle_request(
+            method="POST",
+            url=url,
+            json={"name": key, "dataType": field_type},
+            headers=headers,
+        )
+        result = response.json()
+        print(response.text)
+        if not result.get("customField"):
+            raise HTTPException(
+                status_code=409,
+                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+            )
+        return result
 
     async def process_data_sync(
         self,
@@ -271,32 +344,41 @@ class GoHighLevelIntegrationsService:
         target_schema: str,
         validations: dict = {},
     ):
-        profiles = []
-        for enrichment_user in enrichment_users:
-            result = self.__mapped_googleads_profile(
-                enrichment_user, target_schema, validations
-            )
-            if result:
-                profiles.append(result)
-        if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        list_response = self.__add_profile_to_list(
-            access_token=user_integration.access_token,
-            customer_id=integration_data_sync.customer_id,
-            user_list_id=integration_data_sync.list_id,
-            profiles=profiles,
+        results = []
+        access_token = self.refresh_ghl_token(
+            integration_id=user_integration.id,
+            refresh_token=user_integration.access_token,
         )
 
-        if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
-            return self.__add_profile_to_list(
-                access_token=user_integration.access_token,
-                customer_id=integration_data_sync.customer_id,
-                user_list_id=integration_data_sync.list_id,
-                profiles=profiles,
+        for enrichment_user in enrichment_users:
+            contact_data = self.__mapped_member_into_list(
+                enrichment_user=enrichment_user,
+                target_schema=target_schema,
+                validations=validations,
+                data_map=integration_data_sync.data_map,
+                location_id=user_integration.location_id,
+                access_token=access_token,
             )
 
-        return list_response
+            result = self.upsert_contact(
+                access_token=access_token, contact_data=contact_data
+            )
+            if result == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "lead_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                    }
+                )
+            else:
+                results.append(
+                    {
+                        "lead_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
+        return ProccessDataSyncResult.SUCCESS.value
 
     async def process_data_sync_lead(
         self,
@@ -304,56 +386,61 @@ class GoHighLevelIntegrationsService:
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
     ):
-        profiles = []
         results = []
+        access_token = self.refresh_ghl_token(
+            integration_id=user_integration.id,
+            refresh_token=user_integration.access_token,
+        )
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_googleads_profile_lead(five_x_five_user)
-            if profile in (
+            contact_data = self.__mapped_profile_lead(
+                five_x_five_user=five_x_five_user,
+                data_map=integration_data_sync.data_map,
+                location_id=user_integration.location_id,
+                access_token=access_token,
+            )
+            if contact_data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append({"lead_id": lead_user.id, "status": profile})
+                results.append(
+                    {"lead_id": lead_user.id, "status": contact_data}
+                )
                 continue
             else:
-                results.append(
-                    {
-                        "lead_id": lead_user.id,
-                        "status": ProccessDataSyncResult.SUCCESS.value,
-                    }
+                result = self.upsert_contact(
+                    access_token=access_token, contact_data=contact_data
                 )
+                if result == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                    results.append(
+                        {
+                            "lead_id": lead_user.id,
+                            "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                        }
+                    )
+                else:
+                    results.append(
+                        {
+                            "lead_id": lead_user.id,
+                            "status": ProccessDataSyncResult.SUCCESS.value,
+                        }
+                    )
 
-            profiles.append(profile)
-
-        if not profiles:
-            return results
-
-        list_response = self.__add_profile_to_list(
-            access_token=user_integration.access_token,
-            customer_id=integration_data_sync.customer_id,
-            user_list_id=integration_data_sync.list_id,
-            profiles=profiles,
-        )
-
-        if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
-            return self.__add_profile_to_list(
-                access_token=user_integration.access_token,
-                customer_id=integration_data_sync.customer_id,
-                user_list_id=integration_data_sync.list_id,
-                profiles=profiles,
-            )
-
-        if list_response != ProccessDataSyncResult.SUCCESS.value:
-            for result in results:
-                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
-                    result["status"] = list_response
         return results
 
-    def __mapped_googleads_profile_lead(
-        self, five_x_five_user: FiveXFiveUser
-    ) -> GoogleAdsProfile | None:
+    def __mapped_profile_lead(
+        self,
+        five_x_five_user: FiveXFiveUser,
+        data_map: list,
+        location_id: str,
+        access_token: str,
+    ) -> dict | str:
         first_email = get_valid_email(
             five_x_five_user, self.million_verifier_integrations
         )
+        first_name = getattr(five_x_five_user, "first_name", None)
+        last_name = getattr(five_x_five_user, "last_name", None)
+        if not first_name or not last_name:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -365,22 +452,62 @@ class GoHighLevelIntegrationsService:
 
         address_parts = get_valid_location(five_x_five_user)
 
-        return GoogleAdsProfile(
-            email=first_email,
-            first_name=getattr(five_x_five_user, "first_name", None),
-            last_name=getattr(five_x_five_user, "last_name", None),
-            phone=validate_and_format_phone(format_phone_number(first_phone)),
-            city=address_parts[1],
-            state=address_parts[2],
-            address=address_parts[0],
-        )
+        profile = {
+            "email": first_email,
+            "firstName": first_name,
+            "lastName": last_name,
+            "name": f"{first_name} {last_name}",
+            "country": "US",
+            "companyName": getattr(five_x_five_user, "company_name", None),
+            "address1": address_parts[0],
+            "phone": validate_and_format_phone(first_phone),
+            "city": address_parts[1],
+            "state": address_parts[2],
+            "gender": getattr(five_x_five_user, "gender", None),
+            "tags": ["Customer"],
+            "source": "Allsource api",
+            "locationId": location_id,
+        }
+        custom_fields = []
+        fields = self.list_custom_fields(access_token, location_id)
+        existing_fields = {f["name"]: f for f in fields["customFields"]}
+        for field in data_map:
+            t = field["type"]
+            key = field["value"]
+            val = getattr(five_x_five_user, t, None)
+            if val is None:
+                continue
 
-    def __mapped_googleads_profile(
+            if isinstance(val, datetime):
+                val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            if key not in existing_fields:
+                new_field = self.create_custom_field(
+                    access_token=access_token,
+                    location_id=location_id,
+                    key=key,
+                )
+                existing_fields[key] = new_field["customField"]
+
+            field_info = existing_fields[key]
+            field_key = field_info["id"]
+            custom_fields.append({"id": field_key, "field_value": val})
+
+        if custom_fields:
+            profile["customFields"] = custom_fields
+
+        cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
+        return cleaned
+
+    def __mapped_member_into_list(
         self,
         enrichment_user: EnrichmentUser,
         target_schema: str,
         validations: dict,
-    ) -> GoogleAdsProfile:
+        data_map: list,
+        location_id: str,
+        access_token: str,
+    ):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
@@ -391,12 +518,12 @@ class GoHighLevelIntegrationsService:
             )
         )
         main_email, main_phone = resolve_main_email_and_phone(
-            enrichment_contacts,
-            validations,
-            target_schema,
-            business_email,
-            personal_email,
-            phone,
+            enrichment_contacts=enrichment_contacts,
+            validations=validations,
+            target_schema=target_schema,
+            business_email=business_email,
+            personal_email=personal_email,
+            phone=phone,
         )
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
@@ -404,28 +531,57 @@ class GoHighLevelIntegrationsService:
         if not main_email or not first_name or not last_name:
             return None
 
-        enrichment_user_postal = enrichment_user.postal
-        city = None
-        state = None
-        country_code = None
-        if enrichment_user_postal:
-            city = enrichment_user_postal.home_city
-            if not city:
-                city = enrichment_user_postal.business_city
-            state = enrichment_user_postal.home_state
-            if not state:
-                state = enrichment_user_postal.business_state
+        profile = {
+            "email": main_email,
+            "firstName": first_name,
+            "lastName": last_name,
+            "name": f"{first_name} {last_name}",
+            "phone": main_phone,
+            "tags": ["Customer"],
+            "source": "Allsource api",
+            "locationId": location_id,
+        }
 
-            country_code = enrichment_user_postal.home_country
-            if not country_code:
-                country_code = enrichment_user_postal.business_country
+        required_types = {m["type"] for m in data_map}
+        context = {
+            "main_phone": main_phone,
+            "professional_profiles": enrichment_user.professional_profiles,
+            "postal": enrichment_user.postal,
+            "personal_profiles": enrichment_user.personal_profiles,
+            "business_email": business_email,
+            "personal_email": personal_email,
+            "country_code": enrichment_user.postal,
+            "gender": enrichment_user.personal_profiles,
+            "zip_code": enrichment_user.personal_profiles,
+            "state": enrichment_user.postal,
+            "city": enrichment_user.postal,
+            "company": enrichment_user.professional_profiles,
+            "business_email_last_seen_date": enrichment_contacts,
+            "personal_email_last_seen": enrichment_contacts,
+            "linkedin_url": enrichment_contacts,
+        }
+        result_map = {}
+        for field_type in required_types:
+            filler = FIELD_FILLERS.get(field_type)
+            if filler:
+                filler(result_map, context)
+        address_data = {}
 
-        return GoogleAdsProfile(
-            email=main_email,
-            first_name=first_name,
-            last_name=last_name,
-            phone=main_phone,
-            city=city,
-            state=state,
-            country_code=country_code,
-        )
+        for key, value in result_map.items():
+            if key in ["city", "state", "zip_code", "addr1", "address"]:
+                address_data[key] = value
+            if key == "country" or key == "country_code":
+                profile["country"] = value
+            elif key == "company":
+                profile["companyName"] = value
+
+        if any(
+            k in address_data for k in ["addr1", "city", "state", "zip_code"]
+        ):
+            profile["address1"] = address_data.get("addr1")
+            profile["city"] = address_data.get("city")
+            profile["state"] = address_data.get("state")
+
+        cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
+
+        return cleaned

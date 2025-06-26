@@ -88,12 +88,13 @@ const GoHighLevelConnectPopup = ({
 	const handleLogin = async () => {
 		const clientId = process.env.NEXT_PUBLIC_GO_HIGH_LEVEL_CLIENT_ID;
 		const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/high-landing`;
-		const authUrl = `https://marketplace.gohighlevel.com/oauth/chooselocation?
-		response_type=code&
-		client_id=${clientId}&
-		redirect_uri=${encodeURIComponent(redirectUri)}&
-		scope=contacts.readonly%20contacts.write`;
-
+		const scopes = [
+			"contacts.readonly",
+			"contacts.write",
+			"locations/customFields.readonly",
+			"locations/customFields.write",
+		].join("%20");
+		const authUrl = `https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}`;
 		window.open(authUrl, "_blank", "noopener,noreferrer");
 	};
 

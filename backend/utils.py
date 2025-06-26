@@ -168,7 +168,7 @@ def validate_and_format_phone(phone_numbers: str) -> str | None:
 
     unique_numbers = sorted(set(formatted_numbers))
     if unique_numbers:
-        return ", ".join(unique_numbers)
+        return unique_numbers[0]
     else:
         return None
 

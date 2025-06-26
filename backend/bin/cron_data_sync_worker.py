@@ -8,12 +8,12 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from sqlalchemy import create_engine
+
+from resolver import Resolver
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from utils import get_utc_aware_date
 from config.rmq_connection import publish_rabbitmq_message_with_channel
-from config.aws import get_s3_client
 from enums import (
     ProccessDataSyncResult,
     DataSyncImportedStatus,
@@ -25,26 +25,13 @@ from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.five_x_five_users import FiveXFiveUser
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
 from dependencies import (
-    IntegrationsPresistence,
-    LeadsPersistence,
-    AudiencePersistence,
-    LeadOrdersPersistence,
-    IntegrationsUserSyncPersistence,
-    AWSService,
-    UserDomainsPersistence,
-    SuppressionPersistence,
-    ExternalAppsInstallationsPersistence,
-    UserPersistence,
-    MillionVerifierPersistence,
     NotificationPersistence,
+    Db,
 )
 
 
@@ -222,7 +209,7 @@ async def send_error_msg(
 async def ensure_integration(
     message: IncomingMessage,
     integration_service: IntegrationService,
-    session: Session,
+    db_session: Db,
     notification_persistence: NotificationPersistence,
 ):
     try:
@@ -235,7 +222,7 @@ async def ensure_integration(
         integration_data, lead_user_data = check_correct_data_sync(
             data_sync_id,
             data_sync_imported_ids=data_sync_imported_ids,
-            session=session,
+            session=db_session,
         )
         if not lead_user_data:
             logging.info(f"data sync empty for {data_sync_id}")
@@ -257,10 +244,11 @@ async def ensure_integration(
             "hubspot": integration_service.hubspot,
             "sales_force": integration_service.sales_force,
             "s3": integration_service.s3,
+            "go_high_level": integration_service.go_high_level,
         }
         lead_user_ids = [t.lead_users_id for t in lead_user_data]
         service = service_map.get(service_name)
-        leads = get_lead_attributes(session, lead_user_ids)
+        leads = get_lead_attributes(db_session, lead_user_ids)
         if service:
             try:
                 results = await service.process_data_sync_lead(
@@ -294,7 +282,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                         logging.debug(f"list_not_exists: {service_name}")
                         update_users_integrations(
-                            session=session,
+                            session=db_session,
                             status=ProccessDataSyncResult.LIST_NOT_EXISTS.value,
                             integration_data_sync_id=data_sync.id,
                             service_name=service_name,
@@ -309,7 +297,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                         logging.debug(f"too_many_requests: {service_name}")
                         update_users_integrations(
-                            session=session,
+                            session=db_session,
                             status=ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
                             integration_data_sync_id=data_sync.id,
                             service_name=service_name,
@@ -324,7 +312,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
                         update_users_integrations(
-                            session=session,
+                            session=db_session,
                             status=ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
                             integration_data_sync_id=data_sync.id,
                             service_name=service_name,
@@ -338,7 +326,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
                         update_users_integrations(
-                            session=session,
+                            session=db_session,
                             status=ProccessDataSyncResult.PAYMENT_REQUIRED.value,
                             integration_data_sync_id=data_sync.id,
                             service_name=service_name,
@@ -353,7 +341,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                         logging.debug(f"authentication_failed: {service_name}")
                         update_users_integrations(
-                            session,
+                            db_session,
                             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                             data_sync.id,
                             service_name,
@@ -368,7 +356,7 @@ async def ensure_integration(
 
                 if import_status != DataSyncImportedStatus.SENT.value:
                     update_data_sync_imported_leads(
-                        session=session,
+                        session=db_session,
                         status=import_status,
                         lead_id=result["lead_id"],
                         integration_data_sync=data_sync,
@@ -376,7 +364,7 @@ async def ensure_integration(
                     )
 
             logging.info(f"Processed message for service: {service_name}")
-            await message.ack()
+            # await message.ack()
             return
         else:
             logging.error(f"Invalid service name: {service_name}")
@@ -385,13 +373,13 @@ async def ensure_integration(
 
     except PendingRollbackError:
         logging.error("PendingRollbackError occurred, rolling back session.")
-        session.rollback()
+        db_session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
     except Exception as e:
         logging.error(f"Error processing message {e}", exc_info=True)
-        session.rollback()
+        db_session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
@@ -406,11 +394,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
+    resolver = Resolver()
     try:
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -421,38 +405,17 @@ async def main():
             name=CRON_DATA_SYNC_LEADS,
             durable=True,
         )
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
+        db_session = await resolver.resolve(Db)
+        integration_service = await resolver.resolve(IntegrationService)
+        notification_persistence = await resolver.resolve(
+            NotificationPersistence
         )
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        million_verifier_persistence = MillionVerifierPersistence(session)
-        notification_persistence = NotificationPersistence(session)
-        integration_service = IntegrationService(
-            db=session,
-            integration_persistence=IntegrationsPresistence(session),
-            lead_persistence=LeadsPersistence(session),
-            audience_persistence=AudiencePersistence(session),
-            lead_orders_persistence=LeadOrdersPersistence(session),
-            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(
-                session
-            ),
-            aws_service=AWSService(get_s3_client()),
-            domain_persistence=UserDomainsPersistence(session),
-            suppression_persistence=SuppressionPersistence(session),
-            epi_persistence=ExternalAppsInstallationsPersistence(session),
-            user_persistence=UserPersistence(session),
-            million_verifier_integrations=MillionVerifierIntegrationsService(
-                million_verifier_persistence
-            ),
-        )
-        with integration_service as service:
+        async with integration_service as int_service:
             await queue.consume(
                 functools.partial(
                     ensure_integration,
-                    integration_service=service,
-                    session=session,
+                    integration_service=int_service,
+                    db_session=db_session,
                     notification_persistence=notification_persistence,
                 )
             )
@@ -462,9 +425,9 @@ async def main():
         logging.error("Unhandled Exception:", exc_info=True)
 
     finally:
-        if session:
+        if db_session:
             logging.info("Closing the database session...")
-            session.close()
+            db_session.close()
         if rabbitmq_connection:
             logging.info("Closing RabbitMQ connection...")
             await rabbitmq_connection.close()

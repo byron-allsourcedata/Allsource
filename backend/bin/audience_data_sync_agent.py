@@ -1,16 +1,16 @@
-import logging
-import os
-import sys
 import asyncio
 import functools
 import json
+import logging
+import os
 import sys
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from uuid import UUID
-from sqlalchemy import create_engine, select
+from resolver import Resolver
+from sqlalchemy import select
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from models.enrichment.enrichment_users import EnrichmentUser
@@ -19,9 +19,7 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
-    RabbitMQConnection,
 )
-from config.aws import get_s3_client
 from enums import (
     ProccessDataSyncResult,
     DataSyncImportedStatus,
@@ -34,26 +32,13 @@ from models.audience_data_sync_imported_persons import (
 )
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
 from dependencies import (
-    IntegrationsPresistence,
-    LeadsPersistence,
-    AudiencePersistence,
-    LeadOrdersPersistence,
-    IntegrationsUserSyncPersistence,
-    AWSService,
-    UserDomainsPersistence,
-    SuppressionPersistence,
-    ExternalAppsInstallationsPersistence,
-    UserPersistence,
-    MillionVerifierPersistence,
     NotificationPersistence,
+    Db,
 )
 
 
@@ -325,6 +310,7 @@ async def ensure_integration(
             "s3": integration_service.s3,
             "sales_force": integration_service.sales_force,
             "mailchimp": integration_service.mailchimp,
+            "go_high_level": integration_service.go_high_level,
         }
         service_name = user_integration.service_name
         service = service_map.get(service_name)
@@ -446,11 +432,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
+    resolver = Resolver()
     try:
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
@@ -461,38 +443,17 @@ async def main():
             name=AUDIENCE_DATA_SYNC_PERSONS,
             durable=True,
         )
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
+        db_session = await resolver.resolve(Db)
+        notification_persistence = await resolver.resolve(
+            NotificationPersistence
         )
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        million_verifier_persistence = MillionVerifierPersistence(session)
-        notification_persistence = NotificationPersistence(session)
-        integration_service = IntegrationService(
-            db=session,
-            integration_persistence=IntegrationsPresistence(session),
-            lead_persistence=LeadsPersistence(session),
-            audience_persistence=AudiencePersistence(session),
-            lead_orders_persistence=LeadOrdersPersistence(session),
-            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(
-                session
-            ),
-            aws_service=AWSService(get_s3_client()),
-            domain_persistence=UserDomainsPersistence(session),
-            suppression_persistence=SuppressionPersistence(session),
-            epi_persistence=ExternalAppsInstallationsPersistence(session),
-            user_persistence=UserPersistence(session),
-            million_verifier_integrations=MillionVerifierIntegrationsService(
-                million_verifier_persistence
-            ),
-        )
-        with integration_service as service:
+        integration_service = await resolver.resolve(IntegrationService)
+        async with integration_service as service:
             await queue.consume(
                 functools.partial(
                     ensure_integration,
                     integration_service=service,
-                    session=session,
+                    session=db_session,
                     notification_persistence=notification_persistence,
                 )
             )
@@ -502,9 +463,9 @@ async def main():
         logging.error("Unhandled Exception:", exc_info=True)
 
     finally:
-        if session:
+        if db_session:
             logging.info("Closing the database session...")
-            session.close()
+            db_session.close()
         if rabbitmq_connection:
             logging.info("Closing RabbitMQ connection...")
             await rabbitmq_connection.close()

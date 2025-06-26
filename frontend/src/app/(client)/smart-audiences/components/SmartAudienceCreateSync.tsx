@@ -152,6 +152,7 @@ type ArrayMapping = {
 	s3: CustomRow[];
 	google_ads: CustomRow[];
 	sales_force: CustomRow[];
+	go_high_level: CustomRow[];
 };
 
 const styles = {
@@ -224,6 +225,7 @@ const integrationsImage = [
 	{ image: "google-ads.svg", service_name: "google_ads" },
 	{ image: "bing.svg", service_name: "bing_ads" },
 	{ image: "salesforce-icon.svg", service_name: "sales_force" },
+	{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
 	{ image: "s3.svg", service_name: "s3" },
 ];
 
@@ -524,6 +526,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
 			);
 		}
+		if (service === "go_high_level") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
+			);
+		}
 		if (service === "s3") {
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3",
@@ -788,6 +795,18 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			);
 			setRows(defaultSalesForce);
 		}
+		if (activeService === "go_high_level") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
+			);
+			setRows(defaultRows);
+			setCustomFields(
+				customFieldsList.map((field) => ({
+					type: field.value,
+					value: field.type,
+				})),
+			);
+		}
 		if (activeService === "s3") {
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3",
@@ -1038,6 +1057,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		s3: customFieldsList,
 		google_ads: customFieldsList,
 		sales_force: customFieldsList,
+		go_high_level: customFieldsList,
 	};
 
 	const handleAddIntegration = async (service_name: string) => {

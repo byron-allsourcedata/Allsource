@@ -65,7 +65,7 @@ class IntegrationLimit(Enum):
     S3 = 10000
     KLAVIYO = 1000
     LINKEDIN = 100
-    GO_HIGH_LEVEL = 100
+    GO_HIGH_LEVEL = 50
 
 
 class BusinessType(Enum):

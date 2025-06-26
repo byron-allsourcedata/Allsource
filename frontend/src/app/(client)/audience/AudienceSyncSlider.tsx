@@ -99,6 +99,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [metaConnectApp, setMetaConnectApp] = useState(false);
 	const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false);
 	const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false);
+	const [openGoHighLevelConnect, setOpenGoHighLevelConnect] = useState(false);
+	const [goHighLevelIconPopupOpen, setOpenGoHighLevelIconPopupOpen] =
+		useState(false);
 	const [bingAdsIconPopupOpen, setOpenBingAdsIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false);
 	const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
@@ -157,6 +160,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const handleOmnisendIconPopupOpenClose = () => {
 		setOpenOmnisendConnect(false);
 		setOpenOmnisendIconPopupOpen(false);
+	};
+
+	const handleGoHighLevelIconPopupOpenClose = () => {
+		setOpenGoHighLevelConnect(false);
+		setOpenGoHighLevelIconPopupOpen(false);
 	};
 
 	const handleBingAdsIconPopupOpenClose = () => {
@@ -564,8 +572,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				data={null}
 			/>
 			<GoHighLevelDataSync
-				open={omnisendIconPopupOpen}
-				onClose={handleOmnisendIconPopupOpenClose}
+				open={goHighLevelIconPopupOpen}
+				onClose={handleGoHighLevelIconPopupOpenClose}
 				isEdit={false}
 				data={null}
 			/>
