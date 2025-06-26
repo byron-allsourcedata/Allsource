@@ -118,7 +118,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
 		useState(false);
-	const [isLoading, setIsLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(false);
 	const stripePromise = loadStripe(
 		process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 	);
@@ -412,6 +412,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	return (
 		<>
 			<Box sx={{ pr: 2, pt: 1 }}>
+				{isLoading && <CustomizedProgressBar />}
 				<Box
 					sx={{
 						display: "grid",

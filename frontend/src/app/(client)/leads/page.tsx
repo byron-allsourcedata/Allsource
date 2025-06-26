@@ -1771,7 +1771,7 @@ const Leads: React.FC = () => {
 															...widths,
 															position: "sticky",
 															top: 0,
-															zIndex: 97,
+															zIndex: 7,
 															borderTop: "1px solid rgba(235,235,235,1)",
 															borderBottom: "1px solid rgba(235,235,235,1)",
 															cursor: sortable ? "pointer" : "default",
@@ -1789,7 +1789,7 @@ const Leads: React.FC = () => {
 														};
 														if (isNameColumn) {
 															baseCellSX.left = 0;
-															baseCellSX.zIndex = 99;
+															baseCellSX.zIndex = 9;
 															baseCellSX.boxShadow = isScrolledX
 																? "3px 0px 3px rgba(0,0,0,0.2)"
 																: "none";
@@ -1908,7 +1908,7 @@ const Leads: React.FC = () => {
 															cellOptions={{
 																className: "sticky-cell",
 																sx: {
-																	zIndex: 9,
+																	zIndex: 8,
 																	position: "sticky",
 																	left: 0,
 																	backgroundColor: "#fff",

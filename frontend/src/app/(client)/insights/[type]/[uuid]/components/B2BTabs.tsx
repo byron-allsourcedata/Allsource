@@ -37,7 +37,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 					alignItems: "center",
 					position: "sticky",
 					top: 95,
-					zIndex: 100,
+					zIndex: 1,
 					pt: 2,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",

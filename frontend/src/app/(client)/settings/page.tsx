@@ -172,30 +172,28 @@ const Settings: React.FC = () => {
 				</Box>
 			</Box>
 
-			{isLoading ? (
-				<CustomizedProgressBar />
-			) : (
-				<Box
-					sx={{
-						flexGrow: 1,
-						overflowY: "auto",
-						overflowX: "hidden",
-						pl: 1,
-					}}
-				>
-					{activeSection === "accountDetails" && accountDetails && (
-						<SettingsAccountDetails accountDetails={accountDetails} />
-					)}
+			{isLoading && <CustomizedProgressBar />}
 
-					{activeSection === "teams" && <SettingsTeams />}
+			<Box
+				sx={{
+					flexGrow: 1,
+					overflowY: "auto",
+					overflowX: "hidden",
+					pl: 1,
+				}}
+			>
+				{activeSection === "accountDetails" && accountDetails && (
+					<SettingsAccountDetails accountDetails={accountDetails} />
+				)}
 
-					{activeSection === "billing" && <SettingsBilling />}
+				{activeSection === "teams" && <SettingsTeams />}
 
-					{activeSection === "subscription" && <SettingsSubscription />}
+				{activeSection === "billing" && <SettingsBilling />}
 
-					{activeSection === "apiDetails" && <SettingsApiDetails />}
-				</Box>
-			)}
+				{activeSection === "subscription" && <SettingsSubscription />}
+
+				{activeSection === "apiDetails" && <SettingsApiDetails />}
+			</Box>
 		</Box>
 	);
 };
