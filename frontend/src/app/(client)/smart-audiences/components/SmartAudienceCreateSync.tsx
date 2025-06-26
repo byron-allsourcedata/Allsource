@@ -97,6 +97,7 @@ interface Row {
 interface CustomRow {
 	type: string;
 	value: string;
+	is_constant?: boolean;
 }
 
 interface MetaAuidece {
@@ -142,18 +143,18 @@ type ServiceHandlers = {
 	go_high_level: () => void;
 	s3: () => void;
 };
+type ServiceType =
+	| "hubspot"
+	| "mailchimp"
+	| "CSV"
+	| "default"
+	| "meta"
+	| "s3"
+	| "google_ads"
+	| "sales_force"
+	| "go_high_level";
 
-type ArrayMapping = {
-	hubspot: CustomRow[];
-	mailchimp: CustomRow[];
-	default: CustomRow[];
-	meta: CustomRow[];
-	CSV: CustomRow[];
-	s3: CustomRow[];
-	google_ads: CustomRow[];
-	sales_force: CustomRow[];
-	go_high_level: CustomRow[];
-};
+type ArrayMapping = Record<ServiceType, CustomRow[]>;
 
 const styles = {
 	tabHeading: {
@@ -878,12 +879,19 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 
 	// Data Maping
 
-	const handleChangeField = (index: number, field: string, value: string) => {
-		setCustomFields(
-			customFields.map((item, i) =>
-				i === index ? { ...item, [field]: value } : item,
-			),
-		);
+	const handleChangeField = (
+		index: number,
+		key: keyof CustomRow,
+		value: string | boolean | undefined,
+	) => {
+		setCustomFields((prev) => {
+			const updated = [...prev];
+			updated[index] = {
+				...updated[index],
+				[key]: value,
+			};
+			return updated;
+		});
 	};
 
 	const handleAddField = () => {
@@ -1060,6 +1068,24 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		go_high_level: customFieldsList,
 	};
 
+	const extendedFieldsList = [
+		{ value: "__constant__", type: "Constant field" },
+		...arrayWithCustomFields[(activeService as ServiceType) ?? "default"],
+	];
+
+	const isValueDuplicate = (value: string, currentIndex: number): boolean => {
+		return (
+			customFields.some(
+				(f, idx) => f.value === value && idx !== currentIndex,
+			) || rows.some((r) => r.value === value)
+		);
+	};
+
+	const hasAnyDuplicates = (): boolean => {
+		return customFields.some((field, index) =>
+			isValueDuplicate(field.value, index),
+		);
+	};
 	const handleAddIntegration = async (service_name: string) => {
 		try {
 			setIsLoading(true);
@@ -1726,19 +1752,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 										<Grid
 											item
 											xs="auto"
-											sm={1}
-											sx={{
-												"@media (max-width:599px)": {
-													minWidth: "50px",
-												},
-											}}
-										>
-											&nbsp;
-										</Grid>
-										<Grid
-											item
-											xs="auto"
-											sm={5}
+											sm={7}
 											sx={{
 												textAlign: "center",
 												"@media (max-width:599px)": {
@@ -1752,9 +1766,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 												height={20}
 												width={30}
 											/>
-										</Grid>
-										<Grid item xs="auto" sm={1}>
-											&nbsp;
 										</Grid>
 									</Grid>
 
@@ -2056,74 +2067,153 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 												key={index}
 											>
 												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														select
-														fullWidth
-														variant="outlined"
-														label="Custom Field"
-														value={field.type}
-														onChange={(e) =>
-															handleChangeField(index, "type", e.target.value)
-														}
-														InputLabelProps={{
-															sx: {
-																fontFamily: "Nunito Sans",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
+													{field.is_constant ? (
+														<TextField
+															fullWidth
+															variant="outlined"
+															label="Constant Field Name"
+															value={field.type}
+															onChange={(e) =>
+																handleChangeField(index, "type", e.target.value)
+															}
+															placeholder="Enter field name"
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "Nunito Sans",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
 																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
-														}}
-														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "Roboto",
-																		color: "#202124",
-																		fontSize: "14px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "Roboto",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
 																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
 																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
+															}}
+														/>
+													) : (
+														<TextField
+															select
+															fullWidth
+															variant="outlined"
+															label="Custom Field"
+															value={field.type}
+															onChange={(e) => {
+																const selected = e.target.value;
+																if (selected === "__constant__") {
+																	setCustomFields((prev) => {
+																		const updated = [...prev];
+																		updated[index] = {
+																			...updated[index],
+																			type: "",
+																			is_constant: true,
+																		};
+																		return updated;
+																	});
+																} else {
+																	handleChangeField(index, "type", selected);
+																	handleChangeField(
+																		index,
+																		"is_constant",
+																		undefined,
+																	);
+																}
+															}}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "Nunito Sans",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
 																},
-															},
-														}}
-													>
-														{arrayWithCustomFields[
-															(activeService as keyof ArrayMapping) ?? "default"
-														]?.map((item: CustomRow) => (
-															<MenuItem
-																key={item.value}
-																value={item.value}
-																disabled={customFields.some(
-																	(f) => f.type === item.value,
-																)}
-															>
-																{item.type}
-															</MenuItem>
-														))}
-													</TextField>
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "Roboto",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+														>
+															{extendedFieldsList.map((item) => (
+																<MenuItem
+																	key={item.value}
+																	value={item.value}
+																	disabled={
+																		item.value !== "__constant__" &&
+																		(customFields.some(
+																			(f) => f.type === item.value,
+																		) ||
+																			rows.some((r) => r.type === item.value))
+																	}
+																>
+																	{item.type}
+																</MenuItem>
+															))}
+														</TextField>
+													)}
 												</Grid>
 												<Grid
 													item
@@ -2191,6 +2281,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 																	},
 															},
 														}}
+														error={isValueDuplicate(field.value, index)}
+														helperText={
+															isValueDuplicate(field.value, index)
+																? "This field name already exists"
+																: ""
+														}
 													/>
 												</Grid>
 												<Grid
@@ -2295,6 +2391,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 									variant="contained"
 									onClick={handleNextTab}
 									className="second-sub-title"
+									disabled={hasAnyDuplicates()}
 									sx={{
 										backgroundColor: "rgba(56, 152, 252, 1)",
 										color: "rgba(255, 255, 255, 1) !important",

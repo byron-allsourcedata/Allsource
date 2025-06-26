@@ -37,7 +37,7 @@ interface GoHighLevelProps {
 	open: boolean;
 	onClose: () => void;
 	onCloseCreateSync?: () => void;
-	data: Data;
+	data?: Data;
 	isEdit?: boolean;
 }
 
@@ -129,7 +129,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 				const response = await axiosInstance.put(
 					"/data-sync/sync",
 					{
-						integrations_users_sync_id: data.id,
+						integrations_users_sync_id: data?.id,
 						leads_type: selectedRadioValue,
 						data_map: customFields,
 					},

@@ -575,7 +575,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				open={goHighLevelIconPopupOpen}
 				onClose={handleGoHighLevelIconPopupOpenClose}
 				isEdit={false}
-				data={null}
 			/>
 			<BingAdsDataSync
 				open={bingAdsIconPopupOpen}

@@ -1657,7 +1657,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				open={goHightLevelIconPopupOpen}
 				onClose={handleGoHightLevelIconPopupClose}
 				isEdit={false}
-				data={null}
 			/>
 
 			<ConnectSalesForce

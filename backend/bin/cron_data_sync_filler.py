@@ -6,6 +6,9 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+
+from config.sentry import SentryConfig
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
@@ -333,6 +336,7 @@ async def process_user_integrations(channel, session):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -375,8 +379,9 @@ async def main():
             await process_user_integrations(channel, db_session)
 
             logging.info("Processing completed. Sleeping for 10 minutes...")
-        except Exception:
+        except Exception as e:
             logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
         finally:
             if db_session:
                 logging.info("Closing the database session...")

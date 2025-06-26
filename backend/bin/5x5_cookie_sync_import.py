@@ -1,3 +1,9 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import insert
+from dotenv import load_dotenv
+from datetime import datetime
+
 import asyncio
 import logging
 import os
@@ -9,15 +15,12 @@ import traceback
 import boto3
 import pyarrow.parquet as pq
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.dialects.postgresql import insert
-from dotenv import load_dotenv
-from datetime import datetime
+from config.sentry import SentryConfig
 from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 
 load_dotenv()
@@ -126,6 +129,7 @@ async def process_files(sts_client, session):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     sts_client = create_sts_client(
         os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
     )
@@ -144,6 +148,7 @@ async def main():
             time.sleep(60 * 10)
         except Exception as e:
             session.rollback()
+            SentryConfig.capture(e)
             logging.error(f"An error occurred: {str(e)}")
             traceback.print_exc()
             time.sleep(30)

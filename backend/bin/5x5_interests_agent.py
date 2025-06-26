@@ -6,12 +6,14 @@ import os
 import sys
 
 import pandas as pd
+import sentry_sdk
 from sqlalchemy import create_engine
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.sentry import SentryConfig
 from models.five_x_five_users_interests import FiveXFiveUserInterest
 from config.rmq_connection import RabbitMQConnection
 from sqlalchemy.dialects.postgresql import insert
@@ -56,6 +58,7 @@ async def on_message_received(message, session):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     db_session = None
     rabbitmq_connection = None
@@ -83,6 +86,7 @@ async def main():
         await asyncio.Future()
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
     finally:
         if db_session:
             logging.info("Closing the database session...")
