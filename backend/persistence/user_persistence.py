@@ -389,7 +389,8 @@ class UserPersistence:
                     .filter(
                         UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.timezone('UTC', func.now()) - UserDomains.pixel_installation_date
+                        func.timezone("UTC", func.now())
+                        - UserDomains.pixel_installation_date
                         <= timedelta(hours=24),
                     )
                     .exists(),
@@ -405,7 +406,8 @@ class UserPersistence:
                     .filter(
                         UserDomains.user_id == Users.id,
                         UserDomains.is_pixel_installed == True,
-                        func.timezone('UTC', func.now())- UserDomains.pixel_installation_date
+                        func.timezone("UTC", func.now())
+                        - UserDomains.pixel_installation_date
                         > timedelta(hours=24),
                     )
                     .exists(),
