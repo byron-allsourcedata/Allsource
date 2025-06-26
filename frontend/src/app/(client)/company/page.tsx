@@ -478,7 +478,7 @@ const Leads: React.FC = () => {
 				? Math.floor(appliedDates.end.getTime() / 1000)
 				: null;
 
-			let url = `/company/download-companies?page=${page + 1}&per_page=${rowsPerPage}`;
+			let url = "/company/download-companies";
 			const params = [];
 
 			if (startEpoch !== null && endEpoch !== null) {

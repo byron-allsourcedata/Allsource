@@ -9,6 +9,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.sentry import SentryConfig
 from dependencies import (
     LeadsPersistence,
     AudiencePersistence,
@@ -20,6 +21,7 @@ from sqlalchemy.engine import create_engine
 
 
 if __name__ == "__main__":
+    SentryConfig.initialize()
     logging.basicConfig(level=logging.INFO)
     dotenv.load_dotenv()
     engine = create_engine(
@@ -47,4 +49,5 @@ if __name__ == "__main__":
                         service.sync(user.domain_id)
                 except Exception as e:
                     logging.info(e)
+                    SentryConfig.capture(e)
             time.sleep(60 * 60)

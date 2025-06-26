@@ -5,9 +5,12 @@ import logging
 import os
 import sys
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from config.sentry import SentryConfig
 from config.aws import get_s3_client
 
 from sqlalchemy import create_engine
@@ -42,6 +45,7 @@ PLATFORMS = ["big_commerce", "shopify"]
 
 
 if __name__ == "__main__":
+    SentryConfig.initialize()
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
     )

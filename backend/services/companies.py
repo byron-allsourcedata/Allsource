@@ -576,8 +576,6 @@ class CompanyService:
         employees_range: Optional[str] = None,
         industry: Optional[str] = None,
         search_query: Optional[str] = None,
-        page: Optional[int] = None,
-        per_page: Optional[int] = None,
     ):
         if company_id:
             company = self.company_persistence_service.get_company_by_id(
@@ -590,8 +588,6 @@ class CompanyService:
                 from_date=from_date,
                 to_date=to_date,
                 search_query=search_query,
-                page=page,
-                per_page=per_page,
                 employee_visits=employee_visits,
                 revenue_range=revenue_range,
                 regions=regions,

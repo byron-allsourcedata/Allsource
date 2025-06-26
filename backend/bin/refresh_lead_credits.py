@@ -7,6 +7,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.sentry import SentryConfig
 from persistence.user_persistence import UserPersistence
 from persistence.user_subscriptions import UserSubscriptionsPersistence
 from resolver import Resolver
@@ -83,6 +84,7 @@ def refresh_basic_lead_credits(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     db_session = None
 
@@ -107,6 +109,7 @@ async def main():
     except Exception as err:
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
         db_session.rollback()
+        SentryConfig.capture(err)
     finally:
         if db_session:
             logging.info("Closing the database session...")

@@ -6,6 +6,7 @@ import sys
 import aioboto3
 import boto3
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -14,6 +15,7 @@ from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
+from config.sentry import SentryConfig
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -63,6 +65,7 @@ async def process_files(sts_client, channel):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     sts_client = create_sts_client(
         os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")

@@ -18,9 +18,12 @@ from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from config.sentry import SentryConfig
 from sqlalchemy.dialects.postgresql import insert
 from models.audience_smarts import AudienceSmart
 from utils import send_sse
@@ -289,6 +292,7 @@ async def process_rmq_message(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -334,8 +338,9 @@ async def main():
 
         await asyncio.Future()
 
-    except Exception:
+    except Exception as e:
         logging.error("Unhandled Exception:", exc_info=True)
+        await SentryConfig.capture(e)
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()

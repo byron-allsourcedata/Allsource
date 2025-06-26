@@ -42,7 +42,7 @@ interface UserData {
 	full_name: string;
 	email: string;
 	created_at: string;
-	payment_status?: string;
+	status?: string;
 	is_trial?: boolean;
 	last_login: string;
 	invited_by_email?: string;
@@ -240,21 +240,39 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	};
 	const getStatusStyle = (behavior_type: string) => {
 		switch (behavior_type) {
-			case "PIXEL_VERIFIED":
-				return {
-					background: "rgba(221, 248, 234, 1)",
-					color: "rgba(0, 91, 43, 1) !important",
-				};
-
-			case "USER_AUTHENTICATED":
-				return {
-					background: "rgba(210, 230, 255, 0.8)",
-					color: "rgba(30, 90, 200, 1) !important",
-				};
 			case "NEED_CONFIRM_EMAIL":
 				return {
-					background: "rgba(255, 165, 0, 0.3)",
-					color: "#FF8C00 !important",
+					background: "rgba(253, 221, 218, 1)",
+				};
+
+			case "PIXEL_NOT_INSTALLED":
+				return {
+					background: "rgba(253, 221, 218, 1)",
+				};
+
+			case "WAITING_CONTACTS":
+				return {
+					background: "rgba(254, 243, 205, 1)",
+				};
+
+			case "RESOLUTION_FAILED":
+				return {
+					background: "rgba(253, 221, 218, 1)",
+				};
+
+			case "SYNC_NOT_COMPLETED":
+				return {
+					background: "rgba(254, 243, 205, 1)",
+				};
+
+			case "SYNC_ERROR":
+				return {
+					background: "rgba(253, 221, 218, 1)",
+				};
+
+			case "DATA_SYNCING":
+				return {
+					background: "rgba(221, 248, 234, 1)",
 				};
 
 			default:
@@ -266,23 +284,26 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	};
 
 	const formatFunnelText = (text: string) => {
-		if (text === "NEED_CHOOSE_PLAN") {
-			return "---";
-		}
-		if (text === "TRIAL_ACTIVE") {
-			return "---";
-		}
-		if (text === "USER_AUTHENTICATED") {
-			return "User authenticated";
-		}
 		if (text === "NEED_CONFIRM_EMAIL") {
 			return "Need confirm email";
 		}
-		if (text === "PAYMENT_NEEDED") {
-			return "Payment needed";
+		if (text === "PIXEL_NOT_INSTALLED") {
+			return "Pixel Not Installed";
 		}
-		if (text === "PIXEL_VERIFIED") {
-			return "Pixel verified";
+		if (text === "WAITING_CONTACTS") {
+			return "Waiting Contacts";
+		}
+		if (text === "RESOLUTION_FAILED") {
+			return "Resolution Failed";
+		}
+		if (text === "SYNC_NOT_COMPLETED") {
+			return "Sync Not Completed";
+		}
+		if (text === "SYNC_ERROR") {
+			return "Sync Error";
+		}
+		if (text === "DATA_SYNCING") {
+			return "Data Syncing";
 		}
 	};
 
@@ -364,10 +385,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 											pr: "10px",
 										}}
 									>
-										{row.full_name.replace("#test_allsource", "").trim()}
+										{row.full_name.replace("#test", "").trim()}
 									</Box>
 
-									{row.full_name.includes("#test_allsource") && (
+									{row.full_name.includes("#test") && (
 										<Chip
 											label="Test"
 											size="small"
@@ -455,15 +476,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							fontSize: "12px",
 							fontWeight: "400",
 							lineHeight: "normal",
-							backgroundColor: getStatusStyle(row.payment_status ?? "")
-								.background,
-							color: getStatusStyle(row?.payment_status ?? "").color,
+							backgroundColor: getStatusStyle(row.status ?? "").background,
+							color: "#4A4A4A",
 							justifyContent: "center",
 							minWidth: "130px",
 							textTransform: "capitalize",
 						}}
 					>
-						{formatFunnelText(row.payment_status ?? "") || "--"}
+						{formatFunnelText(row.status ?? "") || "--"}
 					</Typography>
 				);
 			case "subscription_plan":

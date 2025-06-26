@@ -18,6 +18,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.sentry import SentryConfig
 from models.five_x_five_locations import FiveXFiveLocations
 from models.enrichment.enrichment_postals import EnrichmentPostal
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
@@ -152,6 +153,7 @@ def read_and_fill_enrichment_postal(db_session, file_path):
 
 
 def main():
+    SentryConfig.initialize()
     logging.info("Started")
     db_session = None
     try:
@@ -165,6 +167,7 @@ def main():
         read_and_fill_enrichment_postal(db_session, path)
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
     finally:
         if db_session:
             logging.info("Closing the database session...")
