@@ -475,7 +475,7 @@ async def aud_email_validation(
 
 
 async def main():
-    await SentryConfig.async_initialize()
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
