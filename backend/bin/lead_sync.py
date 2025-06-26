@@ -927,6 +927,9 @@ async def process_user_data(
             session.flush()
             if not user_domain.is_pixel_installed:
                 user_domain.is_pixel_installed = True
+                user_domain.pixel_installation_date = datetime.now(
+                    timezone.utc
+                ).replace(tzinfo=None)
                 session.flush()
         else:
             if not lead_user.is_returning_visitor:
