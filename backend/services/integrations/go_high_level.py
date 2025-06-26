@@ -284,9 +284,6 @@ class GoHighLevelIntegrationsService:
         response = self.__handle_request(
             method="POST", url=url, json=contact_data, headers=headers
         )
-        print("----")
-        print(response.status_code)
-        print(response.text)
         if response.status_code in (200, 201, 202):
             return ProccessDataSyncResult.SUCCESS.value
 

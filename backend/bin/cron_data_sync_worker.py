@@ -365,7 +365,7 @@ async def ensure_integration(
                     )
 
             logging.info(f"Processed message for service: {service_name}")
-            # await message.ack()
+            await message.ack()
             return
         else:
             logging.error(f"Invalid service name: {service_name}")
