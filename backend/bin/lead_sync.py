@@ -622,11 +622,20 @@ def get_subscription_plan_info(session, plan_id):
 
 
 def set_behavior_flag(user_domain: UserDomains, behavior_type: str):
-    if behavior_type == "viewed_product":
+    if (
+        not user_domain.is_view_product_installed
+        and behavior_type == "viewed_product"
+    ):
         user_domain.is_view_product_installed = True
-    elif behavior_type == "product_added_to_cart":
+    elif (
+        not user_domain.is_add_to_cart_installed
+        and behavior_type == "product_added_to_cart"
+    ):
         user_domain.is_add_to_cart_installed = True
-    elif behavior_type == "checkout_completed":
+    elif (
+        not user_domain.is_converted_sales_installed
+        and behavior_type == "checkout_completed"
+    ):
         user_domain.is_converted_sales_installed = True
 
 
