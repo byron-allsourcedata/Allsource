@@ -67,7 +67,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({
 					alignItems: "center",
 					position: "sticky",
 					top: 50,
-					zIndex: 100,
+					zIndex: 1,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",
 					width: "97%",

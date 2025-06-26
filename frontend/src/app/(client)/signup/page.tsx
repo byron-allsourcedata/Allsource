@@ -642,7 +642,7 @@ const Signup: React.FC = () => {
 									I accept the{" "}
 									<Link
 										sx={signupStyles.checkboxContentLink}
-										href="https://www.maximiz.ai/terms-and-conditions/"
+										href="https://allforce.io/privacy-policy"
 										color="primary"
 										target="_blank"
 										rel="noopener noreferrer"

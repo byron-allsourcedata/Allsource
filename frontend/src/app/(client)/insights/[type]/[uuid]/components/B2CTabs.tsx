@@ -46,7 +46,7 @@ const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks }) => {
 					alignItems: "center",
 					position: "sticky",
 					top: 95,
-					zIndex: 100,
+					zIndex: 1,
 					pt: 2,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",

@@ -168,6 +168,7 @@ class UsersService:
             enable=domain.is_enable,
             is_add_to_cart_installed=domain.is_add_to_cart_installed,
             is_converted_sales_installed=domain.is_converted_sales_installed,
+            is_view_product_installed=domain.is_view_product_installed,
         )
 
     def get_meeting_info(self) -> MeetingData:
