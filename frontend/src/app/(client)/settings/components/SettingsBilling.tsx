@@ -35,7 +35,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
 		useState(false);
-	const [isLoading, setIsLoading] = useState(true);
+	const [isLoading, setIsLoading] = useState(false);
 	const [hide, setHide] = useState(false);
 
 	const [paymentFailed, setPaymentFailed] = useState(false);
@@ -119,13 +119,10 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 		);
 	};
 
-	if (isLoading) {
-		return <CustomizedProgressBar />;
-	}
-
 	return (
 		<>
 			<Box sx={{ pr: 2, pt: 1 }}>
+				{isLoading && <CustomizedProgressBar />}
 				<Box
 					sx={{
 						display: "grid",

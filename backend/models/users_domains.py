@@ -53,6 +53,9 @@ class UserDomains(Base):
     is_add_to_cart_installed = Column(
         Boolean, nullable=False, server_default=text("false")
     )
+    is_view_product_installed = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )
     total_leads = Column(Integer, nullable=False, server_default=text("0"))
 
     __table_args__ = (

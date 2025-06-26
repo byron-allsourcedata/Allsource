@@ -151,10 +151,6 @@ async def get_seniority(
 @router.get("/download-companies")
 async def download_companies(
     company_id: Optional[int] = Query(None),
-    page: int = Query(1, alias="page", ge=1, description="Page number"),
-    per_page: int = Query(
-        10, alias="per_page", ge=1, le=500, description="Items per page"
-    ),
     from_date: Optional[int] = Query(
         None, description="Start date in integer format"
     ),
@@ -183,8 +179,6 @@ async def download_companies(
         employee_visits=employee_visits,
         revenue_range=revenue_range,
         search_query=search_query,
-        page=page,
-        per_page=per_page,
         regions=regions,
         employees_range=employees_range,
         industry=industry,

@@ -42,8 +42,6 @@ class CompanyPersistence:
         from_date: Optional[int] = None,
         to_date: Optional[int] = None,
         search_query: Optional[str] = None,
-        page: Optional[int] = None,
-        per_page: Optional[int] = None,
         employee_visits: Optional[str] = None,
         revenue_range: Optional[str] = None,
         regions: Optional[str] = None,
@@ -217,8 +215,7 @@ class CompanyPersistence:
 
             query = query.filter(or_(*filters))
 
-        offset = (page - 1) * per_page
-        companies = query.limit(per_page).offset(offset).all()
+        companies = query.limit(self.DOWNLOAD_LIMIT_ROWS).all()
         return companies
 
     def get_company_by_id(self, domain_id: int, company_id: int):

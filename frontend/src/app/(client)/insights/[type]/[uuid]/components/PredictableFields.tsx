@@ -27,7 +27,7 @@ const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
 					alignItems: "center",
 					position: "sticky",
 					top: 50,
-					zIndex: 100,
+					zIndex: 1,
 					backgroundColor: "#fff",
 					justifyContent: "start",
 					width: "100%",
