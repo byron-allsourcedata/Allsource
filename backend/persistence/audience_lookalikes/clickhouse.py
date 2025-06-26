@@ -224,6 +224,8 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
 
         columns = ", ".join(enrichment_columns)
         client = ClickhouseConfig.get_client()
+        client.query("set max_query_size = 268435456").close()
+
         result = client.query(
             f"SELECT {columns} FROM {ClickhouseConfig.users_table()} WHERE asid IN %(ids)s",
             parameters={"ids": asids},
