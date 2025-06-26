@@ -137,8 +137,8 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 						alt="confirm-icon"
 					/>
 					<Typography className="second-sub-title">
-						If the pixel is installed correctly, you&apos;ll see a green
-						checkmark.
+						If the pixel is installed correctly, a confirmation popup will
+						appear in the top right corner.
 					</Typography>
 				</Box>
 
@@ -153,8 +153,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 				>
 					<Image src="/close.svg" width={16} height={16} alt="fail-icon" />
 					<Typography className="second-sub-title">
-						If the pixel cannot be found, a red X icon will display with the
-						warning &quot;Provider id not found&quot;
+						If the pixel is not installed, nothing will happen.
 					</Typography>
 				</Box>
 			</Box>

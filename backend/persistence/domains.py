@@ -23,9 +23,9 @@ from schemas.domains import AdditionalScriptsInfo
 
 @injectable
 class UserDomainsPersistence:
-    def __init__(self, db: Db):
+    def __init__(self, db: Db, leads_persistence: LeadsPersistence):
         self.db = db
-        self.leads_persistence = LeadsPersistence
+        self.leads_persistence = leads_persistence
 
     def get_domains_by_user(self, user_id: int, domain_substr: str = None):
         query = self.db.query(UserDomains).filter_by(user_id=user_id)
@@ -279,7 +279,9 @@ class UserDomainsPersistence:
         if not domain:
             raise HTTPException(status_code=404, detail="Domain not found")
 
-        lead_exists = self.leads_persistence.exists_by_domain_id(domain_id)
+        lead_exists = self.leads_persistence.exists_leads_by_domain_id(
+            domain_id=domain_id
+        )
 
         if lead_exists:
             raise HTTPException(
