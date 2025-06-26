@@ -385,10 +385,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 											pr: "10px",
 										}}
 									>
-										{row.full_name.replace("#test_allsource", "").trim()}
+										{row.full_name.replace("#test", "").trim()}
 									</Box>
 
-									{row.full_name.includes("#test_allsource") && (
+									{row.full_name.includes("#test") && (
 										<Chip
 											label="Test"
 											size="small"
