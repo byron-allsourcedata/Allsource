@@ -328,7 +328,6 @@ class GoHighLevelIntegrationsService:
             headers=headers,
         )
         result = response.json()
-        print(response.text)
         if not result.get("customField"):
             raise HTTPException(
                 status_code=409,
@@ -537,6 +536,7 @@ class GoHighLevelIntegrationsService:
             "lastName": last_name,
             "name": f"{first_name} {last_name}",
             "phone": main_phone,
+            "country": "US",
             "tags": ["Customer"],
             "source": "Allsource api",
             "locationId": location_id,
@@ -570,8 +570,6 @@ class GoHighLevelIntegrationsService:
         for key, value in result_map.items():
             if key in ["city", "state", "zip_code", "addr1", "address"]:
                 address_data[key] = value
-            if key == "country" or key == "country_code":
-                profile["country"] = value
             elif key == "company":
                 profile["companyName"] = value
 
