@@ -10,6 +10,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.sentry import SentryConfig
 from models.five_x_five_users import FiveXFiveUser
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
@@ -127,6 +128,7 @@ def save_users_interests(db_session):
 
 
 def main():
+    SentryConfig.async_initilize()
     logging.info("Started")
     db_session = None
     try:
@@ -139,6 +141,7 @@ def main():
         save_users_interests(db_session=db_session)
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
     finally:
         if db_session:
             logging.info("Closing the database session...")

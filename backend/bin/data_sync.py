@@ -8,9 +8,12 @@ import traceback
 
 import httpx
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from config.sentry import SentryConfig
 from config.aws import get_s3_client
 
 from sqlalchemy import create_engine
@@ -61,6 +64,7 @@ async def process_data_sync(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     db_session = None
     rabbitmq_connection = None
@@ -102,6 +106,7 @@ async def main():
             await asyncio.Future()
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
     finally:
         if db_session:
             logging.info("Closing the database session...")

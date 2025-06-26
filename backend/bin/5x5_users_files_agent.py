@@ -10,6 +10,8 @@ import tempfile
 import aioboto3
 import boto3
 import pandas as pd
+import sentry_sdk
+
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -17,6 +19,8 @@ sys.path.append(parent_dir)
 from config.rmq_connection import publish_rabbitmq_message_with_channel
 from config.rmq_connection import RabbitMQConnection
 from dotenv import load_dotenv
+
+from config.sentry import SentryConfig
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -80,6 +84,7 @@ async def on_message_received(message_body, s3_session, channel):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     try:
         rabbitmq_connection = RabbitMQConnection()
@@ -117,6 +122,7 @@ async def main():
         await connection.close()
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
     finally:
         if rabbitmq_connection:
             logging.info("Closing RabbitMQ connection...")
