@@ -1,4 +1,3 @@
-import argparse
 import asyncio
 import json
 import logging
@@ -9,18 +8,14 @@ import time
 import traceback
 import urllib.parse
 from collections import defaultdict
-from typing import List
 from datetime import datetime, timedelta, timezone
-
+from typing import List
+import argparse
 import pytz
 import regex
-from dateutil.relativedelta import relativedelta
-
-from sqlalchemy import create_engine, desc, update
-from sqlalchemy.orm import sessionmaker, Session, aliased
-
 from dotenv import load_dotenv
 from sqlalchemy import desc
+from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, aliased
 
@@ -29,7 +24,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 
-from persistence.user_subscriptions import UserSubscriptionsPersistence
+from config.sentry import SentryConfig
 from utils import normalize_url, get_url_params_list, check_certain_urls
 from enums import NotificationTitles
 from db_dependencies import Clickhouse
@@ -155,6 +150,7 @@ async def process_table(
     notification_persistence: NotificationPersistence,
     root_user=None,
 ):
+    results = []
     for key, possible_leads in groupped_requests.items():
         for possible_lead in reversed(possible_leads):
             up_id = possible_lead["UP_ID"]
@@ -185,7 +181,7 @@ async def process_table(
                 )
                 if five_x_five_user:
                     logging.info(f"Lead found by UP_ID {up_id}")
-                    await process_user_data(
+                    result = await process_user_data(
                         states_dict,
                         possible_lead,
                         five_x_five_user,
@@ -196,6 +192,8 @@ async def process_table(
                         notification_persistence,
                         None,
                     )
+                    if result:
+                        results.append(result)
                     if root_user:
                         await process_user_data(
                             states_dict,
@@ -211,6 +209,7 @@ async def process_table(
                     break
                 else:
                     logging.warning(f"Not found by UP_ID {up_id}")
+    return results
 
 
 async def handle_payment_notification(
@@ -634,6 +633,7 @@ async def process_user_data(
     root_user=None,
 ):
     global count
+    domain_count_hash = {}
     partner_uid_decoded = urllib.parse.unquote(
         str(possible_lead["PARTNER_UID"]).lower()
     )
@@ -860,6 +860,12 @@ async def process_user_data(
         else:
             lead_user.is_active = False
 
+        if lead_user.is_active:
+            domain_count_hash = {
+                "user_id": lead_user.user_id,
+                "domain_id": lead_user.domain_id,
+            }
+
     requested_at_str = str(possible_lead["EVENT_DATE"])
     requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
     thirty_minutes_ago = requested_at - timedelta(minutes=30)
@@ -922,6 +928,9 @@ async def process_user_data(
             session.flush()
             if not user_domain.is_pixel_installed:
                 user_domain.is_pixel_installed = True
+                user_domain.pixel_installation_date = datetime.now(
+                    timezone.utc
+                ).replace(tzinfo=None)
                 session.flush()
         else:
             if not lead_user.is_returning_visitor:
@@ -1023,6 +1032,7 @@ async def process_user_data(
 
     session.commit()
     count += 1
+    return domain_count_hash
 
 
 def convert_leads_requests_to_utc(leads_requests):
@@ -1130,6 +1140,18 @@ def get_all_states(db_session: Session):
     return db_session.query(States).all()
 
 
+def deduplicate_domain_counts(domain_count_list: List[dict]):
+    combined = defaultdict(int)
+    for item in domain_count_list:
+        key = (item["domain_id"], item["user_id"])
+        combined[key] += 1
+
+    return [
+        {"domain_id": domain_id, "user_id": user_id, "count": count}
+        for (domain_id, user_id), count in combined.items()
+    ]
+
+
 async def process_files(
     ch_session: Clickhouse,
     subscription_service: SubscriptionService,
@@ -1140,8 +1162,8 @@ async def process_files(
     root_user: Users,
 ):
     states = get_all_states(db_session)
+    domain_count_list = []
     states_dict = {state.state_code: state.id for state in states}
-
     while True:
         try:
             with open(LAST_PROCESSED_FILE_PATH, "r") as file:
@@ -1176,7 +1198,7 @@ async def process_files(
         event_date = five_x_five_cookie_sync_file.limit(1).scalar()
         if not event_date:
             logging.info("No data in 5x5 files yet")
-            return
+            return deduplicate_domain_counts(domain_count_list)
 
         new_dt = event_date + timedelta(hours=1)
 
@@ -1194,7 +1216,7 @@ async def process_files(
         if not groupped_requests:
             logging.info("All 5x5 files processed")
             return
-        await process_table(
+        result = await process_table(
             ch_session,
             db_session,
             states_dict,
@@ -1205,6 +1227,8 @@ async def process_files(
             notification_persistence,
             None,
         )
+        if result:
+            domain_count_list.extend(result)
         if root_user:
             await process_table(
                 ch_session,
@@ -1332,45 +1356,25 @@ def update_hash_leads(db_session: Db, domain_count_list: List[dict]):
     for item in domain_count_list:
         totals[item["user_id"]] += item["count"]
 
-    processed = {}
-    for user_id, count, domain_id in domain_count_list.items():
+    for user_id, count in totals.items():
         stmt = (
-            update(AudienceSmart)
-            .where(AudienceSmart.user_id == user_id)
-            .values(
-                processed_active_segment_records=AudienceSmart.processed_active_segment_records
-                + add_count
-            )
+            update(Users)
+            .where(Users.id == user_id)
+            .values(total_leads=Users.total_leads + count)
         )
-        result = session.execute(stmt)
-        row = result.fetchone()
-        if row:
-            processed[row[0]] = row[1]
-    session.commit()
-    return processed
+        db_session.execute(stmt)
 
-
-def update_total_leads(session: Session, domain_count_list: List[dict]):
-    totals = defaultdict(int)
     for item in domain_count_list:
-        totals[item["user_id"]] += item["count"]
-
-    processed = {}
-    for user_id, count, domain_id in domain_count_list.items():
+        domain_id = item["domain_id"]
+        count = item["count"]
         stmt = (
-            update(AudienceSmart)
-            .where(AudienceSmart.user_id == user_id)
-            .values(
-                processed_active_segment_records=AudienceSmart.processed_active_segment_records
-                + add_count
-            )
+            update(UserDomains)
+            .where(UserDomains.id == domain_id)
+            .values(total_leads=UserDomains.total_leads + count)
         )
-        result = session.execute(stmt)
-        row = result.fetchone()
-        if row:
-            processed[row[0]] = row[1]
-    session.commit()
-    return processed
+        db_session.execute(stmt)
+
+    db_session.commit()
 
 
 def get_root_user(db_session: Db):
@@ -1404,16 +1408,7 @@ async def main():
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
     args = parse_args()
-    log_level = logging.INFO
-    if len(sys.argv) > 1:
-        arg = sys.argv[1].upper()
-        if arg == "DEBUG":
-            log_level = logging.DEBUG
-        elif arg == "INFO":
-            log_level = logging.INFO
-        else:
-            sys.exit(1)
-
+    log_level = logging.DEBUG if args.log == "DEBUG" else logging.INFO
     setup_logging(log_level)
 
     await channel.declare_queue(
@@ -1432,7 +1427,7 @@ async def main():
         update_total_leads(db_session=db_session)
     while True:
         try:
-            await process_files(
+            domain_count_list = await process_files(
                 ch_session=ch_session,
                 subscription_service=subscription_service,
                 notification_persistence=notification_persistence,
