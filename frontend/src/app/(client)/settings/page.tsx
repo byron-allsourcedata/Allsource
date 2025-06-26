@@ -67,7 +67,6 @@ const Settings: React.FC = () => {
 						right: "16px",
 						top: 0,
 						background: "#fff",
-						zIndex: 10,
 						"@media (max-width: 1199px)": {
 							paddingTop: "1rem",
 						},
