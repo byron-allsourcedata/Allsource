@@ -314,46 +314,17 @@ class UserDomainsPersistence:
     def get_additional_scripts_info(
         self, user_id: int, domain_id: int
     ) -> AdditionalScriptsInfo:
-        domain_exists = (
-            self.db.query(UserDomains.id)
+        domain: UserDomains | None = (
+            self.db.query(UserDomains)
             .filter(UserDomains.id == domain_id, UserDomains.user_id == user_id)
             .first()
         )
-        if not domain_exists:
+
+        if not domain:
             raise HTTPException(status_code=404, detail="Domain not found")
 
-        has_view_product = (
-            self.db.query(LeadUser.id)
-            .filter(
-                LeadUser.domain_id == domain_id,
-                LeadUser.behavior_type == "viewed_product",
-            )
-            .first()
-            is not None
-        )
-
-        has_add_to_cart = (
-            self.db.query(LeadUser.id)
-            .filter(
-                LeadUser.domain_id == domain_id,
-                LeadUser.behavior_type == "product_added_to_cart",
-            )
-            .first()
-            is not None
-        )
-
-        has_converted_sale = (
-            self.db.query(LeadUser.id)
-            .filter(
-                LeadUser.domain_id == domain_id,
-                LeadUser.is_converted_sales.is_(True),
-            )
-            .first()
-            is not None
-        )
-
         return AdditionalScriptsInfo(
-            view_product=has_view_product,
-            add_to_cart=has_add_to_cart,
-            converted_sale=has_converted_sale,
+            view_product=domain.is_view_product_installed,
+            add_to_cart=domain.is_add_to_cart_installed,
+            converted_sale=domain.is_converted_sales_installed,
         )

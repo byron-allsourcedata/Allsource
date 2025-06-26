@@ -14,6 +14,7 @@ class DomainResponse(BaseModel):
     enable: bool
     is_add_to_cart_installed: bool
     is_converted_sales_installed: bool
+    is_view_product_installed: bool
 
 
 class DomainWithStats(DomainResponse):

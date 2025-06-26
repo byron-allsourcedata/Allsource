@@ -125,7 +125,7 @@ const Suppressions: React.FC = () => {
 							position: "sticky",
 							top: 0,
 							pl: "0.5rem",
-							zIndex: 10000,
+							zIndex: 9,
 							pt: 1.5,
 							backgroundColor: "#fff",
 							justifyContent: "space-between",

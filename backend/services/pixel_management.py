@@ -57,16 +57,17 @@ class PixelManagementService:
                     "pixel_status": domain["is_pixel_installed"],
                     "contacts_resolving": domain["id"]
                     in contacts_resolving_ids,
-                    "additional_pixel": [
-                        {
-                            "is_add_to_cart_installed": domain[
-                                "is_add_to_cart_installed"
-                            ],
-                            "is_converted_sales_installed": domain[
-                                "is_converted_sales_installed"
-                            ],
-                        }
-                    ],
+                    "additional_pixel": {
+                        "is_add_to_cart_installed": domain[
+                            "is_add_to_cart_installed"
+                        ],
+                        "is_converted_sales_installed": domain[
+                            "is_converted_sales_installed"
+                        ],
+                        "is_view_product_installed": domain[
+                            "is_view_product_installed"
+                        ],
+                    },
                     "resolutions": [
                         {"date": d, "lead_count": c}
                         for d, c in self.leads_persistence.get_leads_count_by_day(

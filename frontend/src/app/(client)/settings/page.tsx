@@ -55,7 +55,7 @@ const Settings: React.FC = () => {
 			<AppBar
 				position="sticky"
 				color="inherit"
-				sx={{ boxShadow: "none", pl: 0.5 }}
+				sx={{ boxShadow: "none", pl: 0.5, zIndex: 5 }}
 			>
 				<Box
 					sx={{
@@ -69,7 +69,6 @@ const Settings: React.FC = () => {
 						right: "16px",
 						top: 0,
 						background: "#fff",
-						zIndex: 10,
 						"@media (max-width: 1199px)": {
 							paddingTop: "1rem",
 						},
@@ -174,30 +173,28 @@ const Settings: React.FC = () => {
 				</Box>
 			</AppBar>
 
-			{isLoading ? (
-				<CustomizedProgressBar />
-			) : (
-				<Box
-					sx={{
-						flexGrow: 1,
-						overflowY: "auto",
-						overflowX: "hidden",
-						pl: 1,
-					}}
-				>
-					{activeSection === "accountDetails" && accountDetails && (
-						<SettingsAccountDetails accountDetails={accountDetails} />
-					)}
+			{isLoading && <CustomizedProgressBar />}
 
-					{activeSection === "teams" && <SettingsTeams />}
+			<Box
+				sx={{
+					flexGrow: 1,
+					overflowY: "auto",
+					overflowX: "hidden",
+					pl: 1,
+				}}
+			>
+				{activeSection === "accountDetails" && accountDetails && (
+					<SettingsAccountDetails accountDetails={accountDetails} />
+				)}
 
-					{activeSection === "billing" && <SettingsBilling />}
+				{activeSection === "teams" && <SettingsTeams />}
 
-					{activeSection === "subscription" && <SettingsSubscription />}
+				{activeSection === "billing" && <SettingsBilling />}
 
-					{activeSection === "apiDetails" && <SettingsApiDetails />}
-				</Box>
-			)}
+				{activeSection === "subscription" && <SettingsSubscription />}
+
+				{activeSection === "apiDetails" && <SettingsApiDetails />}
+			</Box>
 		</Box>
 	);
 };
