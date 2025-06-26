@@ -383,7 +383,7 @@ class UserPersistence:
             .filter(Users.role.any("customer"))
         )
 
-        if not test_users:
+        if test_users:
             query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
 
         if filters.get("last_login_date_start"):
