@@ -40,6 +40,7 @@ from utils import (
     get_valid_location,
     format_phone_number,
     get_http_client,
+    get_valid_email_without_million,
 )
 
 logger = logging.getLogger(__name__)
@@ -384,6 +385,7 @@ class GoHighLevelIntegrationsService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         results = []
         access_token = self.refresh_ghl_token(
@@ -396,6 +398,7 @@ class GoHighLevelIntegrationsService:
                 data_map=integration_data_sync.data_map,
                 location_id=user_integration.location_id,
                 access_token=access_token,
+                is_email_validation_enabled=is_email_validation_enabled,
             )
             if contact_data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -432,10 +435,15 @@ class GoHighLevelIntegrationsService:
         data_map: list,
         location_id: str,
         access_token: str,
+        is_email_validation_enabled: bool,
     ) -> dict | str:
-        first_email = get_valid_email(
-            five_x_five_user, self.million_verifier_integrations
-        )
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                five_x_five_user, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(five_x_five_user)
+
         first_name = getattr(five_x_five_user, "first_name", None)
         last_name = getattr(five_x_five_user, "last_name", None)
         if not first_name or not last_name:

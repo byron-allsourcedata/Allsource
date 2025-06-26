@@ -38,7 +38,12 @@ from services.integrations.commonIntegration import resolve_main_email_and_phone
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import get_valid_email, format_phone_number, get_http_client
+from utils import (
+    get_valid_email,
+    format_phone_number,
+    get_http_client,
+    get_valid_email_without_million,
+)
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
@@ -510,11 +515,14 @@ class MetaIntegrationsService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__hash_mapped_meta_user_lead(five_x_five_user)
+            profile = self.__hash_mapped_meta_user_lead(
+                five_x_five_user, is_email_validation_enabled
+            )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
@@ -593,10 +601,15 @@ class MetaIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __hash_mapped_meta_user_lead(self, five_x_five_user: FiveXFiveUser):
-        first_email = get_valid_email(
-            five_x_five_user, self.million_verifier_integrations
-        )
+    def __hash_mapped_meta_user_lead(
+        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
+    ):
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                five_x_five_user, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(five_x_five_user)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

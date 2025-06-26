@@ -46,6 +46,7 @@ from utils import (
     get_valid_location,
     format_phone_number,
     get_http_client,
+    get_valid_email_without_million,
 )
 
 logger = logging.getLogger(__name__)
@@ -298,11 +299,14 @@ class GoogleAdsIntegrationsService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_googleads_profile_lead(five_x_five_user)
+            profile = self.__mapped_googleads_profile_lead(
+                five_x_five_user, is_email_validation_enabled
+            )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
@@ -471,11 +475,14 @@ class GoogleAdsIntegrationsService:
         return {"message": "successfuly"}
 
     def __mapped_googleads_profile_lead(
-        self, five_x_five_user: FiveXFiveUser
-    ) -> GoogleAdsProfile | None:
-        first_email = get_valid_email(
-            five_x_five_user, self.million_verifier_integrations
-        )
+        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
+    ) -> GoogleAdsProfile | str:
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                five_x_five_user, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(five_x_five_user)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -860,3 +867,12 @@ class GoogleAdsIntegrationsService:
                 logger.error(
                     f"Error code: {error.error_code}, Message: {error.message}"
                 )
+            return {
+                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
+                "message": str(IntegrationsStatus.CREDENTAILS_INVALID.value),
+            }
+        except Exception as e:
+            return {
+                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
+                "message": str(IntegrationsStatus.CREDENTAILS_INVALID.value),
+            }
