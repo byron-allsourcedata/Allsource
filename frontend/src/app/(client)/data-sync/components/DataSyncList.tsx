@@ -94,7 +94,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [data, setData] = useState<any[]>([]);
 	const [allData, setAllData] = useState<any[]>([]);
 	const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
-	const [goHightLevelIconPopupOpen, setGoHightLevelIconPopupOpen] =
+	const [goHighLevelIconPopupOpen, setGoHighLevelIconPopupOpen] =
 		useState(false);
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
@@ -479,7 +479,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	};
 
 	const handleGoHighLevelIconPopupClose = async () => {
-		setMetaIconPopupOpen(false);
+		setGoHighLevelIconPopupOpen(false);
 		setSelectedId(null);
 		try {
 			const response = await axiosInstance.get(
@@ -539,7 +539,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			} else if (dataSyncPlatform === "meta") {
 				setMetaIconPopupOpen(true);
 			} else if (dataSyncPlatform === "go_high_level") {
-				setGoHightLevelIconPopupOpen(true);
+				setGoHighLevelIconPopupOpen(true);
 			} else if (dataSyncPlatform === "mailchimp") {
 				setMailchimpIconPopupOpen(true);
 			} else if (dataSyncPlatform === "omnisend") {
@@ -1381,10 +1381,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						/>
 					</>
 				)}
-				{goHightLevelIconPopupOpen && isEdit === true && (
+				{goHighLevelIconPopupOpen && isEdit === true && (
 					<>
 						<GoHighLevelDataSync
-							open={goHightLevelIconPopupOpen}
+							open={goHighLevelIconPopupOpen}
 							onClose={handleGoHighLevelIconPopupClose}
 							data={data.find((item) => item.id === selectedId)}
 							isEdit={isEdit}
