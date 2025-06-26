@@ -274,6 +274,9 @@ const Users: React.FC = () => {
 			case "To Date":
 				filters.to_date = null;
 				break;
+			case "statuses":
+				filters.statuses = {};
+				break;
 			default:
 				break;
 		}
