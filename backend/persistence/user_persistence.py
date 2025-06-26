@@ -384,7 +384,7 @@ class UserPersistence:
         )
 
         if test_users:
-            query = query.filter(~Users.full_name.ilike("%#test_allsource%"))
+            query = query.filter(~Users.full_name.ilike("#test%"))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(
