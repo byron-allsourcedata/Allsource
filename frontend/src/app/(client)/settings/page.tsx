@@ -55,7 +55,7 @@ const Settings: React.FC = () => {
 			<AppBar
 				position="sticky"
 				color="inherit"
-				sx={{ boxShadow: "none", pl: 0.5 }}
+				sx={{ boxShadow: "none", pl: 0.5, zIndex: 5 }}
 			>
 				<Box
 					sx={{
@@ -69,7 +69,6 @@ const Settings: React.FC = () => {
 						right: "16px",
 						top: 0,
 						background: "#fff",
-						zIndex: 10,
 						"@media (max-width: 1199px)": {
 							paddingTop: "1rem",
 						},
