@@ -1,6 +1,17 @@
+import boto3
+import os
+from resolver import injectable
+
+
+@injectable
 class AWSService:
-    def __init__(self, s3_client) -> None:
-        self.s3_client = s3_client
+    def __init__(self) -> None:
+        self.s3_client = boto3.client(
+            "s3",
+            aws_access_key_id=os.getenv("S3_KEY_ID"),
+            aws_secret_access_key=os.getenv("S3_KEY_SECRET"),
+            region_name="us-west-2",
+        )
 
     def upload_string(self, string_data: str, object_name: str) -> None:
         self.s3_client.put_object(

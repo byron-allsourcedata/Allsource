@@ -1,20 +1,22 @@
-from datetime import datetime, timedelta, timezone
-import re
-import os
+import calendar
 import hashlib
 import json
-import httpx
-from typing import Optional, Any
-import calendar
-import regex
-from urllib.parse import urlparse, parse_qs
 import logging
+import os
+import re
+from datetime import datetime, timedelta, timezone
+from typing import Optional, Any
+from urllib.parse import urlparse, parse_qs
+
+import httpx
+import regex
+
+from config.rmq_connection import publish_rabbitmq_message_with_channel
 from enums import ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from config.rmq_connection import publish_rabbitmq_message_with_channel
 
 logger = logging.getLogger(__name__)
 

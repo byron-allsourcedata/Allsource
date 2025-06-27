@@ -1,32 +1,32 @@
 import hashlib
-import os
 import logging
+import os
+from datetime import datetime
 from typing import Annotated
+from urllib.parse import urlencode
 
 import httpx
-from urllib.parse import urlencode
-from jose import JWTError
-from config.bigcommerce import BigcommerceConfig
-from models.users_domains import UserDomains
-from dateutil.relativedelta import relativedelta
-from enums import IntegrationsStatus, SourcePlatformEnum
-from resolver import injectable
-from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
-from schemas.integrations.bigcommerce import BigCommerceInfo
-from persistence.leads_persistence import LeadsPersistence
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from services.aws import AWSService
-from persistence.domains import UserDomainsPersistence
 from bigcommerce.api import BigcommerceApi
-from httpx import Client
+from dateutil.relativedelta import relativedelta
 from fastapi import HTTPException, status, Depends
-from datetime import datetime
-from persistence.leads_order_persistence import LeadOrdersPersistence
+from jose import JWTError
+
+from config.bigcommerce import BigcommerceConfig
+from enums import IntegrationsStatus, SourcePlatformEnum
+from models.users_domains import UserDomains
+from persistence.domains import UserDomainsPersistence
 from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.leads_order_persistence import LeadOrdersPersistence
+from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
+from schemas.integrations.bigcommerce import BigCommerceInfo
+from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
+from services.aws import AWSService
 from utils import get_http_client
 
 logging.basicConfig(level=logging.INFO)
@@ -43,6 +43,7 @@ class BigcommerceIntegrationsService:
         client: Annotated[httpx.Client, Depends(get_http_client)],
         domain_persistence: UserDomainsPersistence,
         epi_persistence: ExternalAppsInstallationsPersistence,
+        aws_service: AWSService,
     ):
         self.integrations_persistence = integrations_persistence
         self.lead_persistence = leads_persistence
@@ -50,6 +51,7 @@ class BigcommerceIntegrationsService:
         self.client = client
         self.domain_persistence = domain_persistence
         self.eai_persistence = epi_persistence
+        self.AWS = aws_service
 
     def get_credentials(self, domain_id: int, user_id=None):
         integration = self.integrations_persistence.get_credentials_for_service(

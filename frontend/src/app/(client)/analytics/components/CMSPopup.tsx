@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import type React from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
 	Box,
 	Button,
@@ -12,6 +13,7 @@ import {
 	Input,
 	TextField,
 } from "@mui/material";
+import type { AxiosError } from "axios";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
 import CustomTooltip from "@/components/customToolTip";
@@ -317,8 +319,18 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 			} else {
 				showErrorToast("Failed to install pixel");
 			}
-		} catch (error) {
-			showErrorToast("An error occurred while installing the pixel");
+		} catch (error: unknown) {
+			const axiosError = error as AxiosError;
+			const data = axiosError?.response?.data as { status?: string };
+			if (data?.status === "CREDENTIALS_INVALID") {
+				showErrorToast("Access token is invalid");
+			} else if (data?.status === "STORE_DOMAIN") {
+				showErrorToast(
+					"Store Domain does not match the one you specified earlier",
+				);
+			} else {
+				showErrorToast(`An unexpected error occurred ${data?.status}`);
+			}
 		}
 	};
 
