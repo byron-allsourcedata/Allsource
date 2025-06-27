@@ -395,7 +395,8 @@ class UserPersistence:
                     )
                     .exists(),
                     ~self.db.query(LeadUser.id)
-                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .join(UserDomains, LeadUser.domain_id == UserDomains.id)
+                    .filter(UserDomains.user_id == Users.id)
                     .exists(),
                 ),
                 UserStatusInAdmin.WAITING_CONTACTS.value,
@@ -412,7 +413,8 @@ class UserPersistence:
                     )
                     .exists(),
                     ~self.db.query(LeadUser.id)
-                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .join(UserDomains, LeadUser.domain_id == UserDomains.id)
+                    .filter(UserDomains.user_id == Users.id)
                     .exists(),
                 ),
                 UserStatusInAdmin.RESOLUTION_FAILED.value,
@@ -423,7 +425,11 @@ class UserPersistence:
                     .filter(LeadUser.domain_id == UserDomains.id)
                     .exists(),
                     ~self.db.query(IntegrationUserSync.id)
-                    .filter(IntegrationUserSync.domain_id == UserDomains.id)
+                    .join(
+                        UserDomains,
+                        IntegrationUserSync.domain_id == UserDomains.id,
+                    )
+                    .filter(UserDomains.user_id == Users.id)
                     .exists(),
                 ),
                 UserStatusInAdmin.SYNC_NOT_COMPLETED.value,
@@ -433,10 +439,10 @@ class UserPersistence:
                     self.db.query(LeadUser.id)
                     .filter(LeadUser.domain_id == UserDomains.id)
                     .exists(),
-                    ~self.db.query(IntegrationUserSync.id)
+                    self.db.query(IntegrationUserSync.id)
                     .filter(
                         IntegrationUserSync.domain_id == UserDomains.id,
-                        IntegrationUserSync.sync_status == True,
+                        IntegrationUserSync.sync_status == False,
                     )
                     .exists(),
                 ),
@@ -460,7 +466,7 @@ class UserPersistence:
         per_page,
         sort_by,
         sort_order,
-        test_users,
+        exclude_test_users,
         filters,
     ):
         status_case = self.calculate_user_status()
@@ -492,7 +498,7 @@ class UserPersistence:
             .filter(Users.role.any("customer"))
         )
 
-        if test_users:
+        if exclude_test_users:
             query = query.filter(~Users.full_name.like("#test%"))
 
         if filters.get("statuses"):

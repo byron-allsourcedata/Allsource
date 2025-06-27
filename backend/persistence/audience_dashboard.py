@@ -12,7 +12,7 @@ from sqlalchemy.sql import (
     literal,
 )
 from sqlalchemy.orm import aliased
-from enums import AudienceSmartStatuses
+from enums import AudienceSmartStatuses, UserStatusInAdmin
 from models import Users
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_smarts import AudienceSmart
@@ -53,6 +53,94 @@ class DashboardAudiencePersistence:
         )
         return source_rows, installed_domains_count
 
+    def calculate_user_status(self):
+        subquery_user_domains = (
+            self.db.query(UserDomains.id)
+            .filter(UserDomains.user_id == Users.id)
+            .correlate(Users)
+        )
+
+        subquery_pixel_installed = (
+            self.db.query(UserDomains.id)
+            .filter(
+                UserDomains.user_id == Users.id,
+                UserDomains.is_pixel_installed == True,
+            )
+            .correlate(Users)
+        )
+
+        subquery_lead_user = (
+            self.db.query(LeadUser.id)
+            .join(UserDomains, LeadUser.domain_id == UserDomains.id)
+            .filter(UserDomains.user_id == Users.id)
+            .correlate(Users)
+        )
+
+        subquery_integration_user_sync = (
+            self.db.query(IntegrationUserSync.id)
+            .join(UserDomains, IntegrationUserSync.domain_id == UserDomains.id)
+            .filter(UserDomains.user_id == Users.id)
+            .correlate(Users)
+        )
+
+        return case(
+            (
+                Users.is_email_confirmed == False,
+                UserStatusInAdmin.NEED_CONFIRM_EMAIL.value,
+            ),
+            (
+                or_(
+                    ~subquery_user_domains.exists(),
+                    ~subquery_pixel_installed.exists(),
+                ),
+                UserStatusInAdmin.PIXEL_NOT_INSTALLED.value,
+            ),
+            (
+                and_(
+                    subquery_pixel_installed.filter(
+                        func.timezone("UTC", func.now())
+                        - UserDomains.pixel_installation_date
+                        <= timedelta(hours=24)
+                    ).exists(),
+                    ~subquery_lead_user.exists(),
+                ),
+                UserStatusInAdmin.WAITING_CONTACTS.value,
+            ),
+            (
+                and_(
+                    subquery_pixel_installed.filter(
+                        func.timezone("UTC", func.now())
+                        - UserDomains.pixel_installation_date
+                        > timedelta(hours=24)
+                    ).exists(),
+                    ~subquery_lead_user.exists(),
+                ),
+                UserStatusInAdmin.RESOLUTION_FAILED.value,
+            ),
+            (
+                and_(
+                    subquery_lead_user.exists(),
+                    ~subquery_integration_user_sync.exists(),
+                ),
+                UserStatusInAdmin.SYNC_NOT_COMPLETED.value,
+            ),
+            (
+                and_(
+                    subquery_lead_user.exists(),
+                    subquery_integration_user_sync.filter(
+                        IntegrationUserSync.sync_status == False
+                    ).exists(),
+                ),
+                UserStatusInAdmin.SYNC_ERROR.value,
+            ),
+            (
+                subquery_integration_user_sync.filter(
+                    IntegrationUserSync.sync_status == True
+                ).exists(),
+                UserStatusInAdmin.DATA_SYNCING.value,
+            ),
+        )
+
     def get_audience_metrics(
         self,
         last_login_date_start: int,
@@ -60,8 +148,21 @@ class DashboardAudiencePersistence:
         join_date_start: int,
         join_date_end: int,
         search_query: str,
+        statuses: str,
+        exclude_test_users: bool,
     ):
         user_filters = [Users.role.contains(["customer"])]
+
+        status_case = self.calculate_user_status()
+
+        if statuses:
+            formatted_statuses = [
+                status.strip().lower() for status in statuses.split(",")
+            ]
+            user_filters.append(func.lower(status_case).in_(formatted_statuses))
+
+        if exclude_test_users:
+            user_filters.append(~Users.full_name.like("#test%"))
 
         if last_login_date_start:
             start_date = datetime.fromtimestamp(
