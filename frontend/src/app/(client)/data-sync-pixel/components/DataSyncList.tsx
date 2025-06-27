@@ -1314,9 +1314,52 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												}}
 											>
 												{!row.is_user_validations &&
-												row.validation_contacts === 0
-													? "Not validating"
-													: row.validation_contacts}
+												row.validation_contacts === 0 ? (
+													<Tooltip
+														title={
+															<Box
+																sx={{
+																	backgroundColor: "#fff",
+																	margin: 0,
+																	padding: 0,
+																	display: "flex",
+																	flexDirection: "row",
+																	alignItems: "center",
+																}}
+															>
+																<Typography
+																	className="table-data"
+																	component="div"
+																	sx={{ fontSize: "12px !important" }}
+																>
+																	Email validation was disabled for your
+																	account, contact support
+																</Typography>
+															</Box>
+														}
+														componentsProps={{
+															tooltip: {
+																sx: {
+																	backgroundColor: "#fff",
+																	color: "#000",
+																	boxShadow:
+																		"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																	border: "0.2px solid rgba(255, 255, 255, 1)",
+																	borderRadius: "4px",
+																	maxHeight: "100%",
+																	maxWidth: "500px",
+																	padding: "11px 10px",
+																},
+															},
+														}}
+													>
+														<Typography className="table-data">
+															Not validating
+														</Typography>
+													</Tooltip>
+												) : (
+													row.validation_contacts
+												)}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
