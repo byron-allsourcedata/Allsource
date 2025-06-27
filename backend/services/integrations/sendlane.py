@@ -1,6 +1,13 @@
 from models import UserIntegration, IntegrationUserSync, LeadUser
 from resolver import injectable
-from utils import validate_and_format_phone, get_http_client
+from utils import (
+    validate_and_format_phone,
+    get_http_client,
+    get_valid_email,
+    get_valid_email_without_million,
+    get_valid_phone,
+    get_valid_location,
+)
 from typing import List, Tuple, Annotated
 from fastapi import HTTPException, Depends
 import httpx
@@ -157,7 +164,7 @@ class SendlaneIntegrationService:
             credential.is_failed = True
             credential.error_message = "Invalid API Key"
             self.integrations_persisntece.db.commit()
-            return
+            return {"status": IntegrationsStatus.CREDENTAILS_INVALID.value}
         return [self.__mapped_list(list) for list in lists.json().get("data")]
 
     def add_integration(
@@ -250,55 +257,95 @@ class SendlaneIntegrationService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
     ):
-        return self.bulk_add_contacts(
-            user_data=user_data,
+        profiles = []
+        results = []
+        for lead_user, five_x_five_user in user_data:
+            profile = self.__mapped_profile(
+                five_x_five_user,
+                integration_data_sync.data_map,
+                is_email_validation_enabled,
+            )
+            if profile in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                results.append({"lead_id": lead_user.id, "status": profile})
+                continue
+            else:
+                results.append(
+                    {
+                        "lead_id": lead_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
+            profiles.append(profile)
+
+        if not profiles:
+            return results
+
+        result_bulk = self.bulk_add_contacts(
             access_token=user_integration.access_token,
+            profiles=profiles,
             list_id=integration_data_sync.list_id,
-            is_email_validation_enabled=is_email_validation_enabled,
         )
+        if result_bulk != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = result_bulk
+        return results
+
+    def __mapped_profile(
+        self,
+        lead: FiveXFiveUser,
+        data_map: list,
+        is_email_validation_enabled: bool,
+    ) -> str | dict[str, str]:
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                lead, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(lead)
+
+        if first_email in (
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+        ):
+            return first_email
+
+        first_phone = get_valid_phone(lead)
+
+        profile = {
+            "email": first_email,
+            "phone": validate_and_format_phone(first_phone),
+            "first_name": getattr(lead, "first_name", None),
+            "last_name": getattr(lead, "last_name", None),
+        }
+
+        cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
+        return cleaned
 
     def bulk_add_contacts(
         self,
-        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
-        access_token,
+        profiles: List[dict],
+        access_token: str,
         list_id: int,
-        is_email_validation_enabled: bool,
-    ):
-        contacts = []
-        id_map = {}
-
-        for lead_user, five_x_five_user in user_data:
-            contacts.append(
-                {
-                    "email": five_x_five_user.email,
-                    "first_name": five_x_five_user.first_name,
-                    "last_name": five_x_five_user.last_name,
-                }
-            )
-            id_map[five_x_five_user.email] = lead_user.id
-
-        data = {"contacts": contacts}
+    ) -> ProccessDataSyncResult:
+        data = {"contacts": profiles}
         response = self.__handle_request(
             f"/lists/{list_id}/contacts",
             api_key=access_token,
             json=data,
             method="POST",
         )
+        if response.status_code in (200, 201, 202):
+            return ProccessDataSyncResult.SUCCESS.value
 
         if response.status_code == 401:
-            status = ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        elif response.status_code != 200:
-            status = ProccessDataSyncResult.INCORRECT_FORMAT.value
-        else:
-            status = ProccessDataSyncResult.SUCCESS.value
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
-        results = []
-        for contact in contacts:
-            email = contact["email"]
-            lead_id = id_map.get(email)
-            results.append({"lead_id": lead_id, "status": status})
-
-        return results
+        return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
     def __create_contact(self, five_x_five_user, access_token, list_id: int):
         profile = self.__mapped_sendlane_contact(five_x_five_user)

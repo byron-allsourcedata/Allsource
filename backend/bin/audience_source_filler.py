@@ -5,11 +5,12 @@ import io
 import json
 import logging
 import os
+import hashlib
 import re
 import sys
 from datetime import datetime, timezone
 from itertools import islice
-from typing import List, Dict
+from typing import List, Dict, Union
 
 import aioboto3
 import boto3
@@ -110,6 +111,29 @@ def parse_date(date_str: str) -> str | None:
     return None
 
 
+def check_existing_csv_source(
+    db_session: Session, body: Union[bytes, bytearray], source: AudienceSource
+):
+    hash_csv_file = hashlib.md5(
+        body + source.target_schema.encode("utf-8")
+    ).hexdigest()
+
+    existing_source = (
+        db_session.query(AudienceSource)
+        .filter_by(hash_csv_file=hash_csv_file)
+        .first()
+    )
+    if existing_source:
+        source.significant_fields = existing_source.significant_fields
+        source.insights = existing_source.insights
+        logging.info(f"MD5 hash {hash_csv_file} already exists. Data copied.")
+    else:
+        logging.info(f"New MD5 hash {hash_csv_file} calculated and saved.")
+
+    source.hash_csv_file = hash_csv_file
+    db_session.add(source)
+
+
 async def parse_csv_file(
     *,
     data: Dict,
@@ -152,6 +176,8 @@ async def parse_csv_file(
             db_session.rollback()
             logging.error(f"Error reading S3 object: {s3_error}")
             return False
+
+    check_existing_csv_source(db_session=db_session, body=body, source=source)
 
     result = chardet.detect(body)
     encoding = result["encoding"]
