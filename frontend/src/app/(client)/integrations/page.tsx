@@ -1370,7 +1370,7 @@ const Integrations = () => {
 	useEffect(() => {
 		const fetchActiveIntegration = async () => {
 			try {
-				const response = await axiosInstance.get("/integrations/active/");
+				const response = await axiosInstance.get("/integrations/active");
 				if (response.status === 200) {
 					setActiveIntegrations(response.data);
 				}
