@@ -162,13 +162,13 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 					resetToDefaultValues();
 					onClose();
 					showToast("Data sync created successfully");
-					triggerSync();
 				}
 			}
 			handlePopupClose();
 			if (onCloseCreateSync) {
 				onCloseCreateSync();
 			}
+			triggerSync();
 		} finally {
 			setLoading(false);
 		}

@@ -10,7 +10,7 @@ from enums import (
     DataSyncType,
     DataSyncImportedStatus,
 )
-from models import DataSyncImportedLead
+from models import DataSyncImportedLead, LeadUser
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
@@ -181,13 +181,17 @@ class IntegrationsUserSyncPersistence:
 
         all_synced_persons_query = (
             select(
-                count(DataSyncImportedLead.id).label("all_contacts"),
+                count(LeadUser.id).label("all_contacts"),
                 IntegrationUserSync.id,
             )
-            .select_from(DataSyncImportedLead)
+            .select_from(LeadUser)
+            .join(
+                UserDomains,
+                UserDomains.id == LeadUser.domain_id,
+            )
             .join(
                 IntegrationUserSync,
-                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
+                IntegrationUserSync.domain_id == UserDomains.id,
             )
             .group_by(IntegrationUserSync.id)
         ).subquery()
