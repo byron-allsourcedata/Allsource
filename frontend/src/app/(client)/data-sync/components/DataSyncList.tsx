@@ -386,7 +386,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		try {
 			setIsLoading(true);
 			const response = await axiosInterceptorInstance.post(
-				`/data-sync/sync/switch-toggle-smart-audience-sync`,
+				"/data-sync/sync/switch-toggle-smart-audience-sync",
 				{
 					list_id: String(selectedId),
 				},
@@ -394,7 +394,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			if (response.status === 200) {
 				switch (response.data.status) {
 					case "SUCCESS":
-						showToast("successfully");
+						if (response.data.data_sync) {
+							showToast("Pixel Sync enabled successfully");
+						} else {
+							showToast("Pixel Sync is disabled");
+						}
 						setData((prevData) =>
 							prevData.map((item) =>
 								item.id === selectedId

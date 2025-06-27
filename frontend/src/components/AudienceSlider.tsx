@@ -1656,6 +1656,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			<GoHighLevelDataSync
 				open={goHightLevelIconPopupOpen}
 				onClose={handleGoHightLevelIconPopupClose}
+				onCloseCreateSync={onClose}
 				isEdit={false}
 			/>
 

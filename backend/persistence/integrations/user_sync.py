@@ -193,6 +193,7 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.domain_id == UserDomains.id,
             )
+            .filter(LeadUser.is_active == True, LeadUser.is_confirmed == True)
             .group_by(IntegrationUserSync.id)
         ).subquery()
 

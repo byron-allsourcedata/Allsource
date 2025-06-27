@@ -45,7 +45,7 @@ class UserDomainsPersistence:
         domain_ids = (
             self.db.query(LeadUser.domain_id)
             .join(UserDomains, LeadUser.domain_id == UserDomains.id)
-            .filter(UserDomains.user_id == user_id)
+            .filter(UserDomains.user_id == user_id, LeadUser.is_active == True)
             .distinct()
             .all()
         )
