@@ -36,6 +36,7 @@ interface CustomCardsProps {
 interface FilterParams {
 	joinDate: { fromDate: number | null; toDate: number | null };
 	lastLoginDate: { fromDate: number | null; toDate: number | null };
+	statuses: Record<string, boolean>;
 }
 
 interface UserData {
@@ -43,7 +44,7 @@ interface UserData {
 	full_name: string;
 	email: string;
 	created_at: string;
-	payment_status?: string;
+	status?: string;
 	is_trial?: boolean;
 	last_login: string;
 	invited_by_email?: string;
@@ -273,6 +274,9 @@ const Users: React.FC = () => {
 			case "To Date":
 				filters.to_date = null;
 				break;
+			case "statuses":
+				filters.statuses = {};
+				break;
 			default:
 				break;
 		}
@@ -288,7 +292,15 @@ const Users: React.FC = () => {
 			const year = date.getFullYear();
 			return `${month}/${day}/${year}`;
 		}
-		return value.charAt(0).toUpperCase() + value.slice(1);
+		return value
+			.split(", ")
+			.map((item) =>
+				item
+					.split("_")
+					.map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+					.join(" "),
+			)
+			.join(", ");
 	}
 
 	function formatFilterLabel(label: string) {
@@ -296,6 +308,16 @@ const Users: React.FC = () => {
 		const normalized = label.replace(/_/g, " ");
 		return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 	}
+
+	const getSelectedValues = (obj: Record<string, boolean>): string => {
+		return Object.entries(obj)
+			.filter(([_, value]) => value)
+			.map(([key]) => toSnakeCase(key))
+			.join(", ");
+	};
+
+	const toSnakeCase = (str: string) =>
+		str.trim().toLowerCase().replace(/\s+/g, "_");
 
 	const handleApplyFilters = (filters: FilterParams) => {
 		const newSelectedFilters: { label: string; value: string }[] = [];
@@ -318,6 +340,13 @@ const Users: React.FC = () => {
 				});
 			}
 		};
+
+		if (filters.statuses) {
+			newSelectedFilters.push({
+				label: "statuses",
+				value: getSelectedValues(filters.statuses!),
+			});
+		}
 
 		processDateRange("lastLoginDate", "last_login_date");
 		processDateRange("joinDate", "join_date");

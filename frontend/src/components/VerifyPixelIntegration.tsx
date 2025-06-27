@@ -5,8 +5,9 @@ import React, { useState, useEffect } from "react";
 import HintCard from "@/app/(client)/components/HintCard";
 import { verifyPixelIntegrationHintCards } from "@/app/(client)/analytics/components/context/hintsCardsContent";
 import { useGetStartedHints } from "@/app/(client)/analytics/components/context/PixelInstallHintsContext";
-import { InfoIcon, OpenInNewIcon } from "@/icon";
 import Image from "next/image";
+import InfoIcon from "@mui/icons-material/Info";
+import { OpenInNewIcon } from "@/icon";
 
 type VerifyPixelIntegrationProps = {
 	domain: string;

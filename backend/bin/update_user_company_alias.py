@@ -9,6 +9,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.sentry import SentryConfig
 from sqlalchemy.orm import sessionmaker
 from utils import create_company_alias
 from models.five_x_five_users import FiveXFiveUser
@@ -63,6 +64,7 @@ async def process_users(session):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     db_session = None
     try:
@@ -76,6 +78,7 @@ async def main():
 
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
     finally:
         if db_session:
             logging.info("Closing the database session...")

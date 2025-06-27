@@ -74,6 +74,7 @@ import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSyne
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import HintCard from "../components/HintCard";
 import { useIntegrationHints } from "./context/IntegrationsHintsContext";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 
 interface IntegrationBoxProps {
 	image: string;
@@ -758,6 +759,7 @@ const UserIntegrationsList = ({
 		{ image: "salesforce-icon.svg", service_name: "sales_force" },
 		// { image: "bing-ads.svg", service_name: "bing_ads" },
 		{ image: "s3-icon.svg", service_name: "s3" },
+		{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
 		// { image: "linkedin-icon.svg", service_name: "linkedin" },
 	];
 
@@ -1158,6 +1160,13 @@ const UserIntegrationsList = ({
 							(integration) => integration.service_name === "google_ads",
 						)?.is_failed === true
 					}
+					boxShadow="rgba(0, 0, 0, 0.1)"
+				/>
+			)}
+			{openModal === "go_high_level" && (
+				<GoHighLevelConnectPopup
+					open={true}
+					handlePopupClose={handleClose}
 					boxShadow="rgba(0, 0, 0, 0.1)"
 				/>
 			)}

@@ -35,7 +35,7 @@ export const PlanProperties: FC<Props> = (props) => {
 			</Row>
 
 			<Column gap="1rem">
-				{advantages.map((advantage, i) => (
+				{advantages?.map((advantage, i) => (
 					<AdvantageRow
 						key={i}
 						advantage={advantage}

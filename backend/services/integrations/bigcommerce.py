@@ -1,6 +1,8 @@
 import hashlib
 import os
 import logging
+from typing import Annotated
+
 import httpx
 from urllib.parse import urlencode
 from jose import JWTError
@@ -8,6 +10,7 @@ from config.bigcommerce import BigcommerceConfig
 from models.users_domains import UserDomains
 from dateutil.relativedelta import relativedelta
 from enums import IntegrationsStatus, SourcePlatformEnum
+from resolver import injectable
 from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
 from schemas.integrations.bigcommerce import BigCommerceInfo
 from persistence.leads_persistence import LeadsPersistence
@@ -18,31 +21,31 @@ from services.aws import AWSService
 from persistence.domains import UserDomainsPersistence
 from bigcommerce.api import BigcommerceApi
 from httpx import Client
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Depends
 from datetime import datetime
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
+from utils import get_http_client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class BigcommerceIntegrationsService:
     def __init__(
         self,
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         leads_order_persistence: LeadOrdersPersistence,
-        aws_service: AWSService,
-        client: Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         domain_persistence: UserDomainsPersistence,
         epi_persistence: ExternalAppsInstallationsPersistence,
     ):
         self.integrations_persistence = integrations_persistence
         self.lead_persistence = leads_persistence
-        self.AWS = aws_service
         self.lead_orders_persistence = leads_order_persistence
         self.client = client
         self.domain_persistence = domain_persistence

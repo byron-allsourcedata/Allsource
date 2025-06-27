@@ -1,9 +1,13 @@
 from sqlalchemy.orm import Session
+
+from db_dependencies import Db
 from models.integrations.leads_suppresions import LeadsSupperssion
+from resolver import injectable
 
 
+@injectable
 class IntegrationsSuppressionPersistence:
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Db) -> None:
         self.db = db
 
     def create(self, data: dict) -> LeadsSupperssion:

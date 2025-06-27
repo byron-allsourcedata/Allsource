@@ -18,6 +18,7 @@ import TabList from "@mui/lab/TabList";
 import TabContext from "@mui/lab/TabContext";
 import { useState } from "react";
 import CustomizedProgressBar from "@/components/ProgressBar";
+import { CustomButton } from "./ui";
 
 const slackStyles = {
 	tabHeading: {
@@ -285,10 +286,10 @@ const GoogleADSConnectPopup = ({
 									</Typography>
 								</Box>
 								<Box>
-									<Button
-										fullWidth
+									<CustomButton
 										onClick={handleLogin}
 										variant="contained"
+										fullWidth
 										startIcon={
 											<Image
 												src="/google-ads.svg"
@@ -297,25 +298,9 @@ const GoogleADSConnectPopup = ({
 												width={24}
 											/>
 										}
-										sx={{
-											backgroundColor: "rgba(56, 152, 252, 1)",
-											fontFamily: "Nunito Sans",
-											fontSize: "14px",
-											fontWeight: "600",
-											lineHeight: "17px",
-											letterSpacing: "0.25px",
-											color: "#fff",
-											textTransform: "none",
-											padding: "14.5px 24px",
-											"&:hover": {
-												backgroundColor: "#2F3076",
-											},
-											borderRadius: "6px",
-											border: "1px solid rgba(56, 152, 252, 1)",
-										}}
 									>
 										Connect to GoogleAds
-									</Button>
+									</CustomButton>
 									{invalid_api_key && (
 										<Typography
 											color="error"

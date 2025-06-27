@@ -18,6 +18,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 import TabPanel from "@mui/lab/TabPanel";
 import TabList from "@mui/lab/TabList";
 import TabContext from "@mui/lab/TabContext";
+import { CustomButton } from "./ui";
 
 interface MetaConnectPopupProps {
 	open: boolean;
@@ -405,10 +406,10 @@ const MetaConnectButton = ({
 										Login to your Facebook
 									</Typography>
 									<Box>
-										<Button
-											fullWidth
+										<CustomButton
 											onClick={handleLogin}
 											variant="contained"
+											fullWidth
 											startIcon={
 												<Image
 													src="/facebook-icon.svg"
@@ -417,25 +418,9 @@ const MetaConnectButton = ({
 													width={24}
 												/>
 											}
-											sx={{
-												backgroundColor: "#0066ff",
-												fontFamily: "Nunito Sans",
-												fontSize: "14px",
-												fontWeight: "600",
-												lineHeight: "17px",
-												letterSpacing: "0.25px",
-												color: "#fff",
-												textTransform: "none",
-												padding: "14.5px 24px",
-												"&:hover": {
-													backgroundColor: "#0066ff",
-												},
-												borderRadius: "6px",
-												border: "1px solid #0066ff",
-											}}
 										>
 											Connect to Facebook
-										</Button>
+										</CustomButton>
 									</Box>
 									{invalid_api_key && (
 										<Typography

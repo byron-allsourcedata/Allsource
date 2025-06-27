@@ -107,6 +107,9 @@ const AddAdditionalScript: React.FC = () => {
 		},
 	);
 	const [openmanually, setOpen] = useState(false);
+	const [selectedType, setSelectedType] = useState<ScriptKey | undefined>(
+		undefined,
+	);
 	const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
 	const [selectedSecondText, setSelectedSecondText] = useState<{
 		button: string;
@@ -360,13 +363,15 @@ const AddAdditionalScript: React.FC = () => {
 									imageSrc: card.imageSrc,
 									onClick: card.showInstalled
 										? undefined
-										: () =>
+										: () => {
+												setSelectedType(card.key);
 												fetchScriptByType(
 													card.key,
 													card.popupTitle,
 													card.secondStepText,
 													card.thirdStepText,
-												),
+												);
+											},
 									showRecommended: false,
 									showInstalled: card.showInstalled,
 								}))}
@@ -447,6 +452,7 @@ const AddAdditionalScript: React.FC = () => {
 				</Box>
 			)}
 			<ScriptsPopup
+				type={selectedType}
 				open={openmanually}
 				handleClose={() => setOpen(false)}
 				pixelCode={pixelCode ?? ""}

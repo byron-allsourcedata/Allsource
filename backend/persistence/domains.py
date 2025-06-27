@@ -294,7 +294,14 @@ class UserDomainsPersistence:
 
     def update_pixel_installation(self, domain_id: int, is_pixel_install):
         self.db.query(UserDomains).filter(UserDomains.id == domain_id).update(
-            {UserDomains.is_pixel_installed: is_pixel_install}
+            {
+                UserDomains.is_pixel_installed: is_pixel_install,
+                UserDomains.pixel_installation_date: datetime.now(
+                    timezone.utc
+                ).replace(tzinfo=None)
+                if is_pixel_install
+                else None,
+            },
         )
         self.db.commit()
 

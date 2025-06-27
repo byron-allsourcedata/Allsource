@@ -7,7 +7,6 @@ import functools
 import json
 import gzip
 
-import boto3
 from sqlalchemy import update, select, func, create_engine
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
@@ -16,6 +15,7 @@ from dotenv import load_dotenv
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
 from models.enrichment.enrichment_lookalike_scores import (
@@ -136,6 +136,7 @@ async def aud_sources_matching(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -178,9 +179,9 @@ async def main():
 
         await asyncio.Future()
 
-    except Exception:
+    except Exception as e:
         logging.error("Unhandled Exception:", exc_info=True)
-
+        SentryConfig.capture(e)
     finally:
         if db_session:
             logging.info("Closing the database session...")

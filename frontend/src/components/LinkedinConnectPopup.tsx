@@ -340,8 +340,8 @@ const LinkedinConnectPopup = ({
 												marginTop: "10px",
 											}}
 										>
-											Invalid API Key detected. Please reconnect to GoogleAds
-											and try again
+											Invalid API Key detected. Please reconnect to Linkedin and
+											try again
 										</Typography>
 									)}
 								</Box>

@@ -130,6 +130,15 @@ class Users(Base):
         Boolean, nullable=False, server_default=text("true")
     )
 
+    random_seed: Column[int] = Column(
+        Integer, nullable=False, server_default=text("42")
+    )
+    """
+        stored random seed for each user
+
+        required for stability of significant fields detection in case of repetable file uploads
+    """
+
     __table_args__ = (
         Index("users_email_idx", email, unique=True),
         Index("users_data_provider_id_idx", data_provider_id, unique=True),

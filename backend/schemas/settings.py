@@ -75,8 +75,8 @@ class LimitedDetail(BaseModel):
 
 class FundsDetail(BaseModel):
     detail_type: str
-    limit_value: int
-    current_value: int
+    limit_value: Decimal
+    current_value: Decimal
 
 
 class NextBillingDate(BaseModel):
@@ -115,7 +115,6 @@ class DowngradePlan(BaseModel):
 
 class BillingSubscriptionDetails(BaseModel):
     subscription_details: Optional[SubscriptionDetails]
-    downgrade_plan: Optional[DowngradePlan]
     canceled_at: Optional[str]
 
 
@@ -133,6 +132,8 @@ class Price(BaseModel):
 class Plan(BaseModel):
     title: str
     alias: str
+    is_recommended: Optional[bool] = False
+    is_active: Optional[bool] = False
     price: Price
     permanent_limits: List[Advantage]
     monthly_limits: List[Advantage]

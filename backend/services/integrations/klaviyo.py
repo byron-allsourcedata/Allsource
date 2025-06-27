@@ -2,10 +2,10 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import List, Tuple
+from typing import Tuple, Annotated
 
 import httpx
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from enums import (
     IntegrationsStatus,
@@ -21,12 +21,17 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
+from resolver import injectable
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import get_valid_email
+from utils import (
+    get_valid_email,
+    get_http_client,
+    get_valid_email_without_million,
+)
 from utils import validate_and_format_phone, format_phone_number
 
 logging.basicConfig(
@@ -39,6 +44,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
+@injectable
 class KlaviyoIntegrationsService:
     def __init__(
         self,
@@ -46,7 +52,7 @@ class KlaviyoIntegrationsService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence
@@ -342,6 +348,7 @@ class KlaviyoIntegrationsService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         results = []
         for lead_user, five_x_five_user in user_data:
@@ -349,6 +356,7 @@ class KlaviyoIntegrationsService:
                 five_x_five_user,
                 user_integration.access_token,
                 integration_data_sync.data_map,
+                is_email_validation_enabled,
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -444,8 +452,16 @@ class KlaviyoIntegrationsService:
         if response.status_code == 429:
             return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
-    def __create_profile(self, five_x_five_user, api_key: str, data_map):
-        profile = self.__mapped_klaviyo_profile(five_x_five_user)
+    def __create_profile(
+        self,
+        five_x_five_user,
+        api_key: str,
+        data_map,
+        is_email_validation_enabled: bool,
+    ):
+        profile = self.__mapped_klaviyo_profile(
+            five_x_five_user, is_email_validation_enabled
+        )
         if profile in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
@@ -635,11 +651,14 @@ class KlaviyoIntegrationsService:
         ]
 
     def __mapped_klaviyo_profile(
-        self, five_x_five_user: FiveXFiveUser
+        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ) -> KlaviyoProfile:
-        first_email = get_valid_email(
-            five_x_five_user, self.million_verifier_integrations
-        )
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                five_x_five_user, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(five_x_five_user)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

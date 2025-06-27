@@ -1,41 +1,44 @@
+import base64
+import binascii
 import hashlib
+import hmac
 import logging
 import os
-import binascii
+from datetime import datetime, timedelta, timezone
+from typing import Annotated
+
 import httpx
-import hmac
-import base64
-from enums import IntegrationsStatus, OauthShopify
-from integrations.shopify import ShopifyConfig
-from fastapi import HTTPException, status
-from models.users_domains import UserDomains
-from models.users import User
 import requests
+import shopify
+from fastapi import HTTPException, status, Depends
+
+from db_dependencies import Db
+from enums import IntegrationsStatus, OauthShopify
+from enums import SourcePlatformEnum
+from integrations.shopify import ShopifyConfig
 from models.plans import SubscriptionPlan
-from ..jwt_service import create_access_token
-from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
-from schemas.integrations.integrations import IntegrationCredentials
-from persistence.leads_persistence import LeadsPersistence
-from persistence.leads_order_persistence import LeadOrdersPersistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from models.subscriptions import UserSubscriptions
+from models.users import User
+from models.users_domains import UserDomains
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
-from httpx import Client
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_order_persistence import LeadOrdersPersistence
+from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
+from schemas.integrations.integrations import IntegrationCredentials
+from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.shopify import ShopifyShopRedactForm
 from schemas.users import ShopifyPayloadModel
-import shopify
-from models.subscriptions import UserSubscriptions
-from enums import SourcePlatformEnum
-from datetime import datetime, timedelta, timezone
-from services.aws import AWSService
-from sqlalchemy.orm import Session
-
+from utils import get_http_client
+from ..jwt_service import create_access_token
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class ShopifyIntegrationService:
     def __init__(
         self,
@@ -43,9 +46,8 @@ class ShopifyIntegrationService:
         lead_persistence: LeadsPersistence,
         lead_orders_persistence: LeadOrdersPersistence,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
-        client: Client,
-        aws_service: AWSService,
-        db: Session,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
+        db: Db,
     ):
         self.integration_persistence = integration_persistence
         self.lead_persistence = lead_persistence
@@ -54,7 +56,6 @@ class ShopifyIntegrationService:
             integrations_user_sync_persistence
         )
         self.client = client
-        self.AWS = aws_service
         self.db = db
 
     def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
@@ -437,7 +438,10 @@ class ShopifyIntegrationService:
                 self.db.query(UserDomains).filter(
                     UserDomains.id == user_integration.domain_id
                 ).update(
-                    {UserDomains.is_pixel_installed: False},
+                    {
+                        UserDomains.is_pixel_installed: False,
+                        UserDomains.pixel_installation_date: None,
+                    },
                     synchronize_session=False,
                 )
             self.db.query(User).filter(User.shop_id == str(shop_id)).update(

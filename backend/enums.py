@@ -65,6 +65,7 @@ class IntegrationLimit(Enum):
     S3 = 10000
     KLAVIYO = 1000
     LINKEDIN = 100
+    GO_HIGH_LEVEL = 50
 
 
 class BusinessType(Enum):
@@ -132,6 +133,17 @@ class SourcePlatformEnum(Enum):
     BING_ADS = "bing_ads"
     S3 = "s3"
     LINKEDIN = "linkedin"
+    GO_HIGH_LEVEL = "go_high_level"
+
+
+class UserStatusInAdmin(Enum):
+    NEED_CONFIRM_EMAIL = "NEED_CONFIRM_EMAIL"
+    PIXEL_NOT_INSTALLED = "PIXEL_NOT_INSTALLED"
+    WAITING_CONTACTS = "WAITING_CONTACTS"
+    RESOLUTION_FAILED = "RESOLUTION_FAILED"
+    SYNC_NOT_COMPLETED = "SYNC_NOT_COMPLETED"
+    SYNC_ERROR = "SYNC_ERROR"
+    DATA_SYNCING = "DATA_SYNCING"
 
 
 class UserPaymentStatusEnum(Enum):
@@ -276,6 +288,11 @@ class SendgridTemplate(Enum):
     EMAIL_VERIFICATION_TEMPLATE = "email_verification_template"
     FORGOT_PASSWORD_TEMPLATE = "forgot_password_template"
     SEND_PIXEL_CODE_TEMPLATE = "send_pixel_code_template"
+    SEND_VIEW_PRODUCT_PIXEL_TEMPLATE_ON_LOAD = "send_view_product_load"
+    SEND_ADD_TO_CART_PIXEL_TEMPLATE_ON_CLICK = "send_add_to_cart_click"
+    SEND_ADD_TO_CART_PIXEL_TEMPLATE_ON_LOAD = "send_add_to_cart_load"
+    SEND_CONVERTED_SALE_PIXEL_TEMPLATE_ON_CLICK = "send_converted_sale_click"
+    SEND_CONVERTED_SALE_PIXEL_TEMPLATE_ON_LOAD = "send_converted_sale_load"
     CHANGE_EMAIL_TEMPLATE = "change_email_template"
     TEAM_MEMBERS_TEMPLATE = "team_members_template"
     ADMIN_INVITATION_TEMPLATE = "admin_invitation_template"

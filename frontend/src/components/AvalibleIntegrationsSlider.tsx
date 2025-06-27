@@ -33,6 +33,7 @@ import WebhookConnectPopup from "./WebhookConnectPopup";
 import ZapierConnectPopup from "./ZapierConnectPopup";
 import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
 import GoogleADSConnectPopup from "./GoogleADSConnectPopup";
+import GoHighLevelConnectPopup from "./GoHighLevelConnectPopup";
 
 interface AvailableIntegrationsSliderProps {
 	isContactSync: boolean;
@@ -76,6 +77,7 @@ const AlivbleIntagrationsSlider = ({
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
 	const [openHubspotConnect, setOpenHubspotConnect] = useState(false);
 	const [openGoogleAdsConnect, setOpenGoogleAdsConnect] = useState(false);
+	const [openGoHighLevelConnect, setOpenGoHighLevelConnect] = useState(false);
 	const [openLinkedInConnect, setOpenLinkedInConnect] = useState(false);
 	const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
@@ -95,6 +97,7 @@ const AlivbleIntagrationsSlider = ({
 		setOpenSlackConnect(false);
 		setOpenHubspotConnect(false);
 		setOpenGoogleAdsConnect(false);
+		setOpenGoHighLevelConnect(false);
 		setOpenWebhookConnect(false);
 		setOpenSalesForceConnect(false);
 	};
@@ -1115,6 +1118,58 @@ const AlivbleIntagrationsSlider = ({
 										</ListItem>
 									)}
 								{filteredIntegrations.some(
+									(integration) => integration.service_name === "go_high_level",
+								) &&
+									!integrationsCredentials.some(
+										(integration) =>
+											integration.service_name === "go_high_level",
+									) && (
+										<ListItem
+											sx={{
+												p: 0,
+												borderRadius: "4px",
+												border: "1px solid #e4e4e4",
+												width: "auto",
+												"@media (max-width:600px)": {
+													flexBasis: "calc(50% - 8px)",
+												},
+											}}
+										>
+											<ListItemButton
+												onClick={() => {
+													setOpenGoHighLevelConnect(true);
+													// onClose()
+												}}
+												sx={{
+													p: 0,
+													flexDirection: "column",
+													px: 3,
+													py: 1.5,
+													width: "102px",
+													height: "72px",
+													justifyContent: "center",
+												}}
+											>
+												<ListItemIcon sx={{ minWidth: "auto" }}>
+													<Image
+														src="/go-high-level-icon.svg"
+														alt="GoHighLevel"
+														height={24}
+														width={24}
+													/>
+												</ListItemIcon>
+												<ListItemText
+													primary="GoHighLevel"
+													primaryTypographyProps={{
+														sx: {
+															...intergrations.integrate,
+														},
+													}}
+												/>
+											</ListItemButton>
+										</ListItem>
+									)}
+								{filteredIntegrations.some(
 									(integration) => integration.service_name === "google_ads",
 								) &&
 									!integrationsCredentials.some(
@@ -1291,6 +1346,10 @@ const AlivbleIntagrationsSlider = ({
 				open={openGoogleAdsConnect}
 				handlePopupClose={() => setOpenGoogleAdsConnect(false)}
 				onSave={saveIntegration}
+			/>
+			<GoHighLevelConnectPopup
+				open={openGoHighLevelConnect}
+				handlePopupClose={() => setOpenGoHighLevelConnect(false)}
 			/>
 			<LinkedinConnectPopup
 				open={openLinkedInConnect}

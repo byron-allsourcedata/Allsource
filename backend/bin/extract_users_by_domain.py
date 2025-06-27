@@ -10,6 +10,7 @@ from sqlalchemy import create_engine
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from config.sentry import SentryConfig
 from models.five_x_five_users import FiveXFiveUser
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
@@ -140,6 +141,7 @@ async def fetch_users_by_domain(
 
 
 async def main():
+    await SentryConfig.async_initilize()
     logging.info("Started")
     db_session = None
     parser = argparse.ArgumentParser(description="Extract users by domain.")
@@ -193,6 +195,7 @@ async def main():
 
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)
+        SentryConfig.capture(err)
     finally:
         if db_session:
             logging.info("Closing the database session...")

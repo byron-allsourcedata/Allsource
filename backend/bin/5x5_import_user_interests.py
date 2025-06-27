@@ -7,12 +7,15 @@ from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import insert
 import pandas as pd
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from models.five_x_five_interests import FiveXFiveInterest
+
+from config.sentry import SentryConfig
 
 load_dotenv()
 FILE_PATH = os.path.join(
@@ -62,6 +65,7 @@ def check_and_print_excel(session):
 
 
 def main():
+    SentryConfig.initialize()
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
     )

@@ -255,7 +255,7 @@ const Management: React.FC = () => {
 						color: "rgba(56, 152, 252, 1)",
 						fontFamily: "Nunito Sans",
 						padding: "0.65em 2em",
-						mr: 1,
+						mr: 2,
 						"&:hover": {
 							background: "rgba(56, 152, 252, 1)",
 							boxShadow: 5,

@@ -21,6 +21,7 @@ from sqlalchemy.orm import sessionmaker, Session
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from config.sentry import SentryConfig
 from schemas.scripts.audience_source import (
     MessageBody,
     PersonRow,
@@ -504,6 +505,7 @@ async def send_sse(channel, user_id: int, data: dict):
 
 
 async def main():
+    await SentryConfig.async_initilize()
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -548,10 +550,10 @@ async def main():
 
         await asyncio.Future()
 
-    except Exception:
+    except Exception as e:
         db_session.rollback()
         logging.error("Unhandled Exception:", exc_info=True)
-
+        SentryConfig.capture(e)
     finally:
         if db_session:
             logging.info("Closing the database session...")

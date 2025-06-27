@@ -348,6 +348,65 @@ class SettingsService:
         if not template_id:
             return {"status": SettingStatus.FAILED}
 
+    def _generate_invitation_link(
+        self, user_id: str, invite_user: str
+    ) -> tuple[str, str]:
+        md5_token_info = {
+            "id": user_id,
+            "user_mail": invite_user,
+            "salt": os.getenv("SECRET_SALT"),
+        }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
+        return confirm_email_url, md5_hash
+
+    def _send_invitation_email(
+        self, to_email: str, link: str, company_name: str, template_id: str
+    ):
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=to_email,
+            template_id=template_id,
+            template_placeholder={
+                "full_name": to_email,
+                "link": link,
+                "company_name": company_name,
+            },
+        )
+
+    def invite_user(
+        self,
+        user: dict,
+        invite_user,
+        access_level=TeamAccessLevel.READ_ONLY,
+    ):
+        user_id = user.get("id")
+        if not self.subscription_service.check_invitation_limit(
+            user_id=user_id
+        ):
+            return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
+
+        if access_level not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+            TeamAccessLevel.STANDARD.value,
+            TeamAccessLevel.READ_ONLY.value,
+        }:
+            raise HTTPException(
+                status_code=500,
+                detail={"error": SettingStatus.INVALID_ACCESS_LEVEL.value},
+            )
+
+        if self.team_invitation_persistence.exists(
+            user_id=user_id, email=invite_user
+        ):
+            return {"status": SettingStatus.ALREADY_INVITED}
+
+        template_id = self._get_invitation_template_id()
+        if not template_id:
+            return {"status": SettingStatus.FAILED}
+
         confirm_link, md5_hash = self._generate_invitation_link(
             user_id, invite_user
         )
@@ -481,8 +540,7 @@ class SettingsService:
             and hasattr(user_subscription.plan_end, "strftime")
             else (
                 user_subscription.plan_end.strftime("%b %d, %Y")
-                if subscription
-                and user_subscription
+                if user_subscription
                 and hasattr(user_subscription.plan_end, "strftime")
                 else None
             )
@@ -546,7 +604,6 @@ class SettingsService:
 
         billing_detail = BillingSubscriptionDetails(
             subscription_details=subscription_details,
-            downgrade_plan=self.get_downgrade_plan(user_subscription),
             canceled_at=user_subscription.cancel_scheduled_at,
         )
 
@@ -666,15 +723,14 @@ class SettingsService:
                     billing_data.created
                 )
                 billing_hash["invoice_id"] = billing_data.id
-                billing_hash["pricing_plan"] = "Overage"
+                billing_hash["pricing_plan"] = (
+                    billing_data.metadata.charge_type.replace("_", " ").title()
+                )
                 billing_hash["total"] = billing_data.amount / 100
                 billing_hash["status"] = self.map_status(billing_data.status)
 
             result.append(billing_hash)
-
         result.sort(key=lambda x: x["date"], reverse=True)
-        for item in result:
-            item["date"] = item["date"].strftime("%b %d, %Y")
 
         return result, count, max_page
 
@@ -851,6 +907,8 @@ class SettingsService:
             customer_id=user.get("customer_id"),
             price_id=credit_plan.stripe_price_id,
             quantity=user.get("overage_leads_count"),
+            product_description="Charge overage credits",
+            charge_type="contacts_overage",
         )
         if result["success"]:
             event = result["stripe_payload"]
@@ -872,7 +930,9 @@ class SettingsService:
             alias="free_trial",
             price=Price(value="$0", y="month"),
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="1")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(
@@ -892,8 +952,12 @@ class SettingsService:
             title="Basic",
             alias="basic",
             price=Price(value="$0,08", y="record"),
+            is_recommended=True,
+            is_active=True,
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="1")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(
@@ -914,7 +978,9 @@ class SettingsService:
             alias="smart_audience",
             price=Price(value="$5,000", y="month"),
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="3")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(
@@ -939,7 +1005,9 @@ class SettingsService:
             alias="pro",
             price=Price(value="$10,000", y="month"),
             permanent_limits=[
-                Advantage(good=True, name="Domains monitored:", value="5")
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
             ],
             monthly_limits=[
                 Advantage(

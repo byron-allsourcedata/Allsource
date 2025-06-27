@@ -1,7 +1,7 @@
 import React from "react";
-import { Button, SxProps, Theme } from "@mui/material";
+import { Button, ButtonProps, SxProps, Theme } from "@mui/material";
 
-interface CustomButtonProps {
+interface CustomButtonProps extends Omit<ButtonProps, "sx"> {
 	children: React.ReactNode;
 	onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 	variant?: "contained" | "outlined";
@@ -15,6 +15,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 	variant = "contained",
 	disabled = false,
 	sx,
+	...muiButtonProps
 }) => {
 	const textStyles: SxProps<Theme> = {
 		textTransform: "none",
@@ -86,6 +87,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 			variant={variant}
 			disabled={disabled}
 			sx={combinedSx}
+			{...muiButtonProps}
 		>
 			{children}
 		</Button>

@@ -1459,7 +1459,7 @@ const SmartAudiences: React.FC = () => {
 																			...widths,
 																			position: "sticky",
 																			top: 0,
-																			zIndex: 97,
+																			zIndex: 8,
 																			borderBottom: "none",
 																			borderTop:
 																				"1px solid rgba(235,235,235,1)",
@@ -1478,7 +1478,7 @@ const SmartAudiences: React.FC = () => {
 																		};
 																		if (isNameColumn) {
 																			baseCellSX.left = 0;
-																			baseCellSX.zIndex = 99;
+																			baseCellSX.zIndex = 9;
 																			baseCellSX.boxShadow = isScrolledX
 																				? "3px 0px 3px rgba(0,0,0,0.2)"
 																				: "none";
@@ -1573,7 +1573,7 @@ const SmartAudiences: React.FC = () => {
 																	sx={{
 																		position: "sticky",
 																		top: "65px",
-																		zIndex: 99,
+																		zIndex: 9,
 																		borderTop: "none",
 																	}}
 																>

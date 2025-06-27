@@ -1,55 +1,57 @@
-from typing import Optional
+import ssl
+from datetime import datetime, timedelta
 
 import httpx
-import ssl
 import truststore
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
 
-from models import UserDomains, FiveXFiveUser
-from services.aws import AWSService
-from persistence.leads_persistence import LeadsPersistence
-from persistence.leads_persistence import LeadsPersistence
-from persistence.leads_order_persistence import LeadOrdersPersistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from persistence.integrations.suppression import (
-    IntegrationsSuppressionPersistence,
+from db_dependencies import Db
+from enums import DataSyncType
+from enums import ProccessDataSyncResult, DomainStatus
+from models import UserDomains
+from persistence.audience_persistence import AudiencePersistence
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.external_apps_installations import (
+    ExternalAppsInstallationsPersistence,
 )
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
-from persistence.audience_persistence import AudiencePersistence
-from persistence.integrations.external_apps_installations import (
-    ExternalAppsInstallationsPersistence,
+from persistence.integrations.suppression import (
+    IntegrationsSuppressionPersistence,
 )
-from enums import DataSyncType
-from .attentive import AttentiveIntegrationsService
-from .hubspot import HubspotIntegrationsService
-from .shopify import ShopifyIntegrationService
-from enums import ProccessDataSyncResult, DomainStatus
-from datetime import datetime, timedelta
-from utils import extract_first_email, format_phone_number
-from .sendlane import SendlaneIntegrationService
-from .s3 import S3IntegrationService
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_order_persistence import LeadOrdersPersistence
+from persistence.leads_persistence import LeadsPersistence
 from persistence.user_persistence import UserPersistence
-from .slack import SlackService
+from resolver import injectable, Resolver
+from utils import extract_first_email, format_phone_number
+from .attentive import AttentiveIntegrationsService
+from .bigcommerce import BigcommerceIntegrationsService
+from .bing_ads import BingAdsIntegrationsService
+from .go_high_level import GoHighLevelIntegrationsService
+from .google_ads import GoogleAdsIntegrationsService
+from .hubspot import HubspotIntegrationsService
+from .klaviyo import KlaviyoIntegrationsService
+from .linkedin import LinkedinIntegrationsService
+from .mailchimp import MailchimpIntegrationsService
+from .meta import MetaIntegrationsService
 from .million_verifier import MillionVerifierIntegrationsService
 from .onimesend import OmnisendIntegrationService
-from .meta import MetaIntegrationsService
-from .mailchimp import MailchimpIntegrationsService
-from .klaviyo import KlaviyoIntegrationsService
+from .s3 import S3IntegrationService
 from .sales_force import SalesForceIntegrationsService
-from .google_ads import GoogleAdsIntegrationsService
-from .bigcommerce import BigcommerceIntegrationsService
+from .sendlane import SendlaneIntegrationService
+from .shopify import ShopifyIntegrationService
+from .slack import SlackService
 from .webhook import WebhookIntegrationService
 from .zapier import ZapierIntegrationService
-from .bing_ads import BingAdsIntegrationsService
 
 
+@injectable
 class IntegrationService:
     def __init__(
         self,
-        db: Session,
+        db: Db,
         integration_persistence: IntegrationsPresistence,
         lead_persistence: LeadsPersistence,
         audience_persistence: AudiencePersistence,
@@ -57,8 +59,7 @@ class IntegrationService:
         user_persistence: UserPersistence,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
-        aws_service: AWSService,
-        domain_persistence,
+        domain_persistence: UserDomainsPersistence,
         suppression_persistence: IntegrationsSuppressionPersistence,
         epi_persistence: ExternalAppsInstallationsPersistence,
     ):
@@ -74,12 +75,47 @@ class IntegrationService:
         self.integrations_user_sync_persistence = (
             integrations_user_sync_persistence
         )
-        self.aws_service = aws_service
         self.million_verifier_integrations = million_verifier_integrations
         self.domain_persistence = domain_persistence
         self.suppression_persistence = suppression_persistence
         self.eai_persistence = epi_persistence
         self.UNLIMITED = -1
+        self.resolver = Resolver()
+
+    async def __aenter__(self):
+        self.shopify = await self.resolver.resolve(ShopifyIntegrationService)
+        self.bigcommerce = await self.resolver.resolve(
+            BigcommerceIntegrationsService
+        )
+        self.klaviyo = await self.resolver.resolve(KlaviyoIntegrationsService)
+        self.google_ads = await self.resolver.resolve(
+            GoogleAdsIntegrationsService
+        )
+        self.sales_force = await self.resolver.resolve(
+            SalesForceIntegrationsService
+        )
+        self.meta = await self.resolver.resolve(MetaIntegrationsService)
+        self.omnisend = await self.resolver.resolve(OmnisendIntegrationService)
+        self.mailchimp = await self.resolver.resolve(
+            MailchimpIntegrationsService
+        )
+        self.sendlane = await self.resolver.resolve(SendlaneIntegrationService)
+        self.s3 = await self.resolver.resolve(S3IntegrationService)
+        self.attentive = await self.resolver.resolve(
+            AttentiveIntegrationsService
+        )
+        self.slack = await self.resolver.resolve(SlackService)
+        self.zapier = await self.resolver.resolve(ZapierIntegrationService)
+        self.webhook = await self.resolver.resolve(WebhookIntegrationService)
+        self.hubspot = await self.resolver.resolve(HubspotIntegrationsService)
+        self.bing_ads = await self.resolver.resolve(BingAdsIntegrationsService)
+        self.go_high_level = await self.resolver.resolve(
+            GoHighLevelIntegrationsService
+        )
+        self.linked_in = await self.resolver.resolve(
+            LinkedinIntegrationsService
+        )
+        return self
 
     def get_user_service_credentials(self, domain, user):
         filters = []
@@ -340,139 +376,5 @@ class IntegrationService:
             return {"status": "SUCCESS", "data_sync": result}
         return {"status": "FAILED"}
 
-    def get_sync_users(self):
-        return self.integrations_user_sync_persistence.get_filter_by()
-
-    def __enter__(self):
-        self.shopify = ShopifyIntegrationService(
-            self.integration_persistence,
-            self.lead_persistence,
-            self.lead_orders_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.aws_service,
-            self.db,
-        )
-        self.bigcommerce = BigcommerceIntegrationsService(
-            integrations_persistence=self.integration_persistence,
-            leads_persistence=self.lead_persistence,
-            leads_order_persistence=self.lead_orders_persistence,
-            aws_service=self.aws_service,
-            client=self.client,
-            epi_persistence=self.eai_persistence,
-            domain_persistence=self.domain_persistence,
-        )
-        self.klaviyo = KlaviyoIntegrationsService(
-            self.domain_persistence,
-            self.integration_persistence,
-            self.lead_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-        self.sales_force = SalesForceIntegrationsService(
-            self.domain_persistence,
-            self.integration_persistence,
-            self.lead_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-        self.google_ads = GoogleAdsIntegrationsService(
-            self.domain_persistence,
-            self.integration_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-        self.meta = MetaIntegrationsService(
-            self.domain_persistence,
-            self.integration_persistence,
-            self.lead_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-        self.omnisend = OmnisendIntegrationService(
-            leads_persistence=self.lead_persistence,
-            sync_persistence=self.integrations_user_sync_persistence,
-            integration_persistence=self.integration_persistence,
-            domain_persistence=self.domain_persistence,
-            client=self.client,
-            million_verifier_integrations=self.million_verifier_integrations,
-        )
-        self.mailchimp = MailchimpIntegrationsService(
-            domain_persistence=self.domain_persistence,
-            integrations_persistence=self.integration_persistence,
-            leads_persistence=self.lead_persistence,
-            sync_persistence=self.integrations_user_sync_persistence,
-            million_verifier_integrations=self.million_verifier_integrations,
-        )
-        self.sendlane = SendlaneIntegrationService(
-            self.domain_persistence,
-            self.integration_persistence,
-            self.lead_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-
-        self.s3 = S3IntegrationService(
-            domain_persistence=self.domain_persistence,
-            integrations_persistence=self.integration_persistence,
-            leads_persistence=self.lead_persistence,
-            sync_persistence=self.integrations_user_sync_persistence,
-            client=self.client,
-            million_verifier_integrations=self.million_verifier_integrations,
-        )
-
-        self.attentive = AttentiveIntegrationsService(
-            self.domain_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-        )
-        self.slack = SlackService(
-            user_persistence=self.user_persistence,
-            user_integrations_persistence=self.integration_persistence,
-            sync_persistence=self.integrations_user_sync_persistence,
-            lead_persistence=self.lead_persistence,
-            million_verifier_integrations=self.million_verifier_integrations,
-        )
-        self.zapier = ZapierIntegrationService(
-            self.lead_persistence,
-            self.domain_persistence,
-            self.integrations_user_sync_persistence,
-            self.integration_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-        self.webhook = WebhookIntegrationService(
-            self.lead_persistence,
-            self.domain_persistence,
-            self.integrations_user_sync_persistence,
-            self.integration_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-
-        self.hubspot = HubspotIntegrationsService(
-            self.domain_persistence,
-            self.integration_persistence,
-            self.lead_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-
-        self.bing_ads = BingAdsIntegrationsService(
-            self.domain_persistence,
-            self.integration_persistence,
-            self.lead_persistence,
-            self.integrations_user_sync_persistence,
-            self.client,
-            self.million_verifier_integrations,
-        )
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.client.close()

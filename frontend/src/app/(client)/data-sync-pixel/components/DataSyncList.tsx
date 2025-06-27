@@ -78,6 +78,8 @@ import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
 import { width } from "@mui/system";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
+import GoHighLevelDataSync from "../../data-sync/components/GoHighLevelDataSync";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -114,6 +116,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [s3IconPopupOpen, setOpenS3IconPopup] = useState(false);
 	const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
 	const [hubspotIconPopupOpen, setOpenHubspotIconPopup] = useState(false);
+	const [goHighLevelIconPopupOpen, setOpenGoHighLevelIconPopup] =
+		useState(false);
 	const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
 	const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false);
 	const [linkedinIconPopupOpen, setOpenLinkedinIconPopup] = useState(false);
@@ -139,6 +143,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
 	const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
+	const [openGoHighLevelConnect, setOpenGoHighLevelConnect] = useState(false);
 	const [openLinkedinConnect, setOpenLinkedinConnect] = useState(false);
 	const [openZapierConnect, setOPenZapierComnect] = useState(false);
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
@@ -339,6 +344,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			case "hubspot":
 				return (
 					<Image src={"/hubspot.svg"} alt="hubspot" width={18} height={18} />
+				);
+			case "go_high_level":
+				return (
+					<Image
+						src="./go-high-level-icon.svg"
+						alt="goHighLevel icon"
+						width={20}
+						height={20}
+					/>
 				);
 			case "google_ads":
 				return (
@@ -550,6 +564,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setOpenHubspotIconPopup(true);
 			} else if (dataSyncPlatform === "sales_force") {
 				setSalesForceIconPopupOpen(true);
+			} else if (dataSyncPlatform === "go_high_level") {
+				setOpenGoHighLevelIconPopup(true);
 			}
 
 			setIsLoading(false);
@@ -571,6 +587,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
 	const handleHubspotIconPopupClose = () => {
 		setOpenHubspotIconPopup(false);
+	};
+
+	const handleGoHighLevelIconPopupClose = () => {
+		setOpenGoHighLevelIconPopup(false);
 	};
 
 	const handleSlackIconPopupClose = () => {
@@ -671,6 +691,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenS3Connect(true);
 					} else if (dataSyncPlatform === "google_ads") {
 						setOpenGoogleADSConnect(true);
+					} else if (dataSyncPlatform === "go_high_level") {
+						setOpenGoHighLevelIconPopup(true);
 					} else if (dataSyncPlatform === "linkedin") {
 						setOpenLinkedinConnect(true);
 					} else if (dataSyncPlatform === "webhook") {
@@ -704,6 +726,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenHubspotIconPopup(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setSalesForceIconPopupOpen(true);
+					} else if (dataSyncPlatform === "go_high_level") {
+						setOpenGoHighLevelIconPopup(true);
 					}
 
 					setIsLoading(false);
@@ -850,8 +874,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "120px", minWidth: "120px", maxWidth: "12vw" },
 		},
 		{
-			key: "processed_contacts",
-			label: "Validated",
+			key: "validation_contacts",
+			label: "Valid emails",
 			widths: {
 				width: "100px",
 				minWidth: "100px",
@@ -859,7 +883,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			},
 		},
 		{
-			key: "successful_contacts",
+			key: "synced_contacts",
 			label: "Synced",
 			widths: {
 				width: "80px",
@@ -1282,7 +1306,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.processed_contacts}
+												{row.validation_contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1732,6 +1756,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						/>
 					</>
 				)}
+				{goHighLevelIconPopupOpen && isEdit && (
+					<>
+						<GoHighLevelDataSync
+							open={goHighLevelIconPopupOpen}
+							isEdit={isEdit}
+							onClose={handleGoHighLevelIconPopupClose}
+							data={data.find((item) => item.id === selectedId)}
+						/>
+					</>
+				)}
 				{slackIconPopupOpen && isEdit && (
 					<>
 						<SlackDatasync
@@ -1916,6 +1950,13 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						)?.access_token
 					}
 					invalid_api_key={isInvalidApiKey}
+					boxShadow="rgba(0, 0, 0, 0.01)"
+				/>
+				<GoHighLevelConnectPopup
+					open={openGoHighLevelConnect}
+					handlePopupClose={() => {
+						setOpenGoHighLevelConnect(false), setIsInvalidApiKey(false);
+					}}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
 				<WebhookConnectPopup

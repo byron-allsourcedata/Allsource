@@ -83,8 +83,7 @@ export const RemoveCardPopup: React.FC<RemoveCardPopupProps> = ({
 					display: "flex",
 					justifyContent: "space-between",
 					alignItems: "center",
-					py: 3.5,
-					px: 2,
+					padding: "0.75em 1em 0.925em 1em",
 					borderBottom: "1px solid #e4e4e4",
 					position: "sticky",
 					top: 0,
@@ -99,8 +98,8 @@ export const RemoveCardPopup: React.FC<RemoveCardPopupProps> = ({
 				>
 					Confirm Deletion
 				</Typography>
-				<IconButton onClick={handleRemovePopupClose} sx={{ p: 0 }}>
-					<CloseIcon sx={{ width: "20px", height: "20px" }} />
+				<IconButton onClick={handleRemovePopupClose}>
+					<CloseIcon />
 				</IconButton>
 			</Box>
 
@@ -155,8 +154,7 @@ export const RemoveCardPopup: React.FC<RemoveCardPopupProps> = ({
 				<Box sx={{ position: "relative" }}>
 					<Box
 						sx={{
-							px: 2,
-							py: 3.5,
+							p: "1em",
 							border: "1px solid #e4e4e4",
 							position: "fixed",
 							bottom: 0,
@@ -168,7 +166,7 @@ export const RemoveCardPopup: React.FC<RemoveCardPopupProps> = ({
 							},
 						}}
 					>
-						<Box display="flex" justifyContent="flex-end" mt={2}>
+						<Box display="flex" justifyContent="flex-end">
 							<Button
 								className="hyperlink-red"
 								onClick={handleRemovePopupClose}

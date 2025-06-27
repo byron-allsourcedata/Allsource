@@ -40,6 +40,8 @@ import SendlaneDatasync from "@/app/(client)/data-sync/components/SendlaneDatasy
 import S3Datasync from "@/app/(client)/data-sync/components/S3Datasync";
 import BingAdsDataSync from "@/app/(client)/data-sync/components/BingAdsDataSync";
 import ZapierDataSync from "@/app/(client)/data-sync/components/ZapierDataSync";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
+import GoHighLevelDataSync from "../data-sync/components/GoHighLevelDataSync";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -97,6 +99,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [metaConnectApp, setMetaConnectApp] = useState(false);
 	const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false);
 	const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false);
+	const [openGoHighLevelConnect, setOpenGoHighLevelConnect] = useState(false);
+	const [goHighLevelIconPopupOpen, setOpenGoHighLevelIconPopupOpen] =
+		useState(false);
 	const [bingAdsIconPopupOpen, setOpenBingAdsIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false);
 	const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
@@ -155,6 +160,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const handleOmnisendIconPopupOpenClose = () => {
 		setOpenOmnisendConnect(false);
 		setOpenOmnisendIconPopupOpen(false);
+	};
+
+	const handleGoHighLevelIconPopupOpenClose = () => {
+		setOpenGoHighLevelConnect(false);
+		setOpenGoHighLevelIconPopupOpen(false);
 	};
 
 	const handleBingAdsIconPopupOpenClose = () => {
@@ -561,6 +571,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				isEdit={false}
 				data={null}
 			/>
+			<GoHighLevelDataSync
+				open={goHighLevelIconPopupOpen}
+				onClose={handleGoHighLevelIconPopupOpenClose}
+				isEdit={false}
+			/>
 			<BingAdsDataSync
 				open={bingAdsIconPopupOpen}
 				onClose={handleBingAdsIconPopupOpenClose}
@@ -661,6 +676,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 						(integartion) => integartion.service_name === "google_ads",
 					)?.access_token
 				}
+			/>
+			<GoHighLevelConnectPopup
+				open={createGoogleADS}
+				handlePopupClose={handleCreateADSClose}
 			/>
 			<KlaviyoIntegrationPopup
 				open={createKlaviyo}

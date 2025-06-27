@@ -1,10 +1,11 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta
-from typing import List, Tuple
+from datetime import datetime
+from typing import List, Tuple, Annotated
 
 import httpx
+from fastapi import Depends
 
 from enums import (
     IntegrationsStatus,
@@ -20,14 +21,16 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from schemas.integrations.omnisend import Identifiers, OmnisendProfile
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import extract_first_email, get_valid_email
+from utils import get_valid_email, get_http_client
 
 
+@injectable
 class OmnisendIntegrationService:
     def __init__(
         self,
@@ -35,7 +38,7 @@ class OmnisendIntegrationService:
         sync_persistence: IntegrationsUserSyncPersistence,
         integration_persistence: IntegrationsPresistence,
         domain_persistence: UserDomainsPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.client = client
@@ -164,11 +167,14 @@ class OmnisendIntegrationService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         results = []
         bulk_profiles = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_profile(five_x_five_user)
+            profile = self.__mapped_profile(
+                five_x_five_user, is_email_validation_enabled
+            )
             identifiers = self.__mapped_identifiers(five_x_five_user)
 
             if identifiers in (
@@ -269,7 +275,7 @@ class OmnisendIntegrationService:
         return Identifiers(id=first_email)
 
     def __mapped_profile(
-        self, five_x_five_user: FiveXFiveUser
+        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ) -> OmnisendProfile:
         gender = getattr(five_x_five_user, "gender", None)
         if gender not in ["m", "f"]:

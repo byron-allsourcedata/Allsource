@@ -1,15 +1,16 @@
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional
+from typing import Optional, TypedDict
 from decimal import Decimal
+import typing
 
 import pytz
-from sqlalchemy import func, desc, asc, or_, select, update
+from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
 from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
-from enums import TeamsInvitationStatus, SignUpStatus
+from enums import TeamsInvitationStatus, SignUpStatus, UserStatusInAdmin
 from models import (
     AudienceLookalikes,
     LeadUser,
@@ -21,12 +22,24 @@ from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
 from models.teams_invitations import TeamInvitation
 from models.users import Users
+from models.leads_users import LeadUser
+from models.integrations import IntegrationUserSync
 from models.users_domains import UserDomains
 from models.audience_sources import AudienceSource
 from resolver import injectable
 from utils import end_of_month
 
 logger = logging.getLogger(__name__)
+
+
+class UserDict(TypedDict):
+    """
+    UserDict is incomplete type for object, used across the application
+    when you add new fields, add them to this type also
+    """
+
+    id: int
+    random_seed: int
 
 
 @injectable
@@ -130,15 +143,19 @@ class UserPersistence:
             select(Users).where(Users.customer_id == customer_id)
         ).scalar()
 
-    def get_user_by_id(self, user_id, result_as_object=False):
+    def get_user_by_id(
+        self, user_id, result_as_object=False
+    ) -> Optional[UserDict]:
         user, partner_is_active = (
             self.db.query(Users, Partner.is_active)
             .filter(Users.id == user_id)
             .outerjoin(Partner, Partner.user_id == user_id)
             .first()
         )
+
         result_user = None
         if user:
+            user: Users = typing.cast(Users, user)
             result_user = {
                 "id": user.id,
                 "email": user.email,
@@ -186,6 +203,7 @@ class UserPersistence:
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
                 "is_email_validation_enabled": user.is_email_validation_enabled,
+                "random_seed": user.random_seed,
             }
         self.db.rollback()
         if result_as_object:
@@ -345,6 +363,96 @@ class UserPersistence:
 
         return query.all()
 
+    def calculate_user_status(self):
+        return case(
+            (
+                Users.is_email_confirmed == False,
+                UserStatusInAdmin.NEED_CONFIRM_EMAIL.value,
+            ),
+            (
+                or_(
+                    ~self.db.query(UserDomains.id)
+                    .filter(UserDomains.user_id == Users.id)
+                    .exists(),
+                    ~self.db.query(UserDomains.id)
+                    .filter(
+                        UserDomains.user_id == Users.id,
+                        UserDomains.is_pixel_installed == True,
+                    )
+                    .exists(),
+                ),
+                UserStatusInAdmin.PIXEL_NOT_INSTALLED.value,
+            ),
+            (
+                and_(
+                    self.db.query(UserDomains.id)
+                    .filter(
+                        UserDomains.user_id == Users.id,
+                        UserDomains.is_pixel_installed == True,
+                        func.timezone("UTC", func.now())
+                        - UserDomains.pixel_installation_date
+                        <= timedelta(hours=24),
+                    )
+                    .exists(),
+                    ~self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
+                ),
+                UserStatusInAdmin.WAITING_CONTACTS.value,
+            ),
+            (
+                and_(
+                    self.db.query(UserDomains.id)
+                    .filter(
+                        UserDomains.user_id == Users.id,
+                        UserDomains.is_pixel_installed == True,
+                        func.timezone("UTC", func.now())
+                        - UserDomains.pixel_installation_date
+                        > timedelta(hours=24),
+                    )
+                    .exists(),
+                    ~self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
+                ),
+                UserStatusInAdmin.RESOLUTION_FAILED.value,
+            ),
+            (
+                and_(
+                    self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
+                    ~self.db.query(IntegrationUserSync.id)
+                    .filter(IntegrationUserSync.domain_id == UserDomains.id)
+                    .exists(),
+                ),
+                UserStatusInAdmin.SYNC_NOT_COMPLETED.value,
+            ),
+            (
+                and_(
+                    self.db.query(LeadUser.id)
+                    .filter(LeadUser.domain_id == UserDomains.id)
+                    .exists(),
+                    ~self.db.query(IntegrationUserSync.id)
+                    .filter(
+                        IntegrationUserSync.domain_id == UserDomains.id,
+                        IntegrationUserSync.sync_status == True,
+                    )
+                    .exists(),
+                ),
+                UserStatusInAdmin.SYNC_ERROR.value,
+            ),
+            (
+                self.db.query(IntegrationUserSync.id)
+                .filter(
+                    IntegrationUserSync.domain_id == UserDomains.id,
+                    IntegrationUserSync.sync_status == True,
+                )
+                .exists(),
+                UserStatusInAdmin.DATA_SYNCING.value,
+            ),
+        )
+
     def get_base_customers(
         self,
         search_query,
@@ -355,6 +463,8 @@ class UserPersistence:
         test_users,
         filters,
     ):
+        status_case = self.calculate_user_status()
+
         query = (
             self.db.query(
                 Users.id,
@@ -363,14 +473,13 @@ class UserPersistence:
                 Users.created_at,
                 Users.last_login,
                 Users.role,
-                Users.is_email_confirmed,
-                Users.is_book_call_passed,
                 Users.leads_credits.label("credits_count"),
                 Users.total_leads,
                 Users.is_email_validation_enabled.label(
                     "is_email_validation_enabled"
                 ),
                 SubscriptionPlan.title.label("subscription_plan"),
+                status_case.label("user_status"),
             )
             .join(
                 UserSubscriptions,
@@ -384,7 +493,14 @@ class UserPersistence:
         )
 
         if test_users:
-            query = query.filter(~Users.full_name.ilike("#test%"))
+            query = query.filter(~Users.full_name.like("#test%"))
+
+        if filters.get("statuses"):
+            statuses = [
+                status.strip().lower()
+                for status in filters["statuses"].split(",")
+            ]
+            query = query.filter(func.lower(status_case).in_(statuses))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(

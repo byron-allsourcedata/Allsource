@@ -102,7 +102,9 @@ class AudienceLookalikesPersistence:
             )
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
             .join(Users, Users.id == AudienceSource.created_by_user_id)
-            .filter(AudienceLookalikes.user_id == user_id)
+            .filter(
+                AudienceLookalikes.user_id == user_id,
+            )
         )
 
         source_count = (
@@ -164,6 +166,46 @@ class AudienceLookalikesPersistence:
         count = query.count()
         max_page = math.ceil(count / per_page)
         return result_query, count, max_page, source_count
+
+    def get_processed_lookalikes_by_user(self, user_id: int):
+        columns = [
+            AudienceLookalikes.id,
+            AudienceLookalikes.name,
+            AudienceLookalikes.lookalike_size,
+            AudienceLookalikes.created_date,
+            AudienceLookalikes.size,
+            AudienceLookalikes.processed_size,
+            AudienceLookalikes.train_model_size,
+            AudienceLookalikes.processed_train_model_size,
+            AudienceSource.name.label("source"),
+            AudienceSource.source_type,
+            Users.full_name.label("created_by"),
+            AudienceSource.source_origin,
+            UserDomains.domain,
+            AudienceSource.target_schema,
+        ]
+
+        query = (
+            self.db.query(*columns)
+            .join(
+                AudienceSource,
+                AudienceLookalikes.source_uuid == AudienceSource.id,
+            )
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(
+                AudienceLookalikes.user_id == user_id,
+                AudienceLookalikes.size == AudienceLookalikes.processed_size,
+            )
+        )
+
+        result_query = [
+            row._asdict()
+            for row in query.order_by(
+                desc(AudienceLookalikes.created_date)
+            ).all()
+        ]
+        return result_query
 
     def create_lookalike(
         self,
@@ -387,6 +429,7 @@ class AudienceLookalikesPersistence:
                 AudienceSourcesMatchedPerson.enrichment_user_id
                 == EnrichmentUser.id,
             )
+            .order_by(EnrichmentUser.asid)
         )
 
         for model in enrichment_models:

@@ -1418,6 +1418,7 @@ def parse_args():
 
 
 async def main():
+    await SentryConfig.async_initilize()
     resolver = Resolver()
     db_session = await resolver.resolve(Db)
     subscription_service = await resolver.resolve(SubscriptionService)
@@ -1469,6 +1470,7 @@ async def main():
         except Exception as e:
             db_session.rollback()
             logging.error(f"An error occurred: {str(e)}")
+            SentryConfig.capture(e)
             traceback.print_exc()
             await resolver.cleanup()
             time.sleep(30)
