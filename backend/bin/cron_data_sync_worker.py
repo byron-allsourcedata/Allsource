@@ -31,9 +31,9 @@ from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
 from persistence.user_persistence import UserPersistence
+from db_dependencies import Db
 from dependencies import (
     NotificationPersistence,
-    Db,
 )
 
 
