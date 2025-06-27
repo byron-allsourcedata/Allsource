@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from dependencies import (
-    get_slack_service,
     check_domain,
     check_user_authentication,
     verify_signature,
@@ -20,9 +19,7 @@ router = APIRouter()
 
 
 @router.get("/oauth/callback")
-async def slack_oauth_callback(
-    request: Request, slack_service: SlackService = Depends(get_slack_service)
-):
+async def slack_oauth_callback(request: Request, slack_service: SlackService):
     code = request.query_params.get("code")
     state = request.query_params.get("state")
     result = slack_service.slack_oauth_callback(code=code, state=state)
@@ -51,9 +48,9 @@ async def slack_oauth_callback(
 
 @router.get("/authorize-url")
 async def get_authorize_url(
+    slack_service: SlackService,
     domain=Depends(check_domain),
     user=Depends(check_user_authentication),
-    slack_service: SlackService = Depends(get_slack_service),
 ):
     return slack_service.generate_authorize_url(
         user_id=user.get("id"), domain_id=domain.id
@@ -62,9 +59,9 @@ async def get_authorize_url(
 
 @router.get("/get-channels")
 async def get_channels(
+    slack_service: SlackService,
     user=Depends(check_user_authentication),
     domain=Depends(check_domain),
-    slack_service: SlackService = Depends(get_slack_service),
 ):
     return slack_service.get_channels(
         domain_id=domain.id, user_id=user.get("id")
@@ -73,10 +70,10 @@ async def get_channels(
 
 @router.post("/create-channel")
 async def get_channels(
+    slack_service: SlackService,
     slack_create_List_request: SlackCreateListRequest,
     user=Depends(check_user_authentication),
     domain=Depends(check_domain),
-    slack_service: SlackService = Depends(get_slack_service),
 ):
     return slack_service.create_channel(
         domain_id=domain.id,
@@ -88,9 +85,7 @@ async def get_channels(
 @router.post(
     "/events", status_code=HTTP_200_OK, dependencies=[Depends(verify_signature)]
 )
-async def handle_slack_events(
-    request: Request, slack_service: SlackService = Depends(get_slack_service)
-):
+async def handle_slack_events(request: Request, slack_service: SlackService):
     data = await request.json()
     if "challenge" in data:
         return {"challenge": data["challenge"]}

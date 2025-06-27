@@ -37,6 +37,10 @@ class GoogleAdsCredentials(BaseModel):
     scope: str
 
 
+class GoHighLevelCredentials(BaseModel):
+    code: str
+
+
 class BingAdsCredentials(BaseModel):
     code: str
     state: str
@@ -81,6 +85,7 @@ class IntegrationCredentials(BaseModel):
     google_ads: Optional[GoogleAdsCredentials] = None
     bing_ads: Optional[BingAdsCredentials] = None
     linkedin: Optional[LinkedinCredentials] = None
+    go_high_level: Optional[GoHighLevelCredentials] = None
     s3: Optional[S3Credentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False

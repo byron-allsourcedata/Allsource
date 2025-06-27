@@ -50,6 +50,7 @@ class UserIntegration(Base):
     is_failed = Column(Boolean, nullable=False, server_default=text("false"))
     shop_id = Column(VARCHAR(32), nullable=True)
     slack_team_id = Column(VARCHAR(32), nullable=True)
+    location_id = Column(VARCHAR(32), nullable=True)
     created_at = Column(
         TIMESTAMP(timezone=False),
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),

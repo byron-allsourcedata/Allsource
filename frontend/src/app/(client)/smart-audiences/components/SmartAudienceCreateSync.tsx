@@ -45,6 +45,7 @@ import {
 	LeftMenuProps,
 } from "@/app/(client)/components/BookACallPopup";
 import { AxiosError } from "axios";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -139,6 +140,7 @@ type ServiceHandlers = {
 	mailchimp: () => void;
 	sales_force: () => void;
 	google_ads: () => void;
+	go_high_level: () => void;
 	s3: () => void;
 };
 type ServiceType =
@@ -149,7 +151,8 @@ type ServiceType =
 	| "meta"
 	| "s3"
 	| "google_ads"
-	| "sales_force";
+	| "sales_force"
+	| "go_high_level";
 
 type ArrayMapping = Record<ServiceType, CustomRow[]>;
 
@@ -223,6 +226,7 @@ const integrationsImage = [
 	{ image: "google-ads.svg", service_name: "google_ads" },
 	{ image: "bing.svg", service_name: "bing_ads" },
 	{ image: "salesforce-icon.svg", service_name: "sales_force" },
+	{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
 	{ image: "s3.svg", service_name: "s3" },
 ];
 
@@ -355,6 +359,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	const [createHubspot, setCreateHubspot] = useState<boolean>(false);
 	const [createSalesForce, setCreateSalesForce] = useState<boolean>(false);
 	const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false);
+	const [CreateGoHighLevel, setCreateGoHighLevel] = useState<boolean>(false);
 	const [integrations, setIntegrations] = useState<Integrations[]>([]);
 	const [metaConnectApp, setMetaConnectApp] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
@@ -518,6 +523,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			);
 		}
 		if (service === "sales_force") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
+			);
+		}
+		if (service === "go_high_level") {
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
 			);
@@ -786,6 +796,18 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			);
 			setRows(defaultSalesForce);
 		}
+		if (activeService === "go_high_level") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
+			);
+			setRows(defaultRows);
+			setCustomFields(
+				customFieldsList.map((field) => ({
+					type: field.value,
+					value: field.type,
+				})),
+			);
+		}
 		if (activeService === "s3") {
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3",
@@ -1006,6 +1028,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		setCreateGoogleAds(false);
 	};
 
+	const handleCreateGoHighLevelOpen = () => {
+		setCreateGoHighLevel(true);
+	};
+
+	const handleCreateGoHighLevelClose = () => {
+		setCreateGoHighLevel(false);
+	};
+
 	const handleCloseMetaConnectApp = () => {
 		setIntegrationsCredentials((prevIntegratiosn) => [
 			...prevIntegratiosn,
@@ -1022,6 +1052,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		mailchimp: handleOpenMailchimpConnect,
 		sales_force: handleCreateSalesForceOpen,
 		google_ads: handleCreateGoogleAdsOpen,
+		go_high_level: handleCreateGoHighLevelOpen,
 		s3: handleCreateS3Open,
 	};
 
@@ -1034,6 +1065,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		s3: customFieldsList,
 		google_ads: customFieldsList,
 		sales_force: customFieldsList,
+		go_high_level: customFieldsList,
 	};
 
 	const extendedFieldsList = [
@@ -2392,6 +2424,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 						(integartion) => integartion.service_name === "google_ads",
 					)?.access_token
 				}
+			/>
+			<GoHighLevelConnectPopup
+				open={createGoogleAds}
+				handlePopupClose={handleCreateGoHighLevelClose}
 			/>
 			<SalesForceIntegrationPopup
 				open={createSalesForce}

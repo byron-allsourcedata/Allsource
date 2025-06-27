@@ -1,35 +1,35 @@
+import base64
+import json
 import logging
+import os
+from typing import List, Tuple
+
+from fastapi import HTTPException
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from config.slack import SlackConfig
-from fastapi import HTTPException
-import json
-from typing import List, Tuple
-from urllib.parse import unquote
-import base64
-import os
-from datetime import datetime, timedelta
-
-from models import UserIntegration, IntegrationUserSync, LeadUser
-from utils import extract_first_email, get_valid_email
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from schemas.integrations.integrations import DataMap
 from slack_sdk.oauth import AuthorizeUrlGenerator
-from models.five_x_five_users import FiveXFiveUser
-from persistence.user_persistence import UserPersistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+
+from config.slack import SlackConfig
 from enums import (
     SourcePlatformEnum,
     IntegrationsStatus,
     ProccessDataSyncResult,
     DataSyncType,
 )
+from models import UserIntegration, IntegrationUserSync, LeadUser
+from models.five_x_five_users import FiveXFiveUser
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+from persistence.user_persistence import UserPersistence
+from resolver import injectable
+from schemas.integrations.integrations import DataMap
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import get_valid_email, get_valid_email_without_million
 
 logger = logging.getLogger("slack")
 logger.setLevel(logging.INFO)
@@ -41,6 +41,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
+@injectable
 class SlackService:
     def __init__(
         self,
@@ -264,10 +265,13 @@ class SlackService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         results = []
         for lead_user, five_x_five_user in user_data:
-            user_text = self.generate_user_text(five_x_five_user)
+            user_text = self.generate_user_text(
+                five_x_five_user, is_email_validation_enabled
+            )
             if user_text in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
@@ -293,13 +297,18 @@ class SlackService:
                         result["status"] = result
         return results
 
-    def generate_user_text(self, five_x_five_user: FiveXFiveUser) -> str:
+    def generate_user_text(
+        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
+    ) -> str:
         if not five_x_five_user.linkedin_url:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        first_email = get_valid_email(
-            five_x_five_user, self.million_verifier_integrations
-        )
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                five_x_five_user, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(five_x_five_user)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

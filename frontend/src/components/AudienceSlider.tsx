@@ -48,6 +48,8 @@ import HubspotDataSync from "../app/(client)/data-sync/components/HubspotDataSyn
 import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
 import IntegrationBox from "../app/(client)/smart-audiences/components/IntegrationBox";
 import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
+import GoHighLevelConnectPopup from "./GoHighLevelConnectPopup";
+import GoHighLevelDataSync from "@/app/(client)/data-sync/components/GoHighLevelDataSync";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -93,6 +95,7 @@ type ServiceHandlers = {
 	linkedin: () => void;
 	meta: () => void;
 	bing_ads: () => void;
+	go_high_level: () => void;
 };
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({
@@ -103,6 +106,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [plusIconPopupOpen, setPlusIconPopupOpen] = useState(false);
 	const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
 	const [bingAdsIconPopupOpen, setBingAdsIconPopupOpen] = useState(false);
+	const [goHightLevelIconPopupOpen, setgoHightLevelPopupOpen] = useState(false);
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
@@ -119,6 +123,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [createWebhook, setCreateWebhook] = useState<boolean>(false);
 	const [createSlack, setCreateSlack] = useState<boolean>(false);
 	const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false);
+	const [createGoHighLevel, setCreateGoHighLevel] = useState<boolean>(false);
 	const [createLinkedin, setCreateLinkedin] = useState<boolean>(false);
 	const [integrations, setIntegrations] = useState<Integrations[]>([]);
 	const [metaConnectApp, setMetaConnectApp] = useState(false);
@@ -204,6 +209,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		setBingAdsIconPopupOpen(false);
 	};
 
+	const handleGoHightLevelIconPopupOpen = () => {
+		setgoHightLevelPopupOpen(true);
+	};
+
+	const handleGoHightLevelIconPopupClose = () => {
+		setgoHightLevelPopupOpen(false);
+	};
+
 	const handleSalesForceIconPopupOpen = () => {
 		setSalesForceIconPopupOpen(true);
 	};
@@ -260,6 +273,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleCreateGoogleAdsOpen = () => {
 		setCreateGoogleAds(true);
+	};
+
+	const handleGoHightLevelOpen = () => {
+		setCreateGoHighLevel(true);
 	};
 
 	const handleCreateLinkedinOpen = () => {
@@ -445,6 +462,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		setCreateGoogleAds(false);
 	};
 
+	const handleCreateGoHighLevelClose = () => {
+		setCreateGoHighLevel(false);
+	};
+
 	const handleCreateLinkedinClose = () => {
 		setCreateLinkedin(false);
 	};
@@ -491,6 +512,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		{ image: "mailchimp-icon.svg", service_name: "mailchimp" },
 		{ image: "hubspot.svg", service_name: "hubspot" },
 		{ image: "google-ads.svg", service_name: "google_ads" },
+		{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
 		{ image: "bing.svg", service_name: "bing_ads" },
 		{ image: "salesforce-icon.svg", service_name: "sales_force" },
 		{ image: "webhook-icon.svg", service_name: "webhook" },
@@ -534,6 +556,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		mailchimp: handleOpenMailchimpConnect,
 		sales_force: handleCreateSalesForceOpen,
 		google_ads: handleCreateGoogleAdsOpen,
+		go_high_level: handleGoHightLevelOpen,
 		s3: handleS3ConnectOpen,
 		slack: handleCreateSlackOpen,
 		klaviyo: handleCreateKlaviyoOpen,
@@ -561,6 +584,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		linkedin: handleLinkedinIconPopupIconOpen,
 		meta: handleMetaIconPopupOpen,
 		bing_ads: handleBingAdsIconPopupOpen,
+		go_high_level: handleGoHightLevelIconPopupOpen,
 	};
 
 	return (
@@ -1628,6 +1652,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				isEdit={false}
 				data={null}
 			/>
+
+			<GoHighLevelDataSync
+				open={goHightLevelIconPopupOpen}
+				onClose={handleGoHightLevelIconPopupClose}
+				isEdit={false}
+			/>
+
 			<ConnectSalesForce
 				data={null}
 				open={salesForceIconPopupOpen}
@@ -1738,6 +1769,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 						(integartion) => integartion.service_name === "google_ads",
 					)?.access_token
 				}
+			/>
+			<GoHighLevelConnectPopup
+				open={createGoHighLevel}
+				handlePopupClose={handleCreateGoHighLevelClose}
 			/>
 			<LinkedinConnectPopup
 				open={createLinkedin}

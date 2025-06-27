@@ -1,18 +1,14 @@
-import math
-from datetime import datetime
+from sqlalchemy import desc
 
-from sqlalchemy import desc, asc
-from sqlalchemy import func
-from sqlalchemy.orm import Session
-
+from db_dependencies import Db
 from enums import AudienceInfoEnum
 from models.audience import Audience
-from models.audience_leads import AudienceLeads
-from models.leads_users import LeadUser
+from resolver import injectable
 
 
+@injectable
 class AudiencePersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_user_audience_list(self, domain_id):

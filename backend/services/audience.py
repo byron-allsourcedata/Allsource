@@ -2,6 +2,8 @@ import logging
 
 from enums import AudienceInfoEnum
 from typing import List
+
+from resolver import injectable
 from schemas.audience import AudienceResponse
 from config.rmq_connection import (
     RabbitMQConnection,
@@ -12,6 +14,7 @@ from persistence.audience_persistence import AudiencePersistence
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class AudienceService:
     def __init__(self, audience_persistence_service: AudiencePersistence):
         self.audience_persistence_service = audience_persistence_service
