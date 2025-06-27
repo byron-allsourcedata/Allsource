@@ -22,9 +22,10 @@ async def get_sync(
     service_name: str | None = Query(None),
     integrations_users_sync_id: int | None = Query(None),
     domain=Depends(check_domain),
+    user=Depends(check_user_authorization),
 ):
     return integration_service.get_sync_domain(
-        domain.id, service_name, integrations_users_sync_id
+        domain.id, user.get("id"), service_name, integrations_users_sync_id
     )
 
 
