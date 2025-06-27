@@ -38,7 +38,8 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
-from dependencies import PlansPersistence, Db
+from db_dependencies import Db
+from dependencies import PlansPersistence
 
 load_dotenv()
 
