@@ -38,6 +38,7 @@ from utils import (
     get_http_client,
     get_valid_email_without_million,
     validate_and_format_phone,
+    to_snake_case,
 )
 
 
@@ -90,6 +91,87 @@ class HubspotIntegrationsService:
                     params=params,
                 )
         return response
+
+    def create_custom_property(
+        self,
+        access_token: str,
+        name: str,
+        label: str,
+        object_type: str = "contacts",
+        group_name: str = "contactinformation",
+        field_type: str = "text",
+        type_: str = "string",
+    ):
+        name_snake = to_snake_case(name)
+        url = f"https://api.hubapi.com/crm/v3/properties/{object_type}"
+        payload = {
+            "name": name_snake,
+            "label": label,
+            "groupName": group_name,
+            "type": type_,  # internal type: string, number, datetime
+            "fieldType": field_type,  # visual input: text, number, date
+        }
+        resp = self.__handle_request(
+            method="POST",
+            url=url,
+            access_token=access_token,
+            json=payload,
+        )
+        if resp.status_code not in (200, 201):
+            logging.warning(
+                "Failed to create property '%s': %s",
+                name,
+                resp.text,
+            )
+        return resp
+
+    def ensure_custom_properties_exist(
+        self,
+        access_token: str,
+        data_map: list[dict],
+        object_type: str = "contacts",
+    ):
+        """
+        Создаёт недостающие custom-поля в HubSpot для полей из data_map с is_constant=True.
+        """
+        url = f"https://api.hubapi.com/crm/v3/properties/{object_type}"
+        resp = self.__handle_request("GET", url, access_token=access_token)
+
+        if resp.status_code != 200:
+            logging.warning(
+                "Failed to fetch existing properties: %s", resp.text
+            )
+            return
+
+        existing_properties = {
+            prop["name"] for prop in resp.json().get("results", [])
+        }
+
+        for field in data_map:
+            if not field.get("is_constant"):
+                continue
+
+            name = field["type"]
+            if name in existing_properties:
+                continue
+
+            create_resp = self.create_custom_property(
+                access_token=access_token,
+                name=name,
+                label=name.replace("_", " ").title(),
+                object_type=object_type,
+            )
+
+            if create_resp.status_code in (200, 201):
+                logging.info(f"Created custom property '{name}' in HubSpot.")
+            elif create_resp.status_code == 409:
+                logging.info(
+                    f"Property '{name}' already exists (race condition)."
+                )
+            else:
+                logging.warning(
+                    f"Failed to create property '{name}': {create_resp.text}"
+                )
 
     def get_credentials(self, domain_id: int, user_id: int):
         credential = self.integrations_persisntece.get_credentials_for_service(
@@ -287,6 +369,10 @@ class HubspotIntegrationsService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
     ):
+        self.ensure_custom_properties_exist(
+            access_token=user_integration.access_token,
+            data_map=integration_data_sync.data_map,
+        )
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
@@ -504,10 +590,6 @@ class HubspotIntegrationsService:
         for field in data_map:
             t = field["type"]
             v = field["value"]
-
-            if field.get("is_constant"):
-                profile[v] = t
-                continue
 
             val = getattr(lead, t, None)
             if val is None:

@@ -260,3 +260,11 @@ async def send_sse(channel, user_id: int, data: dict):
         )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
+
+
+def to_snake_case(value: str) -> str:
+    value = re.sub(r"[^\w\s]", "", value)
+    value = re.sub(r"[\s\-]+", "_", value)
+    value = re.sub(r"([A-Z]+)", r"_\1", value)
+    value = re.sub(r"__+", "_", value)
+    return value.lower().strip("_")
