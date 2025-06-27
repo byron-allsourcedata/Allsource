@@ -5,8 +5,6 @@ import logging
 import os
 import sys
 
-import sentry_sdk
-
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -41,9 +39,9 @@ from sqlalchemy.orm import Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
+from db_dependencies import Db
 from dependencies import (
     NotificationPersistence,
-    Db,
 )
 
 
