@@ -165,7 +165,7 @@ class IntegrationsUserSyncPersistence:
 
         validation_persons_query = (
             select(
-                count(DataSyncImportedLead.id).label("validation"),
+                func.count(DataSyncImportedLead.id).label("validation"),
                 IntegrationUserSync.id,
             )
             .select_from(DataSyncImportedLead)
@@ -173,10 +173,7 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
-            .where(
-                DataSyncImportedLead.status
-                == DataSyncImportedStatus.SUCCESS.value
-            )
+            .where(DataSyncImportedLead.is_validation.is_(True))
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
