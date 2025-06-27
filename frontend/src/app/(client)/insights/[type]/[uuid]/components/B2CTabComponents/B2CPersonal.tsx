@@ -69,11 +69,20 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 					</Box>
 
 					<Box sx={{ display: "flex", width: "32%" }}>
-						<VerticalGradientBarChart
-							title="Age"
-							data={sortAgeGroups(mapGenericPercentage(data.age))}
-							rank={fieldRanks["age"]}
-						/>
+						{Object.keys(data.age || {}).length <= 6 ? (
+							<VerticalGradientBarChart
+								title="Age"
+								data={sortAgeGroups(mapGenericPercentage(data.age))}
+								rank={fieldRanks["age"]}
+							/>
+						) : (
+							<GradientBarChart
+								title="Age"
+								data={mapGenericPercentage(data.age)}
+								rank={fieldRanks["age"]}
+								gradientColor="155, 223, 196"
+							/>
+						)}
 					</Box>
 
 					<Box sx={{ display: "flex", width: "32%" }}>
