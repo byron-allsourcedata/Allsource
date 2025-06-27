@@ -43,7 +43,6 @@ class UserDomains(Base):
     pixel_installation_date = Column(
         TIMESTAMP,
         nullable=True,
-        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
     api_key = Column(VARCHAR, nullable=True)
     viewed_product_part_url = Column(VARCHAR, nullable=True)

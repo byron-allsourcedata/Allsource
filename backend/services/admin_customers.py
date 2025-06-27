@@ -197,7 +197,7 @@ class AdminCustomersService:
         per_page: int,
         sort_by: str,
         sort_order: str,
-        test_users: bool,
+        exclude_test_users: bool,
         last_login_date_start: Optional[int] = None,
         last_login_date_end: Optional[int] = None,
         join_date_start: Optional[int] = None,
@@ -222,7 +222,7 @@ class AdminCustomersService:
             per_page=per_page,
             sort_by=sort_by,
             sort_order=sort_order,
-            test_users=test_users,
+            exclude_test_users=exclude_test_users,
             filters=filters,
         )
 
@@ -272,6 +272,8 @@ class AdminCustomersService:
         join_date_start: int,
         join_date_end: int,
         search_query: str,
+        statuses: str,
+        exclude_test_users: bool,
     ):
         audience_metrics = {}
         dashboard_audience_data = (
@@ -281,6 +283,8 @@ class AdminCustomersService:
                 join_date_start=join_date_start,
                 join_date_end=join_date_end,
                 search_query=search_query,
+                statuses=statuses,
+                exclude_test_users=exclude_test_users,
             )
         )
 

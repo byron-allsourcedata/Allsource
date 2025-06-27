@@ -72,7 +72,7 @@ const Users: React.FC = () => {
 	const [orderBy, setOrderBy] = useState<string>("");
 	const [isSliderOpen, setSliderOpen] = useState(false);
 	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-	const [showTestUsers, setShowTestUsers] = useState(true);
+	const [excludeTestUsers, setExcludeTestUsers] = useState(true);
 	const [selectedFilters, setSelectedFilters] = useState<
 		{ label: string; value: string }[]
 	>([]);
@@ -96,11 +96,11 @@ const Users: React.FC = () => {
 
 	useEffect(() => {
 		fetchData();
-	}, [order, selectedFilters]);
+	}, [order, selectedFilters, excludeTestUsers]);
 
 	useEffect(() => {
 		fetchUserData();
-	}, [tabIndex, page, rowsPerPage, order, showTestUsers, selectedFilters]);
+	}, [tabIndex, page, rowsPerPage, order, selectedFilters]);
 
 	const handleSearchChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -159,6 +159,10 @@ const Users: React.FC = () => {
 				url += `&search_query=${encodeURIComponent(search.trim())}`;
 			}
 
+			if (excludeTestUsers) {
+				url += `&exclude_test_users=true`;
+			}
+
 			const response = await axiosInstance.get(url);
 			if (response.status === 200) {
 				setValueMetrics({
@@ -206,8 +210,8 @@ const Users: React.FC = () => {
 				}
 			}
 
-			if (showTestUsers) {
-				url += `&test_users=true`;
+			if (excludeTestUsers) {
+				url += `&exclude_test_users=true`;
 			}
 
 			if (search.trim() !== "") {
@@ -341,7 +345,10 @@ const Users: React.FC = () => {
 			}
 		};
 
-		if (filters.statuses) {
+		if (
+			Object.keys(filters.statuses).length > 0 &&
+			!Object.values(filters.statuses).includes(false)
+		) {
 			newSelectedFilters.push({
 				label: "statuses",
 				value: getSelectedValues(filters.statuses!),
@@ -560,8 +567,8 @@ const Users: React.FC = () => {
 									Exclude test users
 								</Typography>
 								<CustomSwitch
-									stateSwitch={showTestUsers}
-									changeState={() => setShowTestUsers((prev) => !prev)}
+									stateSwitch={excludeTestUsers}
+									changeState={() => setExcludeTestUsers((prev) => !prev)}
 								/>
 							</Box>
 							<TextField
