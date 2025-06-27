@@ -429,6 +429,10 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		onClose();
 	};
 
+	const isSnakeCase = (str: string): boolean => {
+		return /^[a-z][a-z0-9_]*$/.test(str);
+	};
+
 	return (
 		<>
 			{loading && (
@@ -1174,16 +1178,21 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 														<TextField
 															fullWidth
 															variant="outlined"
-															label="Field Name"
+															label="Constant Field Name"
 															value={field.type}
 															onChange={(e) =>
 																handleChangeField(index, "type", e.target.value)
 															}
 															placeholder="Enter field name"
+															error={
+																field.is_constant &&
+																!!field.type &&
+																!isSnakeCase(field.type)
+															}
 															InputLabelProps={{
 																sx: {
 																	fontFamily: "Nunito Sans",
-																	fontSize: "12px",
+																	fontSize: "16px",
 																	lineHeight: "16px",
 																	color: "rgba(17, 17, 19, 0.60)",
 																	top: "-5px",
@@ -1257,7 +1266,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 															InputLabelProps={{
 																sx: {
 																	fontFamily: "Nunito Sans",
-																	fontSize: "12px",
+																	fontSize: "16px",
 																	lineHeight: "16px",
 																	color: "rgba(17, 17, 19, 0.60)",
 																	top: "-5px",
@@ -1405,6 +1414,24 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 														/>
 													</IconButton>
 												</Grid>
+												{field.type && !isSnakeCase(field.type) && (
+													<Box
+														sx={{ width: "100%", pl: 2.25, mt: "-6px", mb: 1 }}
+													>
+														<Typography
+															sx={{
+																color: "#d32f2f",
+																fontSize: "12px",
+																marginTop: "4px",
+																marginLeft: "2px",
+																fontFamily: "Roboto",
+															}}
+														>
+															Field name must be in snake_case: lowercase
+															letters and underscores only
+														</Typography>
+													</Box>
+												)}
 											</Grid>
 										))}
 										<Box
