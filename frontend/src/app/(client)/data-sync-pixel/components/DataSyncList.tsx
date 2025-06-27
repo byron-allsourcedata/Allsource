@@ -754,7 +754,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		}
 		if (
 			row.contacts === row.processed_contacts &&
-			row.validation_contacts !== 0
+			row.processed_contacts !== 0
 		) {
 			return "Synced";
 		}

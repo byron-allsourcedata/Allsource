@@ -61,11 +61,15 @@ async def get_integrations_service(
     if data_sync is not None:
         filter["data_sync"] = data_sync
 
-    source_platform = user.get("source_platform")
-    if source_platform in ["big_commerce", "shopify"]:
-        filter["service_name"] = ["klaviyo", "omnisend", "mailchimp"]
-
     return integration_persistence.get_integrations_service(**filter)
+
+
+@router.get("/active")
+async def get_active_integrations(
+    integration_serivce: IntegrationService,
+    user=Depends(check_user_authentication),
+):
+    return integration_serivce.get_active_integrations()
 
 
 @router.get("/smart-audience-sync")

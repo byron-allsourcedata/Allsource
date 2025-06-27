@@ -5,6 +5,8 @@ from sqlalchemy import (
     BigInteger,
     TIMESTAMP,
     VARCHAR,
+    text,
+    Boolean,
     ForeignKey,
     Index,
     event,
@@ -18,6 +20,7 @@ class DataSyncImportedLead(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     status = Column(VARCHAR(64), nullable=False)
+    is_validation = Column(Boolean, nullable=False, server_default=text("true"))
     service_name = Column(VARCHAR(128), nullable=False)
     data_sync_id = Column(
         BigInteger,
@@ -53,6 +56,11 @@ class DataSyncImportedLead(Base):
             lead_users_id,
             data_sync_id,
             unique=True,
+        ),
+        Index(
+            "data_sync_imported_leads_is_validation_idx",
+            is_validation,
+            unique=False,
         ),
     )
 

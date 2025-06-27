@@ -24,7 +24,6 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from resolver import injectable
-from schemas.integrations.google_ads import GoogleAdsProfile
 from schemas.integrations.integrations import *
 from services.integrations.commonIntegration import (
     resolve_main_email_and_phone,
@@ -38,7 +37,6 @@ from utils import (
     get_valid_email,
     get_valid_phone,
     get_valid_location,
-    format_phone_number,
     get_http_client,
     get_valid_email_without_million,
 )
