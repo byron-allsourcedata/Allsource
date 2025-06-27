@@ -645,7 +645,7 @@ class ShopifyIntegrationService:
             raise HTTPException(
                 status_code=400,
                 detail={
-                    "status": "error",
+                    "status": "STORE_DOMAIN",
                     "detail": {
                         "message": "Store Domain does not match the one you specified earlier"
                     },
