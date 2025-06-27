@@ -1,9 +1,11 @@
 import logging
 from typing import List, Tuple, Dict, Set
 from uuid import UUID
+import json
 
 from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
 from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
@@ -102,9 +104,12 @@ logger = logging.getLogger(__name__)
 @injectable
 class AudienceLookalikesService:
     def __init__(
-        self, lookalikes_persistence_service: AudienceLookalikesPersistence
+        self,
+        lookalikes_persistence_service: AudienceLookalikesPersistence,
+        sources_persistence: AudienceSourcesPersistence,
     ):
         self.lookalikes_persistence_service = lookalikes_persistence_service
+        self.sources_persistence = sources_persistence
 
     def get_lookalikes(
         self,
@@ -363,7 +368,6 @@ class AudienceLookalikesService:
         self,
         audience_data: List[dict],
         similar_audience_service: SimilarAudienceService,
-        audience_type: BusinessType = BusinessType.ALL,
         random_seed: int = 42,
     ) -> CalculateRequest:
         try:
@@ -380,26 +384,51 @@ class AudienceLookalikesService:
                 random_seed=random_seed,
             )
 
-            rounded_feature = {
-                k: round(v, 6) if isinstance(v, (int, float)) else v
-                for k, v in audience_feature_dict.items()
-            }
-
-            return self.split_insights(rounded_feature)
+            return self.format_predictable_fields(audience_feature_dict)
 
         except Exception as e:
             logger.error(e, exc_info=True)
             raise e
             return self._default_insights()
 
+    def recieve_insights(
+        self,
+        audience_data: List[dict],
+        source_id: UUID,
+    ) -> CalculateRequest:
+        try:
+            if len(audience_data) < 2:
+                raise LessThenTwoTrainDataset
+
+            audience_feature = self.sources_persistence.get_significant_fields(
+                source_id
+            )
+
+            if isinstance(audience_feature.significant_fields, str):
+                audience_feature_dict = json.loads(
+                    audience_feature.significant_fields
+                )
+            audience_feature_dict = audience_feature.significant_fields
+
+            return self.format_predictable_fields(audience_feature_dict)
+
+        except Exception:
+            return self._default_insights()
+
+    def format_predictable_fields(self, predictable_fields):
+        rounded_feature = {
+            k: round(v, 6) if isinstance(v, (int, float)) else v
+            for k, v in predictable_fields.items()
+        }
+
+        return self.split_insights(rounded_feature)
+
     def calculate_lookalike(
         self,
-        similar_audience_service: SimilarAudienceService,
         user: UserDict,
         uuid_of_source: UUID,
         lookalike_size: str,
     ) -> CalculateRequest:
-        random_seed = int(user.get("random_seed", 42))
         audience_data = (
             self.lookalikes_persistence_service.calculate_lookalikes(
                 user_id=user.get("id"),
@@ -407,10 +436,9 @@ class AudienceLookalikesService:
                 lookalike_size=lookalike_size,
             )
         )
-        b2c_insights, b2b_insights, other = self.calculate_insights(
+        b2c_insights, b2b_insights, other = self.recieve_insights(
             audience_data=audience_data,
-            similar_audience_service=similar_audience_service,
-            random_seed=random_seed,
+            source_id=uuid_of_source,
         )
         return CalculateRequest(
             count_matched_persons=len(audience_data),

@@ -408,7 +408,7 @@ class AudienceLookalikesPostgresPersistence(
         audience_type: BusinessType,
         limit: Optional[int] = None,
     ) -> List[Dict]:
-        def all_columns_except(model, *skip: str):
+        def __all_columns_except(model, *skip: str):
             return tuple(c for c in model.__table__.c if c.name not in skip)
 
         # for b2c
@@ -435,7 +435,7 @@ class AudienceLookalikesPostgresPersistence(
             AudienceSourcesMatchedPerson.value_score.label("customer_value")
         ]
         for model in enrichment_models:
-            select_cols.extend(all_columns_except(model, "id", "asid"))
+            select_cols.extend(__all_columns_except(model, "id", "asid"))
 
         q = (
             self.db.query(*select_cols)
@@ -456,7 +456,7 @@ class AudienceLookalikesPostgresPersistence(
             q = q.limit(limit)
         rows = q.all()
 
-        def _row2dict(row) -> Dict[str, Any]:
+        def __row2dict(row) -> Dict[str, Any]:
             d = dict(row._mapping)
             updated_dict = {}
             for k, v in d.items():
@@ -470,21 +470,21 @@ class AudienceLookalikesPostgresPersistence(
                     updated_dict[k] = v
             return updated_dict
 
-        result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
+        result: List[Dict[str, Any]] = [__row2dict(r) for r in rows]
         return result
 
     def calculate_lookalikes(
         self, user_id: int, source_uuid: UUID, lookalike_size: str
     ) -> List[Dict]:
-        audience_source = (
-            self.db.query(AudienceSource)
+        source_target_schema = (
+            self.db.query(AudienceSource.target_schema)
             .filter(
                 AudienceSource.id == str(source_uuid),
                 AudienceSource.user_id == user_id,
             )
             .first()
         )
-        if not audience_source:
+        if not source_target_schema:
             raise HTTPException(
                 status_code=404,
                 detail="Audience source not found or access denied",
@@ -496,9 +496,7 @@ class AudienceLookalikesPostgresPersistence(
             .scalar()
         )
 
-        print(total_matched)
-
-        def get_number_users(lookalike_size: str, size: int) -> int:
+        def __get_number_users(lookalike_size: str, size: int) -> int:
             if lookalike_size == LookalikeSize.ALMOST.value:
                 number = size * 0.2
             elif lookalike_size == LookalikeSize.EXTREMELY.value:
@@ -513,11 +511,12 @@ class AudienceLookalikesPostgresPersistence(
                 number = size * 1
             return int(number)
 
-        number_required = get_number_users(lookalike_size, total_matched)
+        number_required = __get_number_users(lookalike_size, total_matched)
         atype = {
             "b2b": BusinessType.B2B,
             "b2c": BusinessType.B2C,
-        }.get(audience_source.target_schema, BusinessType.ALL)
+        }.get(source_target_schema, BusinessType.ALL)
+
         result = self.retrieve_source_insights(
             source_uuid=source_uuid, audience_type=atype, limit=number_required
         )

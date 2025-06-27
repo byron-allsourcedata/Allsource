@@ -62,7 +62,8 @@ from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
 )
 from services.lookalikes import AudienceLookalikesService
-
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
 
 load_dotenv()
 
@@ -1036,12 +1037,12 @@ def extract_non_zero_values(*insights):
         for category, fields in to_dict(insight).items():
             if isinstance(fields, dict):
                 for key, value in fields.items():
-                    rounded = round(value, 2)
+                    rounded = round(value, 6)
                     if rounded != 0:
                         combined[key] = rounded
             else:
                 if fields != 0:
-                    rounded = round(fields, 2)
+                    rounded = round(fields, 6)
                     if rounded != 0:
                         combined[category] = rounded
 
@@ -1072,6 +1073,15 @@ def calculate_and_save_significant_fields(
         .where(AudienceSource.id == source_id)
         .values(significant_fields=combined_insights)
     )
+
+
+def check_significant_fields_and_insights(source: AudienceSource) -> bool:
+    if source.significant_fields is not None and source.insights is not None:
+        logging.info(
+            "AudienceSource already has significant_fields and insights. Skipping processing."
+        )
+        return True
+    return False
 
 
 async def aud_sources_matching(
@@ -1119,13 +1129,16 @@ async def aud_sources_matching(
                     data_for_normalize.matched_size
                     == data_for_normalize.all_size
                 ):
-                    calculate_and_save_significant_fields(
-                        db_session=db_session,
-                        source_id=source_id,
-                        similar_audience_service=similar_audience_service,
-                        audience_lookalikes_service=audience_lookalikes_service,
-                        audience_type=atype,
-                    )
+                    if not check_significant_fields_and_insights(
+                        source=audience_source
+                    ):
+                        calculate_and_save_significant_fields(
+                            db_session=db_session,
+                            source_id=source_id,
+                            similar_audience_service=similar_audience_service,
+                            audience_lookalikes_service=audience_lookalikes_service,
+                            audience_type=atype,
+                        )
 
                 if (
                     message_body.status
@@ -1222,21 +1235,30 @@ async def aud_sources_matching(
             f"Updated processed and matched records for source_id {source_id}."
         )
         if processed_records >= total_records:
-            InsightsUtils.process_insights(
-                source_agent=source_agent_service,
-                source_id=source_id,
-                db_session=db_session,
-            )
-            if type == "user_ids":
-                calculate_and_save_significant_fields(
-                    db_session=db_session,
+            if not check_significant_fields_and_insights(
+                source=audience_source
+            ):
+                InsightsUtils.process_insights(
+                    source_agent=source_agent_service,
                     source_id=source_id,
-                    similar_audience_service=similar_audience_service,
-                    audience_lookalikes_service=audience_lookalikes_service,
-                    audience_type=atype,
+                    db_session=db_session,
                 )
+                if type == "user_ids":
+                    calculate_and_save_significant_fields(
+                        db_session=db_session,
+                        source_id=source_id,
+                        similar_audience_service=similar_audience_service,
+                        audience_lookalikes_service=audience_lookalikes_service,
+                        audience_type=atype,
+                    )
 
-            logging.info(f"Source_id {source_id} processing complete.")
+                logging.info(f"Source_id {source_id} processing complete.")
+            else:
+                db_session.execute(
+                    update(AudienceSource)
+                    .where(AudienceSource.id == source_id)
+                    .values(matched_records_status="complete")
+                )
 
         if type == "emails" and processed_records >= total_records:
             await process_and_send_chunks(

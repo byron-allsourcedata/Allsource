@@ -99,10 +99,6 @@ async def verify_signature(request: Request):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
 
 
-def get_audience_sources_persistence(db: Session = Depends(get_db)):
-    return AudienceSourcesPersistence(db)
-
-
 def get_audience_setting_persistence(db: Session = Depends(get_db)):
     return AudienceSettingPersistence(db)
 
@@ -211,10 +207,8 @@ def get_accounts_service(
 
 def get_audience_sources_service(
     domain_persistence: UserDomainsPersistence,
+    audience_sources_persistence: AudienceSourcesPersistence,
     audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence,
-    audience_sources_persistence: AudienceSourcesPersistence = Depends(
-        get_audience_sources_persistence
-    ),
 ):
     return AudienceSourceService(
         audience_sources_persistence=audience_sources_persistence,
@@ -226,9 +220,7 @@ def get_audience_sources_service(
 def get_audience_smarts_service(
     audience_smarts_persistence: AudienceSmartsPersistence,
     lookalikes_persistence_service: AudienceLookalikesPersistence,
-    audience_sources_persistence: AudienceSourcesPersistence = Depends(
-        get_audience_sources_persistence
-    ),
+    audience_sources_persistence: AudienceSourcesPersistence,
     audience_settings_persistence: AudienceSettingPersistence = Depends(
         get_audience_setting_persistence
     ),

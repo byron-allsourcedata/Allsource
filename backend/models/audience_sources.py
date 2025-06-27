@@ -68,8 +68,12 @@ class AudienceSource(Base):
     )
     insights = Column(JSON, nullable=True)
     significant_fields = Column(JSON, nullable=True)
+    hash_csv_file = Column(VARCHAR(32), nullable=True)
 
     __table_args__ = (
+        Index(
+            "audience_sources_hash_csv_file_idx", hash_csv_file, unique=False
+        ),
         Index("audience_sources_user_id_idx", user_id),
         Index("audience_sources_matched_records_idx", matched_records),
         Index("audience_sources_total_records_idx", total_records),

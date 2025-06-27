@@ -162,7 +162,6 @@ async def calculate_lookalikes(
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     result = lookalike_service.calculate_lookalike(
-        similar_audience_service=similar_audience_service,
         user=user,
         uuid_of_source=uuid_of_source,
         lookalike_size=lookalike_size,
