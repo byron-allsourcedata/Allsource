@@ -143,6 +143,7 @@ class IntegrationsUserSyncPersistence:
     def get_filter_by(
         self,
         domain_id: int,
+        user_id: Optional[int] = None,
         service_name: Optional[str] = None,
         integrations_users_sync_id: Optional[str] = None,
     ):
@@ -257,6 +258,12 @@ class IntegrationsUserSyncPersistence:
             success_synced_persons_query = success_synced_persons_query.filter(
                 UserIntegration.service_name == service_name
             )
+        is_user_validations = None
+        if user_id:
+            user = self.db.query(Users).filter(Users.id == user_id).first()
+            if user:
+                is_user_validations = user.is_email_validation_enabled
+
         if integrations_users_sync_id:
             sync = success_synced_persons_query.filter(
                 IntegrationUserSync.id == integrations_users_sync_id
@@ -294,6 +301,11 @@ class IntegrationsUserSyncPersistence:
                     "customer_id": sync.customer_id,
                     "hook_url": sync.hook_url,
                     "method": sync.method,
+                    **(
+                        {"is_user_validations": is_user_validations}
+                        if is_user_validations is not None
+                        else {}
+                    ),
                 }
         syncs = success_synced_persons_query.order_by(
             desc(IntegrationUserSync.created_at)
@@ -331,6 +343,11 @@ class IntegrationsUserSyncPersistence:
                 "list_id": sync.list_id,
                 "hook_url": sync.hook_url,
                 "method": sync.method,
+                **(
+                    {"is_user_validations": is_user_validations}
+                    if is_user_validations is not None
+                    else {}
+                ),
             }
             for sync in syncs
         ]

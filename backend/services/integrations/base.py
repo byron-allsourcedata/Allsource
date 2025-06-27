@@ -167,11 +167,13 @@ class IntegrationService:
     def get_sync_domain(
         self,
         domain_id: int,
+        user_id: int = None,
         service_name: str = None,
         integrations_users_sync_id: int = None,
     ):
         return self.integrations_user_sync_persistence.get_filter_by(
             domain_id=domain_id,
+            user_id=user_id,
             service_name=service_name,
             integrations_users_sync_id=integrations_users_sync_id,
         )

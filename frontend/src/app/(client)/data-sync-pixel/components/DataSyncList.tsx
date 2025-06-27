@@ -1313,7 +1313,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.validation_contacts}
+												{!row.is_user_validations &&
+												row.validation_contacts === 0
+													? "Not validating"
+													: row.validation_contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
