@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 from uuid import UUID
+import json
 
 from sqlalchemy import desc, asc, select
 from sqlalchemy.orm import Session
@@ -205,4 +206,11 @@ class AudienceSourcesPersistence:
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
             .filter(AudienceSource.id == str(source_id))
             .one_or_none()
+        )
+
+    def get_significant_fields(self, source_id: UUID):
+        return (
+            self.db.query(AudienceSource.significant_fields)
+            .filter_by(id=str(source_id))
+            .first()
         )

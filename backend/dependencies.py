@@ -827,9 +827,13 @@ def get_lookalikes_service(
     lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(
         get_lookalikes_persistence
     ),
+    sources_persistence: AudienceSourcesPersistence = Depends(
+        get_audience_sources_persistence
+    ),
 ):
     return AudienceLookalikesService(
-        lookalikes_persistence_service=lookalikes_persistence_service
+        lookalikes_persistence_service=lookalikes_persistence_service,
+        sources_persistence=sources_persistence,
     )
 
 
