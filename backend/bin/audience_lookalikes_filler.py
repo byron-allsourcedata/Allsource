@@ -41,7 +41,6 @@ from config.sentry import SentryConfig
 from db_dependencies import Db
 from resolver import Resolver
 
-from services.lookalike_filler import LookalikeFillerService
 
 from config.rmq_connection import publish_rabbitmq_message_with_channel
 from config.rmq_connection import (
