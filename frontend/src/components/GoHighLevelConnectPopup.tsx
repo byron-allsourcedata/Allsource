@@ -70,6 +70,7 @@ const GoHighLevelStyles = {
 
 interface GoHighLevelConnectProps {
 	handlePopupClose: () => void;
+	onCloseCreateSync?: () => void;
 	open: boolean;
 	boxShadow?: string;
 }
