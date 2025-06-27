@@ -241,6 +241,13 @@ class IntegrationsPresistence:
             .all()
         )
 
+    def get_active_integrations(self):
+        return (
+            self.db.query(Integration.service_name, Integration.image_url)
+            .filter(Integration.is_active.is_(True))
+            .all()
+        )
+
     def get_all_integrations_filter_by(self, **filter_by):
         return self.db.query(UserIntegration).filter_by(**filter_by).all()
 

@@ -94,6 +94,6 @@ class Integration(Base):
         nullable=True,
         server_default=text("'Marketing'::character varying"),
     )
-    data_sync = Column(Boolean, nullable=True, server_default=text("true"))
+    is_active = Column(Boolean, nullable=True, server_default=text("true"))
     for_pixel = Column(Boolean, nullable=False, server_default=text("true"))
     for_audience = Column(Boolean, nullable=False, server_default=text("true"))

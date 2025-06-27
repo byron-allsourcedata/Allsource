@@ -378,5 +378,12 @@ class IntegrationService:
             return {"status": "SUCCESS", "data_sync": result}
         return {"status": "FAILED"}
 
+    def get_active_integrations(self):
+        results = self.integration_persistence.get_active_integrations()
+        return [
+            {"service_name": service_name, "image_url": image_url}
+            for service_name, image_url in results
+        ]
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.client.close()

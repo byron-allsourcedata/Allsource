@@ -4,6 +4,9 @@ import json
 import logging
 import os
 import sys
+from typing import Any
+
+from sqlalchemy import Row
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -55,7 +58,7 @@ def setup_logging(level):
 
 def check_correct_data_sync(
     data_sync_id: int, data_sync_imported_ids: list[int], session: Session
-):
+) -> tuple[Any, list[Row[tuple[Any]]]] | None:
     integration_data = (
         session.query(UserIntegration, IntegrationUserSync)
         .join(
@@ -146,15 +149,12 @@ def update_data_sync_imported_leads(
     lead_id: int,
     integration_data_sync: IntegrationUserSync,
     user_integration: UserIntegration,
+    is_email_validation_enabled: bool,
 ):
     session.query(DataSyncImportedLead).filter(
         DataSyncImportedLead.lead_users_id == lead_id,
         DataSyncImportedLead.data_sync_id == integration_data_sync.id,
-    ).update(
-        {
-            "status": status,
-        }
-    )
+    ).update({"status": status, "is_validation": is_email_validation_enabled})
 
     if status == ProccessDataSyncResult.SUCCESS.value:
         integration_data_sync.last_sync_date = get_utc_aware_date()
@@ -222,11 +222,16 @@ async def ensure_integration(
         data_sync_id = message_body.get("data_sync_id")
         users_id = message_body.get("users_id")
         logging.info(f"Data sync id {data_sync_id}")
-        integration_data, lead_user_data = check_correct_data_sync(
+        check_data = check_correct_data_sync(
             data_sync_id,
             data_sync_imported_ids=data_sync_imported_ids,
             session=db_session,
         )
+        if not check_data:
+            await message.ack()
+            return
+        integration_data, lead_user_data = check_data
+
         if not lead_user_data:
             logging.info(f"data sync empty for {data_sync_id}")
             await message.ack()
@@ -369,6 +374,7 @@ async def ensure_integration(
                         lead_id=result["lead_id"],
                         integration_data_sync=data_sync,
                         user_integration=user_integration,
+                        is_email_validation_enabled=is_email_validation_enabled,
                     )
 
             logging.info(f"Processed message for service: {service_name}")

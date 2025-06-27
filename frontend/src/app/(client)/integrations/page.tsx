@@ -660,6 +660,12 @@ interface IntegrationsListProps {
 	changeTab?: (value: string) => void;
 	handleSaveSettings: (new_integration: any) => void;
 	handleDeleteSettings?: (serviceName: string) => void;
+	integrationsAvailable?: ActiveIntegration[];
+}
+
+interface ActiveIntegration {
+	service_name: string;
+	image_url: string;
 }
 
 const UserIntegrationsList = ({
@@ -667,6 +673,7 @@ const UserIntegrationsList = ({
 	integrations,
 	handleSaveSettings,
 	handleDeleteSettings,
+	integrationsAvailable,
 }: IntegrationsListProps) => {
 	const [activeService, setActiveService] = useState<string | null>(null);
 	const [openModal, setOpenModal] = useState<string | null>(null);
@@ -744,24 +751,6 @@ const UserIntegrationsList = ({
 			showErrorToast(`Remove ${activeService} failed`);
 		}
 	};
-
-	const integrationsAvailable = [
-		{ image: "klaviyo.svg", service_name: "klaviyo" },
-		{ image: "meta-icon.svg", service_name: "meta" },
-		{ image: "omnisend_icon_black.svg", service_name: "omnisend" },
-		{ image: "mailchimp-icon.svg", service_name: "mailchimp" },
-		{ image: "sendlane-icon.svg", service_name: "sendlane" },
-		// { image: "zapier-icon.svg", service_name: "zapier" },
-		// { image: "slack-icon.svg", service_name: "slack" },
-		{ image: "webhook-icon.svg", service_name: "webhook" },
-		{ image: "hubspot.svg", service_name: "hubspot" },
-		{ image: "google-ads.svg", service_name: "google_ads" },
-		{ image: "salesforce-icon.svg", service_name: "sales_force" },
-		// { image: "bing-ads.svg", service_name: "bing_ads" },
-		{ image: "s3-icon.svg", service_name: "s3" },
-		{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
-		// { image: "linkedin-icon.svg", service_name: "linkedin" },
-	];
 
 	const integratedServices = integrationsCredentials.map(
 		(cred) => cred.service_name,
@@ -860,7 +849,7 @@ const UserIntegrationsList = ({
 				}}
 			>
 				{integrationsAvailable
-					.filter((integration) => {
+					?.filter((integration) => {
 						if (search) {
 							return integration.service_name
 								.toLowerCase()
@@ -929,7 +918,7 @@ const UserIntegrationsList = ({
 								)}
 
 								<IntegrationBox
-									image={`/${integration.image}`}
+									image={`/${integration.image_url}`}
 									service_name={integration.service_name}
 									active={activeService === integration.service_name}
 									is_avalible={!isIntegrated}
@@ -1353,6 +1342,9 @@ const Integrations = () => {
 	const [isLoading, setLoading] = useState(true);
 	const [activeTab, setActiveTab] = useState("1");
 	const searchParams = useSearchParams();
+	const [integrationsAvailable, setActiveIntegrations] = useState<
+		ActiveIntegration[]
+	>([]);
 	const statusIntegrate = searchParams.get("message");
 	const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
 		setValue(newValue);
@@ -1369,6 +1361,17 @@ const Integrations = () => {
 	}, []);
 
 	useEffect(() => {
+		const fetchActiveIntegration = async () => {
+			try {
+				const response = await axiosInstance.get("/integrations/active/");
+				if (response.status === 200) {
+					setActiveIntegrations(response.data);
+				}
+			} catch (error) {
+				console.log(error);
+			}
+		};
+		fetchActiveIntegration();
 		const fetchIntegrationCredentials = async () => {
 			try {
 				setLoading(true);
@@ -1719,6 +1722,7 @@ const Integrations = () => {
 										integrationsCredentials={integrationsCredentials}
 										changeTab={changeTab}
 										integrations={integrations}
+										integrationsAvailable={integrationsAvailable}
 										handleSaveSettings={handleSaveSettings}
 										handleDeleteSettings={handleDeleteSettings}
 									/>
