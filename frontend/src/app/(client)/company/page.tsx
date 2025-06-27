@@ -871,36 +871,73 @@ const Leads: React.FC = () => {
 	const noContactsYet = data.length === 0 && selectedFilters.length === 0;
 
 	const DownloadButton = (
-		<Button
-			aria-controls={dropdownOpen ? "account-dropdown" : undefined}
-			aria-haspopup="true"
-			aria-expanded={dropdownOpen ? "true" : undefined}
-			disabled={status === "PIXEL_INSTALLATION_NEEDED"}
-			sx={{
-				textTransform: "none",
-				color: "rgba(128, 128, 128, 1)",
-				opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
-				border: "1px solid rgba(184, 184, 184, 1)",
-				borderRadius: "4px",
-				padding: "8px",
-				minWidth: "auto",
-				"@media (max-width: 900px)": {
-					border: "none",
-					padding: 0,
-				},
-				"&:hover": {
-					backgroundColor: "transparent",
-					border: "1px solid rgba(56, 152, 252, 1)",
-					color: "rgba(56, 152, 252, 1)",
-					"& .MuiSvgIcon-root": {
-						color: "rgba(56, 152, 252, 1)",
+		<Tooltip
+			title={
+				<Box
+					sx={{
+						backgroundColor: "#fff",
+						margin: 0,
+						padding: 0,
+						display: "flex",
+						flexDirection: "row",
+						alignItems: "center",
+					}}
+				>
+					<Typography
+						className="table-data"
+						component="div"
+						sx={{ fontSize: "12px !important" }}
+					>
+						Download max 20,000 companies
+					</Typography>
+				</Box>
+			}
+			componentsProps={{
+				tooltip: {
+					sx: {
+						backgroundColor: "#fff",
+						color: "#000",
+						boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+						border: " 0.2px solid rgba(255, 255, 255, 1)",
+						borderRadius: "4px",
+						maxHeight: "100%",
+						maxWidth: "500px",
+						padding: "11px 10px",
 					},
 				},
 			}}
-			onClick={handleDownload}
 		>
-			<DownloadIcon fontSize="medium" />
-		</Button>
+			<Button
+				aria-controls={dropdownOpen ? "account-dropdown" : undefined}
+				aria-haspopup="true"
+				aria-expanded={dropdownOpen ? "true" : undefined}
+				disabled={status === "PIXEL_INSTALLATION_NEEDED"}
+				sx={{
+					textTransform: "none",
+					color: "rgba(128, 128, 128, 1)",
+					opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.5" : "1",
+					border: "1px solid rgba(184, 184, 184, 1)",
+					borderRadius: "4px",
+					padding: "8px",
+					minWidth: "auto",
+					"@media (max-width: 900px)": {
+						border: "none",
+						padding: 0,
+					},
+					"&:hover": {
+						backgroundColor: "transparent",
+						border: "1px solid rgba(56, 152, 252, 1)",
+						color: "rgba(56, 152, 252, 1)",
+						"& .MuiSvgIcon-root": {
+							color: "rgba(56, 152, 252, 1)",
+						},
+					},
+				}}
+				onClick={handleDownload}
+			>
+				<DownloadIcon fontSize="medium" />
+			</Button>
+		</Tooltip>
 	);
 
 	const ButtonGroup = (

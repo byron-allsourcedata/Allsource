@@ -292,7 +292,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					<Button
 						variant="contained"
 						onClick={handleSaveSync}
-						disabled={!selectedRadioValue}
+						disabled={!selectedRadioValue || hasErrors()}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "Nunito Sans",
@@ -431,6 +431,18 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 
 	const isSnakeCase = (str: string): boolean => {
 		return /^[a-z][a-z0-9_]*$/.test(str);
+	};
+
+	const hasErrors = (): boolean => {
+		return customFields.some((field, index) => {
+			if (field.is_constant && field.type && !isSnakeCase(field.type)) {
+				return true;
+			}
+			if (isDuplicate(field.type, index)) {
+				return true;
+			}
+			return false;
+		});
 	};
 
 	return (
@@ -1192,7 +1204,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 															InputLabelProps={{
 																sx: {
 																	fontFamily: "Nunito Sans",
-																	fontSize: "16px",
+																	fontSize: "13px",
 																	lineHeight: "16px",
 																	color: "rgba(17, 17, 19, 0.60)",
 																	top: "-5px",
@@ -1266,7 +1278,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 															InputLabelProps={{
 																sx: {
 																	fontFamily: "Nunito Sans",
-																	fontSize: "16px",
+																	fontSize: "13px",
 																	lineHeight: "16px",
 																	color: "rgba(17, 17, 19, 0.60)",
 																	top: "-5px",
@@ -1359,7 +1371,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 														InputLabelProps={{
 															sx: {
 																fontFamily: "Nunito Sans",
-																fontSize: "12px",
+																fontSize: "13px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",

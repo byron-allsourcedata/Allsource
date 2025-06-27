@@ -14,6 +14,8 @@ import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import ManagementTable from "./components/ManagementTable";
 import { Domain } from "../analytics/components/DomainSelector";
+import { useSidebar } from "@/context/SidebarContext";
+import { fetchUserData } from "@/services/meService";
 
 export type PixelKey =
 	| "is_view_product_installed"
@@ -44,6 +46,7 @@ export interface PixelManagementItem {
 
 const Management: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
+	const { setIsGetStartedPage, setInstalledResources } = useSidebar();
 	const router = useRouter();
 	const [loading, setLoading] = useState(true);
 	const [status, setStatus] = useState("");
@@ -103,11 +106,18 @@ const Management: React.FC = () => {
 			showToast("Successfully removed domain");
 			const me = JSON.parse(sessionStorage.getItem("me") || "{}");
 			if (me.domains) {
-				console.log(12345);
 				me.domains = me.domains.filter(
 					(domain: Domain) => domain.domain !== toDelete.domain_name,
 				);
 				sessionStorage.setItem("me", JSON.stringify(me));
+			}
+
+			const countDomains = me.domains;
+
+			if (!countDomains || countDomains.length === 0) {
+				await fetchUserData(setIsGetStartedPage, setInstalledResources);
+				router.push("/get-started");
+				return;
 			}
 
 			await fetchData();
