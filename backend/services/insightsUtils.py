@@ -57,7 +57,9 @@ class InsightsUtils:
         audience_type: BusinessType,
     ):
         is_invalid = lambda val: (
-            val is None or str(val).upper() in ("UNKNOWN", "U", "2", "", "-")
+            val is None
+            or str(val).upper()
+            in ("UNKNOWN", "U", "2", "", "-", "Unknown", "unknown")
         )
         if (
             audience_type == BusinessType.B2C
