@@ -42,7 +42,9 @@ class PixelManagementService:
 
         domains = self.user_domains_service.get_domains(user_id=user_id)
         for domain in domains:
-            syncs = self.integration_service.get_sync_domain(domain["id"])
+            syncs = self.integration_service.get_sync_domain(
+                domain["id"], user_id=user_id
+            )
 
             result.append(
                 {
