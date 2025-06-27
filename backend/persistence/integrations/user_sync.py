@@ -318,7 +318,6 @@ class IntegrationsUserSyncPersistence:
                 "successful_contacts": sync.no_of_contacts,
                 "validation_contacts": sync.validation,
                 "createdBy": sync.created_by,
-                "status": "Syncing",
                 "accountId": sync.platform_user_id,
                 "campaign_id": sync.campaign_id,
                 "campaign_name": sync.campaign_name,

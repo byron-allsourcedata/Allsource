@@ -5,7 +5,6 @@ from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, status
 from jose import jwt, JWTError
-from sentry_sdk.integrations import httpx
 from slack_sdk.signature import SignatureVerifier
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException
@@ -13,7 +12,6 @@ from starlette.requests import Request
 from typing_extensions import Annotated
 
 from config.auth import AuthConfig
-from config.aws import get_s3_client
 from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
@@ -131,10 +129,6 @@ def get_audience_sources_matched_persons_persistence(
 
 def get_audience_smarts_persistence(db: Session = Depends(get_db)):
     return AudienceSmartsPersistence(db)
-
-
-def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
-    return AWSService(s3_client)
 
 
 def get_partners_asset_persistence(
@@ -355,7 +349,7 @@ def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
 
 
 def get_partners_assets_service(
-    aws_service: AWSService = Depends(get_aws_service),
+    aws_service: AWSService,
     partners_asset_persistence: PartnersAssetPersistence = Depends(
         get_partners_asset_persistence
     ),

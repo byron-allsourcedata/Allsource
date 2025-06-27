@@ -32,6 +32,7 @@ from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.shopify import ShopifyShopRedactForm
 from schemas.users import ShopifyPayloadModel
 from utils import get_http_client
+from ..aws import AWSService
 from ..jwt_service import create_access_token
 
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +46,7 @@ class ShopifyIntegrationService:
         integration_persistence: IntegrationsPresistence,
         lead_persistence: LeadsPersistence,
         lead_orders_persistence: LeadOrdersPersistence,
+        aws_service: AWSService,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         db: Db,
@@ -57,6 +59,7 @@ class ShopifyIntegrationService:
         )
         self.client = client
         self.db = db
+        self.AWS = aws_service
 
     def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
         try:
