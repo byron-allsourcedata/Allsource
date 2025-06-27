@@ -590,6 +590,11 @@ class HubspotIntegrationsService:
         for field in data_map:
             t = field["type"]
             v = field["value"]
+            is_constant = field.get("is_constant")
+
+            if is_constant is True:
+                profile[t] = v
+                continue
 
             val = getattr(lead, t, None)
             if val is None:
