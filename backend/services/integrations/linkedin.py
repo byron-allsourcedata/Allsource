@@ -1,9 +1,9 @@
 import logging
 import os
-from typing import List
+from typing import Annotated
 
 import httpx
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 # from models.enrichment_users import EnrichmentUser
 from enums import (
@@ -18,14 +18,17 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
 from schemas.integrations.integrations import *
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
+from utils import get_http_client
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class LinkedinIntegrationsService:
     def __init__(
         self,
@@ -33,7 +36,7 @@ class LinkedinIntegrationsService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

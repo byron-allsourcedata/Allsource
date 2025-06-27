@@ -91,6 +91,15 @@ const getUseCaseStyle = (status: string) => {
 			return (
 				<Image src="./hubspot.svg" alt="hubspot icon" width={20} height={20} />
 			);
+		case "go_high_level":
+			return (
+				<Image
+					src="./go-high-level-icon.svg"
+					alt="goHighLevel icon"
+					width={20}
+					height={20}
+				/>
+			);
 		case "bing_ads":
 			return (
 				<Image

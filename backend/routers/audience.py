@@ -1,23 +1,19 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 
 from dependencies import (
-    get_audience_service,
     check_user_authorization,
     check_domain,
 )
 from schemas.audience import AudienceRequest
-from typing import List, Optional
-from models.users import User
 from services.audience import AudienceService
-from services.leads import LeadsService
 
 router = APIRouter()
 
 
 @router.get("/list")
 async def get_user_audience_list(
+    audience_service: AudienceService,
     domain=Depends(check_domain),
-    audience_service: AudienceService = Depends(get_audience_service),
 ):
     return audience_service.get_user_audience_list(domain.id)
 
@@ -25,9 +21,9 @@ async def get_user_audience_list(
 @router.post("")
 async def post_audience(
     audience_request: AudienceRequest,
+    audience_service: AudienceService,
     user: dict = Depends(check_user_authorization),
     domain=Depends(check_domain),
-    audience_service: AudienceService = Depends(get_audience_service),
 ):
     return audience_service.create_audience(
         user.get("id"),

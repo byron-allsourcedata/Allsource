@@ -1,34 +1,21 @@
+import hashlib
 import logging
 import os
-import hashlib
 import re
-from grpc import StatusCode
 import time
-import google.api_core.exceptions
-from google.auth.exceptions import RefreshError
+from typing import Tuple, Annotated
 
-from models import FiveXFiveUser, LeadUser
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from persistence.domains import UserDomainsPersistence
-from schemas.integrations.integrations import *
-from services.integrations.commonIntegration import resolve_main_email_and_phone
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from models.integrations.users_domains_integrations import UserIntegration
-from faker import Faker
-from google.auth.transport.requests import Request
+import google.api_core.exceptions
+import httpx
+from fastapi import HTTPException, Depends
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
 from google.api_core import exceptions as core_exceptions
+from google.auth.exceptions import RefreshError
+from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from schemas.integrations.google_ads import GoogleAdsProfile
-from fastapi import HTTPException
+from grpc import StatusCode
+
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -36,27 +23,42 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
-import httpx
-from typing import List, Tuple
+from models import FiveXFiveUser, LeadUser
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from resolver import injectable
+from schemas.integrations.google_ads import GoogleAdsProfile
+from schemas.integrations.integrations import *
+from services.integrations.commonIntegration import resolve_main_email_and_phone
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from utils import (
     validate_and_format_phone,
     get_valid_email,
     get_valid_phone,
     get_valid_location,
     format_phone_number,
+    get_http_client,
 )
-from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class GoogleAdsIntegrationsService:
     def __init__(
         self,
         domain_persistence: UserDomainsPersistence,
         integrations_persistence: IntegrationsPresistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

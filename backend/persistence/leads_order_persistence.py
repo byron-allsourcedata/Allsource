@@ -1,10 +1,13 @@
-from models.leads_orders import LeadOrders
-from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 
+from db_dependencies import Db
+from models.leads_orders import LeadOrders
+from resolver import injectable
 
+
+@injectable
 class LeadOrdersPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def create_lead_order(self, data: dict):

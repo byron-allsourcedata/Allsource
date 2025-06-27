@@ -5,7 +5,7 @@ import os
 import tempfile
 import uuid
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Annotated
 from uuid import UUID
 
 import boto3
@@ -15,7 +15,7 @@ from botocore.exceptions import (
     NoCredentialsError,
     PartialCredentialsError,
 )
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from enums import (
     IntegrationsStatus,
@@ -33,15 +33,18 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from services.integrations.commonIntegration import *
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
+from utils import get_http_client
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class S3IntegrationService:
     def __init__(
         self,
@@ -49,7 +52,7 @@ class S3IntegrationService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

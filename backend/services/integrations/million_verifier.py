@@ -3,6 +3,7 @@ import os
 import logging
 
 from persistence.million_verifier import MillionVerifierPersistence
+from resolver import injectable
 
 logging.basicConfig(
     level=logging.INFO,
@@ -12,6 +13,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class MillionVerifierIntegrationsService:
     def __init__(
         self, million_verifier_persistence: MillionVerifierPersistence

@@ -1,7 +1,8 @@
 from models import UserIntegration, IntegrationUserSync, LeadUser
-from utils import validate_and_format_phone
-from typing import List, Tuple
-from fastapi import HTTPException
+from resolver import injectable
+from utils import validate_and_format_phone, get_http_client
+from typing import List, Tuple, Annotated
+from fastapi import HTTPException, Depends
 import httpx
 import os
 from datetime import datetime, timedelta
@@ -26,6 +27,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 
 
+@injectable
 class SendlaneIntegrationService:
     def __init__(
         self,
@@ -33,7 +35,7 @@ class SendlaneIntegrationService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

@@ -67,6 +67,8 @@ import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
+import GoHighLevelDataSync from "./GoHighLevelDataSync";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -92,6 +94,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [data, setData] = useState<any[]>([]);
 	const [allData, setAllData] = useState<any[]>([]);
 	const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
+	const [goHighLevelIconPopupOpen, setGoHighLevelIconPopupOpen] =
+		useState(false);
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false);
@@ -127,6 +131,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
 	const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
+	const [openGoHighLevelConnect, setOpenGoHighLevelConnect] = useState(false);
 	const [openLinkedinConnect, setOpenLinkedinConnect] = useState(false);
 	const [openZapierConnect, setOPenZapierComnect] = useState(false);
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
@@ -320,6 +325,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				return (
 					<Image src={"/hubspot.svg"} alt="hubspot" width={18} height={18} />
 				);
+			case "go_high_level":
+				return (
+					<Image
+						src="./go-high-level-icon.svg"
+						alt="goHighLevel icon"
+						width={20}
+						height={20}
+					/>
+				);
 			case "google_ads":
 				return (
 					<Image
@@ -464,6 +478,23 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		} catch (error) {}
 	};
 
+	const handleGoHighLevelIconPopupClose = async () => {
+		setGoHighLevelIconPopupOpen(false);
+		setSelectedId(null);
+		try {
+			const response = await axiosInstance.get(
+				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
+			);
+			if (response) {
+				setData((prevData) =>
+					prevData.map((item) =>
+						item.id === selectedId ? { ...item, ...response.data } : item,
+					),
+				);
+			}
+		} catch (error) {}
+	};
+
 	const handleMailchimpIconPopupClose = async () => {
 		setMailchimpIconPopupOpen(false);
 		setSelectedId(null);
@@ -507,6 +538,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setKlaviyoIconPopupOpen(true);
 			} else if (dataSyncPlatform === "meta") {
 				setMetaIconPopupOpen(true);
+			} else if (dataSyncPlatform === "go_high_level") {
+				setGoHighLevelIconPopupOpen(true);
 			} else if (dataSyncPlatform === "mailchimp") {
 				setMailchimpIconPopupOpen(true);
 			} else if (dataSyncPlatform === "omnisend") {
@@ -638,6 +671,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenS3Connect(true);
 					} else if (dataSyncPlatform === "google_ads") {
 						setOpenGoogleADSConnect(true);
+					} else if (dataSyncPlatform === "go_high_level") {
+						setOpenGoHighLevelConnect(true);
 					} else if (dataSyncPlatform === "linkedin") {
 						setOpenLinkedinConnect(true);
 					} else if (dataSyncPlatform === "webhook") {
@@ -671,6 +706,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenHubspotIconPopup(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setSalesForceIconPopupOpen(true);
+					} else if (dataSyncPlatform === "go_high_level") {
+						setOpenGoHighLevelConnect(true);
 					}
 
 					setIsLoading(false);
@@ -1344,6 +1381,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						/>
 					</>
 				)}
+				{goHighLevelIconPopupOpen && isEdit === true && (
+					<>
+						<GoHighLevelDataSync
+							open={goHighLevelIconPopupOpen}
+							onClose={handleGoHighLevelIconPopupClose}
+							data={data.find((item) => item.id === selectedId)}
+							isEdit={isEdit}
+						/>
+					</>
+				)}
 				{salesForceIconPopupOpen && isEdit === true && (
 					<>
 						<ConnectSalesForce
@@ -1610,6 +1657,13 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						)?.access_token
 					}
 					invalid_api_key={isInvalidApiKey}
+					boxShadow="rgba(0, 0, 0, 0.01)"
+				/>
+				<GoHighLevelConnectPopup
+					open={openGoHighLevelConnect}
+					handlePopupClose={() => {
+						setOpenGoHighLevelConnect(false), setIsInvalidApiKey(false);
+					}}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
 				<WebhookConnectPopup

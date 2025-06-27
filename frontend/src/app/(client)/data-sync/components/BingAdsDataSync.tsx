@@ -1053,7 +1053,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 								<Box sx={{ pb: 4 }}>
 									<TabList
 										centered
-										aria-label="Connect to GoogleAds Tabs"
+										aria-label="Connect to BingAds Tabs"
 										TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
 										sx={{
 											"& .MuiTabs-scroller": {

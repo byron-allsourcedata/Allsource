@@ -2,13 +2,13 @@ import hashlib
 import json
 import os
 from datetime import datetime, timezone, timedelta
-from typing import List, Tuple
+from typing import List, Tuple, Annotated
 from uuid import UUID
 
 import httpx
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from config.meta import MetaConfig
 from enums import (
@@ -28,6 +28,7 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
 from schemas.integrations.integrations import (
     IntegrationCredentials,
     ListFromIntegration,
@@ -37,12 +38,13 @@ from services.integrations.commonIntegration import resolve_main_email_and_phone
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import get_valid_email, format_phone_number
+from utils import get_valid_email, format_phone_number, get_http_client
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
 
 
+@injectable
 class MetaIntegrationsService:
     def __init__(
         self,
@@ -50,7 +52,7 @@ class MetaIntegrationsService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

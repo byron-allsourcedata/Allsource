@@ -3,11 +3,9 @@ import logging
 import os
 from typing import List
 
-from fastapi import HTTPException, Depends
-from starlette import status
-from typing_extensions import Annotated
+from dotenv import load_dotenv
 
-from dependencies import get_integration_service
+from config.util import getenv
 from enums import DomainStatus
 from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -15,8 +13,6 @@ from resolver import injectable
 from schemas.pixel_management import ManagementResult
 from services.domains import UserDomainsService
 from services.integrations.base import IntegrationService
-from dotenv import load_dotenv
-from config.util import getenv
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +24,7 @@ class PixelManagementService:
     def __init__(
         self,
         user_domains_service: UserDomainsService,
-        integration_service: Annotated[
-            IntegrationService, Depends(get_integration_service)
-        ],
+        integration_service: IntegrationService,
         lead_persistence: LeadsPersistence,
         user_domain_persistence: UserDomainsPersistence,
     ):

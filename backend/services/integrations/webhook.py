@@ -1,38 +1,40 @@
 import logging
-from datetime import datetime
-
-from models import UserIntegration, LeadUser
-from utils import format_phone_number
-from models.integrations.integrations_users_sync import IntegrationUserSync
-from persistence.domains import UserDomainsPersistence
-from persistence.leads_persistence import LeadsPersistence
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from datetime import datetime, timedelta
-from typing import List, Tuple
-import httpx
 import os
-from models.five_x_five_users import FiveXFiveUser
-from schemas.integrations.integrations import DataMap, IntegrationCredentials
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from fastapi import HTTPException
+from datetime import datetime, timedelta
+from typing import List, Tuple, Annotated
+
+import httpx
+from fastapi import HTTPException, Depends
+from httpx import Client
+
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
     ProccessDataSyncResult,
     DataSyncType,
 )
-from httpx import Client
-from utils import extract_first_email
+from models import UserIntegration, LeadUser
+from models.five_x_five_users import FiveXFiveUser
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
+from schemas.integrations.integrations import DataMap, IntegrationCredentials
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import extract_first_email, get_http_client
+from utils import format_phone_number
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class WebhookIntegrationService:
     def __init__(
         self,
@@ -40,7 +42,7 @@ class WebhookIntegrationService:
         domain_persistence: UserDomainsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         integration_persistence: IntegrationsPresistence,
-        client: Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.leads_persistence = lead_persistence

@@ -3,10 +3,10 @@ import hashlib
 import io
 import logging
 import os
-from typing import Tuple, List
+from typing import Tuple, Annotated
 
 import httpx
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from enums import (
     IntegrationsStatus,
@@ -25,15 +25,17 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
+from resolver import injectable
 from schemas.integrations.integrations import *
 from services.integrations.commonIntegration import *
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import get_valid_email
+from utils import get_valid_email, get_http_client
 from utils import validate_and_format_phone
 
 
+@injectable
 class SalesForceIntegrationsService:
     def __init__(
         self,
@@ -41,7 +43,7 @@ class SalesForceIntegrationsService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

@@ -1,11 +1,11 @@
 import logging
 import os
 from datetime import datetime
-from typing import List, Any, Tuple
+from typing import List, Any, Tuple, Annotated
 from uuid import UUID
 
 import httpx
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
 
 from enums import (
     SourcePlatformEnum,
@@ -24,15 +24,22 @@ from persistence.integrations.integrations_persistence import (
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
 from services.integrations.commonIntegration import *
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import get_valid_email, get_valid_location, get_valid_phone
+from utils import (
+    get_valid_email,
+    get_valid_location,
+    get_valid_phone,
+    get_http_client,
+)
 
 
+@injectable
 class HubspotIntegrationsService:
     def __init__(
         self,
@@ -40,7 +47,7 @@ class HubspotIntegrationsService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        client: httpx.Client,
+        client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence

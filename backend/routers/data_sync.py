@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
+from starlette.responses import StreamingResponse
+
 from dependencies import (
-    get_integration_service,
     get_audience_smarts_service,
     IntegrationService,
     check_domain,
@@ -8,20 +9,18 @@ from dependencies import (
     check_user_authentication,
     check_user_authorization_without_pixel,
 )
-from models import UserDomains
+from enums import TeamAccessLevel, BaseEnum
 from schemas.integrations.integrations import *
 from services.audience_smarts import AudienceSmartsService
-from enums import TeamAccessLevel, BaseEnum
-from starlette.responses import StreamingResponse
 
 router = APIRouter(dependencies=[Depends(check_user_authorization)])
 
 
 @router.get("/sync")
 async def get_sync(
+    integration_service: IntegrationService,
     service_name: str | None = Query(None),
     integrations_users_sync_id: int | None = Query(None),
-    integration_service: IntegrationService = Depends(get_integration_service),
     domain=Depends(check_domain),
 ):
     return integration_service.get_sync_domain(
@@ -31,9 +30,9 @@ async def get_sync(
 
 @router.get("/get-smart-audience-sync")
 async def get_smart_sync(
+    integration_service: IntegrationService,
     service_name: str | None = Query(None),
     integrations_users_sync_id: int | None = Query(None),
-    integration_service: IntegrationService = Depends(get_integration_service),
     user=Depends(check_user_authorization),
 ):
     return integration_service.get_all_audience_sync(
@@ -43,17 +42,17 @@ async def get_smart_sync(
 
 @router.get("/has-integration-and-smart-audiences")
 def has_integration_and_data_sync(
+    integration_service: IntegrationService,
     user: dict = Depends(check_user_authorization_without_pixel),
-    integration_service: IntegrationService = Depends(get_integration_service),
 ):
     return integration_service.has_integration_and_data_sync(user=user)
 
 
 @router.get("/has-data-sync-and-contacts")
 def has_data_sync_and_contacts(
+    integration_service: IntegrationService,
     user: dict = Depends(check_user_authorization_without_pixel),
     domain: dict = Depends(check_domain),
-    integration_service: IntegrationService = Depends(get_integration_service),
 ):
     return integration_service.has_data_sync_and_contacts(
         user=user, domain=domain
@@ -63,7 +62,7 @@ def has_data_sync_and_contacts(
 @router.post("/sync/switch-toggle-smart-audience-sync")
 async def switch_toggle(
     data: SyncRequest,
-    integration_service: IntegrationService = Depends(get_integration_service),
+    integration_service: IntegrationService,
     user=Depends(check_user_authorization),
 ):
     if user.get("team_member"):
@@ -85,8 +84,8 @@ async def switch_toggle(
 @router.post("/sync")
 async def create_sync(
     data: SyncCreate,
+    integration_service: IntegrationService,
     service_name: str = Query(...),
-    integration_service: IntegrationService = Depends(get_integration_service),
     user=Depends(check_user_authorization),
     domain=Depends(check_domain),
 ):
@@ -102,7 +101,7 @@ async def create_sync(
                 detail="Access denied. Admins and standard only.",
             )
     data = {k: v for k, v in data.model_dump().items() if v}
-    with integration_service as service:
+    async with integration_service as service:
         service = getattr(service, service_name.lower())
         await service.create_sync(
             **data,
@@ -115,10 +114,10 @@ async def create_sync(
 
 
 @router.post("/create-smart-audience-sync")
-def create_smart_audience_sync(
+async def create_smart_audience_sync(
     data: SmartAudienceSyncCreate,
+    integration_service: IntegrationService,
     service_name: str = Query(...),
-    integration_service: IntegrationService = Depends(get_integration_service),
     audience_smarts_service: AudienceSmartsService = Depends(
         get_audience_smarts_service
     ),
@@ -136,7 +135,7 @@ def create_smart_audience_sync(
                 detail="Access denied. Admins and standard only.",
             )
     data = {k: v for k, v in data.model_dump().items() if v}
-    with integration_service as service:
+    async with integration_service as service:
         count_updated = audience_smarts_service.set_data_syncing_status(
             data["smart_audience_id"]
         )
@@ -148,9 +147,9 @@ def create_smart_audience_sync(
 
 @router.delete("/sync")
 async def delete_sync(
+    integration_service: IntegrationService,
     list_id: str = Query(...),
     service_name: str | None = Query(None),
-    integration_service: IntegrationService = Depends(get_integration_service),
     user=Depends(check_user_authorization),
     domain=Depends(check_domain),
 ):
@@ -171,8 +170,7 @@ async def delete_sync(
 @router.post("/sync/switch-toggle")
 async def switch_toggle(
     data: SyncCreate,
-    service_name: str | None = Query(None),
-    integration_service: IntegrationService = Depends(get_integration_service),
+    integration_service: IntegrationService,
     user=Depends(check_user_authorization),
     domain=Depends(check_domain),
 ):
@@ -193,8 +191,8 @@ async def switch_toggle(
 @router.put("/sync")
 async def edit_sync(
     data: SyncCreate,
+    integration_service: IntegrationService,
     service_name: str | None = Query(None),
-    integration_service: IntegrationService = Depends(get_integration_service),
     user=Depends(check_user_authorization),
     domain=Depends(check_domain),
 ):
@@ -210,7 +208,7 @@ async def edit_sync(
                 detail="Access denied. Admins and standard only.",
             )
     data = {k: v for k, v in data.model_dump().items() if v}
-    with integration_service as service:
+    async with integration_service as service:
         service = getattr(service, service_name.lower())
         service.edit_sync(
             **data,
@@ -222,29 +220,29 @@ async def edit_sync(
 
 @router.get("/sync/tags")
 async def get_tags(
+    integration_service: IntegrationService,
     service_name: str = Query(...),
-    integration_service: IntegrationService = Depends(get_integration_service),
     user=Depends(check_user_authentication),
     domain=Depends(check_domain),
 ):
-    with integration_service as service:
+    async with integration_service as service:
         service = getattr(service, service_name.lower())
         return service.get_tags(domain.id, user)
 
 
 @router.get("/destinations")
 def get_destinations(
+    integration_service: IntegrationService,
     type: str = Query(...),
-    integration_service: IntegrationService = Depends(get_integration_service),
 ):
     return integration_service.get_destinations(type=type)
 
 
 @router.post("/sync/tags")
 async def create_tag(
+    integrations_service: IntegrationService,
     tag_data: CreateListOrTags,
     service_name: str = Query(...),
-    integrations_service: IntegrationService = Depends(get_integration_service),
     user=Depends(check_user_authorization),
     domain=Depends(check_domain),
 ):
