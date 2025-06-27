@@ -23,7 +23,12 @@ from resolver import injectable
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import format_phone_number, get_valid_email, get_http_client
+from utils import (
+    format_phone_number,
+    get_valid_email,
+    get_http_client,
+    get_valid_email_without_million,
+)
 
 
 @injectable
@@ -108,10 +113,13 @@ class ZapierIntegrationService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         results = []
         for lead_user, five_x_five_user in user_data:
-            data = self.__mapped_lead(five_x_five_user)
+            data = self.__mapped_lead(
+                five_x_five_user, is_email_validation_enabled
+            )
             if data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
@@ -157,10 +165,15 @@ class ZapierIntegrationService:
             return "allContacts"
         return "allContacts"
 
-    def __mapped_lead(self, five_x_five_user: FiveXFiveUser):
-        first_email = get_valid_email(
-            five_x_five_user, self.million_verifier_integrations
-        )
+    def __mapped_lead(
+        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
+    ):
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                five_x_five_user, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(five_x_five_user)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

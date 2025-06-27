@@ -248,11 +248,13 @@ class SendlaneIntegrationService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         return self.bulk_add_contacts(
             user_data=user_data,
             access_token=user_integration.access_token,
             list_id=integration_data_sync.list_id,
+            is_email_validation_enabled=is_email_validation_enabled,
         )
 
     def bulk_add_contacts(
@@ -260,6 +262,7 @@ class SendlaneIntegrationService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         access_token,
         list_id: int,
+        is_email_validation_enabled: bool,
     ):
         contacts = []
         id_map = {}

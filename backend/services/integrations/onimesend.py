@@ -167,11 +167,14 @@ class OmnisendIntegrationService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         results = []
         bulk_profiles = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_profile(five_x_five_user)
+            profile = self.__mapped_profile(
+                five_x_five_user, is_email_validation_enabled
+            )
             identifiers = self.__mapped_identifiers(five_x_five_user)
 
             if identifiers in (
@@ -272,7 +275,7 @@ class OmnisendIntegrationService:
         return Identifiers(id=first_email)
 
     def __mapped_profile(
-        self, five_x_five_user: FiveXFiveUser
+        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ) -> OmnisendProfile:
         gender = getattr(five_x_five_user, "gender", None)
         if gender not in ["m", "f"]:

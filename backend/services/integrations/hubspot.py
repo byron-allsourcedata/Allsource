@@ -36,6 +36,7 @@ from utils import (
     get_valid_location,
     get_valid_phone,
     get_http_client,
+    get_valid_email_without_million,
 )
 
 
@@ -283,12 +284,15 @@ class HubspotIntegrationsService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
             profile = self.__mapped_profile_lead(
-                five_x_five_user, integration_data_sync.data_map
+                five_x_five_user,
+                integration_data_sync.data_map,
+                is_email_validation_enabled,
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -460,9 +464,17 @@ class HubspotIntegrationsService:
         return result
 
     def __mapped_profile_lead(
-        self, lead: FiveXFiveUser, data_map: list
+        self,
+        lead: FiveXFiveUser,
+        data_map: list,
+        is_email_validation_enabled: bool,
     ) -> str | dict[str | Any, str | None | Any]:
-        first_email = get_valid_email(lead, self.million_verifier_integrations)
+        if is_email_validation_enabled:
+            first_email = get_valid_email(
+                lead, self.million_verifier_integrations
+            )
+        else:
+            first_email = get_valid_email_without_million(lead)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

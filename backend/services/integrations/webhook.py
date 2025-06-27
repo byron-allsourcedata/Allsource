@@ -194,12 +194,14 @@ class WebhookIntegrationService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        is_email_validation_enabled: bool,
     ):
         results = []
         for lead_user, five_x_five_user in user_data:
             data = self.__mapped_lead(
                 five_x_five_user=five_x_five_user,
                 data_map=integration_data_sync.data_map,
+                is_email_validation_enabled=is_email_validation_enabled,
             )
             if data == ProccessDataSyncResult.INCORRECT_FORMAT.value:
                 results.append({"lead_id": lead_user.id, "status": data})
@@ -246,7 +248,9 @@ class WebhookIntegrationService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def get_valid_email(self, five_x_five_user, email_fields) -> str:
+    def get_valid_email(
+        self, five_x_five_user, email_fields, is_email_validation_enabled: bool
+    ) -> str:
         thirty_days_ago = datetime.now() - timedelta(days=30)
         thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
         verity = 0
@@ -279,9 +283,11 @@ class WebhookIntegrationService:
                         )
                         if personal_emails_last_seen_str > thirty_days_ago_str:
                             return e.strip()
-                    if e and self.million_verifier_integrations.is_email_verify(
-                        email=e.strip()
-                    ):
+                    if (
+                        e
+                        and self.million_verifier_integrations.is_email_verify
+                        and is_email_validation_enabled
+                    )(email=e.strip()):
                         return e.strip()
                     verity += 1
         if verity > 0:
@@ -380,7 +386,12 @@ class WebhookIntegrationService:
                     properties["personal_phone"] = None
         return properties
 
-    def __mapped_lead(self, five_x_five_user: FiveXFiveUser, data_map):
+    def __mapped_lead(
+        self,
+        five_x_five_user: FiveXFiveUser,
+        data_map,
+        is_email_validation_enabled: bool,
+    ):
         properties = {}
         if all(
             item.get("type") == "" and item.get("value") == ""
@@ -419,7 +430,11 @@ class WebhookIntegrationService:
                     properties[mapping["value"]] = url_visited
 
         if "business_email" in mapped_fields:
-            result = self.get_valid_email(five_x_five_user, ["business_email"])
+            result = self.get_valid_email(
+                five_x_five_user,
+                ["business_email"],
+                is_email_validation_enabled,
+            )
             for mapping in data_map:
                 if mapping["type"] == "business_email":
                     if result in (
@@ -441,7 +456,9 @@ class WebhookIntegrationService:
 
         if "personal_email" in mapped_fields:
             email_fields = ["personal_emails", "additional_personal_emails"]
-            result = self.get_valid_email(five_x_five_user, email_fields)
+            result = self.get_valid_email(
+                five_x_five_user, email_fields, is_email_validation_enabled
+            )
             for mapping in data_map:
                 if mapping["type"] == "personal_email":
                     if result in (
