@@ -49,11 +49,6 @@ type KlaviyoList = {
 	list_name: string;
 };
 
-type KlaviyoTags = {
-	id: string;
-	tags_name: string;
-};
-
 const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 	open,
 	onClose,

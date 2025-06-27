@@ -37,6 +37,7 @@ from utils import (
     get_valid_phone,
     get_http_client,
     get_valid_email_without_million,
+    validate_and_format_phone,
 )
 
 
@@ -487,7 +488,7 @@ class HubspotIntegrationsService:
 
         profile = {
             "email": first_email,
-            "phone": first_phone,
+            "phone": validate_and_format_phone(first_phone),
             "address": location[0],
             "firstname": getattr(lead, "first_name", None),
             "lastname": getattr(lead, "last_name", None),

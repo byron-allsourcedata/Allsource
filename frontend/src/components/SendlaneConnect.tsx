@@ -209,6 +209,7 @@ const SendlaneConnect = ({
 				handleClose();
 			}
 		} catch (error) {
+			showErrorToast("Invalid API Key");
 		} finally {
 			setDisableButton(false);
 		}

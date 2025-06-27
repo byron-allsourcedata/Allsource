@@ -258,9 +258,9 @@ class WebhookIntegrationService:
             email = getattr(five_x_five_user, field, None)
             if email:
                 emails = extract_first_email(email)
-                for e in emails:
+                for email in emails:
                     if (
-                        e
+                        email
                         and field == "business_email"
                         and five_x_five_user.business_email_last_seen
                     ):
@@ -270,9 +270,9 @@ class WebhookIntegrationService:
                             )
                             > thirty_days_ago_str
                         ):
-                            return e.strip()
+                            return email.strip()
                     if (
-                        e
+                        email
                         and field == "personal_emails"
                         and five_x_five_user.personal_emails_last_seen
                     ):
@@ -282,13 +282,15 @@ class WebhookIntegrationService:
                             )
                         )
                         if personal_emails_last_seen_str > thirty_days_ago_str:
-                            return e.strip()
+                            return email.strip()
                     if (
-                        e
-                        and self.million_verifier_integrations.is_email_verify
+                        email
                         and is_email_validation_enabled
-                    )(email=e.strip()):
-                        return e.strip()
+                        and self.million_verifier_integrations.is_email_verify(
+                            email=email
+                        )
+                    ):
+                        return email.strip()
                     verity += 1
         if verity > 0:
             return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
