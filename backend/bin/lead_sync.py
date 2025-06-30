@@ -95,6 +95,9 @@ def normalize_domain(domain):
         domain = domain[7:]
     if domain.startswith("www."):
         domain = domain[4:]
+
+    domain = domain.split("/")[0]
+
     return domain.lower()
 
 
@@ -679,7 +682,7 @@ async def process_user_data(
         logging.info(f"Customer not found {partner_uid_client_id}")
         return
     user, user_domain = result
-    if root_user and normalize_domain(user_domain.domain) not in ROOT_DOMAINS:
+    if root_user and normalize_domain(page) not in ROOT_DOMAINS:
         return
     if not user_domain.is_enable and not root_user:
         logging.info(f"Domain is not enabled: {user_domain.id}")

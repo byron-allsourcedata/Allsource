@@ -212,10 +212,10 @@ const IntegrationBox = ({
 
 	const toTitleCase = (str: string) => {
 		return str
-		  .split('_')
-		  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-		  .join(' ');
-	  }
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(" ");
+	};
 
 	return (
 		<Box
@@ -253,11 +253,11 @@ const IntegrationBox = ({
 				}}
 				title={
 					is_integrated
-						? `A ${
-								toTitleCase(service_name)
-							} account is already integrated. To connect a different account, please remove the existing ${
-								toTitleCase(service_name)
-							} integration first.`
+						? `A ${toTitleCase(
+								service_name,
+							)} account is already integrated. To connect a different account, please remove the existing ${toTitleCase(
+								service_name,
+							)} integration first.`
 						: ""
 				}
 			>
