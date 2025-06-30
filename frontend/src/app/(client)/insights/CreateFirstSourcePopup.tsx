@@ -60,7 +60,7 @@ const WelcomePopup = () => {
 						fontWeight="600"
 						fontSize="26px"
 						textAlign="center"
-						fontFamily="Nunito Sans"
+						fontFamily="var(--font-nunito)"
 					>
 						Welcome Aboard
 					</Typography>
@@ -100,7 +100,7 @@ const WelcomePopup = () => {
 									>
 										<IconButton
 											sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-											onClick={() => {}}
+											onClick={() => { }}
 										>
 											<AllInboxOutlinedIcon />
 										</IconButton>

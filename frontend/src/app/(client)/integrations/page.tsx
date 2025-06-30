@@ -322,7 +322,7 @@ const IntegrationBox = ({
 								{!is_failed ? (
 									<Typography
 										fontSize={"12px"}
-										fontFamily={"Nunito Sans"}
+										fontFamily="var(--font-nunito)"
 										color={"#2B5B00"}
 										fontWeight={600}
 									>
@@ -331,7 +331,7 @@ const IntegrationBox = ({
 								) : (
 									<Typography
 										fontSize={"12px"}
-										fontFamily={"Nunito Sans"}
+										fontFamily="var(--font-nunito)"
 										color={"#4E0110"}
 										fontWeight={600}
 									>
@@ -404,7 +404,7 @@ const IntegrationBox = ({
 				fontSize={"14px"}
 				fontWeight={500}
 				textAlign={"center"}
-				fontFamily={"Nunito Sans"}
+				fontFamily="var(--font-nunito)"
 			>
 				{formatServiceName(service_name)}
 			</Typography>
@@ -581,7 +581,7 @@ const DeleteIntegrationPopup = ({
 					<Typography
 						variant="h6"
 						textAlign="center"
-						fontFamily="Nunito Sans"
+						fontFamily="var(--font-nunito)"
 						fontWeight={500}
 						fontSize="14px"
 						sx={{

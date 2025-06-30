@@ -955,7 +955,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<Typography
 						fontSize={"16px"}
 						fontWeight={600}
-						fontFamily={"Nunito Sans"}
+						fontFamily="var(--font-nunito)"
 						textTransform={"capitalize"}
 					>
 						{service_name} Sync Detail
