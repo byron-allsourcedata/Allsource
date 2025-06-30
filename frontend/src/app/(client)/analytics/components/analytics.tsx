@@ -137,7 +137,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
 				<Typography
 					variant="body1"
 					sx={{
-						fontFamily: "Roboto",
+						fontFamily: "var(--font-roboto)",
 						fontSize: "14px",
 						fontWeight: "400",
 						color: "rgba(32, 33, 36, 1)",
@@ -270,7 +270,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
 										variant="h4"
 										component="h1"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: 600,
 											fontSize: "16px",
 											lineHeight: "140%",

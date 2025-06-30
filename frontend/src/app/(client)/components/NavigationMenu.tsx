@@ -95,7 +95,7 @@ const navigationmenuStyles = {
 			},
 		},
 		"& span.MuiListItemText-primary": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "0.875rem",
 			color: "#3b3b3b",
 			fontWeight: "500",
@@ -115,7 +115,7 @@ const navigationmenuStyles = {
 			},
 		},
 		"& span.MuiListItemText-primary": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "0.875rem",
 			color: "#3b3b3b",
 			fontWeight: "500",
@@ -310,7 +310,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 					<Typography
 						variant="h6"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 600,
 							lineHeight: "19.6px",
@@ -324,7 +324,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						variant="body2"
 						color="textSecondary"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 600,
 							lineHeight: "19.6px",
@@ -336,7 +336,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 				</Box>
 				<MenuItem
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: 500,
 						lineHeight: "19.6px",
@@ -347,7 +347,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 				</MenuItem>
 				<MenuItem
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: 500,
 						lineHeight: "19.6px",

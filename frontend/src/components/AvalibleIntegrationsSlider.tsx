@@ -46,7 +46,7 @@ interface AvailableIntegrationsSliderProps {
 
 const intergrations = {
 	integrate: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		color: "#4a4a4a",
 		fontWeight: "500",
@@ -202,7 +202,7 @@ const AlivbleIntagrationsSlider = ({
 								paddingLeft: "12px",
 								paddingRight: "12px",
 								color: "#707071",
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontSize: "14px",
 								fontWeight: "400",
 								lineHeight: "20px",
@@ -211,7 +211,7 @@ const AlivbleIntagrationsSlider = ({
 								},
 								"& .MuiOutlinedInput-input": {
 									padding: "16px 0",
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									height: "auto",
 									"@media (max-width:600px)": {
 										padding: "13px 0",
@@ -219,7 +219,7 @@ const AlivbleIntagrationsSlider = ({
 								},
 								"&::placeholder": {
 									color: "#707071",
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "14px",
 									fontWeight: "400",
 									lineHeight: "20px",

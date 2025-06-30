@@ -572,7 +572,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 											<Typography
 												className="paragraph"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													textTransform: "none",
 													textAlign: "left",
@@ -644,7 +644,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 										borderColor: "rgba(228, 228, 228, 1)",
 										padding: "8px",
 										pr: 2,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: "rgba(74, 74, 74, 1)",
 										fontWeight: 600,
 										fontSize: "14px",
@@ -653,7 +653,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 									<MenuItem value="All contacts type">
 										<Typography
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 600,
 												fontSize: "14px",
 												color:
@@ -694,7 +694,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 												/>
 												<Typography
 													sx={{
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontWeight: 600,
 														fontSize: "14px",
 														color: selectedGraphs.includes(option.id)

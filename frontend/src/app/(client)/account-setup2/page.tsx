@@ -427,7 +427,7 @@ const AccountSetup = () => {
 	};
 
 	const subtext = {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		fontWeight: "400",
 		lineHeight: "16.8px",
@@ -1285,7 +1285,7 @@ const AccountSetup = () => {
 							<Typography
 								variant="h6"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 600,
 									lineHeight: "19.6px",
@@ -1299,7 +1299,7 @@ const AccountSetup = () => {
 								variant="body2"
 								color="textSecondary"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 600,
 									lineHeight: "19.6px",
@@ -1311,7 +1311,7 @@ const AccountSetup = () => {
 						</Box>
 						<MenuItem
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 500,
 								lineHeight: "19.6px",
@@ -1707,7 +1707,7 @@ const AccountSetup = () => {
 						<Typography
 							variant="h6"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 600,
 								lineHeight: "19.6px",
@@ -1721,7 +1721,7 @@ const AccountSetup = () => {
 							variant="body2"
 							color="textSecondary"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 600,
 								lineHeight: "19.6px",
@@ -1733,7 +1733,7 @@ const AccountSetup = () => {
 					</Box>
 					<MenuItem
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 500,
 							lineHeight: "19.6px",
@@ -2135,7 +2135,7 @@ const AccountSetup = () => {
 															textTransform: "none",
 															background: "#fff",
 															color: "rgba(56, 152, 252, 1)",
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															padding: "0.65em 2em",
 															"@media (max-width: 600px)": {
 																padding: "0.5em 1.5em",
@@ -2239,7 +2239,7 @@ const AccountSetup = () => {
 														fontSize: "12px",
 														margin: 0,
 														fontWeight: 400,
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														textWrap: "nowrap",
 													}}
 												>
@@ -2380,7 +2380,7 @@ const AccountSetup = () => {
 															textTransform: "none",
 															background: "#fff",
 															color: "rgba(56, 152, 252, 1)",
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															padding: "0.65em 2em",
 															mr: 1,
 															"@media (max-width: 600px)": {
@@ -2505,7 +2505,7 @@ const AccountSetup = () => {
 												InputProps={{
 													style: {
 														color: "rgba(17, 17, 19, 1)",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontWeight: 400,
 														fontSize: "14px",
 													},
@@ -2580,7 +2580,7 @@ const AccountSetup = () => {
 												InputProps={{
 													style: {
 														color: "rgba(17, 17, 19, 1)",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontWeight: 400,
 														fontSize: "14px",
 													},
@@ -2749,7 +2749,7 @@ const AccountSetup = () => {
 												InputProps={{
 													style: {
 														color: "rgba(17, 17, 19, 1)",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontWeight: 400,
 														fontSize: "14px",
 													},
@@ -3349,7 +3349,7 @@ const AccountSetup = () => {
 															color: "#000000",
 															fontSize: "12px",
 															fontWeight: 600,
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															textWrap: "nowrap",
 														}}
 													>

@@ -222,7 +222,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 								sx={{
 									fontWeight: "bold",
 									fontSize: "12px",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									color: "rgba(128, 128, 128, 1)",
 									cursor: "pointer",
 								}}
@@ -235,7 +235,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 								sx={{
 									fontWeight: "bold",
 									fontSize: "12px",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									color: "rgba(128, 128, 128, 1)",
 								}}
 							>
@@ -406,7 +406,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                     sx={{
                                         display: "none",
                                         backgroundColor: "#FFF",
-                                        fontFamily: "Nunito Sans",
+                                        fontFamily: "var(--font-nunito)",
                                         fontSize: "14px",
                                         fontWeight: "600",
                                         lineHeight: "20px",
@@ -496,7 +496,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 								onClick={(event) => handleViewActions(event)}
 								sx={{
 									backgroundColor: "#FFF",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: "600",
 									lineHeight: "20px",

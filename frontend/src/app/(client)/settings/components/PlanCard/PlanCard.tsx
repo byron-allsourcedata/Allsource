@@ -116,7 +116,7 @@ export const PlanCard: React.FC<{
 						<Typography
 							variant="caption"
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontWeight: 400,
 								fontSize: "14px",
 								lineHeight: "140%",

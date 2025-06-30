@@ -55,7 +55,7 @@ const sidebarStyles = {
 	container: {
 		width: "100%",
 		flexShrink: 0,
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: ".875rem",
 		fontWeight: "400",
 		backgroundColor: "rgba(255, 255, 255, 1)",
@@ -84,7 +84,7 @@ const sidebarStyles = {
 			marginBottom: "0rem !important",
 		},
 		"& span.MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "14px",
 			fontWeight: 400,
 			lineHeight: "normal",
@@ -113,7 +113,7 @@ const sidebarStyles = {
 			marginBottom: "0rem !important",
 		},
 		"& span.MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "14px",
 			fontWeight: 400,
 			lineHeight: "normal",
@@ -154,7 +154,7 @@ const containerStyles = (hasNotification: boolean, hasSubheader: boolean) => ({
 		width: "100%",
 		flexShrink: 0,
 		flexGrow: 1,
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: ".875rem",
 		fontWeight: "400",
 		backgroundColor: "rgba(255, 255, 255, 1)",
@@ -198,7 +198,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ percent_steps }) => {
 					component="div"
 					ml={1}
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: "400",
 						lineHeight: "normal",
 						color: "rgba(0, 0, 0, 1)",
@@ -225,7 +225,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ percent_steps }) => {
 				color="textSecondary"
 				mt={1}
 				sx={{
-					fontFamily: "Roboto",
+					fontFamily: "var(--font-roboto)",
 					lineHeight: "normal",
 					color: "rgba(120, 120, 120, 1)",
 					fontSize: "10px",
@@ -584,7 +584,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 											backgroundColor: "rgba(56, 152, 252, 1)",
 											color: "rgba(255, 255, 255, 1)",
 											fontSize: ".875rem",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "600",
 										}}
 										onClick={() => handleNavigation("/get-started?pixel=true")}
@@ -725,7 +725,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 									backgroundColor: "rgba(56, 152, 252, 1)",
 									color: "rgba(255, 255, 255, 1)",
 									fontSize: ".875rem",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: "600",
 								}}
 								onClick={() => handleNavigation("/get-started?source=true")}

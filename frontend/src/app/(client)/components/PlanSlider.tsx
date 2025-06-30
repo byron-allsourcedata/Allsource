@@ -148,7 +148,7 @@ const PlanSlider: React.FC<PopupProps> = ({
 								sx={{
 									color: "#4A4A4A",
 									textAlign: "left",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: "500",
 									fontSize: "18px",
 									lineHeight: "23.2px",
@@ -349,7 +349,7 @@ const PlanSlider: React.FC<PopupProps> = ({
 										className="table-data"
 										sx={{
 											color: "rgba(74, 74, 74, 1)",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											textAlign: "left",
 											fontWeight: "400",
 											fontSize: "16px",
@@ -400,7 +400,7 @@ const PlanSlider: React.FC<PopupProps> = ({
 										color: "#fff",
 										padding: "1em 5em",
 										maxHeight: "48px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontWeight: "600",
 										fontSize: "14px",
 										borderRadius: "4px",
@@ -423,7 +423,7 @@ const PlanSlider: React.FC<PopupProps> = ({
 									onClick={handleChoosePlan}
 									sx={{
 										backgroundColor: "rgba(56, 152, 252, 1)",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										textTransform: "none",
 										lineHeight: "19.6px",
 										fontWeight: "600",

@@ -93,7 +93,7 @@ const RewardsHistory: React.FC<RewardProps> = ({
 								variant="h5"
 								sx={{
 									mb: 3,
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "20px",
 									color: "#4a4a4a",
 									fontWeight: "600",
@@ -113,7 +113,7 @@ const RewardsHistory: React.FC<RewardProps> = ({
 								color="textSecondary"
 								sx={{
 									mt: 3,
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									color: "#808080",
 									fontWeight: "600",
@@ -168,7 +168,7 @@ const RewardsHistory: React.FC<RewardProps> = ({
 										sx={{
 											display: "none",
 											backgroundColor: "#FFF",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											fontWeight: "600",
 											lineHeight: "20px",
@@ -281,7 +281,7 @@ const RewardsHistory: React.FC<RewardProps> = ({
 									}}
 									sx={{
 										backgroundColor: "#FFF",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										fontWeight: "600",
 										lineHeight: "20px",

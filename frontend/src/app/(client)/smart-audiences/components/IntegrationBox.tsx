@@ -103,7 +103,7 @@ const IntegrationBox: React.FC<IntegrationBoxProps> = ({
 							{!isFailed ? (
 								<Typography
 									fontSize={"12px"}
-									fontFamily={"Nunito Sans"}
+									fontFamily="var(--font-nunito)"
 									color={"#2B5B00"}
 									fontWeight={600}
 								>
@@ -112,7 +112,7 @@ const IntegrationBox: React.FC<IntegrationBoxProps> = ({
 							) : (
 								<Typography
 									fontSize={"12px"}
-									fontFamily={"Nunito Sans"}
+									fontFamily="var(--font-nunito)"
 									color={"#4E0110"}
 									fontWeight={600}
 								>
@@ -158,7 +158,7 @@ const IntegrationBox: React.FC<IntegrationBoxProps> = ({
 				fontSize={"14px"}
 				fontWeight={500}
 				textAlign={"center"}
-				fontFamily={"Nunito Sans"}
+				fontFamily="var(--font-nunito)"
 			>
 				{formatServiceName(serviceName)}
 			</Typography>

@@ -263,7 +263,7 @@ const Management: React.FC = () => {
 						textTransform: "none",
 						background: "rgba(56, 152, 252, 1)",
 						color: "rgba(56, 152, 252, 1)",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						padding: "0.65em 2em",
 						mr: 2,
 						"&:hover": {

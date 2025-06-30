@@ -638,7 +638,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									</InputAdornment>
 								),
 								sx: {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -652,7 +652,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								},
 								padding: "1em 1em 0em 1em",
 								"& .MuiInputBase-input::placeholder": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -684,7 +684,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 											<ListItemText
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "12px",
 														fontWeight: 600,
 														lineHeight: "16.8px",
@@ -815,7 +815,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     sx={{ display: "flex", flexDirection: "column", gap: 0 }}
                   >
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.page}
@@ -843,7 +843,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                       }
                     />
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.two_page}
@@ -875,7 +875,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     sx={{ display: "flex", flexDirection: "column", gap: 0 }}
                   >
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.page}
@@ -903,7 +903,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                       }
                     />
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.two_page}
@@ -936,7 +936,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     sx={{ display: "flex", flexDirection: "column", gap: 0 }}
                   >
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.page}
@@ -964,7 +964,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                       }
                     />
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.two_page}
@@ -997,7 +997,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     sx={{ display: "flex", flexDirection: "column", gap: 0 }}
                   >
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.page}
@@ -1025,7 +1025,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                       }
                     />
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.two_page}
@@ -1056,7 +1056,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 
                   <Box>
                     <FormControlLabel
-                      sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+                      sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
                       control={
                         <Checkbox
                           checked={checkedFiltersPageVisits.two_page}
@@ -1426,14 +1426,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: ".875rem",
 														fontWeight: 400,
 														lineHeight: "1.225rem",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: ".875rem",
 														fontWeight: 400,
 														lineHeight: "1.225rem",
@@ -1456,14 +1456,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: ".875rem",
 														fontWeight: 400,
 														lineHeight: "1.225rem",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: ".875rem",
 														fontWeight: 400,
 														lineHeight: "1.225rem",

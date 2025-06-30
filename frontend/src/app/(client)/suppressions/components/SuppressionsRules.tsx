@@ -602,7 +602,7 @@ const SuppressionRules: React.FC = () => {
 										fontWeight: "600",
 										color: "rgba(95, 99, 104, 1)",
 										lineHeight: "20px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 									}}
 								>
 									{" "}
@@ -723,7 +723,7 @@ const SuppressionRules: React.FC = () => {
 							>
 								<InputLabel
 									sx={{
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "14px",
 										color: "rgba(74, 74, 74, 1)", // Цвет текста
 									}}
@@ -738,7 +738,7 @@ const SuppressionRules: React.FC = () => {
 										backgroundColor: "#fff",
 										borderRadius: "4px",
 										height: "48px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										fontWeight: 400,
 										zIndex: 0,
@@ -777,7 +777,7 @@ const SuppressionRules: React.FC = () => {
 												typeof option === "number" ? option.toString() : option
 											}
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 500,
 												fontSize: "14px",
 												lineHeight: "19.6px",
@@ -801,7 +801,7 @@ const SuppressionRules: React.FC = () => {
 									sx={{
 										backgroundColor: "#fff",
 										color: "rgba(56, 152, 252, 1)",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										textTransform: "none",
 										lineHeight: "22.4px",
 										fontWeight: "700",
@@ -922,7 +922,7 @@ const SuppressionRules: React.FC = () => {
 										<Typography
 											variant="caption"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												color: "#fff",
 												paddingLeft: 3,
@@ -940,7 +940,7 @@ const SuppressionRules: React.FC = () => {
 										<Typography
 											variant="caption"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												color: "#fff",
 												fontWeight: "400",
@@ -1055,7 +1055,7 @@ const SuppressionRules: React.FC = () => {
 										<Typography
 											variant="caption"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												color: "#fff",
 												paddingLeft: 3,
@@ -1073,7 +1073,7 @@ const SuppressionRules: React.FC = () => {
 										<Typography
 											variant="caption"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												color: "#fff",
 												fontWeight: "400",
@@ -1140,7 +1140,7 @@ const SuppressionRules: React.FC = () => {
 									sx={{
 										backgroundColor: "#fff",
 										color: "rgba(56, 152, 252, 1)",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										textTransform: "none",
 										lineHeight: "22.4px",
 										fontWeight: "700",
@@ -1264,7 +1264,7 @@ const SuppressionRules: React.FC = () => {
 										<Typography
 											variant="caption"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												color: "#fff",
 												paddingLeft: 3,
@@ -1282,7 +1282,7 @@ const SuppressionRules: React.FC = () => {
 										<Typography
 											variant="caption"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												color: "#fff",
 												fontWeight: "400",
@@ -1348,7 +1348,7 @@ const SuppressionRules: React.FC = () => {
 									sx={{
 										backgroundColor: "#fff",
 										color: "rgba(56, 152, 252, 1)",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										textTransform: "none",
 										lineHeight: "22.4px",
 										fontWeight: "700",
@@ -1467,7 +1467,7 @@ const SuppressionRules: React.FC = () => {
 								sx={{
 									backgroundColor: "#fff",
 									color: "rgba(56, 152, 252, 1)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									textTransform: "none",
 									lineHeight: "22.4px",
 									fontWeight: "700",
@@ -1659,7 +1659,7 @@ const SuppressionRules: React.FC = () => {
 											<Typography
 												variant="caption"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													color: "#fff",
 													fontWeight: "400",
@@ -1675,7 +1675,7 @@ const SuppressionRules: React.FC = () => {
 											<Typography
 												variant="caption"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													color: "#fff",
 													fontWeight: "400",
@@ -1933,7 +1933,7 @@ const SuppressionRules: React.FC = () => {
 									sx={{
 										backgroundColor: "#fff",
 										color: "rgba(56, 152, 252, 1)",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										textTransform: "none",
 										lineHeight: "22.4px",
 										fontWeight: "700",
@@ -2113,7 +2113,7 @@ const SuppressionRules: React.FC = () => {
 														background: "rgba(234, 248, 221, 1)",
 														padding: "6px 8px",
 														borderRadius: "2px",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														fontWeight: "400",
 														lineHeight: "16px",

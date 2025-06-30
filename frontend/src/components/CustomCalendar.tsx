@@ -22,7 +22,7 @@ import "../css/CustomDatePicker.css";
 
 const style = {
 	button_date: {
-		fontFamily: "Roboto",
+		fontFamily: "var(--font-roboto)",
 		fontWeight: "500",
 		color: "#4a4a4a",
 		textTransform: "none",
@@ -478,7 +478,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 									sx: {
 										"& .MuiInputBase-input::placeholder": {
 											fontSize: "11px",
-											fontFamily: "Roboto",
+											fontFamily: "var(--font-roboto)",
 											margin: 0,
 											padding: 0,
 										},
@@ -515,7 +515,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 									sx: {
 										"& .MuiInputBase-input::placeholder": {
 											fontSize: "11px",
-											fontFamily: "Roboto",
+											fontFamily: "var(--font-roboto)",
 											margin: 0,
 											padding: 0,
 										},
@@ -558,7 +558,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 									marginTop: "10px",
 								},
 								"& .react-datepicker__day-name": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "12px",
 									fontWeight: "500",
 									lineHeight: "normal",
@@ -566,7 +566,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 									margin: "6px",
 								},
 								"& .react-datepicker__day": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "12px",
 									fontWeight: "500",
 									color: "#4a4a4a",
@@ -621,7 +621,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 										color: "rgba(74, 74, 74, 0.40) !important",
 									},
 								"& .react-datepicker__day--disabled": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "12px",
 									fontWeight: "500",
 									color: "rgba(74, 74, 74, 0.40)",
@@ -640,7 +640,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 									color: "rgba(74, 74, 74, 0.40) !important",
 								},
 								"& .react-datepicker__current-month": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "14px",
 									fontWeight: "700",
 									color: "#4a4a4a",

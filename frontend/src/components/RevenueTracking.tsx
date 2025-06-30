@@ -57,7 +57,7 @@ const RevenueTracking = () => {
 				mb={1}
 				className="first-sub-title"
 				sx={{
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontWeight: "700",
 					lineHeight: "21.82px",
 					textAlign: "left",
@@ -87,7 +87,7 @@ const RevenueTracking = () => {
 				className="table-data"
 				mb={2}
 				sx={{
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontWeight: "500",
 					color: "rgba(128, 128, 128, 1)",
 					fontSize: "12px",

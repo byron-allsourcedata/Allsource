@@ -42,7 +42,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
 					variant="h5"
 					className="first-sub-title"
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "24px !important",
 						color: "#4a4a4a",
 						fontWeight: "500 !important",
@@ -70,7 +70,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
 				variant="body1"
 				sx={{
 					mt: 1,
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontSize: "14px",
 					color: "rgba(50, 54, 62, 1)",
 					fontWeight: "400",

@@ -34,7 +34,7 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({
 			<Typography
 				sx={{
 					color: "rgba(50,54,62,1)",
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontWeight: "600",
 					fontSize: "14px",
 					letterSpacing: "0%",

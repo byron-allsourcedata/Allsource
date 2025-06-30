@@ -164,7 +164,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 					<DialogTitle
 						sx={{
 							fontSize: "16px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: 600,
 							pl: 0.5,
 						}}

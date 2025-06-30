@@ -215,7 +215,7 @@ const CollectionRules: React.FC = () => {
 							InputProps={{
 								style: {
 									color: "rgba(17, 17, 19, 1)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 								},
@@ -223,7 +223,7 @@ const CollectionRules: React.FC = () => {
 							InputLabelProps={{
 								style: {
 									color: "rgba(17, 17, 19, 0.6)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 								},
@@ -295,7 +295,7 @@ const CollectionRules: React.FC = () => {
 							InputProps={{
 								style: {
 									color: "rgba(17, 17, 19, 1)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 								},
@@ -303,7 +303,7 @@ const CollectionRules: React.FC = () => {
 							InputLabelProps={{
 								style: {
 									color: "rgba(17, 17, 19, 0.6)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 									padding: 0,
@@ -338,7 +338,7 @@ const CollectionRules: React.FC = () => {
 					sx={{
 						backgroundColor: "#fff",
 						color: "rgba(56, 152, 252, 1)",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						textTransform: "none",
 						lineHeight: "22.4px",
 						fontWeight: "700",

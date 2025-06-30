@@ -144,7 +144,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 							sx={{
 								fontSize: "18px",
 								fontWeight: 600,
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								color: "rgba(18, 18, 18, 1)",
 							}}
 							mt={2}
@@ -166,7 +166,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 							sx={{
 								fontSize: "24px",
 								fontWeight: 400,
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								color: "rgba(11, 11, 11, 1)",
 							}}
 							gutterBottom
@@ -177,7 +177,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 							sx={{
 								fontSize: "14px",
 								fontWeight: 400,
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								color: "rgba(0, 0, 0, 0.5)",
 							}}
 							gutterBottom
@@ -196,7 +196,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 											sx={{
 												fontSize: "14px",
 												fontWeight: 600,
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												color: "rgba(0, 0, 0, 1)",
 											}}
 										>
@@ -207,7 +207,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 											sx={{
 												fontSize: "14px",
 												fontWeight: 400,
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												color: "rgba(0, 0, 0, 1)",
 											}}
 										>
@@ -225,7 +225,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 									backgroundColor: "rgba(56,152,252,1)",
 									textTransform: "none",
 									padding: "10px 42px",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: 14,
 									lineHeight: "22.4px",

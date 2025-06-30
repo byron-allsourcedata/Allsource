@@ -26,7 +26,7 @@ const accontDetailsStyles = {
 		"@media (max-width: 600px)": { maxWidth: "100%" },
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		lineHeight: "16px",
 		margin: 0,
@@ -64,7 +64,7 @@ const accontDetailsStyles = {
 	},
 	passwordValidationText: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "#707071",
@@ -73,7 +73,7 @@ const accontDetailsStyles = {
 	},
 	passwordValidationTextSuccess: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "#202124",
@@ -648,7 +648,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 						<Typography
 							variant="h6"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: "600",
 								color: "#4a4a4a",
@@ -678,7 +678,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 										<Typography
 											variant="caption"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												fontWeight: "400",
 												lineHeight: "16px",
@@ -692,7 +692,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 									<Typography
 										variant="caption"
 										sx={{
-											fontFamily: "Roboto",
+											fontFamily: "var(--font-roboto)",
 											fontSize: "12px",
 											fontWeight: "400",
 											lineHeight: "16px",
@@ -772,7 +772,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 														<Typography
 															variant="caption"
 															sx={{
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "12px",
 																fontWeight: "400",
 																lineHeight: "16px",
@@ -786,7 +786,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 													<Typography
 														variant="caption"
 														sx={{
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "12px",
 															fontWeight: "400",
 															lineHeight: "16px",

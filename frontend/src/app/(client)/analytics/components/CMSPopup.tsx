@@ -62,7 +62,7 @@ const openStyle = {
 
 const typographyStyles = {
 	textTransform: "none",
-	fontFamily: "Nunito Sans",
+	fontFamily: "var(--font-nunito)",
 	fontSize: "14px",
 	fontWeight: "500",
 	lineHeight: "19.6px",
@@ -105,7 +105,7 @@ const typographyGoogle = {
 };
 
 const maintext = {
-	fontFamily: "Nunito Sans",
+	fontFamily: "var(--font-nunito)",
 	fontSize: "14px",
 	fontWeight: "600",
 	lineHeight: "19.6px",
@@ -115,7 +115,7 @@ const maintext = {
 };
 
 const subtext = {
-	fontFamily: "Nunito Sans",
+	fontFamily: "var(--font-nunito)",
 	fontSize: "15px",
 	fontWeight: "600",
 	lineHeight: "19.6px",
@@ -1011,7 +1011,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 																color: "#000000",
 																fontSize: "12px",
 																fontWeight: 600,
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																textWrap: "nowrap",
 															}}
 														>

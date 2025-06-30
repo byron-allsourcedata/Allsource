@@ -793,7 +793,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Meta"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -857,7 +857,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Hubspot"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -921,7 +921,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Klaviyo"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -985,7 +985,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="BingAds"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1049,7 +1049,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="SalesForce"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1113,7 +1113,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Webhook"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1177,7 +1177,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Omnisend"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1240,7 +1240,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Slack"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1304,7 +1304,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="GoogleAds"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1368,7 +1368,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Linkedin"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1432,7 +1432,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Mailchimp"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1496,7 +1496,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Sendlane"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1559,7 +1559,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="S3"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",
@@ -1622,7 +1622,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Zapier"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",

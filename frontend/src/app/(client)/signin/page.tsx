@@ -234,12 +234,7 @@ const Signin: React.FC = () => {
 
 			<Box sx={loginStyles.mainContent}>
 				<Box sx={loginStyles.container}>
-					<Typography
-						variant="h4"
-						component="h1"
-						className="heading-text"
-						sx={loginStyles.title}
-					>
+					<Typography className="heading-text" sx={loginStyles.title}>
 						Welcome Back!
 					</Typography>
 					<GoogleLogin

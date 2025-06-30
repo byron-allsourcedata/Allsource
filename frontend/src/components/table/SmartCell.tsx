@@ -20,7 +20,7 @@ import CellTooltip from "./CellTooltip";
 
 export const table_array = {
 	position: "relative",
-	fontFamily: "Roboto",
+	fontFamily: "var(--font-roboto)",
 	fontSize: "12px",
 	fontWeight: 400,
 	lineHeight: "16.8px",

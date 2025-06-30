@@ -17,8 +17,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 				sx={{
 					display: "flex",
 					flexWrap: "nowrap",
-					overflowX: "hidden",
-					paddingTop: "4.25rem",
 				}}
 			>
 				<Grid
@@ -27,8 +25,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 					md="auto"
 					lg="auto"
 					sx={{
-						position: "fixed",
-						flexBasis: "168px",
+						position: "sticky",
 						overflowX: "hidden",
 						flexShrink: 0,
 						display: { xs: "none", md: "block" },
@@ -42,8 +39,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 					md
 					lg
 					sx={{
-						padding: "0px",
-						ml: 20,
+						overflow: "auto",
 						"@media (max-width: 899px)": {
 							padding: "0 16px 32px",
 							marginLeft: 0,

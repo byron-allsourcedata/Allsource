@@ -45,7 +45,7 @@ export const assetsStyle: { [key: string]: SxProps<Theme> } = {
 		fontSize: "16px",
 		whiteSpace: "nowrap",
 		textAlign: "start",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 	},
 	button_success: {
 		fontWeight: 400,

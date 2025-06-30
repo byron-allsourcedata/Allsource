@@ -28,7 +28,7 @@ export const ReturnToAdminButton = ({
 			variant="text"
 			startIcon={<ArrowBackIcon />}
 			sx={{
-				fontFamily: "Nunito Sans",
+				fontFamily: "var(--font-nunito)",
 				fontSize: "16px",
 				fontWeight: 600,
 				textTransform: "none",

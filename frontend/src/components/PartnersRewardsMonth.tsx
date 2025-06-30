@@ -395,7 +395,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
                         >
                             <KeyboardArrowLeftIcon sx={{ color: "rgba(128, 128, 128, 1)" }} />
                         </IconButton>
-                        <Typography sx={{ color: "rgba(0, 0, 0, 1)", fontSize: "16px", lineHeight: "22.4px", fontWeight: 600, fontFamily: "Nunito Sans" }}>{selectedMonth} Payout Details</Typography>
+                        <Typography sx={{ color: "rgba(0, 0, 0, 1)", fontSize: "16px", lineHeight: "22.4px", fontWeight: 600, fontFamily: "var(--font-nunito)" }}>{selectedMonth} Payout Details</Typography>
                     </Box> */}
 						</Box>
 
@@ -602,7 +602,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 																		.background,
 																	padding: "6px 8px",
 																	borderRadius: "2px",
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	fontSize: "12px",
 																	fontWeight: "400",
 																	lineHeight: "16px",
@@ -630,7 +630,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 																		component="div"
 																		sx={{
 																			width: "100px",
-																			fontFamily: "Roboto",
+																			fontFamily: "var(--font-roboto)",
 																			fontSize: "10px",
 																			fontWeight: "400",
 																			lineHeight: "14px",

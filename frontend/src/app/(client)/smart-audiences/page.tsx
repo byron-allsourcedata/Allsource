@@ -1169,7 +1169,7 @@ const SmartAudiences: React.FC = () => {
 										<Typography
 											variant="body1"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "14px",
 												fontWeight: "600",
 												lineHeight: "19.6px",
@@ -1759,14 +1759,16 @@ const SmartAudiences: React.FC = () => {
 																							}}
 																							InputProps={{
 																								style: {
-																									fontFamily: "Roboto",
+																									fontFamily:
+																										"var(--font-roboto)",
 																									fontSize: "14px",
 																								},
 																							}}
 																							InputLabelProps={{
 																								style: {
 																									fontSize: "14px",
-																									fontFamily: "Roboto",
+																									fontFamily:
+																										"var(--font-roboto)",
 																								},
 																							}}
 																						/>
@@ -2019,7 +2021,7 @@ const SmartAudiences: React.FC = () => {
 																							).background,
 																							padding: "3px 8px",
 																							borderRadius: "2px",
-																							fontFamily: "Roboto",
+																							fontFamily: "var(--font-roboto)",
 																							fontSize: "12px",
 																							fontWeight: "400",
 																							lineHeight: "16px",

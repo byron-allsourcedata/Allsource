@@ -440,7 +440,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									fontWeight: 500,
 								}}
@@ -490,7 +490,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 					</Box>
 					<Typography
 						sx={{
-							fontFamily: "Roboto",
+							fontFamily: "var(--font-roboto)",
 							fontSize: "12px",
 							color: "rgba(95, 99, 104, 1)",
 						}}

@@ -43,7 +43,7 @@ interface CreateAttentiveProps {
 
 const attentiveStyles = {
 	tabHeading: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		color: "#707071",
 		fontWeight: "500",
@@ -63,7 +63,7 @@ const attentiveStyles = {
 		},
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
@@ -76,7 +76,7 @@ const attentiveStyles = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -259,7 +259,7 @@ const AttentiveIntegrationPopup = ({
 						disabled={!apiKey}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -284,7 +284,7 @@ const AttentiveIntegrationPopup = ({
 						onClick={handleSave}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -357,7 +357,7 @@ const AttentiveIntegrationPopup = ({
 						sx={{
 							textAlign: "center",
 							color: "#202124",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "normal",
@@ -375,7 +375,7 @@ const AttentiveIntegrationPopup = ({
 						<Link
 							href="#"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: "600",
 								lineHeight: "20px",
@@ -460,7 +460,7 @@ const AttentiveIntegrationPopup = ({
 										<Typography
 											variant="h6"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												fontWeight: "600",
 												color: "#202124",
@@ -518,7 +518,7 @@ const AttentiveIntegrationPopup = ({
 										<Typography
 											variant="subtitle1"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												fontWeight: "600",
 												color: "#202124",
@@ -539,7 +539,7 @@ const AttentiveIntegrationPopup = ({
 													sx={{
 														display: "inline-block",
 														marginRight: "4px",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														fontWeight: "400",
 														color: "#808080",
@@ -552,7 +552,7 @@ const AttentiveIntegrationPopup = ({
 													variant="body1"
 													sx={{
 														display: "inline",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														fontWeight: "400",
 														color: "#808080",
@@ -593,7 +593,7 @@ const AttentiveIntegrationPopup = ({
 											<Typography
 												variant="h6"
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "16px",
 													fontWeight: "600",
 													color: "#202124",
@@ -607,7 +607,7 @@ const AttentiveIntegrationPopup = ({
 										<Typography
 											variant="subtitle1"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												fontWeight: "400",
 												color: "#808080",
@@ -630,7 +630,7 @@ const AttentiveIntegrationPopup = ({
 											<Typography
 												variant="subtitle1"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													fontWeight: "400",
 													color: "#808080",
@@ -704,7 +704,7 @@ const AttentiveIntegrationPopup = ({
 														<Typography
 															variant="caption"
 															sx={{
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "12px",
 																color: "#fff",
 																fontWeight: "400",
@@ -722,7 +722,7 @@ const AttentiveIntegrationPopup = ({
 														<Typography
 															variant="caption"
 															sx={{
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "12px",
 																color: "#fff",
 																fontWeight: "400",
@@ -757,7 +757,7 @@ const AttentiveIntegrationPopup = ({
 											<Typography
 												variant="subtitle1"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													fontWeight: "400",
 													color: "#808080",

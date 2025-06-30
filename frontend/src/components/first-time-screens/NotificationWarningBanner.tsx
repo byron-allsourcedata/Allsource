@@ -52,7 +52,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
 					onClick={() => setOpen(false)}
 					sx={{
 						textTransform: "none",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: 500,
 						color: "rgba(224, 49, 48, 1)",
@@ -67,7 +67,7 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
 					onClick={() => router.push(ctaUrl)}
 					sx={{
 						textTransform: "none",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: 500,
 						bgcolor: "rgba(224, 49, 48, 1)",

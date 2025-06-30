@@ -92,7 +92,7 @@ export const BookACallPopup: React.FC<Props> = ({
 							<Typography
 								variant="h6"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "20px",
 									mb: 1,
@@ -104,7 +104,7 @@ export const BookACallPopup: React.FC<Props> = ({
 								<Typography
 									variant="subtitle2"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontWeight: 400,
 										fontSize: "14px",
 										color: "rgba(0,0,0,0.6)",
@@ -146,7 +146,7 @@ export const BookACallPopup: React.FC<Props> = ({
 											<Typography
 												variant="subtitle1"
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontWeight: 600,
 													fontSize: "16px",
 												}}
@@ -156,7 +156,7 @@ export const BookACallPopup: React.FC<Props> = ({
 											<Typography
 												variant="body2"
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontWeight: 400,
 													fontSize: "14px",
 													color: "rgba(0,0,0,0.6)",
@@ -259,7 +259,7 @@ export const BookACallPopup: React.FC<Props> = ({
 										<Typography
 											variant="subtitle1"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 600,
 												fontSize: "16px",
 												lineHeight: "20px",
@@ -272,7 +272,7 @@ export const BookACallPopup: React.FC<Props> = ({
 										<Typography
 											variant="subtitle1"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 400,
 												fontSize: "14px",
 												lineHeight: "20px",
@@ -328,7 +328,7 @@ export const BookACallPopup: React.FC<Props> = ({
 									<Typography
 										variant="subtitle1"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: 400,
 											fontSize: "14px",
 											lineHeight: "20px",
