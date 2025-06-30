@@ -24,23 +24,24 @@ const headerStyles = {
 	headers: {
 		display: "flex",
 		padding: "1.125rem 1.5rem",
+		pl: ".75rem",
 		justifyContent: "space-between",
 		alignItems: "center",
 		minHeight: "4.25rem",
 		maxHeight: "4.25rem",
 		color: "rgba(244, 87, 69, 1)",
 		borderBottom: `1px solid rgba(228, 228, 228, 1)`,
-		position: "fixed",
+		position: "sticky",
+		overflowY: "hidden",
 		top: 0,
 		left: 0,
 		right: 0,
 		background: "#fff",
-		zIndex: 1200,
+		zIndex: 10,
 	},
 	logoContainer: {
 		display: "flex",
 		alignItems: "center",
-		gap: "3.45rem",
 	},
 };
 

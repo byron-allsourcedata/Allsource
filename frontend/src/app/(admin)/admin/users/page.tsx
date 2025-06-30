@@ -410,6 +410,7 @@ const Users: React.FC = () => {
 					display: "flex",
 					flexDirection: "column",
 					pr: 2,
+					pl: 2,
 					width: "100%",
 					overflow: "auto",
 					height: "100%",

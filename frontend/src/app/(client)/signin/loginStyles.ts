@@ -61,11 +61,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	title: {
-		fontWeight: "600",
 		whiteSpace: "nowrap",
 		textAlign: "center",
 		paddingBottom: "33px",
-		lineHeight: "30px",
 		"@media (max-width: 440px)": {
 			paddingBottom: "2rem",
 		},

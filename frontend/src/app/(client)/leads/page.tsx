@@ -1550,7 +1550,6 @@ const Leads: React.FC = () => {
 				sx={{
 					display: "flex",
 					flexDirection: "column",
-					height: "100%",
 					pr: "16px",
 					"@media (max-width: 900px)": {
 						paddingRight: 2,
@@ -1589,7 +1588,6 @@ const Leads: React.FC = () => {
 										flexDirection: "row",
 										alignItems: "center",
 										gap: 3,
-										height: "46px",
 									}}
 								>
 									<Box
@@ -1623,31 +1621,12 @@ const Leads: React.FC = () => {
 										position: "relative",
 										alignItems: "center",
 										gap: "15px",
-										pt: "4px",
 										"@media (max-width: 900px)": {
 											gap: "8px",
 										},
 									}}
 								>
 									{!noContactsYet && ButtonGroup}
-
-									{/* <Button
-                                onClick={handleAudiencePopupOpen}
-                                aria-haspopup="true"
-                                sx={{
-                                    textTransform: 'none',
-                                    color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    padding: '0',
-                                    border: 'none',
-                                    minWidth: 'auto',
-                                    '@media (min-width: 901px)': {
-                                        display: 'none'
-                                    }
-                                }}
-                            >
-                                <Image src='/add.svg' alt='logo' height={24} width={24} />
-                            </Button> */}
 								</Box>
 							</Box>
 							<Box
@@ -1774,7 +1753,7 @@ const Leads: React.FC = () => {
 						) : noContactsYet ? (
 							<EmptyAnalyticsPlaceholder />
 						) : (
-							<Grid container spacing={1} sx={{}}>
+							<Grid container sx={{}}>
 								<Grid item xs={12}>
 									<TableContainer
 										ref={tableContainerRef}
