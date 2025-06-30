@@ -669,6 +669,15 @@ async def process_user_data(
         puci = (
             "edf1a2e46075f1b2ae6caddad58fac17c702f6a17373a7a0067583c0d2ac34cb"
         )
+    if (
+        puci
+        == "f8f664a05426a4593af10265803ad4ecb0eae25e7622e753ef0ea08218ec33cb"
+        and page != None
+        and "joinfridays.com" in page
+    ):
+        puci = (
+            "b51f31b2181ab13b0a125f37cac5641f12a29b5bb63b8d54f7b5fb1d3c0cb434"
+        )
     if root_user:
         result = root_user
     else:
@@ -684,6 +693,15 @@ async def process_user_data(
     user, user_domain = result
     if root_user and normalize_domain(page) not in ROOT_DOMAINS:
         return
+
+    if not root_user and normalize_domain(page) != normalize_domain(
+        user_domain.domain
+    ):
+        logging.info(
+            f"Access denied: normalized page domain '{normalize_domain(page)}' does not match user domain '{user_domain.domain}'"
+        )
+        return
+
     if not user_domain.is_enable and not root_user:
         logging.info(f"Domain is not enabled: {user_domain.id}")
         return
