@@ -47,16 +47,16 @@ class SourceAgentService:
             return []
 
         sql = """
-                SELECT email, asid
+                SELECT personal_email, asid
                 FROM enrichment_users
-                WHERE email IN %(ids)s
+                WHERE personal_email IN %(ids)s
                 """
 
         rows = self._run_query(sql, {"ids": emails_clean})
 
         result = [
-            EmailAsid(email=email.lower(), asid=str(asid))
-            for email, asid in rows
+            EmailAsid(email=personal_email.lower(), asid=str(asid))
+            for personal_email, asid in rows
         ]
 
         logger.debug(
