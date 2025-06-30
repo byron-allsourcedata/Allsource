@@ -1,34 +1,33 @@
 import time
 import psycopg2
-from decimal import Decimal
-from typing import List
+
+from typing import List, Any
 from uuid import UUID
 
 from catboost import CatBoostRegressor
-from fastapi import Depends
+
 from pandas import DataFrame
-from sqlalchemy import update, func, text, select
+from sqlalchemy import update, select
 from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
-from typing_extensions import Annotated
+from typing_extensions import deprecated
 
 from config.database import SqlConfigBase
-from dependencies import Db
-from models import AudienceLookalikes, EnrichmentUserContact, EnrichmentUser
+from db_dependencies import Db
+from models import AudienceLookalikes, EnrichmentUser
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
-    EnrichmentLookalikeScoresPersistenceDep,
 )
 from persistence.enrichment_models import (
     EnrichmentModelsPersistence,
-    EnrichmentModelsPersistenceDep,
 )
-from schemas.similar_audiences import NormalizationConfig, AudienceData
+from resolver import injectable
+from schemas.similar_audiences import NormalizationConfig
 from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
-    default_normalization_config,
-    AudienceDataNormalizationServiceDep,
 )
+from services.similar_audiences.column_selector import AudienceColumnSelector
 
 
 def is_uuid(value):
@@ -54,6 +53,7 @@ def measure_print(func, prefix):
     return result
 
 
+@injectable
 class SimilarAudiencesScoresService:
     enrichment_models_persistence: EnrichmentModelsPersistence
     enrichment_lookalike_scores_persistence: (
@@ -64,11 +64,15 @@ class SimilarAudiencesScoresService:
 
     def __init__(
         self,
-        db: Session,
+        db: Db,
+        lookalikes: AudienceLookalikesPersistence,
+        column_selector: AudienceColumnSelector,
         enrichment_models_persistence: EnrichmentModelsPersistence,
         enrichment_lookalike_scores_persistence: EnrichmentLookalikeScoresPersistence,
         normalization_service: AudienceDataNormalizationService,
     ):
+        self.lookalikes = lookalikes
+        self.column_selector = column_selector
         self.enrichment_models_persistence = enrichment_models_persistence
         self.enrichment_lookalike_scores_persistence = (
             enrichment_lookalike_scores_persistence
@@ -81,6 +85,7 @@ class SimilarAudiencesScoresService:
     ):
         return self.enrichment_models_persistence.save(lookalike_id, model)
 
+    @deprecated("deprecated")
     def calculate_scores(
         self,
         model: CatBoostRegressor,
@@ -117,8 +122,15 @@ class SimilarAudiencesScoresService:
         end = time.perf_counter()
         print(f"cursor time: {end - start:.3f}")
 
+        total_fetch_time = 0.0
+        total_query_time = 0.0
+        total_calculation_time = 0.0
+        total_insert_time = 0.0
+        total_update_time = 0.0
+
         while True:
             rows, duration = measure(lambda _: cursor.fetchmany(batch_size))
+            total_fetch_time += duration
             print(f"fetch time: {duration:.3f}")
 
             if not rows:
@@ -132,10 +144,11 @@ class SimilarAudiencesScoresService:
 
             asids = [rd["asid"] for rd in dict_rows]
 
-            result = measure_print(
+            result, duration = measure_print(
                 lambda _: (query.where(EnrichmentUser.asid.in_(asids))),
                 "query time",
             )
+            total_query_time += duration
 
             feature_dicts = [dict(row._mapping) for row in result]
             user_ids = [rd["id"] for rd in dict_rows]
@@ -145,7 +158,8 @@ class SimilarAudiencesScoresService:
                     model, feature_dicts, config
                 )
             )
-            print(f"calculation time: {duration:.3f}")
+            total_calculation_time += duration
+            print(f"calculation time: {duration:.3f}  - {len(scores)}")
 
             _, duration = measure(
                 lambda _: (
@@ -154,6 +168,7 @@ class SimilarAudiencesScoresService:
                     )
                 )
             )
+            total_insert_time += duration
             print(f"insert time: {duration:.3f}")
 
             _, duration = measure(
@@ -165,12 +180,18 @@ class SimilarAudiencesScoresService:
                     )
                 )
             )
+            total_update_time += duration
             print(f"lookalike update time: {duration:.3f}")
             self.db.commit()
         cursor.close()
         conn.close()
-
         self.db.commit()
+        print("\n=== TOTAL TIMES ===")
+        print(f"Total fetch time: {total_fetch_time:.3f} sec")
+        print(f"Total query time: {total_query_time:.3f} sec")
+        print(f"Total calculation time: {total_calculation_time:.3f} sec")
+        print(f"Total insert time: {total_insert_time:.3f} sec")
+        print(f"Total update time: {total_update_time:.3f} sec")
 
     def calculate_score_dict_batch(
         self,
@@ -193,18 +214,60 @@ class SimilarAudiencesScoresService:
         result = model.predict(df_normed)
         return result.tolist()
 
+    def calculate_batch_scores_v2(
+        self,
+        asids: List[UUID],
+        batch: list[dict[str, Any]],
+        model: CatBoostRegressor,
+        lookalike_id: UUID,
+        config: NormalizationConfig,
+    ) -> tuple[float, float]:
+        scores, duration = measure(
+            lambda _: self.calculate_score_dict_batch(model, batch, config)
+        )
 
-def get_similar_audiences_service(
-    db: Db,
-    models: EnrichmentModelsPersistenceDep,
-    scores: EnrichmentLookalikeScoresPersistenceDep,
-    normalization: AudienceDataNormalizationServiceDep,
-) -> SimilarAudiencesScoresService:
-    return SimilarAudiencesScoresService(
-        db=db, models=models, scores=scores, normalization=normalization
-    )
+        _, insert_time = measure(
+            lambda _: self.enrichment_lookalike_scores_persistence.bulk_insert(
+                lookalike_id, list(zip(asids, scores))
+            )
+        )
+
+        return duration, insert_time
+
+    @deprecated("deprecated")
+    def calculate_batch_scores(
+        self,
+        asids: List[UUID],
+        batch: list[dict[str, Any]],
+        model: CatBoostRegressor,
+        lookalike_id: UUID,
+    ) -> tuple[float, float]:
+        config = self.prepare_config(lookalike_id)
+        return self.calculate_batch_scores_v2(
+            asids=asids,
+            batch=batch,
+            model=model,
+            lookalike_id=lookalike_id,
+            config=config,
+        )
+
+    def prepare_config(self, lookalike_id: UUID) -> NormalizationConfig:
+        lookalike = self.lookalikes.get_lookalike(lookalike_id)
+        return self.get_config(lookalike.significant_fields)
+
+    def get_config(self, significant_fields: dict):
+        column_names = self.column_selector.clickhouse_columns(
+            significant_fields
+        )
+        column_names = list(set(column_names))
+        column_names = [
+            column for column in column_names if column != "zip_code5"
+        ]
+        return NormalizationConfig(
+            ordered_features={},
+            numerical_features=[],
+            unordered_features=column_names,
+        )
 
 
-SimilarAudiencesServiceDep = Annotated[
-    SimilarAudiencesScoresService, Depends(get_similar_audiences_service)
-]
+SimilarAudiencesServiceDep = SimilarAudiencesScoresService

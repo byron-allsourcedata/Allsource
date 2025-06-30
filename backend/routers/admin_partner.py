@@ -101,7 +101,6 @@ async def update_partner(
     result = await get_partners_service.update_partner(
         partner_id, partnerNewData
     )
-
     return result
 
 

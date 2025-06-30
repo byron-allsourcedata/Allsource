@@ -12,7 +12,6 @@ from starlette.requests import Request
 from typing_extensions import Annotated
 
 from config.auth import AuthConfig
-from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from persistence.admin import AdminPersistence
@@ -66,7 +65,6 @@ from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
 from services.leads import LeadsService
-from services.lookalikes import AudienceLookalikesService
 from services.meeting_schedule import MeetingScheduleService
 from services.notification import Notification
 from services.partners import PartnersService
@@ -76,10 +74,6 @@ from services.payments_plans import PaymentsPlans
 from services.payouts import PayoutsService
 from services.plans import PlansService
 from services.settings import SettingsService
-from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.audience_data_normalization import (
-    AudienceDataNormalizationService,
-)
 from services.sse_events import SseEventsService
 from services.stripe_service import StripeService, get_stripe_payment_url
 from services.subscriptions import SubscriptionService
@@ -89,19 +83,9 @@ from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
+from db_dependencies import get_db
 
 logger = logging.getLogger(__name__)
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-Db = Annotated[Session, Depends(get_db)]
 
 
 async def verify_signature(request: Request):
@@ -111,10 +95,6 @@ async def verify_signature(request: Request):
     if verifier.is_valid_request(raw_body, dict(request.headers)) == False:
         logger.debug("Error verification")
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
-
-
-def get_audience_sources_persistence(db: Session = Depends(get_db)):
-    return AudienceSourcesPersistence(db)
 
 
 def get_audience_setting_persistence(db: Session = Depends(get_db)):
@@ -135,12 +115,6 @@ def get_partners_asset_persistence(
     db: Session = Depends(get_db),
 ) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)
-
-
-def get_referral_discount_codes_persistence(
-    db: Session = Depends(get_db),
-) -> ReferralDiscountCodesPersistence:
-    return ReferralDiscountCodesPersistence(db)
 
 
 def get_admin_persistence(db: Session = Depends(get_db)):
@@ -227,12 +201,8 @@ def get_accounts_service(
 
 def get_audience_sources_service(
     domain_persistence: UserDomainsPersistence,
-    audience_sources_persistence: AudienceSourcesPersistence = Depends(
-        get_audience_sources_persistence
-    ),
-    audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence = Depends(
-        get_audience_sources_matched_persons_persistence
-    ),
+    audience_sources_persistence: AudienceSourcesPersistence,
+    audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence,
 ):
     return AudienceSourceService(
         audience_sources_persistence=audience_sources_persistence,
@@ -242,15 +212,9 @@ def get_audience_sources_service(
 
 
 def get_audience_smarts_service(
-    audience_smarts_persistence: AudienceSmartsPersistence = Depends(
-        get_audience_smarts_persistence
-    ),
-    lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(
-        get_lookalikes_persistence
-    ),
-    audience_sources_persistence: AudienceSourcesPersistence = Depends(
-        get_audience_sources_persistence
-    ),
+    audience_smarts_persistence: AudienceSmartsPersistence,
+    lookalikes_persistence_service: AudienceLookalikesPersistence,
+    audience_sources_persistence: AudienceSourcesPersistence,
     audience_settings_persistence: AudienceSettingPersistence = Depends(
         get_audience_setting_persistence
     ),
@@ -814,32 +778,4 @@ def check_api_key(
     raise HTTPException(
         status_code=401,
         detail={"status": UserAuthorizationStatus.INVALID_API_KEY.value},
-    )
-
-
-def get_lookalikes_service(
-    lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(
-        get_lookalikes_persistence
-    ),
-    sources_persistence: AudienceSourcesPersistence = Depends(
-        get_audience_sources_persistence
-    ),
-):
-    return AudienceLookalikesService(
-        lookalikes_persistence_service=lookalikes_persistence_service,
-        sources_persistence=sources_persistence,
-    )
-
-
-def get_audience_data_normalization():
-    return AudienceDataNormalizationService()
-
-
-def get_similar_audience_service(
-    audience_data_normalization_service: AudienceDataNormalizationService = Depends(
-        get_audience_data_normalization
-    ),
-):
-    return SimilarAudienceService(
-        audience_data_normalization_service=audience_data_normalization_service
     )

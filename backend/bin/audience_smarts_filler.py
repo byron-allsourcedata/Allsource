@@ -95,8 +95,8 @@ async def aud_smarts_reader(
             try:
                 lalp_query = (
                     db_session.query(
-                        AudienceLALP.enrichment_user_id.label(
-                            "enrichment_user_id"
+                        AudienceLALP.enrichment_user_asid.label(
+                            "enrichment_user_asid"
                         )
                     )
                     .filter(
@@ -113,8 +113,8 @@ async def aud_smarts_reader(
 
                 smp_query = (
                     db_session.query(
-                        AudienceSMP.enrichment_user_id.label(
-                            "enrichment_user_id"
+                        AudienceSMP.enrichment_user_asid.label(
+                            "enrichment_user_asid"
                         )
                     )
                     .filter(
@@ -150,7 +150,7 @@ async def aud_smarts_reader(
                 # combined_query = lalp_query.union(smp_query).subquery()
 
                 final_query = (
-                    db_session.query(combined_query.c.enrichment_user_id)
+                    db_session.query(combined_query.c.enrichment_user_asid)
                     .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
                     .offset(offset)
                 )

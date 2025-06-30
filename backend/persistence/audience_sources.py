@@ -6,6 +6,7 @@ import json
 from sqlalchemy import desc, asc, select
 from sqlalchemy.orm import Session
 
+from db_dependencies import Db
 from enums import TypeOfSourceOrigin, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.users import Users
@@ -15,12 +16,14 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Query
 
 from persistence.utils import apply_filters
+from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class AudienceSourcesPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_sources(

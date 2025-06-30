@@ -650,7 +650,6 @@ class SubscriptionService:
         self, user, plan, subscription_info, charge_id
     ):
         result = {"status": None, "contact_credit_plan_id": None}
-
         status = subscription_info.get("status", "").lower()
         if status in ("cancelled", "declined"):
             status = "canceled"
