@@ -24,7 +24,7 @@ const FirstTimeScreen: FC<FirstTimeScreenProps> = ({ onBegin }) => {
 					variant="h5"
 					className="first-sub-title"
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "24px !important",
 						color: "#4a4a4a",
 						fontWeight: "500 !important",

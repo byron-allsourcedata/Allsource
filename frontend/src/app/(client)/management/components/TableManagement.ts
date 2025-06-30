@@ -4,7 +4,7 @@ export const style: { [key: string]: SxProps<Theme> } = {
 	actionButtonText: {
 		textTransform: "none",
 		textDecoration: "none",
-		fontFamily: "Roboto",
+		fontFamily: "var(--font-roboto)",
 		fontWeight: 400,
 		fontSize: "14px",
 		color: "rgba(32, 33, 36, 1)",

@@ -577,7 +577,7 @@ const DomainButton: React.FC = () => {
 											variant="body2"
 											sx={{
 												color: "rgba(43, 91, 0, 1)",
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontWeight: "400",
 												fontSize: "12px",
 											}}

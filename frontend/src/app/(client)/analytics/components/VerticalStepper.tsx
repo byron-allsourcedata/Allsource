@@ -82,7 +82,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
 											? "rgba(0, 0, 0, 1) !important"
 											: "rgba(82, 82, 82, 1) !important",
 								"& .MuiStepLabel-label": {
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 400,
 									color:

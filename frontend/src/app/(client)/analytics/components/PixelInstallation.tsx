@@ -237,7 +237,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 					component="div"
 					className="first-sub-title"
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: "700",
 						lineHeight: "21.82px",
 						textAlign: "left",
@@ -265,7 +265,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 					className="table-data"
 					mb={2}
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: "500",
 						color: "rgba(128, 128, 128, 1)",
 						fontSize: "12px",
@@ -632,7 +632,7 @@ const buttonGoogle = (showGoogleInline: boolean) => ({
 
 const typographyStyles = {
 	textTransform: "none",
-	fontFamily: "Nunito Sans",
+	fontFamily: "var(--font-nunito)",
 	fontSize: "14px",
 	fontWeight: "600",
 	lineHeight: "19.6px",
@@ -650,7 +650,7 @@ const typographyStyles = {
 
 const typographyGoogle = {
 	textTransform: "none",
-	fontFamily: "Nunito Sans",
+	fontFamily: "var(--font-nunito)",
 	fontSize: "14px",
 	fontWeight: "600",
 	lineHeight: "19.6px",

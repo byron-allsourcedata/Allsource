@@ -324,7 +324,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									</InputAdornment>
 								),
 								sx: {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -338,7 +338,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									paddingLeft: 0,
 								},
 								"& .MuiInputBase-input::placeholder": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -370,7 +370,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 											<ListItemText
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "12px",
 														fontWeight: 600,
 														lineHeight: "16.8px",

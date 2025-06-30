@@ -1212,7 +1212,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																<Typography
 																	className="paragraph"
 																	sx={{
-																		fontFamily: "Roboto",
+																		fontFamily: "var(--font-roboto)",
 																		fontSize: "12px",
 																		color: color,
 																		backgroundColor: background,
@@ -1300,7 +1300,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 									justifyContent: "flex-start",
 									width: "100%",
 									textTransform: "none",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									color: "rgba(32, 33, 36, 1)",
 									fontWeight: 600,
@@ -1318,7 +1318,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 									justifyContent: "flex-start",
 									width: "100%",
 									textTransform: "none",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									color: "rgba(32, 33, 36, 1)",
 									fontWeight: 600,
@@ -1338,7 +1338,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 									justifyContent: "flex-start",
 									width: "100%",
 									textTransform: "none",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									color: "rgba(32, 33, 36, 1)",
 									fontWeight: 600,
@@ -1359,7 +1359,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 										width: "100%",
 										color: "rgba(32, 33, 36, 1)",
 										textTransform: "none",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										fontWeight: 600,
 										":hover": {

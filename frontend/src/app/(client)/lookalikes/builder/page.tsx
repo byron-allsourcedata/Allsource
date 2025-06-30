@@ -307,7 +307,7 @@ const CreateLookalikePage: React.FC = () => {
 									<Typography
 										variant="h1"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: 600,
 											fontSize: "16px",
 											lineHeight: "25.92px",
@@ -363,7 +363,7 @@ const CreateLookalikePage: React.FC = () => {
 										<Typography
 											variant="h6"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 500,
 												fontSize: "16px",
 												lineHeight: "22.5px",
@@ -532,7 +532,7 @@ const CreateLookalikePage: React.FC = () => {
 										<Typography
 											variant="h6"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 500,
 												fontSize: "16px",
 												lineHeight: "22.5px",
@@ -616,7 +616,7 @@ const CreateLookalikePage: React.FC = () => {
 											<Typography
 												variant="h6"
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontWeight: 500,
 													fontSize: "16px",
 													lineHeight: "22.5px",
@@ -703,7 +703,7 @@ const CreateLookalikePage: React.FC = () => {
 											variant="body1"
 											sx={{
 												fontSize: "18px",
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												letterSpacing: "0%",
 												paddingRight: "20px",
 												color: "#000000",
@@ -754,7 +754,7 @@ const CreateLookalikePage: React.FC = () => {
 													"@media (max-width: 600px)": { width: "100%" },
 												},
 												"& .MuiInputBase-input": {
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontWeight: 400,
 													fontSize: "14px",
 													lineHeight: "20px",
@@ -855,7 +855,7 @@ const CreateLookalikePage: React.FC = () => {
 							<Typography
 								variant="h1"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "17px !important",
 									lineHeight: "25.92px",

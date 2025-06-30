@@ -54,7 +54,7 @@ export const billingStyles = {
 		"&.Mui-focused": {
 			top: 0,
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",
@@ -66,7 +66,7 @@ export const billingStyles = {
 		},
 		"&.MuiOutlinedInput-root": {
 			"& .MuiOutlinedInput-input": {
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",

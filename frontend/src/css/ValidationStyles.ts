@@ -3,7 +3,7 @@ import { SxProps, Theme } from "@mui/system";
 export const ValidationStyle: { [key: string]: SxProps<Theme> } = {
 	filter_name: {
 		color: "rgba(32, 33, 36, 1)",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: "500",
 		fontSize: ".875rem",
 		lineHeight: "1.225rem",
@@ -30,7 +30,7 @@ export const ValidationStyle: { [key: string]: SxProps<Theme> } = {
 		px: ".5rem",
 		fontWeight: "400",
 		fontSize: ".75rem",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: "rgba(74, 74, 74, 1)",
 		lineHeight: "1rem",
 	},
@@ -53,7 +53,7 @@ export const ValidationStyle: { [key: string]: SxProps<Theme> } = {
 		borderRadius: "50%",
 	},
 	collapse_font: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: "rgba(74, 74, 74, 1)",
 		fontSize: ".75rem",
 		fontWeight: 600,
@@ -61,14 +61,14 @@ export const ValidationStyle: { [key: string]: SxProps<Theme> } = {
 	},
 	datetime_picker: {
 		"& .MuiInputBase-input": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: ".875rem",
 			fontWeight: 400,
 			lineHeight: "1.225rem",
 			textAlign: "left",
 		},
 		"& .MuiInputLabel-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: ".875rem",
 			fontWeight: 400,
 			lineHeight: "1.225rem",

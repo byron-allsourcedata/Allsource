@@ -90,7 +90,7 @@ const subscriptionStyles = {
 		"&.Mui-focused": {
 			top: 0,
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",
@@ -784,7 +784,7 @@ export const SettingsSubscription: React.FC = () => {
 										textDecoration: "none",
 										color: "#fff",
 										padding: "1em 8em",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontWeight: "600",
 										fontSize: "14px",
 										borderRadius: "4px",

@@ -3,7 +3,7 @@ import { SxProps, Theme } from "@mui/system";
 
 export const styles: { [key: string]: SxProps<Theme> } = {
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 		lineHeight: "normal",
 		color: "rgba(17, 17, 19, 0.60)",
@@ -17,7 +17,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Nunito Sans",
+				fontFamily: "var(--font-nunito)",
 			},
 			"& .MuiOutlinedInput-notchedOutline": {
 				borderColor: "#A3B0C2",
@@ -36,7 +36,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 	formField: {
 		maxHeight: "56px",
 		maxWidth: "100%",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		"& .MuiInputBase-root": {
 			maxHeight: "48px",
 		},
@@ -66,7 +66,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 	submitButton: {
 		backgroundColor: "rgba(56, 152, 252, 1)",
 		textTransform: "none",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: "600",
 		fontSize: "14px",
 		lineHeight: "22.4px",

@@ -14,8 +14,21 @@ import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
 import Script from "next/script";
+import { Nunito_Sans, Roboto, Press_Start_2P } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
+const nunito = Nunito_Sans({
+	subsets: ["latin"],
+	display: "swap",
+	variable: "--font-nunito",
+});
+
+const roboto = Roboto({
+	subsets: ["latin"],
+	weight: ["100", "300", "400", "500", "700", "900"],
+	display: "swap",
+	variable: "--font-roboto",
+});
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
@@ -40,7 +53,7 @@ export default function RootLayout({
 	const pathname = usePathname();
 	const pageTitle = formatPageTitle(pathname || "");
 	return (
-		<html lang="en">
+		<html lang="en" className={`${nunito.variable} ${roboto.variable}`}>
 			<head>
 				<title>{pageTitle ? `Allsource | ${pageTitle} ` : "Allsource"}</title>
 				<meta name="description" content={`Page: ${pageTitle}`} />

@@ -243,7 +243,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 							<Typography
 								variant="h6"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 600,
 									lineHeight: "19.6px",
@@ -257,7 +257,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 								variant="body2"
 								color="textSecondary"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 600,
 									lineHeight: "19.6px",
@@ -269,7 +269,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 						</Box>
 						<MenuItem
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 500,
 								lineHeight: "19.6px",
@@ -280,7 +280,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 						</MenuItem>
 						<MenuItem
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 500,
 								lineHeight: "19.6px",

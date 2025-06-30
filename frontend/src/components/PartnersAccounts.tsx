@@ -416,7 +416,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 									fontSize: "16px",
 									lineHeight: "22.4px",
 									fontWeight: 600,
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 								}}
 							>
 								Accounts - ({accountName})
@@ -443,7 +443,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 									sx={{
 										fontWeight: "bold",
 										fontSize: "12px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: "#808080",
 										cursor: "pointer",
 									}}
@@ -463,7 +463,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 									fontWeight: "bold",
 									fontSize: "16px",
 									mb: "24px",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 								}}
 							>
 								Master Partners
@@ -640,7 +640,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 										<Typography
 											variant="body1"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "14px",
 												fontWeight: "400",
 												color: "rgba(32, 33, 36, 1)",
@@ -840,7 +840,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 																.background,
 															padding: "3px 8px",
 															borderRadius: "2px",
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "12px",
 															fontWeight: "400",
 															lineHeight: "16px",
@@ -897,7 +897,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 																.background,
 															padding: "3px 8px",
 															borderRadius: "2px",
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "12px",
 															fontWeight: "400",
 															lineHeight: "16px",
@@ -919,7 +919,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 									variant="h5"
 									sx={{
 										mb: 3,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "20px",
 										color: "#4a4a4a",
 										fontWeight: "600",
@@ -939,7 +939,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 									color="textSecondary"
 									sx={{
 										mt: 3,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										color: "#808080",
 										fontWeight: "600",

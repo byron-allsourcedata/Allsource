@@ -902,7 +902,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 										fontSize: "14px",
 										fontWeight: "600",
 										color: "#202124",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 									}}
 								>
 									Sign in with Google
@@ -924,7 +924,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 									textTransform: "none",
 									background: "rgba(56, 152, 252, 1)",
 									color: "#fff",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 									padding: "0.75em 1.5em",
@@ -1187,7 +1187,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 											textTransform: "none",
 											background: "rgba(56, 152, 252, 1)",
 											color: "#fff",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: 400,
 											fontSize: "14px",
 											padding: "0.75em 1.5em",

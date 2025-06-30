@@ -121,7 +121,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 							variant="body2"
 							sx={{
 								color: "rgba(74, 74, 74, 1)",
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontWeight: "400",
 								fontSize: "14px",
 							}}

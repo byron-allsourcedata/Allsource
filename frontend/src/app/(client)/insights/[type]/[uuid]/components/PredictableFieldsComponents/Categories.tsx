@@ -109,7 +109,7 @@ const Categories: React.FC<PredictableFieldsTabProps> = ({ data }) => {
 						style={{
 							color: "rgba(56, 152, 252, 1) !important",
 							fontSize: "12px",
-							fontFamily: "Roboto",
+							fontFamily: "var(--font-roboto)",
 							width: "auto",
 							display: "inline",
 						}}

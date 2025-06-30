@@ -447,7 +447,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 									</InputAdornment>
 								),
 								sx: {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -461,7 +461,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 									paddingLeft: 0,
 								},
 								"& .MuiInputBase-input::placeholder": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -493,7 +493,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 											<ListItemText
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "12px",
 														fontWeight: 600,
 														lineHeight: "16.8px",
@@ -620,7 +620,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 														<Typography
 															sx={{
 																fontSize: "14px",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontWeight: 500,
 																lineHeight: "19.6px",
 																color: checkedFiltersJobTitles[item]
@@ -755,7 +755,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 														<Typography
 															sx={{
 																fontSize: "14px",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontWeight: 500,
 																lineHeight: "19.6px",
 																color: checkedFiltersSeniority[item]
@@ -890,7 +890,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 														<Typography
 															sx={{
 																fontSize: "14px",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontWeight: 500,
 																lineHeight: "19.6px",
 																color: checkedFiltersDepartment[item]
@@ -968,7 +968,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 								onKeyDown={handleAddTag}
 								InputProps={{
 									sx: {
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -979,7 +979,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 								sx={{
 									mb: "3px",
 									"& .MuiInputBase-input::placeholder": {
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -998,7 +998,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 										primary={
 											<span
 												style={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "13px",
 													fontWeight: 600,
 													lineHeight: "16.8px",

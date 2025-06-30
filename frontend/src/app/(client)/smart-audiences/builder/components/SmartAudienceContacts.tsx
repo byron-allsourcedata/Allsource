@@ -339,7 +339,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									fontWeight: 500,
 								}}
@@ -354,7 +354,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 						</Box>
 						<Typography
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontSize: "12px",
 								color: "rgba(95, 99, 104, 1)",
 							}}
@@ -423,7 +423,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 								>
 									<Typography
 										sx={{
-											fontFamily: "Roboto",
+											fontFamily: "var(--font-roboto)",
 											fontWeight: "400",
 											fontSize: "14px",
 											color: "#202124",
@@ -452,7 +452,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 													borderRadius: "4px",
 													"& .MuiChip-label": {
 														fontSize: "12px",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontWeight: "500",
 													},
 												}}
@@ -820,7 +820,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 							sx={{
 								fontWeight: "bold",
 								fontSize: "19px",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								letterSpacing: "0%",
 								paddingRight: "20px",
 								color: "#000000",
@@ -849,7 +849,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 									},
 								},
 								"& .MuiInputBase-input": {
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 									lineHeight: "20px",

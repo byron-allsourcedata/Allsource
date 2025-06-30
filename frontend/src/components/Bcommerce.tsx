@@ -24,7 +24,7 @@ interface BigcommerceConntectPopupProps {
 
 const metaStyles = {
 	tabHeading: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		color: "#707071",
 		fontWeight: "500",
@@ -44,7 +44,7 @@ const metaStyles = {
 		},
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		lineHeight: "14px",
 		pl: "4px",
@@ -58,7 +58,7 @@ const metaStyles = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "14px",
@@ -217,7 +217,7 @@ const BCommerceConnect = ({
 					sx={{
 						textAlign: "center",
 						color: "#202124",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: "600",
 						fontSize: "16px",
 						lineHeight: "normal",
@@ -237,7 +237,7 @@ const BCommerceConnect = ({
 						target="_blank"
 						rel="noopener noreferrer"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -296,7 +296,7 @@ const BCommerceConnect = ({
 						<Typography
 							variant="h6"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: "600",
 								color: "#202124",
@@ -318,7 +318,7 @@ const BCommerceConnect = ({
 									variant="h6"
 									color={"#ff0000"}
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										fontWeight: "600",
 										marginTop: "12px",
@@ -330,7 +330,7 @@ const BCommerceConnect = ({
 								<Link
 									href="#"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										fontWeight: "600",
 										lineHeight: "20px",
@@ -372,7 +372,7 @@ const BCommerceConnect = ({
 							}
 							sx={{
 								backgroundColor: "#000",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: "600",
 								lineHeight: "17px",

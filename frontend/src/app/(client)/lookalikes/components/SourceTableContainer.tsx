@@ -67,7 +67,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 				<TableHead
 					sx={{
 						"& .MuiTableCell-root": {
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: 600,
 							fontSize: "12px",
 							lineHeight: "16.8px",
@@ -91,7 +91,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 				<TableBody
 					sx={{
 						"& .MuiTableCell-root": {
-							fontFamily: "Roboto",
+							fontFamily: "var(--font-roboto)",
 							fontWeight: 400,
 							fontSize: "12px",
 							lineHeight: "16.8px",
@@ -150,7 +150,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -160,7 +160,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",
@@ -179,7 +179,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -189,7 +189,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",
@@ -208,7 +208,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -218,7 +218,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",
@@ -237,7 +237,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -247,7 +247,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",
@@ -266,7 +266,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -276,7 +276,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",
@@ -295,7 +295,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -305,7 +305,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",
@@ -324,7 +324,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -334,7 +334,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",
@@ -352,7 +352,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									color: "#202124",
@@ -362,7 +362,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "#5F6368",

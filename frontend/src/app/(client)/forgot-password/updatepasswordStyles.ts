@@ -84,7 +84,7 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
 		top: "-3px",
 		"&.Mui-focused": {
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",
@@ -112,7 +112,7 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
 	resetPassword: {
 		mt: 2,
 		margin: "3em 0em 0em",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 	},
 	text: {
@@ -147,7 +147,7 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	passwordValidationText: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "#707071",
@@ -155,7 +155,7 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	passwordValidationTextSuccess: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "#202124",

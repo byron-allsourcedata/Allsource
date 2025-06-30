@@ -149,7 +149,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 								right: 0,
 								height: "13.48px",
 								width: "28.31px",
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontSize: "7.74px",
 								fontWeight: "600",
 								lineHeight: "7.9px",
@@ -206,7 +206,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 				{asset.type == "video" ? (
 					<Typography
 						sx={{
-							fontFamily: "Roboto",
+							fontFamily: "var(--font-roboto)",
 							color: "#808080",
 							fontSize: "10px",
 							fontWeight: "400",
@@ -225,7 +225,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 					>
 						<Typography
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								color: "#808080",
 								fontSize: "10px",
 								fontWeight: "400",
@@ -237,7 +237,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 						</Typography>
 						<Typography
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								color: "#5F6368",
 								fontSize: "10px",
 								fontWeight: "400",

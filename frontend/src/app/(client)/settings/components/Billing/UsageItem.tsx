@@ -128,7 +128,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 							alignItems: "center",
 							color: "#3898FC",
 							fontSize: 14,
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							ml: 1,
 							fontWeight: 500,
 						}}

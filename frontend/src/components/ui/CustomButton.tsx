@@ -19,7 +19,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 }) => {
 	const textStyles: SxProps<Theme> = {
 		textTransform: "none",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: 600,
 		fontSize: "14px",
 		lineHeight: "140%",

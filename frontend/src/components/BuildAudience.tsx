@@ -159,7 +159,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 					sx={{
 						textAlign: "center",
 						color: "#4A4A4A",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: "600",
 						fontSize: "22px",
 						lineHeight: "25.2px",
@@ -192,7 +192,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 						sx={{
 							flexGrow: 1,
 							color: "rgba(74, 74, 74, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "25.2px",
@@ -262,7 +262,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 						sx={{
 							flexGrow: 1,
 							color: "rgba(74, 74, 74, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "25.2px",
@@ -332,7 +332,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 						sx={{
 							flexGrow: 1,
 							color: "rgba(74, 74, 74, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "25.2px",
@@ -402,7 +402,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 						sx={{
 							flexGrow: 1,
 							color: "rgba(74, 74, 74, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "25.2px",
@@ -472,7 +472,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 						sx={{
 							flexGrow: 1,
 							color: "rgba(74, 74, 74, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "25.2px",
@@ -542,7 +542,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 						sx={{
 							flexGrow: 1,
 							color: "rgba(74, 74, 74, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "25.2px",
@@ -611,7 +611,7 @@ const BuildAudience: React.FC<BuildAudienceProps> = ({
 						sx={{
 							flexGrow: 1,
 							color: "rgba(74, 74, 74, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "25.2px",

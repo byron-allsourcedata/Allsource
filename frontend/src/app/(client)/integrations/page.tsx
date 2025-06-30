@@ -247,7 +247,7 @@ const IntegrationBox = ({
 							zIndex: 99,
 							padding: "11px 10px",
 							fontSize: "12px !important",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 						},
 					},
 				}}
@@ -432,7 +432,7 @@ const IntegrationBox = ({
 							justifyContent: "flex-start",
 							width: "100%",
 							textTransform: "none",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							color: "rgba(32, 33, 36, 1)",
 							fontWeight: 600,
@@ -450,7 +450,7 @@ const IntegrationBox = ({
 							justifyContent: "flex-start",
 							width: "100%",
 							textTransform: "none",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							color: "rgba(32, 33, 36, 1)",
 							fontWeight: 600,
@@ -634,7 +634,7 @@ const DeleteIntegrationPopup = ({
 					<Button
 						sx={{
 							margin: "0 16px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							background: "rgba(56, 152, 252, 1)",
 							"&:hover": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
@@ -1302,7 +1302,7 @@ const PixelManagment = () => {
 							<Typography
 								className="first-sub-title"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									lineHeight: "normal",
 									fontWeight: 600,
@@ -1622,7 +1622,7 @@ const Integrations = () => {
 										<Typography
 											className="first-sub-title"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												lineHeight: "normal",
 												fontWeight: 600,

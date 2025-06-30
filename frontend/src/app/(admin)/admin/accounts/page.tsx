@@ -510,7 +510,7 @@ const Accounts: React.FC = () => {
 											sx={{
 												fontWeight: "bold",
 												fontSize: "12px",
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												color: "#808080",
 												cursor: "pointer",
 												zIndex: 1000,
@@ -524,7 +524,7 @@ const Accounts: React.FC = () => {
 												sx={{
 													fontWeight: "bold",
 													fontSize: "12px",
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													color: "#808080",
 												}}
 											>
@@ -536,7 +536,7 @@ const Accounts: React.FC = () => {
 												sx={{
 													fontWeight: "bold",
 													fontSize: "12px",
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													cursor: rewardsPageMonthFilter ? "pointer" : "",
 													color: rewardsPageMonthFilter
 														? "rgba(128, 128, 128, 1)"
@@ -560,7 +560,7 @@ const Accounts: React.FC = () => {
 													sx={{
 														fontWeight: "bold",
 														fontSize: "12px",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														color: "rgba(32, 33, 36, 1)",
 													}}
 												>
@@ -591,7 +591,7 @@ const Accounts: React.FC = () => {
 														color: "#202124",
 														fontWeight: "bold",
 														fontSize: "16px",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 													}}
 												>
 													Reward History
@@ -607,7 +607,7 @@ const Accounts: React.FC = () => {
 														backgroundColor: "#fff",
 														borderRadius: "4px",
 														height: "48px",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														minWidth: "112px",
 														fontWeight: 400,
@@ -639,7 +639,7 @@ const Accounts: React.FC = () => {
 															key={index}
 															value={option.toString()}
 															sx={{
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontWeight: 500,
 																fontSize: "14px",
 																lineHeight: "19.6px",
@@ -669,7 +669,7 @@ const Accounts: React.FC = () => {
 												color: "#202124",
 												fontWeight: "bold",
 												fontSize: "16px",
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 											}}
 										>
 											{rewardsPageMonthFilter} Reward Details
@@ -729,7 +729,7 @@ const Accounts: React.FC = () => {
 															color: "rgba(32, 33, 36, 1)",
 															fontWeight: "bold",
 															fontSize: "16px",
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 														}}
 													>
 														Accounts
@@ -821,7 +821,7 @@ const Accounts: React.FC = () => {
 															<Typography
 																variant="body1"
 																sx={{
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	fontSize: "14px",
 																	fontWeight: "400",
 																	color: "rgba(32, 33, 36, 1)",
@@ -1025,7 +1025,7 @@ const Accounts: React.FC = () => {
 																						).background,
 																						padding: "3px 8px",
 																						borderRadius: "2px",
-																						fontFamily: "Roboto",
+																						fontFamily: "var(--font-roboto)",
 																						fontSize: "12px",
 																						fontWeight: "400",
 																						lineHeight: "16px",
@@ -1053,7 +1053,8 @@ const Accounts: React.FC = () => {
 																							component="div"
 																							sx={{
 																								width: "100px",
-																								fontFamily: "Roboto",
+																								fontFamily:
+																									"var(--font-roboto)",
 																								fontSize: "10px",
 																								fontWeight: "400",
 																								lineHeight: "14px",
@@ -1121,7 +1122,7 @@ const Accounts: React.FC = () => {
 																						).background,
 																						padding: "3px 8px",
 																						borderRadius: "2px",
-																						fontFamily: "Roboto",
+																						fontFamily: "var(--font-roboto)",
 																						fontSize: "12px",
 																						fontWeight: "400",
 																						lineHeight: "16px",
@@ -1389,7 +1390,7 @@ const Accounts: React.FC = () => {
 																variant="h5"
 																sx={{
 																	mb: 3,
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "20px",
 																	color: "#4a4a4a",
 																	fontWeight: "600",
@@ -1409,7 +1410,7 @@ const Accounts: React.FC = () => {
 																color="textSecondary"
 																sx={{
 																	mt: 3,
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "14px",
 																	color: "#808080",
 																	fontWeight: "600",

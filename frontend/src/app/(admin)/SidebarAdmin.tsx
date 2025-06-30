@@ -19,7 +19,7 @@ const sidebarStyles = {
 	container: {
 		width: "100%",
 		flexShrink: 0,
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		fontWeight: "400",
 		backgroundColor: "rgba(255, 255, 255, 1)",
@@ -48,7 +48,7 @@ const sidebarStyles = {
 			marginBottom: "0px !important",
 		},
 		"& span.MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "0.875rem",
 			fontWeight: 400,
 			lineHeight: "normal",
@@ -77,7 +77,7 @@ const sidebarStyles = {
 			marginBottom: "0px !important",
 		},
 		"& span.MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "0.875rem",
 			fontWeight: 400,
 			lineHeight: "normal",

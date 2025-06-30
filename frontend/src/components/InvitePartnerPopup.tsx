@@ -245,7 +245,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 				>
 					<Typography
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "16px",
 							fontWeight: "600",
 							lineHeight: "21.82px",
@@ -275,7 +275,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 					>
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: "600",
 								lineHeight: "21.82px",
@@ -295,7 +295,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 							InputLabelProps={{
 								sx: {
 									color: "rgba(17, 17, 19, 0.6)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "15px",
 									padding: 0,
@@ -331,7 +331,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 							InputLabelProps={{
 								sx: {
 									color: "rgba(17, 17, 19, 0.6)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "15px",
 									padding: 0,
@@ -371,7 +371,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 							InputLabelProps={{
 								sx: {
 									color: "rgba(17, 17, 19, 0.6)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "15px",
 									padding: 0,
@@ -404,7 +404,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 							InputLabelProps={{
 								sx: {
 									color: "rgba(17, 17, 19, 0.6)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "15px",
 									top: "-1px",
@@ -474,7 +474,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 								textAlign: "center",
 								color: "rgba(56, 152, 252, 1)",
 								textTransform: "none",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: "600",
 								fontSize: "14px",
 								lineHeight: "19.6px",
@@ -508,7 +508,7 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 							sx={{
 								textAlign: "center",
 								color: "rgba(255, 255, 255, 1)",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								textTransform: "none",
 								fontWeight: "600",
 								fontSize: "14px",

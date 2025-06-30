@@ -33,7 +33,7 @@ const maintext = {
 };
 
 const subtext = {
-	fontFamily: "Nunito Sans",
+	fontFamily: "var(--font-nunito)",
 	fontSize: "14px",
 	fontWeight: "400",
 	lineHeight: "16.8px",
@@ -160,7 +160,7 @@ const Popup: React.FC<PopupProps> = ({
 								fontSize: "12px",
 								margin: 0,
 								fontWeight: 400,
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								textWrap: "nowrap",
 							}}
 						>
@@ -245,7 +245,7 @@ const Popup: React.FC<PopupProps> = ({
 					</Box>
 					<Typography
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "400",
 							lineHeight: "16.8px",
@@ -310,7 +310,7 @@ const Popup: React.FC<PopupProps> = ({
 								textTransform: "none",
 								background: "#fff",
 								color: "rgba(56, 152, 252, 1)",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								padding: "0.65em 2em",
 								mr: 1,
 								"@media (max-width: 600px)": {

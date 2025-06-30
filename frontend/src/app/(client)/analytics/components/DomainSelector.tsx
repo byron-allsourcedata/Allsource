@@ -336,7 +336,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 							textTransform: "none",
 							minHeight: "48px",
 							fontWeight: "400",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "13px",
 							"&:hover": {
 								backgroundColor: "rgba(56, 152, 252, 1)",

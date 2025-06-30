@@ -473,7 +473,7 @@ const Users: React.FC = () => {
 											key={index}
 											label={tab.label}
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 500,
 												fontSize: "14px",
 												lineHeight: "100%",

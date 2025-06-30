@@ -86,7 +86,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 				mb={2}
 				className="first-sub-title"
 				sx={{
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontWeight: "700",
 					lineHeight: "normal",
 					textAlign: "left",
@@ -197,7 +197,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 									gap: 0.5,
 									fontWeight: 300,
 									fontSize: "14px",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									color: "rgba(56, 152, 252, 1)",
 								}}
 							>
@@ -252,7 +252,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 						textTransform: "none",
 						background: "rgba(56, 152, 252, 1)",
 						color: "#fff",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: 400,
 						fontSize: "14px",
 						padding: "0.75em 1.5em",

@@ -145,7 +145,7 @@ const BingAdsIntegrationPopup = ({
 						sx={{
 							textAlign: "center",
 							color: "#202124",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "normal",
@@ -165,7 +165,7 @@ const BingAdsIntegrationPopup = ({
 							target="_blank"
 							rel="noopener noreferrer"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: "600",
 								lineHeight: "20px",
@@ -220,7 +220,7 @@ const BingAdsIntegrationPopup = ({
 										<Typography
 											variant="h6"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												fontWeight: "600",
 												color: "#202124",
@@ -245,7 +245,7 @@ const BingAdsIntegrationPopup = ({
 											}
 											sx={{
 												backgroundColor: "#040404;",
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "14px",
 												fontWeight: "600",
 												lineHeight: "17px",
@@ -266,7 +266,7 @@ const BingAdsIntegrationPopup = ({
 											<Typography
 												color="error"
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "14px",
 													fontWeight: "600",
 													lineHeight: "21.82px",

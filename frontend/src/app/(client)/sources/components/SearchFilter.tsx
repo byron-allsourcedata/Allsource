@@ -825,7 +825,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 										"& input": {
 											paddingLeft: 0,
 										},
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -836,7 +836,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								sx={{
 									padding: "1em 1em 0em 1em",
 									"& .MuiInputBase-input::placeholder": {
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -874,7 +874,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												<ListItemText
 													primaryTypographyProps={{
 														sx: {
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "12px",
 															fontWeight: 600,
 															lineHeight: "16.8px",
@@ -1274,14 +1274,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 													fullWidth: true,
 													sx: {
 														"& .MuiInputBase-input": {
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "14px",
 															fontWeight: 400,
 															lineHeight: "19.6px",
 															textAlign: "left",
 														},
 														"& .MuiInputLabel-root": {
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "14px",
 															fontWeight: 400,
 															lineHeight: "19.6px",
@@ -1310,14 +1310,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 													fullWidth: true,
 													sx: {
 														"& .MuiInputBase-input": {
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "14px",
 															fontWeight: 400,
 															lineHeight: "19.6px",
 															textAlign: "left",
 														},
 														"& .MuiInputLabel-root": {
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "14px",
 															fontWeight: 400,
 															lineHeight: "19.6px",

@@ -209,7 +209,7 @@ const Reseller: React.FC = () => {
 								sx={{
 									marginRight: "4em",
 									backgroundColor: "rgba(56, 152, 252, 1)",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									textTransform: "none",
 									fontWeight: "bold",
 									mt: 3,

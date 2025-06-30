@@ -752,14 +752,14 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 														}}
 														InputProps={{
 															style: {
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "14px",
 															},
 														}}
 														InputLabelProps={{
 															style: {
 																fontSize: "14px",
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 															},
 														}}
 													/>

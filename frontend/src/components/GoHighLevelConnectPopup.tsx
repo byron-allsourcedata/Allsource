@@ -9,7 +9,7 @@ import { CustomButton } from "./ui";
 
 const GoHighLevelStyles = {
 	tabHeading: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		color: "#707071",
 		fontWeight: "500",
@@ -29,7 +29,7 @@ const GoHighLevelStyles = {
 		},
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		lineHeight: "16px",
 		left: "2px",
@@ -43,7 +43,7 @@ const GoHighLevelStyles = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -154,7 +154,7 @@ const GoHighLevelConnectPopup = ({
 					sx={{
 						textAlign: "center",
 						color: "#202124",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: "600",
 						fontSize: "16px",
 						lineHeight: "normal",
@@ -174,7 +174,7 @@ const GoHighLevelConnectPopup = ({
 						target="_blank"
 						rel="noopener noreferrer"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -259,7 +259,7 @@ const GoHighLevelConnectPopup = ({
 									<Typography
 										variant="h6"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "16px",
 											fontWeight: "600",
 											color: "#202124",

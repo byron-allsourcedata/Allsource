@@ -15,7 +15,7 @@ export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	table_column: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		fontWeight: "600",
 		lineHeight: "19.6px",
@@ -67,7 +67,7 @@ export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	table_array: {
-		fontFamily: "Roboto",
+		fontFamily: "var(--font-roboto)",
 		fontSize: "12px",
 		fontWeight: "400",
 		lineHeight: "16.8px",
@@ -88,7 +88,7 @@ export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	table_array_status: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		border: "1px solid rgba(235, 235, 235, 1)",
 		fontWeight: "400",
@@ -99,7 +99,7 @@ export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
 		color: "rgba(20, 110, 246, 1)",
 	},
 	table_array_phone: {
-		fontFamily: "Roboto",
+		fontFamily: "var(--font-roboto)",
 		fontSize: "12px",
 		fontWeight: "400",
 		lineHeight: "16.8px",

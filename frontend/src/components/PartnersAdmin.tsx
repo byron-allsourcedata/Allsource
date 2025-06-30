@@ -535,7 +535,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 							sx={{
 								fontWeight: "bold",
 								fontSize: "12px",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								color: rewardsPage
 									? "rgba(128, 128, 128, 1)"
 									: "rgba(32, 33, 36, 1)",
@@ -552,7 +552,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 									sx={{
 										fontWeight: "bold",
 										fontSize: "12px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: "rgba(128, 128, 128, 1)",
 									}}
 								>
@@ -567,7 +567,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 									sx={{
 										fontWeight: "bold",
 										fontSize: "12px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: rewardsPageMonthFilter
 											? "rgba(128, 128, 128, 1)"
 											: "rgba(32, 33, 36, 1)",
@@ -593,7 +593,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 									sx={{
 										fontWeight: "bold",
 										fontSize: "12px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: "rgba(32, 33, 36, 1)",
 									}}
 								>
@@ -621,7 +621,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 											color: "#202124",
 											fontWeight: "bold",
 											fontSize: "16px",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 										}}
 									>
 										{rewardsPage ? "Reward History" : "Master Partners"}
@@ -637,7 +637,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 											backgroundColor: "#fff",
 											borderRadius: "4px",
 											height: "48px",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											minWidth: "112px",
 											fontWeight: 400,
@@ -667,7 +667,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 												key={index}
 												value={option.toString()}
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontWeight: 500,
 													fontSize: "14px",
 													lineHeight: "19.6px",
@@ -696,7 +696,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 										color: "#202124",
 										fontWeight: "bold",
 										fontSize: "16px",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 									}}
 								>
 									{rewardsPageMonthFilter} Reward Details
@@ -714,7 +714,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 						color: "#202124",
 						fontWeight: "bold",
 						fontSize: "16px",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 					}}
 				>
 					Partners
@@ -977,7 +977,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 										<Typography
 											variant="body1"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "14px",
 												fontWeight: "400",
 												color: "rgba(32, 33, 36, 1)",
@@ -1212,7 +1212,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	).background,
 																	padding: "3px 8px",
 																	borderRadius: "2px",
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	fontSize: "12px",
 																	fontWeight: "400",
 																	lineHeight: "16px",
@@ -1436,7 +1436,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 											variant="h5"
 											sx={{
 												mb: 3,
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "20px",
 												color: "#4a4a4a",
 												fontWeight: "600",
@@ -1456,7 +1456,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 											color="textSecondary"
 											sx={{
 												mt: 3,
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "14px",
 												color: "#808080",
 												fontWeight: "600",
