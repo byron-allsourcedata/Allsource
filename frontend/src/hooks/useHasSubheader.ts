@@ -8,7 +8,7 @@ export const useHasSubheader = (): boolean => {
 		"/leads",
 		"/company",
 		"/suppressions",
-		"/data-sync-pixel",
+		"/pixel-sync",
 	];
 
 	const excludedSubheaderPaths = ["/management/add-domain"];

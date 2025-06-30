@@ -43,6 +43,7 @@ import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsightsIcon from "@mui/icons-material/Insights";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import FastForward from "@mui/icons-material/FastForward";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
@@ -367,7 +368,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 		isActive("/suppressions") ||
 		isActive("/analytics") ||
 		isActive("/management") ||
-		isActive("/data-sync-pixel");
+		isActive("/pixel-sync");
 	const handleClick = () => {
 		setOpen(!open);
 	};
@@ -545,15 +546,15 @@ const Sidebar: React.FC<SidebarProps> = ({
 									{/* Data sync */}
 									<ListItem
 										button
-										onClick={() => handleNavigation("/data-sync-pixel")}
+										onClick={() => handleNavigation("/pixel-sync")}
 										sx={
-											isEquals("/data-sync-pixel")
+											isEquals("/pixel-sync")
 												? { ...sidebarStyles.activeItem, pl: 4 }
 												: { ...sidebarStyles.ListItem, pl: 4 }
 										}
 									>
 										<ListItemIcon sx={sidebarStyles.listItemIcon}>
-											<CategoryIcon />
+											<AccountTreeIcon />
 										</ListItemIcon>
 										<ListItemText primary="Pixel Sync" />
 									</ListItem>

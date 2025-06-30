@@ -704,9 +704,30 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 	) => {
 		setCheckedFiltersStatuses((prev) => {
 			const updatedStatuses = { ...prev };
+
 			options.forEach((option) => {
 				updatedStatuses[option] = isActive ?? !updatedStatuses[option];
 			});
+
+			Object.keys(statusMapping).forEach((target) => {
+				const areAllStatusesActive = statusMapping[target].every(
+					(status) => updatedStatuses[status],
+				);
+
+				setSelectedStatusTarget((prevTargets) => {
+					const formattedTarget =
+						target.charAt(0).toUpperCase() + target.slice(1);
+
+					if (areAllStatusesActive) {
+						return prevTargets.includes(formattedTarget)
+							? prevTargets
+							: [...prevTargets, formattedTarget];
+					} else {
+						return prevTargets.filter((item) => item !== formattedTarget);
+					}
+				});
+			});
+
 			return updatedStatuses;
 		});
 	};
