@@ -37,6 +37,7 @@ import DomainButtonSelect from "./NavigationDomainButton";
 import BusinessIcon from "@mui/icons-material/Business";
 import DnsIcon from "@mui/icons-material/Dns";
 import QuestionMarkOutlinedIcon from "@mui/icons-material/QuestionMarkOutlined";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import ContactsIcon from "@mui/icons-material/Contacts";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -401,7 +402,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 							isActive("/leads") ||
 							isActive("/company") ||
 							isActive("/supression") ||
-							isActive("/data-sync-pixel")
+							isActive("/pixel-sync")
 								? navigationmenuStyles.activeItem
 								: {}),
 							...navigationmenuStyles.mobileDrawerList,
@@ -501,9 +502,9 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 							</ListItem>
 							<ListItem
 								button
-								onClick={() => handleNavigation("/data-sync-pixel")}
+								onClick={() => handleNavigation("/pixel-sync")}
 								sx={{
-									...(isActive("/data-sync-pixel")
+									...(isActive("/pixel-sync")
 										? navigationmenuStyles.activeItem
 										: {}),
 									...navigationmenuStyles.mobileDrawerList,
@@ -511,7 +512,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 								}}
 							>
 								<ListItemIcon>
-									<CategoryIcon />
+									<AccountTreeIcon />
 								</ListItemIcon>
 								<ListItemText primary="Pixel Sync" />
 							</ListItem>

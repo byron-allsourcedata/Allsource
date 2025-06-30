@@ -84,7 +84,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 				<Button
 					variant="outlined"
 					color="primary"
-					onClick={() => router.push("/data-sync-pixel")}
+					onClick={() => router.push("/pixel-sync")}
 					sx={{
 						textTransform: "none",
 						borderRadius: "200px",

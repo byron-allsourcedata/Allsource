@@ -347,7 +347,7 @@ const Users: React.FC = () => {
 
 		if (
 			Object.keys(filters.statuses).length > 0 &&
-			!Object.values(filters.statuses).includes(false)
+			Object.values(filters.statuses).includes(true)
 		) {
 			newSelectedFilters.push({
 				label: "statuses",

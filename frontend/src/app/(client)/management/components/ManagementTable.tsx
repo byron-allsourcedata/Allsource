@@ -107,7 +107,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 
 	const handleDataSyncClick = (domain: string) => {
 		sessionStorage.setItem("current_domain", domain);
-		router.push("/data-sync-pixel");
+		router.push("/pixel-sync");
 	};
 
 	const handleAdditionalPixelClick = (domain: string, domain_id: number) => {
