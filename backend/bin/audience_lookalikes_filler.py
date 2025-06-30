@@ -26,6 +26,8 @@ from config.rmq_connection import (
 )
 from sqlalchemy.orm import Session
 
+from services.lookalike_filler import LookalikeFillerService
+
 
 load_dotenv()
 
