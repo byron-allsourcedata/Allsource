@@ -35,6 +35,7 @@ class PersonRow(BaseModel):
     date: Optional[str] = ""
     sale_amount: Optional[float] = 0.0
     user_id: Optional[int] = None
+    lead_id: Optional[int] = None
     status: Optional[str] = None
 
 
