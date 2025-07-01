@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session, Query
 from typing_extensions import deprecated
 
 from config.database import SqlConfigBase
+from config.util import get_int_env
 from db_dependencies import Db
 from models import AudienceLookalikes, EnrichmentUser
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
@@ -214,7 +215,9 @@ class SimilarAudiencesScoresService:
         df_normed, _ = self.normalization_service.normalize_dataframe(
             df, config
         )
-        result = model.predict(df_normed)
+        result = model.predict(
+            df_normed, thread_count=get_int_env("LOOKALIKE_THREAD_COUNT")
+        )
         return result.tolist()
 
     @deprecated("use v3")
