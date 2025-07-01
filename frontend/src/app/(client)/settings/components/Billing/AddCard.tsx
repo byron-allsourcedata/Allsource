@@ -68,7 +68,7 @@ const stripeStyles = {
 	style: {
 		base: {
 			color: "#707071",
-			fontFamily: "Nunito Sans, sans-serif",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "16px",
 			fontWeight: "400",
 			lineHeight: "24px",

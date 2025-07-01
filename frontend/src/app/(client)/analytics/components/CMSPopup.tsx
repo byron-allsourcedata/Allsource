@@ -379,7 +379,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 					<Typography
 						variant="h6"
 						sx={{
-							fontFamily: "'Nunito Sans', sans-serif",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "16px",
 							width: "100%",
 							fontWeight: 600,

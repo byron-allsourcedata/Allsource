@@ -6,7 +6,7 @@ import { Column } from "@/components/Column";
 import { Advantage } from "./Advantages";
 
 const AdvantageName = styled(Typography)`
-    font-family: Nunito Sans;
+    font-family: var(--font-nunito);
     font-weight: 600;
     white-space: nowrap;
     font-size: 14px;
@@ -17,7 +17,7 @@ const AdvantageName = styled(Typography)`
 `;
 
 const AdvantageValue = styled(Typography)`
-    font-family: Nunito Sans;
+    font-family: var(--font-nunito);
     font-weight: 500;
     font-size: 14px;
     line-height: 22px;

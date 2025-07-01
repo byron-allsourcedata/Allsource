@@ -1436,7 +1436,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     justifyContent: "space-between", alignItems: "center"
                   }}>
                     <Typography variant="h6" sx={{
-                      fontFamily: 'Nunito Sans',
+                      fontFamily: "var(--font-nunito)",
                       color: '#3B3B3B',
                       fontSize: '16px',
                       fontWeight: '600',
@@ -1444,7 +1444,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     }}>
                       {filter.name}
                     </Typography>
-                    <Typography variant="body2" sx={{ fontFamily: 'Nunito Sans' }}>
+                    <Typography variant="body2" sx={{ fontFamily: "var(--font-nunito)", }}>
                     </Typography>
                     <Box sx={{
                       display: "flex",
@@ -1493,7 +1493,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     variant="h5"
                     sx={{
                       mb: 3,
-                      fontFamily: 'Nunito Sans',
+                      fontFamily: "var(--font-nunito)",
                       fontSize: '20px',
                       color: '#4a4a4a',
                       fontWeight: '600',

@@ -15,7 +15,7 @@ type Props = {
 
 const T = Typography;
 const Title = styled(Typography)`
-    font-family: Nunito Sans;
+    font-family: var(--font-nunito);
     font-weight: 600;
     font-size: 14px;
     line-height: 22px;
