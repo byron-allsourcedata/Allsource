@@ -34,14 +34,9 @@ from utils import (
 )
 from utils import validate_and_format_phone, format_phone_number
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 
+logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 @injectable
