@@ -501,7 +501,6 @@ async def on_message_received(message, session):
             save_phones_to_user(
                 session, direct_number, five_x_five_user_id, "direct_number"
             )
-
         if personal_phone:
             personal_phone = [
                 num

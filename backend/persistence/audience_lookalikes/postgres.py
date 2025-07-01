@@ -1,15 +1,11 @@
 from datetime import datetime
 from decimal import Decimal
-from uuid import UUID
 
 import pytz
-from psycopg2.extras import NumericRange
-from pydantic.v1 import UUID4
-from sqlalchemy.dialects.postgresql import INT4RANGE
 
+from db_dependencies import Db
 from enums import LookalikeSize, BusinessType
 from models.enrichment import (
-    EnrichmentUser,
     EnrichmentPersonalProfiles,
     EnrichmentFinancialRecord,
     EnrichmentLifestyle,
@@ -22,24 +18,28 @@ from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
-from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
 import math
-from sqlalchemy import asc, desc, or_, func
+from sqlalchemy import asc, desc, or_, func, select, update
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
-from models.enrichment.enrichment_lookalike_scores import (
-    EnrichmentLookalikeScore,
-)
+
 from uuid import UUID
 
 from models.users import Users
-from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
+from .interface import (
+    AudienceLookalikesPersistenceInterface,
+)
+from resolver import injectable
+from schemas.similar_audiences import AudienceFeatureImportance
 
 
-class AudienceLookalikesPersistence:
-    def __init__(self, db: Session):
+@injectable
+class AudienceLookalikesPostgresPersistence(
+    AudienceLookalikesPersistenceInterface
+):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_source_info(self, uuid_of_source, user_id):
@@ -207,6 +207,36 @@ class AudienceLookalikesPersistence:
         ]
         return result_query
 
+    def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
+        return self.db.execute(
+            select(AudienceLookalikes).where(
+                AudienceLookalikes.id == lookalike_id
+            )
+        ).scalar()
+
+    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(train_model_size=dataset_size)
+        )
+
+    def get_max_size(self, lookalike_size: str) -> int:
+        if lookalike_size == "almost_identical":
+            size = 10000
+        elif lookalike_size == "extremely_similar":
+            size = 50000
+        elif lookalike_size == "very_similar":
+            size = 100000
+        elif lookalike_size == "quite_similar":
+            size = 200000
+        elif lookalike_size == "broad":
+            size = 500000
+        else:
+            size = 50000
+
+        return size
+
     def create_lookalike(
         self,
         uuid_of_source,
@@ -238,20 +268,6 @@ class AudienceLookalikesPersistence:
             for k, v in audience_feature_importance.items()
         }
 
-        def get_max_size(lookalike_size):
-            if lookalike_size == "almost_identical":
-                size = 10000
-            elif lookalike_size == "extremely_similar":
-                size = 50000
-            elif lookalike_size == "very_similar":
-                size = 100000
-            elif lookalike_size == "quite_similar":
-                size = 200000
-            elif lookalike_size == "broad":
-                size = 500000
-
-            return size
-
         sorted_dict = dict(
             sorted(
                 audience_feature_dict.items(),
@@ -267,7 +283,7 @@ class AudienceLookalikesPersistence:
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
             significant_fields=sorted_dict,
-            size=get_max_size(lookalike_size),
+            size=self.get_max_size(lookalike_size),
         )
         self.db.add(lookalike)
         self.db.commit()

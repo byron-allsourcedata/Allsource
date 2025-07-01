@@ -1,7 +1,9 @@
+import logging
 from typing import List, Tuple, Dict, Set
 from uuid import UUID
 import json
 
+from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from enums import BaseEnum, BusinessType
@@ -9,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
 from persistence.user_persistence import UserDict
+from resolver import injectable
 from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
 from schemas.similar_audiences import (
     NormalizationConfig,
@@ -95,6 +98,10 @@ PROFESSIONAL_PROFILE = {
 }
 
 
+logger = logging.getLogger(__name__)
+
+
+@injectable
 class AudienceLookalikesService:
     def __init__(
         self,
@@ -116,7 +123,7 @@ class AudienceLookalikesService:
         lookalike_size,
         lookalike_type,
         search_query,
-        include_json_fields,
+        include_json_fields: bool,
     ):
         result_query, total, max_page, source_count = (
             self.lookalikes_persistence_service.get_lookalikes(
@@ -162,6 +169,9 @@ class AudienceLookalikesService:
                 "source_count": source_count,
             },
         }
+
+    def get_lookalike(self, lookalike_id: UUID) -> AudienceLookalikes | None:
+        return self.lookalikes_persistence_service.get_lookalike(lookalike_id)
 
     def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(
@@ -376,12 +386,9 @@ class AudienceLookalikesService:
 
             return self.format_predictable_fields(audience_feature_dict)
 
-        except (
-            EqualTrainTargets,
-            EmptyTrainDataset,
-            LessThenTwoTrainDataset,
-            Exception,
-        ):
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            raise e
             return self._default_insights()
 
     def recieve_insights(
@@ -438,6 +445,11 @@ class AudienceLookalikesService:
             audience_feature_importance_b2c=b2c_insights,
             audience_feature_importance_b2b=b2b_insights,
             audience_feature_importance_other=other,
+        )
+
+    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        return self.lookalikes_persistence_service.update_dataset_size(
+            lookalike_id=lookalike_id, dataset_size=dataset_size
         )
 
     def get_processing_lookalike(self, id: str):

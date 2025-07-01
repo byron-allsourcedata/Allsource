@@ -5,6 +5,9 @@ from sqlalchemy.orm import relationship
 from models.base import Base
 
 
+ASID = UUID
+
+
 class EnrichmentUser(Base):
     __tablename__ = "enrichment_users"
 

@@ -68,7 +68,9 @@ class PersonalProfiles(BaseModel):
                     YES_NO_UNKNOWN_MAPS[key].get(k, k): v
                     for k, v in val.items()
                 }
-                filtered = {k: v for k, v in mapped.items() if k.lower() != "unknown"}
+                filtered = {
+                    k: v for k, v in mapped.items() if k.lower() != "unknown"
+                }
                 total = sum(filtered.values())
                 setattr(
                     self,
@@ -143,7 +145,8 @@ class FinancialProfiles(BaseModel):
     @staticmethod
     def _map_data(data: dict[str, str], map_dict: dict) -> dict:
         return {
-            data.get(k, k): v for k, v in map_dict.items()
+            data.get(k, k): v
+            for k, v in map_dict.items()
             if k.lower() != "unknown"
         }
 
@@ -167,7 +170,10 @@ class FinancialProfiles(BaseModel):
                 mapped = self._map_data(INCOME_RANGE, val)
                 setattr(self, key, self._to_percent(mapped))
 
-            elif key in ("number_of_credit_lines", "credit_range_of_new_credit"):
+            elif key in (
+                "number_of_credit_lines",
+                "credit_range_of_new_credit",
+            ):
                 if "unknown" in val:
                     val.pop("unknown")
 
@@ -268,7 +274,10 @@ class VoterProfiles(BaseModel):
             if not isinstance(val, dict):
                 continue
 
-            if key in ("congressional_district", "political_party") and "unknown" in val:
+            if (
+                key in ("congressional_district", "political_party")
+                and "unknown" in val
+            ):
                 val.pop("unknown")
 
             setattr(self, key, self._to_percent(val))

@@ -71,6 +71,7 @@ class UserSubscriptions(Base):
         ForeignKey("subscription_plans.id", ondelete="SET NULL"),
         nullable=True,
     )
+    lead_credits = Column(BigInteger, nullable=True, server_default=text("0"))
 
     __table_args__ = (
         Index(

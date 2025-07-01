@@ -1,5 +1,4 @@
 import logging
-import statistics
 import os
 import sys
 import asyncio
@@ -7,7 +6,7 @@ import functools
 import json
 import gzip
 
-from sqlalchemy import update, select, func, create_engine
+from sqlalchemy import update, select, create_engine
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -18,9 +17,7 @@ sys.path.append(parent_dir)
 from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
-from models.enrichment.enrichment_lookalike_scores import (
-    EnrichmentLookalikeScore,
-)
+
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from config.rmq_connection import (
     RabbitMQConnection,
@@ -67,7 +64,8 @@ async def aud_sources_matching(
         lookalike_persons_to_add = []
         for enrichment_user_id in enrichment_user_ids:
             matched_person = AudienceLookalikesPerson(
-                lookalike_id=lookalike_id, enrichment_user_id=enrichment_user_id
+                lookalike_id=lookalike_id,
+                enrichment_user_asid=enrichment_user_id,
             )
             lookalike_persons_to_add.append(matched_person)
 
@@ -115,6 +113,7 @@ async def aud_sources_matching(
             .where(AudienceLookalikes.id == lookalike_id)
             .values(insights=compressed_data)
         )
+
         db_session.commit()
 
         await send_sse(
