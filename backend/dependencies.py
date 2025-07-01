@@ -461,6 +461,7 @@ def check_user_authorization_without_pixel(
     if (
         auth_status != UserAuthorizationStatus.SUCCESS
         and auth_status != UserAuthorizationStatus.PAYMENT_FAILED
+        and auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
         and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
     ):
         raise HTTPException(

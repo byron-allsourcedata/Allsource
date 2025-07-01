@@ -497,12 +497,13 @@ class SettingsService:
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
 
-
     def calculate_money_contacts_overage(self, overage_leads_count: int) -> str:
-        money_contacts_overage = (Decimal(overage_leads_count) * self.COST_CONTACT_ON_BASIC_PLAN)
+        money_contacts_overage = (
+            Decimal(overage_leads_count) * self.COST_CONTACT_ON_BASIC_PLAN
+        )
         if money_contacts_overage == 0:
             return "0"
-        return str(money_contacts_overage.quantize(Decimal('0.01')))
+        return str(money_contacts_overage.quantize(Decimal("0.01")))
 
     def extract_subscription_details(
         self, user: User
