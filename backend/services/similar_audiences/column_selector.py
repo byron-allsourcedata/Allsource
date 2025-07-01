@@ -178,7 +178,7 @@ class AudienceColumnSelector:
             "automotive_buff": EnrichmentLifestyle.automotive_buff.label(
                 "automotive_buff"
             ),
-            "golf_enthusiasts": EnrichmentLifestyle.golf_enthusiasts.label(
+            "golf_enthusiast": EnrichmentLifestyle.golf_enthusiasts.label(
                 "golf_enthusiasts"
             ),
             "beauty_cosmetics": EnrichmentLifestyle.beauty_cosmetics.label(
