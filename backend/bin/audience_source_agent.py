@@ -108,6 +108,8 @@ async def send_sse(channel, user_id: int, data: dict):
         )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
+    except BaseException as e:
+        logging.error(f"BaseException: Error sending SSE: {e}")
 
 
 async def process_email_leads(
