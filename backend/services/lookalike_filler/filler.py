@@ -31,6 +31,7 @@ from services.similar_audiences.similar_audience_scores import (
     SimilarAudiencesScoresService,
     measure,
 )
+from config.util import get_int_env, getenv
 
 logger = logging.getLogger(__name__)
 
@@ -176,6 +177,8 @@ class LookalikeFillerService:
 
         top_scores: list[PersonScore] = []
 
+        BULK_SIZE = get_int_env("LOOKALIKE_BULK_SIZE")
+
         config = self.audiences_scores.prepare_config(lookalike_id)
         with rows_stream:
             fetch_start = time.perf_counter()
@@ -192,7 +195,7 @@ class LookalikeFillerService:
 
                 batch_buffer.extend(dict_batch)
 
-                if len(batch_buffer) < 10_000:
+                if len(batch_buffer) < BULK_SIZE:
                     continue
                 fetch_end = time.perf_counter()
                 logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
