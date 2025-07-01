@@ -171,7 +171,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 						<Typography
 							sx={{
 								fontSize: "16px",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: 700,
 								lineHeight: "22.4px",
 							}}
@@ -596,7 +596,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 									>
 										<Typography
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontWeight: 400,
 												fontSize: "12px",
 												lineHeight: "16.8px",

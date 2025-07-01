@@ -116,7 +116,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 		display: "flex",
 		marginTop: "10px",
 		justifyContent: "space-between",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 		fontWeight: "600",
 		lineHeight: "21.82px",
@@ -181,7 +181,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 		top: "-3px",
 		"&.Mui-focused": {
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",

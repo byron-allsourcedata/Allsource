@@ -74,7 +74,7 @@ const ExpandableCheckboxFilter: React.FC<ExpandableCheckboxFilterProps> = ({
 			>
 				<Typography
 					sx={{
-						fontFamily: "Roboto",
+						fontFamily: "var(--font-roboto)",
 						fontSize: "14px",
 						fontWeight: 400,
 						lineHeight: "19.6px",

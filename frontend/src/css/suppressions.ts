@@ -81,7 +81,7 @@ export const suppressionsStyles: { [key: string]: SxProps<Theme> } = {
 		px: "36px",
 		fontWeight: "400",
 		fontSize: "12px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: "4a4a4a",
 		lineHeight: "16px",
 	},

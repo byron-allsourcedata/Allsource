@@ -212,10 +212,10 @@ const IntegrationBox = ({
 
 	const toTitleCase = (str: string) => {
 		return str
-		  .split('_')
-		  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-		  .join(' ');
-	  }
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(" ");
+	};
 
 	return (
 		<Box
@@ -247,17 +247,17 @@ const IntegrationBox = ({
 							zIndex: 99,
 							padding: "11px 10px",
 							fontSize: "12px !important",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 						},
 					},
 				}}
 				title={
 					is_integrated
-						? `A ${
-								toTitleCase(service_name)
-							} account is already integrated. To connect a different account, please remove the existing ${
-								toTitleCase(service_name)
-							} integration first.`
+						? `A ${toTitleCase(
+								service_name,
+							)} account is already integrated. To connect a different account, please remove the existing ${toTitleCase(
+								service_name,
+							)} integration first.`
 						: ""
 				}
 			>
@@ -322,7 +322,7 @@ const IntegrationBox = ({
 								{!is_failed ? (
 									<Typography
 										fontSize={"12px"}
-										fontFamily={"Nunito Sans"}
+										fontFamily="var(--font-nunito)"
 										color={"#2B5B00"}
 										fontWeight={600}
 									>
@@ -331,7 +331,7 @@ const IntegrationBox = ({
 								) : (
 									<Typography
 										fontSize={"12px"}
-										fontFamily={"Nunito Sans"}
+										fontFamily="var(--font-nunito)"
 										color={"#4E0110"}
 										fontWeight={600}
 									>
@@ -404,7 +404,7 @@ const IntegrationBox = ({
 				fontSize={"14px"}
 				fontWeight={500}
 				textAlign={"center"}
-				fontFamily={"Nunito Sans"}
+				fontFamily="var(--font-nunito)"
 			>
 				{formatServiceName(service_name)}
 			</Typography>
@@ -432,7 +432,7 @@ const IntegrationBox = ({
 							justifyContent: "flex-start",
 							width: "100%",
 							textTransform: "none",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							color: "rgba(32, 33, 36, 1)",
 							fontWeight: 600,
@@ -450,7 +450,7 @@ const IntegrationBox = ({
 							justifyContent: "flex-start",
 							width: "100%",
 							textTransform: "none",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							color: "rgba(32, 33, 36, 1)",
 							fontWeight: 600,
@@ -581,7 +581,7 @@ const DeleteIntegrationPopup = ({
 					<Typography
 						variant="h6"
 						textAlign="center"
-						fontFamily="Nunito Sans"
+						fontFamily="var(--font-nunito)"
 						fontWeight={500}
 						fontSize="14px"
 						sx={{
@@ -634,7 +634,7 @@ const DeleteIntegrationPopup = ({
 					<Button
 						sx={{
 							margin: "0 16px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							background: "rgba(56, 152, 252, 1)",
 							"&:hover": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
@@ -1302,7 +1302,7 @@ const PixelManagment = () => {
 							<Typography
 								className="first-sub-title"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									lineHeight: "normal",
 									fontWeight: 600,
@@ -1622,7 +1622,7 @@ const Integrations = () => {
 										<Typography
 											className="first-sub-title"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												lineHeight: "normal",
 												fontWeight: 600,

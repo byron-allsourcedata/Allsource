@@ -618,7 +618,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 							alignItems: "end",
 							fontWeight: "700",
 							fontSize: "27px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							lineHeight: "30.01px",
 							color: "rgba(32, 33, 36, 1)",
 							gap: 1,
@@ -632,7 +632,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 						<Typography
 							component="span"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								pb: 0.5,
 								fontWeight: 500,
@@ -652,7 +652,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 							fontWeight: "700",
 							alignItems: "end",
 							fontSize: "27px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							lineHeight: "36.83px",
 							color: "rgba(0, 0, 0, 1)",
 							gap: 1,
@@ -666,7 +666,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 						<Typography
 							component="span"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								color: "rgba(32, 33, 36, 1)",
 								fontSize: "14px",
 								pb: 0.5,
@@ -739,7 +739,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 										flexDirection: "row",
 										alignItems: "center",
 										fontWeight: "600 !important",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										lineHeight: "19.1px !important",
 										textWrap: "nowrap",
@@ -756,7 +756,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									<Typography
 										component="span"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											color: "rgba(74, 74, 74, 1)",
 											fontSize: "22px",
 											fontWeight: 600,
@@ -904,7 +904,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 												<Typography
 													className="paragraph"
 													sx={{
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														textTransform: "none",
 														textAlign: "left",
@@ -976,7 +976,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 											borderColor: "rgba(228, 228, 228, 1)",
 											padding: "8px",
 											pr: 2,
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											color: "rgba(74, 74, 74, 1)",
 											fontWeight: 600,
 											fontSize: "14px",
@@ -985,7 +985,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 										<MenuItem value="All revenue type">
 											<Typography
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontWeight: 600,
 													fontSize: "14px",
 													color:
@@ -1026,7 +1026,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 													/>
 													<Typography
 														sx={{
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontWeight: 600,
 															fontSize: "14px",
 															color: selectedGraphs.includes(option.id)
@@ -1232,7 +1232,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 										fontSize: "22px",
 										justifyContent: "flex-end",
 										mt: 1,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										lineHeight: "30.01px",
 										color: "rgba(32, 33, 36, 1)",
 										"@media (max-width: 900px)": {
@@ -1249,7 +1249,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									<Typography
 										component="span"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											pb: 0.5,
 											fontWeight: 500,
@@ -1290,7 +1290,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									fontWeight: "600",
 									fontSize: "12px",
 									justifyContent: "flex-end",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									lineHeight: "16.08px",
 									color: "rgba(74, 74, 74, 1)",
 								}}
@@ -1299,7 +1299,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								<Typography
 									component="span"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 700,
 										lineHeight: "21.82px",
@@ -1335,7 +1335,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									fontWeight: "600",
 									fontSize: "12px",
 									justifyContent: "flex-end",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									lineHeight: "16.08px",
 									color: "rgba(74, 74, 74, 1)",
 									"@media (max-width: 900px)": { alignItems: "start" },
@@ -1345,7 +1345,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								<Typography
 									component="span"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 700,
 										lineHeight: "21.82px",
@@ -1502,7 +1502,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 										fontSize: "22px",
 										justifyContent: "flex-end",
 										mt: 1,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										lineHeight: "30.01px",
 										color: "rgba(32, 33, 36, 1)",
 										"@media (max-width: 900px)": {
@@ -1519,7 +1519,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									<Typography
 										component="span"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											pb: 0.5,
 											fontWeight: 500,
@@ -1559,7 +1559,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									fontWeight: "600",
 									fontSize: "12px",
 									justifyContent: "flex-end",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									lineHeight: "16.08px",
 									color: "rgba(74, 74, 74, 1)",
 								}}
@@ -1568,7 +1568,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								<Typography
 									component="span"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 700,
 										lineHeight: "21.82px",
@@ -1604,7 +1604,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									fontWeight: "600",
 									fontSize: "12px",
 									justifyContent: "flex-end",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									lineHeight: "16.08px",
 									color: "rgba(74, 74, 74, 1)",
 									"@media (max-width: 900px)": { alignItems: "start" },
@@ -1614,7 +1614,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								<Typography
 									component="span"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 700,
 										lineHeight: "21.82px",
@@ -1780,7 +1780,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 										fontSize: "22px",
 										justifyContent: "flex-end",
 										mt: 1,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										lineHeight: "30.01px",
 										color: "rgba(32, 33, 36, 1)",
 										"@media (max-width: 900px)": {
@@ -1797,7 +1797,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									<Typography
 										component="span"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											pb: 0.5,
 											fontWeight: 500,
@@ -1837,7 +1837,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									fontWeight: "600",
 									fontSize: "12px",
 									justifyContent: "flex-end",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									lineHeight: "16.08px",
 									color: "rgba(74, 74, 74, 1)",
 								}}
@@ -1846,7 +1846,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								<Typography
 									component="span"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 700,
 										lineHeight: "21.82px",
@@ -1882,7 +1882,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 									fontWeight: "600",
 									fontSize: "12px",
 									justifyContent: "flex-end",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									lineHeight: "16.08px",
 									color: "rgba(74, 74, 74, 1)",
 									"@media (max-width: 900px)": { alignItems: "start" },
@@ -1892,7 +1892,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								<Typography
 									component="span"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 700,
 										lineHeight: "21.82px",
@@ -2041,7 +2041,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								<Typography
 									component="span"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										pb: 0.5,
 										fontWeight: 500,

@@ -37,6 +37,7 @@ import DomainButtonSelect from "./NavigationDomainButton";
 import BusinessIcon from "@mui/icons-material/Business";
 import DnsIcon from "@mui/icons-material/Dns";
 import QuestionMarkOutlinedIcon from "@mui/icons-material/QuestionMarkOutlined";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import ContactsIcon from "@mui/icons-material/Contacts";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -94,7 +95,7 @@ const navigationmenuStyles = {
 			},
 		},
 		"& span.MuiListItemText-primary": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "0.875rem",
 			color: "#3b3b3b",
 			fontWeight: "500",
@@ -114,7 +115,7 @@ const navigationmenuStyles = {
 			},
 		},
 		"& span.MuiListItemText-primary": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "0.875rem",
 			color: "#3b3b3b",
 			fontWeight: "500",
@@ -309,7 +310,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 					<Typography
 						variant="h6"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 600,
 							lineHeight: "19.6px",
@@ -323,7 +324,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						variant="body2"
 						color="textSecondary"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 600,
 							lineHeight: "19.6px",
@@ -335,7 +336,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 				</Box>
 				<MenuItem
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: 500,
 						lineHeight: "19.6px",
@@ -346,7 +347,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 				</MenuItem>
 				<MenuItem
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: 500,
 						lineHeight: "19.6px",
@@ -401,7 +402,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 							isActive("/leads") ||
 							isActive("/company") ||
 							isActive("/supression") ||
-							isActive("/data-sync-pixel")
+							isActive("/pixel-sync")
 								? navigationmenuStyles.activeItem
 								: {}),
 							...navigationmenuStyles.mobileDrawerList,
@@ -501,9 +502,9 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 							</ListItem>
 							<ListItem
 								button
-								onClick={() => handleNavigation("/data-sync-pixel")}
+								onClick={() => handleNavigation("/pixel-sync")}
 								sx={{
-									...(isActive("/data-sync-pixel")
+									...(isActive("/pixel-sync")
 										? navigationmenuStyles.activeItem
 										: {}),
 									...navigationmenuStyles.mobileDrawerList,
@@ -511,7 +512,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 								}}
 							>
 								<ListItemIcon>
-									<CategoryIcon />
+									<AccountTreeIcon />
 								</ListItemIcon>
 								<ListItemText primary="Pixel Sync" />
 							</ListItem>

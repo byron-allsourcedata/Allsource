@@ -84,7 +84,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 				<Button
 					variant="outlined"
 					color="primary"
-					onClick={() => router.push("/data-sync-pixel")}
+					onClick={() => router.push("/pixel-sync")}
 					sx={{
 						textTransform: "none",
 						borderRadius: "200px",
@@ -121,7 +121,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 							variant="body2"
 							sx={{
 								color: "rgba(74, 74, 74, 1)",
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontWeight: "400",
 								fontSize: "14px",
 							}}

@@ -3,7 +3,7 @@ import { yellow, grey, red } from "@mui/material/colors";
 
 export const planStyles: { [key: string]: SxProps<Theme> } = {
 	pageContainer: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		display: "flex",
 		flexDirection: "column",
 		alignItems: "center",
@@ -53,7 +53,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 		padding: "24px 24px",
 		borderRadius: "0.5em",
 		boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "40px",
 		fontWeight: "700",
 		color: "rgba(74, 74, 74, 1)",
@@ -64,7 +64,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 		display: "flex",
 		alignItems: "center",
 		justifyContent: "start",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: red[500],
 		marginBottom: "2em",
 	},
@@ -80,7 +80,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 	price: {
 		fontWeight: "bold",
 		marginBottom: "2em",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "40px",
 		lineHeight: "54.56px",
 	},
@@ -150,7 +150,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 		margin: "0",
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
@@ -166,7 +166,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -192,7 +192,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	passwordValidationText: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "rgba(17, 17, 19, 0.60)",
@@ -200,7 +200,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	passwordValidationTextSuccess: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "#111113",

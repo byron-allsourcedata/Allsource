@@ -107,7 +107,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 
 	const handleDataSyncClick = (domain: string) => {
 		sessionStorage.setItem("current_domain", domain);
-		router.push("/data-sync-pixel");
+		router.push("/pixel-sync");
 	};
 
 	const handleAdditionalPixelClick = (domain: string, domain_id: number) => {
@@ -152,7 +152,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 					<TableHead
 						sx={{
 							"& .MuiTableCell-root": {
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: 600,
 								fontSize: ".75rem",
 								lineHeight: "1.05rem",
@@ -308,7 +308,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												sx={{
 													cursor: "pointer",
 													color: "rgba(56, 152, 252, 1)",
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "14px",
 													fontWeight: 400,
 													lineHeight: "140%",
@@ -329,7 +329,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 									<TableCell>
 										<Typography
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontWeight: 400,
 												fontSize: "14px",
 												lineHeight: "140%",
@@ -355,7 +355,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 														minWidth: 0,
 														textTransform: "none",
 														fontSize: "14px",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontWeight: 400,
 														color: "rgba(56, 152, 252, 1)",
 														textDecoration: "underline",
@@ -389,7 +389,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												}
 												sx={{
 													color: "rgba(56, 152, 252, 1)",
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "14px",
 													fontWeight: 400,
 													lineHeight: "140%",
@@ -452,7 +452,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												<Box ml={0.75}>
 													<Typography
 														sx={{
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontWeight: "400",
 															fontSize: "14px",
 															lineHeight: "140%",
@@ -472,7 +472,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 											>
 												<Typography
 													sx={{
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontWeight: "400",
 														fontSize: "14px",
 														letterSpacing: "0%",
@@ -499,7 +499,7 @@ const ManagementTable: React.FC<TableContainerProps> = ({
 												sx={{
 													cursor: "pointer",
 													color: "rgba(56, 152, 252, 1)",
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "14px",
 													fontWeight: 400,
 													lineHeight: "140%",

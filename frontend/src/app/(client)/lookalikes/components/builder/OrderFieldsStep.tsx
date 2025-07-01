@@ -52,7 +52,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
 					<Typography
 						variant="h6"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: 500,
 							fontSize: "16px",
 							lineHeight: "22.5px",
@@ -87,7 +87,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
 							sx={{
 								minWidth: 0,
 								textTransform: "none",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: 700,
 								fontSize: "14px",
 								color: "rgba(112, 112, 113, 1)",
@@ -141,7 +141,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
 								sx={{
 									minWidth: 0,
 									textTransform: "none",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 500,
 									fontSize: "14px",
 									color: "rgba(56, 152, 252, 1)",
@@ -212,7 +212,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
 						<Typography
 							variant="h6"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: 500,
 								fontSize: "16px",
 								lineHeight: "22.5px",

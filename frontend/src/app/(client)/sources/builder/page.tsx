@@ -868,7 +868,7 @@ const SourcesImport: React.FC = () => {
 								<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "16px",
 											fontWeight: 500,
 										}}
@@ -877,7 +877,7 @@ const SourcesImport: React.FC = () => {
 									</Typography>
 									<Typography
 										sx={{
-											fontFamily: "Roboto",
+											fontFamily: "var(--font-roboto)",
 											fontSize: "12px",
 											color: "rgba(95, 99, 104, 1)",
 										}}
@@ -919,7 +919,7 @@ const SourcesImport: React.FC = () => {
 												width: "316px",
 												borderRadius: "4px",
 												fontSize: "14px",
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												color:
 													sourceType === ""
 														? "rgba(112, 112, 113, 1)"
@@ -1042,7 +1042,7 @@ const SourcesImport: React.FC = () => {
 											>
 												<Typography
 													sx={{
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "16px",
 														fontWeight: 500,
 													}}
@@ -1051,7 +1051,7 @@ const SourcesImport: React.FC = () => {
 												</Typography>
 												<Typography
 													sx={{
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														color: "rgba(95, 99, 104, 1)",
 													}}
@@ -1105,7 +1105,7 @@ const SourcesImport: React.FC = () => {
 												<Box sx={{ flexGrow: 1 }}>
 													<Typography
 														sx={{
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "16px",
 															fontWeight: "600",
 															color: "rgba(56, 152, 252, 1)",
@@ -1115,7 +1115,7 @@ const SourcesImport: React.FC = () => {
 													</Typography>
 													<Typography
 														sx={{
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "14px",
 															fontWeight: "500",
 															color: "rgba(32, 33, 36, 1)",
@@ -1158,7 +1158,7 @@ const SourcesImport: React.FC = () => {
 													<Box sx={{ flexGrow: 1 }}>
 														<Typography
 															sx={{
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "16px",
 																fontWeight: "600",
 																color: "rgba(32, 33, 36, 1)",
@@ -1172,7 +1172,7 @@ const SourcesImport: React.FC = () => {
 														</Typography>
 														<Typography
 															sx={{
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																fontWeight: "600",
 																color: "rgba(74, 74, 74, 1)",
@@ -1280,7 +1280,7 @@ const SourcesImport: React.FC = () => {
 									>
 										<Typography
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												fontWeight: 500,
 											}}
@@ -1289,7 +1289,7 @@ const SourcesImport: React.FC = () => {
 										</Typography>
 										<Typography
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												color: "rgba(95, 99, 104, 1)",
 											}}
@@ -1357,7 +1357,7 @@ const SourcesImport: React.FC = () => {
 																disabled={true}
 																InputLabelProps={{
 																	sx: {
-																		fontFamily: "Nunito Sans",
+																		fontFamily: "var(--font-nunito)",
 																		fontSize: "12px",
 																		lineHeight: "16px",
 																		color: "rgba(17, 17, 19, 0.60)",
@@ -1377,7 +1377,7 @@ const SourcesImport: React.FC = () => {
 																			height: "36px",
 																			"& .MuiOutlinedInput-input": {
 																				padding: "6.5px 8px",
-																				fontFamily: "Roboto",
+																				fontFamily: "var(--font-roboto)",
 																				color: "#202124",
 																				fontSize: "12px",
 																				fontWeight: "400",
@@ -1431,7 +1431,7 @@ const SourcesImport: React.FC = () => {
 																		sx: {
 																			height: "36px",
 																			padding: "6.5px 8px",
-																			fontFamily: "Roboto",
+																			fontFamily: "var(--font-roboto)",
 																			fontSize: "12px",
 																			fontWeight: "400",
 																			color: "#202124",
@@ -1511,7 +1511,7 @@ const SourcesImport: React.FC = () => {
 											>
 												<Typography
 													sx={{
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														lineHeight: "22.4px",
 														fontSize: "14px",
 														fontWeight: "600",
@@ -1580,7 +1580,7 @@ const SourcesImport: React.FC = () => {
 													sx={{
 														textAlign: "center",
 														color: "rgba(255, 255, 255, 1)",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														textTransform: "none",
 														fontWeight: "600",
 														fontSize: "14px",
@@ -1641,7 +1641,7 @@ const SourcesImport: React.FC = () => {
 											>
 												<Typography
 													sx={{
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "16px",
 														fontWeight: 500,
 													}}
@@ -1650,7 +1650,7 @@ const SourcesImport: React.FC = () => {
 												</Typography>
 												<Typography
 													sx={{
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														color: "rgba(95, 99, 104, 1)",
 													}}
@@ -1675,7 +1675,7 @@ const SourcesImport: React.FC = () => {
 														...sourcesStyles.text,
 														width: "316px",
 														borderRadius: "4px",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														color:
 															selectedDomain === ""
@@ -1725,7 +1725,7 @@ const SourcesImport: React.FC = () => {
 															>
 																<Typography
 																	sx={{
-																		fontFamily: "Nunito Sans",
+																		fontFamily: "var(--font-nunito)",
 																		lineHeight: "22.4px",
 																		textDecoration: "underline",
 																		fontSize: "14px",
@@ -1741,7 +1741,7 @@ const SourcesImport: React.FC = () => {
 													{domains.map((item: DomainsLeads, index) => (
 														<MenuItem
 															sx={{
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontWeight: 400,
 																fontSize: "14px",
 																borderBottom:
@@ -1788,7 +1788,7 @@ const SourcesImport: React.FC = () => {
 												>
 													<Typography
 														sx={{
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "14px",
 															color: "rgba(32, 33, 36, 1)",
 														}}
@@ -1845,7 +1845,7 @@ const SourcesImport: React.FC = () => {
 												>
 													<Typography
 														sx={{
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "16px",
 															fontWeight: 500,
 														}}
@@ -1854,7 +1854,7 @@ const SourcesImport: React.FC = () => {
 													</Typography>
 													<Typography
 														sx={{
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "12px",
 															color: "rgba(95, 99, 104, 1)",
 														}}
@@ -1876,7 +1876,7 @@ const SourcesImport: React.FC = () => {
 														variant="outlined"
 														onClick={handleToggleAll}
 														sx={{
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															border: "1px solid rgba(208, 213, 221, 1)",
 															borderRadius: "4px",
 															textTransform: "none",
@@ -1908,7 +1908,7 @@ const SourcesImport: React.FC = () => {
 																variant="outlined"
 																onClick={() => toggleEventType(ev.id)}
 																sx={{
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	border: "1px solid rgba(208, 213, 221, 1)",
 																	borderRadius: "4px",
 																	color: "rgba(32, 33, 36, 1)",
@@ -1966,7 +1966,7 @@ const SourcesImport: React.FC = () => {
 												>
 													<Typography
 														sx={{
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "14px",
 															color: "rgba(32, 33, 36, 1)",
 														}}
@@ -2023,7 +2023,7 @@ const SourcesImport: React.FC = () => {
 																sx={{
 																	textAlign: "center",
 																	color: "rgba(255, 255, 255, 1)",
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	textTransform: "none",
 																	fontWeight: "600",
 																	fontSize: "14px",
@@ -2085,7 +2085,7 @@ const SourcesImport: React.FC = () => {
 													>
 														<Typography
 															sx={{
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "16px",
 																fontWeight: 500,
 															}}
@@ -2094,7 +2094,7 @@ const SourcesImport: React.FC = () => {
 														</Typography>
 														<Typography
 															sx={{
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "12px",
 																color: "rgba(95, 99, 104, 1)",
 															}}
@@ -2211,7 +2211,7 @@ const SourcesImport: React.FC = () => {
 												>
 													<Typography
 														sx={{
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "16px",
 															fontWeight: 500,
 														}}
@@ -2224,7 +2224,7 @@ const SourcesImport: React.FC = () => {
 														InputLabelProps={{
 															sx: {
 																color: "rgba(17, 17, 19, 0.6)",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontWeight: 400,
 																fontSize: "15px",
 																padding: 0,
@@ -2323,7 +2323,7 @@ const SourcesImport: React.FC = () => {
 														textAlign: "center",
 														color: "rgba(56, 152, 252, 1)",
 														textTransform: "none",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontWeight: "600",
 														fontSize: "14px",
 														lineHeight: "19.6px",
@@ -2360,7 +2360,7 @@ const SourcesImport: React.FC = () => {
 													sx={{
 														textAlign: "center",
 														color: "rgba(255, 255, 255, 1)",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														textTransform: "none",
 														fontWeight: "600",
 														fontSize: "14px",

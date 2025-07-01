@@ -499,7 +499,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												primary="Meta"
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "14px",
 														color: "#4a4a4a",
 														fontWeight: "500",

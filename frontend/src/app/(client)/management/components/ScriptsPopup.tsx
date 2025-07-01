@@ -53,7 +53,7 @@ const maintext = {
 };
 
 const subtext = {
-	fontFamily: "Nunito Sans",
+	fontFamily: "var(--font-nunito)",
 	fontSize: "14px",
 	fontWeight: "400",
 	lineHeight: "16.8px",
@@ -333,7 +333,7 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 									color: "rgba(95, 99, 104, 1)",
 									fontSize: "12px",
 									fontWeight: 400,
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									whiteSpace: "pre-wrap",
 								}}
 							>
@@ -467,7 +467,7 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 										textTransform: "none",
 										background: "#fff",
 										color: "rgba(56, 152, 252, 1)",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										padding: "0.65em 2em",
 										mr: 1,
 										"@media (max-width: 600px)": {

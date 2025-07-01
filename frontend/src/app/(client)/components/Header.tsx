@@ -212,7 +212,7 @@ const Header: React.FC<HeaderProps> = ({
 								onClick={handleReturnToMain}
 								variant="contained"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 600,
 									textTransform: "none",
@@ -397,7 +397,7 @@ const Header: React.FC<HeaderProps> = ({
 								<Typography
 									variant="h6"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										fontWeight: 600,
 										lineHeight: "19.6px",
@@ -411,7 +411,7 @@ const Header: React.FC<HeaderProps> = ({
 									variant="body2"
 									color="textSecondary"
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										fontWeight: 600,
 										lineHeight: "19.6px",
@@ -423,7 +423,7 @@ const Header: React.FC<HeaderProps> = ({
 							</Box>
 							<MenuItem
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 500,
 									lineHeight: "19.6px",
@@ -434,7 +434,7 @@ const Header: React.FC<HeaderProps> = ({
 							</MenuItem>
 							<MenuItem
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 500,
 									lineHeight: "19.6px",

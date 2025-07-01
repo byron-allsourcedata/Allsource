@@ -124,7 +124,7 @@ const MapChart: FC<MapChartProps> = ({ title, regions, rank }) => {
 						borderBottomLeftRadius: "4px",
 						px: 1.5,
 						py: 0.5,
-						fontFamily: "Roboto",
+						fontFamily: "var(--font-roboto)",
 						fontSize: 12,
 						fontWeight: 500,
 						maxWidth: "100%",

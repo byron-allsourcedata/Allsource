@@ -190,7 +190,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 			},
 		},
 		inputLabel: {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
@@ -203,7 +203,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 				height: "48px",
 				"& .MuiOutlinedInput-input": {
 					padding: "12px 16px 13px 16px",
-					fontFamily: "Roboto",
+					fontFamily: "var(--font-roboto)",
 					color: "#202124",
 					fontSize: "14px",
 					lineHeight: "20px",
@@ -229,7 +229,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 						disabled={!selectedRadioValue}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -262,7 +262,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 						onClick={handleSaveSync}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -586,7 +586,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -623,7 +623,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -658,7 +658,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -695,7 +695,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -730,7 +730,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -859,7 +859,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 														}
 														InputLabelProps={{
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -879,7 +879,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
-																		fontFamily: "Roboto",
+																		fontFamily: "var(--font-roboto)",
 																		color: "#202124",
 																		fontSize: "12px",
 																		fontWeight: "400",
@@ -953,7 +953,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 														}
 														InputLabelProps={{
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -973,7 +973,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
-																		fontFamily: "Roboto",
+																		fontFamily: "var(--font-roboto)",
 																		color: "#202124",
 																		fontSize: "12px",
 																		fontWeight: "400",
@@ -1058,7 +1058,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																		variant="body2"
 																		sx={{
 																			color: "#5f6368",
-																			fontFamily: "Roboto",
+																			fontFamily: "var(--font-roboto)",
 																			fontSize: "12px",
 																			fontWeight: "400",
 																			lineHeight: "16px",
@@ -1082,7 +1082,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																				boxShadow:
 																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 																				color: "rgba(56, 152, 252, 1)",
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				fontWeight: "600",
 																				lineHeight: "20px",
@@ -1102,7 +1102,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																				boxShadow:
 																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 																				color: "#fff",
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				fontWeight: "600",
 																				lineHeight: "20px",
@@ -1144,7 +1144,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 														}
 														InputLabelProps={{
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -1164,7 +1164,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
-																		fontFamily: "Roboto",
+																		fontFamily: "var(--font-roboto)",
 																		color: "#202124",
 																		fontSize: "14px",
 																		fontWeight: "400",
@@ -1226,7 +1226,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 														placeholder="Enter value"
 														InputLabelProps={{
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -1245,7 +1245,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																height: "36px",
 																"& .MuiOutlinedInput-input": {
 																	padding: "6.5px 8px",
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	color: "#202124",
 																	fontSize: "14px",
 																	fontWeight: "400",
@@ -1309,7 +1309,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 												<Typography
 													sx={{
 														marginRight: "0.5em",
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														lineHeight: "22.4px",
 														fontSize: "16px",
 														textAlign: "left",

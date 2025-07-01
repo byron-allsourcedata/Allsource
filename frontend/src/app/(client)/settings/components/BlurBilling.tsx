@@ -60,7 +60,7 @@ const BlurBilling = ({}) => {
 							sx={{
 								fontWeight: 600,
 								fontSize: 20,
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								lineHeight: "140%",
 								letterSpacing: "0%",
 								color: "rgba(56, 152, 252, 1)",

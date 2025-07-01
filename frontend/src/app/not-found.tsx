@@ -32,7 +32,7 @@ export default function FourOhFour() {
 				onClick={handleNavigate}
 				sx={{
 					backgroundColor: "rgba(56, 152, 252, 1)",
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					textTransform: "none",
 					lineHeight: "22.4px",
 					fontWeight: "700",

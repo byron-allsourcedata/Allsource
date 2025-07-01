@@ -60,7 +60,7 @@ const WelcomePopup = () => {
 						fontWeight="600"
 						fontSize="26px"
 						textAlign="center"
-						fontFamily="Nunito Sans"
+						fontFamily="var(--font-nunito)"
 					>
 						Welcome Aboard
 					</Typography>

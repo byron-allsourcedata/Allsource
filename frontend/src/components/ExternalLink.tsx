@@ -23,7 +23,7 @@ export const ExternalLink: React.FC<ExternalLinkProps> = ({
 				display: "inline-flex",
 				alignItems: "center",
 				gap: "4px",
-				fontFamily: "Nunito Sans",
+				fontFamily: "var(--font-nunito)",
 				fontWeight: 600,
 				fontSize: "14px",
 			}}

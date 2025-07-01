@@ -36,7 +36,7 @@ const DemoFollowup: React.FC<DemoFollowupProps> = ({
 	sx,
 }) => {
 	const titleSx: SxProps<Theme> = {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: 600,
 		fontSize: "24px",
 		lineHeight: "32px",
@@ -44,7 +44,7 @@ const DemoFollowup: React.FC<DemoFollowupProps> = ({
 		color: "rgba(0,0,0,1)",
 	};
 	const introSx: SxProps<Theme> = {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: 600,
 		fontSize: "16px",
 		lineHeight: "20px",
@@ -55,7 +55,7 @@ const DemoFollowup: React.FC<DemoFollowupProps> = ({
 		textAlign: "center",
 	};
 	const headingSx: SxProps<Theme> = {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: 600,
 		fontSize: "16px",
 		lineHeight: "20px",
@@ -64,7 +64,7 @@ const DemoFollowup: React.FC<DemoFollowupProps> = ({
 		mb: 0.5,
 	};
 	const bodySx: SxProps<Theme> = {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: 400,
 		fontSize: "14px",
 		lineHeight: "20px",
@@ -73,7 +73,7 @@ const DemoFollowup: React.FC<DemoFollowupProps> = ({
 		mb: 1,
 	};
 	const linkSx: SxProps<Theme> = {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: 400,
 		fontSize: "14px",
 		lineHeight: "20px",

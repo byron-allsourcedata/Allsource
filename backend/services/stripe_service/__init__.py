@@ -70,9 +70,8 @@ class StripeService:
             collection_method="charge_automatically",
             billing_cycle_anchor_config={
                 "day_of_month": 31,
-                "hour": 23,
-                "minute": 59,
-                "second": 59,
+                "hour": 16,
+                "minute": 00,
             },
             off_session=True,
         )

@@ -271,7 +271,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 				>
 					<Typography
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "16px",
 							fontWeight: "600",
 							lineHeight: "21.82px",
@@ -298,7 +298,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 					>
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: "600",
 								lineHeight: "21.82px",
@@ -361,16 +361,20 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 									}}
 								/>
 							</IconButton>
-							<Typography sx={{ fontFamily: "Nunito Sans", fontSize: "14px" }}>
+							<Typography
+								sx={{ fontFamily: "var(--font-nunito)", fontSize: "14px" }}
+							>
 								Drag & drop
 							</Typography>
-							<Typography sx={{ fontFamily: "Nunito Sans", fontSize: "12px" }}>
+							<Typography
+								sx={{ fontFamily: "var(--font-nunito)", fontSize: "12px" }}
+							>
 								OR
 							</Typography>
 							<Button
 								component="label"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									textTransform: "none",
 									color: "rgba(56, 152, 252, 1)",
@@ -389,7 +393,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "12px",
 								lineHeight: "22px",
 								color: fileSizeError ? "rgba(224, 49, 48, 1)" : "#000",
@@ -430,7 +434,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 								<Box sx={{ flexGrow: 1 }}>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											fontWeight: "600",
 										}}
@@ -439,7 +443,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 									</Typography>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "12px",
 											color: "rgba(120, 120, 120, 1)",
 										}}
@@ -480,7 +484,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 								textAlign: "center",
 								color: "rgba(56, 152, 252, 1)",
 								textTransform: "none",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: "600",
 								fontSize: "14px",
 								lineHeight: "19.6px",
@@ -501,7 +505,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 							sx={{
 								textAlign: "center",
 								color: "rgba(255, 255, 255, 1)",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								textTransform: "none",
 								fontWeight: "600",
 								fontSize: "14px",

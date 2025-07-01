@@ -92,7 +92,7 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({
 					variant="body1"
 					sx={{
 						mb: 2,
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "16px",
 						color: "#202124",
 						fontWeight: "600",

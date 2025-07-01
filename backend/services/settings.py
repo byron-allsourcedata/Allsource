@@ -348,6 +348,65 @@ class SettingsService:
         if not template_id:
             return {"status": SettingStatus.FAILED}
 
+    def _generate_invitation_link(
+        self, user_id: str, invite_user: str
+    ) -> tuple[str, str]:
+        md5_token_info = {
+            "id": user_id,
+            "user_mail": invite_user,
+            "salt": os.getenv("SECRET_SALT"),
+        }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
+        return confirm_email_url, md5_hash
+
+    def _send_invitation_email(
+        self, to_email: str, link: str, company_name: str, template_id: str
+    ):
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=to_email,
+            template_id=template_id,
+            template_placeholder={
+                "full_name": to_email,
+                "link": link,
+                "company_name": company_name,
+            },
+        )
+
+    def invite_user(
+        self,
+        user: dict,
+        invite_user,
+        access_level=TeamAccessLevel.READ_ONLY,
+    ):
+        user_id = user.get("id")
+        if not self.subscription_service.check_invitation_limit(
+            user_id=user_id
+        ):
+            return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
+
+        if access_level not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+            TeamAccessLevel.STANDARD.value,
+            TeamAccessLevel.READ_ONLY.value,
+        }:
+            raise HTTPException(
+                status_code=500,
+                detail={"error": SettingStatus.INVALID_ACCESS_LEVEL.value},
+            )
+
+        if self.team_invitation_persistence.exists(
+            user_id=user_id, email=invite_user
+        ):
+            return {"status": SettingStatus.ALREADY_INVITED}
+
+        template_id = self._get_invitation_template_id()
+        if not template_id:
+            return {"status": SettingStatus.FAILED}
+
         confirm_link, md5_hash = self._generate_invitation_link(
             user_id, invite_user
         )
@@ -438,11 +497,13 @@ class SettingsService:
     def timestamp_to_date(self, timestamp):
         return datetime.fromtimestamp(timestamp)
 
-    def calculate_money_contacts_overage(self, user: User) -> Decimal:
-        return (
-            Decimal(user.get("overage_leads_count"))
-            * self.COST_CONTACT_ON_BASIC_PLAN
+    def calculate_money_contacts_overage(self, overage_leads_count: int) -> str:
+        money_contacts_overage = (
+            Decimal(overage_leads_count) * self.COST_CONTACT_ON_BASIC_PLAN
         )
+        if money_contacts_overage == 0:
+            return "0"
+        return str(money_contacts_overage.quantize(Decimal("0.01")))
 
     def extract_subscription_details(
         self, user: User
@@ -465,7 +526,7 @@ class SettingsService:
         leads_credits_limit = current_plan.leads_credits
         smart_audience_quota_limit = current_plan.smart_audience_quota
         money_contacts_overage = self.calculate_money_contacts_overage(
-            user=user
+            overage_leads_count=user.get("overage_leads_count")
         )
         total_key = (
             "monthly_total"
@@ -487,15 +548,7 @@ class SettingsService:
             )
         )
 
-        total_sum = (
-            current_plan.price
-            if user.get("source_platform") == "shopify" and user_subscription
-            else (
-                self.calculate_final_price(subscription, user_subscription)
-                if subscription and user_subscription
-                else f"${money_contacts_overage.quantize(Decimal('0.01'))}"
-            )
-        )
+        total_sum = f"${money_contacts_overage}"
 
         is_active = (
             subscription.get("status") in ["active", "trialing"]
@@ -603,6 +656,9 @@ class SettingsService:
         current_plan = self.plan_persistence.get_current_plan(
             user_id=user.get("id")
         )
+        money_contacts_overage = self.calculate_money_contacts_overage(
+            overage_leads_count=user.get("overage_leads_count")
+        )
 
         result["billing_details"] = self.extract_subscription_details(
             user=user
@@ -620,9 +676,7 @@ class SettingsService:
             "leads_credits": user.get("leads_credits"),
             "validation_funds": user.get("validation_funds"),
             "premium_source_credits": user.get("premium_source_credits"),
-            "money_because_of_overage": self.calculate_money_contacts_overage(
-                user=user
-            ),
+            "money_because_of_overage": money_contacts_overage,
             "smart_audience_quota": {
                 "available": user.get("smart_audience_quota") != 0
                 and (
@@ -894,7 +948,6 @@ class SettingsService:
             alias="basic",
             price=Price(value="$0,08", y="record"),
             is_recommended=True,
-            is_active=True,
             permanent_limits=[
                 Advantage(
                     good=True, name="Domains monitored:", value="Unlimited"

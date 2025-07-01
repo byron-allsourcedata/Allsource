@@ -185,7 +185,7 @@ const TrialStatus: React.FC = () => {
 							marginRight: "5px",
 							letterSpacing: "-0.02em",
 							pt: "1px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "13px",
 							lineHeight: "normal",
 							textAlign: "left",

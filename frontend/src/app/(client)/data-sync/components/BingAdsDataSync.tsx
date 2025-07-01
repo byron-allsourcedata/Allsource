@@ -329,7 +329,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 			},
 		},
 		inputLabel: {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
@@ -342,7 +342,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 				height: "48px",
 				"& .MuiOutlinedInput-input": {
 					padding: "12px 16px 13px 16px",
-					fontFamily: "Roboto",
+					fontFamily: "var(--font-roboto)",
 					color: "#202124",
 					fontSize: "14px",
 					lineHeight: "20px",
@@ -665,7 +665,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 			},
 		},
 		inputLabel: {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
@@ -678,7 +678,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 				height: "48px",
 				"& .MuiOutlinedInput-input": {
 					padding: "12px 16px 13px 16px",
-					fontFamily: "Roboto",
+					fontFamily: "var(--font-roboto)",
 					color: "#202124",
 					fontSize: "14px",
 					lineHeight: "20px",
@@ -704,7 +704,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 						disabled={!selectedRadioValue}
 						sx={{
 							backgroundColor: "#5052B2",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -738,7 +738,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 						onClick={handleSaveList}
 						sx={{
 							backgroundColor: "#5052B2",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -772,7 +772,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 						disabled={!inputListName || !selectedRadioValue.trim()}
 						sx={{
 							backgroundColor: "#5052B2",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -1147,7 +1147,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														componentsProps={{
 															typography: {
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "14px",
 																	fontWeight: "500",
 																	color: "#000",
@@ -1184,7 +1184,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														componentsProps={{
 															typography: {
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "14px",
 																	fontWeight: "500",
 																	color: "#000",
@@ -1221,7 +1221,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														componentsProps={{
 															typography: {
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "14px",
 																	fontWeight: "500",
 																	color: "#000",
@@ -1258,7 +1258,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														componentsProps={{
 															typography: {
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "14px",
 																	fontWeight: "500",
 																	color: "#000",
@@ -1295,7 +1295,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														componentsProps={{
 															typography: {
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "14px",
 																	fontWeight: "500",
 																	color: "#000",
@@ -1381,7 +1381,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 													InputLabelProps={{
 														shrink: isShrunk || inputCustomerName !== "",
 														sx: {
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "12px",
 															lineHeight: "16px",
 															color: "rgba(17, 17, 19, 0.60)",
@@ -1422,7 +1422,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 													sx={{
 														"& input": {
 															caretColor: "transparent",
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "14px",
 															color: "rgba(0, 0, 0, 0.89)",
 															fontWeight: "600",
@@ -1466,7 +1466,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																primary={account.customer_name}
 																primaryTypographyProps={{
 																	sx: {
-																		fontFamily: "Nunito Sans",
+																		fontFamily: "var(--font-nunito)",
 																		fontSize: "14px",
 																		color: "#202124",
 																		fontWeight: "500",
@@ -1496,7 +1496,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														InputLabelProps={{
 															shrink: inputListName ? false : isShrunk,
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -1537,7 +1537,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														sx={{
 															"& input": {
 																caretColor: "transparent",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																color: "rgba(0, 0, 0, 0.89)",
 																fontWeight: "600",
@@ -1581,7 +1581,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																primary={`+ Create new audience list`}
 																primaryTypographyProps={{
 																	sx: {
-																		fontFamily: "Nunito Sans",
+																		fontFamily: "var(--font-nunito)",
 																		fontSize: "14px",
 																		color: showCreateForm
 																			? "#5052B2"
@@ -1629,7 +1629,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																			helperText={listNameErrorMessage}
 																			InputLabelProps={{
 																				sx: {
-																					fontFamily: "Nunito Sans",
+																					fontFamily: "var(--font-nunito)",
 																					fontSize: "12px",
 																					lineHeight: "16px",
 																					fontWeight: "400",
@@ -1660,7 +1660,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																						height: "32px",
 																						"& .MuiOutlinedInput-input": {
 																							padding: "5px 16px 4px 16px",
-																							fontFamily: "Roboto",
+																							fontFamily: "var(--font-roboto)",
 																							color: "#202124",
 																							fontSize: "14px",
 																							fontWeight: "400",
@@ -1698,7 +1698,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																				background: "#fff",
 																				boxShadow:
 																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				fontWeight: "600",
 																				lineHeight: "20px",
@@ -1736,7 +1736,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																		primary={audience.audience_name}
 																		primaryTypographyProps={{
 																			sx: {
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				color: "#202124",
 																				fontWeight: "500",
@@ -1770,7 +1770,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																? false
 																: isShrunkCampaign,
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -1820,7 +1820,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														sx={{
 															"& input": {
 																caretColor: "transparent",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																color: "rgba(0, 0, 0, 0.89)",
 																fontWeight: "600",
@@ -1868,7 +1868,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																primary={`+ Create new campaign list`}
 																primaryTypographyProps={{
 																	sx: {
-																		fontFamily: "Nunito Sans",
+																		fontFamily: "var(--font-nunito)",
 																		fontSize: "14px",
 																		color: showCreateFormCampaign
 																			? "#5052B2"
@@ -1910,7 +1910,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																			fullWidth
 																			margin="normal"
 																			sx={{
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				"& .MuiInputBase-input": {
 																					fontSize: "14px",
 																					lineHeight: "16px",
@@ -2005,7 +2005,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																				background: "#fff",
 																				boxShadow:
 																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				fontWeight: "600",
 																				lineHeight: "20px",
@@ -2047,7 +2047,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																		primary={campaign.campaign_name}
 																		primaryTypographyProps={{
 																			sx: {
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				color: "#202124",
 																				fontWeight: "500",
@@ -2085,7 +2085,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 													sx={{
 														background: "#EDEDF7",
 														borderRadius: "3px",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														fontWeight: "400",
 														color: "#5f6368",
@@ -2182,7 +2182,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 															}
 															InputLabelProps={{
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "12px",
 																	lineHeight: "16px",
 																	color: "rgba(17, 17, 19, 0.60)",
@@ -2202,7 +2202,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																		height: "36px",
 																		"& .MuiOutlinedInput-input": {
 																			padding: "6.5px 8px",
-																			fontFamily: "Roboto",
+																			fontFamily: "var(--font-roboto)",
 																			color: "#202124",
 																			fontSize: "12px",
 																			fontWeight: "400",
@@ -2274,7 +2274,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 															}
 															InputLabelProps={{
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "12px",
 																	lineHeight: "16px",
 																	color: "rgba(17, 17, 19, 0.60)",
@@ -2294,7 +2294,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																		height: "36px",
 																		"& .MuiOutlinedInput-input": {
 																			padding: "6.5px 8px",
-																			fontFamily: "Roboto",
+																			fontFamily: "var(--font-roboto)",
 																			color: "#202124",
 																			fontSize: "12px",
 																			fontWeight: "400",

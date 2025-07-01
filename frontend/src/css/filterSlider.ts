@@ -4,7 +4,7 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
 	filter_name: {
 		flexGrow: 1,
 		color: "rgba(32, 33, 36, 1)",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: "500",
 		fontSize: "14px",
 		lineHeight: "19.6px",
@@ -31,7 +31,7 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
 		px: "8px",
 		fontWeight: "400",
 		fontSize: "12px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: "rgba(74, 74, 74, 1)",
 		lineHeight: "16px",
 	},
@@ -55,7 +55,7 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
 		borderRadius: "50%",
 	},
 	collapse_font: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: "rgba(74, 74, 74, 1)",
 		fontSize: "12px",
 		fontWeight: 600,
@@ -63,14 +63,14 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	datetime_picker: {
 		"& .MuiInputBase-input": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "14px",
 			fontWeight: 400,
 			lineHeight: "19.6px",
 			textAlign: "left",
 		},
 		"& .MuiInputLabel-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "14px",
 			fontWeight: 400,
 			lineHeight: "19.6px",

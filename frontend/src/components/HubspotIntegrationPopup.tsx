@@ -57,7 +57,7 @@ interface IntegrationsCredentials {
 
 const hubspotStyles = {
 	tabHeading: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		color: "#707071",
 		fontWeight: "500",
@@ -76,7 +76,7 @@ const hubspotStyles = {
 		},
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		lineHeight: "16px",
 		left: "2px",
@@ -90,7 +90,7 @@ const hubspotStyles = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -302,7 +302,7 @@ const HubspotIntegrationPopup = ({
 						disabled={!apiKey || disableButton || apiKeyError}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -335,7 +335,7 @@ const HubspotIntegrationPopup = ({
 						onClick={handleSave}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -427,7 +427,7 @@ const HubspotIntegrationPopup = ({
 						sx={{
 							textAlign: "center",
 							color: "#202124",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "normal",
@@ -447,7 +447,7 @@ const HubspotIntegrationPopup = ({
 							target="_blank"
 							rel="noopener noreferrer"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: "600",
 								lineHeight: "20px",
@@ -530,7 +530,7 @@ const HubspotIntegrationPopup = ({
 										<Typography
 											variant="h6"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												fontWeight: "600",
 												color: "#202124",
@@ -595,7 +595,7 @@ const HubspotIntegrationPopup = ({
 										<Typography
 											variant="subtitle1"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "16px",
 												fontWeight: "600",
 												color: "#202124",
@@ -616,7 +616,7 @@ const HubspotIntegrationPopup = ({
 													sx={{
 														display: "inline-block",
 														marginRight: "4px",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														fontWeight: "400",
 														color: "#808080",
@@ -629,7 +629,7 @@ const HubspotIntegrationPopup = ({
 													variant="body1"
 													sx={{
 														display: "inline",
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														fontWeight: "400",
 														color: "#808080",
@@ -670,7 +670,7 @@ const HubspotIntegrationPopup = ({
 											<Typography
 												variant="h6"
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "16px",
 													fontWeight: "600",
 													color: "#202124",
@@ -684,7 +684,7 @@ const HubspotIntegrationPopup = ({
 										<Typography
 											variant="subtitle1"
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontSize: "12px",
 												fontWeight: "400",
 												color: "#808080",
@@ -707,7 +707,7 @@ const HubspotIntegrationPopup = ({
 											<Typography
 												variant="subtitle1"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													fontWeight: "400",
 													color: "#808080",
@@ -781,7 +781,7 @@ const HubspotIntegrationPopup = ({
 														<Typography
 															variant="caption"
 															sx={{
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "12px",
 																color: "#fff",
 																fontWeight: "400",
@@ -799,7 +799,7 @@ const HubspotIntegrationPopup = ({
 														<Typography
 															variant="caption"
 															sx={{
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "12px",
 																color: "#fff",
 																fontWeight: "400",
@@ -834,7 +834,7 @@ const HubspotIntegrationPopup = ({
 											<Typography
 												variant="subtitle1"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													fontWeight: "400",
 													color: "#808080",

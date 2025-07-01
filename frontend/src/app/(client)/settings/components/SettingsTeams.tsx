@@ -717,7 +717,7 @@ export const SettingsTeams: React.FC = () => {
 															<Button
 																sx={{
 																	textTransform: "none",
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	fontWeight: 400,
 																	fontSize: "14px",
 																	color: "rgba(32, 33, 36, 1)",
@@ -736,7 +736,7 @@ export const SettingsTeams: React.FC = () => {
 															<Button
 																sx={{
 																	textTransform: "none",
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	fontWeight: 400,
 																	fontSize: "14px",
 																	color: "rgba(32, 33, 36, 1)",
@@ -985,7 +985,7 @@ export const SettingsTeams: React.FC = () => {
 														},
 														"& .MuiOutlinedInput-input": {
 															display: "inline-block",
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "12px",
 															lineHeight: "16px",
 															color: "#5f6368",
@@ -1022,7 +1022,7 @@ export const SettingsTeams: React.FC = () => {
 																minWidth: "100px !important",
 																border: "1px solid #e4e4e4",
 																"& .MuiMenuItem-root": {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "12px",
 																	lineHeight: "16px",
 																	color: "#202124",

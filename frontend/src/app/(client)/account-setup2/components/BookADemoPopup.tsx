@@ -81,7 +81,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
 				<DialogTitle>
 					<Typography
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "22px",
 							fontWeight: 600,
 							lineHeight: "30.01px",
@@ -109,7 +109,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
 								<ListItemText
 									primary={text}
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										lineHeight: "21.82px",
 									}}
@@ -126,7 +126,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
 							textWrap: "nowrap",
 							color: "#fff",
 							padding: "1em",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "14px",
 							textAlign: "center",
@@ -148,7 +148,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
 						sx={{
 							textTransform: "none",
 							color: "rgba(244, 87, 69, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 600,
 							lineHeight: "19.6px",

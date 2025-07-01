@@ -323,7 +323,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 										padding: "4px 6px",
 										gap: "4px",
 										".MuiChip-label": {
-											fontFamily: "Roboto",
+											fontFamily: "var(--font-roboto)",
 											fontSize: "12px",
 											color: "#5F6368",
 											fontWeight: "400",
@@ -394,7 +394,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 									padding: "5px 16px 4px 16px",
 								},
 								"& .MuiInputBase-input": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									color: "#202124",
 									fontSize: "14px",
 									fontWeight: "400",
@@ -449,7 +449,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 									display: "none", // Hide the default dropdown icon
 								},
 								"& .MuiOutlinedInput-input": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									color: "#202124",
 									fontSize: "14px",
 									lineHeight: "20px",

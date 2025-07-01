@@ -48,6 +48,6 @@ export const resellerStyle: { [ket: string]: SxProps<Theme> } = {
 		whiteSpace: "nowrap",
 		textAlign: "start",
 		padding: "1.5rem 0rem 0",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 	},
 };

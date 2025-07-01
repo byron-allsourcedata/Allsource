@@ -506,7 +506,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 					>
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: 500,
 							}}
@@ -515,7 +515,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 						</Typography>
 						<Typography
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontSize: "12px",
 								color: "rgba(95, 99, 104, 1)",
 							}}
@@ -637,7 +637,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 							>
 								<Typography
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 500,
 									}}
@@ -652,7 +652,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 							</Box>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "12px",
 									color: "rgba(95, 99, 104, 1)",
 								}}
@@ -721,7 +721,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 									>
 										<Typography
 											sx={{
-												fontFamily: "Roboto",
+												fontFamily: "var(--font-roboto)",
 												fontWeight: "400",
 												fontSize: "14px",
 												color: "#202124",
@@ -750,7 +750,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 														borderRadius: "4px",
 														"& .MuiChip-label": {
 															fontSize: "12px",
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontWeight: "500",
 														},
 													}}
@@ -1168,7 +1168,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: 500,
 							}}
@@ -1177,7 +1177,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 						</Typography>
 						<Typography
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontSize: "12px",
 								color: "rgba(95, 99, 104, 1)",
 							}}
@@ -1189,7 +1189,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: 500,
 							}}
@@ -1198,7 +1198,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 						</Typography>
 						<Typography
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontSize: "12px",
 								color: "rgba(95, 99, 104, 1)",
 							}}
@@ -1214,7 +1214,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									fontWeight: 500,
 									pt: 1,
@@ -1224,7 +1224,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 							</Typography>
 							<Typography
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "12px",
 									color: "rgba(95, 99, 104, 1)",
 									pb: 1,
@@ -1249,7 +1249,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 										onChange={handleInputNumberChange}
 										inputProps={{ max: AudienceSize }}
 										InputLabelProps={{
-											sx: { fontFamily: "Nunito Sans", pl: "2px" },
+											sx: { fontFamily: "var(--font-nunito)", pl: "2px" },
 										}}
 										sx={smartAudiences.inputStyle}
 									/>
@@ -1643,7 +1643,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 							sx={{
 								fontWeight: "bold",
 								fontSize: "19px",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								letterSpacing: "0%",
 								paddingRight: "20px",
 								color: "#000000",
@@ -1672,7 +1672,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 									},
 								},
 								"& .MuiInputBase-input": {
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 									lineHeight: "20px",

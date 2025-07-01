@@ -191,71 +191,68 @@ const Insights = () => {
 					},
 				}}
 			>
-				<IconButton
-					onClick={() => {
-						router.push("/insights");
-					}}
-					sx={{
-						":hover": {
-							backgroundColor: "transparent",
-						},
-						"@media (max-width: 600px)": {
-							display: "none",
-						},
-					}}
-				>
-					<ArrowBackIcon sx={{ color: "#1E88E5" }} />
-				</IconButton>
-				<Typography
-					variant="h4"
-					component="h1"
-					className="first-sub-title"
-					sx={{
-						...insightsStyle.title,
-						position: "fixed",
-						ml: 6,
-						mt: 1,
-						"@media (max-width: 600px)": {
-							display: "none",
-						},
-					}}
-				>
-					{type === "sources" ? "Source" : "Lookalike"} - {name}
-					<CustomTooltip
-						title="Insights"
-						linkText="Learn more"
-						linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
-					/>
-				</Typography>
-				<Box
-					sx={{
-						display: "none",
-						width: "100%",
-						justifyContent: "start",
-						alignItems: "center",
-						"@media (max-width: 600px)": {
-							display: "flex",
-						},
-					}}
-				>
+				<Box sx={{ display: "flex", width: "100%" }}>
 					<IconButton
 						onClick={() => {
 							router.push("/insights");
 						}}
 						sx={{
-							"@media (max-width: 600px)": {},
+							":hover": {
+								backgroundColor: "transparent",
+							},
+							"@media (max-width: 600px)": {
+								display: "none",
+							},
 						}}
 					>
-						<ArrowBackIcon sx={{ color: "rgba(56, 152, 252, 1)" }} />
+						<ArrowBackIcon sx={{ color: "#1E88E5" }} />
 					</IconButton>
 					<Typography
-						variant="h4"
-						component="h1"
 						className="first-sub-title"
-						sx={{ ...dashboardStyles.title, mb: 0 }}
+						sx={{
+							...insightsStyle.title,
+							position: "sticky",
+							mt: 1,
+							"@media (max-width: 600px)": {
+								display: "none",
+							},
+						}}
 					>
 						{type === "sources" ? "Source" : "Lookalike"} - {name}
+						<CustomTooltip
+							title="Insights"
+							linkText="Learn more"
+							linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
+						/>
 					</Typography>
+					<Box
+						sx={{
+							display: "none",
+							width: "100%",
+							justifyContent: "start",
+							alignItems: "center",
+							"@media (max-width: 600px)": {
+								display: "flex",
+							},
+						}}
+					>
+						<IconButton
+							onClick={() => {
+								router.push("/insights");
+							}}
+							sx={{
+								"@media (max-width: 600px)": {},
+							}}
+						>
+							<ArrowBackIcon sx={{ color: "rgba(56, 152, 252, 1)" }} />
+						</IconButton>
+						<Typography
+							className="first-sub-title"
+							sx={{ ...dashboardStyles.title, mb: 0 }}
+						>
+							{type === "sources" ? "Source" : "Lookalike"} - {name}
+						</Typography>
+					</Box>
 				</Box>
 
 				<Box
@@ -350,6 +347,7 @@ const Insights = () => {
 						/>
 					</Tabs>
 				</Box>
+				<Box sx={{ display: "flex", width: "80%" }}></Box>
 			</Box>
 			<Box
 				sx={{

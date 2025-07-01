@@ -55,7 +55,7 @@ const StepperTimeline: React.FC<StepperTimelineProps> = ({ steps, sx }) => {
 									alignItems: "center",
 									justifyContent: "center",
 									fontWeight: 600,
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 								}}
 							>
 								{idx + 1}
@@ -78,7 +78,7 @@ const StepperTimeline: React.FC<StepperTimelineProps> = ({ steps, sx }) => {
 							<Typography
 								variant="subtitle1"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "16px",
 								}}
@@ -88,7 +88,7 @@ const StepperTimeline: React.FC<StepperTimelineProps> = ({ steps, sx }) => {
 							<Typography
 								variant="body2"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									color: "rgba(50,54,62,0.6)",
 									mt: 0.5,
 								}}

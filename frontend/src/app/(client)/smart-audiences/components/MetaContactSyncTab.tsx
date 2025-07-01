@@ -69,7 +69,7 @@ const styles = {
 		},
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
@@ -82,7 +82,7 @@ const styles = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -453,7 +453,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 									? false
 									: true,
 							sx: {
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "15px",
 								lineHeight: "16px",
 								color: "rgba(17, 17, 19, 0.60)",
@@ -493,7 +493,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 						sx={{
 							"& input": {
 								caretColor: "transparent",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								color: "rgba(0, 0, 0, 0.89)",
 								fontWeight: "600",
@@ -534,7 +534,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 									primary={adAccount.name}
 									primaryTypographyProps={{
 										sx: {
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											color: "#202124",
 											fontWeight: "500",
@@ -559,7 +559,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 						InputLabelProps={{
 							shrink: selectedOptionMeta?.list_name ? false : isShrunkMeta,
 							sx: {
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "15px",
 								lineHeight: "16px",
 								color: "rgba(17, 17, 19, 0.60)",
@@ -596,7 +596,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 						sx={{
 							"& input": {
 								caretColor: "transparent",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								color: "rgba(0, 0, 0, 0.89)",
 								fontWeight: "600",
@@ -639,7 +639,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 								primary={`+ Create new list`}
 								primaryTypographyProps={{
 									sx: {
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										color: showCreateFormMeta
 											? "rgba(56, 152, 252, 1)"
@@ -693,7 +693,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 											helperText={listNameError ? "Audience Name is empty" : ""}
 											InputLabelProps={{
 												sx: {
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "12px",
 													lineHeight: "16px",
 													fontWeight: "400",
@@ -724,7 +724,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 														height: "32px",
 														"& .MuiOutlinedInput-input": {
 															padding: "5px 16px 4px 16px",
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															color: "#202124",
 															fontSize: "14px",
 															fontWeight: "400",
@@ -757,7 +757,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 												border: "1px solid rgba(56, 152, 252, 1)",
 												background: "#fff",
 												boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "14px",
 												fontWeight: "600",
 												lineHeight: "20px",
@@ -798,7 +798,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 										primary={klaviyo.list_name}
 										primaryTypographyProps={{
 											sx: {
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "14px",
 												color: "#202124",
 												fontWeight: "500",
@@ -831,7 +831,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 									? false
 									: isShrunkCampaignMeta,
 								sx: {
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "15px",
 									lineHeight: "16px",
 									color: "rgba(17, 17, 19, 0.60)",
@@ -876,7 +876,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 							sx={{
 								"& input": {
 									caretColor: "transparent",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									color: "rgba(0, 0, 0, 0.89)",
 									fontWeight: "600",
@@ -921,7 +921,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 									primary={`+ Create new Campaign list`}
 									primaryTypographyProps={{
 										sx: {
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											color: showCreateFormCampaignMeta
 												? "rgba(56, 152, 252, 1)"
@@ -958,7 +958,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 												fullWidth
 												margin="normal"
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													"& .MuiInputBase-input": {
 														fontSize: "14px",
 														lineHeight: "16px",
@@ -1081,7 +1081,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 													border: "1px solid rgba(56, 152, 252, 1)",
 													boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 													backgroundColor: "rgba(56, 152, 252, 1)",
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "14px",
 													fontWeight: "600",
 													lineHeight: "20px",
@@ -1126,7 +1126,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 											primary={klaviyo.list_name}
 											primaryTypographyProps={{
 												sx: {
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "14px",
 													color: "#202124",
 													fontWeight: "500",

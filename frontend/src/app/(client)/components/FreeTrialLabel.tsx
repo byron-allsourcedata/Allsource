@@ -111,7 +111,7 @@ const FreeTrialLabel: React.FC = () => {
 						<Box>
 							<Typography
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "12px",
 									color: "rgba(50, 50, 50, 0.6)",
@@ -168,7 +168,7 @@ const FreeTrialLabel: React.FC = () => {
 								>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "400",
 											fontSize: "12px",
 											color: "rgba(50, 54, 62, 0.5)",
@@ -178,7 +178,7 @@ const FreeTrialLabel: React.FC = () => {
 									</Typography>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "400",
 											fontSize: "12px",
 											color: "rgba(50, 54, 62, 1)",
@@ -200,7 +200,7 @@ const FreeTrialLabel: React.FC = () => {
 								>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "400",
 											fontSize: "12px",
 											color: "rgba(50, 54, 62, 0.5)",
@@ -213,7 +213,7 @@ const FreeTrialLabel: React.FC = () => {
 									</Typography>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "400",
 											fontSize: "12px",
 											color: "rgba(50, 54, 62, 1)",
@@ -234,7 +234,7 @@ const FreeTrialLabel: React.FC = () => {
 								>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "400",
 											fontSize: "12px",
 											color: "rgba(50, 54, 62, 0.5)",
@@ -247,7 +247,7 @@ const FreeTrialLabel: React.FC = () => {
 									</Typography>
 									<Typography
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "400",
 											fontSize: "12px",
 											color: "rgba(50, 54, 62, 1)",
@@ -261,7 +261,7 @@ const FreeTrialLabel: React.FC = () => {
 							<Button
 								onClick={handleChoosePlanSlider}
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									fontSize: "12px",
 									lineHeight: "22px",

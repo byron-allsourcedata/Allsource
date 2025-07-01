@@ -31,7 +31,7 @@ const DemoFeedbackCard: React.FC<DemoFeedbackCardProps> = ({
 	sx,
 }) => {
 	const labelTypographySx: SxProps<Theme> = {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontWeight: 400,
 		fontSize: "14px",
 		lineHeight: "20px",
@@ -93,7 +93,7 @@ const DemoFeedbackCard: React.FC<DemoFeedbackCardProps> = ({
 				<FormControl sx={{ mb: 3 }}>
 					<Typography
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: 600,
 							fontSize: "16px",
 							lineHeight: "20px",
@@ -112,7 +112,7 @@ const DemoFeedbackCard: React.FC<DemoFeedbackCardProps> = ({
 							fontWeight: 500,
 							letterSpacing: "0%",
 							lineHeight: "20px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							color: "rgba(0, 0, 0, 1)",
 						}}
 					>
@@ -148,7 +148,7 @@ const DemoFeedbackCard: React.FC<DemoFeedbackCardProps> = ({
 							fontWeight: 500,
 							letterSpacing: "0%",
 							lineHeight: "20px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							color: "rgba(0, 0, 0, 1)",
 						}}
 					>
@@ -185,7 +185,7 @@ const DemoFeedbackCard: React.FC<DemoFeedbackCardProps> = ({
 							backgroundColor: "rgba(56,152,252,1)",
 							textTransform: "none",
 							padding: "10px 42px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: 600,
 							fontSize: 14,
 							lineHeight: "22.4px",

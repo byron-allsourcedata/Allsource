@@ -334,7 +334,7 @@ const AccountSetup = () => {
 							<Typography
 								variant="h6"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 600,
 									lineHeight: "19.6px",
@@ -348,7 +348,7 @@ const AccountSetup = () => {
 								variant="body2"
 								color="textSecondary"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: 600,
 									lineHeight: "19.6px",
@@ -360,7 +360,7 @@ const AccountSetup = () => {
 						</Box>
 						<MenuItem
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 500,
 								lineHeight: "19.6px",
@@ -422,7 +422,7 @@ const AccountSetup = () => {
 						<Typography
 							variant="h6"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 600,
 								lineHeight: "19.6px",
@@ -436,7 +436,7 @@ const AccountSetup = () => {
 							variant="body2"
 							color="textSecondary"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 600,
 								lineHeight: "19.6px",
@@ -448,7 +448,7 @@ const AccountSetup = () => {
 					</Box>
 					<MenuItem
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 500,
 							lineHeight: "19.6px",

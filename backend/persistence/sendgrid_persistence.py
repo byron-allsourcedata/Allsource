@@ -1,3 +1,4 @@
+from db_dependencies import Db
 from models.sendgrid_template import SendgridTemplate
 
 from resolver import injectable

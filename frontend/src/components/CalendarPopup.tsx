@@ -115,7 +115,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 							<Button onClick={handleToday}>
 								<Typography
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: "rgba(0, 0, 0, 1)",
 										textTransform: "none",
 									}}
@@ -126,7 +126,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 							<Button onClick={handleLast7Days}>
 								<Typography
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: "rgba(0, 0, 0, 1)",
 										textTransform: "none",
 									}}
@@ -137,7 +137,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 							<Button onClick={handleLastMonth}>
 								<Typography
 									sx={{
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										color: "rgba(0, 0, 0, 1)",
 										textTransform: "none",
 									}}
@@ -186,7 +186,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 						onClick={handleClear}
 						sx={{
 							width: "55px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							height: "30px",
 							padding: "4px 8px",
 							borderRadius: "4px 0 0 0",
@@ -202,7 +202,9 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 						}}
 						disabled={!startDate && !endDate}
 					>
-						<Typography sx={{ fontFamily: "Nunito Sans" }}>Clear</Typography>
+						<Typography sx={{ fontFamily: "var(--font-nunito)" }}>
+							Clear
+						</Typography>
 					</Button>
 					<Button
 						onClick={handleApply}
@@ -217,7 +219,9 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
 							textTransform: "none",
 						}}
 					>
-						<Typography sx={{ fontFamily: "Nunito Sans" }}>Apply</Typography>
+						<Typography sx={{ fontFamily: "var(--font-nunito)" }}>
+							Apply
+						</Typography>
 					</Button>
 				</Box>
 			</Popover>

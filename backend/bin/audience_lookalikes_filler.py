@@ -17,7 +17,6 @@ sys.path.append(parent_dir)
 from db_dependencies import Db
 from resolver import Resolver
 
-from services.lookalike_filler import LookalikeFillerService
 
 from config.sentry import SentryConfig
 from config.rmq_connection import publish_rabbitmq_message_with_channel

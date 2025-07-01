@@ -422,7 +422,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 							<Typography
 								variant="body1"
 								sx={{
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "14px",
 									fontWeight: "400",
 									color: "rgba(32, 33, 36, 1)",
@@ -624,7 +624,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 																.background,
 															padding: "6px 8px",
 															borderRadius: "2px",
-															fontFamily: "Roboto",
+															fontFamily: "var(--font-roboto)",
 															fontSize: "12px",
 															fontWeight: "400",
 															lineHeight: "16px",
@@ -651,7 +651,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 														sx={{
 															backgroundColor:
 																item.reward_status === "paid" ? "#fff" : "#fff",
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontSize: "14px",
 															fontWeight: "600",
 															lineHeight: "20px",

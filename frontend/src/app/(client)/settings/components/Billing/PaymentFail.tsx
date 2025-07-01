@@ -29,7 +29,7 @@ import { ReturnToAdminButton } from "@/components/ReturnToAdminButton";
 interface PaymentPopupProps {
 	open: boolean;
 	cardDetails: CardDetails[];
-	moneyContactsOverage: number;
+	moneyContactsOverage: string;
 	handleCheckoutSuccess: (item: CardDetails) => void;
 }
 
@@ -164,7 +164,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 					<DialogTitle
 						sx={{
 							fontSize: "16px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: 600,
 							pl: 0.5,
 						}}
@@ -213,11 +213,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 								Outstanding Balance:
 							</Typography>
 							<Typography color="textSecondary">
-								$
-								{new Intl.NumberFormat("en-US", {
-									minimumFractionDigits: 2,
-									maximumFractionDigits: 2,
-								}).format(moneyContactsOverage)}
+								${moneyContactsOverage}
 							</Typography>
 						</Box>
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>

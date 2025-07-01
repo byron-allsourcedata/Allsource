@@ -78,7 +78,7 @@ const FirstTimeScreenCommon2: React.FC<TimeScreenProps> = ({
 								align="center"
 								className="first-sub-title"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "24px !important",
 									color: "#4a4a4a",
 									fontWeight: "500 !important",
@@ -99,7 +99,7 @@ const FirstTimeScreenCommon2: React.FC<TimeScreenProps> = ({
 									<Typography
 										variant="body1"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											color: "rgba(50, 54, 62, 1)",
 											fontWeight: "400",
@@ -119,7 +119,7 @@ const FirstTimeScreenCommon2: React.FC<TimeScreenProps> = ({
 												alignItems: "center",
 												color: "#3898FC",
 												fontSize: 14,
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 											}}
 										>
 											Learn more&nbsp;

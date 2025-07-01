@@ -1376,7 +1376,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   textAlign: "center",
                   color: "rgba(56, 152, 252, 1)",
                   textTransform: "none",
-                  fontFamily: "Nunito Sans",
+                  fontFamily: "var(--font-nunito)",
                   fontWeight: "600",
                   fontSize: "16px",
                   lineHeight: "22.4px",
@@ -1419,7 +1419,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   sx={{
                     textAlign: "center",
                     color: "#4A4A4A",
-                    fontFamily: "Nunito Sans",
+                    fontFamily: "var(--font-nunito)",
                     fontWeight: "600",
                     fontSize: "16px",
                     lineHeight: "22.4px",
@@ -1528,7 +1528,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   textAlign: "center",
                   color: isButtonDisabled ? "rgba(80, 82, 178, 0.5)" : "rgba(56, 152, 252, 1)",
                   textTransform: "none",
-                  fontFamily: "Nunito Sans",
+                  fontFamily: "var(--font-nunito)",
                   fontWeight: "600",
                   fontSize: "16px",
                   lineHeight: "22.4px",
@@ -1552,7 +1552,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   sx={{
                     textAlign: "center",
                     color: "rgba(59, 59, 59, 1)",
-                    fontFamily: "Nunito Sans",
+                    fontFamily: "var(--font-nunito)",
                     fontWeight: "600",
                     fontSize: "14px",
                     lineHeight: "19.6px",
@@ -1599,7 +1599,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                     variant="contained"
                     sx={{
                       backgroundColor: "rgba(56, 152, 252, 1)",
-                      fontFamily: "Nunito Sans",
+                      fontFamily: "var(--font-nunito)",
                       textTransform: "none",
                     }}
                     disabled={!filterName.trim()}
@@ -1663,7 +1663,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									</InputAdornment>
 								),
 								sx: {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -1674,7 +1674,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 							sx={{
 								padding: "1em 1em 0em 1em",
 								"& .MuiInputBase-input::placeholder": {
-									fontFamily: "Roboto",
+									fontFamily: "var(--font-roboto)",
 									fontSize: "0.875rem",
 									fontWeight: 400,
 									lineHeight: "19.6px",
@@ -1706,7 +1706,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 											<ListItemText
 												primaryTypographyProps={{
 													sx: {
-														fontFamily: "Nunito Sans",
+														fontFamily: "var(--font-nunito)",
 														fontSize: "12px",
 														fontWeight: 600,
 														lineHeight: "16.8px",
@@ -1878,7 +1878,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												textWrap: "nowrap",
 												textAlign: "center",
 												borderRadius: "4px",
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												opacity: 1,
 												display: "flex",
 												alignItems: "center",
@@ -2116,14 +2116,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
@@ -2146,14 +2146,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
@@ -2351,14 +2351,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
@@ -2378,14 +2378,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
@@ -2454,7 +2454,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								onKeyDown={handleAddTag}
 								InputProps={{
 									sx: {
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -2465,7 +2465,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								sx={{
 									mb: "3px",
 									"& .MuiInputBase-input::placeholder": {
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -2484,7 +2484,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 										primary={
 											<span
 												style={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "13px",
 													fontWeight: 600,
 													lineHeight: "16.8px",
@@ -2554,7 +2554,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								onKeyDown={handleAddPage}
 								InputProps={{
 									sx: {
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -2565,7 +2565,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								sx={{
 									mb: "3px",
 									"& .MuiInputBase-input::placeholder": {
-										fontFamily: "Roboto",
+										fontFamily: "var(--font-roboto)",
 										fontSize: "0.875rem",
 										fontWeight: 400,
 										lineHeight: "19.6px",
@@ -2584,7 +2584,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 										primary={
 											<span
 												style={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "13px",
 													fontWeight: 600,
 													lineHeight: "16.8px",
@@ -2642,7 +2642,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 							>
 								<Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
 									<FormControlLabel
-										sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+										sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
 										control={
 											<Checkbox
 												checked={checkedFiltersPageVisits.page}
@@ -2670,7 +2670,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 										}
 									/>
 									<FormControlLabel
-										sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+										sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
 										control={
 											<Checkbox
 												checked={checkedFiltersPageVisits.two_page}
@@ -2700,7 +2700,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								</Box>
 								<Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
 									<FormControlLabel
-										sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+										sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
 										control={
 											<Checkbox
 												checked={checkedFiltersPageVisits.three_page}
@@ -2728,7 +2728,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 										}
 									/>
 									<FormControlLabel
-										sx={{ fontFamily: "Nunito Sans", fontWeight: 100 }}
+										sx={{ fontFamily: "var(--font-nunito)", fontWeight: 100 }}
 										control={
 											<Checkbox
 												checked={checkedFiltersPageVisits.more_three}
@@ -3005,7 +3005,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 											display: "flex",
 											color: "rgba(74, 74, 74, 1)",
 											alignItems: "center",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: "600",
 											fontSize: "16px",
 											lineHeight: "25.2px",
