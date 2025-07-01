@@ -18,7 +18,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [planContactsCollected, setPlanContactsCollected] = useState(0);
 	const [validationFundsCollected, setValidationFundsData] = useState(0);
 	const [smartAudienceCollected, setSmartAudienceCollected] = useState(0);
-	const [moneyContactsOverage, setMoneyContactsOverage] = useState(0);
+	const [moneyContactsOverage, setMoneyContactsOverage] = useState("");
 	const [planPremiumSourceCollected, setPlanPremiumSourceCollected] =
 		useState(0);
 	const [premiumSourceCollected, setPremiumSourceCollected] = useState(0);
@@ -165,7 +165,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											title="Contacts Downloaded"
 											limitValue={
 												contactsCollected > planContactsCollected &&
-												moneyContactsOverage === 0
+												moneyContactsOverage === "0"
 													? contactsCollected
 													: planContactsCollected
 											}

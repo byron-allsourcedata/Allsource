@@ -21,7 +21,7 @@ interface UsageItemProps {
 	available?: boolean;
 	needButton?: boolean;
 	commingSoon?: boolean;
-	moneyContactsOverage?: number;
+	moneyContactsOverage?: string;
 }
 
 export const UsageItem: React.FC<UsageItemProps> = ({
@@ -31,7 +31,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	available = true,
 	needButton = true,
 	commingSoon = false,
-	moneyContactsOverage = 0,
+	moneyContactsOverage = "0",
 }) => {
 	const [isLoading, setIsLoading] = useState(true);
 	const limit = Math.round(((limitValue - currentValue) / limitValue) * 100);
@@ -39,7 +39,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	const valueLinearProgress = () => {
 		if (limitValue === -1) {
 			return 100;
-		} else if (!available || moneyContactsOverage !== 0) {
+		} else if (!available || moneyContactsOverage !== "0") {
 			return 0;
 		} else {
 			return 100 - limit;
@@ -96,7 +96,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				>
 					{title}
 				</Typography>
-				{moneyContactsOverage !== 0 && (
+				{moneyContactsOverage !== "0" && (
 					<Typography
 						className="second-sub-title"
 						sx={{ lineHeight: "20px !important" }}
@@ -181,7 +181,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 				)}
 				{limitValue !== -1 &&
 					available &&
-					moneyContactsOverage === 0 &&
+					moneyContactsOverage === "0" &&
 					!commingSoon && (
 						<Typography
 							className="second-sub-title"
