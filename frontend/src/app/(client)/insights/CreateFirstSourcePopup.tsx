@@ -100,7 +100,7 @@ const WelcomePopup = () => {
 									>
 										<IconButton
 											sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-											onClick={() => { }}
+											onClick={() => {}}
 										>
 											<AllInboxOutlinedIcon />
 										</IconButton>
