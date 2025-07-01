@@ -37,9 +37,6 @@ const PlanTerm = styled(Typography)`
 
 export const PlanCard: React.FC<{
 	plan: Plan;
-	activePlanTitle: string;
-	activePlanPeriod: string;
-	tabValue: number;
 	buttonProps: {
 		onChoose: (alias: string) => void;
 		text: string;
@@ -47,44 +44,7 @@ export const PlanCard: React.FC<{
 		variant?: "contained" | "outlined";
 	};
 	isRecommended?: boolean;
-}> = ({
-	plan,
-	activePlanTitle,
-	tabValue,
-	buttonProps,
-	activePlanPeriod,
-	isRecommended,
-}) => {
-	const getButtonLabel = () => {
-		if (plan.is_active) return "Current Plan";
-
-		if (activePlanTitle === "") {
-			return "Choose Plan";
-		}
-
-		const levels = ["Launch", "Pro", "Growth"];
-		const currentLevelIndex = levels.indexOf(activePlanTitle);
-		const targetLevelIndex = levels.indexOf(plan.title);
-
-		if (currentLevelIndex === -1 || targetLevelIndex === -1) {
-			return "Choose Plan";
-		}
-
-		if (tabValue === 1 && activePlanPeriod === "year") {
-			if (targetLevelIndex > currentLevelIndex) return "Upgrade";
-			if (targetLevelIndex < currentLevelIndex) return "Downgrade";
-			return "Current";
-		}
-
-		if (tabValue === 1 && activePlanPeriod === "month") {
-			return "Upgrade";
-		}
-
-		if (targetLevelIndex > currentLevelIndex) return "Upgrade";
-		if (targetLevelIndex < currentLevelIndex) return "Downgrade";
-		return "Downgrade";
-	};
-
+}> = ({ plan, buttonProps, isRecommended }) => {
 	const alias = "";
 
 	return (

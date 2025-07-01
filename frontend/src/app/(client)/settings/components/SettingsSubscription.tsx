@@ -98,29 +98,12 @@ const subscriptionStyles = {
 	},
 };
 
-const marks = [
-	{ value: 0, label: "0/yr" },
-	{ value: 10000, label: "10K" },
-	{ value: 25000, label: "25K" },
-	{ value: 50000, label: "50K" },
-	{ value: 100000, label: "100K" },
-	{ value: 250000, label: "250K" },
-	{ value: 500000, label: "500K" },
-	{ value: 1000000, label: "1M" },
-	{ value: 2500000, label: "2.5M" },
-	{ value: 5000000, label: "5M" },
-	{ value: 7500000, label: "7.5M" }, // Adjusted additional mark to balance space
-	{ value: 10000000, label: "10M" },
-	{ value: 50000000, label: "50M" },
-];
-
 export const SettingsSubscription: React.FC = () => {
-	const [tabValue, setTabValue] = useState(1);
-	const [visiblePlans, planAlias] = usePlans(tabValue === 0 ? "month" : "year");
-	let [plans, setPlans] = useState<Plan[]>(visiblePlans);
-	const [allPlans, setAllPlans] = useState<any[]>([]);
+	const [tabValue, setTabValue] = useState(0);
+	const [plans, setPlans] = useState<Plan[]>([]);
+	const [plansMonthly, setPlansMonthly] = useState<Plan[]>([]);
+	const [plansYearly, setPlansYearly] = useState<Plan[]>([]);
 	const [credits, setCredits] = useState<number>(50000);
-	const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
@@ -137,8 +120,6 @@ export const SettingsSubscription: React.FC = () => {
 	const [activePlan, setActivePlan] = useState<any>(null);
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
-
-	plans = visiblePlans;
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
@@ -164,11 +145,11 @@ export const SettingsSubscription: React.FC = () => {
 		setTabValue(newValue);
 
 		const period = newValue === 0 ? "month" : "year";
-		const period_plans = allPlans.filter(
-			(plan: any) => plan.interval === period,
-		);
-		setPlans(visiblePlans);
-		// setPlans(period_plans);
+		if (period === "month") {
+			setPlans(plansMonthly);
+		} else {
+			setPlans(plansYearly);
+		}
 	};
 
 	const handleCustomPlanPopupOpen = () => {
@@ -214,32 +195,14 @@ export const SettingsSubscription: React.FC = () => {
 		const fetchData = async () => {
 			try {
 				setIsLoading(true);
-				fetchPrefillData();
-				const response = await axiosInterceptorInstance.get(
-					`/subscriptions/stripe-plans`,
-				);
-				setAllPlans(response.data.stripe_plans);
-
-				const stripePlans: StripePlan[] = response.data.stripe_plans;
-				const active = stripePlans.find(
-					(plan) =>
-						plan.is_active &&
-						plan.title !== "Free Trial" &&
-						plan.title !== "Partners Live",
-				);
-				setActivePlan(active || null);
-				setHasActivePlan(!!active);
-
-				const interval = active ? active.interval : "month";
-				// if (interval === 'year') {
-				//     setTabValue(1);
-				// } else {
-				//     setTabValue(0);
-				// }
-				const period_plans = response.data.stripe_plans.filter(
-					(plan: any) => plan.interval === interval,
-				);
-				setPlans(visiblePlans);
+				const response = await axiosInterceptorInstance.get("/settings/plans");
+				setPlansMonthly(response.data.monthly);
+				setPlansYearly(response.data.yearly);
+				if (tabValue === 0) {
+					setPlans(response.data.monthly);
+				} else {
+					setPlans(response.data.yearly);
+				}
 			} catch (error) {
 			} finally {
 				setIsLoading(false);
@@ -323,7 +286,7 @@ export const SettingsSubscription: React.FC = () => {
 						const response = await axiosInterceptorInstance.get(
 							`/subscriptions/stripe-plans`,
 						);
-						setAllPlans(response.data.stripe_plans);
+
 						const stripePlans: StripePlan[] = response.data.stripe_plans;
 						const activePlan = stripePlans.find((plan) => plan.is_active);
 						const active = stripePlans.find(
@@ -344,7 +307,6 @@ export const SettingsSubscription: React.FC = () => {
 						const period_plans = response.data.stripe_plans.filter(
 							(plan: any) => plan.interval === interval,
 						);
-						setPlans(visiblePlans);
 					} catch (error) {
 					} finally {
 						setIsLoading(false);
@@ -373,8 +335,6 @@ export const SettingsSubscription: React.FC = () => {
 	};
 
 	// Filter plans based on the selected tab
-	const filteredPlans = plans;
-
 	// .filter(plan =>
 	//     (tabValue === 0 && plan.interval === 'month') ||
 	//     (tabValue === 1 && plan.interval === 'year')
@@ -558,7 +518,7 @@ export const SettingsSubscription: React.FC = () => {
 						overflowX: "auto",
 					}}
 				>
-					{filteredPlans.length > 0 ? (
+					{plans?.length > 0 ? (
 						plans.map((plan, index) => {
 							if (isTrial === false && plan.title === "Free Trial") {
 								return null;
@@ -589,24 +549,16 @@ export const SettingsSubscription: React.FC = () => {
 								}
 							}
 
-							if (plan.is_active) {
-								buttonText = "Current Plan";
-								disabled = true;
-							}
-
 							return (
 								<Box
 									key={plan.title}
 									sx={{
 										...subscriptionStyles.formWrapper,
-										pt: filteredPlans.length === 1 ? 1 : undefined,
+										pt: 1,
 									}}
 								>
 									<PlanCard
 										plan={plan}
-										activePlanTitle={activePlan?.title || ""}
-										activePlanPeriod={activePlan?.interval || ""}
-										tabValue={tabValue}
 										isRecommended={plan.is_recommended}
 										buttonProps={{
 											onChoose: handle,

@@ -894,7 +894,6 @@ class SettingsService:
             alias="basic",
             price=Price(value="$0,08", y="record"),
             is_recommended=True,
-            is_active=True,
             permanent_limits=[
                 Advantage(
                     good=True, name="Domains monitored:", value="Unlimited"
