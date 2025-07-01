@@ -58,8 +58,9 @@ class DataSyncImportedLead(Base):
             unique=True,
         ),
         Index(
-            "data_sync_imported_leads_is_validation_idx",
+            "data_sync_imported_leads_is_validation_status_idx",
             is_validation,
+            status,
             unique=False,
         ),
     )

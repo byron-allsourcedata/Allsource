@@ -3,6 +3,8 @@ import logging
 import os
 import sys
 
+from models import Users
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -217,6 +219,15 @@ def get_previous_imported_leads(session, data_sync_id):
     return lead_users
 
 
+def is_validation(session, users_id: int):
+    is_email_validation_enabled = (
+        session.query(Users.is_email_validation_enabled)
+        .filter(Users.id == users_id)
+        .first()
+    )
+    return is_email_validation_enabled
+
+
 async def send_leads_to_rmq(
     session,
     channel,
@@ -230,6 +241,7 @@ async def send_leads_to_rmq(
         {
             "status": DataSyncImportedStatus.SENT.value,
             "lead_users_id": lead_id,
+            "is_validation": 123,
             "service_name": user_integrations_service_name,
             "data_sync_id": data_sync.id,
             "created_at": datetime.now(timezone.utc),

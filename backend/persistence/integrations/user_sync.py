@@ -9,6 +9,7 @@ from enums import (
     SourcePlatformEnum,
     DataSyncType,
     DataSyncImportedStatus,
+    ProccessDataSyncResult,
 )
 from models import DataSyncImportedLead, LeadUser
 from models.audience_data_sync_imported_persons import (
@@ -173,7 +174,11 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
-            .where(DataSyncImportedLead.is_validation.is_(True))
+            .where(
+                DataSyncImportedLead.is_validation.is_(True),
+                DataSyncImportedLead.status
+                == ProccessDataSyncResult.SUCCESS.value,
+            )
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
