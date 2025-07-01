@@ -48,8 +48,8 @@ class PersonalProfiles(BaseModel):
                 "undisclosed",
             }
 
-        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
-        filtered_data = data.copy()
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -68,7 +68,7 @@ class PersonalProfiles(BaseModel):
                     YES_NO_UNKNOWN_MAPS[key].get(k, k): v
                     for k, v in val.items()
                 }
-                filtered = {k: v for k, v in mapped.items() if k != "Unknown"}
+                filtered = {k: v for k, v in mapped.items() if k.lower() != "unknown"}
                 total = sum(filtered.values())
                 setattr(
                     self,
@@ -151,18 +151,35 @@ class FinancialProfiles(BaseModel):
             if key == "net_worth_range":
                 mapped = {
                     NET_WORTH_RANGE_MAP.get(k, k): v for k, v in val.items()
+                    if k.lower() != "unknown"
                 }
                 setattr(self, key, self._to_percent(mapped))
 
             elif key == "credit_score_range":
                 mapped = {
                     CREDIT_SCORE_RANGE_MAP.get(k, k): v for k, v in val.items()
+                    if k.lower() != "unknown"
                 }
                 setattr(self, key, self._to_percent(mapped))
 
             elif key == "income_range":
-                mapped = {INCOME_RANGE.get(k, k): v for k, v in val.items()}
+                mapped = {
+                    INCOME_RANGE.get(k, k): v for k, v in val.items()
+                    if k.lower() != "unknown"
+                }
                 setattr(self, key, self._to_percent(mapped))
+
+            elif key == "number_of_credit_lines":
+                if "unknown" in val:
+                    val.pop("unknown")
+
+                setattr(self, key, self._to_percent(val))
+
+            elif key == "credit_range_of_new_credit":
+                if "unknown" in val:
+                    val.pop("unknown")
+
+                setattr(self, key, self._to_percent(val))
 
             else:
                 setattr(self, key, self._to_percent(val))
@@ -254,9 +271,20 @@ class VoterProfiles(BaseModel):
     @model_validator(mode="after")
     def calculate_percentages(self) -> "VoterProfiles":
         values = self.model_dump()
+
         for key, val in values.items():
-            if isinstance(val, dict):
+            if not isinstance(val, dict):
+                continue
+
+            if key in ("congressional_district", "political_party"):
+                if "unknown" in val:
+                    val.pop("unknown")
+
                 setattr(self, key, self._to_percent(val))
+
+            else:
+                setattr(self, key, self._to_percent(val))
+
         return self
 
 
@@ -307,9 +335,16 @@ class ProfessionalProfiles(BaseModel):
     @model_validator(mode="after")
     def calculate_percentages(self) -> "ProfessionalProfiles":
         values = self.model_dump()
+
         for key, val in values.items():
-            if isinstance(val, dict):
-                setattr(self, key, self._to_percent(val))
+            if not isinstance(val, dict):
+                continue
+
+            if "unknown" in val:
+                val.pop("unknown")
+
+            setattr(self, key, self._to_percent(val))
+
         return self
 
 
@@ -348,9 +383,16 @@ class EmploymentHistory(BaseModel):
     @model_validator(mode="after")
     def calculate_percentages(self) -> "EmploymentHistory":
         values = self.model_dump()
+
         for key, val in values.items():
-            if isinstance(val, dict):
-                setattr(self, key, self._to_percent(val))
+            if not isinstance(val, dict):
+                continue
+
+            if "unknown" in val:
+                val.pop("unknown")
+
+            setattr(self, key, self._to_percent(val))
+
         return self
 
 
