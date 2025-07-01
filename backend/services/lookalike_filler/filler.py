@@ -89,7 +89,8 @@ class LookalikeFillerService:
         columns = ", ".join(["asid"] + column_names)
 
         rows_stream = self.clickhouse.query_row_block_stream(
-            f"SELECT {columns} FROM enrichment_users"
+            f"SELECT {columns} FROM enrichment_users",
+            settings={"max_block_size": 100000},
         )
         column_names = rows_stream.source.column_names
 
