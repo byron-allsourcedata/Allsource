@@ -1467,7 +1467,7 @@ const SourcesImport: React.FC = () => {
 																	emailNotSubstitution && (
 																		<Typography
 																			sx={{
-																				fontFamily: "Nunito",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "12px",
 																				color: "rgba(224, 49, 48, 1)",
 																			}}

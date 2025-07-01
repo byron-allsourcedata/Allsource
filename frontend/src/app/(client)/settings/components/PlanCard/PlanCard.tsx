@@ -9,7 +9,7 @@ import { CustomButton } from "@/components/ui";
 import { Column } from "@/components/Column";
 
 const PlanTitle = styled(Typography)`
-    font-family: Nunito Sans;
+    font-family: var(--font-nunito);
     font-weight: 600;
     font-size: 20px;
     line-height: 22px;
@@ -18,7 +18,7 @@ const PlanTitle = styled(Typography)`
 `;
 
 const PlanPrice = styled(Typography)`
-    font-family: Nunito Sans;
+    font-family: var(--font-nunito);
     font-weight: 600;
     font-size: 14px;
     line-height: 22px;
@@ -27,7 +27,7 @@ const PlanPrice = styled(Typography)`
 `;
 
 const PlanTerm = styled(Typography)`
-    font-family: Nunito Sans;
+    font-family: var(--font-nunito);
     font-weight: 600;
     font-size: 14px;
     line-height: 22px;

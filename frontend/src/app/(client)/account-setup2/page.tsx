@@ -2914,7 +2914,7 @@ const AccountSetup = () => {
 															border: "1px solid #E4E4E4",
 															borderRadius: "4px",
 															fontSize: "14px",
-															fontFamily: "'Nunito Sans', sans-serif",
+															fontFamily: "var(--font-nunito)",
 															fontWeight: 600,
 															cursor: "pointer",
 															transition: "background-color 0.3s ease",
@@ -2987,7 +2987,7 @@ const AccountSetup = () => {
 														<Typography
 															variant="h6"
 															sx={{
-																fontFamily: "Nunito Sans, sans-serif",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "16px",
 																fontWeight: "600",
 																color: "rgba(33, 43, 54, 0.87)",
