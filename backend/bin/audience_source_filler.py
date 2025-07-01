@@ -55,7 +55,7 @@ load_dotenv()
 AUDIENCE_SOURCES_READER = "aud_sources_files"
 AUDIENCE_SOURCES_MATCHING = "aud_sources_matching"
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
-S3_BUCKET_NAME = "maximiz-data"
+S3_BUCKET_NAME = "allsource-data"
 SELECTED_ROW_COUNT = 500
 
 

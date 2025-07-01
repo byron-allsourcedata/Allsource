@@ -368,7 +368,7 @@ class ShopifyIntegrationService:
         self.AWS.upload_string(
             script_shopify, f"shopify-pixel-code/{client_id}.js"
         )
-        script_event_url = f"https://maximiz-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js"
+        script_event_url = f"https://allsource-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js"
         url = f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags.json"
 
         headers = {

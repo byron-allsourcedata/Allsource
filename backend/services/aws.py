@@ -15,12 +15,12 @@ class AWSService:
 
     def upload_string(self, string_data: str, object_name: str) -> None:
         self.s3_client.put_object(
-            Bucket="maximiz-data", Key=object_name, Body=string_data
+            Bucket="allsource-data", Key=object_name, Body=string_data
         )
 
     def file_exists(self, key) -> bool:
         try:
-            self.s3_client.head_object(Bucket="maximiz-data", Key=key)
+            self.s3_client.head_object(Bucket="allsource-data", Key=key)
             return True
         except Exception:
             return False
