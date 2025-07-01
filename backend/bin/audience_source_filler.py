@@ -291,6 +291,8 @@ def get_max_ids(db_session, domain_id, statuses):
         )
         .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
         .filter(LeadUser.domain_id == domain_id)
+        .filter(LeadUser.is_active)
+        .filter(LeadUser.is_confirmed)
     )
 
     filters = []
@@ -391,10 +393,11 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
     current_id = -1
     while current_id < max_id:
         query = (
-            db_session.query(FiveXFiveUser.id, LeadUser.id)
-            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            db_session.query(LeadUser.id.label("lead_id"))
             .filter(LeadUser.domain_id == domain_id)
             .filter(LeadUser.id > current_id)
+            .filter(LeadUser.is_active)
+            .filter(LeadUser.is_confirmed)
         )
         filters = []
         if LeadStatus.VIEWED_PRODUCT.value in statuses:
@@ -457,10 +460,9 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
         results = query.all()
         persons: List[PersonRow] = []
         for result in results:
-            user_id, current_id = result
-
+            current_id = result.lead_id
             if current_id <= max_id:
-                persons.append(PersonRow(user_id=user_id))
+                persons.append(PersonRow(lead_id=current_id))
 
         message_body = MessageBody(
             type="user_ids",

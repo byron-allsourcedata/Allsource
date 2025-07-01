@@ -1,22 +1,21 @@
-import logging
-import os
-import sys
 import asyncio
 import functools
 import json
-import pytz
-from uuid import UUID
+import logging
+import os
+import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Union, Optional, Tuple
-import boto3
-import sentry_sdk
-from sqlalchemy import update, func
-from aio_pika import IncomingMessage, Connection, Channel
-from sqlalchemy.orm import Session
-from dotenv import load_dotenv
+from uuid import UUID
 
+import boto3
+import pytz
+from aio_pika import IncomingMessage, Connection, Channel
+from dotenv import load_dotenv
+from sqlalchemy import update, func
+from sqlalchemy.orm import Session
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -32,7 +31,6 @@ from db_dependencies import Db
 from resolver import Resolver
 
 from config.sentry import SentryConfig
-from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
@@ -40,7 +38,6 @@ from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, EmailType, BusinessType
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
-
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import (
     PersonEntry,
@@ -62,8 +59,6 @@ from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
 )
 from services.lookalikes import AudienceLookalikesService
-from persistence.audience_lookalikes import AudienceLookalikesPersistence
-from persistence.audience_sources import AudienceSourcesPersistence
 
 load_dotenv()
 
@@ -373,12 +368,12 @@ def calculate_website_visitor_user_value(
         "inverted_recency": inverted_recency,
         "inverted_recency_min": inverted_recency_min,
         "inverted_recency_max": inverted_recency_max,
-        "active_end_date": last_end_datetime,
-        "active_start_date": last_start_datetime,
+        "end_date": last_end_datetime,
+        "start_date": last_start_datetime,
         "duration": duration_minutes,
         "recency_score": recency_score,
-        "page_view_score": page_view_score,
-        "user_value_score": user_value_score,
+        "view_score": page_view_score,
+        "value_score": user_value_score,
     }
 
 
@@ -402,13 +397,10 @@ async def process_user_id(
     persons: List[PersonRow],
     db_session: Session,
     source_id: str,
-    audience_source: AudienceSource,
     source_agent_service: SourceAgentService,
 ) -> int:
-    five_x_five_user_ids = [p.user_id for p in persons]
-    logging.info(
-        f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}"
-    )
+    lead_ids = [p.lead_id for p in persons]
+    logging.info(f"user_ids find {len(lead_ids)} for source_id {source_id}")
 
     db_session.commit()
     with db_session.begin():
@@ -416,9 +408,7 @@ async def process_user_id(
             row[0]
             for row in db_session.query(
                 AudienceSourcesMatchedPerson.enrichment_user_asid
-            )
-            .filter(AudienceSourcesMatchedPerson.source_id == source_id)
-            .all()
+            ).filter(AudienceSourcesMatchedPerson.source_id == source_id)
         }
         results_query = (
             db_session.query(
@@ -427,67 +417,83 @@ async def process_user_id(
             .join(
                 FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
             )
-            .filter(
-                LeadUser.user_id == audience_source.user_id,
-                FiveXFiveUser.id.in_(five_x_five_user_ids),
-            )
+            .filter(LeadUser.id.in_(lead_ids))
             .all()
         )
 
+        lead_to_five_x = {
+            lead_id: five_x_id for lead_id, five_x_id in results_query
+        }
+        five_x_ids = list(lead_to_five_x.values())
+
+        emails_links = (
+            db_session.query(
+                FiveXFiveUsersEmails.user_id,
+                FiveXFiveUsersEmails.type,
+                FiveXFiveUsersEmails.email_id,
+            )
+            .filter(FiveXFiveUsersEmails.user_id.in_(five_x_ids))
+            .all()
+        )
+
+        email_ids = list({el.email_id for el in emails_links})
+        email_rows = (
+            db_session.query(FiveXFiveEmails.id, FiveXFiveEmails.email)
+            .filter(FiveXFiveEmails.id.in_(email_ids))
+            .all()
+        )
+        email_map = {eid: email.strip().lower() for eid, email in email_rows}
+
+        priority = {
+            EmailType.BUSINESS.value: 0,
+            EmailType.PERSONAL.value: 1,
+            EmailType.ADDITIONAL_PERSONAL.value: 2,
+        }
+
+        user_best_email = {}
+        for link in sorted(
+            emails_links, key=lambda l: priority.get(l.type, 99)
+        ):
+            email = email_map.get(link.email_id)
+            if email and link.user_id not in user_best_email:
+                user_best_email[link.user_id] = email
+
         updates = []
-        for lead_id, five_x_id in results_query:
-            email = None
-            for t in (
-                EmailType.BUSINESS,
-                EmailType.PERSONAL,
-                EmailType.ADDITIONAL_PERSONAL,
-            ):
-                link = (
-                    db_session.query(FiveXFiveUsersEmails.email_id)
-                    .filter_by(user_id=five_x_id, type=t.value)
-                    .first()
-                )
-                if not link:
-                    continue
-                email_row = (
-                    db_session.query(FiveXFiveEmails.email)
-                    .filter_by(id=link[0])
-                    .first()
-                )
-                if email_row:
-                    email = email_row[0].strip().lower()
-                    break
+
+        for lead_id, five_x_id in lead_to_five_x.items():
+            email = user_best_email.get(five_x_id)
             if not email:
                 continue
 
             matches = source_agent_service.get_user_ids_by_emails([email])
             if not matches:
                 continue
-            asid = UUID(matches[0].asid)
 
+            asid = UUID(matches[0].asid)
             if asid in existing_asids:
                 continue
 
-            first = (
+            first_visit = (
                 db_session.query(LeadsVisits)
-                .filter_by(lead_id=lead_id)
-                .order_by(LeadsVisits.end_date, LeadsVisits.end_time)
+                .join(LeadUser, LeadUser.first_visit_id == LeadsVisits.id)
+                .filter(LeadUser.id == lead_id)
                 .first()
             )
-            last = (
+
+            last_visit = (
                 db_session.query(LeadsVisits)
                 .filter_by(lead_id=lead_id)
-                .order_by(
-                    LeadsVisits.end_date.desc(), LeadsVisits.end_time.desc()
-                )
+                .order_by(LeadsVisits.id.desc())
                 .first()
             )
-            if not first or not last:
+
+            if not first_visit or not last_visit:
                 continue
 
-            fd = datetime.combine(first.end_date, first.end_time)
-            ls = datetime.combine(last.start_date, last.start_time)
-            le = datetime.combine(last.end_date, last.end_time)
+            fd = datetime.combine(first_visit.end_date, first_visit.end_time)
+            ls = datetime.combine(last_visit.start_date, last_visit.start_time)
+            le = datetime.combine(last_visit.end_date, last_visit.end_time)
+
             calc = calculate_website_visitor_user_value(fd, ls, le)
 
             updates.append(
@@ -495,22 +501,10 @@ async def process_user_id(
                     "source_id": source_id,
                     "enrichment_user_asid": asid,
                     "email": email,
-                    "start_date": calc["active_start_date"],
-                    "end_date": calc["active_end_date"],
-                    "recency": calc["recency"],
-                    "recency_min": calc["recency_min"],
-                    "recency_max": calc["recency_max"],
-                    "inverted_recency": calc["inverted_recency"],
-                    "inverted_recency_min": calc["inverted_recency_min"],
-                    "inverted_recency_max": calc["inverted_recency_max"],
-                    "duration": calc["duration"],
-                    "recency_score": calc["recency_score"],
-                    "view_score": calc["page_view_score"],
-                    "value_score": calc["user_value_score"],
+                    **calc,
                 }
             )
             existing_asids.add(asid)
-
         if updates:
             db_session.bulk_insert_mappings(
                 AudienceSourcesMatchedPerson, updates
@@ -518,7 +512,6 @@ async def process_user_id(
             logging.info(
                 f"Inserted {len(updates)} new persons for source_id {source_id}"
             )
-
     return len(updates)
 
 
@@ -1181,7 +1174,6 @@ async def aud_sources_matching(
                 persons=persons,
                 db_session=db_session,
                 source_id=source_id,
-                audience_source=audience_source,
                 source_agent_service=source_agent_service,
             )
 
