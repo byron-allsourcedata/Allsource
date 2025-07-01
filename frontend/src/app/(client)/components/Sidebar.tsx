@@ -683,22 +683,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 						</ListItem>
 
 						<PremiumSources />
-
-						{/* Integrations */}
-						<ListItem
-							button
-							onClick={() => handleNavigation("/integrations")}
-							sx={
-								isActive("/integrations")
-									? sidebarStyles.activeItem
-									: sidebarStyles.ListItem
-							}
-						>
-							<ListItemIcon sx={sidebarStyles.listItemIcon}>
-								<IntegrationsIcon />
-							</ListItemIcon>
-							<ListItemText primary="Integrations" />
-						</ListItem>
 					</List>
 
 					{!isSourceInstalled && !loading && (
@@ -734,6 +718,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 						</Box>
 					)}
 				</Box>
+				{/* Integrations */}
+				<ListItem
+					button
+					onClick={() => handleNavigation("/integrations")}
+					sx={
+						isActive("/integrations")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
+				>
+					<ListItemIcon sx={sidebarStyles.listItemIcon}>
+						<IntegrationsIcon />
+					</ListItemIcon>
+					<ListItemText primary="Integrations" />
+				</ListItem>
 
 				{/* <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
