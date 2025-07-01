@@ -27,7 +27,7 @@ sys.path.append(parent_dir)
 from config.sentry import SentryConfig
 from utils import normalize_url, get_url_params_list, check_certain_urls
 from enums import NotificationTitles
-from db_dependencies import Clickhouse
+from db_dependencies import Clickhouse, Db
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
 
@@ -62,7 +62,6 @@ from config.rmq_connection import (
 )
 from dependencies import (
     SubscriptionService,
-    Db,
 )
 
 load_dotenv()

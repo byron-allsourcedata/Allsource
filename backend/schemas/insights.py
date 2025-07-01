@@ -48,8 +48,8 @@ class PersonalProfiles(BaseModel):
                 "undisclosed",
             }
 
-        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
-        filtered_data = data.copy()
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -68,7 +68,7 @@ class PersonalProfiles(BaseModel):
                     YES_NO_UNKNOWN_MAPS[key].get(k, k): v
                     for k, v in val.items()
                 }
-                filtered = {k: v for k, v in mapped.items() if k != "Unknown"}
+                filtered = {k: v for k, v in mapped.items() if k.lower() != "unknown"}
                 total = sum(filtered.values())
                 setattr(
                     self,
@@ -140,6 +140,13 @@ class FinancialProfiles(BaseModel):
             return {k: 0.0 for k in filtered_data}
         return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
+    @staticmethod
+    def _map_data(data: dict[str, str], map_dict: dict) -> dict:
+        return {
+            data.get(k, k): v for k, v in map_dict.items()
+            if k.lower() != "unknown"
+        }
+
     @model_validator(mode="after")
     def calculate_percentages(self) -> "FinancialProfiles":
         values = self.model_dump()
@@ -149,20 +156,22 @@ class FinancialProfiles(BaseModel):
                 continue
 
             if key == "net_worth_range":
-                mapped = {
-                    NET_WORTH_RANGE_MAP.get(k, k): v for k, v in val.items()
-                }
+                mapped = self._map_data(NET_WORTH_RANGE_MAP, val)
                 setattr(self, key, self._to_percent(mapped))
 
             elif key == "credit_score_range":
-                mapped = {
-                    CREDIT_SCORE_RANGE_MAP.get(k, k): v for k, v in val.items()
-                }
+                mapped = self._map_data(CREDIT_SCORE_RANGE_MAP, val)
                 setattr(self, key, self._to_percent(mapped))
 
             elif key == "income_range":
-                mapped = {INCOME_RANGE.get(k, k): v for k, v in val.items()}
+                mapped = self._map_data(INCOME_RANGE, val)
                 setattr(self, key, self._to_percent(mapped))
+
+            elif key in ("number_of_credit_lines", "credit_range_of_new_credit"):
+                if "unknown" in val:
+                    val.pop("unknown")
+
+                setattr(self, key, self._to_percent(val))
 
             else:
                 setattr(self, key, self._to_percent(val))
@@ -254,9 +263,16 @@ class VoterProfiles(BaseModel):
     @model_validator(mode="after")
     def calculate_percentages(self) -> "VoterProfiles":
         values = self.model_dump()
+
         for key, val in values.items():
-            if isinstance(val, dict):
-                setattr(self, key, self._to_percent(val))
+            if not isinstance(val, dict):
+                continue
+
+            if key in ("congressional_district", "political_party") and "unknown" in val:
+                val.pop("unknown")
+
+            setattr(self, key, self._to_percent(val))
+
         return self
 
 
@@ -307,9 +323,16 @@ class ProfessionalProfiles(BaseModel):
     @model_validator(mode="after")
     def calculate_percentages(self) -> "ProfessionalProfiles":
         values = self.model_dump()
+
         for key, val in values.items():
-            if isinstance(val, dict):
-                setattr(self, key, self._to_percent(val))
+            if not isinstance(val, dict):
+                continue
+
+            if "unknown" in val:
+                val.pop("unknown")
+
+            setattr(self, key, self._to_percent(val))
+
         return self
 
 
@@ -348,9 +371,16 @@ class EmploymentHistory(BaseModel):
     @model_validator(mode="after")
     def calculate_percentages(self) -> "EmploymentHistory":
         values = self.model_dump()
+
         for key, val in values.items():
-            if isinstance(val, dict):
-                setattr(self, key, self._to_percent(val))
+            if not isinstance(val, dict):
+                continue
+
+            if "unknown" in val:
+                val.pop("unknown")
+
+            setattr(self, key, self._to_percent(val))
+
         return self
 
 

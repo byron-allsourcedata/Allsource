@@ -348,6 +348,65 @@ class SettingsService:
         if not template_id:
             return {"status": SettingStatus.FAILED}
 
+    def _generate_invitation_link(
+        self, user_id: str, invite_user: str
+    ) -> tuple[str, str]:
+        md5_token_info = {
+            "id": user_id,
+            "user_mail": invite_user,
+            "salt": os.getenv("SECRET_SALT"),
+        }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
+        return confirm_email_url, md5_hash
+
+    def _send_invitation_email(
+        self, to_email: str, link: str, company_name: str, template_id: str
+    ):
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=to_email,
+            template_id=template_id,
+            template_placeholder={
+                "full_name": to_email,
+                "link": link,
+                "company_name": company_name,
+            },
+        )
+
+    def invite_user(
+        self,
+        user: dict,
+        invite_user,
+        access_level=TeamAccessLevel.READ_ONLY,
+    ):
+        user_id = user.get("id")
+        if not self.subscription_service.check_invitation_limit(
+            user_id=user_id
+        ):
+            return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
+
+        if access_level not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+            TeamAccessLevel.STANDARD.value,
+            TeamAccessLevel.READ_ONLY.value,
+        }:
+            raise HTTPException(
+                status_code=500,
+                detail={"error": SettingStatus.INVALID_ACCESS_LEVEL.value},
+            )
+
+        if self.team_invitation_persistence.exists(
+            user_id=user_id, email=invite_user
+        ):
+            return {"status": SettingStatus.ALREADY_INVITED}
+
+        template_id = self._get_invitation_template_id()
+        if not template_id:
+            return {"status": SettingStatus.FAILED}
+
         confirm_link, md5_hash = self._generate_invitation_link(
             user_id, invite_user
         )

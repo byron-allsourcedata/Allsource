@@ -47,7 +47,7 @@ class LeadsRequests(Base):
         ForeignKey("leads_visits.id", ondelete="CASCADE"),
         nullable=False,
     )
-    page_parameters = Column(VARCHAR(1024), nullable=True)
+    page_parameters = Column(VARCHAR(2048), nullable=True)
     spent_time_sec = Column(BigInteger, nullable=False)
     domain_id = Column(
         Integer,
