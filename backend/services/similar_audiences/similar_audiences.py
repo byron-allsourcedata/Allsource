@@ -19,7 +19,11 @@ from .audience_data_normalization import (
     AudienceDataNormalizationServiceDep,
     default_normalization_config,
 )
-from .exceptions import EqualTrainTargets, EmptyTrainDataset
+from .exceptions import (
+    EqualTrainTargets,
+    EmptyTrainDataset,
+    FeaturesAreConstant,
+)
 
 pd.set_option("future.no_silent_downcasting", True)
 
@@ -133,11 +137,18 @@ class SimilarAudienceService:
         try:
             model.fit(train_pool)
         except CatBoostError as e:
-            if "All train targets are equal" in str(e):
+            str_e = str(e)
+            if "All train targets are equal" in str_e:
                 value = y_train.iloc[0]
                 raise EqualTrainTargets(
                     f"All train targets are equal - customer value is same ({value}) for all rows, check if your data is valid)"
                 )
+            if "All features are either constant or ignored" in str_e:
+                raise FeaturesAreConstant(
+                    "All training features (in X) are either constant or ignored"
+                )
+
+            raise e from e
 
         return model, train_pool
 

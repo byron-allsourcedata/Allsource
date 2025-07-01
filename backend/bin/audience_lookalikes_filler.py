@@ -14,6 +14,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.util import get_int_env
 from db_dependencies import Db
 from resolver import Resolver
 
@@ -25,6 +26,8 @@ from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
 )
 from sqlalchemy.orm import Session
+
+from services.lookalike_filler import LookalikeFillerService
 
 
 load_dotenv()
@@ -53,6 +56,8 @@ async def send_sse(channel, user_id: int, data: dict):
             message_body={"status": AUDIENCE_LOOKALIKES_PROGRESS, "data": data},
         )
     except Exception as e:
+        logging.error(f"Error sending SSE: {e}")
+    except BaseException as e:
         logging.error(f"Error sending SSE: {e}")
 
 
@@ -131,6 +136,8 @@ async def aud_sources_reader(
 
 async def main():
     await SentryConfig.async_initilize()
+    bulk_size = get_int_env("LOOKALIKE_BULK_SIZE")
+
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
@@ -144,6 +151,8 @@ async def main():
     resolver = Resolver()
     try:
         logging.info("Starting processing...")
+        logging.info(f"Bulk size = {bulk_size}")
+
         rmq_connection = RabbitMQConnection()
         connection = await rmq_connection.connect()
         channel = await connection.channel()

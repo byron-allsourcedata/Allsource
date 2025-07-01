@@ -135,5 +135,8 @@ def dep_constructor(cls) -> Callable:
     return constructor
 
 
-def injectable(cls):
+Class = TypeVar("Class")
+
+
+def injectable(cls: Class) -> Annotated[Class, Depends]:
     return Annotated[cls, Depends(dep_constructor(cls))]

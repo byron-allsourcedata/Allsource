@@ -30,6 +30,9 @@ from services.similar_audiences.audience_data_normalization import (
 from services.similar_audiences.column_selector import AudienceColumnSelector
 
 
+PersonScore = tuple[UUID, float]
+
+
 def is_uuid(value):
     try:
         UUID(str(value))
@@ -214,13 +217,14 @@ class SimilarAudiencesScoresService:
         result = model.predict(df_normed)
         return result.tolist()
 
+    @deprecated("use v3")
     def calculate_batch_scores_v2(
         self,
         asids: List[UUID],
         batch: list[dict[str, Any]],
         model: CatBoostRegressor,
         lookalike_id: UUID,
-        config: NormalizationConfig
+        config: NormalizationConfig,
     ) -> tuple[float, float]:
         scores, duration = measure(
             lambda _: self.calculate_score_dict_batch(model, batch, config)
@@ -233,6 +237,35 @@ class SimilarAudiencesScoresService:
         )
 
         return duration, insert_time
+
+    def calculate_batch_scores_v3(
+        self,
+        asids: list[UUID],
+        batch: list[dict[str, Any]],
+        model: CatBoostRegressor,
+        config: NormalizationConfig,
+    ) -> tuple[float, list[PersonScore]]:
+        scores, duration = measure(
+            lambda _: self.calculate_score_dict_batch(model, batch, config)
+        )
+
+        return duration, list(zip(asids, scores))
+
+    def top_scores(
+        self,
+        old_scores: list[tuple[UUID, float]],
+        new_scores: list[tuple[UUID, float]],
+        top_n: int,
+    ) -> list[PersonScore]:
+        combined = {}
+
+        for uuid_, score in old_scores + new_scores:
+            if uuid_ not in combined or score > combined[uuid_]:
+                combined[uuid_] = score
+
+        return sorted(combined.items(), key=lambda x: x[1], reverse=True)[
+            :top_n
+        ]
 
     @deprecated("deprecated")
     def calculate_batch_scores(
@@ -248,13 +281,12 @@ class SimilarAudiencesScoresService:
             batch=batch,
             model=model,
             lookalike_id=lookalike_id,
-            config=config
+            config=config,
         )
 
     def prepare_config(self, lookalike_id: UUID) -> NormalizationConfig:
         lookalike = self.lookalikes.get_lookalike(lookalike_id)
         return self.get_config(lookalike.significant_fields)
-
 
     def get_config(self, significant_fields: dict):
         column_names = self.column_selector.clickhouse_columns(

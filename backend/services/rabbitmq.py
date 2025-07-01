@@ -40,7 +40,6 @@ class RabbitmqService:
         finally:
             await channel.close()
 
-
     async def publish_rabbitmq_message_with_channel(
         self, channel, queue_name: str, message_body: MessageBody | dict
     ):
