@@ -200,7 +200,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {
@@ -216,14 +216,14 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 			maxHeight: "48px",
 		},
 		"&.Mui-focused": {
-			color: "#0000FF",
+			color: "rgba(56, 152, 252, 1)",
 		},
 		"& .MuiOutlinedInput-root": {
 			paddingTop: "13px",
 			paddingBottom: "13px",
 		},
 		"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-			borderColor: "#0000FF",
+			borderColor: "rgba(56, 152, 252, 1)",
 		},
 	},
 	form: {

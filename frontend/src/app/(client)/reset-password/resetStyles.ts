@@ -170,7 +170,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 		},
 	},

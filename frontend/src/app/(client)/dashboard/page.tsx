@@ -775,6 +775,9 @@ const AudienceDashboard: React.FC = () => {
 														xs={12}
 														sx={{
 															"@media (max-width: 600px)": { minWidth: 320 },
+															display: "flex",
+															flexDirection: "column",
+															gap: 1,
 														}}
 														md={2.4}
 													>
@@ -818,6 +821,9 @@ const AudienceDashboard: React.FC = () => {
 																	"@media (max-width: 600px)": {
 																		minWidth: 320,
 																	},
+																	display: "flex",
+																	flexDirection: "column",
+																	gap: 1,
 																}}
 																xs={12}
 																md={2.4}
@@ -849,6 +855,9 @@ const AudienceDashboard: React.FC = () => {
 																	"@media (max-width: 600px)": {
 																		minWidth: 320,
 																	},
+																	display: "flex",
+																	flexDirection: "column",
+																	gap: 1,
 																}}
 																md={2.4}
 															>
@@ -879,6 +888,9 @@ const AudienceDashboard: React.FC = () => {
 																	"@media (max-width: 600px)": {
 																		minWidth: 320,
 																	},
+																	display: "flex",
+																	flexDirection: "column",
+																	gap: 1,
 																}}
 																md={2.4}
 															>
@@ -915,6 +927,9 @@ const AudienceDashboard: React.FC = () => {
 																		mr: 10,
 																		pr: 1.5,
 																	},
+																	display: "flex",
+																	flexDirection: "column",
+																	gap: 1,
 																}}
 																md={2.4}
 															>

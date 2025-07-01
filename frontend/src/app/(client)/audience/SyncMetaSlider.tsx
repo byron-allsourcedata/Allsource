@@ -336,7 +336,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
 			"&.Mui-focused": {
-				color: "#0000FF",
+				color: "rgba(56, 152, 252, 1)",
 			},
 		},
 		formInput: {
@@ -692,7 +692,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																margin: 0,
 																left: "3px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																},
 															},
 														}}
@@ -937,7 +937,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																					fontWeight: "400",
 																					color: "rgba(17, 17, 19, 0.60)",
 																					"&.Mui-focused": {
-																						color: "#0000FF",
+																						color: "rgba(56, 152, 252, 1)",
 																					},
 																				},
 																			}}
@@ -978,7 +978,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																							},
 																						"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																							{
-																								borderColor: "#0000FF",
+																								borderColor:
+																									"rgba(56, 152, 252, 1)",
 																							},
 																					},
 																					"&+.MuiFormHelperText-root": {

@@ -29,6 +29,7 @@ import { cmsHintCards } from "./context/hintsCardsContent";
 import { useGetStartedHints } from "./context/PixelInstallHintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 import { useRef } from "react";
+import CustomButton from "@/components/ui/CustomButton";
 
 interface HintCardInterface {
 	description: string;
@@ -822,29 +823,14 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													position="relative"
 													sx={{ display: "flex", justifyContent: "flex-end" }}
 												>
-													<Button
-														fullWidth
+													<CustomButton
+														disabled={!isFormValid()}
 														variant="contained"
-														sx={{
-															...styles.submitButton,
-															marginTop: "auto",
-															maxWidth: "88px",
-															minHeight: "40px",
-															opacity: isFormValid() ? 1 : 0.6,
-															pointerEvents: isFormValid() ? "auto" : "none",
-															backgroundColor: isFormValid()
-																? "rgba(56, 152, 252, 1)"
-																: "rgba(56, 152, 252, 0.6)",
-															"&.Mui-disabled": {
-																backgroundColor: "rgba(56, 152, 252, 0.6)",
-																color: "#fff",
-															},
-														}}
 														onClick={handleSubmit}
-														disabled={!isFormValid}
+														sx={{ padding: "10px 47px" }}
 													>
 														Install
-													</Button>
+													</CustomButton>
 													{cmsHints["installScript"]?.show && (
 														<HintCard
 															card={cmsHintCards["installScript"]}
@@ -908,35 +894,18 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 											</Typography>
 										</Box>
 										<Box position="relative">
-											<Button
-												component={Link}
-												href="https://wordpress.org/plugins/allsource"
-												target="_blank"
-												variant="outlined"
-												sx={{
-													ml: 5,
-													backgroundColor: "rgba(56, 152, 252, 1)",
-													color: "rgba(255, 255, 255, 1)",
-													textTransform: "none",
-													padding: "1em 2em",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													"&:hover": {
-														backgroundColor: "rgba(56, 152, 252, 1)",
-													},
+											<CustomButton
+												variant="contained"
+												sx={{ ml: 5 }}
+												onClick={() => {
+													window.open(
+														"https://wordpress.org/plugins/allsource",
+														"_blank",
+													);
 												}}
 											>
-												<Typography
-													className="second-sub-title"
-													sx={{
-														fontSize: "14px !important",
-														color: "#fff !important",
-														textAlign: "left",
-														textWrap: "wrap",
-													}}
-												>
-													Get plugin
-												</Typography>
-											</Button>
+												Get plugin
+											</CustomButton>
 											{cmsHints["installPlugin"]?.show && (
 												<HintCard
 													card={cmsHintCards["installPlugin"]}
@@ -995,7 +964,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 														sx={{
 															backgroundColor: "#ffffff",
 															border: "1px solid rgba(228, 228, 228, 1)",
-															borderRadius: "10px",
+															borderRadius: "4px",
 															maxHeight: "10em",
 															overflowY: "auto",
 															position: "relative",
@@ -1026,7 +995,9 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 														}}
 													>
 														<IconButton onClick={handleCopyToClipboard}>
-															<ContentCopyIcon />
+															<ContentCopyIcon
+																sx={{ width: "24px", height: "24px" }}
+															/>
 														</IconButton>
 													</Box>
 													{cmsHints["enterSiteID"]?.show && (
@@ -1078,30 +1049,13 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 											</Typography>
 										</Box>
 										<Box position="relative">
-											<Button
-												onClick={handleInstallButtonClick}
+											<CustomButton
 												variant="outlined"
-												sx={{
-													ml: 5,
-													backgroundColor: "rgba(255, 255, 255, 1)",
-													textTransform: "none",
-													padding: "1em 2em",
-													border: "1px solid rgba(56, 152, 252, 1)",
-												}}
+												sx={{ ml: 5 }}
+												onClick={handleInstallButtonClick}
 											>
-												<Typography
-													className="second-sub-title"
-													sx={{
-														fontSize: "14px !important",
-														color: "rgba(56, 152, 252, 1) !important",
-														lineHeight: "22.4px",
-														textAlign: "left",
-														textWrap: "wrap",
-													}}
-												>
-													View installation
-												</Typography>
-											</Button>
+												View installation
+											</CustomButton>
 											{cmsHints["scriptInstallation"]?.show && (
 												<HintCard
 													card={cmsHintCards["scriptInstallation"]}

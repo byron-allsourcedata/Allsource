@@ -136,10 +136,10 @@ const SourcesCard: React.FC<CardProps> = ({ value, onClick, isActive }) => (
 		value={value}
 		title="Sources"
 		icon={
-			<AllInboxIcon sx={{ color: "rgba(56, 152, 252, 1)", fontSize: "36px" }} />
+			<AllInboxIcon sx={{ color: "rgba(80, 82, 178, 1)", fontSize: "36px" }} />
 		}
 		textColor="rgba(32,33,36,1)"
-		borderColor="rgba(56, 152, 252, 1)33"
+		borderColor="rgba(80, 82, 178, 0.2)"
 		onClick={onClick}
 		isActive={isActive}
 	/>
@@ -220,6 +220,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
 		>
 			<Grid
 				item
+				style={{ gap: 1, display: "flex", flexDirection: "column" }}
 				sx={{
 					"@media (max-width: 600px)": { minWidth: 320 },
 					pointerEvents: disabledCards.pixel ? "none" : "auto",

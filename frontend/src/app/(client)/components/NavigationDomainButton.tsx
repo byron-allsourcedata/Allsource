@@ -228,7 +228,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 						maxHeight: "48px",
 					},
 					"&.Mui-focused": {
-						color: "#0000FF",
+						color: "rgba(56, 152, 252, 1)",
 					},
 					"& .MuiOutlinedInput-root": {
 						paddingTop: "13px",
@@ -238,7 +238,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 						top: "-5px",
 					},
 					"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-						borderColor: "#0000FF",
+						borderColor: "rgba(56, 152, 252, 1)",
 					},
 				}}
 				placeholder={isFocused ? "example.com" : ""}

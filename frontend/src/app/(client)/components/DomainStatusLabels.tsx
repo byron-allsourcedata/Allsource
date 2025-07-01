@@ -94,7 +94,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 						minHeight: "28px",
 					}}
 				>
-					+ Add Data Sync
+					+ Add Pixel Sync
 				</Button>
 			);
 		}

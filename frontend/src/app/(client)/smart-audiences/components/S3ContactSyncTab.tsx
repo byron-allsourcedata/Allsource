@@ -147,7 +147,7 @@ const S3ContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 									letterSpacing: "0.06px",
 									top: "5px",
 									"&.Mui-focused": {
-										color: "#0000FF",
+										color: "rgba(56, 152, 252, 1)",
 									},
 								},
 							}}

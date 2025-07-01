@@ -157,7 +157,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 				padding: "12px 16px 13px 16px",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {

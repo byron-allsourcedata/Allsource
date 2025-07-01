@@ -88,16 +88,11 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 					<Button
 						onClick={onCancel}
 						variant="text"
+						className="second-sub-title"
 						sx={{
-							textTransform: "none",
-							fontSize: "14px",
 							padding: "12px",
-							fontWeight: 600,
-							borderRadius: "4px",
-							fontFamily: "var(--font-nunito)",
-							"&:active": {
-								backgroundColor: "#74B7FD",
-							},
+							textTransform: "none",
+							color: "rgba(56, 152, 252, 1) !important",
 						}}
 					>
 						Cancel
