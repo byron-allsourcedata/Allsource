@@ -36,7 +36,7 @@
 	font-size: 13px !important;
 	padding: 0px !important;
 	margin: 0px !important;
-	font-family: "Nunito Sans" !important;
+	font-family: var(--font-nunito) !important;
 	line-height: inherit;
 	min-height: 50px !important;
 	max-width: 100%;

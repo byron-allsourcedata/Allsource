@@ -1,5 +1,4 @@
 "use client";
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import React from "react";
@@ -13,12 +12,12 @@ import { SSEProvider } from "../context/SSEContext";
 import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
-import Script from "next/script";
-import { Nunito_Sans, Roboto, Press_Start_2P } from "next/font/google";
+import { Nunito_Sans, Roboto } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
 const nunito = Nunito_Sans({
 	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700", "900"],
 	display: "swap",
 	variable: "--font-nunito",
 });

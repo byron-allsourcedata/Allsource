@@ -29,6 +29,7 @@ from routers import (
     dashboard_audience,
     insights,
     pixel_management,
+    opt_out,
 )
 
 main_router = APIRouter()
@@ -72,3 +73,4 @@ main_router.include_router(
     dashboard_audience.router, prefix="/audience-dashboard"
 )
 main_router.include_router(insights.router, prefix="/audience-insights")
+main_router.include_router(opt_out.router, prefix="/opt-out")
