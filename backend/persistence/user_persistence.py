@@ -476,6 +476,15 @@ class UserPersistence:
     ):
         status_case = self.calculate_user_status()
 
+        subq_domain_resolved = (
+            self.db.query(UserDomains.user_id)
+            .filter(
+                UserDomains.user_id == Users.id,
+                UserDomains.is_another_domain_resolved.is_(True),
+            )
+            .exists()
+        )
+
         query = (
             self.db.query(
                 Users.id,
@@ -491,6 +500,9 @@ class UserPersistence:
                 ),
                 SubscriptionPlan.title.label("subscription_plan"),
                 status_case.label("user_status"),
+                case((subq_domain_resolved, True), else_=False).label(
+                    "is_another_domain_resolved"
+                ),
             )
             .join(
                 UserSubscriptions,
@@ -511,7 +523,20 @@ class UserPersistence:
                 status.strip().lower()
                 for status in filters["statuses"].split(",")
             ]
-            query = query.filter(func.lower(status_case).in_(statuses))
+
+            filter_conditions = []
+
+            if "multiple_domains" in statuses:
+                filter_conditions.append(
+                    case((subq_domain_resolved, True), else_=False).is_(True)
+                )
+                statuses.remove("multiple_domains")
+
+            if statuses:
+                filter_conditions.append(func.lower(status_case).in_(statuses))
+
+            if filter_conditions:
+                query = query.filter(or_(*filter_conditions))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(

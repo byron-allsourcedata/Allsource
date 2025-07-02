@@ -90,6 +90,7 @@ const statusMapping: Record<string, string[]> = {
 		"Pixel Not Installed",
 		"Resolution Failed",
 		"Sync Error",
+		"Multiple Domains",
 	],
 	neutral: ["Waiting Contacts", "Sync Not Completed"],
 	positive: ["Data Syncing"],
@@ -950,6 +951,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									"Sync Not Completed",
 									"Sync Error",
 									"Data Syncing",
+									"Multiple Domains",
 								]}
 								onOptionToggle={(status) => handleStatusChange([status])}
 								placeholder="Select Status"

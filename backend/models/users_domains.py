@@ -56,6 +56,9 @@ class UserDomains(Base):
         Boolean, nullable=False, server_default=text("false")
     )
     total_leads = Column(Integer, nullable=False, server_default=text("0"))
+    is_another_domain_resolved = Column(
+        Boolean, nullable=False, server_default="false", default=False
+    )
 
     __table_args__ = (
         Index(

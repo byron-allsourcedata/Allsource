@@ -260,6 +260,7 @@ class AdminCustomersService:
                     "lookalikes_count": lookalikes_count,
                     "type": "user",
                     "credits_count": user.credits_count,
+                    "is_another_domain_resolved": user.is_another_domain_resolved,
                 }
             )
 

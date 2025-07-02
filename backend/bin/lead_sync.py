@@ -697,10 +697,12 @@ async def process_user_data(
         logging.info(
             f"Access denied: normalized page domain '{normalize_domain(page)}' does not match user domain '{user_domain.domain}'"
         )
+        if not user_domain.is_another_domain_resolved:
+            user_domain.is_another_domain_resolved = True
         return
 
     if not user_domain.is_enable and not root_user:
-        logging.info(f"Domain is not enabled: {user_domain.id}")
+        logging.info(f"Domain disabled: {user_domain.id}")
         return
     user_domain_id = user_domain.id
     if not subscription_service.is_allow_add_lead(user.id):

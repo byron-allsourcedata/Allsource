@@ -155,11 +155,36 @@ class DashboardAudiencePersistence:
 
         status_case = self.calculate_user_status()
 
+        subq_domain_resolved = (
+            self.db.query(UserDomains.user_id)
+            .filter(
+                UserDomains.user_id == Users.id,
+                UserDomains.is_another_domain_resolved.is_(True),
+            )
+            .correlate(Users)
+            .exists()
+        )
+
         if statuses:
             formatted_statuses = [
                 status.strip().lower() for status in statuses.split(",")
             ]
-            user_filters.append(func.lower(status_case).in_(formatted_statuses))
+
+            filter_conditions = []
+
+            if "multiple_domains" in formatted_statuses:
+                filter_conditions.append(
+                    case((subq_domain_resolved, True), else_=False).is_(True)
+                )
+                formatted_statuses.remove("multiple_domains")
+
+            if formatted_statuses:
+                filter_conditions.append(
+                    func.lower(status_case).in_(formatted_statuses)
+                )
+
+            if filter_conditions:
+                user_filters.append(or_(*filter_conditions))
 
         if exclude_test_users:
             user_filters.append(~Users.full_name.like("#test%"))

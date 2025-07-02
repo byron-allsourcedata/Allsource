@@ -39,7 +39,7 @@ interface FilterParams {
 	statuses: Record<string, boolean>;
 }
 
-interface UserData {
+export interface UserData {
 	id: number;
 	full_name: string;
 	email: string;
@@ -57,6 +57,7 @@ interface UserData {
 	credits_count?: number;
 	type?: string;
 	is_email_validation_enabled: boolean;
+	is_another_domain_resolved: boolean;
 }
 
 const Users: React.FC = () => {
@@ -181,7 +182,6 @@ const Users: React.FC = () => {
 					router.push("/signin");
 				} else {
 					showErrorToast(`Error: ${error.response?.status}`);
-					router.push("/signin");
 				}
 			}
 		} finally {
