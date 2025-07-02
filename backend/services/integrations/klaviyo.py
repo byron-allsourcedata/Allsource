@@ -100,7 +100,7 @@ class KlaviyoIntegrationsService:
             "Content-Type": "application/json",
         }
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.request(
                     method=method,
                     url=url,
@@ -372,7 +372,7 @@ class KlaviyoIntegrationsService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
     ):
-        sem = asyncio.Semaphore(10)
+        sem = asyncio.Semaphore(5)
 
         async def process_single_lead(lead_user, five_x_five_user):
             async with sem:

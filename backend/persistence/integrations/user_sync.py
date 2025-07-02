@@ -200,6 +200,25 @@ class IntegrationsUserSyncPersistence:
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
+        successful_contacts_query = (
+            select(
+                func.count(DataSyncImportedLead.id).label(
+                    "successful_contacts"
+                ),
+                IntegrationUserSync.id,
+            )
+            .select_from(DataSyncImportedLead)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
+            )
+            .where(
+                DataSyncImportedLead.status
+                == ProccessDataSyncResult.SUCCESS.value,
+            )
+            .group_by(IntegrationUserSync.id)
+        ).subquery()
+
         success_synced_persons_query = (
             self.db.query(
                 IntegrationUserSync.id,
@@ -228,6 +247,9 @@ class IntegrationsUserSyncPersistence:
                 coalesce(validation_persons_query.c.validation, 0).label(
                     "validation"
                 ),
+                coalesce(
+                    successful_contacts_query.c.successful_contacts, 0
+                ).label("successful_contacts"),
                 UserIntegration.service_name,
                 UserIntegration.is_with_suppression,
                 UserIntegration.platform_user_id,
@@ -237,6 +259,10 @@ class IntegrationsUserSyncPersistence:
             .join(
                 UserIntegration,
                 UserIntegration.id == IntegrationUserSync.integration_id,
+            )
+            .outerjoin(
+                successful_contacts_query,
+                IntegrationUserSync.id == successful_contacts_query.c.id,
             )
             .outerjoin(
                 processed_persons_query,
@@ -287,7 +313,7 @@ class IntegrationsUserSyncPersistence:
                     "suppression": sync.is_with_suppression,
                     "contacts": sync.all_contacts,
                     "processed_contacts": sync.processed,
-                    "successful_contacts": sync.no_of_contacts,
+                    "successful_contacts": sync.successful_contacts,
                     "validation_contacts": sync.validation,
                     "createdBy": sync.created_by,
                     "accountId": sync.platform_user_id,
@@ -329,7 +355,7 @@ class IntegrationsUserSyncPersistence:
                 "suppression": sync.is_with_suppression,
                 "contacts": sync.all_contacts,
                 "processed_contacts": sync.processed,
-                "successful_contacts": sync.no_of_contacts,
+                "successful_contacts": sync.successful_contacts,
                 "validation_contacts": sync.validation,
                 "createdBy": sync.created_by,
                 "accountId": sync.platform_user_id,
