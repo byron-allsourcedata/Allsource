@@ -4,6 +4,7 @@ import sys
 import asyncio
 import functools
 import json
+import aio_pika
 from aio_pika import IncomingMessage
 from dotenv import load_dotenv
 
@@ -20,7 +21,6 @@ from resolver import Resolver
 
 
 from config.sentry import SentryConfig
-from config.rmq_connection import publish_rabbitmq_message_with_channel
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -77,21 +77,20 @@ def get_max_size(lookalike_size):
 
 
 async def aud_sources_reader(
-    message: IncomingMessage,
+    message_body,
     db_session: Session,
+    connection,
     channel,
     filler: LookalikeFillerService,
 ):
+    message_body_json = json.loads(message_body)
+    logging.info(f"msg body {message_body_json}")
+    lookalike_id = message_body_json["lookalike_id"]
     try:
-        message_body = json.loads(message.body)
-        logging.info(f"msg body {message_body}")
-        lookalike_id = message_body.get("lookalike_id")
-
         audience_lookalike = filler.get_lookalike(lookalike_id)
 
         if not audience_lookalike:
             logging.info(f"audience_lookalike with id {lookalike_id} not found")
-            await message.ack()
             return
 
         total_rows = get_max_size(audience_lookalike.lookalike_size)
@@ -99,6 +98,32 @@ async def aud_sources_reader(
         user_ids = filler.process_lookalike_pipeline(
             audience_lookalike=audience_lookalike
         )
+
+        audience_lookalike = db_session.merge(audience_lookalike)
+
+        try:
+            await channel.close()
+            await connection.close()
+        except BaseException as e:
+            logging.error(f"Close conn: {e}", exc_info=True)
+
+        rmq_connection = RabbitMQConnection()
+        connection = await rmq_connection.connect()
+        channel = await connection.channel()
+        await filler.inform_lookalike_agent(
+            channel,
+            lookalike_id=audience_lookalike.id,
+            user_id=audience_lookalike.user_id,
+            persons=user_ids,
+        )
+        await channel.close()
+        await connection.close()
+
+        db_session.commit()
+
+        rmq_connection = RabbitMQConnection()
+        connection = await rmq_connection.connect()
+        channel = await connection.channel()
 
         await send_sse(
             channel,
@@ -109,29 +134,15 @@ async def aud_sources_reader(
                 "processed": 0,
             },
         )
-
-        # i'm not sure why this was necessary
-        # if not enrichment_lookalike_scores:
-        #     await message.ack()
-        #     return
-
-        print(f"lookalike persons: {len(user_ids)}")
-
-        audience_lookalike = db_session.merge(audience_lookalike)
-
-        await filler.inform_lookalike_agent(
-            channel,
-            lookalike_id=audience_lookalike.id,
-            user_id=audience_lookalike.user_id,
-            persons=user_ids,
-        )
-
-        db_session.commit()
-        await message.ack()
     except BaseException as e:
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
-        await message.reject(requeue=True)
+        await asyncio.sleep(5)
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
+            queue_name=AUDIENCE_LOOKALIKES_READER,
+            message_body=message_body,
+        )
 
 
 async def main():
@@ -168,14 +179,38 @@ async def main():
                 "x-consumer-timeout": 14400000,
             },
         )
-        await reader_queue.consume(
-            functools.partial(
-                aud_sources_reader,
-                db_session=db_session,
-                channel=channel,
-                filler=filler,
-            )
-        )
+
+        while True:
+            try:
+                reader_queue = await channel.declare_queue(
+                    name=AUDIENCE_LOOKALIKES_READER,
+                    durable=True,
+                    arguments={
+                        "x-consumer-timeout": 14400000,
+                    },
+                )
+                message = await reader_queue.get(no_ack=False)
+                await message.ack()
+                await aud_sources_reader(
+                    message_body=message.body,
+                    db_session=db_session,
+                    connection=connection,
+                    channel=channel,
+                    filler=filler,
+                )
+
+            except aio_pika.exceptions.QueueEmpty as e:
+                await asyncio.sleep(1)
+
+            try:
+                await channel.close()
+                await connection.close()
+            except BaseException as e:
+                logging.error(f"Close conn 2: {e}", exc_info=True)
+
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
 
         await asyncio.Future()
 

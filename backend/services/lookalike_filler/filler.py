@@ -1,3 +1,4 @@
+from concurrent.futures import Future
 import logging
 from py_compile import _get_default_invalidation_mode
 import statistics
@@ -5,12 +6,13 @@ import time
 from typing import Tuple, Dict, List, TypedDict
 from uuid import UUID
 
+from config import ClickhouseConfig
 from catboost import CatBoostRegressor
 from clickhouse_connect.driver.common import StreamContext
 from sqlalchemy import update
 from typing_extensions import deprecated
 
-from db_dependencies import Clickhouse, Db, ClickhouseInserter
+from db_dependencies import Clickhouse, Db, ClickhouseInserter, get_db
 from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_matched_persons import (
@@ -76,6 +78,15 @@ class LookalikeFillerService:
         self.matched_sources = matched_sources
         self.rabbit = rabbit
 
+    def get_buckets(self, num_workers: int):
+        buckets_per_worker = 100 // num_workers
+        bucket_ranges = [
+            list(range(i * buckets_per_worker, (i + 1) * buckets_per_worker))
+            for i in range(num_workers)
+        ]
+
+        return bucket_ranges
+
     def get_enrichment_users(
         self, significant_fields: Dict
     ) -> Tuple[StreamContext, List[str]]:
@@ -91,6 +102,33 @@ class LookalikeFillerService:
 
         rows_stream = self.clickhouse.query_row_block_stream(
             f"SELECT {columns} FROM enrichment_users",
+            settings={"max_block_size": 1000000},
+        )
+        column_names = rows_stream.source.column_names
+
+        return rows_stream, column_names
+
+    def get_enrichment_users_partition(
+        self, significant_fields: dict, bucket: list[int]
+    ) -> tuple[StreamContext, list[str]]:
+        """
+        Returns a stream of blocks of enrichment users and a list of column names for a partition
+        """
+
+        column_names = self.column_selector.clickhouse_columns(
+            significant_fields
+        )
+
+        columns = ", ".join(["asid"] + column_names)
+
+        logger.info(f"bucket: {bucket}")
+
+        in_clause = ",".join(f"{x}" for x in bucket)
+
+        client = ClickhouseConfig.get_client()
+
+        rows_stream = client.query_row_block_stream(
+            f"SELECT {columns} FROM enrichment_users WHERE cityHash64(asid) % 100 IN ({in_clause})",
             settings={"max_block_size": 1000000},
         )
         column_names = rows_stream.source.column_names
@@ -192,68 +230,140 @@ class LookalikeFillerService:
         )
         self.db.commit()
 
+        buckets = self.get_buckets(thread_count)
+
         with ThreadPoolExecutor(max_workers=thread_count) as executor:
-            futures = []
-            fetch_start = time.perf_counter()
-            with rows_stream:
-                for batch in rows_stream:
-                    dict_batch = [
-                        {
-                            **dict(zip(column_names, row)),
-                            "customer_value": value_by_asid.get(
-                                row[column_names.index("asid")], 0.0
-                            ),
-                        }
-                        for row in batch
-                    ]
+            futures: list[Future[list[PersonScore]]] = []
 
-                    batch_buffer.extend(dict_batch)
+            for bucket in buckets:
+                future = executor.submit(
+                    self.filler_worker,
+                    significant_fields=significant_fields,
+                    config=config,
+                    value_by_asid=value_by_asid,
+                    lookalike_id=lookalike_id,
+                    bucket=bucket,
+                    top_n=top_n,
+                    model=model,
+                )
 
-                    if len(batch_buffer) < BULK_SIZE:
-                        continue
-                    fetch_end = time.perf_counter()
-                    logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
+                futures.append(future)
 
-                    prepare_asids_start = time.perf_counter()
-                    asids: list[UUID] = [doc["asid"] for doc in batch_buffer]
-                    prepare_asids_end = time.perf_counter()
+            for future in as_completed(futures):
+                scores = future.result()
 
-                    logger.info(
-                        f"prepare asids time: {prepare_asids_end - prepare_asids_start:.3f}"
-                    )
+                top_scores = self.audiences_scores.top_scores(
+                    old_scores=top_scores,
+                    new_scores=scores,
+                    top_n=top_n,
+                )
 
-                    futures.append(
-                        executor.submit(
-                            self.audiences_scores.calculate_batch_scores_v3,
-                            asids,
-                            batch_buffer,
-                            model,
-                            config,
-                            lookalike_id,
-                        )
-                    )
-
-                    batch_buffer = []
-                    fetch_start = time.perf_counter()
-
-                for future in as_completed(futures):
-                    task_result = future.result()
-                    times, scores = task_result
-                    count += len(scores)
-
-                    top_scores = self.audiences_scores.top_scores(
-                        old_scores=top_scores,
-                        new_scores=scores,
-                        top_n=top_n,
-                    )
-
-                    logging.info(f"{count} users processed")
+                logging.info(f"sort done")
 
         self.clickhouse.command("SET max_query_size = 20485760")
         self.enrichment_scores.bulk_insert(
             lookalike_id=lookalike_id, scores=top_scores
         )
         self.db_workaround(lookalike_id=lookalike_id)
+
+    def filler_worker(
+        self,
+        significant_fields: dict,
+        config: NormalizationConfig,
+        value_by_asid: dict[UUID, float],
+        lookalike_id: UUID,
+        bucket: list[int],
+        top_n: int,
+        model: CatBoostRegressor,
+    ) -> list[PersonScore]:
+        db = next(get_db())
+        BULK_SIZE: int = get_int_env("LOOKALIKE_BULK_SIZE")
+
+        rows_stream, column_names = self.get_enrichment_users_partition(
+            significant_fields=significant_fields,
+            bucket=bucket,
+        )
+
+        batch_buffer = []
+
+        top_scores: list[PersonScore] = []
+
+        _ = db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(processed_train_model_size=0)
+        )
+        db.commit()
+
+        fetch_start = time.perf_counter()
+
+        with rows_stream:
+            for batch in rows_stream:
+                dict_batch = [
+                    {
+                        **dict(zip(column_names, row)),
+                        "customer_value": value_by_asid.get(
+                            row[column_names.index("asid")], 0.0
+                        ),
+                    }
+                    for row in batch
+                ]
+
+                batch_buffer.extend(dict_batch)
+
+                if len(batch_buffer) < BULK_SIZE:
+                    continue
+
+                fetch_end = time.perf_counter()
+                logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
+
+                prepare_asids_start = time.perf_counter()
+                asids: list[UUID] = [doc["asid"] for doc in batch_buffer]
+                prepare_asids_end = time.perf_counter()
+
+                logger.info(
+                    f"prepare asids time: {prepare_asids_end - prepare_asids_start:.3f}"
+                )
+
+                times, scores = self.audiences_scores.calculate_batch_scores_v3(
+                    asids,
+                    batch_buffer,
+                    model,
+                    config,
+                    lookalike_id,
+                )
+
+                logger.info(f"batch calculation time: {times:.3f}")
+
+                update_query = (
+                    update(AudienceLookalikes)
+                    .where(AudienceLookalikes.id == lookalike_id)
+                    .values(
+                        processed_train_model_size=AudienceLookalikes.processed_train_model_size
+                        + len(scores),
+                        processed_size=AudienceLookalikes.processed_size
+                        + len(scores),
+                    )
+                    .returning(AudienceLookalikes.processed_train_model_size)
+                )
+
+                processed = db.execute(update_query).scalar()
+                db.commit()
+
+                logger.info(f"processed: {processed}")
+
+                top_scores = self.audiences_scores.top_scores(
+                    old_scores=top_scores,
+                    new_scores=scores,
+                    top_n=top_n,
+                )
+
+                logging.info(f"sorted scores")
+
+                batch_buffer = []
+                fetch_start = time.perf_counter()
+
+        return top_scores
 
     @deprecated("workaround")
     def db_workaround(self, lookalike_id: UUID):
