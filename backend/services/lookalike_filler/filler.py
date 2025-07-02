@@ -185,6 +185,13 @@ class LookalikeFillerService:
         config = self.audiences_scores.prepare_config(lookalike_id)
         from concurrent.futures import ThreadPoolExecutor, as_completed
 
+        _ = self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(processed_train_model_size=0)
+        )
+        self.db.commit()
+
         with ThreadPoolExecutor(max_workers=thread_count) as executor:
             futures = []
             fetch_start = time.perf_counter()
@@ -222,6 +229,7 @@ class LookalikeFillerService:
                             batch_buffer,
                             model,
                             config,
+                            lookalike_id,
                         )
                     )
 
@@ -241,6 +249,7 @@ class LookalikeFillerService:
 
                     logging.info(f"{count} users processed")
 
+        self.clickhouse.command("SET max_query_size = 20485760")
         self.enrichment_scores.bulk_insert(
             lookalike_id=lookalike_id, scores=top_scores
         )
@@ -262,6 +271,7 @@ class LookalikeFillerService:
         )
 
     def post_process_lookalike(self, audience_lookalike: AudienceLookalikes):
+        self.clickhouse.command("SET max_query_size = 20485760")
         source_id = audience_lookalike.source_uuid
         lookalike_id = audience_lookalike.id
         total_rows = self.audience_lookalikes.get_max_size(
