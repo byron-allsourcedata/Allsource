@@ -149,12 +149,11 @@ def update_data_sync_imported_leads(
     lead_id: int,
     integration_data_sync: IntegrationUserSync,
     user_integration: UserIntegration,
-    is_email_validation_enabled: bool,
 ):
     session.query(DataSyncImportedLead).filter(
         DataSyncImportedLead.lead_users_id == lead_id,
         DataSyncImportedLead.data_sync_id == integration_data_sync.id,
-    ).update({"status": status, "is_validation": is_email_validation_enabled})
+    ).update({"status": status})
 
     if status == ProccessDataSyncResult.SUCCESS.value:
         integration_data_sync.last_sync_date = get_utc_aware_date()
@@ -374,7 +373,6 @@ async def ensure_integration(
                         lead_id=result["lead_id"],
                         integration_data_sync=data_sync,
                         user_integration=user_integration,
-                        is_email_validation_enabled=is_email_validation_enabled,
                     )
 
             logging.info(f"Processed message for service: {service_name}")

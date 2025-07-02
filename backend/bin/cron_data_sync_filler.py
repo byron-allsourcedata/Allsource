@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-
+from models import Users
 from config.sentry import SentryConfig
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
@@ -217,6 +217,15 @@ def get_previous_imported_leads(session, data_sync_id):
     return lead_users
 
 
+def is_email_validation_enabled(session: Session, users_id: int) -> bool:
+    result = (
+        session.query(Users.is_email_validation_enabled)
+        .filter(Users.id == users_id)
+        .scalar()
+    )
+    return result
+
+
 async def send_leads_to_rmq(
     session,
     channel,
@@ -230,6 +239,9 @@ async def send_leads_to_rmq(
         {
             "status": DataSyncImportedStatus.SENT.value,
             "lead_users_id": lead_id,
+            "is_validation": is_email_validation_enabled(
+                session=session, users_id=users_id
+            ),
             "service_name": user_integrations_service_name,
             "data_sync_id": data_sync.id,
             "created_at": datetime.now(timezone.utc),
