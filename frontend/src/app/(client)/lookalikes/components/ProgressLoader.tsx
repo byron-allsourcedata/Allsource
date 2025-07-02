@@ -18,7 +18,9 @@ const ProgressBar = ({ progress }: ProgressBarProps) => {
 		<div>
 			<LinearProgress
 				variant="determinate"
-				value={percentage > 0 ? Math.min(percentage, 100) : Math.max(percentage, 0)}
+				value={
+					percentage > 0 ? Math.min(percentage, 100) : Math.max(percentage, 0)
+				}
 				sx={{
 					width: "100%",
 					borderRadius: "54px",
