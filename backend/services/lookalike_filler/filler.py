@@ -1,4 +1,5 @@
 import logging
+from py_compile import _get_default_invalidation_mode
 import statistics
 import time
 from typing import Tuple, Dict, List, TypedDict
@@ -90,7 +91,7 @@ class LookalikeFillerService:
 
         rows_stream = self.clickhouse.query_row_block_stream(
             f"SELECT {columns} FROM enrichment_users",
-            settings={"max_block_size": 100000},
+            settings={"max_block_size": 1000000},
         )
         column_names = rows_stream.source.column_names
 
@@ -179,75 +180,66 @@ class LookalikeFillerService:
         top_scores: list[PersonScore] = []
 
         BULK_SIZE = get_int_env("LOOKALIKE_BULK_SIZE")
+        thread_count = get_int_env("LOOKALIKE_THREAD_COUNT")
 
         config = self.audiences_scores.prepare_config(lookalike_id)
-        with rows_stream:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+
+        with ThreadPoolExecutor(max_workers=thread_count) as executor:
+            futures = []
             fetch_start = time.perf_counter()
-            for batch in rows_stream:
-                dict_batch = [
-                    {
-                        **dict(zip(column_names, row)),
-                        "customer_value": value_by_asid.get(
-                            row[column_names.index("asid")], 0.0
-                        ),
-                    }
-                    for row in batch
-                ]
+            with rows_stream:
+                for batch in rows_stream:
+                    dict_batch = [
+                        {
+                            **dict(zip(column_names, row)),
+                            "customer_value": value_by_asid.get(
+                                row[column_names.index("asid")], 0.0
+                            ),
+                        }
+                        for row in batch
+                    ]
 
-                batch_buffer.extend(dict_batch)
+                    batch_buffer.extend(dict_batch)
 
-                if len(batch_buffer) < BULK_SIZE:
-                    continue
-                fetch_end = time.perf_counter()
-                logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
+                    if len(batch_buffer) < BULK_SIZE:
+                        continue
+                    fetch_end = time.perf_counter()
+                    logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
 
-                prepare_asids_start = time.perf_counter()
-                asids: list[UUID] = [doc["asid"] for doc in batch_buffer]
-                prepare_asids_end = time.perf_counter()
+                    prepare_asids_start = time.perf_counter()
+                    asids: list[UUID] = [doc["asid"] for doc in batch_buffer]
+                    prepare_asids_end = time.perf_counter()
 
-                logger.info(
-                    f"prepare asids time: {prepare_asids_end - prepare_asids_start:.3f}"
-                )
-
-                calc_time, scores = (
-                    self.audiences_scores.calculate_batch_scores_v3(
-                        model=model,
-                        asids=asids,
-                        batch=batch_buffer,
-                        config=config,
+                    logger.info(
+                        f"prepare asids time: {prepare_asids_end - prepare_asids_start:.3f}"
                     )
-                )
 
-                top_scores, sort_time = measure(
-                    lambda _: self.audiences_scores.top_scores(
+                    futures.append(
+                        executor.submit(
+                            self.audiences_scores.calculate_batch_scores_v3,
+                            asids,
+                            batch_buffer,
+                            model,
+                            config,
+                        )
+                    )
+
+                    batch_buffer = []
+                    fetch_start = time.perf_counter()
+
+                for future in as_completed(futures):
+                    task_result = future.result()
+                    times, scores = task_result
+                    count += len(scores)
+
+                    top_scores = self.audiences_scores.top_scores(
                         old_scores=top_scores,
                         new_scores=scores,
                         top_n=top_n,
                     )
-                )
 
-                logger.info(f"batch calculation time: {calc_time:.3f}")
-                logger.info(f"batch sort time: {sort_time:.3f}")
-
-                count += len(asids)
-                _, duration = measure(
-                    lambda _: (
-                        self.db.execute(
-                            update(AudienceLookalikes)
-                            .where(AudienceLookalikes.id == lookalike_id)
-                            .values(processed_train_model_size=count)
-                        ),
-                        self.db.commit(),
-                    )
-                )
-
-                logger.info(f"lookalike update time: {duration:.3f}")
-                logger.info(f"processed users = {count}")
-                batch_buffer = []
-
-                total_batch_time = time.perf_counter() - fetch_start
-                logger.info(f"total batch time: {total_batch_time:.3f}")
-                fetch_start = time.perf_counter()
+                    logging.info(f"{count} users processed")
 
         self.enrichment_scores.bulk_insert(
             lookalike_id=lookalike_id, scores=top_scores

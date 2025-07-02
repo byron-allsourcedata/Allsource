@@ -1,6 +1,7 @@
 from typing import Annotated
 
 import clickhouse_connect
+from clickhouse_connect.driver import Client
 
 from sqlalchemy.orm import Session
 from fastapi import Depends
@@ -38,10 +39,6 @@ def get_clickhouse_inserter_db():
         ch.close()
 
 
-Clickhouse = Annotated[
-    clickhouse_connect.driver.Client, Depends(get_clickhouse_db)
-]
+Clickhouse = Annotated[Client, Depends(get_clickhouse_db)]
 
-ClickhouseInserter = Annotated[
-    clickhouse_connect.driver.Client, Depends(get_clickhouse_inserter_db)
-]
+ClickhouseInserter = Annotated[Client, Depends(get_clickhouse_inserter_db)]
