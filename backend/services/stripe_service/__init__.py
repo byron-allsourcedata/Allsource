@@ -114,6 +114,50 @@ class StripeService:
     def create_customer(self, user: NewStripeCustomer):
         return create_customer(user)
 
+    def charge_customer_immediately(
+        self,
+        customer_id: str,
+        amount_usd: int,
+        currency: str,
+        description: str,
+        metadata: dict,
+    ) -> dict:
+        result = {"success": False}
+        try:
+            customer = stripe.Customer.retrieve(customer_id)
+            default_payment_method_id = (
+                customer.invoice_settings.default_payment_method
+            )
+
+            if not default_payment_method_id:
+                result["error"] = "Customer has no default payment method"
+                return result
+
+            payment_intent = stripe.PaymentIntent.create(
+                amount=amount_usd * 100,
+                currency=currency,
+                customer=customer_id,
+                payment_method=default_payment_method_id,
+                confirm=True,
+                automatic_payment_methods={
+                    "enabled": True,
+                    "allow_redirects": "never",
+                },
+                metadata=metadata,
+                description=description,
+            )
+
+            if payment_intent.status == "succeeded":
+                result["success"] = True
+                result["stripe_payload"] = payment_intent
+            else:
+                result["error"] = f"Unexpected status: {payment_intent.status}"
+
+        except Exception as e:
+            result["error"] = f"Error while charging: {str(e)}"
+
+        return result
+
 
 def create_customer(user: NewStripeCustomer):
     customer = stripe.Customer.create(

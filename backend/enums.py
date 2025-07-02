@@ -225,6 +225,11 @@ class UserSubscriptionsStatus(Enum):
     INACTIVE = "inactive"
 
 
+class TypeFunds(Enum):
+    VALIDATION_FUNDS = "validation_funds"
+    PREMIUM_SOURCES_FUNDS = "premium_sources_funds"
+
+
 class MiddleWareEnum(Enum):
     NEED_EMAIL_CONFIRMATION = "NEED_EMAIL_CONFIRMATION"
 

@@ -10,7 +10,12 @@ from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
 from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
-from enums import TeamsInvitationStatus, SignUpStatus, UserStatusInAdmin
+from enums import (
+    TeamsInvitationStatus,
+    SignUpStatus,
+    UserStatusInAdmin,
+    TypeFunds,
+)
 from models import (
     AudienceLookalikes,
     LeadUser,
@@ -831,6 +836,29 @@ class UserPersistence:
                 overage_leads_count=func.greatest(
                     Users.overage_leads_count - quantity, 0
                 )
+            )
+        )
+        result = self.db.execute(stmt_users)
+        self.db.commit()
+        return result.rowcount
+
+    def increase_funds_count(
+        self, customer_id: str, quantity: int, type_funds: TypeFunds
+    ):
+        if type_funds == TypeFunds.VALIDATION_FUNDS:
+            field_to_update = Users.validation_funds
+        elif type_funds == TypeFunds.PREMIUM_SOURCES_FUNDS:
+            field_to_update = Users.premium_source_credits
+
+        stmt_users = (
+            update(Users)
+            .where(Users.customer_id == customer_id)
+            .values(
+                **{
+                    field_to_update.key: func.greatest(
+                        field_to_update + quantity, 0
+                    )
+                }
             )
         )
         result = self.db.execute(stmt_users)

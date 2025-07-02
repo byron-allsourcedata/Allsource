@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Any, List
 from decimal import Decimal
+from enums import TypeFunds
 
 
 class ChangePassword(BaseModel):
@@ -143,3 +144,8 @@ class Plan(BaseModel):
 class PlansResponse(BaseModel):
     monthly: List[Plan]
     yearly: List[Plan]
+
+
+class BuyFundsRequest(BaseModel):
+    amount: int
+    type_funds: TypeFunds

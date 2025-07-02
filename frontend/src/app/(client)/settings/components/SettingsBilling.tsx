@@ -162,6 +162,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 								{!hide && (
 									<>
 										<UsageItem
+											handleCheckoutSuccess={handleCheckoutSuccess}
+											cardDetails={cardDetails}
 											title="Contacts Downloaded"
 											limitValue={
 												contactsCollected > planContactsCollected &&
@@ -175,6 +177,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 										/>
 
 										<UsageItem
+											handleCheckoutSuccess={handleCheckoutSuccess}
+											cardDetails={cardDetails}
 											title="Smart Audience"
 											limitValue={
 												smartAudienceCollected > planSmartAudienceCollected
@@ -207,6 +211,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 								{!hide && (
 									<>
 										<UsageItem
+											handleCheckoutSuccess={handleCheckoutSuccess}
+											cardDetails={cardDetails}
 											title="Validation funds"
 											limitValue={
 												validationFundsCollected > validationLimitFundsCollected
@@ -216,6 +222,8 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											currentValue={validationFundsCollected}
 										/>
 										<UsageItem
+											handleCheckoutSuccess={handleCheckoutSuccess}
+											cardDetails={cardDetails}
 											title="Premium Source funds"
 											limitValue={
 												premiumSourceCollected > planPremiumSourceCollected
