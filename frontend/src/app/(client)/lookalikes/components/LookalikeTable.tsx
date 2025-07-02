@@ -914,7 +914,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												},
 											}}
 										>
-											{row.processed_size + row.processed_train_model_size ===
+											{/* {row.processed_size + row.processed_train_model_size ===
 												row.size + row.train_model_size &&
 											row.size + row.train_model_size !== 0 ? (
 												row.size.toLocaleString("en-US")
@@ -925,6 +925,17 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 														processed:
 															row.processed_size +
 																row.processed_train_model_size || 0,
+													}}
+												/>
+											)} */}
+											{row.processed_train_model_size ===
+												row.train_model_size && row.train_model_size !== 0 ? (
+												row.train_model_size.toLocaleString("en-US")
+											) : (
+												<ProgressBar
+													progress={{
+														total: row.train_model_size || 0,
+														processed: row.processed_train_model_size || 0,
 													}}
 												/>
 											)}
