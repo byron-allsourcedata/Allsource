@@ -305,7 +305,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 								{" "}
 								Size:{" "}
 								{mergedTotal === mergedProgress && mergedProgress !== 0 ? (
-									mergedTotal.toLocaleString("en-US")
+									row.size.toLocaleString("en-US")
 								) : (
 									<ProgressBar
 										progress={{
