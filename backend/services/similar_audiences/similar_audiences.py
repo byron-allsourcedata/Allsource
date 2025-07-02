@@ -8,6 +8,7 @@ from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from typing_extensions import deprecated
 
+from config.util import get_int_env
 from resolver import injectable
 from schemas.similar_audiences import (
     AudienceData,
@@ -132,6 +133,7 @@ class SimilarAudienceService:
             cat_features=cat_features,
             verbose=0,
             random_seed=random_seed,
+            thread_count=get_int_env("LOOKALIKE_THREAD_COUNT"),
         )
 
         try:

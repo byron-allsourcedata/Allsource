@@ -26,7 +26,7 @@ class RabbitMQConnection:
             virtualhost=os.getenv("RABBITMQ_VIRTUALHOST"),
             login=os.getenv("RABBITMQ_LOGIN"),
             password=os.getenv("RABBITMQ_PASSWORD"),
-            timeout=5000,
+            timeout=30000,
         )
         return self._connection
 

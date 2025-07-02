@@ -1,3 +1,4 @@
+import logging
 import time
 import psycopg2
 
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session, Query
 from typing_extensions import deprecated
 
 from config.database import SqlConfigBase
+from config.util import get_int_env
 from db_dependencies import Db
 from models import AudienceLookalikes, EnrichmentUser
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
@@ -31,6 +33,8 @@ from services.similar_audiences.column_selector import AudienceColumnSelector
 
 
 PersonScore = tuple[UUID, float]
+
+logger = logging.getLogger(__name__)
 
 
 def is_uuid(value):
@@ -214,7 +218,9 @@ class SimilarAudiencesScoresService:
         df_normed, _ = self.normalization_service.normalize_dataframe(
             df, config
         )
-        result = model.predict(df_normed)
+        result = model.predict(
+            df_normed, thread_count=get_int_env("LOOKALIKE_THREAD_COUNT")
+        )
         return result.tolist()
 
     @deprecated("use v3")
@@ -244,10 +250,26 @@ class SimilarAudiencesScoresService:
         batch: list[dict[str, Any]],
         model: CatBoostRegressor,
         config: NormalizationConfig,
+        lookalike_id: UUID,
     ) -> tuple[float, list[PersonScore]]:
         scores, duration = measure(
             lambda _: self.calculate_score_dict_batch(model, batch, config)
         )
+
+        update_query = (
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(
+                processed_train_model_size=AudienceLookalikes.processed_train_model_size
+                + len(scores)
+            )
+            .returning(AudienceLookalikes.processed_train_model_size)
+        )
+
+        processed = self.db.execute(update_query).scalar()
+        self.db.commit()
+
+        logger.info(f"processed: {processed}")
 
         return duration, list(zip(asids, scores))
 
