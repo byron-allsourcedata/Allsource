@@ -4,7 +4,7 @@ import inspect
 
 from functools import wraps
 from types import GeneratorType
-from typing import Callable, Optional, get_args, TypeVar, Type
+from typing import Any, Callable, Optional, get_args, TypeVar, Type
 
 from fastapi import Depends
 from typing_extensions import Annotated
@@ -56,7 +56,9 @@ class Resolver:
         self.deps_cache = {}
         self._cleanup_stack = []
 
-    async def resolve(self, fastapi_dep_annotation: Type[T]) -> T:
+    async def resolve(
+        self, fastapi_dep_annotation: Type[T] | Annotated[T, Any]
+    ) -> T:
         try:
             fastapi_dep = fastapi_dep_annotation.__metadata__[0]
         except Exception as e:

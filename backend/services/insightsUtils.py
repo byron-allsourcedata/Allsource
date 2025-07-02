@@ -304,7 +304,7 @@ class InsightsUtils:
     def compute_insights_for_lookalike(
         lookalike_id: uuid.UUID,
         db_session: Session,
-        source_agent: SourceAgentService = None,
+        source_agent: SourceAgentService,
     ) -> InsightsByCategory:
         insights = InsightsByCategory()
         asids = [
