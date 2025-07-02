@@ -99,13 +99,22 @@ class KlaviyoIntegrationsService:
             "revision": "2024-10-15",
             "Content-Type": "application/json",
         }
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.request(
-                method=method,
-                url=url,
-                headers=headers,
-                json=json,
-            )
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.request(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    json=json,
+                )
+            return response
+        except httpx.ConnectTimeout:
+            print(f"Timeout when connecting to {url}")
+            raise
+        except httpx.RequestError as e:
+            print(f"Request failed: {e}")
+            raise
+
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
