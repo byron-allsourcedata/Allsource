@@ -217,13 +217,13 @@ def get_previous_imported_leads(session, data_sync_id):
     return lead_users
 
 
-def email_validation_enabled(session: Session, users_id: int):
-    is_email_validation_enabled = (
+def is_email_validation_enabled(session: Session, users_id: int) -> bool:
+    result = (
         session.query(Users.is_email_validation_enabled)
         .filter(Users.id == users_id)
         .scalar()
     )
-    return is_email_validation_enabled
+    return result
 
 
 async def send_leads_to_rmq(
@@ -239,7 +239,7 @@ async def send_leads_to_rmq(
         {
             "status": DataSyncImportedStatus.SENT.value,
             "lead_users_id": lead_id,
-            "is_validation": email_validation_enabled(
+            "is_validation": is_email_validation_enabled(
                 session=session, users_id=users_id
             ),
             "service_name": user_integrations_service_name,
