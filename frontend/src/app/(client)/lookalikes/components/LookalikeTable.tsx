@@ -240,7 +240,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 			console.log("pooling started");
 			intervalRef.current = setInterval(() => {
 				const hasPending = tableData.some(
-					(item) => item.size !== item.processed_size,
+					(item) =>
+						item.train_model_size !== item.processed_train_model_size &&
+						item.train_model_size !== 0,
 				);
 
 				if (hasPending) {
@@ -930,7 +932,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 											)} */}
 											{row.processed_train_model_size ===
 												row.train_model_size && row.train_model_size !== 0 ? (
-												row.train_model_size.toLocaleString("en-US")
+												row.size.toLocaleString("en-US")
 											) : (
 												<ProgressBar
 													progress={{
