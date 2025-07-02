@@ -109,10 +109,10 @@ class KlaviyoIntegrationsService:
                 )
             return response
         except httpx.ConnectTimeout:
-            print(f"Timeout when connecting to {url}")
+            logging.error(f"Timeout when connecting to {url}")
             raise
         except httpx.RequestError as e:
-            print(f"Request failed: {e}")
+            logging.error(f"Request failed: {e}")
             raise
 
         return response
