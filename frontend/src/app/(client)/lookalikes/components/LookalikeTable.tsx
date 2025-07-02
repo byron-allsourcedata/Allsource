@@ -914,7 +914,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												},
 											}}
 										>
-											{row.processed_train_model_size !==
+											{row.processed_train_model_size ===
 											row.train_model_size ? (
 												row.size.toLocaleString("en-US")
 											) : (
