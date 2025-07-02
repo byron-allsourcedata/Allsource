@@ -261,7 +261,8 @@ class SimilarAudiencesScoresService:
             .where(AudienceLookalikes.id == lookalike_id)
             .values(
                 processed_train_model_size=AudienceLookalikes.processed_train_model_size
-                + len(scores)
+                + len(scores),
+                processed_size=AudienceLookalikes.processed_size + len(scores),
             )
             .returning(AudienceLookalikes.processed_train_model_size)
         )
