@@ -38,7 +38,7 @@ load_dotenv()
 
 CRON_DATA_SYNC_LEADS = "cron_data_sync_leads"
 BATCH_SIZE = 200
-SLEEP_INTERVAL = 60 * 10
+SLEEP_INTERVAL = 60 * 5
 
 
 def setup_logging(level):
