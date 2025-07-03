@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+from collections import Counter
 from typing import Any
 
 from sqlalchemy import Row
@@ -266,7 +267,9 @@ async def ensure_integration(
                     leads,
                     is_email_validation_enabled,
                 )
-                logging.info(f"Result {results}")
+                status_counts = Counter(r.get("status") for r in results)
+                logging.info(f"Status summary: {dict(status_counts)}")
+
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()

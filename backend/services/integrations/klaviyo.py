@@ -290,6 +290,7 @@ class KlaviyoIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = domain.id if domain else None
         try:
             if self.test_api_key(credentials.klaviyo.api_key) == False:
                 raise HTTPException(
@@ -303,7 +304,7 @@ class KlaviyoIntegrationsService:
             )
         integartions = self.__save_integrations(
             credentials.klaviyo.api_key,
-            None if domain is None else domain.id,
+            domain_id,
             user,
         )
         return {

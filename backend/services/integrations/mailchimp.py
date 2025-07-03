@@ -261,11 +261,12 @@ class MailchimpIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = domain.id if domain else None
         data_center = credentials.mailchimp.api_key.split("-")[-1]
         try:
             lists = self.get_list(
                 api_key=credentials.mailchimp.api_key,
-                domain_id=domain.id,
+                domain_id=domain_id,
                 user_id=user.get("id"),
                 server=data_center,
             )
@@ -282,7 +283,7 @@ class MailchimpIntegrationsService:
                 detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
             )
         integration = self.__save_integation(
-            domain_id=domain.id,
+            domain_id=domain_id,
             api_key=credentials.mailchimp.api_key,
             server=data_center,
             user=user,

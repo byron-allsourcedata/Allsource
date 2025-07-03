@@ -130,7 +130,20 @@ def fetch_leads_by_domain(
 
     if data_sync_leads_type != "allContacts":
         if data_sync_leads_type == "converted_sales":
-            query = query.filter(LeadUser.is_converted_sales == True)
+            query = query.filter(
+                or_(
+                    and_(
+                        LeadUser.behavior_type != "product_added_to_cart",
+                        LeadUser.is_converted_sales == True,
+                    ),
+                    and_(
+                        LeadUser.is_converted_sales == True,
+                        LeadsUsersOrdered.ordered_at.isnot(None),
+                        LeadsUsersAddedToCart.added_at
+                        < LeadsUsersOrdered.ordered_at,
+                    ),
+                )
+            )
 
         elif data_sync_leads_type == "viewed_product":
             query = query.filter(
@@ -314,7 +327,9 @@ async def process_user_integrations(channel, session):
             continue
 
         lead_users = get_previous_imported_leads(session, data_sync.id)
-        logging.info(f"Re imported leads= {len(lead_users)}")
+        logging.info(
+            f"Pixel sync {data_sync.id} Re imported leads= {len(lead_users)}"
+        )
         data_sync_limit = user_integrations[i].limit
         if data_sync_limit - len(lead_users) > 0:
             additional_leads = fetch_leads_by_domain(
@@ -328,10 +343,12 @@ async def process_user_integrations(channel, session):
 
         update_data_sync_integration(session, data_sync.id)
         if not lead_users:
-            logging.info("lead_users empty")
+            logging.info(f"Pixel sync {data_sync.id} Lead users empty")
             continue
 
-        logging.debug(f"lead_users len = {len(lead_users)}")
+        logging.info(
+            f"Pixel sync {data_sync.id} lead users len = {len(lead_users)}"
+        )
         lead_users = sorted(lead_users, key=lambda x: x.id)
         await send_leads_to_rmq(
             session,
@@ -342,7 +359,9 @@ async def process_user_integrations(channel, session):
         )
         last_lead_id = lead_users[-1].id
         if last_lead_id:
-            logging.info(f"last_lead_id = {last_lead_id}")
+            logging.info(
+                f"Pixel sync {data_sync.id} last_lead_id = {last_lead_id}"
+            )
             update_last_sent_lead(session, data_sync.id, last_lead_id)
             update_data_sync_integration(session, data_sync.id)
 

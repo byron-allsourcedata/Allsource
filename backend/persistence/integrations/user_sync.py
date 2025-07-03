@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import count, coalesce
+from sqlalchemy.sql import and_, or_
 
 from db_dependencies import Db
 from enums import (
@@ -11,7 +12,12 @@ from enums import (
     DataSyncImportedStatus,
     ProccessDataSyncResult,
 )
-from models import DataSyncImportedLead, LeadUser
+from models import (
+    DataSyncImportedLead,
+    LeadUser,
+    LeadsUsersAddedToCart,
+    LeadsUsersOrdered,
+)
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
@@ -141,6 +147,49 @@ class IntegrationsUserSyncPersistence:
 
         return integration_limit, domain_integrations_count
 
+    def add_leads_type_filter(self, query):
+        return query.filter(
+            or_(
+                IntegrationUserSync.leads_type == "allContacts",
+                and_(
+                    IntegrationUserSync.leads_type == "converted_sales",
+                    or_(
+                        and_(
+                            LeadUser.behavior_type != "product_added_to_cart",
+                            LeadUser.is_converted_sales == True,
+                        ),
+                        and_(
+                            LeadUser.is_converted_sales == True,
+                            LeadsUsersOrdered.ordered_at.isnot(None),
+                            LeadsUsersAddedToCart.added_at
+                            < LeadsUsersOrdered.ordered_at,
+                        ),
+                    ),
+                ),
+                and_(
+                    IntegrationUserSync.leads_type == "viewed_product",
+                    LeadUser.behavior_type == "viewed_product",
+                    LeadUser.is_converted_sales == False,
+                ),
+                and_(
+                    IntegrationUserSync.leads_type == "visitor",
+                    LeadUser.behavior_type == "visitor",
+                    LeadUser.is_converted_sales == False,
+                ),
+                and_(
+                    IntegrationUserSync.leads_type == "abandoned_cart",
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadUser.is_converted_sales == False,
+                    LeadsUsersAddedToCart.added_at.isnot(None),
+                    or_(
+                        LeadsUsersOrdered.ordered_at.is_(None),
+                        LeadsUsersAddedToCart.added_at
+                        > LeadsUsersOrdered.ordered_at,
+                    ),
+                ),
+            )
+        )
+
     def get_filter_by(
         self,
         domain_id: int,
@@ -182,22 +231,31 @@ class IntegrationsUserSyncPersistence:
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
-        all_synced_persons_query = (
+        base_query = (
             select(
                 count(LeadUser.id).label("all_contacts"),
                 IntegrationUserSync.id,
             )
             .select_from(LeadUser)
-            .join(
-                UserDomains,
-                UserDomains.id == LeadUser.domain_id,
-            )
+            .join(UserDomains, UserDomains.id == LeadUser.domain_id)
             .join(
                 IntegrationUserSync,
                 IntegrationUserSync.domain_id == UserDomains.id,
             )
-            .filter(LeadUser.is_active == True, LeadUser.is_confirmed == True)
-            .group_by(IntegrationUserSync.id)
+            .filter(
+                LeadUser.is_active == True,
+                LeadUser.is_confirmed == True,
+            )
+        )
+        base_query = base_query.outerjoin(
+            LeadsUsersAddedToCart,
+            LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+        ).outerjoin(
+            LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+        )
+        all_synced_persons_query = self.add_leads_type_filter(base_query)
+        all_synced_persons_query = all_synced_persons_query.group_by(
+            IntegrationUserSync.id
         ).subquery()
 
         successful_contacts_query = (

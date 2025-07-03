@@ -134,7 +134,8 @@ class WebhookIntegrationService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
-        integration = self.save_integration(domain_id=domain.id, user=user)
+        domain_id = domain.id if domain else None
+        integration = self.save_integration(domain_id=domain_id, user=user)
         return integration
 
     def create_list(self, list, domain_id: int, user_id: int):
