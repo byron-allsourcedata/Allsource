@@ -140,7 +140,7 @@ const MetaConnectButton = ({
 	boxShadow,
 	invalid_api_key,
 }: MetaConnectPopupProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [accessToken, setAccessToken] = useState("");
 	const [loading, setLoading] = useState(false);
 	const appID = process.env.NEXT_PUBLIC_META_APP_ID;
@@ -219,7 +219,8 @@ const MetaConnectButton = ({
 			if (response.status === 200) {
 				showToast("Connect to Meta Successfuly");
 			}
-			triggerSync();
+			await triggerSync();
+			setNeedsSync(false);
 		} catch (error) {
 		} finally {
 			setLoading(false);

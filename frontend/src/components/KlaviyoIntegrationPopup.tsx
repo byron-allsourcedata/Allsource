@@ -122,7 +122,7 @@ const KlaviyoIntegrationPopup = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateKlaviyoProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
 	const [checked, setChecked] = useState(false);
@@ -231,7 +231,8 @@ const KlaviyoIntegrationPopup = ({
 					});
 				}
 				showToast("Integration Klaviyo Successfully");
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 				handleClose();
 			} else {
 				showErrorToast("Invalid API Key");

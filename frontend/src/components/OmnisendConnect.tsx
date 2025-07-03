@@ -120,7 +120,7 @@ const OmnisendConnect = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateOmnisendProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
 	const [loading, setLoading] = useState(false);
@@ -219,7 +219,8 @@ const OmnisendConnect = ({
 						access_token: apiKey,
 					});
 				}
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 				handleClose();
 			}
 			if (response.data === "CREDENTIALS_INVALID") {

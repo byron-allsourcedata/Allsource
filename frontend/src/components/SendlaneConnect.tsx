@@ -110,7 +110,7 @@ const SendlaneConnect = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateSendlaneProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
 	const [value, setValue] = useState<string>("1");
@@ -205,7 +205,8 @@ const SendlaneConnect = ({
 						access_token: apiKey,
 					});
 				}
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 				handleClose();
 			}
 		} catch (error) {

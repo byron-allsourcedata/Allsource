@@ -32,7 +32,7 @@ const WebhookConnectPopup = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateWebhookProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = useState<string>("1");
@@ -51,7 +51,8 @@ const WebhookConnectPopup = ({
 					onSave({ service_name: "webhook", is_failed: false });
 				}
 				handleClose();
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 			} else {
 				showErrorToast("Error connect webhook");
 			}

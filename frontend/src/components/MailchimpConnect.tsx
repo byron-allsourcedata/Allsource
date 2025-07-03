@@ -122,7 +122,7 @@ const MailchimpConnect = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateOmnisendProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
 	const [loading, setLoading] = useState(false);
@@ -221,7 +221,8 @@ const MailchimpConnect = ({
 						access_token: apiKey,
 					});
 				}
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 				handleClose();
 			} else {
 				showErrorToast("Invalid API Key");

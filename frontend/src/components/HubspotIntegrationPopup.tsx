@@ -124,7 +124,7 @@ const HubspotIntegrationPopup = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateHubspotProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
 	const [checked, setChecked] = useState(false);
@@ -241,7 +241,8 @@ const HubspotIntegrationPopup = ({
 					});
 				}
 				showToast("Integration Hubspot Successfully");
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 				handleClose();
 			} else {
 				showErrorToast("Invalid API Key");

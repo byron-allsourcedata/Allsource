@@ -103,7 +103,7 @@ const S3Connect = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateS3Props) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiIdKey, setApiIdKey] = useState("");
 	const [apiKey, setApiKey] = useState("");
 	const [value, setValue] = useState<string>("1");
@@ -169,7 +169,8 @@ const S3Connect = ({
 						apiIdKey,
 					});
 				}
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 				if (fromAudience) {
 					handleClose();
 				} else {
