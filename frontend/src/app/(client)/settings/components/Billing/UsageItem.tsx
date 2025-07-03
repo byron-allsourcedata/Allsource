@@ -115,20 +115,20 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 					)}
 					{needButton && (
 						<Box sx={{ flexShrink: 0 }}>
-							{commingSoon && (
+							{true && (
 								<Tooltip title="Coming Soon" arrow>
 									<Box sx={{ display: "inline-block" }}>
 										<CustomButton disabled={true}>Add Funds</CustomButton>
 									</Box>
 								</Tooltip>
 							)}
-							{!commingSoon && (
+							{/* {!commingSoon && (
 								<Box sx={{ display: "inline-block" }}>
 									<CustomButton onClick={() => setAddFundsPopupOpen(true)}>
 										Add Funds
 									</CustomButton>
 								</Box>
-							)}
+							)} */}
 						</Box>
 					)}
 					{!available && (
