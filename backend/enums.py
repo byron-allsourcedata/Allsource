@@ -63,7 +63,7 @@ class IntegrationLimit(Enum):
     META = 5000
     HUBSPOT = 100
     S3 = 10000
-    KLAVIYO = 500
+    KLAVIYO = 150
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
 
