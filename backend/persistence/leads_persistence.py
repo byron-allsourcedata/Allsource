@@ -3,7 +3,7 @@ import math
 from datetime import datetime, timedelta, timezone
 
 import pytz
-from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select
+from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select, case
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 
@@ -685,30 +685,114 @@ class LeadsPersistence:
         return query.all()
 
     def get_contact_data_for_d2c(self, domain_id, from_date, to_date):
+        added_to_cart = aliased(LeadsUsersAddedToCart)
+        ordered = aliased(LeadsUsersOrdered)
+
+        converted_sales = func.count(
+            distinct(
+                case(
+                    (
+                        or_(
+                            and_(
+                                LeadUser.behavior_type
+                                != "product_added_to_cart",
+                                LeadUser.is_converted_sales == True,
+                            ),
+                            and_(
+                                LeadUser.is_converted_sales == True,
+                                ordered.ordered_at.isnot(None),
+                                added_to_cart.added_at < ordered.ordered_at,
+                            ),
+                        ),
+                        LeadUser.id,
+                    ),
+                    else_=None,
+                )
+            )
+        )
+
+        viewed_product = func.count(
+            distinct(
+                case(
+                    (
+                        and_(
+                            LeadUser.behavior_type == "viewed_product",
+                            LeadUser.is_converted_sales == False,
+                        ),
+                        LeadUser.id,
+                    ),
+                    else_=None,
+                )
+            )
+        )
+
+        visitor = func.count(
+            distinct(
+                case(
+                    (
+                        and_(
+                            LeadUser.behavior_type == "visitor",
+                            LeadUser.is_converted_sales == False,
+                        ),
+                        LeadUser.id,
+                    ),
+                    else_=None,
+                )
+            )
+        )
+
+        abandoned_cart = func.count(
+            distinct(
+                case(
+                    (
+                        or_(
+                            and_(
+                                LeadUser.behavior_type
+                                == "product_added_to_cart",
+                                LeadUser.is_converted_sales == False,
+                            ),
+                            and_(
+                                LeadUser.behavior_type
+                                == "product_added_to_cart",
+                                LeadUser.is_converted_sales == True,
+                                added_to_cart.added_at > ordered.ordered_at,
+                            ),
+                        ),
+                        LeadUser.id,
+                    ),
+                    else_=None,
+                )
+            )
+        )
+
+        total_count = (
+            converted_sales + viewed_product + visitor + abandoned_cart
+        )
+
         query = (
             self.db.query(
-                LeadsVisits.start_date,
-                LeadUser.behavior_type,
-                LeadUser.is_converted_sales,
-                func.count(LeadUser.id).label("lead_count"),
+                LeadsVisits.start_date.label("start_date"),
+                converted_sales.label("converted_sales"),
+                viewed_product.label("viewed_product"),
+                visitor.label("visitor"),
+                abandoned_cart.label("abandoned_cart"),
+                total_count.label("total_count"),
             )
+            .select_from(LeadUser)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .group_by(
-                LeadsVisits.start_date,
-                LeadUser.behavior_type,
-                LeadUser.is_converted_sales,
+            .outerjoin(added_to_cart, added_to_cart.lead_user_id == LeadUser.id)
+            .outerjoin(ordered, ordered.lead_user_id == LeadUser.id)
+            .group_by(LeadsVisits.start_date)
+            .filter(
+                LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True
             )
-            .filter(LeadUser.domain_id == domain_id)
         )
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
-                and_(
-                    LeadsVisits.start_date >= start_date,
-                    LeadsVisits.start_date <= end_date,
-                )
+                LeadsVisits.start_date.between(start_date, end_date)
             )
 
         results = query.all()

@@ -141,21 +141,18 @@ class DashboardService:
         }
 
         for result in results:
-            start_date = result[0].isoformat()
-            behavior_type = result[1]
-            is_converted_sales = result[2]
-            lead_count = result.lead_count
+            start_date = result.start_date.isoformat()
+            converted_sales = result.converted_sales
+            viewed_product = result.viewed_product
+            visitor = result.visitor
+            abandoned_cart = result.abandoned_cart
+            total_count = result.total_count
 
-            total_counts["total_contacts_collected"] += lead_count
-
-            if behavior_type == "visitor":
-                total_counts["total_visitors"] += lead_count
-            elif behavior_type == "viewed_product":
-                total_counts["total_view_products"] += lead_count
-            elif behavior_type == "product_added_to_cart":
-                total_counts["total_abandoned_cart"] += lead_count
-            if is_converted_sales:
-                total_counts["total_converted_sale"] += lead_count
+            total_counts["total_contacts_collected"] += total_count
+            total_counts["total_visitors"] += visitor
+            total_counts["total_view_products"] += viewed_product
+            total_counts["total_abandoned_cart"] += abandoned_cart
+            total_counts["total_converted_sale"] += converted_sales
 
             if start_date not in daily_data:
                 daily_data[start_date] = {
@@ -166,17 +163,13 @@ class DashboardService:
                     "converted_sale": 0,
                 }
 
-            accumulated_total_price += lead_count
+            accumulated_total_price += total_count
             daily_data[start_date]["total_leads"] = accumulated_total_price
 
-            if behavior_type == "visitor":
-                accumulated_visitor += lead_count
-            elif behavior_type == "viewed_product":
-                accumulated_viewed_product += lead_count
-            elif behavior_type == "product_added_to_cart":
-                accumulated_abandoned_cart += lead_count
-            if is_converted_sales:
-                accumulated_converted_sale += lead_count
+            accumulated_visitor += visitor
+            accumulated_viewed_product += viewed_product
+            accumulated_abandoned_cart += abandoned_cart
+            accumulated_converted_sale += converted_sales
 
             daily_data[start_date]["visitors"] = accumulated_visitor
             daily_data[start_date]["view_products"] = accumulated_viewed_product

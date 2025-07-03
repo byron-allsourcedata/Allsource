@@ -790,9 +790,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		}
 		if (row.dataSync) {
 			return {
-				background: "rgba(234, 248, 221, 1)",
-				color: "rgba(43, 91, 0, 1)",
-				toolTipText: "Your contacts are being synced every 10 minutes",
+				background: "#CCE6FE",
+				color: "#0081FB",
+				toolTipText: "Your contacts are being synced every 1 minutes",
 			};
 		}
 
