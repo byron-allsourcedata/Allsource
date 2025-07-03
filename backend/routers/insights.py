@@ -14,23 +14,25 @@ router = APIRouter()
 @router.get("/sources/{uuid}")
 async def get_source_insights_info(
     uuid: UUID,
+    is_debug: bool = Query(False),
     user: dict = Depends(check_user_authorization_without_pixel),
     insights_service: AudienceInsightsService = Depends(
         get_audience_insights_service
     ),
 ):
-    return insights_service.get_source_insights(uuid, user)
+    return insights_service.get_source_insights(uuid, user, is_debug)
 
 
 @router.get("/lookalikes/{uuid}")
 async def get_lookalike_insights_info(
     uuid: UUID,
+    is_debug: bool = False,
     user: dict = Depends(check_user_authorization_without_pixel),
     insights_service: AudienceInsightsService = Depends(
         get_audience_insights_service
     ),
 ):
-    return insights_service.get_lookalike_insights(uuid, user)
+    return insights_service.get_lookalike_insights(uuid, user, is_debug)
 
 
 @router.get("/get-data-sources")

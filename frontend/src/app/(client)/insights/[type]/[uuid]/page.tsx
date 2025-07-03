@@ -1,7 +1,7 @@
 "use client";
 import { Box, Typography, Tabs, Tab, IconButton } from "@mui/material";
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -23,6 +23,7 @@ import {
 import { useInsightsHints } from "../../context/IntegrationsHintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 
+
 const getFieldRankMap = (
 	significantFields: Record<string, number>,
 ): FieldRankMap => {
@@ -39,8 +40,10 @@ const getFieldRankMap = (
 const Insights = () => {
 	const router = useRouter();
 	const params = useParams();
+	const searchParams = useSearchParams();
 	const type = params.type;
 	const uuid = params.uuid;
+	const isDebug = searchParams.get("is_debug") === "true";
 	const [loading, setLoading] = useState(false);
 	const { hasNotification } = useNotification();
 	const [tabIndex, setTabIndex] = useState(0);
@@ -129,6 +132,11 @@ const Insights = () => {
 			const response =
 				await axiosInstance.get<AudienceInsightsStatisticsResponse>(
 					`/audience-insights/${type}/${uuid}`,
+					{
+						params: {
+							is_debug: isDebug,
+						},
+					}
 				);
 
 			const significantFields = response.data.significant_fields;

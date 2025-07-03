@@ -48,8 +48,8 @@ class PersonalProfiles(BaseModel):
                 "undisclosed",
             }
 
-        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
-        # filtered_data = data.copy()
+        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -68,16 +68,13 @@ class PersonalProfiles(BaseModel):
                     YES_NO_UNKNOWN_MAPS[key].get(k, k): v
                     for k, v in val.items()
                 }
-                filtered = {
-                    k: v for k, v in mapped.items() if k.lower() != "unknown"
-                }
-                total = sum(filtered.values())
+                total = sum(mapped.values())
                 setattr(
                     self,
                     key,
-                    {k: round(v / total * 100, 2) for k, v in filtered.items()}
+                    {k: round(v / total * 100, 2) for k, v in mapped.items()}
                     if total
-                    else {k: 0.0 for k in filtered},
+                    else {k: 0.0 for k in mapped},
                 )
             elif key == "gender":
                 filtered = {k: v for k, v in val.items() if k != "2"}
@@ -147,7 +144,7 @@ class FinancialProfiles(BaseModel):
         return {
             data.get(k, k): v
             for k, v in map_dict.items()
-            if k.lower() != "unknown"
+            # if k.lower() != "unknown"
         }
 
     @model_validator(mode="after")
@@ -169,15 +166,6 @@ class FinancialProfiles(BaseModel):
             elif key == "income_range":
                 mapped = self._map_data(INCOME_RANGE, val)
                 setattr(self, key, self._to_percent(mapped))
-
-            elif key in (
-                "number_of_credit_lines",
-                "credit_range_of_new_credit",
-            ):
-                if "unknown" in val:
-                    val.pop("unknown")
-
-                setattr(self, key, self._to_percent(val))
 
             else:
                 setattr(self, key, self._to_percent(val))
@@ -274,11 +262,11 @@ class VoterProfiles(BaseModel):
             if not isinstance(val, dict):
                 continue
 
-            if (
-                key in ("congressional_district", "political_party")
-                and "unknown" in val
-            ):
-                val.pop("unknown")
+            # if (
+            #     key in ("congressional_district", "political_party")
+            #     and "unknown" in val
+            # ):
+            #     val.pop("unknown")
 
             setattr(self, key, self._to_percent(val))
 
@@ -337,8 +325,8 @@ class ProfessionalProfiles(BaseModel):
             if not isinstance(val, dict):
                 continue
 
-            if "unknown" in val:
-                val.pop("unknown")
+            # if "unknown" in val:
+            #     val.pop("unknown")
 
             setattr(self, key, self._to_percent(val))
 
@@ -384,9 +372,6 @@ class EmploymentHistory(BaseModel):
         for key, val in values.items():
             if not isinstance(val, dict):
                 continue
-
-            if "unknown" in val:
-                val.pop("unknown")
 
             setattr(self, key, self._to_percent(val))
 
