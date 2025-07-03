@@ -1240,36 +1240,28 @@ const Leads: React.FC = () => {
 			key: "first_visited_date",
 			label: "Visited date",
 			sortable: true,
-			widths: { width: "140px", minWidth: "140px", maxWidth: "120px" },
+			widths: { width: "135px", minWidth: "135px", maxWidth: "135px" },
 		},
 		{
 			key: "funnel",
 			label: "Lead Status",
-			widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
 		},
 		{
 			key: "status",
 			label: "Visitor Type",
-			widths: {
-				width: "150px",
-				minWidth: "150px",
-				maxWidth: "150px",
-			},
+			widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
 		},
 		{
 			key: "number_of_page",
 			label: "URL Visited",
-			widths: {
-				width: "120px",
-				minWidth: "120px",
-				maxWidth: "120px",
-			},
+			widths: { width: "120px" , minWidth: "120px",maxWidth: "120px" },
 		},
 		{
 			key: "average_time_sec",
 			label: "Time on site",
 			sortable: true,
-			widths: { width: "130px", minWidth: "130px", maxWidth: "130px" },
+			widths: { width: "140px", minWidth: "140px", maxWidth: "140px" },
 		},
 	];
 
@@ -2048,7 +2040,7 @@ const Leads: React.FC = () => {
 															)}
 														</SmartCell>
 
-														{/* Lead Status */}
+														{/* Visited Date */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2074,7 +2066,7 @@ const Leads: React.FC = () => {
 																: "--"}
 														</SmartCell>
 
-														{/* Visitor Type */}
+														{/* Lead Status */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2101,7 +2093,7 @@ const Leads: React.FC = () => {
 																	color: getStatusStyle(row.behavior_type)
 																		.color,
 																	justifyContent: "center",
-																	minWidth: "110px",
+																	// minWidth: "110px",
 																	textTransform: "capitalize",
 																}}
 															>
@@ -2109,7 +2101,7 @@ const Leads: React.FC = () => {
 															</Box>
 														</SmartCell>
 
-														{/* URL Visited */}
+														{/* Visitor Type */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2135,14 +2127,15 @@ const Leads: React.FC = () => {
 																	).background,
 																	color: getStatusStyle(row.visitor_type).color,
 																	justifyContent: "center",
-																	minWidth: "110px",
+																	// minWidth: "110px",
 																	textTransform: "capitalize",
 																}}
 															>
 																{formatFunnelText(row.visitor_type) || "--"}
 															</Box>
 														</SmartCell>
-
+														
+														{/* URL Visited */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2261,6 +2254,8 @@ const Leads: React.FC = () => {
 																</Tooltip>
 															</Box>
 														</SmartCell>
+
+														{/* Time on site */}
 														<SmartCell
 															cellOptions={{
 																sx: {

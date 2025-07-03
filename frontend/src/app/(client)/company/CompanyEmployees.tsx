@@ -743,17 +743,17 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 		{
 			key: "mobile_phone",
 			label: "Mobile Number",
-			widths: { width: "12vw", minWidth: "150px", maxWidth: "12vw" },
+			widths: { width: "150px", minWidth: "150px", maxWidth: "12vw" },
 		},
 		{
 			key: "job_title",
 			label: "Job Title",
-			widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
+			widths: { width: "150px", minWidth: "150px", maxWidth: "17vw" },
 		},
 		{
 			key: "seniority",
 			label: "Seniority",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			widths: { width: "150px", minWidth: "150px", maxWidth: "12vw" },
 		},
 		{
 			key: "department",

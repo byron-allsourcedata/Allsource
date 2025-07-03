@@ -226,7 +226,7 @@ const Sources: React.FC = () => {
 		{
 			key: "target_schema",
 			label: "Target Type",
-			widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
 		},
 		{
 			key: "source",
