@@ -114,7 +114,7 @@ class KlaviyoIntegrationsService:
             return {"error": "Timeout"}
         except httpcore.ConnectError as e:
             logging.error(f"Connection error to {url}: {e}")
-            raise
+            return {"error": "Connection error"}
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 429:
                 logging.warning(e.response.headers)
@@ -399,6 +399,7 @@ class KlaviyoIntegrationsService:
                     integration_data_sync.data_map,
                     is_email_validation_enabled,
                 )
+                print(profile)
                 if profile in (
                     ProccessDataSyncResult.INCORRECT_FORMAT.value,
                     ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
