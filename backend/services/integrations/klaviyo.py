@@ -389,7 +389,7 @@ class KlaviyoIntegrationsService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
     ):
-        sem = asyncio.Semaphore(50)
+        sem = asyncio.Semaphore(10)
 
         async def process_single_lead(lead_user, five_x_five_user):
             async with sem:
