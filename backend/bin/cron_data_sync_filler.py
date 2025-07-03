@@ -130,18 +130,28 @@ def fetch_leads_by_domain(
 
     if data_sync_leads_type != "allContacts":
         if data_sync_leads_type == "converted_sales":
-            query = query.filter(
-                or_(
-                    and_(
-                        LeadUser.behavior_type != "product_added_to_cart",
-                        LeadUser.is_converted_sales == True,
-                    ),
-                    and_(
-                        LeadUser.is_converted_sales == True,
-                        LeadsUsersOrdered.ordered_at.isnot(None),
-                        LeadsUsersAddedToCart.added_at
-                        < LeadsUsersOrdered.ordered_at,
-                    ),
+            query = (
+                query.outerjoin(
+                    LeadsUsersAddedToCart,
+                    LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+                )
+                .outerjoin(
+                    LeadsUsersOrdered,
+                    LeadsUsersOrdered.lead_user_id == LeadUser.id,
+                )
+                .filter(
+                    or_(
+                        and_(
+                            LeadUser.behavior_type != "product_added_to_cart",
+                            LeadUser.is_converted_sales == True,
+                        ),
+                        and_(
+                            LeadUser.is_converted_sales == True,
+                            LeadsUsersOrdered.ordered_at.isnot(None),
+                            LeadsUsersAddedToCart.added_at
+                            < LeadsUsersOrdered.ordered_at,
+                        ),
+                    )
                 )
             )
 
@@ -187,7 +197,10 @@ def fetch_leads_by_domain(
                     )
                 )
             )
-    result = query.order_by(LeadUser.id).limit(limit).all()
+    result = (
+        query.distinct(LeadUser.id).order_by(LeadUser.id).limit(limit).all()
+    )
+
     return result or []
 
 
