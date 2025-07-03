@@ -24,8 +24,10 @@ interface B2CData {
 interface B2CTabsProps {
 	data: B2CData;
 	fieldRanks: FieldRankMap;
+	isDebug: boolean;
 }
-const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks }) => {
+
+const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks, isDebug }) => {
 	const [tabIndex, setIndex] = useState(0);
 	const {
 		insightsHints,
@@ -207,6 +209,7 @@ const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks }) => {
 						data={data.personal_info}
 						pets_data={data.lifestyle.own_pets}
 						fieldRanks={fieldRanks}
+						isDebug={isDebug}
 					/>
 				</TabPanel>
 				<TabPanel value={tabIndex} index={1}>

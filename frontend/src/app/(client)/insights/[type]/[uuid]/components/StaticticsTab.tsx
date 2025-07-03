@@ -16,6 +16,7 @@ type StatisticsTabProps = {
 	b2bData: B2BData;
 	b2cData: B2CData;
 	fieldRanks: FieldRankMap;
+	isDebug: boolean;
 };
 
 const StaticticsTab: React.FC<StatisticsTabProps> = ({
@@ -23,6 +24,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({
 	b2bData,
 	b2cData,
 	fieldRanks,
+	isDebug,
 }) => {
 	const [targetIndex, setTargetIndex] = useState(0);
 	const {
@@ -43,7 +45,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({
 					{
 						key: "b2c",
 						label: "B2C",
-						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} isDebug={isDebug} />,
 					},
 				]
 			: [
@@ -55,7 +57,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({
 					{
 						key: "b2c",
 						label: "B2C",
-						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} isDebug={isDebug}/>,
 					},
 				];
 	return (
