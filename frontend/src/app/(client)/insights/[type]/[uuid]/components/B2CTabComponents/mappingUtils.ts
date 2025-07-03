@@ -1,28 +1,47 @@
 type PercentageMap = Record<string, number | string>;
 
-export const mapGender = (gender: PercentageMap) => [
-	{
-		imageSrc: "/male.svg",
-		label: "Male",
-		percentage: parseFloat((gender["male"] ?? 0).toString()),
-		fillColor: "rgba(98, 178, 253, 1)",
-		bgColor: "rgba(193, 228, 255, 1)",
-	},
-	{
-		imageSrc: "/female.svg",
-		label: "Female",
-		percentage: parseFloat((gender["female"] ?? 0).toString()),
-		fillColor: "rgba(249, 155, 171, 1)",
-		bgColor: "rgba(255, 222, 227, 1)",
-	},
-	{
-		// imageSrc: "/male-female.svg",
-		label: "Other",
-		percentage: parseFloat((gender["unknown"] ?? 0).toString()),
-		fillColor: "rgb(15, 209, 134)",
-		bgColor: "rgb(96, 212, 166)",
-	},
-];
+
+export const mapGender = (gender: PercentageMap, isDebug: boolean) => {
+	type GenderEntry = {
+		imageSrc?: string;
+		label: string;
+		key: string; // ключ из объекта `gender`
+		fillColor: string;
+		bgColor: string;
+	};
+
+	const entries: GenderEntry[] = [
+		{
+			imageSrc: "/male.svg",
+			label: "Male",
+			key: "male",
+			fillColor: "rgba(98, 178, 253, 1)",
+			bgColor: "rgba(193, 228, 255, 1)",
+		},
+		{
+			imageSrc: "/female.svg",
+			label: "Female",
+			key: "female",
+			fillColor: "rgba(249, 155, 171, 1)",
+			bgColor: "rgba(255, 222, 227, 1)",
+		},
+	];
+
+	if (isDebug) {
+		entries.push({
+			// imageSrc: "/male-female.svg",
+			label: "Other",
+			key: "unknown",
+			fillColor: "rgb(15, 209, 134)",
+			bgColor: "rgb(96, 212, 166)",
+		});
+	}
+
+	return entries.map(({ key, ...rest }) => ({
+		...rest,
+		percentage: parseFloat((gender[key] ?? 0).toString()),
+	}));
+};
 
 export const mapState = (state: PercentageMap) =>
 	Object.entries(state).map(([key, val]) => ({

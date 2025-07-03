@@ -92,9 +92,8 @@ class AudienceInsightsService:
 
             # B2C
             for key, val in personal_info.items():
-                if ("unknown" in val
-                    and key != "gender"
-                ):
+
+                if "unknown" in val:
                     val.pop("unknown")
 
             for key, val in financial.items():

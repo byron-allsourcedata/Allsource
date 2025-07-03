@@ -43,7 +43,7 @@ const Insights = () => {
 	const searchParams = useSearchParams();
 	const type = params.type;
 	const uuid = params.uuid;
-	const isDebug = searchParams.get("is_debug") === "true";
+	const isDebug: boolean = searchParams.get("is_debug") === "true";
 	const [loading, setLoading] = useState(false);
 	const { hasNotification } = useNotification();
 	const [tabIndex, setTabIndex] = useState(0);
@@ -371,6 +371,7 @@ const Insights = () => {
 						b2bData={b2bData}
 						b2cData={b2cData}
 						fieldRanks={fieldRanks}
+						isDebug={isDebug}
 					/>
 				</TabPanel>
 				<TabPanel value={tabIndex} index={1}>
