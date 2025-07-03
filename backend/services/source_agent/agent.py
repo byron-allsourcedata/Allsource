@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr
 from db_dependencies import Db, Clickhouse
 from resolver import injectable
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -41,28 +42,106 @@ class SourceAgentService:
         self,
         emails: Iterable[str],
     ) -> List[EmailAsid]:
-        emails_clean: List[str] = [e.strip() for e in emails if e]
+        emails_clean: List[str] = [
+            e.strip().lower() for e in emails if e and "@" in e
+        ]
         if not emails_clean:
             logger.debug("get_user_ids_by_emails: empty input")
             return []
 
-        sql = """
+        matched: dict[str, EmailAsid] = {}
+
+        count_business = 0
+        count_personal = 0
+        count_other = 0
+
+        # --- Business email
+        sql_business = """
+            SELECT business_email, asid
+            FROM enrichment_users
+            WHERE business_email IN %(ids)s
+        """
+        start_time = time.perf_counter()
+        rows = self._run_query(sql_business, {"ids": emails_clean})
+        elapsed = time.perf_counter() - start_time
+        logger.info(
+            "Business email query returned %d rows in %.4f seconds",
+            len(rows),
+            elapsed,
+        )
+
+        for email, asid in rows:
+            if not email or not isinstance(email, str):
+                continue
+            email_l = email.strip().lower()
+            if email_l not in matched:
+                matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
+                count_business += 1
+
+        remaining = [e for e in emails_clean if e not in matched]
+
+        # --- Personal email
+        if remaining:
+            sql_personal = """
                 SELECT personal_email, asid
                 FROM enrichment_users
                 WHERE personal_email IN %(ids)s
-                """
+            """
+            start_time = time.perf_counter()
+            rows = self._run_query(sql_personal, {"ids": remaining})
+            elapsed = time.perf_counter() - start_time
+            logger.info(
+                "Personal email query returned %d rows in %.4f seconds",
+                len(rows),
+                elapsed,
+            )
 
-        rows = self._run_query(sql, {"ids": emails_clean})
+            for email, asid in rows:
+                if not email or not isinstance(email, str):
+                    continue
+                email_l = email.strip().lower()
+                if email_l not in matched:
+                    matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
+                    count_personal += 1
 
-        result = [
-            EmailAsid(email=personal_email.lower(), asid=str(asid))
-            for personal_email, asid in rows
-        ]
+            remaining = [e for e in remaining if e not in matched]
 
-        logger.debug(
-            "Found %d matches in ClickHouse for %d input emails",
+        # --- Other emails (array)
+        if remaining:
+            sql_other = """
+                SELECT other_email, asid
+                FROM (
+                    SELECT arrayJoin(other_emails) AS other_email, asid
+                    FROM enrichment_users
+                )
+                WHERE other_email IN %(ids)s
+            """
+            start_time = time.perf_counter()
+            rows = self._run_query(sql_other, {"ids": remaining})
+            elapsed = time.perf_counter() - start_time
+            logger.info(
+                "Other email query returned %d rows in %.4f seconds",
+                len(rows),
+                elapsed,
+            )
+
+            for email, asid in rows:
+                if not email or not isinstance(email, str):
+                    continue
+                email_l = email.strip().lower()
+                if email_l not in matched:
+                    matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
+                    count_other += 1
+
+        result = list(matched.values())
+
+        logger.info(
+            "Finished email matching: %d total matches (from %d input). Business: %d, Personal: %d, Other: %d",
             len(result),
             len(emails_clean),
+            count_business,
+            count_personal,
+            count_other,
         )
         return result
 
