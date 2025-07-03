@@ -108,7 +108,6 @@ def update_users_integrations(
 ):
     if status in (
         ProccessDataSyncResult.LIST_NOT_EXISTS.value,
-        ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
         ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
         ProccessDataSyncResult.PAYMENT_REQUIRED.value,
     ):
@@ -309,20 +308,10 @@ async def ensure_integration(
                             NotificationTitles.DATA_SYNC_ERROR.value,
                         )
 
-                    case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
+                    case ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
                         logging.debug(f"too_many_requests: {service_name}")
-                        update_users_integrations(
-                            session=db_session,
-                            status=ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
-                            integration_data_sync_id=data_sync.id,
-                            service_name=service_name,
-                        )
-                        await send_error_msg(
-                            users_id,
-                            service_name,
-                            notification_persistence,
-                            NotificationTitles.TOO_MANY_REQUESTS.value,
-                        )
+                        await message.ack()
+                        return
 
                     case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
