@@ -299,7 +299,7 @@ const Management: React.FC = () => {
 																	gap: 0.5,
 																	fontWeight: 300,
 																	fontSize: "14px",
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	color: "rgba(56, 152, 252, 1)",
 																}}
 															>

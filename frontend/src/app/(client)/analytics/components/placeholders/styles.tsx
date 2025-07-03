@@ -1,7 +1,7 @@
 import { styled, Typography } from "@mui/material";
 
 export const Title = styled(Typography)`
-  font-family: Nunito Sans;
+  font-family: var(--font-nunito);
   font-weight: 600;
   font-size: 20px;
   line-height: 20px;
@@ -10,7 +10,7 @@ export const Title = styled(Typography)`
 `;
 
 export const Subtitle = styled(Typography)`
-  font-family: Nunito Sans;
+  font-family: var(--font-nunito);
   font-weight: 400;
   font-size: 14px;
   line-height: 20px;

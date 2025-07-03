@@ -61,11 +61,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	title: {
-		fontWeight: "600",
 		whiteSpace: "nowrap",
 		textAlign: "center",
 		paddingBottom: "33px",
-		lineHeight: "30px",
 		"@media (max-width: 440px)": {
 			paddingBottom: "2rem",
 		},
@@ -107,7 +105,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
 		top: "-3px",
 		"&.Mui-focused": {
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",

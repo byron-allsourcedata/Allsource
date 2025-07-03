@@ -135,7 +135,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 						style: {
 							base: {
 								color: "#32325d",
-								fontFamily: "Nunito Sans, sans-serif",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: "400",
 								lineHeight: "24px",
@@ -163,7 +163,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 							style: {
 								base: {
 									color: "#32325d",
-									fontFamily: "Nunito Sans, sans-serif",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									fontWeight: "400",
 									lineHeight: "24px",
@@ -189,7 +189,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 							style: {
 								base: {
 									color: "#32325d",
-									fontFamily: "Nunito Sans, sans-serif",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									fontWeight: "400",
 									lineHeight: "24px",
@@ -217,7 +217,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 					variant="outlined"
 					sx={{
 						color: "#007BFF",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						textTransform: "none",
 						lineHeight: "22.4px",
 						fontWeight: "700",
@@ -240,7 +240,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({
 					sx={{
 						backgroundColor: "#007BFF",
 						color: "#fff",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						textTransform: "none",
 						lineHeight: "22.4px",
 						fontWeight: "700",

@@ -103,7 +103,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
 		top: "-3px",
 		"&.Mui-focused": {
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",
@@ -132,13 +132,13 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
 	loginText: {
 		mt: 2,
 		margin: "1.25em 0px 24px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 	},
 	resetPassword: {
 		mt: 2,
 		margin: "3em 0em 0em",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 	},
 	text: {
@@ -150,7 +150,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
 		color: "#F45745",
 		cursor: "pointer",
 		fontWeight: "bold",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		textDecoration: "none",
 	},
 	formField: {
@@ -161,7 +161,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Nunito Sans",
+				fontFamily: "var(--font-nunito)",
 			},
 			"& .MuiOutlinedInput-notchedOutline": {
 				borderColor: "#A3B0C2",
@@ -170,7 +170,7 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 		},
 	},

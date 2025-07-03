@@ -20,7 +20,7 @@ export async function POST(req) {
 		});
 
 		const params = {
-			Bucket: "maximiz-data",
+			Bucket: "allsource-data",
 			Key: fileName,
 			ContentType: fileType,
 		};

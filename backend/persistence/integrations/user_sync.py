@@ -3,14 +3,21 @@ from typing import Optional
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import count, coalesce
+from sqlalchemy.sql import and_, or_
 
 from db_dependencies import Db
 from enums import (
     SourcePlatformEnum,
     DataSyncType,
     DataSyncImportedStatus,
+    ProccessDataSyncResult,
 )
-from models import DataSyncImportedLead, LeadUser
+from models import (
+    DataSyncImportedLead,
+    LeadUser,
+    LeadsUsersAddedToCart,
+    LeadsUsersOrdered,
+)
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
@@ -140,6 +147,49 @@ class IntegrationsUserSyncPersistence:
 
         return integration_limit, domain_integrations_count
 
+    def add_leads_type_filter(self, query):
+        return query.filter(
+            or_(
+                IntegrationUserSync.leads_type == "allContacts",
+                and_(
+                    IntegrationUserSync.leads_type == "converted_sales",
+                    or_(
+                        and_(
+                            LeadUser.behavior_type != "product_added_to_cart",
+                            LeadUser.is_converted_sales == True,
+                        ),
+                        and_(
+                            LeadUser.is_converted_sales == True,
+                            LeadsUsersOrdered.ordered_at.isnot(None),
+                            LeadsUsersAddedToCart.added_at
+                            < LeadsUsersOrdered.ordered_at,
+                        ),
+                    ),
+                ),
+                and_(
+                    IntegrationUserSync.leads_type == "viewed_product",
+                    LeadUser.behavior_type == "viewed_product",
+                    LeadUser.is_converted_sales == False,
+                ),
+                and_(
+                    IntegrationUserSync.leads_type == "visitor",
+                    LeadUser.behavior_type == "visitor",
+                    LeadUser.is_converted_sales == False,
+                ),
+                and_(
+                    IntegrationUserSync.leads_type == "abandoned_cart",
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadUser.is_converted_sales == False,
+                    LeadsUsersAddedToCart.added_at.isnot(None),
+                    or_(
+                        LeadsUsersOrdered.ordered_at.is_(None),
+                        LeadsUsersAddedToCart.added_at
+                        > LeadsUsersOrdered.ordered_at,
+                    ),
+                ),
+            )
+        )
+
     def get_filter_by(
         self,
         domain_id: int,
@@ -173,25 +223,57 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync,
                 IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
             )
-            .where(DataSyncImportedLead.is_validation.is_(True))
+            .where(
+                DataSyncImportedLead.is_validation.is_(True),
+                DataSyncImportedLead.status
+                == ProccessDataSyncResult.SUCCESS.value,
+            )
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
-        all_synced_persons_query = (
+        base_query = (
             select(
                 count(LeadUser.id).label("all_contacts"),
                 IntegrationUserSync.id,
             )
             .select_from(LeadUser)
-            .join(
-                UserDomains,
-                UserDomains.id == LeadUser.domain_id,
-            )
+            .join(UserDomains, UserDomains.id == LeadUser.domain_id)
             .join(
                 IntegrationUserSync,
                 IntegrationUserSync.domain_id == UserDomains.id,
             )
-            .filter(LeadUser.is_active == True, LeadUser.is_confirmed == True)
+            .filter(
+                LeadUser.is_active == True,
+                LeadUser.is_confirmed == True,
+            )
+        )
+        base_query = base_query.outerjoin(
+            LeadsUsersAddedToCart,
+            LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+        ).outerjoin(
+            LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+        )
+        all_synced_persons_query = self.add_leads_type_filter(base_query)
+        all_synced_persons_query = all_synced_persons_query.group_by(
+            IntegrationUserSync.id
+        ).subquery()
+
+        successful_contacts_query = (
+            select(
+                func.count(DataSyncImportedLead.id).label(
+                    "successful_contacts"
+                ),
+                IntegrationUserSync.id,
+            )
+            .select_from(DataSyncImportedLead)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.id == DataSyncImportedLead.data_sync_id,
+            )
+            .where(
+                DataSyncImportedLead.status
+                == ProccessDataSyncResult.SUCCESS.value,
+            )
             .group_by(IntegrationUserSync.id)
         ).subquery()
 
@@ -223,6 +305,9 @@ class IntegrationsUserSyncPersistence:
                 coalesce(validation_persons_query.c.validation, 0).label(
                     "validation"
                 ),
+                coalesce(
+                    successful_contacts_query.c.successful_contacts, 0
+                ).label("successful_contacts"),
                 UserIntegration.service_name,
                 UserIntegration.is_with_suppression,
                 UserIntegration.platform_user_id,
@@ -232,6 +317,10 @@ class IntegrationsUserSyncPersistence:
             .join(
                 UserIntegration,
                 UserIntegration.id == IntegrationUserSync.integration_id,
+            )
+            .outerjoin(
+                successful_contacts_query,
+                IntegrationUserSync.id == successful_contacts_query.c.id,
             )
             .outerjoin(
                 processed_persons_query,
@@ -282,7 +371,7 @@ class IntegrationsUserSyncPersistence:
                     "suppression": sync.is_with_suppression,
                     "contacts": sync.all_contacts,
                     "processed_contacts": sync.processed,
-                    "successful_contacts": sync.no_of_contacts,
+                    "successful_contacts": sync.successful_contacts,
                     "validation_contacts": sync.validation,
                     "createdBy": sync.created_by,
                     "accountId": sync.platform_user_id,
@@ -324,7 +413,7 @@ class IntegrationsUserSyncPersistence:
                 "suppression": sync.is_with_suppression,
                 "contacts": sync.all_contacts,
                 "processed_contacts": sync.processed,
-                "successful_contacts": sync.no_of_contacts,
+                "successful_contacts": sync.successful_contacts,
                 "validation_contacts": sync.validation,
                 "createdBy": sync.created_by,
                 "accountId": sync.platform_user_id,

@@ -133,7 +133,7 @@ const columns = (isDebug: boolean) => [
 	{
 		key: "target_schema",
 		label: "Target Type",
-		widths: { width: "130px", minWidth: "130px", maxWidth: "130px" },
+		widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
 	},
 	{
 		key: "lookalike_size",
@@ -754,14 +754,14 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 														}}
 														InputProps={{
 															style: {
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "14px",
 															},
 														}}
 														InputLabelProps={{
 															style: {
 																fontSize: "14px",
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 															},
 														}}
 													/>

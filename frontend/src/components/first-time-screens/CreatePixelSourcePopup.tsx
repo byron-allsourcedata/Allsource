@@ -96,7 +96,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
 								fontWeight="600"
 								fontSize="26px"
 								textAlign="center"
-								fontFamily="Nunito Sans"
+								fontFamily="var(--font-nunito)"
 							>
 								Create your source first
 							</Typography>
@@ -329,7 +329,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
 								fontWeight="600"
 								fontSize="26px"
 								textAlign="center"
-								fontFamily="Nunito Sans"
+								fontFamily="var(--font-nunito)"
 							>
 								Create your source first
 							</Typography>
@@ -405,7 +405,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
 								fontWeight="600"
 								fontSize="26px"
 								textAlign="center"
-								fontFamily="Nunito Sans"
+								fontFamily="var(--font-nunito)"
 							>
 								Generate your Smart Audience first
 							</Typography>

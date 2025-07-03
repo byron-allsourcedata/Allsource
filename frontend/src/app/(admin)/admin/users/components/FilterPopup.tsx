@@ -90,6 +90,7 @@ const statusMapping: Record<string, string[]> = {
 		"Pixel Not Installed",
 		"Resolution Failed",
 		"Sync Error",
+		"Multiple Domains",
 	],
 	neutral: ["Waiting Contacts", "Sync Not Completed"],
 	positive: ["Data Syncing"],
@@ -704,9 +705,30 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 	) => {
 		setCheckedFiltersStatuses((prev) => {
 			const updatedStatuses = { ...prev };
+
 			options.forEach((option) => {
 				updatedStatuses[option] = isActive ?? !updatedStatuses[option];
 			});
+
+			Object.keys(statusMapping).forEach((target) => {
+				const areAllStatusesActive = statusMapping[target].every(
+					(status) => updatedStatuses[status],
+				);
+
+				setSelectedStatusTarget((prevTargets) => {
+					const formattedTarget =
+						target.charAt(0).toUpperCase() + target.slice(1);
+
+					if (areAllStatusesActive) {
+						return prevTargets.includes(formattedTarget)
+							? prevTargets
+							: [...prevTargets, formattedTarget];
+					} else {
+						return prevTargets.filter((item) => item !== formattedTarget);
+					}
+				});
+			});
+
 			return updatedStatuses;
 		});
 	};
@@ -929,6 +951,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									"Sync Not Completed",
 									"Sync Error",
 									"Data Syncing",
+									"Multiple Domains",
 								]}
 								onOptionToggle={(status) => handleStatusChange([status])}
 								placeholder="Select Status"
@@ -1161,14 +1184,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
@@ -1197,14 +1220,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
@@ -1444,14 +1467,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
@@ -1480,14 +1503,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												fullWidth: true,
 												sx: {
 													"& .MuiInputBase-input": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",
 														textAlign: "left",
 													},
 													"& .MuiInputLabel-root": {
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "14px",
 														fontWeight: 400,
 														lineHeight: "19.6px",

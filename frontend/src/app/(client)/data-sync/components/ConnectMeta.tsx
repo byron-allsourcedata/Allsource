@@ -440,7 +440,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 			},
 		},
 		inputLabel: {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
@@ -453,7 +453,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 				height: "48px",
 				"& .MuiOutlinedInput-input": {
 					padding: "12px 16px 13px 16px",
-					fontFamily: "Roboto",
+					fontFamily: "var(--font-roboto)",
 					color: "#202124",
 					fontSize: "14px",
 					lineHeight: "20px",
@@ -486,7 +486,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						disabled={!selectedRadioValue}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -520,7 +520,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						disabled={!isDropdownValid || inputValue == ""}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -554,7 +554,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						disabled={!selectedOption || !selectedRadioValue}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -1031,7 +1031,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -1068,7 +1068,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -1103,7 +1103,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -1140,7 +1140,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -1175,7 +1175,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 													componentsProps={{
 														typography: {
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																fontWeight: "500",
 																color: "#000",
@@ -1264,7 +1264,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	? false
 																	: true,
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "15px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -1305,7 +1305,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 														sx={{
 															"& input": {
 																caretColor: "transparent", // Hide caret with transparent color
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																color: "rgba(0, 0, 0, 0.89)",
 																fontWeight: "600",
@@ -1352,7 +1352,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	primary={adAccount.name}
 																	primaryTypographyProps={{
 																		sx: {
-																			fontFamily: "Nunito Sans",
+																			fontFamily: "var(--font-nunito)",
 																			fontSize: "14px",
 																			color: "#202124",
 																			fontWeight: "500",
@@ -1382,7 +1382,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																? false
 																: isShrunk,
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "15px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -1422,7 +1422,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 														sx={{
 															"& input": {
 																caretColor: "transparent",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "14px",
 																color: "rgba(0, 0, 0, 0.89)",
 																fontWeight: "600",
@@ -1470,7 +1470,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																primary={`+ Create new list`}
 																primaryTypographyProps={{
 																	sx: {
-																		fontFamily: "Nunito Sans",
+																		fontFamily: "var(--font-nunito)",
 																		fontSize: "14px",
 																		color: showCreateForm
 																			? "rgba(56, 152, 252, 1)"
@@ -1525,7 +1525,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																			}
 																			InputLabelProps={{
 																				sx: {
-																					fontFamily: "Nunito Sans",
+																					fontFamily: "var(--font-nunito)",
 																					fontSize: "12px",
 																					lineHeight: "16px",
 																					fontWeight: "400",
@@ -1556,7 +1556,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																						height: "32px",
 																						"& .MuiOutlinedInput-input": {
 																							padding: "5px 16px 4px 16px",
-																							fontFamily: "Roboto",
+																							fontFamily: "var(--font-roboto)",
 																							color: "#202124",
 																							fontSize: "14px",
 																							fontWeight: "400",
@@ -1595,7 +1595,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				background: "#fff",
 																				boxShadow:
 																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				fontWeight: "600",
 																				lineHeight: "20px",
@@ -1637,7 +1637,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																		primary={klaviyo.list_name}
 																		primaryTypographyProps={{
 																			sx: {
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				color: "#202124",
 																				fontWeight: "500",
@@ -1671,7 +1671,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	? false
 																	: isShrunkCampaign,
 																sx: {
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "15px",
 																	lineHeight: "16px",
 																	color: "rgba(17, 17, 19, 0.60)",
@@ -1721,7 +1721,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 															sx={{
 																"& input": {
 																	caretColor: "transparent",
-																	fontFamily: "Nunito Sans",
+																	fontFamily: "var(--font-nunito)",
 																	fontSize: "14px",
 																	color: "rgba(0, 0, 0, 0.89)",
 																	fontWeight: "600",
@@ -1773,7 +1773,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	primary={`+ Create new Campaign list`}
 																	primaryTypographyProps={{
 																		sx: {
-																			fontFamily: "Nunito Sans",
+																			fontFamily: "var(--font-nunito)",
 																			fontSize: "14px",
 																			color: showCreateFormCampaign
 																				? "rgba(56, 152, 252, 1)"
@@ -1810,7 +1810,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				fullWidth
 																				margin="normal"
 																				sx={{
-																					fontFamily: "Nunito Sans",
+																					fontFamily: "var(--font-nunito)",
 																					"& .MuiInputBase-input": {
 																						fontSize: "14px",
 																						lineHeight: "16px",
@@ -1917,7 +1917,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																					background: "#fff",
 																					boxShadow:
 																						"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																					fontFamily: "Nunito Sans",
+																					fontFamily: "var(--font-nunito)",
 																					fontSize: "14px",
 																					fontWeight: "600",
 																					lineHeight: "20px",
@@ -1961,7 +1961,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																			primary={klaviyo.list_name}
 																			primaryTypographyProps={{
 																				sx: {
-																					fontFamily: "Nunito Sans",
+																					fontFamily: "var(--font-nunito)",
 																					fontSize: "14px",
 																					color: "#202124",
 																					fontWeight: "500",
@@ -2001,7 +2001,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 												sx={{
 													background: "#EDEDF7",
 													borderRadius: "3px",
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													fontWeight: "400",
 													color: "#5f6368",
@@ -2102,7 +2102,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 														}
 														InputLabelProps={{
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -2122,7 +2122,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
-																		fontFamily: "Roboto",
+																		fontFamily: "var(--font-roboto)",
 																		color: "#202124",
 																		fontSize: "12px",
 																		fontWeight: "400",
@@ -2188,7 +2188,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 														value={row.type}
 														InputLabelProps={{
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -2208,7 +2208,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
-																		fontFamily: "Roboto",
+																		fontFamily: "var(--font-roboto)",
 																		color: "#202124",
 																		fontSize: "12px",
 																		fontWeight: "400",
@@ -2293,7 +2293,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																		variant="body2"
 																		sx={{
 																			color: "#5f6368",
-																			fontFamily: "Roboto",
+																			fontFamily: "var(--font-roboto)",
 																			fontSize: "12px",
 																			fontWeight: "400",
 																			lineHeight: "16px",
@@ -2317,7 +2317,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				boxShadow:
 																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 																				color: "rgba(56, 152, 252, 1)",
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				fontWeight: "600",
 																				lineHeight: "20px",
@@ -2337,7 +2337,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				boxShadow:
 																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 																				color: "#fff",
-																				fontFamily: "Nunito Sans",
+																				fontFamily: "var(--font-nunito)",
 																				fontSize: "14px",
 																				fontWeight: "600",
 																				lineHeight: "20px",

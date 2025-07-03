@@ -157,6 +157,11 @@ class InsightsUtils:
         source_agent: SourceAgentService,
         audience_type: BusinessType,
     ):
+        is_invalid = lambda val: (
+            val is None
+            or str(val).upper()
+            in ("UNKNOWN", "U", "2", "", "-", "Unknown", "unknown")
+        )
         if not asids:
             return insights
 
@@ -169,6 +174,25 @@ class InsightsUtils:
         if audience_type in (BusinessType.B2C, BusinessType.ALL):
             categories += ["personal", "financial", "lifestyle", "voter"]
 
+        if (
+            audience_type == BusinessType.B2C
+            or audience_type == BusinessType.ALL
+        ):
+            # 3) PERSONAL
+            personal_fields = [
+                "gender",
+                "state",
+                "religion",
+                "homeowner",
+                "age",
+                "ethnicity",
+                "languages",
+                "marital_status",
+                "have_children",
+                "education_level",
+                "children_ages",
+                "pets",
+            ]
         if (
             audience_type == BusinessType.B2C
             or audience_type == BusinessType.ALL

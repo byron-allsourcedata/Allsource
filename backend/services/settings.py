@@ -48,6 +48,7 @@ import hashlib
 import json
 from services.stripe_service import *
 from decimal import Decimal
+from schemas.settings import BuyFundsRequest
 
 
 @injectable
@@ -64,6 +65,7 @@ class SettingsService:
         user_domains_service: UserDomainsService,
         lead_persistence: LeadsPersistence,
         team_invitation_persistence: TeamInvitationPersistence,
+        stripe_service: StripeService,
     ):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
@@ -73,6 +75,7 @@ class SettingsService:
         self.user_domains_service = user_domains_service
         self.lead_persistence = lead_persistence
         self.team_invitation_persistence = team_invitation_persistence
+        self.stripe_service = stripe_service
 
     def get_account_details(self, user):
         member_id = None
@@ -919,6 +922,32 @@ class SettingsService:
 
         return result
 
+    def buy_funds(self, user: User, payload: BuyFundsRequest):
+        metadata = {
+            "user_id": str(user.get("id")),
+            "type_funds": payload.type_funds.value,
+            "amount_usd": str(payload.amount),
+        }
+
+        result = self.stripe_service.charge_customer_immediately(
+            customer_id=user.get("customer_id"),
+            amount_usd=payload.amount,
+            currency="usd",
+            description="Buy funds",
+            metadata=metadata,
+        )
+
+        if result["success"]:
+            event = result["stripe_payload"]
+            self.user_persistence.increase_funds_count(
+                customer_id=event["customer"],
+                quantity=payload.amount,
+                type_funds=payload.type_funds,
+            )
+            return {"success": True}
+
+        return result
+
     def get_all_plans(self) -> PlansResponse:
         FREE_TRAIL_PLAN = Plan(
             title="Free Trial",
@@ -948,7 +977,6 @@ class SettingsService:
             alias="basic",
             price=Price(value="$0,08", y="record"),
             is_recommended=True,
-            is_active=True,
             permanent_limits=[
                 Advantage(
                     good=True, name="Domains monitored:", value="Unlimited"

@@ -32,7 +32,7 @@ const WebhookConnectPopup = ({
 	boxShadow,
 	invalid_api_key,
 }: CreateWebhookProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = useState<string>("1");
@@ -51,7 +51,8 @@ const WebhookConnectPopup = ({
 					onSave({ service_name: "webhook", is_failed: false });
 				}
 				handleClose();
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 			} else {
 				showErrorToast("Error connect webhook");
 			}
@@ -70,7 +71,7 @@ const WebhookConnectPopup = ({
 						onClick={handleApiKeySave}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -162,7 +163,7 @@ const WebhookConnectPopup = ({
 						sx={{
 							textAlign: "center",
 							color: "#202124",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: "600",
 							fontSize: "16px",
 							lineHeight: "normal",
@@ -182,7 +183,7 @@ const WebhookConnectPopup = ({
 							target="_blank"
 							rel="noopener refferer"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: "600",
 								lineHeight: "20px",
@@ -222,7 +223,7 @@ const WebhookConnectPopup = ({
 							<Typography
 								color="error"
 								sx={{
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									fontWeight: "600",
 									lineHeight: "21.82px",

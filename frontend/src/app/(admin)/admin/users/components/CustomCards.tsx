@@ -75,7 +75,7 @@ const StatCard: React.FC<StatCardProps> = ({
 					sx={{
 						fontWeight: "700",
 						fontSize: "22px",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						lineHeight: "30.01px",
 						color: textColor,
 					}}
@@ -85,7 +85,7 @@ const StatCard: React.FC<StatCardProps> = ({
 				<Typography
 					variant="body1"
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: "500",
 						lineHeight: "19.6px",

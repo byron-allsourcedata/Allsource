@@ -174,6 +174,7 @@ class GoogleAdsIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = domain.id if domain else None
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         client_secret = os.getenv("CLIENT_GOOGLE_SECRET")
         data = {
@@ -193,9 +194,7 @@ class GoogleAdsIntegrationsService:
                 status_code=400, detail="Failed to get access token"
             )
 
-        integrations = self.__save_integrations(
-            access_token, None if domain is None else domain.id, user
-        )
+        integrations = self.__save_integrations(access_token, domain_id, user)
         return {
             "integrations": integrations,
             "status": IntegrationsStatus.SUCCESS.value,

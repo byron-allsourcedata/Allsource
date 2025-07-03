@@ -842,7 +842,7 @@ const Leads: React.FC = () => {
 			key: "visited_date",
 			label: "Visited date",
 			sortable: true,
-			widths: { width: "150px", minWidth: "13vw", maxWidth: "20vw" },
+			widths: { width: "120px", minWidth: "120px", maxWidth: "120px" },
 		},
 		{
 			key: "revenue",

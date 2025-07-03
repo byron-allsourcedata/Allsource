@@ -172,10 +172,7 @@ class IntegrationsPresistence:
         )
         if user_id:
             query = query.filter(
-                or_(
-                    UserIntegration.domain_id == domain_id,
-                    UserIntegration.user_id == user_id,
-                )
+                UserIntegration.user_id == user_id,
             )
         else:
             query = query.filter(UserIntegration.domain_id == domain_id)

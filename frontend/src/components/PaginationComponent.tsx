@@ -97,7 +97,7 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
 		>
 			<Typography
 				sx={{
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontWeight: "400",
 					fontSize: "12px",
 					lineHeight: "16px",

@@ -54,7 +54,7 @@ export const billingStyles = {
 		"&.Mui-focused": {
 			top: 0,
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",
@@ -66,7 +66,7 @@ export const billingStyles = {
 		},
 		"&.MuiOutlinedInput-root": {
 			"& .MuiOutlinedInput-input": {
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -155,5 +155,24 @@ export const billingStyles = {
 		display: "flex",
 		justifyContent: "center",
 		alignItems: "center",
+	},
+	cardImageContainer: {
+		width: "62px",
+		height: "62px",
+		borderRadius: "4px",
+		border: "1px solid #f0f0f0",
+		display: "flex",
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	cardItemWrapper: {
+		display: "flex",
+		alignItems: "center",
+		width: "100%",
+		gap: 2,
+		border: "1px solid #ddd",
+		borderRadius: "4px",
+		p: 2,
+		boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 	},
 };

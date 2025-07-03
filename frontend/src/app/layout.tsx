@@ -1,5 +1,4 @@
 "use client";
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import React from "react";
@@ -13,9 +12,22 @@ import { SSEProvider } from "../context/SSEContext";
 import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
-import Script from "next/script";
+import { Nunito_Sans, Roboto } from "next/font/google";
 
 const inter = Inter({ subsets: ["latin"] });
+const nunito = Nunito_Sans({
+	subsets: ["latin"],
+	weight: ["300", "400", "500", "600", "700", "900"],
+	display: "swap",
+	variable: "--font-nunito",
+});
+
+const roboto = Roboto({
+	subsets: ["latin"],
+	weight: ["100", "300", "400", "500", "700", "900"],
+	display: "swap",
+	variable: "--font-roboto",
+});
 
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
@@ -29,6 +41,7 @@ const formatPageTitle = (path: string) => {
 		.split("/")
 		.filter(Boolean)
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.slice(0, 2)
 		.join(" ");
 };
 
@@ -40,7 +53,7 @@ export default function RootLayout({
 	const pathname = usePathname();
 	const pageTitle = formatPageTitle(pathname || "");
 	return (
-		<html lang="en">
+		<html lang="en" className={`${nunito.variable} ${roboto.variable}`}>
 			<head>
 				<title>{pageTitle ? `Allsource | ${pageTitle} ` : "Allsource"}</title>
 				<meta name="description" content={`Page: ${pageTitle}`} />

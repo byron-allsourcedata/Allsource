@@ -167,7 +167,7 @@ const ReferralRewards: React.FC = () => {
 									backgroundColor: "#fff",
 									borderRadius: "4px",
 									height: "48px",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									minWidth: "112px",
 									fontWeight: 400,
@@ -196,7 +196,7 @@ const ReferralRewards: React.FC = () => {
 										key={index}
 										value={option.toString()}
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: 500,
 											fontSize: "14px",
 											lineHeight: "19.6px",
@@ -214,7 +214,7 @@ const ReferralRewards: React.FC = () => {
 									variant="h5"
 									sx={{
 										mb: 3,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "20px",
 										color: "#4a4a4a",
 										fontWeight: "600",
@@ -234,7 +234,7 @@ const ReferralRewards: React.FC = () => {
 									color="textSecondary"
 									sx={{
 										mt: 3,
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "14px",
 										color: "#808080",
 										fontWeight: "600",
@@ -289,7 +289,7 @@ const ReferralRewards: React.FC = () => {
 											sx={{
 												display: "none",
 												backgroundColor: "#FFF",
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "14px",
 												fontWeight: "600",
 												lineHeight: "20px",
@@ -411,7 +411,7 @@ const ReferralRewards: React.FC = () => {
 										onClick={() => handleViewDetails(data.month)}
 										sx={{
 											backgroundColor: "#FFF",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											fontWeight: "600",
 											lineHeight: "20px",

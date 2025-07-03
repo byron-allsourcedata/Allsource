@@ -259,7 +259,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 						<Typography
 							sx={{
 								fontSize: "16px",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: 600,
 								lineHeight: "21.82px",
 								color: "rgba(32, 33, 36, 1)",

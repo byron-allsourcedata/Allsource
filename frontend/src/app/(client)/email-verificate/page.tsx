@@ -200,7 +200,7 @@ const EmailVerificate: React.FC = () => {
 						<Typography
 							variant="h6"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 600,
 								lineHeight: "19.6px",
@@ -214,7 +214,7 @@ const EmailVerificate: React.FC = () => {
 							variant="body2"
 							color="textSecondary"
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
 								fontWeight: 600,
 								lineHeight: "19.6px",
@@ -227,7 +227,7 @@ const EmailVerificate: React.FC = () => {
 
 					<MenuItem
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: 500,
 							lineHeight: "19.6px",

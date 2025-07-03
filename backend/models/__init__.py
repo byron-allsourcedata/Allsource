@@ -90,6 +90,7 @@ from .audience_postals_verification import AudiencePostalVerification
 from .admin_invitations import AdminInvitation
 from .transaction_history import TransactionHistory
 from .charging_credits_history import ChargingCreditsHistory
+from .opt_out import OptOutBlackList
 
 
 __all__ = [
@@ -177,4 +178,5 @@ __all__ = [
     "AudiencePostalVerification",
     "EnrichmentPersonalProfiles",
     "AdminInvitation",
+    "OptOutBlackList",
 ]

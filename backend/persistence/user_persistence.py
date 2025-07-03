@@ -10,7 +10,12 @@ from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
 from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
-from enums import TeamsInvitationStatus, SignUpStatus, UserStatusInAdmin
+from enums import (
+    TeamsInvitationStatus,
+    SignUpStatus,
+    UserStatusInAdmin,
+    TypeFunds,
+)
 from models import (
     AudienceLookalikes,
     LeadUser,
@@ -471,6 +476,15 @@ class UserPersistence:
     ):
         status_case = self.calculate_user_status()
 
+        subq_domain_resolved = (
+            self.db.query(UserDomains.user_id)
+            .filter(
+                UserDomains.user_id == Users.id,
+                UserDomains.is_another_domain_resolved.is_(True),
+            )
+            .exists()
+        )
+
         query = (
             self.db.query(
                 Users.id,
@@ -486,6 +500,9 @@ class UserPersistence:
                 ),
                 SubscriptionPlan.title.label("subscription_plan"),
                 status_case.label("user_status"),
+                case((subq_domain_resolved, True), else_=False).label(
+                    "is_another_domain_resolved"
+                ),
             )
             .join(
                 UserSubscriptions,
@@ -506,7 +523,20 @@ class UserPersistence:
                 status.strip().lower()
                 for status in filters["statuses"].split(",")
             ]
-            query = query.filter(func.lower(status_case).in_(statuses))
+
+            filter_conditions = []
+
+            if "multiple_domains" in statuses:
+                filter_conditions.append(
+                    case((subq_domain_resolved, True), else_=False).is_(True)
+                )
+                statuses.remove("multiple_domains")
+
+            if statuses:
+                filter_conditions.append(func.lower(status_case).in_(statuses))
+
+            if filter_conditions:
+                query = query.filter(or_(*filter_conditions))
 
         if filters.get("last_login_date_start"):
             last_login_date_start = datetime.fromtimestamp(
@@ -831,6 +861,29 @@ class UserPersistence:
                 overage_leads_count=func.greatest(
                     Users.overage_leads_count - quantity, 0
                 )
+            )
+        )
+        result = self.db.execute(stmt_users)
+        self.db.commit()
+        return result.rowcount
+
+    def increase_funds_count(
+        self, customer_id: str, quantity: int, type_funds: TypeFunds
+    ):
+        if type_funds == TypeFunds.VALIDATION_FUNDS:
+            field_to_update = Users.validation_funds
+        elif type_funds == TypeFunds.PREMIUM_SOURCES_FUNDS:
+            field_to_update = Users.premium_source_credits
+
+        stmt_users = (
+            update(Users)
+            .where(Users.customer_id == customer_id)
+            .values(
+                **{
+                    field_to_update.key: func.greatest(
+                        field_to_update + quantity, 0
+                    )
+                }
             )
         )
         result = self.db.execute(stmt_users)

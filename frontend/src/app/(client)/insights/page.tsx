@@ -403,7 +403,7 @@ const Insights = () => {
 														}}
 														InputLabelProps={{
 															sx: {
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontSize: "15px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
@@ -412,7 +412,7 @@ const Insights = () => {
 																margin: 0,
 																left: "3px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																},
 															},
 														}}
@@ -429,7 +429,7 @@ const Insights = () => {
 															),
 															style: {
 																color: "rgba(17, 17, 19, 1)",
-																fontFamily: "Nunito Sans",
+																fontFamily: "var(--font-nunito)",
 																fontWeight: 400,
 																fontSize: "14px",
 															},

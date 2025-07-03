@@ -21,8 +21,10 @@ class AudienceSmartDTO(BaseModel):
     validations: Optional[Dict]
     target_schema: Optional[str]
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True,
+        "extra": "forbid",
+    }
 
 
 class PersonRecord(BaseModel):
@@ -67,8 +69,10 @@ class PersonRecord(BaseModel):
     state_abbr: Optional[str] = None
     zip_code5: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True,
+        "extra": "forbid",
+    }
 
 
 class SyncedPersonRecord(BaseModel):
@@ -99,5 +103,7 @@ class SyncedPersonRecord(BaseModel):
     state: Optional[str] = None
     gender: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True,
+        "extra": "forbid",
+    }

@@ -59,7 +59,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 						sx={{
 							fontWeight: 500,
 							fontSize: "20px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 						}}
 					>
 						Website Pixel Successfully Installed! 🎉
@@ -85,7 +85,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 							mb: 4,
 							pt: 4,
 							textAlign: "left",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 						}}
 					>
 						Great news — your tracking pixel is active! Now we&apos;ll start
@@ -103,7 +103,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 							padding: "12px",
 							fontWeight: 600,
 							borderRadius: "8px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							"&:hover": {
 								backgroundColor: "#1E88E5",
 							},

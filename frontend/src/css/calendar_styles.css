@@ -1,5 +1,5 @@
 .react-datepicker {
-	font-family: "Nunito Sans", sans-serif;
+	font-family: var(--font-nunito);
 	border: none;
 	position: relative;
 }

@@ -60,10 +60,11 @@ const MainSectionCard: React.FC<PixelCardProps> = ({ data, onClick }) => {
 				cursor: onClick ? "pointer" : "default",
 				borderRadius: 2,
 				boxShadow: "0px 1px 4px rgba(0, 0, 0, 0.25)",
-				padding: "1rem 0.75rem",
+				padding: "1rem 0.7rem",
 				maxWidth: "100%",
+				border: "1.5px solid rgba(255, 255, 255, 0.25)",
 				"&:hover": {
-					border: `1px solid rgba(5, 105, 226, 1)`,
+					border: `1.5px solid rgba(5, 105, 226, 1)`,
 					transition: "none",
 				},
 			}}

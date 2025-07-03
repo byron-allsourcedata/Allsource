@@ -116,7 +116,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 		display: "flex",
 		marginTop: "10px",
 		justifyContent: "space-between",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 		fontWeight: "600",
 		lineHeight: "21.82px",
@@ -181,7 +181,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 		top: "-3px",
 		"&.Mui-focused": {
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",
@@ -200,7 +200,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {
@@ -216,14 +216,14 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 			maxHeight: "48px",
 		},
 		"&.Mui-focused": {
-			color: "#0000FF",
+			color: "rgba(56, 152, 252, 1)",
 		},
 		"& .MuiOutlinedInput-root": {
 			paddingTop: "13px",
 			paddingBottom: "13px",
 		},
 		"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-			borderColor: "#0000FF",
+			borderColor: "rgba(56, 152, 252, 1)",
 		},
 	},
 	form: {

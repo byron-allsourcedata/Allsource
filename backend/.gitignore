@@ -2,10 +2,13 @@
 *.*env
 .inf
 venv
+.venv
 # Cache
 __pycache__
 .pytest_cache/
 .coverage
+.python-version
+pyproject.toml
 
 # Vim
 tags
@@ -31,5 +34,6 @@ tmp/*
 
 logs/*
 !logs/.gitkeep
+/README.md
 
 utilities/*

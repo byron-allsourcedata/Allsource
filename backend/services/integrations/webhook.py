@@ -134,7 +134,8 @@ class WebhookIntegrationService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
-        integration = self.save_integration(domain_id=domain.id, user=user)
+        domain_id = domain.id if domain else None
+        integration = self.save_integration(domain_id=domain_id, user=user)
         return integration
 
     def create_list(self, list, domain_id: int, user_id: int):
@@ -203,7 +204,10 @@ class WebhookIntegrationService:
                 data_map=integration_data_sync.data_map,
                 is_email_validation_enabled=is_email_validation_enabled,
             )
-            if data == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+            if data in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
                 results.append({"lead_id": lead_user.id, "status": data})
                 continue
             else:
@@ -395,6 +399,7 @@ class WebhookIntegrationService:
         is_email_validation_enabled: bool,
     ):
         properties = {}
+        validation_email = 2
         if all(
             item.get("type") == "" and item.get("value") == ""
             for item in data_map
@@ -443,6 +448,7 @@ class WebhookIntegrationService:
                         ProccessDataSyncResult.INCORRECT_FORMAT.value,
                         ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
                     ):
+                        validation_email -= 1
                         properties[mapping["value"]] = None
                     else:
                         properties[mapping["value"]] = result
@@ -467,9 +473,13 @@ class WebhookIntegrationService:
                         ProccessDataSyncResult.INCORRECT_FORMAT.value,
                         ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
                     ):
+                        validation_email -= 1
                         properties[mapping["value"]] = None
                     else:
                         properties[mapping["value"]] = result
+
+        if validation_email == 0:
+            return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
 
         return properties
 

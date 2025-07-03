@@ -101,7 +101,7 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
 		maxWidth: "384px",
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 	},
 	submitButton: {
@@ -128,13 +128,13 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
 	loginText: {
 		mt: 2,
 		margin: "1.25em 0px 24px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 	},
 	resetPassword: {
 		mt: 2,
 		margin: "3em 0em 0em",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 	},
 	text: {

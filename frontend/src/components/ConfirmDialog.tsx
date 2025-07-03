@@ -78,7 +78,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 						mb: 4,
 						pt: 4,
 						textAlign: "left",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 					}}
 				>
 					{description}
@@ -88,16 +88,11 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 					<Button
 						onClick={onCancel}
 						variant="text"
+						className="second-sub-title"
 						sx={{
-							textTransform: "none",
-							fontSize: "14px",
 							padding: "12px",
-							fontWeight: 600,
-							borderRadius: "4px",
-							fontFamily: "Nunito Sans",
-							"&:active": {
-								backgroundColor: "#74B7FD",
-							},
+							textTransform: "none",
+							color: "rgba(56, 152, 252, 1) !important",
 						}}
 					>
 						Cancel
@@ -112,7 +107,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 							padding: "10px 24px",
 							fontWeight: 600,
 							borderRadius: "4px",
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							"&:hover": {
 								backgroundColor: "#1E88E5",
 							},

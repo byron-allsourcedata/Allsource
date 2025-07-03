@@ -4,7 +4,6 @@ from config.base import Base
 
 
 class ShopifyConfig(Base):
-    app = "Maximiz"
     key = os.getenv("SHOPIFY_KEY")
     secret = os.getenv("SHOPIFY_SECRET")
     scopes = [

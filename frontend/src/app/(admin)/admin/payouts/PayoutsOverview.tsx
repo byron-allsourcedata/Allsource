@@ -276,7 +276,7 @@ const ReferralOverview: React.FC = () => {
 										textWrap: "nowrap",
 										backgroundColor: "#fff",
 										color: "rgba(56, 152, 252, 1)",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 										textTransform: "none",
 										lineHeight: "22.4px",
 										fontWeight: "600",
@@ -437,7 +437,7 @@ const ReferralOverview: React.FC = () => {
 									<Typography
 										variant="body1"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											fontWeight: "600",
 											lineHeight: "19.6px",
@@ -563,7 +563,7 @@ const ReferralOverview: React.FC = () => {
 																background: "rgba(234, 248, 221, 1)",
 																padding: "6px 8px",
 																borderRadius: "2px",
-																fontFamily: "Roboto",
+																fontFamily: "var(--font-roboto)",
 																fontSize: "12px",
 																fontWeight: "400",
 																lineHeight: "16px",

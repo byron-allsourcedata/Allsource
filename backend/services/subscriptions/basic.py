@@ -51,9 +51,7 @@ class BasicPlanService:
     def move_to_basic_plan(self, customer_id: str):
         user = self.users.by_customer_id(customer_id)
         if not user:
-            logger.error(
-                f"Basic plan not found for user with customer_id: {customer_id}, user_id: {user.id}"
-            )
+            logger.error(f"User not found with customer_id: {customer_id}")
             return
         user_id = user.id
 

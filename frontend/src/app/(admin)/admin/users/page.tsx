@@ -39,7 +39,7 @@ interface FilterParams {
 	statuses: Record<string, boolean>;
 }
 
-interface UserData {
+export interface UserData {
 	id: number;
 	full_name: string;
 	email: string;
@@ -57,6 +57,7 @@ interface UserData {
 	credits_count?: number;
 	type?: string;
 	is_email_validation_enabled: boolean;
+	is_another_domain_resolved: boolean;
 }
 
 const Users: React.FC = () => {
@@ -181,7 +182,6 @@ const Users: React.FC = () => {
 					router.push("/signin");
 				} else {
 					showErrorToast(`Error: ${error.response?.status}`);
-					router.push("/signin");
 				}
 			}
 		} finally {
@@ -347,7 +347,7 @@ const Users: React.FC = () => {
 
 		if (
 			Object.keys(filters.statuses).length > 0 &&
-			!Object.values(filters.statuses).includes(false)
+			Object.values(filters.statuses).includes(true)
 		) {
 			newSelectedFilters.push({
 				label: "statuses",
@@ -410,6 +410,7 @@ const Users: React.FC = () => {
 					display: "flex",
 					flexDirection: "column",
 					pr: 2,
+					pl: 2,
 					width: "100%",
 					overflow: "auto",
 					height: "100%",
@@ -473,7 +474,7 @@ const Users: React.FC = () => {
 											key={index}
 											label={tab.label}
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontWeight: 500,
 												fontSize: "14px",
 												lineHeight: "100%",

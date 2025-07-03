@@ -158,7 +158,7 @@ const TableWithEmptyData: React.FC<MyTableCellProps> = ({
 					variant="h5"
 					sx={{
 						mb: 3,
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "20px",
 						color: "#4a4a4a",
 						fontWeight: "600",
@@ -173,7 +173,7 @@ const TableWithEmptyData: React.FC<MyTableCellProps> = ({
 					color="textSecondary"
 					sx={{
 						mt: 3,
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						color: "#808080",
 						fontWeight: "600",

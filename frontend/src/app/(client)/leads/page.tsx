@@ -1240,36 +1240,28 @@ const Leads: React.FC = () => {
 			key: "first_visited_date",
 			label: "Visited date",
 			sortable: true,
-			widths: { width: "140px", minWidth: "140px", maxWidth: "120px" },
+			widths: { width: "135px", minWidth: "135px", maxWidth: "135px" },
 		},
 		{
 			key: "funnel",
 			label: "Lead Status",
-			widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
 		},
 		{
 			key: "status",
 			label: "Visitor Type",
-			widths: {
-				width: "150px",
-				minWidth: "150px",
-				maxWidth: "150px",
-			},
+			widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
 		},
 		{
 			key: "number_of_page",
 			label: "URL Visited",
-			widths: {
-				width: "120px",
-				minWidth: "120px",
-				maxWidth: "120px",
-			},
+			widths: { width: "120px" , minWidth: "120px",maxWidth: "120px" },
 		},
 		{
 			key: "average_time_sec",
 			label: "Time on site",
 			sortable: true,
-			widths: { width: "130px", minWidth: "130px", maxWidth: "130px" },
+			widths: { width: "140px", minWidth: "140px", maxWidth: "140px" },
 		},
 	];
 
@@ -1494,7 +1486,7 @@ const Leads: React.FC = () => {
 				<Typography
 					variant="body1"
 					sx={{
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontSize: "14px",
 						fontWeight: "600",
 						lineHeight: "19.6px",
@@ -1550,7 +1542,6 @@ const Leads: React.FC = () => {
 				sx={{
 					display: "flex",
 					flexDirection: "column",
-					height: "100%",
 					pr: "16px",
 					"@media (max-width: 900px)": {
 						paddingRight: 2,
@@ -1589,7 +1580,6 @@ const Leads: React.FC = () => {
 										flexDirection: "row",
 										alignItems: "center",
 										gap: 3,
-										height: "46px",
 									}}
 								>
 									<Box
@@ -1623,31 +1613,12 @@ const Leads: React.FC = () => {
 										position: "relative",
 										alignItems: "center",
 										gap: "15px",
-										pt: "4px",
 										"@media (max-width: 900px)": {
 											gap: "8px",
 										},
 									}}
 								>
 									{!noContactsYet && ButtonGroup}
-
-									{/* <Button
-                                onClick={handleAudiencePopupOpen}
-                                aria-haspopup="true"
-                                sx={{
-                                    textTransform: 'none',
-                                    color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    padding: '0',
-                                    border: 'none',
-                                    minWidth: 'auto',
-                                    '@media (min-width: 901px)': {
-                                        display: 'none'
-                                    }
-                                }}
-                            >
-                                <Image src='/add.svg' alt='logo' height={24} width={24} />
-                            </Button> */}
 								</Box>
 							</Box>
 							<Box
@@ -1774,7 +1745,7 @@ const Leads: React.FC = () => {
 						) : noContactsYet ? (
 							<EmptyAnalyticsPlaceholder />
 						) : (
-							<Grid container spacing={1} sx={{}}>
+							<Grid container sx={{}}>
 								<Grid item xs={12}>
 									<TableContainer
 										ref={tableContainerRef}
@@ -2069,7 +2040,7 @@ const Leads: React.FC = () => {
 															)}
 														</SmartCell>
 
-														{/* Lead Status */}
+														{/* Visited Date */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2095,7 +2066,7 @@ const Leads: React.FC = () => {
 																: "--"}
 														</SmartCell>
 
-														{/* Visitor Type */}
+														{/* Lead Status */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2112,7 +2083,7 @@ const Leads: React.FC = () => {
 																	display: "flex",
 																	padding: "2px 8px",
 																	borderRadius: "2px",
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	fontSize: "12px",
 																	fontWeight: "400",
 																	lineHeight: "normal",
@@ -2122,7 +2093,7 @@ const Leads: React.FC = () => {
 																	color: getStatusStyle(row.behavior_type)
 																		.color,
 																	justifyContent: "center",
-																	minWidth: "110px",
+																	// minWidth: "110px",
 																	textTransform: "capitalize",
 																}}
 															>
@@ -2130,7 +2101,7 @@ const Leads: React.FC = () => {
 															</Box>
 														</SmartCell>
 
-														{/* URL Visited */}
+														{/* Visitor Type */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2147,7 +2118,7 @@ const Leads: React.FC = () => {
 																	display: "flex",
 																	padding: "2px 8px",
 																	borderRadius: "2px",
-																	fontFamily: "Roboto",
+																	fontFamily: "var(--font-roboto)",
 																	fontSize: "12px",
 																	fontWeight: "400",
 																	lineHeight: "normal",
@@ -2156,14 +2127,15 @@ const Leads: React.FC = () => {
 																	).background,
 																	color: getStatusStyle(row.visitor_type).color,
 																	justifyContent: "center",
-																	minWidth: "110px",
+																	// minWidth: "110px",
 																	textTransform: "capitalize",
 																}}
 															>
 																{formatFunnelText(row.visitor_type) || "--"}
 															</Box>
 														</SmartCell>
-
+														
+														{/* URL Visited */}
 														<SmartCell
 															cellOptions={{
 																sx: {
@@ -2282,6 +2254,8 @@ const Leads: React.FC = () => {
 																</Tooltip>
 															</Box>
 														</SmartCell>
+
+														{/* Time on site */}
 														<SmartCell
 															cellOptions={{
 																sx: {

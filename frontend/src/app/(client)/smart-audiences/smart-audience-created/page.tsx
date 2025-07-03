@@ -459,7 +459,7 @@ const SourcesList: React.FC = () => {
 													).background,
 													padding: "3px 8px",
 													borderRadius: "2px",
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "12px",
 													fontWeight: "400",
 													lineHeight: "16px",

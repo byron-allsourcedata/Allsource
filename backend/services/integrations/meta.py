@@ -125,7 +125,8 @@ class MetaIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
-        credential = self.get_credentials(domain.id, user.get("id"))
+        domain_id = None if domain is None else domain.id
+        credential = self.get_credentials(domain_id, user.get("id"))
         access_token = self.get_long_lived_token(credentials.meta.access_token)
         if not access_token:
             raise HTTPException(
@@ -155,7 +156,7 @@ class MetaIntegrationsService:
         if common_integration:
             integration_data["user_id"] = user.get("id")
         else:
-            integration_data["domain_id"] = domain.id
+            integration_data["domain_id"] = domain_id
 
         integartion = self.integrations_persisntece.create_integration(
             integration_data
@@ -163,7 +164,7 @@ class MetaIntegrationsService:
 
         integrations = (
             self.integrations_persisntece.get_all_integrations_filter_by(
-                ad_account_id=ad_account_info.get("id"), domain_id=domain.id
+                ad_account_id=ad_account_info.get("id"), domain_id=domain_id
             )
         )
         for integration in integrations:

@@ -395,7 +395,7 @@ class BigcommerceIntegrationsService:
             pixel_bigcommerce, f"bigcommrce-pixel-code/{client_id}.js"
         )
 
-        script_event_url = f"https://maximiz-data.s3.us-east-2.amazonaws.com/bigcommrce-pixel-code/{client_id}.js"
+        script_event_url = f"https://allsource-data.s3.us-east-2.amazonaws.com/bigcommrce-pixel-code/{client_id}.js"
         url = f"{shop_domain}/v3/content/scripts"
         headers = {
             "X-Auth-Token": access_token,

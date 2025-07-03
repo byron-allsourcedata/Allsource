@@ -37,7 +37,7 @@ interface PopupProps {
 const inputLabelStyles = {
 	fontSize: "14px",
 	fontWeight: 400,
-	fontFamily: "'Nunito Sans', sans-serif",
+	fontFamily: "var(--font-nunito)",
 	color: "#707071",
 	"&.MuiInputLabel-shrink": {
 		transform: "translate(14px, -9px) scale(1)",
@@ -721,7 +721,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 							<Typography
 								variant="h6"
 								sx={{
-									fontFamily: "'Nunito Sans', sans-serif",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "16px",
 									width: "100%",
 									fontWeight: 600,
@@ -800,7 +800,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 											sx={{
 												fontSize: "14px",
 												fontWeight: "500px",
-												fontFamily: "'Nunito Sans', sans-serif",
+												fontFamily: "var(--font-nunito)",
 												pt: "3px",
 												color: "#3C4043",
 											}}
@@ -847,7 +847,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 										sx={{
 											fontSize: "12px",
 											fontWeight: "400px",
-											fontFamily: "'Nunito Sans', sans-serif",
+											fontFamily: "var(--font-nunito)",
 											color: "#5F6368",
 										}}
 									>
@@ -873,7 +873,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 									backgroundColor: "#fff",
 									color: "#202124",
 									fontSize: "14px",
-									fontFamily: "'Nunito Sans', sans-serif",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 600,
 									cursor: "pointer",
 									transition: "background-color 0.3s ease",
@@ -902,7 +902,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 										fontSize: "14px",
 										fontWeight: "600",
 										color: "#202124",
-										fontFamily: "Nunito Sans",
+										fontFamily: "var(--font-nunito)",
 									}}
 								>
 									Sign in with Google
@@ -924,7 +924,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 									textTransform: "none",
 									background: "rgba(56, 152, 252, 1)",
 									color: "#fff",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontWeight: 400,
 									fontSize: "14px",
 									padding: "0.75em 1.5em",
@@ -960,7 +960,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 								<Typography
 									variant="h6"
 									sx={{
-										fontFamily: "Nunito Sans, sans-serif",
+										fontFamily: "var(--font-nunito)",
 										fontSize: "16px",
 										fontWeight: 600,
 										justifyContent: "center",
@@ -1187,7 +1187,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 											textTransform: "none",
 											background: "rgba(56, 152, 252, 1)",
 											color: "#fff",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontWeight: 400,
 											fontSize: "14px",
 											padding: "0.75em 1.5em",

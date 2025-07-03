@@ -198,7 +198,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
 								: "rgba(80, 82, 178, 0.2)";
 							const textColor = isLookalike
 								? "rgba(224, 176, 5, 1)"
-								: "rgba(56, 152, 252, 1)";
+								: "rgba(80, 82, 178, 1)";
 
 							return (
 								<Box
@@ -300,7 +300,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
 				: "rgba(80, 82, 178, 0.2)";
 			const textColor = isLookalike
 				? "rgba(224, 176, 5, 1)"
-				: "rgba(56, 152, 252, 1)";
+				: "rgba(80, 82, 178, 1)";
 			const icon = isInclude ? (
 				<PlaylistAddIcon sx={{ fontSize: 16, mr: 0.5 }} />
 			) : isExclude ? (
@@ -392,6 +392,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
 								padding: "3px 1rem",
 								textOverflow: "ellipsis",
 								maxWidth: "120px",
+								borderRadius: "2px",
 								backgroundColor: status.includes("Synced")
 									? "rgba(234, 248, 221, 1)"
 									: "rgba(222, 237, 255, 1)",

@@ -1,7 +1,7 @@
 "use client";
 import { Box, Typography, Tabs, Tab, IconButton } from "@mui/material";
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -23,6 +23,7 @@ import {
 import { useInsightsHints } from "../../context/IntegrationsHintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 
+
 const getFieldRankMap = (
 	significantFields: Record<string, number>,
 ): FieldRankMap => {
@@ -39,8 +40,10 @@ const getFieldRankMap = (
 const Insights = () => {
 	const router = useRouter();
 	const params = useParams();
+	const searchParams = useSearchParams();
 	const type = params.type;
 	const uuid = params.uuid;
+	const isDebug = searchParams.get("is_debug") === "true";
 	const [loading, setLoading] = useState(false);
 	const { hasNotification } = useNotification();
 	const [tabIndex, setTabIndex] = useState(0);
@@ -129,6 +132,11 @@ const Insights = () => {
 			const response =
 				await axiosInstance.get<AudienceInsightsStatisticsResponse>(
 					`/audience-insights/${type}/${uuid}`,
+					{
+						params: {
+							is_debug: isDebug,
+						},
+					}
 				);
 
 			const significantFields = response.data.significant_fields;
@@ -191,71 +199,68 @@ const Insights = () => {
 					},
 				}}
 			>
-				<IconButton
-					onClick={() => {
-						router.push("/insights");
-					}}
-					sx={{
-						":hover": {
-							backgroundColor: "transparent",
-						},
-						"@media (max-width: 600px)": {
-							display: "none",
-						},
-					}}
-				>
-					<ArrowBackIcon sx={{ color: "#1E88E5" }} />
-				</IconButton>
-				<Typography
-					variant="h4"
-					component="h1"
-					className="first-sub-title"
-					sx={{
-						...insightsStyle.title,
-						position: "fixed",
-						ml: 6,
-						mt: 1,
-						"@media (max-width: 600px)": {
-							display: "none",
-						},
-					}}
-				>
-					{type === "sources" ? "Source" : "Lookalike"} - {name}
-					<CustomTooltip
-						title="Insights"
-						linkText="Learn more"
-						linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
-					/>
-				</Typography>
-				<Box
-					sx={{
-						display: "none",
-						width: "100%",
-						justifyContent: "start",
-						alignItems: "center",
-						"@media (max-width: 600px)": {
-							display: "flex",
-						},
-					}}
-				>
+				<Box sx={{ display: "flex", width: "100%" }}>
 					<IconButton
 						onClick={() => {
 							router.push("/insights");
 						}}
 						sx={{
-							"@media (max-width: 600px)": {},
+							":hover": {
+								backgroundColor: "transparent",
+							},
+							"@media (max-width: 600px)": {
+								display: "none",
+							},
 						}}
 					>
-						<ArrowBackIcon sx={{ color: "rgba(56, 152, 252, 1)" }} />
+						<ArrowBackIcon sx={{ color: "#1E88E5" }} />
 					</IconButton>
 					<Typography
-						variant="h4"
-						component="h1"
 						className="first-sub-title"
-						sx={{ ...dashboardStyles.title, mb: 0 }}
+						sx={{
+							...insightsStyle.title,
+							position: "sticky",
+							mt: 1,
+							"@media (max-width: 600px)": {
+								display: "none",
+							},
+						}}
 					>
 						{type === "sources" ? "Source" : "Lookalike"} - {name}
+						<CustomTooltip
+							title="Insights"
+							linkText="Learn more"
+							linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
+						/>
 					</Typography>
+					<Box
+						sx={{
+							display: "none",
+							width: "100%",
+							justifyContent: "start",
+							alignItems: "center",
+							"@media (max-width: 600px)": {
+								display: "flex",
+							},
+						}}
+					>
+						<IconButton
+							onClick={() => {
+								router.push("/insights");
+							}}
+							sx={{
+								"@media (max-width: 600px)": {},
+							}}
+						>
+							<ArrowBackIcon sx={{ color: "rgba(56, 152, 252, 1)" }} />
+						</IconButton>
+						<Typography
+							className="first-sub-title"
+							sx={{ ...dashboardStyles.title, mb: 0 }}
+						>
+							{type === "sources" ? "Source" : "Lookalike"} - {name}
+						</Typography>
+					</Box>
 				</Box>
 
 				<Box
@@ -350,6 +355,7 @@ const Insights = () => {
 						/>
 					</Tabs>
 				</Box>
+				<Box sx={{ display: "flex", width: "80%" }}></Box>
 			</Box>
 			<Box
 				sx={{

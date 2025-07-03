@@ -19,6 +19,7 @@ from schemas.settings import (
     PlansResponse,
 )
 from schemas.users import VerifyTokenResponse
+from schemas.settings import BuyFundsRequest
 from services.settings import SettingsService
 
 router = APIRouter(dependencies=[Depends(check_user_setting_access)])
@@ -395,6 +396,15 @@ def pay_credits(
     user: dict = Depends(check_team_access_owner_user),
 ):
     return settings_service.pay_credits(user=user)
+
+
+@router.post("/billing/buy-funds")
+def buy_funds(
+    settings_service: SettingsService,
+    payload: BuyFundsRequest,
+    user: User = Depends(check_team_access_owner_user),
+):
+    return settings_service.buy_funds(user=user, payload=payload)
 
 
 @router.get(

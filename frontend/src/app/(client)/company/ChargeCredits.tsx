@@ -51,7 +51,7 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({
 				>
 					<Typography
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "16px",
 							fontWeight: "600",
 							lineHeight: "21.82px",
@@ -80,7 +80,7 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({
 					>
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: "600",
 								lineHeight: "21.82px",
@@ -108,7 +108,7 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({
 					>
 						<Typography
 							sx={{
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontSize: "16px",
 								fontWeight: "600",
 								lineHeight: "21.82px",
@@ -156,7 +156,7 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({
 								textAlign: "center",
 								color: "rgba(56, 152, 252, 1)",
 								textTransform: "none",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								fontWeight: "600",
 								fontSize: "14px",
 								lineHeight: "19.6px",
@@ -188,7 +188,7 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({
 							sx={{
 								textAlign: "center",
 								color: "rgba(255, 255, 255, 1)",
-								fontFamily: "Nunito Sans",
+								fontFamily: "var(--font-nunito)",
 								textTransform: "none",
 								fontWeight: "600",
 								fontSize: "14px",

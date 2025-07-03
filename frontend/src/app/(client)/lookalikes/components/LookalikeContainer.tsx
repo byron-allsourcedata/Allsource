@@ -143,7 +143,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 				<TableHead
 					sx={{
 						"& .MuiTableCell-root": {
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontWeight: 600,
 							fontSize: ".75rem",
 							lineHeight: "1.05rem",
@@ -168,7 +168,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 				<TableBody
 					sx={{
 						"& .MuiTableCell-root": {
-							fontFamily: "Roboto",
+							fontFamily: "var(--font-roboto)",
 							fontWeight: 400,
 							fontSize: ".75rem",
 							lineHeight: "1.05rem",

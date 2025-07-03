@@ -77,7 +77,7 @@ namespace fb {
 
 const metaStyles = {
 	tabHeading: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		color: "#707071",
 		fontWeight: "500",
@@ -97,7 +97,7 @@ const metaStyles = {
 		},
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
@@ -110,7 +110,7 @@ const metaStyles = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -140,7 +140,7 @@ const MetaConnectButton = ({
 	boxShadow,
 	invalid_api_key,
 }: MetaConnectPopupProps) => {
-	const { triggerSync } = useIntegrationContext();
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [accessToken, setAccessToken] = useState("");
 	const [loading, setLoading] = useState(false);
 	const appID = process.env.NEXT_PUBLIC_META_APP_ID;
@@ -219,7 +219,8 @@ const MetaConnectButton = ({
 			if (response.status === 200) {
 				showToast("Connect to Meta Successfuly");
 			}
-			triggerSync();
+			await triggerSync();
+			setNeedsSync(false);
 		} catch (error) {
 		} finally {
 			setLoading(false);
@@ -278,7 +279,7 @@ const MetaConnectButton = ({
 					sx={{
 						textAlign: "center",
 						color: "#202124",
-						fontFamily: "Nunito Sans",
+						fontFamily: "var(--font-nunito)",
 						fontWeight: "600",
 						fontSize: "16px",
 						lineHeight: "normal",
@@ -298,7 +299,7 @@ const MetaConnectButton = ({
 						target="_blank"
 						rel="noopener referrer"
 						sx={{
-							fontFamily: "Nunito Sans",
+							fontFamily: "var(--font-nunito)",
 							fontSize: "14px",
 							fontWeight: "600",
 							lineHeight: "20px",
@@ -395,7 +396,7 @@ const MetaConnectButton = ({
 									<Typography
 										variant="h6"
 										sx={{
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "16px",
 											fontWeight: "600",
 											color: "#202124",
@@ -426,7 +427,7 @@ const MetaConnectButton = ({
 										<Typography
 											color="error"
 											sx={{
-												fontFamily: "Nunito Sans",
+												fontFamily: "var(--font-nunito)",
 												fontSize: "14px",
 												fontWeight: "600",
 												lineHeight: "21.82px",

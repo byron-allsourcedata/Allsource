@@ -115,14 +115,6 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
 	const hasSubheader = useHasSubheader();
 
-	const computeTop = () => {
-		if ((latestNotification || newNotification) && hasSubheader)
-			return "10.85rem";
-		if (hasSubheader) return "8.25rem";
-		if (latestNotification || newNotification) return "7.125rem";
-		return "4.25rem";
-	};
-
 	return (
 		<>
 			{!isAuthenticated ? (
@@ -182,11 +174,11 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 								padding: "0px",
 								display: { xs: "none", md: "block" },
 								flexBasis: "170px",
-								flexShrink: 0,
 								minWidth: "170px",
 								maxWidth: "170px",
-								position: "fixed",
-								top: computeTop(),
+								position: "sticky",
+								top: 0,
+								overflowY: "hidden",
 							}}
 						>
 							<SliderProvider>
@@ -213,18 +205,15 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 								sx={{
 									position: "relative",
 									flexGrow: 1,
-									padding: "0px 0px 0px 24px",
+									padding: "0px 0px 12px 24px",
 									minWidth: 0,
 									overflowY: "auto",
-									marginLeft: "170px",
 									"@media (max-width: 899px)": {
 										overflowY: "hidden",
 										padding: "0 0 16px 16px",
-										marginLeft: 0,
 									},
 									"@media (max-width: 599px)": {
 										padding: "0 0px 16px 16px",
-										marginLeft: 0,
 									},
 								}}
 							>

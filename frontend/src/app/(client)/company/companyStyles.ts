@@ -29,7 +29,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 	},
 
 	table_array: {
-		fontFamily: "Roboto",
+		fontFamily: "var(--font-roboto)",
 		fontSize: "12px",
 		fontWeight: "400",
 		lineHeight: "16.8px",
@@ -49,7 +49,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	table_array_status: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		border: "1px solid rgba(235, 235, 235, 1)",
 		fontWeight: "400",
@@ -60,7 +60,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		color: "rgba(20, 110, 246, 1)",
 	},
 	table_array_phone: {
-		fontFamily: "Roboto",
+		fontFamily: "var(--font-roboto)",
 		fontSize: "12px",
 		fontWeight: "400",
 		lineHeight: "16.8px",
@@ -81,7 +81,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	table_column: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		fontWeight: "600",
 		lineHeight: "16px",
@@ -121,7 +121,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		fontSize: "14px",
 		whiteSpace: "nowrap",
 		textAlign: "start",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: "#595959",
 		"@media (max-width: 385px)": {
 			fontSize: "12px",
@@ -140,7 +140,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		// whiteSpace: 'nowrap',
 		textAlign: "start",
 		padding: "0 0rem 0",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		mr: "1.5em",
 		"@media (max-width: 440px)": {
 			fontSize: "16px",
@@ -175,7 +175,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		width: "100%",
 		maxWidth: "360px",
 		padding: "220px 0px 24px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 	},
 	submitButton: {
 		mt: 2,
@@ -190,10 +190,10 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		textTransform: "none",
 		minHeight: "3rem",
 		fontSize: "16px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 	},
 	name: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 		fontWeight: "600",
 		lineHeight: "19.1px",
@@ -213,14 +213,14 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		},
 	},
 	header_text: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		fontWeight: "400",
 		lineHeight: "19.1px",
 		color: "rgba(74, 74, 74, 1)",
 	},
 	text: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		fontWeight: "400",
 		lineHeight: "19.1px",
@@ -231,14 +231,14 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 		textOverflow: "ellipsis",
 	},
 	title_text: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		fontWeight: "600",
 		lineHeight: "19.1px",
 		flex: 1,
 	},
 	title_company: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "18px",
 		fontWeight: "700",
 		lineHeight: "19.1px",
@@ -255,7 +255,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
 	headers_title: {
 		textTransform: "none",
 		borderRadius: "0",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "16px",
 	},
 	rows_pam: {

@@ -22,7 +22,7 @@
 .rti--tag {
 	color: rgba(95, 99, 104, 1);
 	font-size: 12px;
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	background-color: rgba(237, 237, 247, 1) !important;
 	margin-top: 2px;
 	max-height: 25px !important;
@@ -36,7 +36,7 @@
 	font-size: 13px !important;
 	padding: 0px !important;
 	margin: 0px !important;
-	font-family: "Nunito Sans" !important;
+	font-family: var(--font-nunito) !important;
 	line-height: inherit;
 	min-height: 50px !important;
 	max-width: 100%;

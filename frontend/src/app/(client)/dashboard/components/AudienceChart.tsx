@@ -696,7 +696,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 						<Typography
 							variant="body1"
 							sx={{
-								fontFamily: "Roboto",
+								fontFamily: "var(--font-roboto)",
 								fontSize: ".875rem",
 								fontWeight: "400",
 								color: "rgba(32, 33, 36, 1)",
@@ -834,7 +834,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 												<Typography
 													className="paragraph"
 													sx={{
-														fontFamily: "Roboto",
+														fontFamily: "var(--font-roboto)",
 														fontSize: "12px",
 														textTransform: "none",
 														textAlign: "left",
@@ -907,7 +907,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 											borderColor: "rgba(228, 228, 228, 1)",
 											padding: "8px",
 											pr: 2,
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											color: "rgba(74, 74, 74, 1)",
 											fontWeight: 600,
 											fontSize: "14px",
@@ -916,7 +916,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 										<MenuItem value="All contacts type">
 											<Typography
 												sx={{
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontWeight: 600,
 													fontSize: "14px",
 													color:
@@ -961,7 +961,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 													/>
 													<Typography
 														sx={{
-															fontFamily: "Nunito Sans",
+															fontFamily: "var(--font-nunito)",
 															fontWeight: 600,
 															fontSize: "14px",
 															color: selectedGraphs.includes(option.id)

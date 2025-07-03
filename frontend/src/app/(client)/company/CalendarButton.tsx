@@ -53,7 +53,7 @@ export const CalendarButton = (props: Props) => {
 			<Typography
 				variant="body1"
 				sx={{
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontSize: "14px",
 					fontWeight: "600",
 					lineHeight: "19.6px",

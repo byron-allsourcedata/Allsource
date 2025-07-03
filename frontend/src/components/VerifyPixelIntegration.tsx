@@ -8,6 +8,7 @@ import { useGetStartedHints } from "@/app/(client)/analytics/components/context/
 import Image from "next/image";
 import InfoIcon from "@mui/icons-material/Info";
 import { OpenInNewIcon } from "@/icon";
+import CustomButton from "@/components/ui/CustomButton";
 
 type VerifyPixelIntegrationProps = {
 	domain: string;
@@ -86,7 +87,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 				mb={2}
 				className="first-sub-title"
 				sx={{
-					fontFamily: "Nunito Sans",
+					fontFamily: "var(--font-nunito)",
 					fontWeight: "700",
 					lineHeight: "normal",
 					textAlign: "left",
@@ -197,7 +198,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 									gap: 0.5,
 									fontWeight: 300,
 									fontSize: "14px",
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									color: "rgba(56, 152, 252, 1)",
 								}}
 							>
@@ -246,30 +247,9 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 					},
 				}}
 			>
-				<Button
-					onClick={handleButtonClick}
-					sx={{
-						textTransform: "none",
-						background: "rgba(56, 152, 252, 1)",
-						color: "#fff",
-						fontFamily: "Nunito Sans",
-						fontWeight: 400,
-						fontSize: "14px",
-						padding: "0.75em 1.5em",
-						lineHeight: "normal",
-						"@media (max-width: 600px)": {
-							padding: "0.625rem 1.5rem",
-							marginLeft: 0,
-							fontSize: "16px",
-						},
-						"&:hover": {
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							boxShadow: 2,
-						},
-					}}
-				>
+				<CustomButton onClick={handleButtonClick} variant="contained">
 					Verify Installation
-				</Button>
+				</CustomButton>
 				{verifyPixelIntegrationHints["verifyPixelIntegration"]?.show &&
 					showHint && (
 						<HintCard

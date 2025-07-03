@@ -36,7 +36,7 @@ const styles = {
 		},
 	},
 	inputLabel: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
@@ -49,7 +49,7 @@ const styles = {
 			height: "48px",
 			"& .MuiOutlinedInput-input": {
 				padding: "12px 16px 13px 16px",
-				fontFamily: "Roboto",
+				fontFamily: "var(--font-roboto)",
 				color: "#202124",
 				fontSize: "14px",
 				lineHeight: "20px",
@@ -140,14 +140,14 @@ const S3ContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 							InputLabelProps={{
 								shrink: selectedOptions3 ? false : isShrunk,
 								sx: {
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "12px",
 									lineHeight: "16px",
 									color: "rgba(17, 17, 19, 0.60)",
 									letterSpacing: "0.06px",
 									top: "5px",
 									"&.Mui-focused": {
-										color: "#0000FF",
+										color: "rgba(56, 152, 252, 1)",
 									},
 								},
 							}}
@@ -178,7 +178,7 @@ const S3ContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 							sx={{
 								"& input": {
 									caretColor: "transparent", // Hide caret with transparent color
-									fontFamily: "Nunito Sans",
+									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
 									color: "rgba(0, 0, 0, 0.89)",
 									fontWeight: "600",
@@ -220,7 +220,7 @@ const S3ContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 											primary={klaviyo}
 											primaryTypographyProps={{
 												sx: {
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "14px",
 													color: "#202124",
 													fontWeight: "500",

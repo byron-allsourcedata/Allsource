@@ -178,7 +178,7 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
 							const textColor = isLookalike
 								? "rgba(224, 176, 5, 1)"
 								: isSource
-									? "rgba(56, 152, 252, 1)"
+									? "rgba(80, 82, 178, 1)"
 									: "rgba(0, 0, 0, 0.8)";
 
 							return (
@@ -281,6 +281,7 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
 								padding: "3px 1rem",
 								textOverflow: "ellipsis",
 								maxWidth: "120px",
+								borderRadius: "2px",
 								backgroundColor: status.includes("Synced")
 									? "rgba(234, 248, 221, 1)"
 									: "rgba(222, 237, 255, 1)",

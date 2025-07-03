@@ -349,7 +349,7 @@ const PaymentHistory: React.FC = () => {
 											color: "rgba(32, 33, 36, 1)",
 											fontWeight: "bold",
 											fontSize: "16px",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 										}}
 									>
 										Payment History
@@ -396,7 +396,7 @@ const PaymentHistory: React.FC = () => {
 											<Typography
 												variant="body1"
 												sx={{
-													fontFamily: "Roboto",
+													fontFamily: "var(--font-roboto)",
 													fontSize: "14px",
 													fontWeight: "400",
 													color: "rgba(32, 33, 36, 1)",
@@ -537,7 +537,7 @@ const PaymentHistory: React.FC = () => {
 																			.background,
 																		padding: "3px 8px",
 																		borderRadius: "2px",
-																		fontFamily: "Roboto",
+																		fontFamily: "var(--font-roboto)",
 																		fontSize: "12px",
 																		fontWeight: "400",
 																		lineHeight: "16px",
@@ -581,7 +581,7 @@ const PaymentHistory: React.FC = () => {
 												variant="h5"
 												sx={{
 													mb: 3,
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "20px",
 													color: "#4a4a4a",
 													fontWeight: "600",
@@ -601,7 +601,7 @@ const PaymentHistory: React.FC = () => {
 												color="textSecondary"
 												sx={{
 													mt: 3,
-													fontFamily: "Nunito Sans",
+													fontFamily: "var(--font-nunito)",
 													fontSize: "14px",
 													color: "#808080",
 													fontWeight: "600",

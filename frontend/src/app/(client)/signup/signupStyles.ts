@@ -112,7 +112,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		top: "-3px",
 		"&.Mui-focused": {
 			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontWeight: 400,
 			fontSize: "12px",
 			lineHeight: "16px",
@@ -157,7 +157,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 				padding: "12px 16px 13px 16px",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {
@@ -166,7 +166,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	passwordValidationText: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "#707071",
@@ -175,7 +175,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	passwordValidationTextSuccess: {
 		"& .MuiTypography-root": {
-			fontFamily: "Nunito Sans",
+			fontFamily: "var(--font-nunito)",
 			fontSize: "12px",
 			fontWeight: "400",
 			color: "#202124",
@@ -200,7 +200,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		display: "table",
 		textAlign: "left",
 		color: "#202124",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		fontWeight: "400",
 		lineHeight: "normal",
@@ -246,7 +246,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	checkboxContentLink: {
 		color: "#202124",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		textDecorationColor: "#202124",
 		"& img": {

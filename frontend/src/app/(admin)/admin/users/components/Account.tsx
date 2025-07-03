@@ -36,26 +36,7 @@ import { Paginator } from "@/components/PaginationComponent";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import CustomSwitch from "@/components/ui/CustomSwitch";
-
-interface UserData {
-	id: number;
-	full_name: string;
-	email: string;
-	created_at: string;
-	status?: string;
-	is_trial?: boolean;
-	last_login: string;
-	invited_by_email?: string;
-	subscription_plan?: string;
-	role: string[];
-	pixel_installed_count?: number;
-	sources_count?: number;
-	contacts_count?: number;
-	lookalikes_count?: number;
-	credits_count?: number;
-	type?: string;
-	is_email_validation_enabled: boolean;
-}
+import { UserData } from "../page";
 
 interface tableHeaders {
 	key: string;
@@ -472,18 +453,22 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							display: "flex",
 							padding: "2px 8px",
 							borderRadius: "2px",
-							fontFamily: "Roboto",
+							fontFamily: "var(--font-roboto)",
 							fontSize: "12px",
 							fontWeight: "400",
 							lineHeight: "normal",
-							backgroundColor: getStatusStyle(row.status ?? "").background,
+							backgroundColor: row.is_another_domain_resolved
+								? "rgba(253, 221, 218, 1)"
+								: getStatusStyle(row.status ?? "").background,
 							color: "#4A4A4A",
 							justifyContent: "center",
 							minWidth: "130px",
 							textTransform: "capitalize",
 						}}
 					>
-						{formatFunnelText(row.status ?? "") || "--"}
+						{row.is_another_domain_resolved
+							? "Multiple Domain"
+							: formatFunnelText(row.status ?? "") || "--"}
 					</Typography>
 				);
 			case "subscription_plan":
@@ -542,7 +527,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				// 								justifyContent: "flex-start",
 				// 								width: "100%",
 				// 								textTransform: "none",
-				// 								fontFamily: "Nunito Sans",
+				// 								fontFamily: "var(--font-nunito)",
 				// 								fontSize: "14px",
 				// 								color: "rgba(32, 33, 36, 1)",
 				// 								fontWeight: 600,
@@ -597,7 +582,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 											justifyContent: "flex-start",
 											width: "100%",
 											textTransform: "none",
-											fontFamily: "Nunito Sans",
+											fontFamily: "var(--font-nunito)",
 											fontSize: "14px",
 											color: "rgba(32, 33, 36, 1)",
 											fontWeight: 600,
@@ -694,6 +679,7 @@ interface AccountData {
 	credits_count?: number;
 	type?: string;
 	is_email_validation_enabled: boolean;
+	is_another_domain_resolved: boolean;
 }
 
 const Account: React.FC<PartnersAccountsProps> = ({

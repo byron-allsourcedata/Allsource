@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 import os
@@ -34,14 +35,9 @@ from utils import (
 )
 from utils import validate_and_format_phone, format_phone_number
 
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
 
+logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 @injectable
@@ -93,6 +89,32 @@ class KlaviyoIntegrationsService:
                     data=data,
                     params=params,
                 )
+        return response
+
+    async def __async_handle_request(
+        self, method: str, url: str, api_key: str, json: dict = None
+    ):
+        headers = {
+            "Authorization": f"Klaviyo-API-Key {api_key}",
+            "revision": "2024-10-15",
+            "Content-Type": "application/json",
+        }
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.request(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    json=json,
+                )
+            return response
+        except httpx.ConnectTimeout:
+            logging.error(f"Timeout when connecting to {url}")
+            raise
+        except httpx.RequestError as e:
+            logging.error(f"Request failed: {e}")
+            raise
+
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
@@ -268,6 +290,7 @@ class KlaviyoIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = domain.id if domain else None
         try:
             if self.test_api_key(credentials.klaviyo.api_key) == False:
                 raise HTTPException(
@@ -281,7 +304,7 @@ class KlaviyoIntegrationsService:
             )
         integartions = self.__save_integrations(
             credentials.klaviyo.api_key,
-            None if domain is None else domain.id,
+            domain_id,
             user,
         )
         return {
@@ -350,83 +373,49 @@ class KlaviyoIntegrationsService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
     ):
-        results = []
-        for lead_user, five_x_five_user in user_data:
-            profile = self.__create_profile(
-                five_x_five_user,
-                user_integration.access_token,
-                integration_data_sync.data_map,
-                is_email_validation_enabled,
-            )
-            if profile in (
-                ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-            ):
-                results.append({"lead_id": lead_user.id, "status": profile})
-                continue
-            else:
-                results.append(
-                    {
+        sem = asyncio.Semaphore(5)
+
+        async def process_single_lead(lead_user, five_x_five_user):
+            async with sem:
+                profile = await self.__create_profile(
+                    five_x_five_user,
+                    user_integration.access_token,
+                    integration_data_sync.data_map,
+                    is_email_validation_enabled,
+                )
+                if profile in (
+                    ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                    ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                    ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+                ):
+                    return {"lead_id": lead_user.id, "status": profile}
+                else:
+                    list_response = await self.__add_profile_to_list(
+                        integration_data_sync.list_id,
+                        profile["id"],
+                        user_integration.access_token,
+                        profile["email"],
+                        profile["phone_number"],
+                    )
+                    if list_response.status_code == 404:
+                        return {
+                            "lead_id": lead_user.id,
+                            "status": ProccessDataSyncResult.LIST_NOT_EXISTS.value,
+                        }
+                    return {
                         "lead_id": lead_user.id,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
-                )
 
-            list_response = self.__add_profile_to_list(
-                integration_data_sync.list_id,
-                profile["id"],
-                user_integration.access_token,
-                profile["email"],
-                profile["phone_number"],
-            )
-            if list_response.status_code == 404:
-                for result in results:
-                    if result["status"] == ProccessDataSyncResult.SUCCESS.value:
-                        result["status"] = (
-                            ProccessDataSyncResult.LIST_NOT_EXISTS.value
-                        )
-
+        tasks = [
+            process_single_lead(lead_user, five_x_five_user)
+            for lead_user, five_x_five_user in user_data
+        ]
+        results = await asyncio.gather(*tasks)
         return results
 
     def is_supported_region(self, phone_number: str) -> bool:
         return phone_number.startswith("+1")
-
-    def build_bulk_profiles(self, five_x_five_users: List[FiveXFiveUser]):
-        profiles = []
-        for user in five_x_five_users:
-            profile = self.__mapped_klaviyo_profile(user)
-            if profile in (
-                ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-            ):
-                continue
-
-            phone_number = validate_and_format_phone(profile.phone_number)
-            phone_number = (
-                phone_number.split(", ")[-1] if phone_number else None
-            )
-            json_data = {
-                "type": "profile",
-                "attributes": {
-                    "email": profile.email,
-                    "phone_number": phone_number,
-                    "first_name": profile.first_name or None,
-                    "last_name": profile.last_name or None,
-                    "organization": profile.organization or None,
-                    "location": profile.location or None,
-                    "title": profile.title or None,
-                    # "properties": properties,
-                },
-            }
-            json_data["attributes"] = {
-                k: v
-                for k, v in json_data["attributes"].items()
-                if v is not None
-            }
-
-            profiles.append(json_data)
-        return profiles
 
     def get_count_profiles(self, list_id: str, api_key: str):
         url = f"https://a.klaviyo.com/api/lists/{list_id}?additional-fields[list]=profile_count"
@@ -452,14 +441,14 @@ class KlaviyoIntegrationsService:
         if response.status_code == 429:
             return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
-    def __create_profile(
+    async def __create_profile(
         self,
         five_x_five_user,
         api_key: str,
         data_map,
         is_email_validation_enabled: bool,
     ):
-        profile = self.__mapped_klaviyo_profile(
+        profile = await self.__mapped_klaviyo_profile(
             five_x_five_user, is_email_validation_enabled
         )
         if profile in (
@@ -469,7 +458,7 @@ class KlaviyoIntegrationsService:
             return profile
 
         if data_map:
-            properties = self.__map_properties(five_x_five_user, data_map)
+            properties = await self.__map_properties(five_x_five_user, data_map)
         else:
             properties = {}
 
@@ -496,7 +485,7 @@ class KlaviyoIntegrationsService:
             if v is not None
         }
         email = profile.email
-        check_response = self.__handle_request(
+        check_response = await self.__async_handle_request(
             method="GET",
             url=f'https://a.klaviyo.com/api/profiles/?filter=equals(email,"{email}")',
             api_key=api_key,
@@ -507,14 +496,14 @@ class KlaviyoIntegrationsService:
         ):
             profile_id = check_response.json()["data"][0]["id"]
             json_data["data"]["id"] = profile_id
-            response = self.__handle_request(
+            response = await self.__async_handle_request(
                 method="PATCH",
                 url=f"https://a.klaviyo.com/api/profiles/{profile_id}",
                 api_key=api_key,
                 json=json_data,
             )
         else:
-            response = self.__handle_request(
+            response = await self.__async_handle_request(
                 method="POST",
                 url="https://a.klaviyo.com/api/profiles/",
                 api_key=api_key,
@@ -541,7 +530,7 @@ class KlaviyoIntegrationsService:
                 "email": profile.email,
             }
 
-    def __add_profile_to_list(
+    async def __add_profile_to_list(
         self, list_id: str, profile_id: str, api_key: str, email, phone_number
     ):
         payload = {
@@ -650,7 +639,7 @@ class KlaviyoIntegrationsService:
             for profile in response.json().get("data")
         ]
 
-    def __mapped_klaviyo_profile(
+    async def __mapped_klaviyo_profile(
         self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ) -> KlaviyoProfile:
         if is_email_validation_enabled:
@@ -693,7 +682,7 @@ class KlaviyoIntegrationsService:
             title=getattr(five_x_five_user, "job_title", None),
         )
 
-    def __map_properties(
+    async def __map_properties(
         self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]
     ) -> dict:
         properties = {}

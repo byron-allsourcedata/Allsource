@@ -63,7 +63,7 @@ class IntegrationLimit(Enum):
     META = 5000
     HUBSPOT = 100
     S3 = 10000
-    KLAVIYO = 1000
+    KLAVIYO = 500
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
 
@@ -223,6 +223,11 @@ class UserSubscriptionsStatus(Enum):
     ACTIVE = "active"
     CANCELED = "canceled"
     INACTIVE = "inactive"
+
+
+class TypeFunds(Enum):
+    VALIDATION_FUNDS = "validation_funds"
+    PREMIUM_SOURCES_FUNDS = "premium_sources_funds"
 
 
 class MiddleWareEnum(Enum):

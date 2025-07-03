@@ -79,7 +79,7 @@ export const insightsStyle: { [key: string]: SxProps<Theme> } = {
 		width: "100%",
 		maxWidth: "360px",
 		padding: "220px 0px 24px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 	},
 	submitButton: {
 		mt: 2,
@@ -94,7 +94,7 @@ export const insightsStyle: { [key: string]: SxProps<Theme> } = {
 		textTransform: "none",
 		minHeight: "3rem",
 		fontSize: "16px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 	},
 	mainItemContent: {
 		"@media (max-width: 900px)": {
@@ -111,7 +111,7 @@ export const insightsStyle: { [key: string]: SxProps<Theme> } = {
 	},
 	description: {
 		fontSize: "14px",
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		color: "#808080",
 	},
 };

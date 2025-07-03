@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
 from schemas.lookalikes import CalculateRequest
+from schemas.mapping.audience_insights_mapping import YES_NO_UNKNOWN_MAPS
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.exceptions import (
@@ -24,23 +25,23 @@ class AudienceInsightsService:
     ):
         self.insights_persistence_service = insights_persistence_service
 
-    def get_source_insights(self, source_uuid: UUID, user: dict) -> dict:
+    def get_source_insights(self, source_uuid: UUID, user: dict, is_debug: bool) -> dict:
         raw_data = self.insights_persistence_service.get_source_insights_info(
             source_uuid, user.get("id")
         )
-        response = self._build_response(raw_data.get("insights", {}))
+        response = self._build_response(raw_data.get("insights", {}), is_debug)
         response["name"] = raw_data.get("name", "")
         response["audience_type"] = raw_data.get("audience_type", "")
         response["significant_fields"] = raw_data.get("significant_fields", "")
         return response
 
-    def get_lookalike_insights(self, lookalike_uuid: UUID, user: dict) -> dict:
+    def get_lookalike_insights(self, lookalike_uuid: UUID, user: dict, is_debug: bool) -> dict:
         raw_data = (
             self.insights_persistence_service.get_lookalike_insights_info(
                 lookalike_uuid, user.get("id")
             )
         )
-        response = self._build_response(raw_data.get("insights", {}))
+        response = self._build_response(raw_data.get("insights", {}), is_debug)
         response["name"] = raw_data.get("name", "")
         response["audience_type"] = raw_data.get("audience_type", "")
         response["significant_fields"] = raw_data.get("significant_fields", {})
@@ -66,21 +67,65 @@ class AudienceInsightsService:
 
         return self._combine_limit_20(sources, lookalikes)
 
-    def _build_response(self, data: dict) -> dict:
+    def _build_response(self, data: dict, is_debug: bool) -> dict:
+        # B2B
+        professional_profile = data.get("professional_profile", {})
+        education_history = data.get("education_history", {})
+        employment_history = data.get("employment_history", {})
+
+        # B2C
+        personal_info = data.get("personal_profile", {})
+        financial = data.get("financial", {})
+        lifestyle = data.get("lifestyle", {})
+        voter = data.get("voter", {})
+
+        # Deleting unknown values
+        if not is_debug:
+            # B2B
+            for key, val in professional_profile.items():
+                if "unknown" in val:
+                    val.pop("unknown")
+
+            for key, val in employment_history.items():
+                if "unknown" in val:
+                    val.pop("unknown")
+
+            # B2C
+            for key, val in personal_info.items():
+                if ("unknown" in val
+                    and key != "gender"
+                ):
+                    val.pop("unknown")
+
+            for key, val in financial.items():
+                if "unknown" in val:
+                    val.pop("unknown")
+
+            for key, val in voter.items():
+                if (
+                    key in ("congressional_district", "political_party")
+                    and "unknown" in val
+                ):
+                    val.pop("unknown")
+
         parsed = AudienceInsightData(
             b2b={
-                "professional_profile": data.get("professional_profile", {}),
-                "education": data.get("education_history", {}),
-                "employment_history": data.get("employment_history", {}),
+                "professional_profile": professional_profile,
+                "education": education_history,
+                "employment_history": employment_history,
             },
             b2c={
-                "personal_info": data.get("personal_profile", {}),
-                "financial": data.get("financial", {}),
-                "lifestyle": data.get("lifestyle", {}),
-                "voter": data.get("voter", {}),
+                "personal_info": personal_info,
+                "financial": financial,
+                "lifestyle": lifestyle,
+                "voter": voter,
             },
         )
-        return parsed.dict()
+
+        parsed = parsed.model_dump()
+        parsed["is_debug"] = is_debug
+
+        return parsed
 
     def _combine_limit_20(self, sources: list, lookalikes: list) -> dict:
         source_data = [

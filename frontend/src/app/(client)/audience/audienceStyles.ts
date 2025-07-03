@@ -64,7 +64,7 @@ export const audienceStyles: { [key: string]: SxProps<Theme> } = {
 		boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
 	},
 	table_column: {
-		fontFamily: "Nunito Sans",
+		fontFamily: "var(--font-nunito)",
 		fontSize: "12px",
 		fontWeight: "600",
 		lineHeight: "16px",

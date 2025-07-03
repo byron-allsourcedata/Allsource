@@ -85,7 +85,7 @@ body {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-size: 12px;
 	font-weight: 400;
 	line-height: 16px;
@@ -93,17 +93,17 @@ body {
 }
 
 .main-text {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 }
 
 .second-text {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 }
 
 /* Design Style guide */
 
 .tab-filled-button {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	text-transform: none;
 	font-weight: 600;
 	font-size: 14px;
@@ -117,7 +117,7 @@ body {
 }
 
 .heading-text {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 22px;
 	line-height: normal;
 	font-weight: 500;
@@ -125,7 +125,7 @@ body {
 }
 
 .first-sub-title {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 16px;
 	line-height: normal;
 	font-weight: 600;
@@ -133,7 +133,7 @@ body {
 }
 
 .second-sub-title {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 600;
@@ -141,7 +141,7 @@ body {
 }
 
 .third-sub-title {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 12px;
 	line-height: normal;
 	font-weight: 400;
@@ -149,7 +149,7 @@ body {
 }
 
 .fourth-sub-title {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 16px;
 	line-height: normal;
 	font-weight: 400;
@@ -157,7 +157,7 @@ body {
 }
 
 .fiveth-sub-title {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 400;
@@ -165,7 +165,7 @@ body {
 }
 
 .sixth-sub-title {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 12px;
 	line-height: normal;
 	font-weight: 600;
@@ -173,7 +173,7 @@ body {
 }
 
 .table-heading {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 12px;
 	line-height: normal;
 	font-weight: 600;
@@ -181,7 +181,7 @@ body {
 }
 
 .table-data {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-size: 12px;
 	line-height: normal;
 	font-weight: 400;
@@ -189,7 +189,7 @@ body {
 }
 
 .black-table-data {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-size: 12px;
 	line-height: normal;
 	font-weight: 400;
@@ -197,7 +197,7 @@ body {
 }
 
 .black-table-header {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 400;
@@ -205,7 +205,7 @@ body {
 }
 
 .left-nav {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 400;
@@ -213,7 +213,7 @@ body {
 }
 
 .paragraph {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-size: 12px;
 	line-height: normal;
 	font-weight: 400;
@@ -222,7 +222,7 @@ body {
 }
 
 .description {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 400;
@@ -232,7 +232,7 @@ body {
 }
 
 .paragraph-description {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 400;
@@ -240,7 +240,7 @@ body {
 }
 
 .button {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 400;
@@ -249,7 +249,7 @@ body {
 }
 
 .hyperlink {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: normal;
 	font-weight: 400;
@@ -257,7 +257,7 @@ body {
 }
 
 .hyperlink-red {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: 20px;
 	font-weight: 600;
@@ -265,7 +265,7 @@ body {
 }
 
 .hyperlink-blue {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	line-height: 20px;
 	font-weight: 600;
@@ -273,7 +273,7 @@ body {
 }
 
 .tab-heading {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	color: #707071;
 	font-weight: 500;
@@ -281,7 +281,7 @@ body {
 }
 
 .form-input {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-weight: 400;
 	font-size: 14px;
 	line-height: 20px;
@@ -289,7 +289,7 @@ body {
 }
 
 .form-input-label {
-	font-family: "Roboto";
+	font-family: var(--font-roboto);
 	font-weight: 400;
 	font-size: 14px;
 	line-height: 20px;
@@ -308,7 +308,7 @@ body {
 }
 
 .dashboard-pixel-card-text {
-	font-family: Nunito Sans;
+	font-family: var(--font-nunito);
 	font-weight: 400;
 	font-size: 10px;
 	line-height: 140%;
@@ -317,7 +317,7 @@ body {
 }
 
 .dashboard-card-heading {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 16px;
 	font-weight: 500;
 	line-height: 140%;
@@ -326,7 +326,7 @@ body {
 }
 
 .dashboard-card-text {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 14px;
 	font-weight: 400;
 	line-height: 140%;
@@ -335,7 +335,7 @@ body {
 }
 
 .dashboard-gist-card-text {
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-size: 12px;
 	font-weight: 400;
 	line-height: 140%;
@@ -344,7 +344,7 @@ body {
 }
 
 .management-table-header {
-	font-family: Roboto;
+	font-family: var(--font-roboto);
 	font-size: 14px;
 	line-height: 140%;
 	font-weight: 500;
@@ -353,7 +353,7 @@ body {
 
 .MuiInputLabel.MuiInputLabel-outlined {
 	color: rgba(17, 17, 19, 0.6);
-	font-family: "Nunito Sans";
+	font-family: var(--font-nunito);
 	font-weight: 400;
 	font-size: 12px;
 	line-height: 16px;
