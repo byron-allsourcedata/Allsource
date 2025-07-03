@@ -100,6 +100,7 @@ class KlaviyoIntegrationsService:
             "revision": "2024-10-15",
             "Content-Type": "application/json",
         }
+
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.request(
@@ -109,12 +110,19 @@ class KlaviyoIntegrationsService:
                     json=json,
                 )
             return response
+
         except httpx.ConnectTimeout:
             logging.error(f"Timeout when connecting to {url}")
             return {"error": "Timeout"}
+
         except httpcore.ConnectError as e:
             logging.error(f"Connection error to {url}: {e}")
-            raise
+            return {"error": "Connection error"}
+
+        except httpx.ReadError as e:
+            logging.error(f"Read error from {url}: {e}")
+            return {"error": "Read error"}
+
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 429:
                 logging.warning(e.response.headers)
@@ -124,7 +132,8 @@ class KlaviyoIntegrationsService:
                 )
             else:
                 logging.error(f"HTTP error occurred: {e}")
-                return {"error": "Rate limit exceeded"}
+            return {"error": "HTTP status error"}
+
         except httpx.RequestError as e:
             logging.error(
                 f"Request failed: {type(e).__name__} - {e!s} (URL: {url})"
