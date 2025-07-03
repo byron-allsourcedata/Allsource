@@ -399,7 +399,6 @@ class KlaviyoIntegrationsService:
                     integration_data_sync.data_map,
                     is_email_validation_enabled,
                 )
-                print(profile)
                 if profile in (
                     ProccessDataSyncResult.INCORRECT_FORMAT.value,
                     ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
