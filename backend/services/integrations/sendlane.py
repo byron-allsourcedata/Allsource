@@ -170,6 +170,7 @@ class SendlaneIntegrationService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = None if domain is None else domain.id
         lists = self.__get_list(credentials.sendlane.api_key)
         if lists.status_code == 401:
             raise HTTPException(
@@ -178,7 +179,7 @@ class SendlaneIntegrationService:
             )
         return self.__save_integrations(
             credentials.sendlane.api_key,
-            domain_id=None if domain is None else domain.id,
+            domain_id=domain_id,
             user=user,
         )
 

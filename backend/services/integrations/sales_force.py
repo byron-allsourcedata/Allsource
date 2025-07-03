@@ -281,6 +281,7 @@ class SalesForceIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = None if domain is None else domain.id
         client_id = os.getenv("SALES_FORCE_TOKEN")
         client_secret = os.getenv("SALES_FORCE_SECRET")
         data = {
@@ -303,7 +304,7 @@ class SalesForceIntegrationsService:
             integration = self.__save_integrations(
                 refresh_token,
                 instance_url,
-                None if domain is None else domain.id,
+                domain_id,
                 user,
             )
             return {

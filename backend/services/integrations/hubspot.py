@@ -247,6 +247,7 @@ class HubspotIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = domain.id if domain else None
         try:
             if self.test_API_key(credentials.hubspot.access_token) == False:
                 raise HTTPException(
@@ -260,7 +261,7 @@ class HubspotIntegrationsService:
             )
         integartions = self.__save_integrations(
             credentials.hubspot.access_token,
-            None if domain is None else domain.id,
+            domain_id,
             user,
         )
         return {

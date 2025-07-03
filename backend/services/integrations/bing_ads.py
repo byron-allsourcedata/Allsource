@@ -412,6 +412,7 @@ class BingAdsIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = None if domain is None else domain.id
         client_id = os.getenv("AZURE_CLIENT_ID")
         client_secret = os.getenv("AZURE_CLIENT_SECRET")
         data = {
@@ -433,7 +434,7 @@ class BingAdsIntegrationsService:
             access_token = token_data.get("access_token")
             refresh_token = token_data.get("refresh_token")
             integrations = self.__save_integrations(
-                refresh_token, domain.id, user
+                refresh_token, domain_id, user
             )
             return {
                 "integrations": integrations,

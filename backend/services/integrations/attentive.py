@@ -88,7 +88,7 @@ class AttentiveIntegrationsService:
                 detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
             )
         integration = self.save_integration(
-            domain_id=domain.id, api_key=api_key, user=user
+            domain_id=domain.id if domain else None, api_key=api_key, user=user
         )
         return integration
 

@@ -192,6 +192,7 @@ class GoHighLevelIntegrationsService:
         domain: UserDomains,
         user: dict,
     ):
+        domain_id = domain.id if domain else None
         code = credentials.go_high_level.code
         data = {
             "grant_type": "authorization_code",
@@ -217,7 +218,7 @@ class GoHighLevelIntegrationsService:
 
         integrations = self.__save_integrations(
             refresh_token=refresh_token,
-            domain_id=domain.id,
+            domain_id=domain_id,
             user=user,
             location_id=location_id,
         )

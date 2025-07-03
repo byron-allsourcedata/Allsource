@@ -175,6 +175,7 @@ class LinkedinIntegrationsService:
     def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
+        domain_id = domain.id if domain else None
         client_id = os.getenv("LINKEDIN_CLIENT_ID")
         client_secret = os.getenv("LINKEDIN_CLIENT_SECRET")
         code = credentials.linkedin.code
@@ -209,7 +210,7 @@ class LinkedinIntegrationsService:
         # elements = email_resp.json().get("elements", [])
         # email = elements[0]["handle~"]["emailAddress"] if elements else None
 
-        integrations = self.__save_integrations(access_token, domain.id, user)
+        integrations = self.__save_integrations(access_token, domain_id, user)
         return {
             "integrations": integrations,
             "status": IntegrationsStatus.SUCCESS.value,
