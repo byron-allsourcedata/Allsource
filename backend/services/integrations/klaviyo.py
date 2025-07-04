@@ -545,6 +545,8 @@ class KlaviyoIntegrationsService:
                 "email": profile.email,
             }
 
+        return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
     async def __add_profiles_to_list(
         self,
         list_id: str,
