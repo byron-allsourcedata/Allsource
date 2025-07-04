@@ -47,6 +47,7 @@ import LeadsIcon from "@mui/icons-material/People";
 import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import InsightsIcon from "@mui/icons-material/Insights";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 const navigationmenuStyles = {
 	mobileMenuHeader: {
@@ -334,6 +335,54 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						{email}
 					</Typography>
 				</Box>
+				<MenuItem
+					component="a"
+					href={`${process.env.NEXT_PUBLIC_BASE_URL}/opt-out`}
+					target="_blank"
+					rel="noopener noreferrer"
+					sx={{
+						fontFamily: "var(--font-nunito)",
+						fontSize: "14px",
+						fontWeight: 500,
+						lineHeight: "19.6px",
+						color: "rgba(56, 152, 252, 1)",
+						gap: 1,
+					}}
+				>
+					Opt-Out <OpenInNewIcon sx={{ fontSize: 16 }} />
+				</MenuItem>
+				<MenuItem
+					component="a"
+					href="https://allsourcedata.io/terms-of-service"
+					target="_blank"
+					rel="noopener noreferrer"
+					sx={{
+						fontFamily: "var(--font-nunito)",
+						fontSize: "14px",
+						fontWeight: 500,
+						lineHeight: "19.6px",
+						color: "rgba(56, 152, 252, 1)",
+						gap: 1,
+					}}
+				>
+					Terms of Use <OpenInNewIcon sx={{ fontSize: 16 }} />
+				</MenuItem>
+				<MenuItem
+					component="a"
+					href="https://allsourcedata.io/privacy-policy"
+					target="_blank"
+					rel="noopener noreferrer"
+					sx={{
+						fontFamily: "var(--font-nunito)",
+						fontSize: "14px",
+						fontWeight: 500,
+						lineHeight: "19.6px",
+						color: "rgba(56, 152, 252, 1)",
+						gap: 1,
+					}}
+				>
+					Privacy Policy <OpenInNewIcon sx={{ fontSize: 16 }} />
+				</MenuItem>
 				<MenuItem
 					sx={{
 						fontFamily: "var(--font-nunito)",
