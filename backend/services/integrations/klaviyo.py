@@ -393,15 +393,17 @@ class KlaviyoIntegrationsService:
 
     async def log_response_to_file(self, response, lead_user_id=None):
         def write():
+            os.makedirs("tmp", exist_ok=True)
             status_code = getattr(response, "status_code", None)
-
             content = None
 
-            try:
-                content = response.json()
-
-            except (ValueError, json.JSONDecodeError):
-                content = response.text if hasattr(response, "text") else None
+            if isinstance(response, dict):
+                content = response
+            else:
+                try:
+                    content = response.json()
+                except (ValueError, json.JSONDecodeError, AttributeError):
+                    content = getattr(response, "text", None)
 
             log_data = {
                 "timestamp": datetime.utcnow().isoformat(),
@@ -546,6 +548,9 @@ class KlaviyoIntegrationsService:
             for k, v in json_data["data"]["attributes"].items()
             if v is not None
         }
+        await self.log_response_to_file(
+            response=json_data, lead_user_id=lead_user.id
+        )
         response = await self.__async_handle_request(
             method="POST",
             url="https://a.klaviyo.com/api/profiles/",
