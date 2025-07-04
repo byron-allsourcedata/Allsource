@@ -553,7 +553,9 @@ class KlaviyoIntegrationsService:
             json=json_data,
         )
 
-        self.log_response_to_file(response=response, lead_user_id=lead_user.id)
+        await self.log_response_to_file(
+            response=response, lead_user_id=lead_user.id
+        )
 
         if response.status_code in (200, 201):
             return {
