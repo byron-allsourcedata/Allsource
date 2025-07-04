@@ -36,6 +36,7 @@ from utils import (
     format_phone_number,
     get_valid_email,
     get_valid_email_without_million,
+    get_valid_phone,
 )
 
 
@@ -645,12 +646,7 @@ class MailchimpIntegrationsService:
         ):
             return first_email
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
 
         location = {
             "address": getattr(five_x_five_user, "personal_address")

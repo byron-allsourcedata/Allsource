@@ -43,6 +43,7 @@ from utils import (
     format_phone_number,
     get_http_client,
     get_valid_email_without_million,
+    get_valid_phone,
 )
 
 APP_SECRET = MetaConfig.app_secret
@@ -625,12 +626,7 @@ class MetaIntegrationsService:
                 else ""
             )
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
         first_phone = format_phone_number(first_phone)
 
         return [
