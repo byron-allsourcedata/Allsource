@@ -415,6 +415,9 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
         return Token(**data)
     except JWTError:
         raise InvalidToken
+    
+def raise_forbidden(detail: dict):
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
 def check_user_authorization(
@@ -428,37 +431,31 @@ def check_user_authorization(
     exist_privacy_policy = privacy_policy_service.exist_user_privacy_policy(
         user_id=user.get("id")
     )
-    error_responses = {
-        UserAuthorizationStatus.PAYMENT_NEEDED: {
-            "status": UserAuthorizationStatus.PAYMENT_NEEDED.value,
-            "stripe_payment_url": get_stripe_payment_url(
-                user.get("customer_id"), user.get("stripe_payment_url")
-            ),
-        },
-        UserAuthorizationStatus.NEED_CONFIRM_EMAIL: {
-            "status": UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value,
-        },
-    }
 
-    if auth_status in error_responses:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=error_responses[auth_status],
-        )
+    if auth_status == UserAuthorizationStatus.NEED_CONFIRM_EMAIL:
+        raise_forbidden({
+            "status": UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value,
+        })
 
     if not exist_privacy_policy:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value
-            },
+        raise_forbidden({
+            "status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value
+        })
+
+    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
+        stripe_payment_url = get_stripe_payment_url(
+            user.get("customer_id"),
+            user.get("stripe_payment_url") or {},
         )
+        raise_forbidden({
+            "status": auth_status.value,
+            "stripe_payment_url": stripe_payment_url,
+        })
 
     if auth_status != UserAuthorizationStatus.SUCCESS:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={"status": auth_status.value},
-        )
+        raise_forbidden({
+            "status": auth_status.value
+        })
     return user
 
 
@@ -474,31 +471,25 @@ def check_user_authorization_without_pixel(
         user_id=user.get("id")
     )
 
-    error_responses = {
-        UserAuthorizationStatus.PAYMENT_NEEDED: {
-            "status": UserAuthorizationStatus.PAYMENT_NEEDED.value,
-            "stripe_payment_url": get_stripe_payment_url(
-                user.get("customer_id"), user.get("stripe_payment_url")
-            ),
-        },
-        UserAuthorizationStatus.NEED_CONFIRM_EMAIL: {
+    if auth_status == UserAuthorizationStatus.NEED_CONFIRM_EMAIL:
+        raise_forbidden({
             "status": UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value,
-        },
-    }
-
-    if auth_status in error_responses:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=error_responses[auth_status],
-        )
+        })
 
     if not exist_privacy_policy:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={
-                "status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value
-            },
+        raise_forbidden({
+            "status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value
+        })
+
+    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
+        stripe_payment_url = get_stripe_payment_url(
+            user.get("customer_id"),
+            user.get("stripe_payment_url") or {},
         )
+        raise_forbidden({
+            "status": auth_status.value,
+            "stripe_payment_url": stripe_payment_url,
+        })
 
     allowed_statuses = {
         UserAuthorizationStatus.SUCCESS,
@@ -508,10 +499,9 @@ def check_user_authorization_without_pixel(
     }
 
     if auth_status not in allowed_statuses:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail={"status": auth_status.value},
-        )
+        raise_forbidden({
+            "status": auth_status.value
+        })
 
     return user
 
