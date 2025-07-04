@@ -42,7 +42,6 @@ class MillionVerifierIntegrationsService:
                     json=json,
                     params=params,
                 )
-            return response
 
         except httpx.ConnectTimeout:
             logging.error(f"Timeout when connecting to {url}")
@@ -73,7 +72,7 @@ class MillionVerifierIntegrationsService:
             )
             return {"error": "Request failed"}
 
-        return response
+        return await response.json()
 
     async def is_email_verify(self, email: str):
         is_verify = False
@@ -116,7 +115,5 @@ class MillionVerifierIntegrationsService:
         response = await self.__async_handle_request(
             method="GET", url=self.api_url, params=params
         )
-        if response.get("error"):
-            return response
 
-        return response.json()
+        return response
