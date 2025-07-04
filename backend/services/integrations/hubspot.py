@@ -606,5 +606,11 @@ class HubspotIntegrationsService:
 
             profile[v] = val
 
-        cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
+        cleaned = {}
+        for k, v in profile.items():
+            if v in (None, ""):
+                continue
+            key = k.lower()[:100]
+            key = re.sub(r"[^a-z0-9_]", "_", key)
+            cleaned[key] = v
         return cleaned
