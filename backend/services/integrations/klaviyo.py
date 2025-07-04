@@ -520,39 +520,12 @@ class KlaviyoIntegrationsService:
             for k, v in json_data["data"]["attributes"].items()
             if v is not None
         }
-        email = profile.email
-        check_response = await self.__async_handle_request(
-            method="GET",
-            url=f'https://a.klaviyo.com/api/profiles/?filter=equals(email,"{email}")',
+        response = await self.__async_handle_request(
+            method="POST",
+            url="https://a.klaviyo.com/api/profiles/",
             api_key=api_key,
+            json=json_data,
         )
-
-        if isinstance(check_response, dict):
-            if check_response.get("error"):
-                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
-
-        if check_response.status_code == 200 and check_response.json().get(
-            "data"
-        ):
-            profile_id = check_response.json()["data"][0]["id"]
-            json_data["data"]["id"] = profile_id
-            response = await self.__async_handle_request(
-                method="PATCH",
-                url=f"https://a.klaviyo.com/api/profiles/{profile_id}",
-                api_key=api_key,
-                json=json_data,
-            )
-        else:
-            response = await self.__async_handle_request(
-                method="POST",
-                url="https://a.klaviyo.com/api/profiles/",
-                api_key=api_key,
-                json=json_data,
-            )
-
-        if isinstance(response, dict):
-            if check_response.get("error"):
-                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
         if response.status_code in (200, 201):
             return {
