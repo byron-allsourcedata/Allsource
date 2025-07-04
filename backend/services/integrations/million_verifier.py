@@ -1,11 +1,9 @@
 import asyncio
+import logging
+import os
 
 import httpcore
-import requests
-import os
-import logging
-
-from gql.transport import httpx
+import httpx
 
 from persistence.million_verifier import MillionVerifierPersistence
 from resolver import injectable
@@ -64,14 +62,16 @@ class MillionVerifierIntegrationsService:
                     attempt += 1
                     continue
 
-                return await response.json()
+                return response.json()
 
             except (
                 httpx.ConnectTimeout,
+                httpx.ReadTimeout,
                 httpcore.ConnectError,
-                httpx.ReadError,
             ) as e:
-                logging.warning(f"Temporary error: {type(e).__name__} - {e}")
+                logging.warning(
+                    f"Temporary network error: {type(e).__name__} - {e}"
+                )
                 if attempt < max_retries:
                     logging.info(f"Retrying in {retry_delay} seconds...")
                     await asyncio.sleep(retry_delay)
