@@ -7,6 +7,7 @@ const PrivacyPolicy: React.FC<{
 }> = ({ onAccept }) => {
 	const [scrolledToEnd, setScrolledToEnd] = useState(false);
 	const contentRef = useRef<HTMLDivElement>(null);
+	const [hovered, setHovered] = useState(false);
 
 	const handleScroll = () => {
 		const el = contentRef.current;
@@ -198,14 +199,19 @@ const PrivacyPolicy: React.FC<{
 				}}
 			>
 				<Box sx={{ position: "relative", display: "flex", gap: 2 }}>
-					<CustomButton
-						variant="contained"
-						onClick={onAccept}
-						disabled={!scrolledToEnd}
+					<Box
+						onMouseEnter={() => setHovered(true)}
+						onMouseLeave={() => setHovered(false)}
 					>
-						Accept and Continue
-					</CustomButton>
-					{!scrolledToEnd && (
+						<CustomButton
+							variant="contained"
+							onClick={onAccept}
+							disabled={!scrolledToEnd}
+						>
+							Accept and Continue
+						</CustomButton>
+					</Box>
+					{!scrolledToEnd && hovered && (
 						<Box
 							sx={{
 								position: "absolute",

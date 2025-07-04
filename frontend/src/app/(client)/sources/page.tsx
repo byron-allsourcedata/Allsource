@@ -73,6 +73,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import SmartCell from "@/components/table/SmartCell";
 import { usePagination } from "@/hooks/usePagination";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import RenderProgress from "./components/RenderProgress";
 
 interface Source {
 	id: string;
@@ -1562,36 +1563,14 @@ const Sources: React.FC = () => {
 																					},
 																				}}
 																			>
-																				{row.matched_records_status ===
-																					"complete" &&
-																				row?.total_records === 0 ? (
-																					"0"
-																				) : (progress?.processed &&
-																						progress?.processed ==
-																							progress?.total) ||
-																					(row?.processed_records ==
-																						row?.total_records &&
-																						row?.processed_records !== 0) ? (
-																					progress?.matched >
-																					row?.matched_records ? (
-																						progress?.matched.toLocaleString(
-																							"en-US",
-																						)
-																					) : (
-																						row.matched_records.toLocaleString(
-																							"en-US",
-																						)
-																					)
-																				) : row?.processed_records !== 0 ? (
-																					<ProgressBar
-																						progress={{
-																							total: row?.total_records,
-																							processed: row?.processed_records,
-																							matched: row?.matched_records,
-																						}}
-																					/>
-																				) : (
-																					<ProgressBar progress={progress} />
+																				{RenderProgress(
+																					row.matched_records_status,
+																					row.total_records,
+																					row.matched_records,
+																					row.processed_records,
+																					progress?.total,
+																					progress?.matched,
+																					progress?.processed,
 																				)}
 																			</SmartCell>
 
