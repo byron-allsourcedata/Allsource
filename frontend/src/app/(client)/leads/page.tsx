@@ -1255,7 +1255,7 @@ const Leads: React.FC = () => {
 		{
 			key: "number_of_page",
 			label: "URL Visited",
-			widths: { width: "120px" , minWidth: "120px",maxWidth: "120px" },
+			widths: { width: "120px", minWidth: "120px", maxWidth: "120px" },
 		},
 		{
 			key: "average_time_sec",
@@ -2134,7 +2134,7 @@ const Leads: React.FC = () => {
 																{formatFunnelText(row.visitor_type) || "--"}
 															</Box>
 														</SmartCell>
-														
+
 														{/* URL Visited */}
 														<SmartCell
 															cellOptions={{
