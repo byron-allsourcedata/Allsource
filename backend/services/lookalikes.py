@@ -206,6 +206,7 @@ class AudienceLookalikesService:
                 "created_by": created_by,
                 "number_of_customers": source.total_records,
                 "matched_records": source.matched_records,
+                "matched_records_status": source.matched_records_status,
             }
             for source, created_by in sources
         ]

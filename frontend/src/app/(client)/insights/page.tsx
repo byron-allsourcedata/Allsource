@@ -49,6 +49,7 @@ type TableData = {
 	name: string;
 	type: string;
 	size: number;
+	disabled: boolean;
 	created_date: string;
 };
 
@@ -453,7 +454,8 @@ const Insights = () => {
 													<Table>
 														<TableBody>
 															{dataToShow.map((row, index) => {
-																const isRowDisabled = row.size === 0;
+																const isRowDisabled =
+																	row.size === 0 || row.disabled;
 																return (
 																	<TableRow
 																		key={index}
