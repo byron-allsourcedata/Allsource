@@ -556,7 +556,7 @@ async def get_leads_for_zapier(
     integrations_service: IntegrationService,
     domain=Depends(check_api_key),
 ):
-    return integrations_service.get_leads_for_zapier(domain)
+    return await integrations_service.get_leads_for_zapier(domain)
 
 
 @router.get("/shopify/install/redirect")

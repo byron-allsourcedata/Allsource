@@ -522,7 +522,7 @@ class MetaIntegrationsService:
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__hash_mapped_meta_user_lead(
+            profile = await self.__hash_mapped_meta_user_lead(
                 five_x_five_user, is_email_validation_enabled
             )
             if profile in (
@@ -603,11 +603,11 @@ class MetaIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __hash_mapped_meta_user_lead(
+    async def __hash_mapped_meta_user_lead(
         self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ):
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:

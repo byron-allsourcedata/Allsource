@@ -51,7 +51,7 @@ def end_of_month(dt: datetime) -> datetime:
     )
 
 
-def get_valid_email(
+async def get_valid_email(
     user: FiveXFiveUser,
     million_verifier_integrations: MillionVerifierIntegrationsService,
 ) -> str:
@@ -92,7 +92,7 @@ def get_valid_email(
                     )
                     if personal_emails_last_seen_str > thirty_days_ago_str:
                         return e.strip()
-                if e and million_verifier_integrations.is_email_verify(
+                if e and await million_verifier_integrations.is_email_verify(
                     email=e.strip()
                 ):
                     return e.strip()

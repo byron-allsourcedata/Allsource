@@ -303,7 +303,7 @@ class GoogleAdsIntegrationsService:
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_googleads_profile_lead(
+            profile = await self.__mapped_googleads_profile_lead(
                 five_x_five_user, is_email_validation_enabled
             )
             if profile in (
@@ -473,11 +473,11 @@ class GoogleAdsIntegrationsService:
         self.integrations_persistence.db.commit()
         return {"message": "successfuly"}
 
-    def __mapped_googleads_profile_lead(
+    async def __mapped_googleads_profile_lead(
         self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ) -> GoogleAdsProfile | str:
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:

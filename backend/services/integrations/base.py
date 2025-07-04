@@ -222,7 +222,7 @@ class IntegrationService:
             return True
         return False
 
-    def get_leads_for_zapier(self, domain):
+    async def get_leads_for_zapier(self, domain):
         five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(
             domain.id
         )
@@ -236,7 +236,7 @@ class IntegrationService:
                 "additional_personal_emails",
             ]
 
-            def get_valid_email(user) -> str:
+            async def get_valid_email(user) -> str:
                 thirty_days_ago = datetime.now() - timedelta(days=30)
                 thirty_days_ago_str = thirty_days_ago.strftime(
                     "%Y-%m-%d %H:%M:%S"
@@ -274,7 +274,7 @@ class IntegrationService:
                                     return e.strip()
                             if (
                                 e
-                                and self.million_verifier_integrations.is_email_verify(
+                                and await self.million_verifier_integrations.is_email_verify(
                                     email=e.strip()
                                 )
                             ):
@@ -284,7 +284,7 @@ class IntegrationService:
                     return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-            first_email = get_valid_email(five_x_five_user)
+            first_email = await get_valid_email(five_x_five_user)
 
             if first_email in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
