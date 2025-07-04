@@ -737,7 +737,6 @@ class KlaviyoIntegrationsService:
             getattr(five_x_five_user, "mobile_phone")
             or getattr(five_x_five_user, "personal_phone")
             or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
         )
 
         location = {
