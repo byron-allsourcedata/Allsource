@@ -399,11 +399,9 @@ class KlaviyoIntegrationsService:
         is_email_validation_enabled: bool,
     ):
         sem = asyncio.Semaphore(10)
-        ids_list = []
 
         async def process_single_lead(lead_user, five_x_five_user):
             async with sem:
-                ids_list.append(lead_user.id)
                 profile = await self.__create_profile(
                     five_x_five_user,
                     user_integration.access_token,
