@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Tuple, Annotated
+from typing import Tuple, Annotated, Dict, Any
 
 import httpcore
 import httpx
@@ -408,36 +408,44 @@ class KlaviyoIntegrationsService:
                     integration_data_sync.data_map,
                     is_email_validation_enabled,
                 )
-                if profile in (
-                    ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                    ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                    ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
-                    ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-                ):
+                if isinstance(profile, str):
                     return {"lead_id": lead_user.id, "status": profile}
-                else:
-                    list_response = await self.__add_profile_to_list(
-                        integration_data_sync.list_id,
-                        profile["id"],
-                        user_integration.access_token,
-                        profile["email"],
-                        profile["phone_number"],
-                    )
-                    if list_response.status_code == 404:
-                        return {
-                            "lead_id": lead_user.id,
-                            "status": ProccessDataSyncResult.LIST_NOT_EXISTS.value,
-                        }
-                    return {
-                        "lead_id": lead_user.id,
-                        "status": ProccessDataSyncResult.SUCCESS.value,
-                    }
+                return {
+                    "lead_id": lead_user.id,
+                    "status": ProccessDataSyncResult.SUCCESS.value,
+                    "profile": profile,
+                }
 
         tasks = [
             process_single_lead(lead_user, five_x_five_user)
             for lead_user, five_x_five_user in user_data
         ]
         results = await asyncio.gather(*tasks)
+
+        successful = [
+            result
+            for result in results
+            if result.get("status") == ProccessDataSyncResult.SUCCESS.value
+        ]
+        if successful:
+            profiles_payload = [
+                {
+                    "id": result["profile"]["id"],
+                    "email": result["profile"]["email"],
+                    "phone_number": result["profile"]["phone_number"],
+                }
+                for result in successful
+            ]
+
+            list_response = await self.__add_profiles_to_list(
+                list_id=integration_data_sync.list_id,
+                profiles=profiles_payload,
+                api_key=user_integration.access_token,
+            )
+            if list_response == ProccessDataSyncResult.LIST_NOT_EXISTS.value:
+                for r in successful:
+                    r["status"] = ProccessDataSyncResult.LIST_NOT_EXISTS.value
+
         return results
 
     def is_supported_region(self, phone_number: str) -> bool:
@@ -510,38 +518,12 @@ class KlaviyoIntegrationsService:
             for k, v in json_data["data"]["attributes"].items()
             if v is not None
         }
-        email = profile.email
-        check_response = await self.__async_handle_request(
-            method="GET",
-            url=f'https://a.klaviyo.com/api/profiles/?filter=equals(email,"{email}")',
+        response = await self.__async_handle_request(
+            method="POST",
+            url="https://a.klaviyo.com/api/profiles/",
             api_key=api_key,
+            json=json_data,
         )
-        if isinstance(check_response, dict):
-            if check_response.get("error"):
-                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
-
-        if check_response.status_code == 200 and check_response.json().get(
-            "data"
-        ):
-            profile_id = check_response.json()["data"][0]["id"]
-            json_data["data"]["id"] = profile_id
-            response = await self.__async_handle_request(
-                method="PATCH",
-                url=f"https://a.klaviyo.com/api/profiles/{profile_id}",
-                api_key=api_key,
-                json=json_data,
-            )
-        else:
-            response = await self.__async_handle_request(
-                method="POST",
-                url="https://a.klaviyo.com/api/profiles/",
-                api_key=api_key,
-                json=json_data,
-            )
-
-        if isinstance(response, dict):
-            if check_response.get("error"):
-                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
         if response.status_code in (200, 201):
             return {
@@ -563,68 +545,92 @@ class KlaviyoIntegrationsService:
                 "email": profile.email,
             }
 
-    async def __add_profile_to_list(
-        self, list_id: str, profile_id: str, api_key: str, email, phone_number
+    async def __add_profiles_to_list(
+        self,
+        list_id: str,
+        profiles: List[Dict[str, Any]],
+        api_key: str,
     ):
-        payload = {
-            "data": {
-                "type": "profile-subscription-bulk-create-job",
-                "attributes": {
-                    "profiles": {
-                        "data": [
-                            {
-                                "type": "profile",
-                                "attributes": {
-                                    "subscriptions": {
-                                        "email": {
-                                            "marketing": {
-                                                "consent": "SUBSCRIBED",
-                                                "consented_at": "2025-01-01T12:00:00Z",
-                                            }
-                                        },
-                                        "sms": {
-                                            "marketing": {
-                                                "consent": "SUBSCRIBED",
-                                                "consented_at": "2025-01-01T12:00:00Z",
-                                            },
-                                            "transactional": {
-                                                "consent": "SUBSCRIBED",
-                                                "consented_at": "2025-01-01T12:00:00Z",
-                                            },
-                                        },
-                                    },
-                                    "email": email,
-                                    "phone_number": phone_number,
-                                },
-                                "id": f"{profile_id}",
+        def chunks(lst, n):
+            for i in range(0, len(lst), n):
+                yield lst[i : i + n]
+
+        async def send_batch(batch, include_sms: bool):
+            data_items = []
+            for p in batch:
+                attrs = {
+                    "email": p["email"],
+                    "subscriptions": {
+                        "email": {
+                            "marketing": {
+                                "consent": "SUBSCRIBED",
+                                "consented_at": "2025-01-01T12:00:00Z",
                             }
-                        ]
+                        }
                     },
-                    "historical_import": True,
-                },
-                "relationships": {
-                    "list": {"data": {"type": "list", "id": f"{list_id}"}}
-                },
+                }
+                if include_sms:
+                    attrs["phone_number"] = p["phone_number"]
+                    attrs["subscriptions"]["sms"] = {
+                        "marketing": {
+                            "consent": "SUBSCRIBED",
+                            "consented_at": "2025-01-01T12:00:00Z",
+                        },
+                        "transactional": {
+                            "consent": "SUBSCRIBED",
+                            "consented_at": "2025-01-01T12:00:00Z",
+                        },
+                    }
+                data_items.append(
+                    {"type": "profile", "id": p["id"], "attributes": attrs}
+                )
+
+            payload = {
+                "data": {
+                    "type": "profile-subscription-bulk-create-job",
+                    "attributes": {
+                        "profiles": {"data": data_items},
+                        "historical_import": True,
+                    },
+                    "relationships": {
+                        "list": {"data": {"type": "list", "id": list_id}}
+                    },
+                }
             }
-        }
-        try:
-            response = self.__handle_request(
+
+            resp = await self.__async_handle_request(
                 method="POST",
                 url="https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs",
                 api_key=api_key,
-                data=json.dumps(payload),
+                json=payload,
             )
-            response.raise_for_status()
-            return response
-        except Exception as http_err:
-            response = self.__handle_request(
-                method="POST",
-                url=f"https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/",
-                api_key=api_key,
-                json={"data": [{"type": "profile", "id": profile_id}]},
-            )
+            if resp.status_code not in (200, 201, 202, 204):
+                ids = [{"type": "profile", "id": p["id"]} for p in batch]
+                resp = await self.__async_handle_request(
+                    method="POST",
+                    url=f"https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/",
+                    api_key=api_key,
+                    json={"data": ids},
+                )
+                return resp
 
-        return response
+            return resp
+
+        for batch in chunks(profiles, 100):
+            with_phone = [p for p in batch if p.get("phone_number")]
+            no_phone = [p for p in batch if not p.get("phone_number")]
+
+            if with_phone:
+                resp = await send_batch(with_phone, include_sms=True)
+                if resp.status_code == 404:
+                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+
+            if no_phone:
+                resp = await send_batch(no_phone, include_sms=False)
+                if resp.status_code == 404:
+                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+
+        return ProccessDataSyncResult.SUCCESS.value
 
     def set_suppression(self, suppression: bool, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id, user.get("id"))

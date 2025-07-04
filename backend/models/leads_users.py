@@ -83,6 +83,7 @@ class LeadUser(Base):
             "leads_users_five_x_five_user_id_domain_id_idx",
             five_x_five_user_id,
             domain_id,
+            unique=True,
         ),
         Index(
             "leads_users_five_x_five_user_id_user_id_idx",
