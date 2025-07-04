@@ -256,21 +256,6 @@ class SimilarAudiencesScoresService:
             lambda _: self.calculate_score_dict_batch(model, batch, config)
         )
 
-        update_query = (
-            update(AudienceLookalikes)
-            .where(AudienceLookalikes.id == lookalike_id)
-            .values(
-                processed_train_model_size=AudienceLookalikes.processed_train_model_size
-                + len(scores)
-            )
-            .returning(AudienceLookalikes.processed_train_model_size)
-        )
-
-        processed = self.db.execute(update_query).scalar()
-        self.db.commit()
-
-        logger.info(f"processed: {processed}")
-
         return duration, list(zip(asids, scores))
 
     def top_scores(
