@@ -399,9 +399,11 @@ class KlaviyoIntegrationsService:
         is_email_validation_enabled: bool,
     ):
         sem = asyncio.Semaphore(10)
+        ids_list = []
 
         async def process_single_lead(lead_user, five_x_five_user):
             async with sem:
+                ids_list.append(lead_user.id)
                 profile = await self.__create_profile(
                     lead_user,
                     five_x_five_user,
@@ -422,6 +424,10 @@ class KlaviyoIntegrationsService:
             for lead_user, five_x_five_user in user_data
         ]
         results = await asyncio.gather(*tasks)
+        print(len(ids_list))
+        print(ids_list)
+        print("------")
+
         successful = [
             result
             for result in results
@@ -436,6 +442,9 @@ class KlaviyoIntegrationsService:
                 }
                 for result in successful
             ]
+
+            print(len(profiles_payload))
+            print(profiles_payload)
 
             list_response = await self.__add_profiles_to_list(
                 list_id=integration_data_sync.list_id,
@@ -609,7 +618,7 @@ class KlaviyoIntegrationsService:
             for i in range(0, len(lst), n):
                 yield lst[i : i + n]
 
-        async def send_batch(batch, include_sms: bool):
+        async def send_batch(batch):
             ids = [{"type": "profile", "id": p["id"]} for p in batch]
             resp = await self.__async_handle_request(
                 method="POST",
@@ -620,19 +629,10 @@ class KlaviyoIntegrationsService:
             await self.log_response_to_file(response=resp)
             return resp
 
-        for batch in chunks(profiles, 1):
-            with_phone = [p for p in batch if p.get("phone_number")]
-            no_phone = [p for p in batch if not p.get("phone_number")]
-
-            if with_phone:
-                resp = await send_batch(with_phone, include_sms=False)
-                if resp.status_code == 404:
-                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
-
-            if no_phone:
-                resp = await send_batch(no_phone, include_sms=False)
-                if resp.status_code == 404:
-                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+        for batch in chunks(profiles, 100):
+            resp = await send_batch(batch)
+            if resp.status_code == 404:
+                return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
