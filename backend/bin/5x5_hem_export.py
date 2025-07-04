@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import time
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -45,31 +46,33 @@ async def main():
     await SentryConfig.async_initilize()
     logging.info("Started")
     resolver = Resolver()
-    try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue(
-            name=QUEUE_HEMS_EXPORT,
-            durable=True,
-            arguments={
-                "x-consumer-timeout": 7200000,
-            },
-        )
-        ch_session = await resolver.resolve(Clickhouse)
+    while True:
+        try:
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
+            queue = await channel.declare_queue(
+                name=QUEUE_HEMS_EXPORT,
+                durable=True,
+                arguments={
+                    "x-consumer-timeout": 7200000,
+                },
+            )
+            ch_session = await resolver.resolve(Clickhouse)
 
-        await queue.consume(
-            functools.partial(on_message_received, ch_session=ch_session)
-        )
-        await asyncio.Future()
-    except Exception as err:
-        SentryConfig.capture(err)
-        logging.error(f"Unhandled Exception: {err}", exc_info=True)
-    finally:
-        logging.info("Shutting down...")
-        await resolver.cleanup()
-        await rabbitmq_connection.close()
+            await queue.consume(
+                functools.partial(on_message_received, ch_session=ch_session)
+            )
+            await asyncio.Future()
+        except Exception as err:
+            SentryConfig.capture(err)
+            logging.error(f"Unhandled Exception: {err}", exc_info=True)
+        finally:
+            logging.info("Shutting down...")
+            await resolver.cleanup()
+            await rabbitmq_connection.close()
+            time.sleep(10)
 
 
 if __name__ == "__main__":

@@ -1,17 +1,16 @@
-import logging
-import os
-import sys
 import asyncio
 import functools
 import json
+import logging
+import os
+import sys
+import time
+
 from aio_pika import IncomingMessage
-import sentry_sdk
-from sqlalchemy.orm import sessionmaker, Session, aliased
-from sqlalchemy.sql import func
-from sqlalchemy.exc import IntegrityError
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker, Session, aliased
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -213,46 +212,47 @@ async def main():
     db_password = os.getenv("DB_PASSWORD")
     db_host = os.getenv("DB_HOST")
     db_name = os.getenv("DB_NAME")
+    while True:
+        try:
+            logging.info("Starting processing...")
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-    try:
-        logging.info("Starting processing...")
-        rmq_connection = RabbitMQConnection()
-        connection = await rmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-
-        reader_queue = await channel.declare_queue(
-            name=AUDIENCE_SMARTS_FILLER,
-            durable=True,
-        )
-        await reader_queue.consume(
-            functools.partial(
-                aud_smarts_reader, db_session=db_session, channel=channel
+            engine = create_engine(
+                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+                pool_pre_ping=True,
             )
-        )
+            Session = sessionmaker(bind=engine)
+            db_session = Session()
 
-        await asyncio.Future()
+            reader_queue = await channel.declare_queue(
+                name=AUDIENCE_SMARTS_FILLER,
+                durable=True,
+            )
+            await reader_queue.consume(
+                functools.partial(
+                    aud_smarts_reader, db_session=db_session, channel=channel
+                )
+            )
 
-    except Exception as e:
-        db_session.rollback()
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
+            await asyncio.Future()
 
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rmq_connection.close()
-        logging.info("Shutting down...")
+        except Exception as e:
+            db_session.rollback()
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

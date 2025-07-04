@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import time
 from datetime import datetime
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -87,35 +88,37 @@ async def main():
     resolver = Resolver()
     db_session = await resolver.resolve(Db)
     rabbitmq_connection = None
-    try:
-        logging.info("Starting processing...")
+    while True:
+        try:
+            logging.info("Starting processing...")
 
-        rabbitmq_connection = RabbitMQConnection()
-        rmq_connection = await rabbitmq_connection.connect()
-        channel = await rmq_connection.channel()
-        await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue(
-            name=CHARGE_CREDITS,
-            durable=True,
-        )
+            rabbitmq_connection = RabbitMQConnection()
+            rmq_connection = await rabbitmq_connection.connect()
+            channel = await rmq_connection.channel()
+            await channel.set_qos(prefetch_count=1)
+            queue = await channel.declare_queue(
+                name=CHARGE_CREDITS,
+                durable=True,
+            )
 
-        await queue.consume(
-            functools.partial(
-                process_rmq_message, channel=channel, db_session=db_session
-            ),
-        )
+            await queue.consume(
+                functools.partial(
+                    process_rmq_message, channel=channel, db_session=db_session
+                ),
+            )
 
-        await asyncio.Future()
-    except Exception as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
+            await asyncio.Future()
+        except Exception as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+                time.sleep(10)
 
 
 if __name__ == "__main__":

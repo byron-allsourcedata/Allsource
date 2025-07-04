@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -1301,56 +1302,59 @@ async def main():
     setup_logging(log_level)
 
     resolver = Resolver()
-    try:
-        logging.info("Starting processing...")
-        rmq_connection = RabbitMQConnection()
-        connection = await rmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
 
-        db_session = await resolver.resolve(Db)
+    while True:
+        try:
+            logging.info("Starting processing...")
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-        queue = await channel.declare_queue(
-            name=AUDIENCE_SOURCES_MATCHING,
-            durable=True,
-        )
-        similar_audience_service = SimilarAudienceService(
-            audience_data_normalization_service=AudienceDataNormalizationService()
-        )
+            db_session = await resolver.resolve(Db)
 
-        audience_lookalikes_service = await resolver.resolve(
-            AudienceLookalikesService,
-        )
-
-        source_agent_service = await resolver.resolve(
-            SourceAgentService,
-        )
-        await queue.consume(
-            functools.partial(
-                aud_sources_matching,
-                connection=connection,
-                channel=channel,
-                db_session=db_session,
-                similar_audience_service=similar_audience_service,
-                audience_lookalikes_service=audience_lookalikes_service,
-                source_agent_service=source_agent_service,
+            queue = await channel.declare_queue(
+                name=AUDIENCE_SOURCES_MATCHING,
+                durable=True,
             )
-        )
+            similar_audience_service = SimilarAudienceService(
+                audience_data_normalization_service=AudienceDataNormalizationService()
+            )
 
-        await asyncio.Future()
+            audience_lookalikes_service = await resolver.resolve(
+                AudienceLookalikesService,
+            )
 
-    except Exception as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
+            source_agent_service = await resolver.resolve(
+                SourceAgentService,
+            )
+            await queue.consume(
+                functools.partial(
+                    aud_sources_matching,
+                    connection=connection,
+                    channel=channel,
+                    db_session=db_session,
+                    similar_audience_service=similar_audience_service,
+                    audience_lookalikes_service=audience_lookalikes_service,
+                    source_agent_service=source_agent_service,
+                )
+            )
 
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rmq_connection.close()
-        logging.info("Shutting down...")
+            await asyncio.Future()
+
+        except Exception as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

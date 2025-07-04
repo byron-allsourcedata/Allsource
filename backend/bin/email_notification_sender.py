@@ -4,21 +4,20 @@ import json
 import logging
 import os
 import sys
-
+import time
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from config.sentry import SentryConfig
-from models.account_notification import AccountNotification
 from models.sendgrid_template import SendgridTemplate
 
 from config.rmq_connection import RabbitMQConnection
 from dotenv import load_dotenv
 from enums import SendgridTemplate
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker
 from services.sendgrid import SendgridHandler
 
 load_dotenv()
@@ -81,31 +80,33 @@ async def main():
     await SentryConfig.async_initilize()
     logging.info("Started")
     rabbitmq_connection = None
-    try:
-        engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-        )
-        Session = sessionmaker(bind=engine)
-        session = Session()
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue(
-            name=EMAIL_NOTIFICATIONS, durable=True
-        )
-        await queue.consume(
-            functools.partial(on_message_received, session=session)
-        )
-        await asyncio.Future()
-    except Exception as err:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(err)
-    finally:
-        if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
-        logging.info("Shutting down...")
+    while True:
+        try:
+            engine = create_engine(
+                f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+            )
+            Session = sessionmaker(bind=engine)
+            session = Session()
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
+            queue = await channel.declare_queue(
+                name=EMAIL_NOTIFICATIONS, durable=True
+            )
+            await queue.consume(
+                functools.partial(on_message_received, session=session)
+            )
+            await asyncio.Future()
+        except Exception as err:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(err)
+        finally:
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":
