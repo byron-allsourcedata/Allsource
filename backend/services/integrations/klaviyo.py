@@ -33,6 +33,7 @@ from utils import (
     get_valid_email,
     get_http_client,
     get_valid_email_without_million,
+    get_valid_phone,
 )
 from utils import validate_and_format_phone, format_phone_number
 
@@ -733,11 +734,7 @@ class KlaviyoIntegrationsService:
         ):
             return first_email
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-        )
+        first_phone = get_valid_phone(five_x_five_user)
 
         location = {
             "address1": getattr(five_x_five_user, "personal_address")

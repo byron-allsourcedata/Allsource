@@ -35,6 +35,7 @@ from utils import (
     get_valid_email,
     get_http_client,
     get_valid_email_without_million,
+    get_valid_phone,
 )
 from utils import validate_and_format_phone
 
@@ -613,12 +614,7 @@ class SalesForceIntegrationsService:
         if not company_name:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
         phone_number = validate_and_format_phone(first_phone)
         mobile_phone = getattr(five_x_five_user, "mobile_phone", None)
 
