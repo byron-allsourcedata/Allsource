@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import time
 from collections import Counter
 from typing import Any
 
@@ -400,46 +401,47 @@ async def main():
 
     setup_logging(log_level)
     resolver = Resolver()
-    try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+    while True:
+        try:
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-        queue = await channel.declare_queue(
-            name=CRON_DATA_SYNC_LEADS,
-            durable=True,
-        )
-        db_session = await resolver.resolve(Db)
-        integration_service = await resolver.resolve(IntegrationService)
-        notification_persistence = await resolver.resolve(
-            NotificationPersistence
-        )
-        user_persistence = await resolver.resolve(UserPersistence)
-        async with integration_service as int_service:
-            await queue.consume(
-                functools.partial(
-                    ensure_integration,
-                    integration_service=int_service,
-                    db_session=db_session,
-                    notification_persistence=notification_persistence,
-                    user_persistence=user_persistence,
-                )
+            queue = await channel.declare_queue(
+                name=CRON_DATA_SYNC_LEADS,
+                durable=True,
             )
-            await asyncio.Future()
+            db_session = await resolver.resolve(Db)
+            integration_service = await resolver.resolve(IntegrationService)
+            notification_persistence = await resolver.resolve(
+                NotificationPersistence
+            )
+            user_persistence = await resolver.resolve(UserPersistence)
+            async with integration_service as int_service:
+                await queue.consume(
+                    functools.partial(
+                        ensure_integration,
+                        integration_service=int_service,
+                        db_session=db_session,
+                        notification_persistence=notification_persistence,
+                        user_persistence=user_persistence,
+                    )
+                )
+                await asyncio.Future()
 
-    except BaseException as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
-        logging.info("Shutting down...")
-        sys.exit(1)
+        except BaseException as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

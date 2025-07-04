@@ -45,7 +45,13 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({
 					{
 						key: "b2c",
 						label: "B2C",
-						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} isDebug={isDebug} />,
+						content: (
+							<B2CTabs
+								data={b2cData}
+								fieldRanks={fieldRanks}
+								isDebug={isDebug}
+							/>
+						),
 					},
 				]
 			: [
@@ -57,7 +63,13 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({
 					{
 						key: "b2c",
 						label: "B2C",
-						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} isDebug={isDebug}/>,
+						content: (
+							<B2CTabs
+								data={b2cData}
+								fieldRanks={fieldRanks}
+								isDebug={isDebug}
+							/>
+						),
 					},
 				];
 	return (

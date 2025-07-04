@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, Suspense } from "react";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	showErrorToast,
@@ -8,10 +8,12 @@ import {
 	showToast,
 } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { usePrivacyPolicyContext } from "../../../../context/PrivacyPolicyContext";
 
 const VerifyToken = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { setPrivacyPolicyPromiseResolver } = usePrivacyPolicyContext();
 	const token = searchParams.get("token");
 	const mail = searchParams.get("mail");
 
@@ -21,6 +23,13 @@ const VerifyToken = () => {
 			document.body.style.overflow = "auto";
 		};
 	}, []);
+
+	const checkPrivacyPolicy = async (): Promise<void> => {
+		return new Promise((resolve) => {
+			setPrivacyPolicyPromiseResolver(() => resolve);
+			router.push("/privacy-policy");
+		});
+	};
 
 	useEffect(() => {
 		const verifyToken = async () => {
@@ -56,20 +65,17 @@ const VerifyToken = () => {
 						) {
 							if (typeof window !== "undefined") {
 								if (response.data.status === "EMAIL_ALREADY_VERIFIED") {
-									localStorage.setItem("welcome_popup", "true");
 									showInfoToast("Email has already been verified");
 								} else if (response.data.status === "SUCCESS") {
-									localStorage.setItem("welcome_popup", "true");
 									showToast("You have successfully verified your email");
 								}
+								await checkPrivacyPolicy();
+								localStorage.setItem("welcome_popup", "true");
 								const newToken = response.data.token;
 								localStorage.removeItem("token");
 								localStorage.setItem("token", newToken);
 
-								setTimeout(() => {
-									// router.push('/account-setup');
-									router.push("/get-started");
-								}, 2500);
+								router.push("/get-started");
 							}
 						} else if (response.data.status === "INCORRECT_TOKEN") {
 							showErrorToast("The link is incorrect or outdated");

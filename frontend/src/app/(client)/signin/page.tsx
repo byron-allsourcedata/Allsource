@@ -17,11 +17,13 @@ import { loginStyles } from "./loginStyles";
 import { showErrorToast } from "@/components/ToastNotification";
 import { GoogleLogin } from "@react-oauth/google";
 import { fetchUserData } from "@/services/meService";
-import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import PageWithLoader from "@/components/FirstLevelLoader";
+import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 
 const Signin: React.FC = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { setPrivacyPolicyPromiseResolver } = usePrivacyPolicyContext();
 	useEffect(() => {
 		document.body.style.overflow = "hidden";
 		return () => {
@@ -56,6 +58,13 @@ const Signin: React.FC = () => {
 		password: "",
 		...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
 	});
+
+	const checkPrivacyPolicy = async (): Promise<void> => {
+		return new Promise((resolve) => {
+			setPrivacyPolicyPromiseResolver(() => resolve);
+			router.push("/privacy-policy");
+		});
+	};
 
 	const validateField = (name: string, value: string) => {
 		const newErrors: { [key: string]: string } = { ...errors };
@@ -146,6 +155,7 @@ const Signin: React.FC = () => {
 					}
 					switch (responseData.status) {
 						case "SUCCESS":
+							await checkPrivacyPolicy();
 							await fetchUserData();
 							router.push("/dashboard");
 							break;
@@ -190,6 +200,7 @@ const Signin: React.FC = () => {
 							break;
 
 						case "FILL_COMPANY_DETAILS":
+							await checkPrivacyPolicy();
 							let data = await fetchUserData();
 							const { is_pixel_installed, is_source_imported } =
 								data?.get_started;
@@ -435,7 +446,7 @@ const Signin: React.FC = () => {
 
 const SigninPage: React.FC = () => {
 	return (
-		<Suspense fallback={<CustomizedProgressBar />}>
+		<Suspense fallback={<PageWithLoader />}>
 			<Signin />
 		</Suspense>
 	);

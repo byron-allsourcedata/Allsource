@@ -4,9 +4,9 @@ import json
 import logging
 import os
 import sys
+import time
 
 import pandas as pd
-import sentry_sdk
 from sqlalchemy import create_engine
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -62,39 +62,41 @@ async def main():
     logging.info("Started")
     db_session = None
     rabbitmq_connection = None
-    try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue(
-            name=QUEUE_USERS_USERS_ROWS,
-            durable=True,
-            arguments={
-                "x-consumer-timeout": 3600000,
-            },
-        )
+    while True:
+        try:
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
+            queue = await channel.declare_queue(
+                name=QUEUE_USERS_USERS_ROWS,
+                durable=True,
+                arguments={
+                    "x-consumer-timeout": 3600000,
+                },
+            )
 
-        engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-        await queue.consume(
-            functools.partial(on_message_received, session=db_session)
-        )
-        await asyncio.Future()
-    except Exception as err:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(err)
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
-        logging.info("Shutting down...")
+            engine = create_engine(
+                f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+            )
+            Session = sessionmaker(bind=engine)
+            db_session = Session()
+            await queue.consume(
+                functools.partial(on_message_received, session=db_session)
+            )
+            await asyncio.Future()
+        except Exception as err:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(err)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

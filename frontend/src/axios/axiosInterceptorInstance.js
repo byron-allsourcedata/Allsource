@@ -77,6 +77,9 @@ axiosInterceptorInstance.interceptors.response.use(
 						case "NEED_CONFIRM_EMAIL":
 							navigateTo("/email-verificate");
 							break;
+						case "NEED_ACCEPT_PRIVACY_POLICY":
+							navigateTo("/privacy-policy");
+							break;
 						case "PIXEL_INSTALLATION_NEEDED":
 							break;
 						case "FILL_COMPANY_DETAILS":

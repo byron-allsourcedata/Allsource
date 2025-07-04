@@ -36,6 +36,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 		"/choose-plan",
 		"/authentication/verify-token",
 		"/forgot-password",
+		"/privacy-policy",
 	];
 	const isAuthenticated = !excludedPaths.includes(pathname);
 	const [showSlider, setSlider] = useState(false);

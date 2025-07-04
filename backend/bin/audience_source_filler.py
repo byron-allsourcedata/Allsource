@@ -1,37 +1,32 @@
 import asyncio
 import csv
 import functools
+import hashlib
 import io
 import json
 import logging
 import os
-import hashlib
 import re
 import sys
+import time
 from datetime import datetime, timezone
-from typing import List, Dict
-from itertools import islice
-
-import aioboto3
-from aio_pika import IncomingMessage, Connection, Channel
-
-from sqlalchemy.orm import sessionmaker, Session
-from dotenv import load_dotenv
-
 from itertools import islice
 from typing import List, Dict, Union
-
 
 import aioboto3
 import boto3
 import chardet
 from aio_pika import IncomingMessage, Channel
 from dotenv import load_dotenv
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
+
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from db_dependencies import Db
+from resolver import Resolver
 from config.sentry import SentryConfig
 from schemas.scripts.audience_source import (
     MessageBody,
@@ -39,7 +34,7 @@ from schemas.scripts.audience_source import (
     DataBodyFromSource,
 )
 from models.leads_users import LeadUser
-from sqlalchemy import and_, or_, func, create_engine, distinct
+from sqlalchemy import and_, or_, func, distinct
 from enums import SourceType, LeadStatus, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
@@ -555,53 +550,46 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
+    resolver = Resolver()
+    while True:
+        try:
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-    try:
-        rmq_connection = RabbitMQConnection()
-        connection = await rmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+            db_session = await resolver.resolve(Db)
+            s3_session = aioboto3.Session()
 
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-        s3_session = aioboto3.Session()
-
-        reader_queue = await channel.declare_queue(
-            name=AUDIENCE_SOURCES_READER,
-            durable=True,
-        )
-        await reader_queue.consume(
-            functools.partial(
-                aud_sources_reader,
-                db_session=db_session,
-                s3_session=s3_session,
-                connection=connection,
-                channel=channel,
+            reader_queue = await channel.declare_queue(
+                name=AUDIENCE_SOURCES_READER,
+                durable=True,
             )
-        )
+            await reader_queue.consume(
+                functools.partial(
+                    aud_sources_reader,
+                    db_session=db_session,
+                    s3_session=s3_session,
+                    connection=connection,
+                    channel=channel,
+                )
+            )
 
-        await asyncio.Future()
+            await asyncio.Future()
 
-    except Exception as e:
-        db_session.rollback()
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rmq_connection.close()
-        logging.info("Shutting down...")
+        except Exception as e:
+            db_session.rollback()
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

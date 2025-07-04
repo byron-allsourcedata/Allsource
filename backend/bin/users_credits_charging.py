@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import time
 from collections import defaultdict
 
 logging.basicConfig(
@@ -18,7 +19,6 @@ sys.path.append(parent_dir)
 
 from config.sentry import SentryConfig
 from models.plans import SubscriptionPlan
-from models.users_domains import UserDomains
 from enums import NotificationTitles
 from models.account_notification import AccountNotification
 from models.users_account_notification import UserAccountNotification
@@ -287,59 +287,61 @@ async def main():
     logging.info("Started")
     db_session = None
     rabbitmq_connection = None
-    try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue(
-            name=QUEUE_CREDITS_CHARGING,
-            durable=True,
-            arguments={
-                "x-consumer-timeout": 3600000,
-            },
-        )
-
-        await channel.declare_queue(
-            name=EMAIL_NOTIFICATIONS,
-            durable=True,
-            arguments={
-                "x-consumer-timeout": 3600000,
-            },
-        )
-
-        engine = create_engine(
-            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-        subscription_service = SubscriptionService(
-            plans_persistence=PlansPersistence(db_session),
-            user_persistence_service=None,
-            referral_service=None,
-            partners_persistence=None,
-            db=db_session,
-        )
-        await queue.consume(
-            functools.partial(
-                on_message_received,
-                session=db_session,
-                subscription_service=subscription_service,
+    while True:
+        try:
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
+            queue = await channel.declare_queue(
+                name=QUEUE_CREDITS_CHARGING,
+                durable=True,
+                arguments={
+                    "x-consumer-timeout": 3600000,
+                },
             )
-        )
-        await asyncio.Future()
-    except Exception as err:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(err)
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
-        logging.info("Shutting down...")
+
+            await channel.declare_queue(
+                name=EMAIL_NOTIFICATIONS,
+                durable=True,
+                arguments={
+                    "x-consumer-timeout": 3600000,
+                },
+            )
+
+            engine = create_engine(
+                f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
+                pool_pre_ping=True,
+            )
+            Session = sessionmaker(bind=engine)
+            db_session = Session()
+            subscription_service = SubscriptionService(
+                plans_persistence=PlansPersistence(db_session),
+                user_persistence_service=None,
+                referral_service=None,
+                partners_persistence=None,
+                db=db_session,
+            )
+            await queue.consume(
+                functools.partial(
+                    on_message_received,
+                    session=db_session,
+                    subscription_service=subscription_service,
+                )
+            )
+            await asyncio.Future()
+        except Exception as err:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(err)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

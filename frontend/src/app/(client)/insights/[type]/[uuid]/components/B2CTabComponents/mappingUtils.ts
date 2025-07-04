@@ -1,6 +1,5 @@
 type PercentageMap = Record<string, number | string>;
 
-
 export const mapGender = (gender: PercentageMap, isDebug: boolean) => {
 	type GenderEntry = {
 		imageSrc?: string;

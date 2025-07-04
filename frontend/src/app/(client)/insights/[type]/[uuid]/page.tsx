@@ -23,7 +23,6 @@ import {
 import { useInsightsHints } from "../../context/IntegrationsHintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 
-
 const getFieldRankMap = (
 	significantFields: Record<string, number>,
 ): FieldRankMap => {
@@ -136,7 +135,7 @@ const Insights = () => {
 						params: {
 							is_debug: isDebug,
 						},
-					}
+					},
 				);
 
 			const significantFields = response.data.significant_fields;
