@@ -1,3 +1,5 @@
+import asyncio
+
 import httpcore
 import requests
 import os
@@ -26,53 +28,69 @@ class MillionVerifierIntegrationsService:
         self.api_url = "https://api.millionverifier.com/api/v3/"
 
     async def __async_handle_request(
-        self, method: str, url: str, json: dict = None, params: dict = None
+        self,
+        method: str,
+        url: str,
+        json: dict = None,
+        params: dict = None,
+        max_retries: int = 1,
+        retry_delay: float = 2.0,
     ):
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.request(
-                    method=method,
-                    url=url,
-                    headers=headers,
-                    json=json,
-                    params=params,
+        attempt = 0
+        while attempt <= max_retries:
+            try:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.request(
+                        method=method,
+                        url=url,
+                        headers=headers,
+                        json=json,
+                        params=params,
+                    )
+
+                if response.status_code == 429:
+                    retry_after = int(
+                        response.headers.get("Retry-After", retry_delay)
+                    )
+                    logging.warning(
+                        f"Rate limited. Retrying after {retry_after} seconds..."
+                    )
+                    await asyncio.sleep(retry_after)
+                    attempt += 1
+                    continue
+
+                return await response.json()
+
+            except (
+                httpx.ConnectTimeout,
+                httpcore.ConnectError,
+                httpx.ReadError,
+            ) as e:
+                logging.warning(f"Temporary error: {type(e).__name__} - {e}")
+                if attempt < max_retries:
+                    logging.info(f"Retrying in {retry_delay} seconds...")
+                    await asyncio.sleep(retry_delay)
+                    attempt += 1
+                    continue
+                else:
+                    return {"error": str(e)}
+
+            except httpx.RequestError as e:
+                logging.error(
+                    f"Request failed: {type(e).__name__} - {e!s} (URL: {url})"
                 )
+                return {"error": "Request failed"}
 
-        except httpx.ConnectTimeout:
-            logging.error(f"Timeout when connecting to {url}")
-            return {"error": "Timeout"}
+            except Exception as e:
+                logging.error(f"Unexpected error: {e}")
+                return {"error": str(e)}
 
-        except httpcore.ConnectError as e:
-            logging.error(f"Connection error to {url}: {e}")
-            return {"error": "Connection error"}
-
-        except httpx.ReadError as e:
-            logging.error(f"Read error from {url}: {e}")
-            return {"error": "Read error"}
-
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 429:
-                logging.warning(e.response.headers)
-                retry_after = int(e.response.headers.get("Retry-After", 1))
-                logging.warning(
-                    f"Rate limit exceeded. Retrying after {retry_after} seconds."
-                )
-            else:
-                logging.error(f"HTTP error occurred: {e}")
-            return {"error": "HTTP status error"}
-
-        except httpx.RequestError as e:
-            logging.error(
-                f"Request failed: {type(e).__name__} - {e!s} (URL: {url})"
-            )
-            return {"error": "Request failed"}
-
-        return await response.json()
+        return {"error": "Max retries exceeded"}
 
     async def is_email_verify(self, email: str):
         is_verify = False
@@ -82,7 +100,7 @@ class MillionVerifierIntegrationsService:
         if checked_email:
             return checked_email.is_verify
 
-        result = self.__check_verify_email(email)
+        result = await self.__check_verify_email(email)
         if result.get("error"):
             return False
 
