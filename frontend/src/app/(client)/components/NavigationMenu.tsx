@@ -347,6 +347,10 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						lineHeight: "19.6px",
 						color: "rgba(56, 152, 252, 1)",
 						gap: 1,
+						textDecoration: "underline",
+						"&:hover": {
+							textDecoration: "none",
+						},
 					}}
 				>
 					Opt-Out <OpenInNewIcon sx={{ fontSize: 16 }} />
@@ -363,9 +367,13 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						lineHeight: "19.6px",
 						color: "rgba(56, 152, 252, 1)",
 						gap: 1,
+						textDecoration: "underline",
+						"&:hover": {
+							textDecoration: "none",
+						},
 					}}
 				>
-					Terms of Use <OpenInNewIcon sx={{ fontSize: 16 }} />
+					Terms of Service <OpenInNewIcon sx={{ fontSize: 16 }} />
 				</MenuItem>
 				<MenuItem
 					component="a"
@@ -379,6 +387,10 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						lineHeight: "19.6px",
 						color: "rgba(56, 152, 252, 1)",
 						gap: 1,
+						textDecoration: "underline",
+						"&:hover": {
+							textDecoration: "none",
+						},
 					}}
 				>
 					Privacy Policy <OpenInNewIcon sx={{ fontSize: 16 }} />
