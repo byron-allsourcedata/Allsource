@@ -23,6 +23,7 @@ interface B2CPersonalProps {
 	data: PersonalInfo;
 	pets_data: Record<string, BooleanDistribution>;
 	fieldRanks: FieldRankMap;
+	isDebug: boolean;
 }
 
 function sortAgeGroups(data: BarData[]): BarData[] {
@@ -40,6 +41,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 	data,
 	pets_data,
 	fieldRanks,
+	isDebug,
 }) => {
 	const ownPets = pets_data ? pets_data["own_pets"] : null;
 	const trueVal = ownPets?.true ?? 0;
@@ -63,7 +65,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 					<Box sx={{ display: "flex", width: "32%" }}>
 						<MultiIconFillIndicator
 							title="Gender"
-							items={mapGender(data.gender)}
+							items={mapGender(data.gender, isDebug)}
 							rank={fieldRanks["gender"]}
 						/>
 					</Box>

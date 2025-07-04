@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from typing import Tuple, Annotated
 
+import httpcore
 import httpx
 from fastapi import HTTPException, Depends
 
@@ -99,6 +100,7 @@ class KlaviyoIntegrationsService:
             "revision": "2024-10-15",
             "Content-Type": "application/json",
         }
+
         try:
             async with httpx.AsyncClient(timeout=60.0) as client:
                 response = await client.request(
@@ -108,12 +110,35 @@ class KlaviyoIntegrationsService:
                     json=json,
                 )
             return response
+
         except httpx.ConnectTimeout:
             logging.error(f"Timeout when connecting to {url}")
-            raise
+            return {"error": "Timeout"}
+
+        except httpcore.ConnectError as e:
+            logging.error(f"Connection error to {url}: {e}")
+            return {"error": "Connection error"}
+
+        except httpx.ReadError as e:
+            logging.error(f"Read error from {url}: {e}")
+            return {"error": "Read error"}
+
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                logging.warning(e.response.headers)
+                retry_after = int(e.response.headers.get("Retry-After", 1))
+                logging.warning(
+                    f"Rate limit exceeded. Retrying after {retry_after} seconds."
+                )
+            else:
+                logging.error(f"HTTP error occurred: {e}")
+            return {"error": "HTTP status error"}
+
         except httpx.RequestError as e:
-            logging.error(f"Request failed: {e}")
-            raise
+            logging.error(
+                f"Request failed: {type(e).__name__} - {e!s} (URL: {url})"
+            )
+            return {"error": "Request failed"}
 
         return response
 
@@ -373,7 +398,7 @@ class KlaviyoIntegrationsService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
     ):
-        sem = asyncio.Semaphore(5)
+        sem = asyncio.Semaphore(10)
 
         async def process_single_lead(lead_user, five_x_five_user):
             async with sem:
@@ -386,6 +411,7 @@ class KlaviyoIntegrationsService:
                 if profile in (
                     ProccessDataSyncResult.INCORRECT_FORMAT.value,
                     ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                    ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
                     ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
                 ):
                     return {"lead_id": lead_user.id, "status": profile}
@@ -490,6 +516,9 @@ class KlaviyoIntegrationsService:
             url=f'https://a.klaviyo.com/api/profiles/?filter=equals(email,"{email}")',
             api_key=api_key,
         )
+        if isinstance(check_response, dict):
+            if check_response.get("error"):
+                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
         if check_response.status_code == 200 and check_response.json().get(
             "data"
@@ -509,6 +538,10 @@ class KlaviyoIntegrationsService:
                 api_key=api_key,
                 json=json_data,
             )
+
+        if isinstance(response, dict):
+            if check_response.get("error"):
+                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
         if response.status_code in (200, 201):
             return {

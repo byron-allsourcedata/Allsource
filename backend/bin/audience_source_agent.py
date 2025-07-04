@@ -95,7 +95,7 @@ def assume_role(role_arn, sts_client):
 
 async def send_sse(channel, user_id: int, data: dict):
     try:
-        logging.info(f"send client throught SSE: {data, user_id}")
+        logging.info(f"send client through SSE: {data, user_id}")
         await publish_rabbitmq_message_with_channel(
             channel=channel,
             queue_name=f"sse_events_{str(user_id)}",
@@ -388,7 +388,6 @@ async def process_email_interest_leads(
         db_session=db_session,
         source_id=source_id,
         include_amount=False,
-        date_range=90,
         source_agent_service=source_agent_service,
     )
 
