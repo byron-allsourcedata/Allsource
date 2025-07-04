@@ -391,6 +391,32 @@ class KlaviyoIntegrationsService:
                 api_key=credentials.access_token,
             )
 
+    async def log_response_to_file(self, response, lead_user_id=None):
+        def write():
+            status_code = getattr(response, "status_code", None)
+
+            content = None
+
+            try:
+                content = response.json()
+
+            except (ValueError, json.JSONDecodeError):
+                content = response.text if hasattr(response, "text") else None
+
+            log_data = {
+                "timestamp": datetime.utcnow().isoformat(),
+                "lead_user_id": lead_user_id,
+                "status_code": status_code,
+                "response": content,
+            }
+
+            with open(
+                "tmp/profile_sync_responses.log", "a", encoding="utf-8"
+            ) as f:
+                f.write(json.dumps(log_data, ensure_ascii=False) + "\n")
+
+        await asyncio.to_thread(write)
+
     async def process_data_sync_lead(
         self,
         user_integration: UserIntegration,
@@ -403,6 +429,7 @@ class KlaviyoIntegrationsService:
         async def process_single_lead(lead_user, five_x_five_user):
             async with sem:
                 profile = await self.__create_profile(
+                    lead_user,
                     five_x_five_user,
                     user_integration.access_token,
                     integration_data_sync.data_map,
@@ -477,6 +504,7 @@ class KlaviyoIntegrationsService:
 
     async def __create_profile(
         self,
+        lead_user,
         five_x_five_user,
         api_key: str,
         data_map,
@@ -524,6 +552,8 @@ class KlaviyoIntegrationsService:
             api_key=api_key,
             json=json_data,
         )
+
+        self.log_response_to_file(response=response, lead_user_id=lead_user.id)
 
         if response.status_code in (200, 201):
             return {
