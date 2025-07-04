@@ -688,7 +688,7 @@ class KlaviyoIntegrationsService:
         self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ) -> KlaviyoProfile:
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:

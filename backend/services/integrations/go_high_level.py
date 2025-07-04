@@ -389,7 +389,7 @@ class GoHighLevelIntegrationsService:
             refresh_token=user_integration.access_token,
         )
         for lead_user, five_x_five_user in user_data:
-            contact_data = self.__mapped_profile_lead(
+            contact_data = await elf.__mapped_profile_lead(
                 five_x_five_user=five_x_five_user,
                 data_map=integration_data_sync.data_map,
                 location_id=user_integration.location_id,
@@ -425,7 +425,7 @@ class GoHighLevelIntegrationsService:
 
         return results
 
-    def __mapped_profile_lead(
+    async def __mapped_profile_lead(
         self,
         five_x_five_user: FiveXFiveUser,
         data_map: list,
@@ -434,7 +434,7 @@ class GoHighLevelIntegrationsService:
         is_email_validation_enabled: bool,
     ) -> dict | str:
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:
