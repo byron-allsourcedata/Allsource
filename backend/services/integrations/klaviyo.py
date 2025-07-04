@@ -424,9 +424,20 @@ class KlaviyoIntegrationsService:
             for lead_user, five_x_five_user in user_data
         ]
         results = await asyncio.gather(*tasks)
-        print(len(ids_list))
-        print(ids_list)
-        print("------")
+
+        seen_ids = set()
+        duplicates = []
+        for p in profiles:
+            pid = p.get("id")
+            if pid in seen_ids:
+                duplicates.append(pid)
+            else:
+                seen_ids.add(pid)
+
+        if duplicates:
+            print(f"Дубликаты профилей по id: {duplicates}")
+        else:
+            print("Дубликатов по id нет")
 
         successful = [
             result
