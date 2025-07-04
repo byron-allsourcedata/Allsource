@@ -73,6 +73,7 @@ from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
 from services.payouts import PayoutsService
 from services.plans import PlansService
+from services.privacy_policy import PrivacyPolicyService
 from services.settings import SettingsService
 from services.sse_events import SseEventsService
 from services.stripe_service import StripeService, get_stripe_payment_url
@@ -419,20 +420,40 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
 def check_user_authorization(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,
+    privacy_policy_service: PrivacyPolicyService,
     users_auth_service: UsersAuth = Depends(get_users_auth_service),
 ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
-    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
+    exist_privacy_policy = privacy_policy_service.exist_user_privacy_policy(
+        user_id=user.get("id")
+    )
+    error_responses = {
+        UserAuthorizationStatus.PAYMENT_NEEDED: {
+            "status": UserAuthorizationStatus.PAYMENT_NEEDED.value,
+            "stripe_payment_url": get_stripe_payment_url(
+                user.get("customer_id"), user.get("stripe_payment_url")
+            ),
+        },
+        UserAuthorizationStatus.NEED_CONFIRM_EMAIL: {
+            "status": UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value,
+        },
+    }
+
+    if auth_status in error_responses:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_responses[auth_status],
+        )
+
+    if not exist_privacy_policy:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
-                "status": auth_status.value,
-                "stripe_payment_url": get_stripe_payment_url(
-                    user.get("customer_id"), user.get("stripe_payment_url")
-                ),
+                "status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value
             },
         )
+
     if auth_status != UserAuthorizationStatus.SUCCESS:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -444,30 +465,54 @@ def check_user_authorization(
 def check_user_authorization_without_pixel(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,
+    privacy_policy_service: PrivacyPolicyService,
     users_auth_service: UsersAuth = Depends(get_users_auth_service),
 ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
-    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
+    exist_privacy_policy = privacy_policy_service.exist_user_privacy_policy(
+        user_id=user.get("id")
+    )
+
+    error_responses = {
+        UserAuthorizationStatus.PAYMENT_NEEDED: {
+            "status": UserAuthorizationStatus.PAYMENT_NEEDED.value,
+            "stripe_payment_url": get_stripe_payment_url(
+                user.get("customer_id"), user.get("stripe_payment_url")
+            ),
+        },
+        UserAuthorizationStatus.NEED_CONFIRM_EMAIL: {
+            "status": UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value,
+        },
+    }
+
+    if auth_status in error_responses:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=error_responses[auth_status],
+        )
+
+    if not exist_privacy_policy:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={
-                "status": auth_status.value,
-                "stripe_payment_url": get_stripe_payment_url(
-                    user.get("customer_id"), user.get("stripe_payment_url")
-                ),
+                "status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value
             },
         )
-    if (
-        auth_status != UserAuthorizationStatus.SUCCESS
-        and auth_status != UserAuthorizationStatus.PAYMENT_FAILED
-        and auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
-        and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
-    ):
+
+    allowed_statuses = {
+        UserAuthorizationStatus.SUCCESS,
+        UserAuthorizationStatus.PAYMENT_FAILED,
+        UserAuthorizationStatus.NEED_CHOOSE_PLAN,
+        UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED,
+    }
+
+    if auth_status not in allowed_statuses:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail={"status": auth_status.value},
         )
+
     return user
 
 
@@ -499,7 +544,7 @@ def check_user_partner(
     if not user["is_partner"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"status": "Aссess Forbidden"},
+            detail={"status": "Access Forbidden"},
         )
     return user
 

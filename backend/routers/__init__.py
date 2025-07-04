@@ -30,6 +30,7 @@ from routers import (
     insights,
     pixel_management,
     opt_out,
+    privacy_policy,
 )
 
 main_router = APIRouter()
@@ -74,3 +75,4 @@ main_router.include_router(
 )
 main_router.include_router(insights.router, prefix="/audience-insights")
 main_router.include_router(opt_out.router, prefix="/opt-out")
+main_router.include_router(privacy_policy.router, prefix="/privacy-policy")
