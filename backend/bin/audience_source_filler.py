@@ -20,12 +20,13 @@ from aio_pika import IncomingMessage, Channel
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
-from db_dependencies import Db
-from resolver import Resolver
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from db_dependencies import Db
+from resolver import Resolver
 from config.sentry import SentryConfig
 from schemas.scripts.audience_source import (
     MessageBody,
