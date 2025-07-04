@@ -3,6 +3,8 @@ import uuid
 from collections import defaultdict, Counter
 from itertools import islice
 from typing import List, Optional, Dict, Any
+from dateutil.parser import parse as parse_date
+from datetime import datetime, timedelta
 
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
@@ -91,15 +93,16 @@ PROF_COLS = [
     "annual_sales",
 ]
 
-# EMPLOYMENT_COLS = [
-#     "job_title",
-#     "company_name",
-#     "start_date",
-#     "end_date",
-#     "is_current",
-#     "location",
-#     "job_description",
-# ]
+EMPLOYMENT_COLS = [
+    "job_title",
+    "company_name",
+    "start_date",
+    "end_date",
+    "is_current",
+    "location AS job_location",
+    "job_description",
+    "job_tenure",
+]
 
 COLUMNS_BY_CATEGORY: Dict[str, List[str]] = {
     "personal": PERSONAL_COLS,
@@ -107,7 +110,7 @@ COLUMNS_BY_CATEGORY: Dict[str, List[str]] = {
     "lifestyle": LIFESTYLE_COLS,
     "voter": VOTER_COLS,
     "professional": PROF_COLS,
-    # "employment": EMPLOYMENT_COLS,
+    "employment": EMPLOYMENT_COLS,
 }
 
 MAX_IDS_PER_BATCH = 5_000
@@ -157,103 +160,153 @@ class InsightsUtils:
         source_agent: SourceAgentService,
         audience_type: BusinessType,
     ):
-        is_invalid = lambda val: (
-            val is None
-            or str(val).upper()
-            in ("UNKNOWN", "U", "2", "", "-", "Unknown", "unknown")
-        )
         if not asids:
             return insights
 
-        is_invalid = lambda val: (
-            val is None
-            or str(val).upper()
-            in ("UNKNOWN", "U", "2", "", "-", "Unknown", "unknown")
-        )
         categories: list[str] = []
         if audience_type in (BusinessType.B2C, BusinessType.ALL):
             categories += ["personal", "financial", "lifestyle", "voter"]
-
-        if (
-            audience_type == BusinessType.B2C
-            or audience_type == BusinessType.ALL
-        ):
-            # 3) PERSONAL
-            personal_fields = [
-                "gender",
-                "state",
-                "religion",
-                "homeowner",
-                "age",
-                "ethnicity",
-                "languages",
-                "marital_status",
-                "have_children",
-                "education_level",
-                "children_ages",
-                "pets",
-            ]
-        if (
-            audience_type == BusinessType.B2C
-            or audience_type == BusinessType.ALL
-        ):
-            # 3) PERSONAL
-            personal_fields = [
-                "gender",
-                "state",
-                "religion",
-                "homeowner",
-                "age",
-                "ethnicity",
-                "languages",
-                "marital_status",
-                "have_children",
-                "education_level",
-                "children_ages",
-                "pets",
-            ]
+        if audience_type in (BusinessType.B2C, BusinessType.ALL):
+            categories += ["professional", "employment"]
 
         buckets: Dict[str, Dict[str, Counter]] = {
             cat: defaultdict(Counter) for cat in COLUMNS_BY_CATEGORY
         }
 
+        # Дополнительно для подсчета кол-ва вакансий за 5 лет по asid
+        jobs_last_5_years_counter: Counter = Counter()
+        five_years_ago = datetime.utcnow() - timedelta(days=365 * 5)
+
         for cat in categories:
             columns = COLUMNS_BY_CATEGORY[cat]
+
             for batch in InsightsUtils._chunk(asids, MAX_IDS_PER_BATCH):
-                rows = source_agent.fetch_fields_by_asids(batch, columns)
+                if cat != "employment":
+                    rows = source_agent.fetch_fields_by_asids(batch, columns)
+                else:
+                    # employment_json -> List[EmploymentEntry]
+                    employment_data = source_agent.get_employment_by_asids(
+                        batch
+                    )
 
-                for row in rows:
-                    if isinstance(row, (list, tuple)):
-                        pairs = zip(columns, row)
-                    else:
-                        pairs = ((c, row[c.split(" AS ")[-1]]) for c in columns)
-
-                    for raw_col, val in pairs:
-                        field = raw_col.split(" AS ")[-1]
-
-                        if field == "age":
-                            val = InsightsUtils.bucket_age(val)
-
-                        if InsightsUtils.is_invalid(val):
-                            key = "unknown"
-                        elif field == "credit_cards":
-                            raw = (
-                                str(val or "")
-                                .strip("[]")
-                                .replace("'", "")
-                                .replace('"', "")
-                            )
-                            for card in (
-                                c.strip().lower()
-                                for c in raw.split(",")
-                                if c.strip()
-                            ):
-                                buckets[cat][field][card] += 1
-                            continue
+                for idx, row in enumerate(
+                    rows if cat != "employment" else batch
+                ):
+                    if cat != "employment":
+                        if isinstance(row, (list, tuple)):
+                            pairs = zip(columns, row)
                         else:
-                            key = str(val).lower()
+                            pairs = (
+                                (c, row[c.split(" AS ")[-1]]) for c in columns
+                            )
 
-                        buckets[cat][field][key] += 1
+                        for raw_col, val in pairs:
+                            field = raw_col.split(" AS ")[-1]
+
+                            if field == "age":
+                                val = InsightsUtils.bucket_age(val)
+
+                            if InsightsUtils.is_invalid(val):
+                                key = "unknown"
+                            elif field == "credit_cards":
+                                raw = (
+                                    str(val or "")
+                                    .strip("[]")
+                                    .replace("'", "")
+                                    .replace('"', "")
+                                )
+                                for card in (
+                                    c.strip().lower()
+                                    for c in raw.split(",")
+                                    if c.strip()
+                                ):
+                                    buckets[cat][field][card] += 1
+                                continue
+                            else:
+                                key = str(val).lower()
+
+                            buckets[cat][field][key] += 1
+                    else:
+                        asid = batch[idx]
+                        jobs = employment_data.get(asid, [])
+                        if not jobs:
+                            continue
+
+                        asid_jobs_count_5y = 0
+
+                        for job_entry in jobs:
+                            try:
+                                start = (
+                                    parse_date(job_entry.start_date)
+                                    if job_entry.start_date
+                                    else None
+                                )
+                            except Exception:
+                                start = None
+                            try:
+                                end = (
+                                    parse_date(job_entry.end_date)
+                                    if job_entry.end_date
+                                    else None
+                                )
+                            except Exception:
+                                end = None
+
+                            # Подсчет вакансий за 5 лет
+                            if start and start >= five_years_ago:
+                                asid_jobs_count_5y += 1
+
+                            if start and end:
+                                tenure_months = (end.year - start.year) * 12 + (
+                                    end.month - start.month
+                                )
+                                if tenure_months < 0:
+                                    tenure_months = 0
+                            elif start and not end:
+                                now = datetime.utcnow()
+                                tenure_months = (now.year - start.year) * 12 + (
+                                    now.month - start.month
+                                )
+                            else:
+                                tenure_months = None
+
+                            # Форматируем tenure
+                            if tenure_months is None:
+                                tenure_key = "unknown"
+                            else:
+                                years = tenure_months // 12
+                                months = tenure_months % 12
+
+                                parts = []
+                                if years > 0:
+                                    parts.append(
+                                        f"{years} year{'s' if years != 1 else ''}"
+                                    )
+                                if months > 0:
+                                    parts.append(
+                                        f"{months} month{'s' if months != 1 else ''}"
+                                    )
+
+                                tenure_key = (
+                                    " ".join(parts)
+                                    if parts
+                                    else "Less than 1 month"
+                                )
+
+                            # Собираем в buckets по полям
+                            def add_val(field_name, val):
+                                if InsightsUtils.is_invalid(val):
+                                    key = "unknown"
+                                else:
+                                    key = str(val).lower()
+                                buckets["employment"][field_name][key] += 1
+
+                            add_val("company_name", job_entry.company_name)
+                            add_val("job_title", job_entry.job_title)
+                            add_val("location", job_entry.location)
+                            buckets["employment"]["job_tenure"][tenure_key] += 1
+
+                        jobs_last_5_years_counter[str(asid_jobs_count_5y)] += 1
 
         # Pydantic
         def _fill(target, cols, cat):
@@ -271,9 +324,13 @@ class InsightsUtils:
             _fill(insights.voter, VOTER_COLS, "voter")
         if "professional" in categories:
             _fill(insights.professional_profile, PROF_COLS, "professional")
-        # if "employment" in categories:
-        #     # employment_json может потребовать спец‑разбора; пока кладём как raw‑частоты
-        #     _fill(insights.employment_history, EMPLOYMENT_COLS, "employment")
+        if "employment" in categories:
+            setattr(
+                insights.employment_history,
+                "number_of_jobs_last_5_years",
+                dict(jobs_last_5_years_counter),
+            )
+            _fill(insights.employment_history, EMPLOYMENT_COLS, "employment")
         return insights
 
     @staticmethod

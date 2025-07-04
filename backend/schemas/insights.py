@@ -333,7 +333,7 @@ class ProfessionalProfiles(BaseModel):
         return self
 
 
-class EmploymentHistory(BaseModel):
+class EmploymentHistoryProfiles(BaseModel):
     job_location: Dict[str, float] = {}
     number_of_jobs: Dict[str, float] = {}
     company_name: Dict[str, float] = {}
@@ -366,7 +366,7 @@ class EmploymentHistory(BaseModel):
         return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
     @model_validator(mode="after")
-    def calculate_percentages(self) -> "EmploymentHistory":
+    def calculate_percentages(self) -> "EmploymentHistoryProfiles":
         values = self.model_dump()
 
         for key, val in values.items():
@@ -381,7 +381,7 @@ class EmploymentHistory(BaseModel):
 class B2BInsight(BaseModel):
     professional_profile: ProfessionalProfiles
     education_history: Dict[str, Any] = {}
-    employment_history: EmploymentHistory
+    employment_history: EmploymentHistoryProfiles
 
 
 class AudienceInsightData(BaseModel):
@@ -463,6 +463,10 @@ class EmploymentHistory(BaseModel):
     is_current: Optional[Dict[str, int]] = Field(default_factory=dict)
     location: Optional[Dict[str, int]] = Field(default_factory=dict)
     job_description: Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_tenure: Optional[Dict[str, int]] = Field(default_factory=dict)
+    number_of_jobs_last_5_years: Optional[Dict[str, float]] = Field(
+        default_factory=dict
+    )
 
 
 class ProfessionalProfile(BaseModel):
