@@ -199,7 +199,7 @@ class WebhookIntegrationService:
     ):
         results = []
         for lead_user, five_x_five_user in user_data:
-            data = self.__mapped_lead(
+            data = await self.__mapped_lead(
                 five_x_five_user=five_x_five_user,
                 data_map=integration_data_sync.data_map,
                 is_email_validation_enabled=is_email_validation_enabled,
@@ -252,7 +252,7 @@ class WebhookIntegrationService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def get_valid_email(
+    async def get_valid_email(
         self, five_x_five_user, email_fields, is_email_validation_enabled: bool
     ) -> str:
         thirty_days_ago = datetime.now() - timedelta(days=30)
@@ -290,7 +290,7 @@ class WebhookIntegrationService:
                     if (
                         email
                         and is_email_validation_enabled
-                        and self.million_verifier_integrations.is_email_verify(
+                        and await self.million_verifier_integrations.is_email_verify(
                             email=email
                         )
                     ):
@@ -392,7 +392,7 @@ class WebhookIntegrationService:
                     properties["personal_phone"] = None
         return properties
 
-    def __mapped_lead(
+    async def __mapped_lead(
         self,
         five_x_five_user: FiveXFiveUser,
         data_map,
@@ -437,7 +437,7 @@ class WebhookIntegrationService:
                     properties[mapping["value"]] = url_visited
 
         if "business_email" in mapped_fields:
-            result = self.get_valid_email(
+            result = await self.get_valid_email(
                 five_x_five_user,
                 ["business_email"],
                 is_email_validation_enabled,
@@ -464,7 +464,7 @@ class WebhookIntegrationService:
 
         if "personal_email" in mapped_fields:
             email_fields = ["personal_emails", "additional_personal_emails"]
-            result = self.get_valid_email(
+            result = await self.get_valid_email(
                 five_x_five_user, email_fields, is_email_validation_enabled
             )
             for mapping in data_map:

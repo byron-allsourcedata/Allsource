@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import List, Any, Tuple, Annotated
 from uuid import UUID
 
+import httpcore
 import httpx
 from fastapi import HTTPException, Depends
 
@@ -60,6 +61,56 @@ class HubspotIntegrationsService:
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
 
+    async def __async_handle_request(
+        self, method: str, url: str, access_token: str, json: dict = None
+    ):
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                response = await client.request(
+                    method=method,
+                    url=url,
+                    headers=headers,
+                    json=json,
+                )
+            return response
+
+        except httpx.ConnectTimeout:
+            logging.error(f"Timeout when connecting to {url}")
+            return {"error": "Timeout"}
+
+        except httpcore.ConnectError as e:
+            logging.error(f"Connection error to {url}: {e}")
+            return {"error": "Connection error"}
+
+        except httpx.ReadError as e:
+            logging.error(f"Read error from {url}: {e}")
+            return {"error": "Read error"}
+
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 429:
+                logging.warning(e.response.headers)
+                retry_after = int(e.response.headers.get("Retry-After", 1))
+                logging.warning(
+                    f"Rate limit exceeded. Retrying after {retry_after} seconds."
+                )
+            else:
+                logging.error(f"HTTP error occurred: {e}")
+            return {"error": "HTTP status error"}
+
+        except httpx.RequestError as e:
+            logging.error(
+                f"Request failed: {type(e).__name__} - {e!s} (URL: {url})"
+            )
+            return {"error": "Request failed"}
+
+        return response
+
     def __handle_request(
         self,
         method: str,
@@ -92,7 +143,7 @@ class HubspotIntegrationsService:
                 )
         return response
 
-    def create_custom_property(
+    async def create_custom_property(
         self,
         access_token: str,
         name: str,
@@ -111,7 +162,8 @@ class HubspotIntegrationsService:
             "type": type_,  # internal type: string, number, datetime
             "fieldType": field_type,  # visual input: text, number, date
         }
-        resp = self.__handle_request(
+
+        resp = await self.__async_handle_request(
             method="POST",
             url=url,
             access_token=access_token,
@@ -125,7 +177,7 @@ class HubspotIntegrationsService:
             )
         return resp
 
-    def ensure_custom_properties_exist(
+    async def ensure_custom_properties_exist(
         self,
         access_token: str,
         data_map: list[dict],
@@ -135,7 +187,9 @@ class HubspotIntegrationsService:
         Создаёт недостающие custom-поля в HubSpot для полей из data_map с is_constant=True.
         """
         url = f"https://api.hubapi.com/crm/v3/properties/{object_type}"
-        resp = self.__handle_request("GET", url, access_token=access_token)
+        resp = await self.__async_handle_request(
+            method="GET", url=url, access_token=access_token
+        )
 
         if resp.status_code != 200:
             logging.warning(
@@ -155,23 +209,12 @@ class HubspotIntegrationsService:
             if name in existing_properties:
                 continue
 
-            create_resp = self.create_custom_property(
+            await self.create_custom_property(
                 access_token=access_token,
                 name=name,
                 label=name.replace("_", " ").title(),
                 object_type=object_type,
             )
-
-            if create_resp.status_code in (200, 201):
-                logging.info(f"Created custom property '{name}' in HubSpot.")
-            elif create_resp.status_code == 409:
-                logging.info(
-                    f"Property '{name}' already exists (race condition)."
-                )
-            else:
-                logging.warning(
-                    f"Failed to create property '{name}': {create_resp.text}"
-                )
 
     def get_credentials(self, domain_id: int, user_id: int):
         credential = self.integrations_persisntece.get_credentials_for_service(
@@ -346,7 +389,7 @@ class HubspotIntegrationsService:
     ):
         profiles = []
         for enrichment_user in enrichment_users:
-            profile = self.__mapped_profile(
+            profile = await self.__mapped_profile(
                 enrichment_user,
                 target_schema,
                 validations,
@@ -358,7 +401,7 @@ class HubspotIntegrationsService:
         if not profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        list_response = self.__create_profiles(
+        list_response = await self.__create_profiles(
             user_integration.access_token, profiles
         )
         return list_response
@@ -370,14 +413,14 @@ class HubspotIntegrationsService:
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
     ):
-        self.ensure_custom_properties_exist(
+        await self.ensure_custom_properties_exist(
             access_token=user_integration.access_token,
             data_map=integration_data_sync.data_map,
         )
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_profile_lead(
+            profile = await self.__mapped_profile_lead(
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
@@ -401,7 +444,7 @@ class HubspotIntegrationsService:
         if not profiles:
             return results
 
-        result_bulk = self.__create_profiles(
+        result_bulk = await self.__create_profiles(
             user_integration.access_token, profiles
         )
         if result_bulk != ProccessDataSyncResult.SUCCESS.value:
@@ -410,7 +453,7 @@ class HubspotIntegrationsService:
                     result["status"] = result_bulk
         return results
 
-    def fetch_all_contacts(self, access_token, emails, after=None):
+    async def fetch_all_contacts(self, access_token, emails, after=None):
         search_payload = {
             "filterGroups": [
                 {
@@ -428,7 +471,7 @@ class HubspotIntegrationsService:
         if after:
             search_payload["after"] = after
 
-        search_resp = self.__handle_request(
+        search_resp = await self.__async_handle_request(
             url="https://api.hubapi.com/crm/v3/objects/contacts/search",
             method="POST",
             access_token=access_token,
@@ -443,13 +486,15 @@ class HubspotIntegrationsService:
         paging = search_resp.json().get("paging", {})
         after = paging.get("next", {}).get("after")
         if after:
-            results.extend(self.fetch_all_contacts(access_token, emails, after))
+            results.extend(
+                await self.fetch_all_contacts(access_token, emails, after)
+            )
 
         return results
 
-    def __create_profiles(self, access_token, profiles_list):
+    async def __create_profiles(self, access_token, profiles_list):
         emails = [p.get("email") for p in profiles_list if p.get("email")]
-        all_contacts = self.fetch_all_contacts(access_token, emails)
+        all_contacts = await self.fetch_all_contacts(access_token, emails)
         existing = {
             item["properties"]["email"]: item["id"] for item in all_contacts
         }
@@ -500,7 +545,7 @@ class HubspotIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __mapped_profile(
+    async def __mapped_profile(
         self,
         enrichment_user: EnrichmentUser,
         target_schema: str,
@@ -551,14 +596,14 @@ class HubspotIntegrationsService:
 
         return result
 
-    def __mapped_profile_lead(
+    async def __mapped_profile_lead(
         self,
         lead: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
     ) -> str | dict[str | Any, str | None | Any]:
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 lead, self.million_verifier_integrations
             )
         else:

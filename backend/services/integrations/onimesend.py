@@ -176,7 +176,7 @@ class OmnisendIntegrationService:
             profile = self.__mapped_profile(
                 five_x_five_user, is_email_validation_enabled
             )
-            identifiers = self.__mapped_identifiers(five_x_five_user)
+            identifiers = await self.__mapped_identifiers(five_x_five_user)
 
             if identifiers in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -262,8 +262,8 @@ class OmnisendIntegrationService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __mapped_identifiers(self, five_x_five_user: FiveXFiveUser):
-        first_email = get_valid_email(
+    async def __mapped_identifiers(self, five_x_five_user: FiveXFiveUser):
+        first_email = await get_valid_email(
             five_x_five_user, self.million_verifier_integrations
         )
 

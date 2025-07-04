@@ -388,7 +388,7 @@ class MailchimpIntegrationsService:
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_member_into_list_lead(
+            profile = await self.__mapped_member_into_list_lead(
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
@@ -627,14 +627,14 @@ class MailchimpIntegrationsService:
 
         return result
 
-    def __mapped_member_into_list_lead(
+    async def __mapped_member_into_list_lead(
         self,
         five_x_five_user: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
     ):
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:

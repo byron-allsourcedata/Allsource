@@ -82,7 +82,7 @@ class ZapierIntegrationService:
         self, domain_id, leads_type, hook_url, list_name, created_by
     ):
         credentials = self.get_credentials(domain_id)
-        leads_type = self.__mapped_leads_type(leads_type)
+        leads_type = await self.__mapped_leads_type(leads_type)
         sync = self.sync_persistence.create_sync(
             {
                 "domain_id": domain_id,
@@ -166,11 +166,11 @@ class ZapierIntegrationService:
             return "allContacts"
         return "allContacts"
 
-    def __mapped_lead(
+    async def __mapped_lead(
         self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ):
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:

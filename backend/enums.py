@@ -56,13 +56,13 @@ class DataSyncType(Enum):
 
 
 class IntegrationLimit(Enum):
-    MAILCHIMP = 10000
-    SALESFORCE = 10000
-    BING_ADS = 100000
-    GOOGLE_ADS = 5000
-    META = 5000
+    MAILCHIMP = 500
+    SALESFORCE = 500
+    BING_ADS = 500
+    GOOGLE_ADS = 500
+    META = 500
     HUBSPOT = 100
-    S3 = 10000
+    S3 = 500
     KLAVIYO = 150
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
