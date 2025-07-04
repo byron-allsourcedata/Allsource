@@ -33,6 +33,7 @@ from utils import (
     get_valid_email,
     get_http_client,
     get_valid_email_without_million,
+    get_valid_phone,
 )
 from utils import validate_and_format_phone, format_phone_number
 
@@ -403,6 +404,7 @@ class KlaviyoIntegrationsService:
         async def process_single_lead(lead_user, five_x_five_user):
             async with sem:
                 profile = await self.__create_profile(
+                    lead_user,
                     five_x_five_user,
                     user_integration.access_token,
                     integration_data_sync.data_map,
@@ -477,6 +479,7 @@ class KlaviyoIntegrationsService:
 
     async def __create_profile(
         self,
+        lead_user,
         five_x_five_user,
         api_key: str,
         data_map,
@@ -518,6 +521,7 @@ class KlaviyoIntegrationsService:
             for k, v in json_data["data"]["attributes"].items()
             if v is not None
         }
+
         response = await self.__async_handle_request(
             method="POST",
             url="https://a.klaviyo.com/api/profiles/",
@@ -544,6 +548,8 @@ class KlaviyoIntegrationsService:
                 "phone_number": phone_number,
                 "email": profile.email,
             }
+
+        return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
     async def __add_profiles_to_list(
         self,
@@ -694,12 +700,7 @@ class KlaviyoIntegrationsService:
         ):
             return first_email
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
 
         location = {
             "address1": getattr(five_x_five_user, "personal_address")

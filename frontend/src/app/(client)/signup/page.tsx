@@ -14,6 +14,9 @@ import {
 	ListItem,
 	ListItemIcon,
 	ListItemText,
+	Checkbox,
+	FormControlLabel,
+	FormHelperText,
 } from "@mui/material";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
@@ -62,6 +65,7 @@ const Signup: React.FC = () => {
 		full_name: "",
 		email: user_mail,
 		password: "",
+		termsAccepted: false,
 		is_with_card: is_with_card || false,
 		...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
 		...{ awc: awin_awc },
@@ -182,6 +186,22 @@ const Signup: React.FC = () => {
 		setErrors(newErrors);
 	};
 
+	const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { checked } = e.target;
+		setFormValues({ ...formValues, termsAccepted: checked });
+		if (formSubmitted) {
+			setErrors((prevErrors) => {
+				const newErrors = { ...prevErrors };
+				if (checked) {
+					delete newErrors.termsAccepted; // Remove the error if checked
+				} else {
+					newErrors.termsAccepted = "Please accept our Terms of Service"; // Add the error if unchecked
+				}
+				return newErrors;
+			});
+		}
+	};
+
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = event.target;
 		setFormValues({
@@ -216,6 +236,10 @@ const Signup: React.FC = () => {
 
 		if (!formValues.full_name) {
 			newErrors.full_name = "Full name is required";
+		}
+
+		if (!formValues.termsAccepted) {
+			newErrors.termsAccepted = "Please accept our Terms of Service";
 		}
 
 		if (!formValues.email) {
@@ -610,6 +634,51 @@ const Signup: React.FC = () => {
 								/>
 							</ListItem>
 						</List>
+						<FormControlLabel
+							sx={signupStyles.checkboxContentField}
+							control={
+								<Checkbox
+									checked={formValues.termsAccepted}
+									onChange={handleCheckboxChange}
+									name="termsAccepted"
+									color="primary"
+									sx={{
+										"&.MuiCheckbox-root:before": {
+											border: errors.termsAccepted
+												? "1px solid #d32f2f"
+												: "1px solid #e4e4e4", // Conditional border color
+										},
+									}}
+								/>
+							}
+							label={
+								<span
+									className="second-sub-title"
+									tabIndex={-1}
+									style={{ fontWeight: 400 }}
+								>
+									I accept the{" "}
+									<Link
+										sx={signupStyles.checkboxContentLink}
+										href="https://allforce.io/privacy-policy"
+										color="primary"
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										Terms of Service{" "}
+										<Image
+											src="/terms-service-icon.svg"
+											alt="logo"
+											height={16}
+											width={16}
+										/>
+									</Link>
+								</span>
+							}
+						/>
+						{errors.termsAccepted && (
+							<FormHelperText error>{errors.termsAccepted}</FormHelperText>
+						)}
 						<Button
 							className="hyperlink-blue"
 							type="submit"

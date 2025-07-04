@@ -137,6 +137,7 @@ class AudienceInsightsService:
                 "type": item.type,
                 "data_source_type": "sources",
                 "size": item.matched_records,
+                "disabled": item.matched_records_status != "complete",
                 "created_date": item.created_date.isoformat(),
             }
             for item in sources
@@ -149,6 +150,9 @@ class AudienceInsightsService:
                 "type": item.type,
                 "data_source_type": "lookalikes",
                 "size": item.size,
+                "disabled": item.train_model_size
+                != item.processed_train_model_size
+                or item.processed_train_model_size == 0,
                 "created_date": item.created_date.isoformat(),
             }
             for item in lookalikes

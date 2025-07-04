@@ -26,6 +26,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { fetchUserData } from "@/services/meService";
 import CustomNotification from "@/components/CustomNotification";
 import { usePathname } from "next/navigation";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
 
 const headerStyles = {
@@ -380,6 +381,9 @@ const Header: React.FC<HeaderProps> = ({
 							onClose={handleProfileMenuClose}
 							MenuListProps={{
 								"aria-labelledby": "profile-menu-button",
+								sx: {
+									minWidth: "160px",
+								},
 							}}
 							sx={{
 								mt: 0.5,
@@ -421,6 +425,66 @@ const Header: React.FC<HeaderProps> = ({
 									{email}
 								</Typography>
 							</Box>
+							<MenuItem
+								component="a"
+								href={`${process.env.NEXT_PUBLIC_BASE_URL}/opt-out`}
+								target="_blank"
+								rel="noopener noreferrer"
+								sx={{
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									fontWeight: 500,
+									lineHeight: "19.6px",
+									color: "rgba(56, 152, 252, 1)",
+									gap: 1,
+									textDecoration: "underline",
+									"&:hover": {
+										textDecoration: "none",
+									},
+								}}
+							>
+								Opt-Out <OpenInNewIcon sx={{ fontSize: 16 }} />
+							</MenuItem>
+							<MenuItem
+								component="a"
+								href="https://allsourcedata.io/terms-of-service"
+								target="_blank"
+								rel="noopener noreferrer"
+								sx={{
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									fontWeight: 500,
+									lineHeight: "19.6px",
+									color: "rgba(56, 152, 252, 1)",
+									gap: 1,
+									textDecoration: "underline",
+									"&:hover": {
+										textDecoration: "none",
+									},
+								}}
+							>
+								Terms of Service <OpenInNewIcon sx={{ fontSize: 16 }} />
+							</MenuItem>
+							<MenuItem
+								component="a"
+								href="https://allsourcedata.io/privacy-policy"
+								target="_blank"
+								rel="noopener noreferrer"
+								sx={{
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									fontWeight: 500,
+									lineHeight: "19.6px",
+									color: "rgba(56, 152, 252, 1)",
+									gap: 1,
+									textDecoration: "underline",
+									"&:hover": {
+										textDecoration: "none",
+									},
+								}}
+							>
+								Privacy Policy <OpenInNewIcon sx={{ fontSize: 16 }} />
+							</MenuItem>
 							<MenuItem
 								sx={{
 									fontFamily: "var(--font-nunito)",

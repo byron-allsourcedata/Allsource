@@ -192,7 +192,6 @@ def get_valid_phone(user: FiveXFiveUser) -> Optional[str]:
         getattr(user, "mobile_phone")
         or getattr(user, "personal_phone")
         or getattr(user, "direct_number")
-        or getattr(user, "company_phone", None)
     )
 
 
