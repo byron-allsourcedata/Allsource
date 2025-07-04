@@ -4,6 +4,7 @@ import sys
 import asyncio
 import functools
 import json
+import time
 from decimal import Decimal
 from aio_pika import IncomingMessage, Channel
 from sqlalchemy import create_engine, func, select
@@ -229,52 +230,55 @@ async def main():
     db_password = os.getenv("DB_PASSWORD")
     db_host = os.getenv("DB_HOST")
     db_name = os.getenv("DB_NAME")
+    while True:
+        try:
+            logging.info("Starting processing...")
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-    try:
-        logging.info("Starting processing...")
-        rmq_connection = RabbitMQConnection()
-        connection = await rmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+            engine = create_engine(
+                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+                pool_pre_ping=True,
+            )
+            Session = sessionmaker(bind=engine)
+            db_session = Session()
 
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
+            user_persistence = UserPersistence(db_session)
 
-        user_persistence = UserPersistence(db_session)
+            queue = await channel.declare_queue(
+                name=AUDIENCE_VALIDATION_AGENT_EMAIL_API,
+                durable=True,
+            )
+            million_verifier_service = MillionVerifierIntegrationsService(
+                million_verifier_persistence=MillionVerifierPersistence(
+                    db_session
+                )
+            )
+            await queue.consume(
+                functools.partial(
+                    process_rmq_message,
+                    channel=channel,
+                    db_session=db_session,
+                    million_verifier_service=million_verifier_service,
+                    user_persistence=user_persistence,
+                ),
+            )
 
-        queue = await channel.declare_queue(
-            name=AUDIENCE_VALIDATION_AGENT_EMAIL_API,
-            durable=True,
-        )
-        million_verifier_service = MillionVerifierIntegrationsService(
-            million_verifier_persistence=MillionVerifierPersistence(db_session)
-        )
-        await queue.consume(
-            functools.partial(
-                process_rmq_message,
-                channel=channel,
-                db_session=db_session,
-                million_verifier_service=million_verifier_service,
-                user_persistence=user_persistence,
-            ),
-        )
+            await asyncio.Future()
 
-        await asyncio.Future()
-
-    except Exception as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rmq_connection.close()
-        logging.info("Shutting down...")
+        except Exception as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

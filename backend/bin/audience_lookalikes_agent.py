@@ -1,16 +1,16 @@
+import asyncio
+import functools
+import gzip
+import json
 import logging
 import os
 import sys
-import asyncio
-import functools
-import json
-import gzip
+import time
 
-from sqlalchemy import update, select, create_engine
 from aio_pika import IncomingMessage
-from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
-
+from sqlalchemy import update, select
+from sqlalchemy.orm import Session
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -158,43 +158,44 @@ async def main():
     setup_logging(log_level)
 
     resolver = Resolver()
+    while True:
+        try:
+            logging.info("Starting processing...")
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-    try:
-        logging.info("Starting processing...")
-        rmq_connection = RabbitMQConnection()
-        connection = await rmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+            db_session = await resolver.resolve(Db)
+            source_agent = await resolver.resolve(SourceAgentService)
 
-        db_session = await resolver.resolve(Db)
-        source_agent = await resolver.resolve(SourceAgentService)
-
-        queue = await channel.declare_queue(
-            name=AUDIENCE_LOOKALIKES_MATCHING,
-            durable=True,
-        )
-        await queue.consume(
-            functools.partial(
-                aud_sources_matching,
-                channel=channel,
-                db_session=db_session,
-                source_agent=source_agent,
+            queue = await channel.declare_queue(
+                name=AUDIENCE_LOOKALIKES_MATCHING,
+                durable=True,
             )
-        )
+            await queue.consume(
+                functools.partial(
+                    aud_sources_matching,
+                    channel=channel,
+                    db_session=db_session,
+                    source_agent=source_agent,
+                )
+            )
 
-        await asyncio.Future()
+            await asyncio.Future()
 
-    except Exception as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rmq_connection.close()
-        logging.info("Shutting down...")
+        except Exception as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

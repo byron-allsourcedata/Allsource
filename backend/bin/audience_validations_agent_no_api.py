@@ -4,6 +4,7 @@ import sys
 import asyncio
 import functools
 import json
+import time
 import boto3
 import random
 from datetime import datetime
@@ -297,48 +298,49 @@ async def main():
     db_password = os.getenv("DB_PASSWORD")
     db_host = os.getenv("DB_HOST")
     db_name = os.getenv("DB_NAME")
+    while True:
+        try:
+            logging.info("Starting processing...")
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-    try:
-        logging.info("Starting processing...")
-        rmq_connection = RabbitMQConnection()
-        connection = await rmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-
-        user_persistence = UserPersistence(db_session)
-
-        queue = await channel.declare_queue(
-            name=AUDIENCE_VALIDATION_AGENT_NOAPI,
-            durable=True,
-        )
-        await queue.consume(
-            functools.partial(
-                aud_validation_agent,
-                channel=channel,
-                db_session=db_session,
-                user_persistence=user_persistence,
+            engine = create_engine(
+                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+                pool_pre_ping=True,
             )
-        )
+            Session = sessionmaker(bind=engine)
+            db_session = Session()
 
-        await asyncio.Future()
+            user_persistence = UserPersistence(db_session)
 
-    except Exception as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rmq_connection.close()
-        logging.info("Shutting down...")
+            queue = await channel.declare_queue(
+                name=AUDIENCE_VALIDATION_AGENT_NOAPI,
+                durable=True,
+            )
+            await queue.consume(
+                functools.partial(
+                    aud_validation_agent,
+                    channel=channel,
+                    db_session=db_session,
+                    user_persistence=user_persistence,
+                )
+            )
+
+            await asyncio.Future()
+
+        except Exception as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

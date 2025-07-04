@@ -1,17 +1,15 @@
 import asyncio
 import functools
-import gzip
 import json
 import logging
 import os
 import sys
 import tempfile
+import time
 
 import aioboto3
 import boto3
 import pandas as pd
-import sentry_sdk
-
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -90,37 +88,45 @@ async def on_message_received(message, s3_session, channel):
 async def main():
     await SentryConfig.async_initilize()
     logging.info("Started")
-    try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue(
-            name=QUEUE_USERS_FILES,
-            durable=True,
-            arguments={
-                "x-consumer-timeout": 3600000,
-            },
-        )
-        await channel.declare_queue(
-            name=QUEUE_USERS_ROWS,
-            durable=True,
-            arguments={
-                "x-consumer-timeout": 3600000,
-            },
-        )
-        session = aioboto3.Session()
-        await queue.consume(
-            functools.partial(
-                on_message_received,
-                s3_session=session,
-                channel=channel,
+    while True:
+        try:
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
+            queue = await channel.declare_queue(
+                name=QUEUE_USERS_FILES,
+                durable=True,
+                arguments={
+                    "x-consumer-timeout": 3600000,
+                },
             )
-        )
-        await asyncio.Future()
-    except Exception as err:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(err)
+            await channel.declare_queue(
+                name=QUEUE_USERS_ROWS,
+                durable=True,
+                arguments={
+                    "x-consumer-timeout": 3600000,
+                },
+            )
+            session = aioboto3.Session()
+            await queue.consume(
+                functools.partial(
+                    on_message_received,
+                    s3_session=session,
+                    channel=channel,
+                )
+            )
+            await asyncio.Future()
+        except Exception as err:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(err)
+
+        finally:
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":
