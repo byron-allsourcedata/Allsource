@@ -405,7 +405,6 @@ class KlaviyoIntegrationsService:
             async with sem:
                 ids_list.append(lead_user.id)
                 profile = await self.__create_profile(
-                    lead_user,
                     five_x_five_user,
                     user_integration.access_token,
                     integration_data_sync.data_map,
@@ -425,20 +424,6 @@ class KlaviyoIntegrationsService:
         ]
         results = await asyncio.gather(*tasks)
 
-        seen_ids = set()
-        duplicates = []
-        for p in profiles:
-            pid = p.get("id")
-            if pid in seen_ids:
-                duplicates.append(pid)
-            else:
-                seen_ids.add(pid)
-
-        if duplicates:
-            print(f"Дубликаты профилей по id: {duplicates}")
-        else:
-            print("Дубликатов по id нет")
-
         successful = [
             result
             for result in results
@@ -453,9 +438,6 @@ class KlaviyoIntegrationsService:
                 }
                 for result in successful
             ]
-
-            print(len(profiles_payload))
-            print(profiles_payload)
 
             list_response = await self.__add_profiles_to_list(
                 list_id=integration_data_sync.list_id,
@@ -495,30 +477,8 @@ class KlaviyoIntegrationsService:
         if response.status_code == 429:
             return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
-    async def log_response_to_file(self, response, lead_user_id=None):
-        def write():
-            status_code = getattr(response, "status_code", None)
-            content = None
-            try:
-                content = response.json()
-            except (ValueError, json.JSONDecodeError):
-                content = response.text if hasattr(response, "text") else None
-            log_data = {
-                "timestamp": datetime.utcnow().isoformat(),
-                "lead_user_id": lead_user_id,
-                "status_code": status_code,
-                "response": content,
-            }
-            with open(
-                "tmp/profile_sync_responses.log", "a", encoding="utf-8"
-            ) as f:
-                f.write(json.dumps(log_data, ensure_ascii=False) + "\n")
-
-        await asyncio.to_thread(write)
-
     async def __create_profile(
         self,
-        lead_user,
         five_x_five_user,
         api_key: str,
         data_map,
@@ -566,9 +526,7 @@ class KlaviyoIntegrationsService:
             url=f'https://a.klaviyo.com/api/profiles/?filter=equals(email,"{email}")',
             api_key=api_key,
         )
-        await self.log_response_to_file(
-            lead_user_id=lead_user.id, response=check_response
-        )
+
         if isinstance(check_response, dict):
             if check_response.get("error"):
                 return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
@@ -592,9 +550,6 @@ class KlaviyoIntegrationsService:
                 json=json_data,
             )
 
-        await self.log_response_to_file(
-            lead_user_id=lead_user.id, response=response
-        )
         if isinstance(response, dict):
             if check_response.get("error"):
                 return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
@@ -629,21 +584,80 @@ class KlaviyoIntegrationsService:
             for i in range(0, len(lst), n):
                 yield lst[i : i + n]
 
-        async def send_batch(batch):
-            ids = [{"type": "profile", "id": p["id"]} for p in batch]
+        async def send_batch(batch, include_sms: bool):
+            data_items = []
+            for p in batch:
+                attrs = {
+                    "email": p["email"],
+                    "subscriptions": {
+                        "email": {
+                            "marketing": {
+                                "consent": "SUBSCRIBED",
+                                "consented_at": "2025-01-01T12:00:00Z",
+                            }
+                        }
+                    },
+                }
+                if include_sms:
+                    attrs["phone_number"] = p["phone_number"]
+                    attrs["subscriptions"]["sms"] = {
+                        "marketing": {
+                            "consent": "SUBSCRIBED",
+                            "consented_at": "2025-01-01T12:00:00Z",
+                        },
+                        "transactional": {
+                            "consent": "SUBSCRIBED",
+                            "consented_at": "2025-01-01T12:00:00Z",
+                        },
+                    }
+                data_items.append(
+                    {"type": "profile", "id": p["id"], "attributes": attrs}
+                )
+
+            payload = {
+                "data": {
+                    "type": "profile-subscription-bulk-create-job",
+                    "attributes": {
+                        "profiles": {"data": data_items},
+                        "historical_import": True,
+                    },
+                    "relationships": {
+                        "list": {"data": {"type": "list", "id": list_id}}
+                    },
+                }
+            }
+
             resp = await self.__async_handle_request(
                 method="POST",
-                url=f"https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/",
+                url="https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs",
                 api_key=api_key,
-                json={"data": ids},
+                json=payload,
             )
-            await self.log_response_to_file(response=resp)
+            if resp.status_code not in (200, 201, 202, 204):
+                ids = [{"type": "profile", "id": p["id"]} for p in batch]
+                resp = await self.__async_handle_request(
+                    method="POST",
+                    url=f"https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/",
+                    api_key=api_key,
+                    json={"data": ids},
+                )
+                return resp
+
             return resp
 
         for batch in chunks(profiles, 100):
-            resp = await send_batch(batch)
-            if resp.status_code == 404:
-                return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+            with_phone = [p for p in batch if p.get("phone_number")]
+            no_phone = [p for p in batch if not p.get("phone_number")]
+
+            if with_phone:
+                resp = await send_batch(with_phone, include_sms=True)
+                if resp.status_code == 404:
+                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+
+            if no_phone:
+                resp = await send_batch(no_phone, include_sms=False)
+                if resp.status_code == 404:
+                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
