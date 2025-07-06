@@ -75,7 +75,9 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 	const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(
 		null,
 	);
-	const [listName, setlistName] = useState<string | null>(data?.name ?? "");
+	const [listName, setlistName] = useState<string | null>(
+		data?.list_name ?? "",
+	);
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
 	const [tagName, setTagName] = useState<string>("");
