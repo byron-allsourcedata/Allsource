@@ -593,7 +593,9 @@ class AudienceSourceService:
             "If there is no close match, return 'None' for that header. "
             "Default headers: " + ", ".join(default_headings) + ".\n"
             "Headers to map: " + ", ".join(headers) + ".\n"
-            "The output must be a comma-separated string of exactly 10 values, corresponding strictly to the predefined default headers: "
+            "The output must be a comma-separated string of exactly "
+            + str(len(default_headings))
+            + " values, corresponding strictly to the predefined default headers: "
             "" + ", ".join(default_headings) + ".\n"
             "Do not include any comments, explanations, or extra information."
         )

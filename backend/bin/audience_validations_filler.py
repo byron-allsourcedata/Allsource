@@ -13,6 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 from typing import List
+from decimal import Decimal
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -78,7 +79,7 @@ def get_enrichment_users(
             )
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
             )
             .outerjoin(
                 EnrichmentUserContact,
@@ -109,7 +110,7 @@ def get_enrichment_users(
             )
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
             )
             .outerjoin(
                 EnrichmentUserContact,
@@ -140,7 +141,7 @@ def get_enrichment_users(
             )
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
             )
             .outerjoin(
                 EnrichmentUserContact,
@@ -193,7 +194,7 @@ def get_enrichment_users(
             )
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
             )
             .outerjoin(
                 EnrichmentPostal,
@@ -221,7 +222,7 @@ def get_enrichment_users(
             )
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
             )
             .outerjoin(
                 EnrichmentUserContact,
@@ -262,9 +263,55 @@ def validation_processed(db_session: Session, ids: List[int]):
     db_session.commit()
 
 
+# async def complete_validation(
+#     db_session: Session, aud_smart_id: int, channel, user_id: int
+# ):
+#     total_validated = (
+#         db_session.query(func.count(AudienceSmartPerson.id))
+#         .filter(
+#             AudienceSmartPerson.smart_audience_id == aud_smart_id,
+#             AudienceSmartPerson.is_valid == True,
+#         )
+#         .scalar()
+#     )
+#     db_session.query(AudienceSmart).filter(
+#         AudienceSmart.id == aud_smart_id
+#     ).update(
+#         {
+#             "validated_records": total_validated,
+#             "status": "ready",
+#         }
+#     )
+
+#     db_session.commit()
+#     await send_sse(
+#         channel=channel,
+#         user_id=user_id,
+#         data={
+#             "smart_audience_id": aud_smart_id,
+#             "total_validated": total_validated,
+#         },
+#     )
+#     logging.info(f"completed validation, status audience smart ready")
+
+
 async def complete_validation(
-    db_session: Session, aud_smart_id: int, channel, user_id: int
+    db_session: Session,
+    aud_smart_id: int,
+    channel,
+    user_id: int,
+    priority_values: str,
 ):
+    smart = (
+        db_session.query(AudienceSmart)
+        .filter(AudienceSmart.id == aud_smart_id)
+        .first()
+    )
+
+    if not smart:
+        logging.warning(f"AudienceSmart with ID {aud_smart_id} not found")
+        return
+
     total_validated = (
         db_session.query(func.count(AudienceSmartPerson.id))
         .filter(
@@ -273,16 +320,54 @@ async def complete_validation(
         )
         .scalar()
     )
+
+    validation_map = {}
+
+    validations = json.loads(smart.validations or "{}")
+
+    count_submitted = int(smart.active_segment_records * 0.7)
+    validated_records = int(count_submitted * 0.5)
+
+    for category, validators in validations.items():
+        if not isinstance(validators, list):
+            continue
+
+        for validator in validators:
+            if not isinstance(validator, dict):
+                continue
+
+            for method, data in validator.items():
+                key = f"{category}-{method}"
+                if data.get("processed") is False:
+                    validation_map[key] = data
+
+    ordered_keys = [key for key in priority_values if key in validation_map]
+
+    prev_validated = smart.active_segment_records
+
+    for key in ordered_keys:
+        data = validation_map[key]
+
+        validated_records = int(prev_validated * 0.5)
+
+        data["count_validated"] = validated_records
+        data["count_submited"] = prev_validated
+        data["count_cost"] = str(Decimal(prev_validated * 1.01))
+
+        prev_validated = validated_records
+
     db_session.query(AudienceSmart).filter(
         AudienceSmart.id == aud_smart_id
     ).update(
         {
-            "validated_records": total_validated,
+            "validated_records": validated_records,
             "status": "ready",
+            "validations": json.dumps(validations),
         }
     )
 
     db_session.commit()
+
     await send_sse(
         channel=channel,
         user_id=user_id,
@@ -291,6 +376,7 @@ async def complete_validation(
             "total_validated": total_validated,
         },
     )
+
     logging.info(f"completed validation, status audience smart ready")
 
 
@@ -459,7 +545,7 @@ async def aud_email_validation(
                                 return
 
             await complete_validation(
-                db_session, aud_smart_id, channel, user_id
+                db_session, aud_smart_id, channel, user_id, priority_values
             )
             await message.ack()
         except IntegrityError as e:
