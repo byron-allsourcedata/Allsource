@@ -9,7 +9,6 @@ from schemas.mapping.audience_insights_mapping import (
     CREDIT_SCORE_RANGE_MAP,
     INCOME_RANGE,
 )
-from datetime import datetime
 
 
 class PersonalProfiles(BaseModel):
@@ -259,6 +258,12 @@ class VoterProfiles(BaseModel):
             if not isinstance(val, dict):
                 continue
 
+            # if (
+            #     key in ("congressional_district", "political_party")
+            #     and "unknown" in val
+            # ):
+            #     val.pop("unknown")
+
             setattr(self, key, self._to_percent(val))
 
         return self
@@ -468,7 +473,7 @@ class EducationProfiles(BaseModel):
 
 class B2BInsight(BaseModel):
     professional_profile: ProfessionalProfiles
-    education_history: EducationProfiles
+    education_history: Dict[str, Any] = {}
     employment_history: EmploymentHistoryProfiles
 
 
@@ -588,7 +593,4 @@ class InsightsByCategory(BaseModel):
     )
     professional_profile: Optional[ProfessionalProfile] = Field(
         default_factory=ProfessionalProfile
-    )
-    education_history: Optional[EducationProfile] = Field(
-        default_factory=EducationProfile
     )

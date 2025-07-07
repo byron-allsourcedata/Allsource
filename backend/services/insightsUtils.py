@@ -1,6 +1,5 @@
 import re
 import uuid
-import json
 from collections import defaultdict, Counter
 from itertools import islice
 from typing import List, Optional, Dict, Any
@@ -117,6 +116,7 @@ EDUCATION_JSON_COLS = [
     "education_description",
 ]
 
+
 EMPLOYMENT_COLS = [
     "job_title",
     "company_name",
@@ -135,7 +135,6 @@ COLUMNS_BY_CATEGORY: Dict[str, List[str]] = {
     "voter": VOTER_COLS,
     "professional": PROF_COLS,
     "employment": EMPLOYMENT_COLS,
-    "education": EDUCATION_COLS,
 }
 
 
@@ -302,7 +301,7 @@ class InsightsUtils:
 
     @staticmethod
     def process_insights_for_asids(
-        insights: InsightsByCategory,
+        insights,
         asids: List[uuid.UUID],
         source_agent: SourceAgentService,
         audience_type: BusinessType,
@@ -313,8 +312,8 @@ class InsightsUtils:
         categories: list[str] = []
         if audience_type in (BusinessType.B2C, BusinessType.ALL):
             categories += ["personal", "financial", "lifestyle", "voter"]
-        if audience_type in (BusinessType.B2B, BusinessType.ALL):
-            categories += ["professional", "education", "employment"]
+        if audience_type in (BusinessType.B2C, BusinessType.ALL):
+            categories += ["professional", "employment"]
 
         buckets: Dict[str, Dict[str, Counter]] = {
             cat: defaultdict(Counter) for cat in COLUMNS_BY_CATEGORY
@@ -457,6 +456,7 @@ class InsightsUtils:
             _fill(insights.professional_profile, PROF_COLS, "professional")
         if "education" in categories:
             _fill(insights.education_history, EDUCATION_JSON_COLS, "education")
+
         if "employment" in categories:
             setattr(
                 insights.employment_history,
