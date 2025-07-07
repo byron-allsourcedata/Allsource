@@ -117,11 +117,8 @@ def update_users_integrations(
         ).update({"sync_status": False})
         session.commit()
 
-    if status in (
-        ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-        ProccessDataSyncResult.FORBIDDEN.value,
-    ):
-        logging.debug(
+    if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
+        logging.info(
             f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}"
         )
         if service_name == SourcePlatformEnum.WEBHOOK.value:
@@ -311,8 +308,6 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.DATA_SYNC_ERROR.value,
                         )
-                        await message.ack()
-                        return
 
                     case ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
                         logging.debug(f"too_many_requests: {service_name}")
@@ -331,9 +326,6 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.QUOTA_EXHAUSTED.value,
                         )
-                        await message.ack()
-                        return
-
                     case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
                         update_users_integrations(
@@ -348,8 +340,6 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.PAYMENT_REQUIRED.value,
                         )
-                        await message.ack()
-                        return
 
                     case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                         logging.debug(f"authentication_failed: {service_name}")
@@ -366,26 +356,6 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value,
                         )
-                        await message.ack()
-                        return
-
-                    case ProccessDataSyncResult.FORBIDDEN.value:
-                        logging.debug(f"Forbidden: {service_name}")
-                        update_users_integrations(
-                            db_session,
-                            ProccessDataSyncResult.FORBIDDEN.value,
-                            data_sync.id,
-                            service_name,
-                            data_sync.integration_id,
-                        )
-                        await send_error_msg(
-                            users_id,
-                            service_name,
-                            notification_persistence,
-                            NotificationTitles.FORBIDDEN.value,
-                        )
-                        await message.ack()
-                        return
 
                 if import_status != DataSyncImportedStatus.SENT.value:
                     update_data_sync_imported_leads(

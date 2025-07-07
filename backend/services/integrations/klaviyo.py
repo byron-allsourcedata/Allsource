@@ -444,9 +444,9 @@ class KlaviyoIntegrationsService:
                 profiles=profiles_payload,
                 api_key=user_integration.access_token,
             )
-            if list_response != ProccessDataSyncResult.SUCCESS.value:
+            if list_response == ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                 for r in successful:
-                    r["status"] = list_response
+                    r["status"] = ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
         return results
 
@@ -618,23 +618,9 @@ class KlaviyoIntegrationsService:
                     api_key=api_key,
                     json={"data": ids},
                 )
-                status = resp.status_code
+                return resp
 
-                if status == 401:
-                    return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-
-                elif status == 403:
-                    return ProccessDataSyncResult.FORBIDDEN.value
-
-                elif status == 404:
-                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
-
-                elif status == 429:
-                    return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
-
-                return ProccessDataSyncResult.SUCCESS.value
-
-            return ProccessDataSyncResult.SUCCESS.value
+            return resp
 
         for batch in chunks(profiles, 100):
             with_phone = [p for p in batch if p.get("phone_number")]
@@ -642,13 +628,13 @@ class KlaviyoIntegrationsService:
 
             if with_phone:
                 resp = await send_batch(with_phone, include_sms=True)
-                if resp != ProccessDataSyncResult.SUCCESS.value:
-                    return resp
+                if resp.status_code == 404:
+                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
             if no_phone:
                 resp = await send_batch(no_phone, include_sms=False)
-                if resp != ProccessDataSyncResult.SUCCESS.value:
-                    return resp
+                if resp.status_code == 404:
+                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
