@@ -20,13 +20,12 @@ import {
 	FieldRankMap,
 	SignificantFields,
 } from "@/types/insights";
-import { useInsightsHints } from "../../context/IntegrationsHintsContext";
-import HintCard from "@/app/(client)/components/HintCard";
-
 
 const getFieldRankMap = (
-	significantFields: Record<string, number>,
+	significantFields: Record<string, number> | undefined | null,
 ): FieldRankMap => {
+	if (!significantFields) return {};
+
 	const entries = Object.entries(significantFields)
 		.filter(([, value]) => value > 0)
 		.sort((a, b) => b[1] - a[1]);
@@ -53,12 +52,6 @@ const Insights = () => {
 		{},
 	);
 	const [fieldRanks, setFieldRanks] = useState<FieldRankMap>({});
-	const {
-		insightsHints,
-		cardsInsights,
-		changeInsightsHint,
-		resetInsightsHints,
-	} = useInsightsHints();
 
 	const [b2cData, setB2CData] = useState<B2CData>({
 		personal_info: {
@@ -136,12 +129,11 @@ const Insights = () => {
 						params: {
 							is_debug: isDebug,
 						},
-					}
+					},
 				);
 
 			const significantFields = response.data.significant_fields;
 			const fieldRankMap = getFieldRankMap(significantFields);
-
 			setB2BData(response.data.b2b);
 			setB2CData(response.data.b2c);
 			setPredictableFields(response.data.significant_fields);
@@ -149,6 +141,7 @@ const Insights = () => {
 			setName(response.data.name);
 			setType(response.data.audience_type);
 		} catch (error) {
+			console.error(error);
 		} finally {
 			setLoading(false);
 		}
@@ -217,6 +210,7 @@ const Insights = () => {
 					</IconButton>
 					<Typography
 						className="first-sub-title"
+						component="span"
 						sx={{
 							...insightsStyle.title,
 							position: "sticky",
