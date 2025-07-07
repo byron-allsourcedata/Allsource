@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Link, Typography } from "@mui/material";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -17,6 +17,35 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 	onDismiss,
 }) => {
 	const [show, setShow] = useState(true);
+
+	const [integrationLinks] = useState<{ [key: string]: string }>({
+		klaviyo:
+			"https://allsourceio.zohodesk.com/portal/en/kb/articles/unable-to-add-contact-to-klaviyo-list-missing-integration-permissions",
+		hubspot:
+			"https://allsourceio.zohodesk.com/portal/en/kb/articles/unable-to-add-contact-to-hubspot-list-missing-integration-permissions",
+	});
+
+	const [learnMoreUrl, setLearnMoreUrl] = useState("");
+
+	useEffect(() => {
+		if (!message) {
+			setLearnMoreUrl("");
+			return;
+		}
+
+		const lowerMessage = message.toLowerCase();
+
+		const matchedKey = Object.keys(integrationLinks).find((key) =>
+			lowerMessage.includes(key.toLowerCase()),
+		);
+
+		if (matchedKey) {
+			setLearnMoreUrl(integrationLinks[matchedKey]);
+		} else {
+			setLearnMoreUrl("");
+		}
+	}, [message]);
+
 	const handleDismiss = () => {
 		try {
 			const response = axiosInstance.post("/notification/dismiss", {
@@ -33,6 +62,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 		{ word: "Enable", link: "/settings?section=billing" },
 		{ word: "Upgrade", link: "/settings?section=subscription" },
 		{ word: "Choose a plan", link: "/settings?section=subscription" },
+		{ word: "Learn more", link: learnMoreUrl },
 	];
 
 	const transformTextToLinks = (text: string | null): JSX.Element => {
@@ -49,6 +79,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 					<Link
 						key={index}
 						className="second-sub-title"
+						target="_blank"
 						href={keyword.link}
 						sx={{
 							textDecoration: "none",

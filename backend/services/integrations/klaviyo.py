@@ -203,7 +203,7 @@ class KlaviyoIntegrationsService:
             },
         )
         if response.status_code == 401 and credential:
-            credential.error_message = "Invalid API KEY"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             return
@@ -218,7 +218,7 @@ class KlaviyoIntegrationsService:
             api_key=access_token,
         )
         if response.status_code == 401 and credential:
-            credential.error_message = "Invalid API KEY"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             return
@@ -239,7 +239,7 @@ class KlaviyoIntegrationsService:
         if response.status_code == 201 or response.status_code == 200:
             return self.__mapped_tags(response.json().get("data"))
         elif response.status_code == 401:
-            credential.error_message = "Invalid API Key"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             raise HTTPException(
@@ -283,7 +283,7 @@ class KlaviyoIntegrationsService:
             ),
         )
         if response.status_code == 401:
-            credential.error_message = "Invalid API Key"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             raise HTTPException(
@@ -620,6 +620,9 @@ class KlaviyoIntegrationsService:
                 )
                 status = resp.status_code
 
+                if status in (200, 201, 202, 204):
+                    return ProccessDataSyncResult.SUCCESS.value
+
                 if status == 401:
                     return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
@@ -632,7 +635,9 @@ class KlaviyoIntegrationsService:
                 elif status == 429:
                     return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
-                return ProccessDataSyncResult.SUCCESS.value
+                else:
+                    logging.error(resp.text)
+                    return ProccessDataSyncResult.UNEXPECTED_ERROR.value
 
             return ProccessDataSyncResult.SUCCESS.value
 

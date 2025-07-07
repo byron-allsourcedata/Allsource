@@ -233,7 +233,7 @@ const HubspotIntegrationPopup = ({
 				},
 				params: { service_name: "hubspot" },
 			});
-			if (response?.status === 200) {
+			if (response?.status === 200 && response?.data?.status === "SUCCESS") {
 				if (onSave) {
 					onSave({
 						service_name: "hubspot",
@@ -245,10 +245,10 @@ const HubspotIntegrationPopup = ({
 				setNeedsSync(false);
 				handleClose();
 			} else {
-				showErrorToast("Invalid API Key");
+				showErrorToast("Invalid API key or permissions");
 			}
 		} catch (err) {
-			showErrorToast("Invalid API Key");
+			showErrorToast("Invalid API key or permissions");
 		} finally {
 			setDisableButton(false);
 		}
@@ -557,7 +557,9 @@ const HubspotIntegrationPopup = ({
 										fullWidth
 										margin="normal"
 										error={invalid_api_key}
-										helperText={invalid_api_key ? "Invalid API Key" : ""}
+										helperText={
+											invalid_api_key ? "Invalid API key or permissions" : ""
+										}
 										value={apiKey}
 										onChange={handleApiKeyChange}
 										InputLabelProps={{ sx: hubspotStyles.inputLabel }}

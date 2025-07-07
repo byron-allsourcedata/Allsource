@@ -293,15 +293,9 @@ class HubspotIntegrationsService:
         domain_id = domain.id if domain else None
         try:
             if self.test_API_key(credentials.hubspot.access_token) == False:
-                raise HTTPException(
-                    status_code=400,
-                    detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
-                )
+                return {"status": IntegrationsStatus.CREDENTAILS_INVALID.value}
         except:
-            raise HTTPException(
-                status_code=400,
-                detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
-            )
+            return {"status": IntegrationsStatus.CREDENTAILS_INVALID.value}
         integartions = self.__save_integrations(
             credentials.hubspot.access_token,
             domain_id,
@@ -521,15 +515,36 @@ class HubspotIntegrationsService:
                 access_token=access_token,
                 json={"inputs": to_create},
             )
-            if create_resp.status_code == 402:
+
+            if create_resp.status_code in (200, 201):
+                logging.debug("Batch create success: %s", create_resp.text)
+
+            elif create_resp.status_code == 207:
+                logging.error("Partial create; details: %s", create_resp.json())
+
+            elif create_resp.status_code in (400, 422):
+                logging.error("Incorrect format: %s", create_resp.text)
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+            elif create_resp.status_code == 401:
+                logging.debug("Authentication failed: %s", create_resp.text)
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+            elif create_resp.status_code == 403:
+                logging.debug("Forbidden: insufficient permissions to update")
+                return ProccessDataSyncResult.FORBIDDEN.value
+
+            elif create_resp.status_code == 402:
                 category = create_resp.json().get("category")
                 logging.warning(category)
                 if category == "PAYMENT_REQUIRED":
                     return ProccessDataSyncResult.PAYMENT_REQUIRED.value
 
-            if create_resp.status_code not in (200, 201):
-                logging.error("Batch create failed: %s", create_resp.text)
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            else:
+                logging.warning(
+                    "Partial create; details: %s", create_resp.json()
+                )
+                return ProccessDataSyncResult.UNEXPECTED_ERROR.value
 
         if to_update:
             update_resp = self.__handle_request(
@@ -539,9 +554,36 @@ class HubspotIntegrationsService:
                 json={"inputs": to_update},
             )
 
-            if update_resp.status_code not in (200, 201):
-                logging.error("Batch update failed: %s", update_resp.text)
+            if create_resp.status_code in (200, 201):
+                logging.debug("Batch create success: %s", create_resp.text)
+
+            elif update_resp.status_code == 207:
+                logging.error("Partial create; details: %s", update_resp.json())
+                return ProccessDataSyncResult.SUCCESS.value
+
+            elif update_resp.status_code in (400, 422):
+                logging.error("Incorrect format: %s", update_resp.text)
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+            elif update_resp.status_code == 401:
+                logging.debug("Authentication failed: %s", update_resp.text)
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+            elif update_resp.status_code == 403:
+                logging.debug("Forbidden: insufficient permissions to update")
+                return ProccessDataSyncResult.FORBIDDEN.value
+
+            elif update_resp.status_code == 402:
+                category = update_resp.json().get("category")
+                logging.warning(category)
+                if category == "PAYMENT_REQUIRED":
+                    return ProccessDataSyncResult.PAYMENT_REQUIRED.value
+
+            else:
+                logging.warning(
+                    "Partial create; details: %s", update_resp.json()
+                )
+                return ProccessDataSyncResult.UNEXPECTED_ERROR.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
