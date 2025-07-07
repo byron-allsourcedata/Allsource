@@ -117,18 +117,21 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 	);
 
 	const semiCircleData = {
-		bankCardPercent: extractSemiCirclePercent(data.bank_card, "2"),
-		mailOrderDonorPercent: extractSemiCirclePercent(data.mail_order_donor, "2"),
+		bankCardPercent: extractSemiCirclePercent(data.bank_card, "true"),
+		mailOrderDonorPercent: extractSemiCirclePercent(
+			data.mail_order_donor,
+			"true",
+		),
 		creditCardPremiumPercent: extractSemiCirclePercent(
 			data.credit_card_premium,
-			"2",
+			"true",
 		),
 		creditCardNewIssuePercent: extractSemiCirclePercent(
 			data.credit_card_new_issue,
-			"2",
+			"true",
 		),
-		donorPercent: extractSemiCirclePercent(data.donor, "2"),
-		investorPercent: extractSemiCirclePercent(data.investor, "2"),
+		donorPercent: extractSemiCirclePercent(data.donor, "true"),
+		investorPercent: extractSemiCirclePercent(data.investor, "true"),
 	};
 
 	return (
@@ -256,7 +259,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 					<Box
 						sx={{
 							display: "flex",
-							width: "22%",
+							width: "44%",
 							flexDirection: "column",
 							gap: 2,
 						}}
@@ -284,14 +287,14 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							rank={fieldRanks["investor"]}
 						/>
 					</Box>
-					<Box sx={{ display: "flex", width: "40%" }}>
+					{/* <Box sx={{ display: "flex", width: "40%" }}>
 						<GradientBarChart
 							title="Credit Range Of New Credit"
 							data={mapGenericPercentage(data.credit_range_of_new_credit)}
 							rank={fieldRanks["credit_range_of_new_credit"]}
 						/>
-					</Box>
-					<Box sx={{ display: "flex", width: "34%" }}>
+					</Box> */}
+					<Box sx={{ display: "flex", width: "53.5%" }}>
 						<VerticalGradientBarChart
 							title="Number of credit lines"
 							data={numberOfCreditLinesData}

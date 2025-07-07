@@ -193,13 +193,13 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 				</Box>
 
 				<Box sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}>
-					{/* <Box sx={{ display: "flex", width: "99%" }}>
+					<Box sx={{ display: "flex", width: "99%" }}>
 						<MapChart
 							title="Location"
 							regions={mapState(data.state)}
 							rank={fieldRanks["state"]}
 						/>
-					</Box> */}
+					</Box>
 
 					{/* <Box sx={{ display: "flex", width: "15.25%" }}>
 						<GradientBarChart
