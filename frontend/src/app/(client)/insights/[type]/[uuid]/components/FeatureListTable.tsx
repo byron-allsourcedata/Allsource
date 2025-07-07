@@ -16,7 +16,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 export type FeatureObject = Record<string, number>;
 
 interface Props<T extends FeatureObject> {
-	features: T;
+	features?: T;
 	title?: string;
 	columnHeaders?: [string, string];
 	first?: boolean;
@@ -39,13 +39,12 @@ function FeatureListTable<T extends FeatureObject>({
 	const theme = useTheme();
 	const [showAll, setShowAll] = useState(false);
 
-	const allPairs = useMemo(
-		() =>
-			Object.entries(features)
-				.map(([k, v]) => [k as keyof T, v] as [keyof T, number])
-				.sort((a, b) => b[1] - a[1]),
-		[features],
-	);
+	const allPairs = useMemo(() => {
+		const safeFeatures = features ?? {};
+		return Object.entries(safeFeatures)
+			.map(([k, v]) => [k as keyof T, v] as [keyof T, number])
+			.sort((a, b) => b[1] - a[1]);
+	}, [features]);
 
 	const visiblePairs = showAll ? allPairs : allPairs.slice(0, 5);
 

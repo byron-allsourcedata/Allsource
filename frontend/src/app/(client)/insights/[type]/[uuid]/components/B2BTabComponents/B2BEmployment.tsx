@@ -1,6 +1,5 @@
 import { Box } from "@mui/material";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
-import { USHeatMapCard } from "../USMap";
 
 import { mapState, mapGenericPercentage } from "./mappingUtils";
 import { EmploymentInfo, FieldRankMap } from "@/types/insights";
