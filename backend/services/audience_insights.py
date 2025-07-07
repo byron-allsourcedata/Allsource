@@ -113,7 +113,7 @@ class AudienceInsightsService:
         parsed = AudienceInsightData(
             b2b={
                 "professional_profile": professional_profile,
-                "education": education_history,
+                "education_history": education_history,
                 "employment_history": employment_history,
             },
             b2c={
