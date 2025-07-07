@@ -99,7 +99,7 @@ EMPLOYMENT_COLS = [
     "start_date",
     "end_date",
     "is_current",
-    "location AS job_location",
+    "location            AS job_location",
     "job_description",
     "job_tenure",
 ]
@@ -114,6 +114,143 @@ COLUMNS_BY_CATEGORY: Dict[str, List[str]] = {
 }
 
 MAX_IDS_PER_BATCH = 5_000
+
+
+US_STATE_ABBR = {
+    "alabama": "AL",
+    "alaska": "AK",
+    "arizona": "AZ",
+    "arkansas": "AR",
+    "california": "CA",
+    "colorado": "CO",
+    "connecticut": "CT",
+    "delaware": "DE",
+    "florida": "FL",
+    "georgia": "GA",
+    "hawaii": "HI",
+    "idaho": "ID",
+    "illinois": "IL",
+    "indiana": "IN",
+    "iowa": "IA",
+    "kansas": "KS",
+    "kentucky": "KY",
+    "louisiana": "LA",
+    "maine": "ME",
+    "maryland": "MD",
+    "massachusetts": "MA",
+    "michigan": "MI",
+    "minnesota": "MN",
+    "mississippi": "MS",
+    "missouri": "MO",
+    "montana": "MT",
+    "nebraska": "NE",
+    "nevada": "NV",
+    "new hampshire": "NH",
+    "new jersey": "NJ",
+    "new mexico": "NM",
+    "new york": "NY",
+    "north carolina": "NC",
+    "north dakota": "ND",
+    "ohio": "OH",
+    "oklahoma": "OK",
+    "oregon": "OR",
+    "pennsylvania": "PA",
+    "rhode island": "RI",
+    "south carolina": "SC",
+    "south dakota": "SD",
+    "tennessee": "TN",
+    "texas": "TX",
+    "utah": "UT",
+    "vermont": "VT",
+    "virginia": "VA",
+    "washington": "WA",
+    "west virginia": "WV",
+    "wisconsin": "WI",
+    "wyoming": "WY",
+    # For territories and aliases
+    "dc": "DC",
+    "district of columbia": "DC",
+    "puerto rico": "PR",
+}
+
+# Some major cities -> state abbreviation
+CITY_TO_STATE = {
+    "dallas": "TX",
+    "fort worth": "TX",
+    "houston": "TX",
+    "austin": "TX",
+    "sacramento": "CA",
+    "san francisco": "CA",
+    "los angeles": "CA",
+    "boston": "MA",
+    "chicago": "IL",
+    "philadelphia": "PA",
+    "new york": "NY",
+    "brooklyn": "NY",
+    "atlanta": "GA",
+    "miami": "FL",
+    "orlando": "FL",
+    "tampa": "FL",
+    "minneapolis": "MN",
+    "st. paul": "MN",
+    "phoenix": "AZ",
+    "denver": "CO",
+    "salt lake city": "UT",
+    "seattle": "WA",
+    "las vegas": "NV",
+    "new orleans": "LA",
+    "nashville": "TN",
+    "baltimore": "MD",
+    "detroit": "MI",
+    "pittsburgh": "PA",
+    "st. louis": "MO",
+    "arlington": "VA",
+    "fairfax": "VA",
+    "fredericksburg": "VA",
+    "hartford": "CT",
+    "mclean": "VA",
+    "waco": "TX",
+    "jackson": "MS",
+    "tacoma": "WA",
+    "eagan": "MN",
+    "sioux falls": "SD",
+    "smyra": "TN",
+    "franklin": "TN",
+    "flowood": "MS",
+    "boulder": "CO",
+    "lenexa": "KS",
+    "cedar rapids": "IA",
+    "anderson": "IN",
+    "oklahoma city": "OK",
+    "madison": "WI",
+    "ames": "IA",
+    "plummer": "ID",
+    "richardson": "TX",
+    "hendersonville": "TN",
+    "newton": "MA",
+    "wilmington": "NC",
+    "spokane": "WA",
+    "brentwood": "TN",
+    "charlotte": "NC",
+    "greensboro": "NC",
+    "concord": "NH",
+    "rochester": "MN",
+    "peoria": "AZ",
+    "vienna": "VA",
+    "mesa": "AZ",
+    "greenville": "TX",
+    "hallandale": "FL",
+    "maple grove": "MN",
+    "carmichael": "CA",
+    "eden prairie": "MN",
+    "bloomington": "MN",
+    "utica": "NY",
+    "elizabeth city": "NC",
+    "natchitoches": "LA",
+    "warminster": "PA",
+    "kalamazoo": "MI",
+    "springfield": "MO",
+}
 
 
 class InsightsUtils:
@@ -139,6 +276,32 @@ class InsightsUtils:
         if 46 <= low <= 65:
             return "46-65"
         return "Other"
+
+    @staticmethod
+    def extract_state_from_location(location: str) -> Optional[str]:
+        if not location:
+            return None
+
+        normalized = location.lower().strip()
+
+        # Try to match known abbreviations like ", ca", ", tx"
+        match = re.search(r"\b([a-z]{2})\b", normalized[-5:])
+        if match:
+            abbrev = match.group(1).upper()
+            if abbrev in US_STATE_ABBR.values():
+                return abbrev
+
+        # Try to find full state name in string
+        for state_name, abbr in US_STATE_ABBR.items():
+            if state_name in normalized:
+                return abbr
+
+        # Try matching cities
+        for city, abbr in CITY_TO_STATE.items():
+            if city in normalized:
+                return abbr
+
+        return None
 
     @staticmethod
     def _chunk(iterable, size: int):
@@ -173,7 +336,6 @@ class InsightsUtils:
             cat: defaultdict(Counter) for cat in COLUMNS_BY_CATEGORY
         }
 
-        # Дополнительно для подсчета кол-ва вакансий за 5 лет по asid
         jobs_last_5_years_counter: Counter = Counter()
         five_years_ago = datetime.utcnow() - timedelta(days=365 * 5)
 
@@ -252,7 +414,6 @@ class InsightsUtils:
                             except Exception:
                                 end = None
 
-                            # Подсчет вакансий за 5 лет
                             if start and start >= five_years_ago:
                                 asid_jobs_count_5y += 1
 
@@ -270,7 +431,6 @@ class InsightsUtils:
                             else:
                                 tenure_months = None
 
-                            # Форматируем tenure
                             if tenure_months is None:
                                 tenure_key = "unknown"
                             else:
@@ -293,7 +453,6 @@ class InsightsUtils:
                                     else "Less than 1 month"
                                 )
 
-                            # Собираем в buckets по полям
                             def add_val(field_name, val):
                                 if InsightsUtils.is_invalid(val):
                                     key = "unknown"
@@ -303,7 +462,19 @@ class InsightsUtils:
 
                             add_val("company_name", job_entry.company_name)
                             add_val("job_title", job_entry.job_title)
-                            add_val("location", job_entry.location)
+                            state_code = (
+                                InsightsUtils.extract_state_from_location(
+                                    job_entry.location or ""
+                                )
+                            )
+                            if state_code:
+                                buckets["employment"]["job_location"][
+                                    state_code
+                                ] += 1
+                            else:
+                                buckets["employment"]["job_location"][
+                                    "unknown"
+                                ] += 1
                             buckets["employment"]["job_tenure"][tenure_key] += 1
 
                         jobs_last_5_years_counter[str(asid_jobs_count_5y)] += 1

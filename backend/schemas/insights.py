@@ -461,7 +461,7 @@ class EmploymentHistory(BaseModel):
     start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
     end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
     is_current: Optional[Dict[str, int]] = Field(default_factory=dict)
-    location: Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_location: Optional[Dict[str, int]] = Field(default_factory=dict)
     job_description: Optional[Dict[str, int]] = Field(default_factory=dict)
     job_tenure: Optional[Dict[str, int]] = Field(default_factory=dict)
     number_of_jobs_last_5_years: Optional[Dict[str, float]] = Field(
