@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Button, Link, Typography } from "@mui/material";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { useIntegrationLink } from "@/hooks/useIntegrationLink";
 
 interface CustomNotificationProps {
 	id: number;
@@ -18,33 +19,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 }) => {
 	const [show, setShow] = useState(true);
 
-	const [integrationLinks] = useState<{ [key: string]: string }>({
-		klaviyo:
-			"https://allsourceio.zohodesk.com/portal/en/kb/articles/unable-to-add-contact-to-klaviyo-list-missing-integration-permissions",
-		hubspot:
-			"https://allsourceio.zohodesk.com/portal/en/kb/articles/unable-to-add-contact-to-hubspot-list-missing-integration-permissions",
-	});
-
-	const [learnMoreUrl, setLearnMoreUrl] = useState("");
-
-	useEffect(() => {
-		if (!message) {
-			setLearnMoreUrl("");
-			return;
-		}
-
-		const lowerMessage = message.toLowerCase();
-
-		const matchedKey = Object.keys(integrationLinks).find((key) =>
-			lowerMessage.includes(key.toLowerCase()),
-		);
-
-		if (matchedKey) {
-			setLearnMoreUrl(integrationLinks[matchedKey]);
-		} else {
-			setLearnMoreUrl("");
-		}
-	}, [message]);
+	const learnMoreUrl = useIntegrationLink(message);
 
 	const handleDismiss = () => {
 		try {

@@ -486,6 +486,41 @@ class HubspotIntegrationsService:
 
         return results
 
+    def handle_hubspot_response(self, response, action="create"):
+        if response.status_code in (200, 201):
+            logging.debug(f"Batch {action} success: %s", response.text)
+            return ProccessDataSyncResult.SUCCESS.value
+
+        elif response.status_code == 207:
+            logging.error(f"Partial {action}; details: %s", response.json())
+            return ProccessDataSyncResult.SUCCESS.value
+
+        elif response.status_code in (400, 422):
+            logging.error("Incorrect format: %s", response.text)
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        elif response.status_code == 401:
+            logging.debug("Authentication failed: %s", response.text)
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+        elif response.status_code == 403:
+            logging.debug("Forbidden: insufficient permissions to %s", action)
+            return ProccessDataSyncResult.FORBIDDEN.value
+
+        elif response.status_code == 402:
+            category = response.json().get("category")
+            logging.warning("402: %s", category)
+            if category == "PAYMENT_REQUIRED":
+                return ProccessDataSyncResult.PAYMENT_REQUIRED.value
+
+        else:
+            logging.warning(
+                "Unexpected error during %s; details: %s",
+                action,
+                response.json(),
+            )
+            return ProccessDataSyncResult.UNEXPECTED_ERROR.value
+
     async def __create_profiles(self, access_token, profiles_list):
         emails = [p.get("email") for p in profiles_list if p.get("email")]
         all_contacts = await self.fetch_all_contacts(access_token, emails)
@@ -516,35 +551,9 @@ class HubspotIntegrationsService:
                 json={"inputs": to_create},
             )
 
-            if create_resp.status_code in (200, 201):
-                logging.debug("Batch create success: %s", create_resp.text)
-
-            elif create_resp.status_code == 207:
-                logging.error("Partial create; details: %s", create_resp.json())
-
-            elif create_resp.status_code in (400, 422):
-                logging.error("Incorrect format: %s", create_resp.text)
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-            elif create_resp.status_code == 401:
-                logging.debug("Authentication failed: %s", create_resp.text)
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-
-            elif create_resp.status_code == 403:
-                logging.debug("Forbidden: insufficient permissions to update")
-                return ProccessDataSyncResult.FORBIDDEN.value
-
-            elif create_resp.status_code == 402:
-                category = create_resp.json().get("category")
-                logging.warning(category)
-                if category == "PAYMENT_REQUIRED":
-                    return ProccessDataSyncResult.PAYMENT_REQUIRED.value
-
-            else:
-                logging.warning(
-                    "Partial create; details: %s", create_resp.json()
-                )
-                return ProccessDataSyncResult.UNEXPECTED_ERROR.value
+            result = self.handle_hubspot_response(create_resp, action="create")
+            if result != ProccessDataSyncResult.SUCCESS.value:
+                return result
 
         if to_update:
             update_resp = self.__handle_request(
@@ -554,36 +563,9 @@ class HubspotIntegrationsService:
                 json={"inputs": to_update},
             )
 
-            if create_resp.status_code in (200, 201):
-                logging.debug("Batch create success: %s", create_resp.text)
-
-            elif update_resp.status_code == 207:
-                logging.error("Partial create; details: %s", update_resp.json())
-                return ProccessDataSyncResult.SUCCESS.value
-
-            elif update_resp.status_code in (400, 422):
-                logging.error("Incorrect format: %s", update_resp.text)
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-            elif update_resp.status_code == 401:
-                logging.debug("Authentication failed: %s", update_resp.text)
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-
-            elif update_resp.status_code == 403:
-                logging.debug("Forbidden: insufficient permissions to update")
-                return ProccessDataSyncResult.FORBIDDEN.value
-
-            elif update_resp.status_code == 402:
-                category = update_resp.json().get("category")
-                logging.warning(category)
-                if category == "PAYMENT_REQUIRED":
-                    return ProccessDataSyncResult.PAYMENT_REQUIRED.value
-
-            else:
-                logging.warning(
-                    "Partial create; details: %s", update_resp.json()
-                )
-                return ProccessDataSyncResult.UNEXPECTED_ERROR.value
+            result = self.handle_hubspot_response(update_resp, action="update")
+            if result != ProccessDataSyncResult.SUCCESS.value:
+                return result
 
         return ProccessDataSyncResult.SUCCESS.value
 

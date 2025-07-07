@@ -39,7 +39,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
 	const [loading, setLoading] = useState(false);
 	const [notifications, setNotifications] = useState<Notification[]>([]);
 
-	const [integrationLinks] = useState<{ [key: string]: string }>({
+	const [INTEGRATION_LINKS] = useState<{ [key: string]: string }>({
 		klaviyo:
 			"https://allsourceio.zohodesk.com/portal/en/kb/articles/unable-to-add-contact-to-klaviyo-list-missing-integration-permissions",
 		hubspot:
@@ -70,11 +70,11 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
 	const transformTextToLinks = (text: string | null): JSX.Element => {
 		if (!text) return <span></span>;
 
-		const matchedKey = Object.keys(integrationLinks).find((key) =>
+		const matchedKey = Object.keys(INTEGRATION_LINKS).find((key) =>
 			text.includes(key.toLowerCase()),
 		);
 
-		const learnMore = matchedKey ? integrationLinks[matchedKey] : "";
+		const learnMore = matchedKey ? INTEGRATION_LINKS[matchedKey] : "";
 
 		const keywords = [
 			{ word: "Enable Overage", link: "/settings?section=billing" },
