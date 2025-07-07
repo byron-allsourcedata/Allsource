@@ -9,6 +9,7 @@ from schemas.mapping.audience_insights_mapping import (
     CREDIT_SCORE_RANGE_MAP,
     INCOME_RANGE,
 )
+from datetime import datetime
 
 
 class PersonalProfiles(BaseModel):
@@ -144,7 +145,6 @@ class FinancialProfiles(BaseModel):
         return {
             data.get(k, k): v
             for k, v in map_dict.items()
-            # if k.lower() != "unknown"
         }
 
     @model_validator(mode="after")
@@ -262,12 +262,6 @@ class VoterProfiles(BaseModel):
             if not isinstance(val, dict):
                 continue
 
-            # if (
-            #     key in ("congressional_district", "political_party")
-            #     and "unknown" in val
-            # ):
-            #     val.pop("unknown")
-
             setattr(self, key, self._to_percent(val))
 
         return self
@@ -378,9 +372,105 @@ class EmploymentHistoryProfiles(BaseModel):
         return self
 
 
+class EducationProfiles(BaseModel):
+    degree: Optional[Dict[str, int]] = Field(default_factory=dict)
+    institution_name: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_description: Optional[Dict[str, int]] = Field(default_factory=dict)
+    post_graduation_time: Optional[Dict[str, int]] = Field(default_factory=dict)
+
+
+    @staticmethod
+    def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
+        # TODO
+        filtered_data = data.copy()
+        total = sum(filtered_data.values())
+
+        if total == 0:
+            return {k: 0.0 for k in filtered_data}
+
+        return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
+
+    def _calculate_post_graduation_time(self) -> Dict[int | None, int]:
+        def is_valid_date(date_str: str, date_format: str = "%Y-%m-%d") -> bool:
+            try:
+                datetime.strptime(date_str, date_format)
+                return True
+            except ValueError:
+                return False
+
+        date_format = "%Y-%m-%d"
+        today = datetime.today()
+
+        post_graduation_time: Dict[int | None, int] = {}
+        post_graduation_time[None] = 0
+
+        for raw_date in self.education_end_date:
+            if is_valid_date(raw_date, date_format):
+                graduated_date = datetime.strptime(raw_date, date_format)
+
+                if graduated_date <= today:
+                    years = int((today - graduated_date).days / 365.25)
+
+                    if years not in post_graduation_time:
+                        post_graduation_time[years] = 1
+                    else:
+                        post_graduation_time[years] += 1
+            else:
+                post_graduation_time[None] += 1 # if date in invalid format
+
+        return post_graduation_time
+
+    def _dates_to_bins(self) -> Dict[str, int]:
+        bins = {
+            "Under year": 0,
+            "1 - 3 years": 0,
+            "3 - 5 years": 0,
+            "5 - 10 years": 0,
+            "More than 10 years": 0,
+            "unknown": 0
+        }
+
+        post_graduation_time = self._calculate_post_graduation_time()
+
+        for years in post_graduation_time:
+            if years is None:
+                bins["unknown"] += 1
+            elif years < 1:
+                bins["Under year"] += 1
+            elif 1 <= years < 3:
+                bins["1 - 3 years"] += 1
+            elif 3 <= years < 5:
+                bins["3 - 5 years"] += 1
+            elif 5 <= years < 10:
+                bins["5 - 10 years"] += 1
+            elif 10 <= years:
+                bins["More than 10 years"] += 1
+            else:
+                bins["unknown"] += 1
+
+        return bins
+
+    @model_validator(mode="after")
+    def calculate_percentages(self) -> "EducationProfiles":
+        values = self.model_dump()
+
+        for key, val in values.items():
+            if not isinstance(val, dict):
+                continue
+
+            setattr(self, key, self._to_percent(val))
+
+        setattr(self, "post_graduation_time", self._dates_to_bins())
+
+        return self
+
+
 class B2BInsight(BaseModel):
     professional_profile: ProfessionalProfiles
-    education_history: Dict[str, Any] = {}
+    education_history: EducationProfiles
+
     employment_history: EmploymentHistoryProfiles
 
 
@@ -467,6 +557,14 @@ class EmploymentHistory(BaseModel):
     number_of_jobs: Optional[Dict[str, float]] = Field(default_factory=dict)
 
 
+class EducationProfile(BaseModel):
+    degree: Optional[Dict[str, int]] = Field(default_factory=dict)
+    institution_name: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_description: Optional[Dict[str, int]] = Field(default_factory=dict)
+
+
 class ProfessionalProfile(BaseModel):
     current_job_title: Optional[Dict[str, int]] = Field(default_factory=dict)
     current_company_name: Optional[Dict[str, int]] = Field(default_factory=dict)
@@ -490,4 +588,7 @@ class InsightsByCategory(BaseModel):
     )
     professional_profile: Optional[ProfessionalProfile] = Field(
         default_factory=ProfessionalProfile
+    )
+    education_history: Optional[EducationProfile] = Field(
+        default_factory=EducationProfile
     )

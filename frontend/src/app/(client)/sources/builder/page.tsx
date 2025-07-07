@@ -114,7 +114,6 @@ const SourcesImport: React.FC = () => {
 	const [sourceMethod, setSourceMethod] = useState<number>(0);
 	const [selectedDomainId, setSelectedDomainId] = useState<number>(0);
 	const [dragActive, setDragActive] = useState(false);
-	const [emailNotSubstitution, setEmailNotSubstitution] = useState(false);
 	const [pixelNotInstalled, setPixelNotInstalled] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 	const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
@@ -130,6 +129,40 @@ const SourcesImport: React.FC = () => {
 	const [showTargetStep, setShowTargetStep] = useState(false);
 
 	type SkeletonState = Record<BuilderKey, boolean>;
+
+	const defautlHeadingSubstitution = {
+		Email: false,
+		"Phone number": false,
+		"Last Name": false,
+		"First Name": false,
+	};
+
+	const customerConversionHeadingSubstitution = {
+		"Transaction Date": false,
+		"Order Amount": false,
+	};
+
+	const failedLeadsHeadingSubstitution = {
+		"Lead Date": false,
+	};
+
+	const interestHeadingSubstitution = {
+		"Interest Date": false,
+	};
+
+	interface InterfaceMappingHeadingSubstitution {
+		[key: string]: Record<string, boolean>;
+	}
+
+	const mappingHeadingSubstitution: InterfaceMappingHeadingSubstitution = {
+		Interest: interestHeadingSubstitution,
+		"Failed Leads": failedLeadsHeadingSubstitution,
+		"Customer Conversions": customerConversionHeadingSubstitution,
+	};
+
+	const [headingsNotSubstitution, setHeadingsNotSubstitution] = useState<
+		Record<string, boolean>
+	>(defautlHeadingSubstitution);
 
 	const initialSkeletons: SkeletonState = {
 		sourceType: false,
@@ -191,8 +224,8 @@ const SourcesImport: React.FC = () => {
 			canDelete: true,
 			isHidden: false,
 		},
-		{ id: 3, type: "Last Name", value: "", canDelete: true, isHidden: false },
-		{ id: 4, type: "First Name", value: "", canDelete: true, isHidden: false },
+		{ id: 3, type: "Last Name", value: "", canDelete: false, isHidden: false },
+		{ id: 4, type: "First Name", value: "", canDelete: false, isHidden: false },
 	];
 
 	const customerConversionsMapping: Row[] = [
@@ -200,14 +233,14 @@ const SourcesImport: React.FC = () => {
 			id: 5,
 			type: "Transaction Date",
 			value: "",
-			canDelete: true,
+			canDelete: false,
 			isHidden: false,
 		},
 		{
 			id: 6,
 			type: "Order Amount",
 			value: "",
-			canDelete: true,
+			canDelete: false,
 			isHidden: false,
 		},
 	];
@@ -217,7 +250,7 @@ const SourcesImport: React.FC = () => {
 			id: 5,
 			type: "Lead Date",
 			value: "",
-			canDelete: true,
+			canDelete: false,
 			isHidden: false,
 		},
 	];
@@ -227,7 +260,7 @@ const SourcesImport: React.FC = () => {
 			id: 5,
 			type: "Interest Date",
 			value: "",
-			canDelete: true,
+			canDelete: false,
 			isHidden: false,
 		},
 	];
@@ -248,14 +281,15 @@ const SourcesImport: React.FC = () => {
 
 	// Mapping
 
-	const handleMapListChange = (id: number, value: string) => {
+	const handleMapListChange = (id: number, value: string, rowValue: string) => {
 		setMappingRows(
 			mappingRows.map((row) => (row.id === id ? { ...row, value } : row)),
 		);
 
-		if (id === 1) {
-			setEmailNotSubstitution(false);
-		}
+		setHeadingsNotSubstitution((prev) => ({
+			...prev,
+			[rowValue]: false,
+		}));
 	};
 
 	const handleDelete = (id: number) => {
@@ -395,6 +429,12 @@ const SourcesImport: React.FC = () => {
 					newSourceType as keyof InterfaceMappingRowsSourceType
 				],
 			]);
+			setHeadingsNotSubstitution({
+				...defautlHeadingSubstitution,
+				...mappingHeadingSubstitution[
+					newSourceType as keyof InterfaceMappingHeadingSubstitution
+				],
+			});
 			setSourceMethod(1);
 			closeSkeleton("sourceFile");
 			if (sourceType === "") {
@@ -428,7 +468,7 @@ const SourcesImport: React.FC = () => {
 	const handleDeleteFile = () => {
 		setFile(null);
 		setFileName("");
-		setEmailNotSubstitution(false);
+		setHeadingsNotSubstitution(defautlHeadingSubstitution);
 		setMappingRows(defaultMapping);
 	};
 
@@ -622,20 +662,42 @@ const SourcesImport: React.FC = () => {
 		try {
 			const { data } = parsedData;
 			const headers = data[0];
-			setHeadersinCSV(headers);
+			const formatterHeaders = headers.map((el) => el.trim());
+			setHeadersinCSV(formatterHeaders);
 
 			if (
-				headers.length === 0 ||
-				headers.every((header: string) => header === "")
+				formatterHeaders.length === 0 ||
+				formatterHeaders.every((header: string) => header === "")
 			) {
 				throw new Error("CSV file doesn't contain headers!");
 			}
 
-			const newHeadings = await smartSubstitutionHeaders(headers);
+			const newHeadings = await smartSubstitutionHeaders(formatterHeaders);
 
-			if (newHeadings[0] === "None") {
-				setEmailNotSubstitution(true);
-			}
+			type HeadingSubstitution = Record<string, boolean>;
+			const typeHeadings = mappingHeadingSubstitution[sourceType];
+
+			const updatedHeadingSubstitution: HeadingSubstitution = {};
+			const headingKeys = [
+				...Object.keys(defautlHeadingSubstitution),
+				...Object.keys(typeHeadings),
+			];
+
+			headingKeys.forEach((key, index) => {
+				updatedHeadingSubstitution[key] = newHeadings[index] === "None";
+			});
+
+			setHeadingsNotSubstitution({
+				Email: updatedHeadingSubstitution.Email || false,
+				"Last Name": updatedHeadingSubstitution["Last Name"] || false,
+				"First Name": updatedHeadingSubstitution["First Name"] || false,
+				"Phone number": updatedHeadingSubstitution["Phone number"] || false,
+				"Transaction Date":
+					updatedHeadingSubstitution["Transaction Date"] || false,
+				"Lead Date": updatedHeadingSubstitution["Lead Date"] || false,
+				"Order Amount": updatedHeadingSubstitution["Order Amount"] || false,
+				"Interest Date": updatedHeadingSubstitution["Interest Date"] || false,
+			});
 
 			const updatedRows = mappingRows.map((row, index) => ({
 				...row,
@@ -790,6 +852,12 @@ const SourcesImport: React.FC = () => {
 				height={height}
 				sx={{ borderRadius: "4px" }}
 			/>
+		);
+	};
+
+	const hasUnsubstitutedHeadings = () => {
+		return Object.entries(headingsNotSubstitution).some(
+			([key, value]) => key !== "Phone number" && value,
 		);
 	};
 
@@ -1334,12 +1402,16 @@ const SourcesImport: React.FC = () => {
 										</Grid>
 										{mappingRows
 											?.filter((row) => !row.isHidden)
+											.sort((a, b) => {
+												if (a.type === "Phone number") return 1;
+												if (b.type === "Phone number") return -1;
+												return 0;
+											})
 											.map((row, index) => (
 												<Box
 													key={index}
 													sx={{
-														mt:
-															index === 1 && emailNotSubstitution ? "10px" : 0,
+														mb: headingsNotSubstitution[row.type] ? "10px" : 0,
 													}}
 												>
 													<Grid
@@ -1424,7 +1496,11 @@ const SourcesImport: React.FC = () => {
 																<Select
 																	value={row.value || ""}
 																	onChange={(e) =>
-																		handleMapListChange(row.id, e.target.value)
+																		handleMapListChange(
+																			row.id,
+																			e.target.value,
+																			row.type,
+																		)
 																	}
 																	displayEmpty
 																	inputProps={{
@@ -1463,8 +1539,8 @@ const SourcesImport: React.FC = () => {
 																		),
 																	)}
 																</Select>
-																{row.type === "Email" &&
-																	emailNotSubstitution && (
+																{row.type !== "Phone number" &&
+																	headingsNotSubstitution[row.type] && (
 																		<Typography
 																			sx={{
 																				fontFamily: "var(--font-nunito)",
@@ -1472,7 +1548,7 @@ const SourcesImport: React.FC = () => {
 																				color: "rgba(224, 49, 48, 1)",
 																			}}
 																		>
-																			Please match email
+																			Please match
 																		</Typography>
 																	)}
 															</FormControl>
@@ -1549,7 +1625,9 @@ const SourcesImport: React.FC = () => {
 									{!showTargetStep && (
 										<Box sx={{ display: "flex", justifyContent: "right" }}>
 											<Button
-												disabled={isChatGPTProcessing || emailNotSubstitution}
+												disabled={
+													isChatGPTProcessing || hasUnsubstitutedHeadings()
+												}
 												variant="contained"
 												onClick={() => {
 													setShowTargetStep(true);
@@ -2337,7 +2415,7 @@ const SourcesImport: React.FC = () => {
 												onClick={handleSumbit}
 												disabled={
 													sourceName.trim() === "" ||
-													emailNotSubstitution ||
+													hasUnsubstitutedHeadings() ||
 													pixelNotInstalled
 												}
 												sx={{

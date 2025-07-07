@@ -129,6 +129,7 @@ NET_WORTH_RANGE_MAP = {
     "u": "Unknown",
     "other": "Other",
 }
+
 CREDIT_SCORE_RANGE_MAP = {
     "a": "800+",
     "b": "750-799",
