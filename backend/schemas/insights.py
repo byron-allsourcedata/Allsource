@@ -142,10 +142,7 @@ class FinancialProfiles(BaseModel):
 
     @staticmethod
     def _map_data(data: dict[str, str], map_dict: dict) -> dict:
-        return {
-            data.get(k, k): v
-            for k, v in map_dict.items()
-        }
+        return {data.get(k, k): v for k, v in map_dict.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "FinancialProfiles":
@@ -377,9 +374,10 @@ class EducationProfiles(BaseModel):
     institution_name: Optional[Dict[str, int]] = Field(default_factory=dict)
     education_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
     education_end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_description: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_description: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
     post_graduation_time: Optional[Dict[str, int]] = Field(default_factory=dict)
-
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
@@ -418,7 +416,7 @@ class EducationProfiles(BaseModel):
                     else:
                         post_graduation_time[years] += 1
             else:
-                post_graduation_time[None] += 1 # if date in invalid format
+                post_graduation_time[None] += 1  # if date in invalid format
 
         return post_graduation_time
 
@@ -429,7 +427,7 @@ class EducationProfiles(BaseModel):
             "3 - 5 years": 0,
             "5 - 10 years": 0,
             "More than 10 years": 0,
-            "unknown": 0
+            "unknown": 0,
         }
 
         post_graduation_time = self._calculate_post_graduation_time()
@@ -459,10 +457,11 @@ class EducationProfiles(BaseModel):
         for key, val in values.items():
             if not isinstance(val, dict):
                 continue
-
             setattr(self, key, self._to_percent(val))
 
-        setattr(self, "post_graduation_time", self._dates_to_bins())
+        bins = self._dates_to_bins()
+        percent_bins = self._to_percent(bins)
+        setattr(self, "post_graduation_time", percent_bins)
 
         return self
 
@@ -470,7 +469,6 @@ class EducationProfiles(BaseModel):
 class B2BInsight(BaseModel):
     professional_profile: ProfessionalProfiles
     education_history: EducationProfiles
-
     employment_history: EmploymentHistoryProfiles
 
 
@@ -562,7 +560,9 @@ class EducationProfile(BaseModel):
     institution_name: Optional[Dict[str, int]] = Field(default_factory=dict)
     education_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
     education_end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_description: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_description: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
 
 
 class ProfessionalProfile(BaseModel):
