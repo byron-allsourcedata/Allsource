@@ -6,6 +6,7 @@ from pydantic import BaseModel, EmailStr
 from db_dependencies import Db, Clickhouse
 from resolver import injectable
 import time
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,16 @@ class ProfContact(BaseModel):
     business_email: str | None
     business_email_validation_status: str | None
     linkedin_url: str | None
+
+
+class EmploymentEntry(BaseModel):
+    job_title: str | None = None
+    company_name: str | None = None
+    location: str | None = None
+    job_tenure: str | None = None
+    number_of_jobs: str | None = None
+    start_date: str | None = None
+    end_date: str | None = None
 
 
 @injectable
@@ -210,3 +221,36 @@ class SourceAgentService:
         )
 
         return self._run_query(sql, {"ids": asids})
+
+    def get_employment_by_asids(
+        self, asids: Iterable[UUID | str]
+    ) -> Dict[UUID, List[EmploymentEntry]]:
+        if not asids:
+            return {}
+
+        sql = """
+        SELECT asid, employment_json
+        FROM enrichment_users
+        WHERE asid IN %(ids)s
+        """
+
+        rows = self._run_query(sql, {"ids": [str(a) for a in asids]})
+
+        results: Dict[UUID, List[EmploymentEntry]] = {}
+        for asid, json_str in rows:
+            try:
+                parsed = json.loads(json_str or "[]")  # list[dict]
+                entries = [
+                    EmploymentEntry(**e) for e in parsed if isinstance(e, dict)
+                ]
+
+                asid_uuid = asid if isinstance(asid, UUID) else UUID(str(asid))
+                results[asid_uuid] = entries
+            except (json.JSONDecodeError, TypeError, ValueError) as err:
+                logger.warning(
+                    f"Failed to parse employment_json for {asid}: {err}"
+                )
+                asid_uuid = asid if isinstance(asid, UUID) else UUID(str(asid))
+                results[asid_uuid] = []
+
+        return results
