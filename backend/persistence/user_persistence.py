@@ -62,6 +62,14 @@ class UserPersistence:
         )
         self.db.commit()
 
+    async def is_email_validation_enabled(self, users_id: int) -> bool:
+        result = (
+            self.db.query(Users.is_email_validation_enabled)
+            .filter(Users.id == users_id)
+            .scalar()
+        )
+        return result
+
     def save_user_domain(self, user_id: int, domain: str):
         user_domain = (
             self.db.query(UserDomains)

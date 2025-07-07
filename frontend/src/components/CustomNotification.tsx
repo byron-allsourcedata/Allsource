@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Button, Link, Typography } from "@mui/material";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useIntegrationLink } from "@/hooks/useIntegrationLink";
 
 interface CustomNotificationProps {
@@ -53,16 +54,31 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 				return (
 					<Link
 						key={index}
+						{...(keyword.word === "Learn more" && {
+							target: "_blank",
+							rel: "noopener noreferrer",
+						})}
 						className="second-sub-title"
-						target="_blank"
+						rel="noopener noreferrer"
 						href={keyword.link}
 						sx={{
-							textDecoration: "none",
+							display: "inline-flex",
+							alignItems: "center",
+							fontFamily: "var(--font-nunito)",
+							fontSize: "14px",
+							fontWeight: 500,
+							lineHeight: "19.6px",
+							gap: 1,
+							textDecoration:
+								keyword.word === "Learn more" ? "underline" : "none",
 							color: "rgba(20, 110, 246, 1) !important",
 							"@media (max-width: 600px)": { fontSize: "11px !important" },
 						}}
 					>
 						{part}
+						{keyword.word === "Learn more" && (
+							<OpenInNewIcon sx={{ fontSize: 16 }} />
+						)}
 					</Link>
 				);
 			}
