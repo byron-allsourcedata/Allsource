@@ -93,7 +93,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 								},
 							}}
 						/>
-						<Tab
+						{/* <Tab
 							label="Education"
 							className="tab-filled-button"
 							sx={{
@@ -104,7 +104,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 									color: "rgba(32, 33, 36, 1)",
 								},
 							}}
-						/>
+						/> */}
 						<Tab
 							label="Employment"
 							className="tab-filled-button"
