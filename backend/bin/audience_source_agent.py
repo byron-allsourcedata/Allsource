@@ -630,7 +630,7 @@ async def process_and_send_chunks(
 
 async def normalize_persons_customer_conversion(
     persons: List[PersonEntry],
-    source_id: str,
+    source_id: UUID,
     data_for_normalize: DataForNormalize,
     source_agent_service: SourceAgentService,
     db_session: Session,
@@ -736,7 +736,7 @@ async def normalize_persons_customer_conversion(
                 logging.debug("Skip mp_id %s: asid is null", mp_id)
                 continue
             try:
-                mp_to_asid[UUID(mp_id)] = UUID(asid)
+                mp_to_asid[mp_id] = asid
             except (TypeError, ValueError) as err:
                 logging.warning("Bad UUID in row %s → %s: %s", mp_id, asid, err)
 
@@ -1121,21 +1121,6 @@ async def aud_sources_matching(
         with db_session.begin():
             if type == "emails" and data_for_normalize:
                 if (
-                    data_for_normalize.matched_size
-                    == data_for_normalize.all_size
-                ):
-                    if not check_significant_fields_and_insights(
-                        source=audience_source
-                    ):
-                        calculate_and_save_significant_fields(
-                            db_session=db_session,
-                            source_id=source_id,
-                            similar_audience_service=similar_audience_service,
-                            audience_lookalikes_service=audience_lookalikes_service,
-                            audience_type=atype,
-                        )
-
-                if (
                     message_body.status
                     == TypeOfCustomer.CUSTOMER_CONVERSIONS.value
                 ):
@@ -1163,6 +1148,20 @@ async def aud_sources_matching(
                         data_for_normalize=data_for_normalize,
                         db_session=db_session,
                     )
+                if (
+                    data_for_normalize.matched_size
+                    == data_for_normalize.all_size
+                ):
+                    if not check_significant_fields_and_insights(
+                        source=audience_source
+                    ):
+                        calculate_and_save_significant_fields(
+                            db_session=db_session,
+                            source_id=source_id,
+                            similar_audience_service=similar_audience_service,
+                            audience_lookalikes_service=audience_lookalikes_service,
+                            audience_type=atype,
+                        )
                 await message.ack()
                 return
 
