@@ -110,18 +110,6 @@ def update_stats_validations(
         db_session.add(new_record)
 
 
-def check_value_in_database(
-    db_session: Session, user_id: int, person_id: int
-) -> bool:
-    # Логика проверки наличия значения в базе
-    result = (
-        db_session.query(SomeModel)
-        .filter_by(user_id=user_id, person_id=person_id)
-        .first()
-    )
-    return result is not None
-
-
 async def aud_validation_agent(
     message: IncomingMessage,
     db_session: Session,

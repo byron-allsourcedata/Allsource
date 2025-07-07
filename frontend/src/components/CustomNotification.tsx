@@ -59,7 +59,6 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 							rel: "noopener noreferrer",
 						})}
 						className="second-sub-title"
-						rel="noopener noreferrer"
 						href={keyword.link}
 						sx={{
 							display: "inline-flex",
