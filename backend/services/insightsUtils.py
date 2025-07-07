@@ -10,16 +10,11 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
 from db_dependencies import Clickhouse
+import json
 from enums import BusinessType
 from models import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
-from services.utils_constants.location_constants import (
-    US_STATE_ABBR,
-    CITY_TO_STATE,
-)
-from services.source_agent.agent import EmploymentEntry
-
 from pydantic import BaseModel
 
 from services.utils_constants.location_constants import (
@@ -135,6 +130,7 @@ COLUMNS_BY_CATEGORY: Dict[str, List[str]] = {
     "voter": VOTER_COLS,
     "professional": PROF_COLS,
     "employment": EMPLOYMENT_COLS,
+    "education": EDUCATION_COLS,
 }
 
 
@@ -313,7 +309,7 @@ class InsightsUtils:
         if audience_type in (BusinessType.B2C, BusinessType.ALL):
             categories += ["personal", "financial", "lifestyle", "voter"]
         if audience_type in (BusinessType.B2C, BusinessType.ALL):
-            categories += ["professional", "employment"]
+            categories += ["professional", "employment", "education"]
 
         buckets: Dict[str, Dict[str, Counter]] = {
             cat: defaultdict(Counter) for cat in COLUMNS_BY_CATEGORY

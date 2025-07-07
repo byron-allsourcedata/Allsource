@@ -599,3 +599,6 @@ class InsightsByCategory(BaseModel):
     professional_profile: Optional[ProfessionalProfile] = Field(
         default_factory=ProfessionalProfile
     )
+    education_history: Optional[EducationProfile] = Field(
+        default_factory=EducationProfile
+    )
