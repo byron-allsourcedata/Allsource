@@ -1,5 +1,6 @@
 import re
 import uuid
+import json
 from collections import defaultdict, Counter
 from itertools import islice
 from typing import List, Optional, Dict, Any
@@ -14,6 +15,9 @@ from enums import BusinessType
 from models import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
+
+from pydantic import BaseModel
+
 from services.utils_constants.location_constants import (
     US_STATE_ABBR,
     CITY_TO_STATE,
@@ -98,6 +102,22 @@ PROF_COLS = [
     "annual_sales",
 ]
 
+EDUCATION_COLS = [
+    "education_json"
+]
+
+EDUCATION_JSON_COLS = [
+    "degree",
+    "institution_name",
+    "education_start_date",
+    "education_end_date",
+    "education_description",
+]
+
+EMPLOYMENT_COLS = [
+    "employment_json"
+]
+
 EMPLOYMENT_COLS = [
     "job_title",
     "company_name",
@@ -116,7 +136,16 @@ COLUMNS_BY_CATEGORY: Dict[str, List[str]] = {
     "voter": VOTER_COLS,
     "professional": PROF_COLS,
     "employment": EMPLOYMENT_COLS,
+    "education": EDUCATION_COLS,
 }
+
+
+class EducationJsonEntry(BaseModel):
+    degree: str | None
+    institution_name: str | None
+    education_start_date: str | None
+    education_end_date: str | None
+    education_description: str | None
 
 MAX_IDS_PER_BATCH = 5_000
 
@@ -273,7 +302,7 @@ class InsightsUtils:
 
     @staticmethod
     def process_insights_for_asids(
-        insights,
+        insights: InsightsByCategory,
         asids: List[uuid.UUID],
         source_agent: SourceAgentService,
         audience_type: BusinessType,
@@ -284,8 +313,8 @@ class InsightsUtils:
         categories: list[str] = []
         if audience_type in (BusinessType.B2C, BusinessType.ALL):
             categories += ["personal", "financial", "lifestyle", "voter"]
-        if audience_type in (BusinessType.B2C, BusinessType.ALL):
-            categories += ["professional", "employment"]
+        if audience_type in (BusinessType.B2B, BusinessType.ALL):
+            categories += ["professional", "education", "employment"]
 
         buckets: Dict[str, Dict[str, Counter]] = {
             cat: defaultdict(Counter) for cat in COLUMNS_BY_CATEGORY
@@ -355,6 +384,49 @@ class InsightsUtils:
                             five_years_ago=five_years_ago,
                             jobs_last_5y_counter=jobs_last_5_years_counter,
                         )
+                        pairs = ((c, row[c.split(" AS ")[-1]]) for c in columns)
+
+                    for raw_col, val in pairs:
+                        # Gathering data for education profile
+                        if raw_col in EDUCATION_COLS and val is not None:
+                            # Row with all education info by asid
+                            # TODO: check why key 'education_json' in buckets
+                            raw_json = val
+                            education_json_entries: list[dict] = json.loads(raw_json)
+                            education_entries: list[EducationJsonEntry] = [EducationJsonEntry(**json_entry) for json_entry in education_json_entries]
+
+                            for entry in education_entries:
+                                for key, value in entry:
+                                    if key == "education_json":
+                                        continue
+                                    buckets[cat][key][value] += 1
+
+                        else:
+                            field = raw_col.split(" AS ")[-1]
+
+                            if field == "age":
+                                val = InsightsUtils.bucket_age(val)
+
+                            if InsightsUtils.is_invalid(val):
+                                key = "unknown"
+                            elif field == "credit_cards":
+                                raw = (
+                                    str(val or "")
+                                    .strip("[]")
+                                    .replace("'", "")
+                                    .replace('"', "")
+                                )
+                                for card in (
+                                    c.strip().lower()
+                                    for c in raw.split(",")
+                                    if c.strip()
+                                ):
+                                    buckets[cat][field][card] += 1
+                                continue
+                            else:
+                                key = str(val).lower()
+
+                            buckets[cat][field][key] += 1
 
         # Pydantic
         def _fill(target, cols, cat):
@@ -372,6 +444,9 @@ class InsightsUtils:
             _fill(insights.voter, VOTER_COLS, "voter")
         if "professional" in categories:
             _fill(insights.professional_profile, PROF_COLS, "professional")
+
+        if "education" in categories:
+            _fill(insights.education_history, EDUCATION_JSON_COLS, "education")
         if "employment" in categories:
             setattr(
                 insights.employment_history,
@@ -379,6 +454,7 @@ class InsightsUtils:
                 dict(jobs_last_5_years_counter),
             )
             _fill(insights.employment_history, EMPLOYMENT_COLS, "employment")
+            
         return insights
 
     @staticmethod
