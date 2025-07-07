@@ -56,14 +56,14 @@ class DataSyncType(Enum):
 
 
 class IntegrationLimit(Enum):
-    MAILCHIMP = 10000
-    SALESFORCE = 10000
-    BING_ADS = 100000
-    GOOGLE_ADS = 5000
-    META = 5000
+    MAILCHIMP = 500
+    SALESFORCE = 500
+    BING_ADS = 500
+    GOOGLE_ADS = 500
+    META = 500
     HUBSPOT = 100
-    S3 = 10000
-    KLAVIYO = 500
+    S3 = 500
+    KLAVIYO = 150
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
 
@@ -212,6 +212,7 @@ class UserAuthorizationStatus(Enum):
     PIXEL_INSTALLATION_NEEDED = "PIXEL_INSTALLATION_NEEDED"
     TEAM_TOKEN_EXPIRED = "TEAM_TOKEN_EXPIRED"
     INVALID_API_KEY = "INVALID_API_KEY"
+    NEED_ACCEPT_PRIVACY_POLICY = "NEED_ACCEPT_PRIVACY_POLICY"
 
 
 class SubscriptionPlanAlias(Enum):
@@ -364,6 +365,7 @@ class NotificationTitles(Enum):
     OVERAGE_LEADS = "overage_leads"
     PLAN_LIMIT_EXCEEDED = "plan_limit_exceeded"
     AUTHENTICATION_INTEGRATION_FAILED = "authentication_integration_failed"
+    FORBIDDEN = "forbidden"
     PAYMENT_INTEGRATION_REQUIRED = "payment_integration_required"
     DATA_SYNC_ERROR = "data_sync_error"
     PAYMENT_FAILED = "payment_failed"
@@ -416,6 +418,7 @@ class ProccessDataSyncResult(Enum):
     LEAD_PROFILE_ERROR = "lead_profile_error"
     LIST_NOT_EXISTS = "list_not_exists"
     AUTHENTICATION_FAILED = "authentication_failed"
+    FORBIDDEN = "forbidden"
     TOO_MANY_REQUESTS = "too_many_requests"
     VERIFY_EMAIL_FAILED = "verify_email_failed"
     PAYMENT_REQUIRED = "payment_required"

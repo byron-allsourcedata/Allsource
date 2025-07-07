@@ -269,7 +269,7 @@ class SlackService:
     ):
         results = []
         for lead_user, five_x_five_user in user_data:
-            user_text = self.generate_user_text(
+            user_text = await self.generate_user_text(
                 five_x_five_user, is_email_validation_enabled
             )
             if user_text in (
@@ -297,14 +297,14 @@ class SlackService:
                         result["status"] = result
         return results
 
-    def generate_user_text(
+    async def generate_user_text(
         self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ) -> str:
         if not five_x_five_user.linkedin_url:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:

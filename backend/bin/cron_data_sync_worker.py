@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import sys
+import time
 from collections import Counter
 from typing import Any
 
@@ -108,7 +109,6 @@ def update_users_integrations(
 ):
     if status in (
         ProccessDataSyncResult.LIST_NOT_EXISTS.value,
-        ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
         ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
         ProccessDataSyncResult.PAYMENT_REQUIRED.value,
     ):
@@ -117,8 +117,11 @@ def update_users_integrations(
         ).update({"sync_status": False})
         session.commit()
 
-    if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
-        logging.info(
+    if status in (
+        ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+        ProccessDataSyncResult.FORBIDDEN.value,
+    ):
+        logging.debug(
             f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}"
         )
         if service_name == SourcePlatformEnum.WEBHOOK.value:
@@ -308,21 +311,11 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.DATA_SYNC_ERROR.value,
                         )
+                        await message.ack()
+                        return
 
-                    case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
+                    case ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
                         logging.debug(f"too_many_requests: {service_name}")
-                        update_users_integrations(
-                            session=db_session,
-                            status=ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
-                            integration_data_sync_id=data_sync.id,
-                            service_name=service_name,
-                        )
-                        await send_error_msg(
-                            users_id,
-                            service_name,
-                            notification_persistence,
-                            NotificationTitles.TOO_MANY_REQUESTS.value,
-                        )
 
                     case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
@@ -338,6 +331,9 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.QUOTA_EXHAUSTED.value,
                         )
+                        await message.ack()
+                        return
+
                     case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
                         update_users_integrations(
@@ -352,6 +348,8 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.PAYMENT_REQUIRED.value,
                         )
+                        await message.ack()
+                        return
 
                     case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                         logging.debug(f"authentication_failed: {service_name}")
@@ -368,6 +366,26 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value,
                         )
+                        await message.ack()
+                        return
+
+                    case ProccessDataSyncResult.FORBIDDEN.value:
+                        logging.debug(f"Forbidden: {service_name}")
+                        update_users_integrations(
+                            db_session,
+                            ProccessDataSyncResult.FORBIDDEN.value,
+                            data_sync.id,
+                            service_name,
+                            data_sync.integration_id,
+                        )
+                        await send_error_msg(
+                            users_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.FORBIDDEN.value,
+                        )
+                        await message.ack()
+                        return
 
                 if import_status != DataSyncImportedStatus.SENT.value:
                     update_data_sync_imported_leads(
@@ -411,46 +429,47 @@ async def main():
 
     setup_logging(log_level)
     resolver = Resolver()
-    try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+    while True:
+        try:
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-        queue = await channel.declare_queue(
-            name=CRON_DATA_SYNC_LEADS,
-            durable=True,
-        )
-        db_session = await resolver.resolve(Db)
-        integration_service = await resolver.resolve(IntegrationService)
-        notification_persistence = await resolver.resolve(
-            NotificationPersistence
-        )
-        user_persistence = await resolver.resolve(UserPersistence)
-        async with integration_service as int_service:
-            await queue.consume(
-                functools.partial(
-                    ensure_integration,
-                    integration_service=int_service,
-                    db_session=db_session,
-                    notification_persistence=notification_persistence,
-                    user_persistence=user_persistence,
-                )
+            queue = await channel.declare_queue(
+                name=CRON_DATA_SYNC_LEADS,
+                durable=True,
             )
-            await asyncio.Future()
+            db_session = await resolver.resolve(Db)
+            integration_service = await resolver.resolve(IntegrationService)
+            notification_persistence = await resolver.resolve(
+                NotificationPersistence
+            )
+            user_persistence = await resolver.resolve(UserPersistence)
+            async with integration_service as int_service:
+                await queue.consume(
+                    functools.partial(
+                        ensure_integration,
+                        integration_service=int_service,
+                        db_session=db_session,
+                        notification_persistence=notification_persistence,
+                        user_persistence=user_persistence,
+                    )
+                )
+                await asyncio.Future()
 
-    except BaseException as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
-        logging.info("Shutting down...")
-        sys.exit(1)
+        except BaseException as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

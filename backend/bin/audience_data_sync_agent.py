@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import sys
-
+import time
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -437,45 +437,46 @@ async def main():
 
     setup_logging(log_level)
     resolver = Resolver()
-    try:
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+    while True:
+        try:
+            rabbitmq_connection = RabbitMQConnection()
+            connection = await rabbitmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-        queue = await channel.declare_queue(
-            name=AUDIENCE_DATA_SYNC_PERSONS,
-            durable=True,
-        )
-        db_session = await resolver.resolve(Db)
-        notification_persistence = await resolver.resolve(
-            NotificationPersistence
-        )
-        integration_service = await resolver.resolve(IntegrationService)
-        async with integration_service as service:
-            await queue.consume(
-                functools.partial(
-                    ensure_integration,
-                    integration_service=service,
-                    session=db_session,
-                    notification_persistence=notification_persistence,
-                )
+            queue = await channel.declare_queue(
+                name=AUDIENCE_DATA_SYNC_PERSONS,
+                durable=True,
             )
-            await asyncio.Future()
+            db_session = await resolver.resolve(Db)
+            notification_persistence = await resolver.resolve(
+                NotificationPersistence
+            )
+            integration_service = await resolver.resolve(IntegrationService)
+            async with integration_service as service:
+                await queue.consume(
+                    functools.partial(
+                        ensure_integration,
+                        integration_service=service,
+                        session=db_session,
+                        notification_persistence=notification_persistence,
+                    )
+                )
+                await asyncio.Future()
 
-    except BaseException as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
+        except BaseException as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
 
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rabbitmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rabbitmq_connection.close()
-        logging.info("Shutting down...")
-        sys.exit(1)
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rabbitmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rabbitmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

@@ -1,17 +1,17 @@
-import logging
-import os
-import sys
 import asyncio
 import functools
 import json
-import boto3
-import sentry_sdk
-from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+import logging
+import os
+import sys
+import time
+
+from aio_pika import IncomingMessage
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy import update
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker, Session
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -146,47 +146,48 @@ async def main():
     db_password = os.getenv("DB_PASSWORD")
     db_host = os.getenv("DB_HOST")
     db_name = os.getenv("DB_NAME")
+    while True:
+        try:
+            logging.info("Starting processing...")
+            rmq_connection = RabbitMQConnection()
+            connection = await rmq_connection.connect()
+            channel = await connection.channel()
+            await channel.set_qos(prefetch_count=1)
 
-    try:
-        logging.info("Starting processing...")
-        rmq_connection = RabbitMQConnection()
-        connection = await rmq_connection.connect()
-        channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
-
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            pool_pre_ping=True,
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-
-        queue = await channel.declare_queue(
-            name=AUDIENCE_SMARTS_AGENT,
-            durable=True,
-        )
-        await queue.consume(
-            functools.partial(
-                aud_smarts_matching,
-                channel=channel,
-                db_session=db_session,
+            engine = create_engine(
+                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+                pool_pre_ping=True,
             )
-        )
+            Session = sessionmaker(bind=engine)
+            db_session = Session()
 
-        await asyncio.Future()
+            queue = await channel.declare_queue(
+                name=AUDIENCE_SMARTS_AGENT,
+                durable=True,
+            )
+            await queue.consume(
+                functools.partial(
+                    aud_smarts_matching,
+                    channel=channel,
+                    db_session=db_session,
+                )
+            )
 
-    except Exception as e:
-        logging.error("Unhandled Exception:", exc_info=True)
-        SentryConfig.capture(e)
+            await asyncio.Future()
 
-    finally:
-        if db_session:
-            logging.info("Closing the database session...")
-            db_session.close()
-        if rmq_connection:
-            logging.info("Closing RabbitMQ connection...")
-            await rmq_connection.close()
-        logging.info("Shutting down...")
+        except Exception as e:
+            logging.error("Unhandled Exception:", exc_info=True)
+            SentryConfig.capture(e)
+
+        finally:
+            if db_session:
+                logging.info("Closing the database session...")
+                db_session.close()
+            if rmq_connection:
+                logging.info("Closing RabbitMQ connection...")
+                await rmq_connection.close()
+            logging.info("Shutting down...")
+            time.sleep(10)
 
 
 if __name__ == "__main__":

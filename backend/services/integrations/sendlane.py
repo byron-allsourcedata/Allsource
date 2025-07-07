@@ -296,14 +296,14 @@ class SendlaneIntegrationService:
                     result["status"] = result_bulk
         return results
 
-    def __mapped_profile(
+    async def __mapped_profile(
         self,
         lead: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
     ) -> str | dict[str, str]:
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 lead, self.million_verifier_integrations
             )
         else:
@@ -348,8 +348,10 @@ class SendlaneIntegrationService:
 
         return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-    def __create_contact(self, five_x_five_user, access_token, list_id: int):
-        profile = self.__mapped_sendlane_contact(five_x_five_user)
+    async def __create_contact(
+        self, five_x_five_user, access_token, list_id: int
+    ):
+        profile = await self.__mapped_sendlane_contact(five_x_five_user)
         if profile in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
@@ -378,60 +380,8 @@ class SendlaneIntegrationService:
             id=str(sender.get("id")), sender_name=sender.get("from_name")
         )
 
-    def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            if (
-                                personal_emails_last_seen_str
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
-                            )
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+    async def __mapped_sendlane_contact(self, five_x_five_user: FiveXFiveUser):
+        first_email = await get_valid_email(five_x_five_user)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -439,12 +389,7 @@ class SendlaneIntegrationService:
         ):
             return first_email
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
 
         if first_email:
             first_email = first_email.split(",")[-1].strip()

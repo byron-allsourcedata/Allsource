@@ -25,7 +25,9 @@ class AudienceInsightsService:
     ):
         self.insights_persistence_service = insights_persistence_service
 
-    def get_source_insights(self, source_uuid: UUID, user: dict, is_debug: bool) -> dict:
+    def get_source_insights(
+        self, source_uuid: UUID, user: dict, is_debug: bool
+    ) -> dict:
         raw_data = self.insights_persistence_service.get_source_insights_info(
             source_uuid, user.get("id")
         )
@@ -35,7 +37,9 @@ class AudienceInsightsService:
         response["significant_fields"] = raw_data.get("significant_fields", "")
         return response
 
-    def get_lookalike_insights(self, lookalike_uuid: UUID, user: dict, is_debug: bool) -> dict:
+    def get_lookalike_insights(
+        self, lookalike_uuid: UUID, user: dict, is_debug: bool
+    ) -> dict:
         raw_data = (
             self.insights_persistence_service.get_lookalike_insights_info(
                 lookalike_uuid, user.get("id")
@@ -92,9 +96,7 @@ class AudienceInsightsService:
 
             # B2C
             for key, val in personal_info.items():
-                if ("unknown" in val
-                    and key != "gender"
-                ):
+                if "unknown" in val:
                     val.pop("unknown")
 
             for key, val in financial.items():
@@ -135,6 +137,7 @@ class AudienceInsightsService:
                 "type": item.type,
                 "data_source_type": "sources",
                 "size": item.matched_records,
+                "disabled": item.matched_records_status != "complete",
                 "created_date": item.created_date.isoformat(),
             }
             for item in sources
@@ -147,6 +150,9 @@ class AudienceInsightsService:
                 "type": item.type,
                 "data_source_type": "lookalikes",
                 "size": item.size,
+                "disabled": item.train_model_size
+                != item.processed_train_model_size
+                or item.processed_train_model_size == 0,
                 "created_date": item.created_date.isoformat(),
             }
             for item in lookalikes

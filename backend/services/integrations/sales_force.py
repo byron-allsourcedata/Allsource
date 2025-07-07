@@ -35,6 +35,7 @@ from utils import (
     get_valid_email,
     get_http_client,
     get_valid_email_without_million,
+    get_valid_phone,
 )
 from utils import validate_and_format_phone
 
@@ -423,10 +424,12 @@ class SalesForceIntegrationsService:
         results = []
         access_token = self.get_access_token(user_integration.access_token)
         if not access_token:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            return [
+                {"status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value}
+            ]
 
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_sales_force_profile_lead(
+            profile = await self.__mapped_sales_force_profile_lead(
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
@@ -590,14 +593,14 @@ class SalesForceIntegrationsService:
 
         return result
 
-    def __mapped_sales_force_profile_lead(
+    async def __mapped_sales_force_profile_lead(
         self,
         five_x_five_user: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
     ) -> dict:
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:
@@ -613,12 +616,7 @@ class SalesForceIntegrationsService:
         if not company_name:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
         phone_number = validate_and_format_phone(first_phone)
         mobile_phone = getattr(five_x_five_user, "mobile_phone", None)
 

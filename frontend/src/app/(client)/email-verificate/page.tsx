@@ -9,6 +9,7 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { emailStyles } from "./emailStyles";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useUser } from "../../../context/UserContext";
+import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import PersonIcon from "@mui/icons-material/Person";
 import useAxios from "axios-hooks";
 
@@ -17,9 +18,9 @@ const EmailVerificate: React.FC = () => {
 	const [timer, setTimer] = useState(60);
 	const router = useRouter();
 	const { full_name: userFullName, email: userEmail } = useUser();
+	const { setPrivacyPolicyPromiseResolver } = usePrivacyPolicyContext();
 	const [email, setEmail] = useState("");
 	const [full_name, setFullName] = useState("");
-
 	useEffect(() => {
 		if (typeof window !== "undefined") {
 			const meItem = sessionStorage.getItem("me");
@@ -98,22 +99,33 @@ const EmailVerificate: React.FC = () => {
 		{ manual: true },
 	);
 
+	const checkPrivacyPolicy = async (): Promise<void> => {
+		return new Promise((resolve) => {
+			setPrivacyPolicyPromiseResolver(() => resolve);
+			router.push("/privacy-policy");
+		});
+	};
+
 	useEffect(() => {
 		const interval = setInterval(() => {
-			refetch()
-				.then((response) => {
+			(async () => {
+				try {
+					const response = await refetch();
+
 					if (
 						response.status === 200 &&
 						response.data.status === "EMAIL_VERIFIED"
 					) {
+						await checkPrivacyPolicy();
 						localStorage.setItem("welcome_popup", "true");
 						showToast("Verification done successfully");
 						clearInterval(interval);
 						router.push("/get-started");
-						// router.push('/account-setup');
 					}
-				})
-				.catch((error) => console.error("Error:", error));
+				} catch (error) {
+					console.error("Error:", error);
+				}
+			})();
 		}, 5000);
 
 		return () => clearInterval(interval);

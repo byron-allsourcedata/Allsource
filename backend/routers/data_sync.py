@@ -247,7 +247,7 @@ async def create_tag(
     user=Depends(check_user_authorization),
     domain=Depends(check_domain),
 ):
-    with integrations_service as service:
+    async with integrations_service as service:
         service = getattr(service, service_name)
         return service.create_tags(tag_data.name, domain.id, user)
 

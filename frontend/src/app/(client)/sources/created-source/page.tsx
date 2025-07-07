@@ -23,13 +23,13 @@ import { useNotification } from "@/context/NotificationContext";
 import { useSSE } from "../../../../context/SSEContext";
 import { MoreVert } from "@mui/icons-material";
 import { SliderProvider } from "../../../../context/SliderContext";
-import ProgressBar from "../components/ProgressLoader";
 import { showToast, showErrorToast } from "@/components/ToastNotification";
 import HintCard from "../../components/HintCard";
 import { useSourcesHints } from "../context/SourcesHintsContext";
 import { createdHintCards } from "../context/hintsCardsContent";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
+import RenderProgress from "../components/RenderProgress";
 
 interface Source {
 	id: string;
@@ -551,37 +551,14 @@ const SourcesList: React.FC = () => {
 											Matched Records
 										</Typography>
 										<Typography variant="subtitle1" className="table-data">
-											{createdData.matched_records_status === "complete" &&
-											createdData?.total_records === 0 ? (
-												"0"
-											) : (createdData?.id &&
-													createdData.matched_records_status === "comlete" &&
-													sourceProgress[createdData.id]?.processed &&
-													sourceProgress[createdData.id]?.processed ==
-														sourceProgress[createdData.id]?.total) ||
-												(createdData?.processed_records ==
-													createdData?.total_records &&
-													createdData?.processed_records !== 0) ? (
-												sourceProgress[createdData.id]?.matched >
-												createdData?.matched_records ? (
-													sourceProgress[
-														createdData.id
-													]?.matched.toLocaleString("en-US")
-												) : (
-													createdData.matched_records.toLocaleString("en-US")
-												)
-											) : createdData?.processed_records !== 0 ? (
-												<ProgressBar
-													progress={{
-														total: createdData?.total_records,
-														processed: createdData?.processed_records,
-														matched: createdData?.matched_records,
-													}}
-												/>
-											) : (
-												<ProgressBar
-													progress={sourceProgress[createdData.id]}
-												/>
+											{RenderProgress(
+												createdData.matched_records_status,
+												createdData.total_records,
+												createdData.matched_records,
+												createdData.processed_records,
+												sourceProgress[createdData.id]?.total,
+												sourceProgress[createdData.id]?.matched,
+												sourceProgress[createdData.id]?.processed,
 											)}
 										</Typography>
 									</Box>

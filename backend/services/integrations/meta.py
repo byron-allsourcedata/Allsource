@@ -43,6 +43,7 @@ from utils import (
     format_phone_number,
     get_http_client,
     get_valid_email_without_million,
+    get_valid_phone,
 )
 
 APP_SECRET = MetaConfig.app_secret
@@ -521,7 +522,7 @@ class MetaIntegrationsService:
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__hash_mapped_meta_user_lead(
+            profile = await self.__hash_mapped_meta_user_lead(
                 five_x_five_user, is_email_validation_enabled
             )
             if profile in (
@@ -602,11 +603,11 @@ class MetaIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __hash_mapped_meta_user_lead(
+    async def __hash_mapped_meta_user_lead(
         self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
     ):
         if is_email_validation_enabled:
-            first_email = get_valid_email(
+            first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:
@@ -625,12 +626,7 @@ class MetaIntegrationsService:
                 else ""
             )
 
-        first_phone = (
-            getattr(five_x_five_user, "mobile_phone")
-            or getattr(five_x_five_user, "personal_phone")
-            or getattr(five_x_five_user, "direct_number")
-            or getattr(five_x_five_user, "company_phone", None)
-        )
+        first_phone = get_valid_phone(five_x_five_user)
         first_phone = format_phone_number(first_phone)
 
         return [

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import React from "react";
 import { UserProvider } from "../context/UserContext";
+import { PrivacyPolicyProvider } from "../context/PrivacyPolicyContext";
 import ToastNotificationContainer from "../components/ToastNotification";
 import "react-toastify/dist/ReactToastify.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
@@ -68,9 +69,11 @@ export default function RootLayout({
 						<SidebarProvider>
 							<TrialProvider>
 								<HintsProvider>
-									<UserProvider>
-										<IntegrationProvider>{children}</IntegrationProvider>
-									</UserProvider>
+									<PrivacyPolicyProvider>
+										<UserProvider>
+											<IntegrationProvider>{children}</IntegrationProvider>
+										</UserProvider>
+									</PrivacyPolicyProvider>
 								</HintsProvider>
 							</TrialProvider>
 						</SidebarProvider>

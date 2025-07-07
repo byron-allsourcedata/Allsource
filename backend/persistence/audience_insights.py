@@ -132,6 +132,9 @@ class AudienceInsightsPersistence:
                 AudienceSource.name,
                 AudienceSource.source_type.label("type"),
                 AudienceSource.matched_records,
+                AudienceSource.matched_records_status.label(
+                    "matched_records_status"
+                ),
                 AudienceSource.created_at.label("created_date"),
             )
             .filter(AudienceSource.user_id == user_id)
@@ -147,6 +150,10 @@ class AudienceInsightsPersistence:
                 AudienceLookalikes.name,
                 AudienceSource.source_type.label("type"),
                 AudienceLookalikes.size,
+                AudienceLookalikes.train_model_size.label("train_model_size"),
+                AudienceLookalikes.processed_train_model_size.label(
+                    "processed_train_model_size"
+                ),
                 AudienceLookalikes.created_date,
             )
             .join(

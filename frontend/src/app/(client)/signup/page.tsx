@@ -5,9 +5,6 @@ import Image from "next/image";
 import {
 	Box,
 	Button,
-	Checkbox,
-	FormControlLabel,
-	FormHelperText,
 	TextField,
 	Typography,
 	Link,
@@ -17,6 +14,9 @@ import {
 	ListItem,
 	ListItemIcon,
 	ListItemText,
+	Checkbox,
+	FormControlLabel,
+	FormHelperText,
 } from "@mui/material";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
@@ -24,11 +24,13 @@ import { signupStyles } from "./signupStyles";
 import { showErrorToast } from "../../../components/ToastNotification";
 import { GoogleLogin } from "@react-oauth/google";
 import { fetchUserData } from "@/services/meService";
-import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
+import PageWithLoader from "@/components/FirstLevelLoader";
 
 const UTM_STORAGE_KEY = "utm_params";
 
 const Signup: React.FC = () => {
+	const { setPrivacyPolicyPromiseResolver } = usePrivacyPolicyContext();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const is_with_card = searchParams.get("is_with_card");
@@ -63,8 +65,8 @@ const Signup: React.FC = () => {
 		full_name: "",
 		email: user_mail,
 		password: "",
-		is_with_card: is_with_card || false,
 		termsAccepted: false,
+		is_with_card: is_with_card || false,
 		...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
 		...{ awc: awin_awc },
 		...{ coupon: coupon },
@@ -184,6 +186,22 @@ const Signup: React.FC = () => {
 		setErrors(newErrors);
 	};
 
+	const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const { checked } = e.target;
+		setFormValues({ ...formValues, termsAccepted: checked });
+		if (formSubmitted) {
+			setErrors((prevErrors) => {
+				const newErrors = { ...prevErrors };
+				if (checked) {
+					delete newErrors.termsAccepted; // Remove the error if checked
+				} else {
+					newErrors.termsAccepted = "Please accept our Terms of Service"; // Add the error if unchecked
+				}
+				return newErrors;
+			});
+		}
+	};
+
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = event.target;
 		setFormValues({
@@ -203,6 +221,13 @@ const Signup: React.FC = () => {
 
 	const passwordValidation = isPasswordValid(formValues.password);
 
+	const checkPrivacyPolicy = async (): Promise<void> => {
+		return new Promise((resolve) => {
+			setPrivacyPolicyPromiseResolver(() => resolve);
+			router.push("/privacy-policy");
+		});
+	};
+
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
 		setFormSubmitted(true); // Mark the form as submitted
@@ -211,6 +236,10 @@ const Signup: React.FC = () => {
 
 		if (!formValues.full_name) {
 			newErrors.full_name = "Full name is required";
+		}
+
+		if (!formValues.termsAccepted) {
+			newErrors.termsAccepted = "Please accept our Terms of Service";
 		}
 
 		if (!formValues.email) {
@@ -227,10 +256,6 @@ const Signup: React.FC = () => {
 			!passwordValidation.lowerCase
 		) {
 			newErrors.password = "Please enter a stronger password";
-		}
-
-		if (!formValues.termsAccepted) {
-			newErrors.termsAccepted = "Please accept our Terms of Service";
 		}
 
 		setErrors(newErrors);
@@ -253,8 +278,10 @@ const Signup: React.FC = () => {
 							localStorage.setItem("token", responseData.token);
 						}
 					}
+
 					switch (responseData.status) {
 						case "NEED_CHOOSE_PLAN":
+							await checkPrivacyPolicy();
 							get_me();
 							router.push("/settings?section=subscription");
 							break;
@@ -289,6 +316,7 @@ const Signup: React.FC = () => {
 							router.push("/dashboard");
 							break;
 						case "PAYMENT_NEEDED":
+							await checkPrivacyPolicy();
 							get_me();
 							router.push(`${response.data.stripe_payment_url}`);
 							break;
@@ -302,19 +330,18 @@ const Signup: React.FC = () => {
 								"The email provided is not valid for team invitation.",
 							);
 							break;
-						// case "FILL_COMPANY_DETAILS":
-						//   get_me()
-						//   router.push("/account-setup")
-						//   break;
 						case "FILL_COMPANY_DETAILS":
+							await checkPrivacyPolicy();
 							get_me();
 							router.push("/dashboard");
 							break;
 						case "PIXEL_INSTALLATION_NEEDED":
+							await checkPrivacyPolicy();
 							get_me();
 							router.push("/dashboard");
 							break;
 						default:
+							await checkPrivacyPolicy();
 							get_me();
 							router.push("/dashboard");
 							break;
@@ -334,22 +361,6 @@ const Signup: React.FC = () => {
 
 	const togglePasswordVisibility = () => {
 		setShowPassword(!showPassword);
-	};
-
-	const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { checked } = e.target;
-		setFormValues({ ...formValues, termsAccepted: checked });
-		if (formSubmitted) {
-			setErrors((prevErrors) => {
-				const newErrors = { ...prevErrors };
-				if (checked) {
-					delete newErrors.termsAccepted; // Remove the error if checked
-				} else {
-					newErrors.termsAccepted = "Please accept our Terms of Service"; // Add the error if unchecked
-				}
-				return newErrors;
-			});
-		}
 	};
 
 	const CustomCheckCircleIcon = ({ isSuccess }: { isSuccess: boolean }) => (
@@ -412,29 +423,34 @@ const Signup: React.FC = () => {
 
 								switch (response.data.status) {
 									case "SUCCESS":
+										await checkPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										break;
 									case "SUCCESS_ADMIN":
+										await checkPrivacyPolicy();
 										await fetchUserData();
 										sessionStorage.setItem("admin", "true");
 										router.push("/admin");
 										break;
 									case "NEED_CHOOSE_PLAN":
+										await checkPrivacyPolicy();
 										get_me();
 										router.push("/settings?section=subscription");
 										break;
 									case "FILL_COMPANY_DETAILS":
+										await checkPrivacyPolicy();
 										get_me();
 										navigateTo("/dashboard");
-										// navigateTo('/account-setup');
 										break;
 									case "NEED_BOOK_CALL":
+										await checkPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										sessionStorage.setItem("is_slider_opened", "true");
 										break;
 									case "PAYMENT_NEEDED":
+										await checkPrivacyPolicy();
 										get_me();
 										router.push(`${response.data.stripe_payment_url}`);
 										break;
@@ -458,6 +474,7 @@ const Signup: React.FC = () => {
 										showErrorToast("Incorrect_referral code");
 										break;
 									case "PIXEL_INSTALLATION_NEEDED":
+										await checkPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										break;
@@ -467,6 +484,7 @@ const Signup: React.FC = () => {
 										);
 										break;
 									default:
+										await checkPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										break;
@@ -693,7 +711,7 @@ const Signup: React.FC = () => {
 
 const SignupPage = () => {
 	return (
-		<Suspense fallback={<CustomizedProgressBar />}>
+		<Suspense fallback={<PageWithLoader />}>
 			<Signup />
 		</Suspense>
 	);
