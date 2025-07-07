@@ -31,7 +31,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 				>
 					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
-							title="Current Company Name"
+							title="Top Employers"
 							data={mapGenericPercentage(data.current_company_name)}
 							gradientColor="155, 223, 196"
 							rank={fieldRanks["current_company_name"]}

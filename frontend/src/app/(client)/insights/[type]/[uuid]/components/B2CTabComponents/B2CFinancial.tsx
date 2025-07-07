@@ -29,7 +29,7 @@ function parseNetWorthStart(label: string): number {
 
 function sortNetWorthRanges(data: BarData[]): BarData[] {
 	return [...data].sort(
-		(a, b) => parseNetWorthStart(a.label) - parseNetWorthStart(b.label),
+		(b, a) => parseNetWorthStart(a.label) - parseNetWorthStart(b.label),
 	);
 }
 
@@ -86,7 +86,7 @@ function parseCreditScoreStart(label: string): number {
 
 function sortIncomeRanges(data: BarData[]): BarData[] {
 	return [...data].sort(
-		(a, b) => parseIncomeRangeStart(a.label) - parseIncomeRangeStart(b.label),
+		(b, a) => parseIncomeRangeStart(a.label) - parseIncomeRangeStart(b.label),
 	);
 }
 
