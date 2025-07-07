@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator
+from datetime import datetime
 from schemas.mapping.audience_insights_mapping import (
     ETHNICITY_MAP,
     LANGUAGE_MAP,
@@ -375,14 +376,18 @@ class EmploymentHistoryProfiles(BaseModel):
 
 
 class EducationProfiles(BaseModel):
-    degree: Optional[Dict[str, int]] = Field(default_factory=dict)
-    institution_name: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_description: Optional[Dict[str, int]] = Field(
+    degree: Optional[Dict[str, float]] = Field(default_factory=dict)
+    institution_name: Optional[Dict[str, float]] = Field(default_factory=dict)
+    education_start_date: Optional[Dict[str, float]] = Field(
         default_factory=dict
     )
-    post_graduation_time: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_end_date: Optional[Dict[str, float]] = Field(default_factory=dict)
+    education_description: Optional[Dict[str, float]] = Field(
+        default_factory=dict
+    )
+    post_graduation_time: Optional[Dict[str, float]] = Field(
+        default_factory=dict
+    )
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
@@ -473,7 +478,7 @@ class EducationProfiles(BaseModel):
 
 class B2BInsight(BaseModel):
     professional_profile: ProfessionalProfiles
-    education_history: Dict[str, Any] = {}
+    education_history: EducationProfiles
     employment_history: EmploymentHistoryProfiles
 
 
