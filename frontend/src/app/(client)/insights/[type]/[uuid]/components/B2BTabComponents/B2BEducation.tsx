@@ -47,11 +47,12 @@ const B2BEducation: React.FC<B2BEducationProps> = ({ data, fieldRanks }) => {
 				<Box
 					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
 				>
-					<Box sx={{ display: "flex", width: "40%" }}>
-						<VerticalGradientBarChart
+					<Box sx={{ display: "flex", width: "50%" }}>
+						<GradientBarChart
 							title="Degree"
 							data={mapGenericPercentage(data?.degree)}
 							rank={fieldRanks["degree"]}
+							gradientColor="155, 223, 196"
 						/>
 					</Box>
 				</Box>

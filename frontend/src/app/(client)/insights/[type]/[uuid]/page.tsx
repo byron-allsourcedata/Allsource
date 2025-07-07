@@ -101,7 +101,7 @@ const Insights = () => {
 			department: {},
 			homeowner: {},
 		},
-		education: {
+		education_history: {
 			institution_name: {},
 			post_graduation_time: {},
 			degree: {},
