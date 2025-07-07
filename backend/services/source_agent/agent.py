@@ -30,7 +30,7 @@ class EmploymentEntry(BaseModel):
     company_name: str | None = None
     location: str | None = None
     job_tenure: str | None = None
-    number_of_jobs_last_5_years: str | None = None
+    number_of_jobs: str | None = None
     start_date: str | None = None
     end_date: str | None = None
 

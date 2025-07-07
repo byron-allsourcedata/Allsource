@@ -375,7 +375,7 @@ class InsightsUtils:
         if "employment" in categories:
             setattr(
                 insights.employment_history,
-                "number_of_jobs_last_5_years",
+                "number_of_jobs",
                 dict(jobs_last_5_years_counter),
             )
             _fill(insights.employment_history, EMPLOYMENT_COLS, "employment")
