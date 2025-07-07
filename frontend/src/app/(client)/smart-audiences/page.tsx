@@ -81,6 +81,7 @@ import SmartCell from "@/components/table/SmartCell";
 import { Paginator } from "@/components/PaginationComponent";
 import { usePagination } from "@/hooks/usePagination";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import RenderProgress from "../sources/components/RenderProgress";
 
 interface Smarts {
 	id: string;
@@ -1970,8 +1971,14 @@ const SmartAudiences: React.FC = () => {
 																						(row.status === "unvalidated" ||
 																							row?.processed_active_segment_records !==
 																								0)) ? (
-																					row.active_segment_records.toLocaleString(
-																						"en-US",
+																					row.validated_records > 0 ? (
+																						row.validated_records.toLocaleString(
+																							"en-US",
+																						)
+																					) : (
+																						row.active_segment_records.toLocaleString(
+																							"en-US",
+																						)
 																					)
 																				) : row?.processed_active_segment_records >
 																					progress?.processed ? (
