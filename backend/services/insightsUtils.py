@@ -14,6 +14,11 @@ from enums import BusinessType
 from models import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
+from services.utils_constants.location_constants import (
+    US_STATE_ABBR,
+    CITY_TO_STATE,
+)
+from services.source_agent.agent import EmploymentEntry
 
 from models.enrichment import (
     EnrichmentUser,
@@ -116,143 +121,6 @@ COLUMNS_BY_CATEGORY: Dict[str, List[str]] = {
 MAX_IDS_PER_BATCH = 5_000
 
 
-US_STATE_ABBR = {
-    "alabama": "AL",
-    "alaska": "AK",
-    "arizona": "AZ",
-    "arkansas": "AR",
-    "california": "CA",
-    "colorado": "CO",
-    "connecticut": "CT",
-    "delaware": "DE",
-    "florida": "FL",
-    "georgia": "GA",
-    "hawaii": "HI",
-    "idaho": "ID",
-    "illinois": "IL",
-    "indiana": "IN",
-    "iowa": "IA",
-    "kansas": "KS",
-    "kentucky": "KY",
-    "louisiana": "LA",
-    "maine": "ME",
-    "maryland": "MD",
-    "massachusetts": "MA",
-    "michigan": "MI",
-    "minnesota": "MN",
-    "mississippi": "MS",
-    "missouri": "MO",
-    "montana": "MT",
-    "nebraska": "NE",
-    "nevada": "NV",
-    "new hampshire": "NH",
-    "new jersey": "NJ",
-    "new mexico": "NM",
-    "new york": "NY",
-    "north carolina": "NC",
-    "north dakota": "ND",
-    "ohio": "OH",
-    "oklahoma": "OK",
-    "oregon": "OR",
-    "pennsylvania": "PA",
-    "rhode island": "RI",
-    "south carolina": "SC",
-    "south dakota": "SD",
-    "tennessee": "TN",
-    "texas": "TX",
-    "utah": "UT",
-    "vermont": "VT",
-    "virginia": "VA",
-    "washington": "WA",
-    "west virginia": "WV",
-    "wisconsin": "WI",
-    "wyoming": "WY",
-    # For territories and aliases
-    "dc": "DC",
-    "district of columbia": "DC",
-    "puerto rico": "PR",
-}
-
-# Some major cities -> state abbreviation
-CITY_TO_STATE = {
-    "dallas": "TX",
-    "fort worth": "TX",
-    "houston": "TX",
-    "austin": "TX",
-    "sacramento": "CA",
-    "san francisco": "CA",
-    "los angeles": "CA",
-    "boston": "MA",
-    "chicago": "IL",
-    "philadelphia": "PA",
-    "new york": "NY",
-    "brooklyn": "NY",
-    "atlanta": "GA",
-    "miami": "FL",
-    "orlando": "FL",
-    "tampa": "FL",
-    "minneapolis": "MN",
-    "st. paul": "MN",
-    "phoenix": "AZ",
-    "denver": "CO",
-    "salt lake city": "UT",
-    "seattle": "WA",
-    "las vegas": "NV",
-    "new orleans": "LA",
-    "nashville": "TN",
-    "baltimore": "MD",
-    "detroit": "MI",
-    "pittsburgh": "PA",
-    "st. louis": "MO",
-    "arlington": "VA",
-    "fairfax": "VA",
-    "fredericksburg": "VA",
-    "hartford": "CT",
-    "mclean": "VA",
-    "waco": "TX",
-    "jackson": "MS",
-    "tacoma": "WA",
-    "eagan": "MN",
-    "sioux falls": "SD",
-    "smyra": "TN",
-    "franklin": "TN",
-    "flowood": "MS",
-    "boulder": "CO",
-    "lenexa": "KS",
-    "cedar rapids": "IA",
-    "anderson": "IN",
-    "oklahoma city": "OK",
-    "madison": "WI",
-    "ames": "IA",
-    "plummer": "ID",
-    "richardson": "TX",
-    "hendersonville": "TN",
-    "newton": "MA",
-    "wilmington": "NC",
-    "spokane": "WA",
-    "brentwood": "TN",
-    "charlotte": "NC",
-    "greensboro": "NC",
-    "concord": "NH",
-    "rochester": "MN",
-    "peoria": "AZ",
-    "vienna": "VA",
-    "mesa": "AZ",
-    "greenville": "TX",
-    "hallandale": "FL",
-    "maple grove": "MN",
-    "carmichael": "CA",
-    "eden prairie": "MN",
-    "bloomington": "MN",
-    "utica": "NY",
-    "elizabeth city": "NC",
-    "natchitoches": "LA",
-    "warminster": "PA",
-    "kalamazoo": "MI",
-    "springfield": "MO",
-}
-
-
 class InsightsUtils:
     @staticmethod
     def bucket_age(age_range: Optional[str]) -> str:
@@ -276,6 +144,56 @@ class InsightsUtils:
         if 46 <= low <= 65:
             return "46-65"
         return "Other"
+
+    @staticmethod
+    def _safe_parse_date(date_str: Optional[str]) -> Optional[datetime]:
+        if not date_str:
+            return None
+        try:
+            return parse_date(date_str)
+        except Exception:
+            return None
+
+    @staticmethod
+    def _calculate_tenure_key(
+        start: Optional[datetime], end: Optional[datetime]
+    ) -> str:
+        if not start:
+            return "unknown"
+
+        if end:
+            tenure_months = (end.year - start.year) * 12 + (
+                end.month - start.month
+            )
+            if tenure_months < 0:
+                tenure_months = 0
+        else:
+            now = datetime.utcnow()
+            tenure_months = (now.year - start.year) * 12 + (
+                now.month - start.month
+            )
+
+        years = tenure_months // 12
+        months = tenure_months % 12
+
+        parts = []
+        if years > 0:
+            parts.append(f"{years} year{'s' if years != 1 else ''}")
+        if months > 0:
+            parts.append(f"{months} month{'s' if months != 1 else ''}")
+        return " ".join(parts) if parts else "Less than 1 month"
+
+    @staticmethod
+    def _add_employment_value(
+        buckets: Dict[str, Dict[str, Counter]],
+        field_name: str,
+        val: Optional[str],
+    ):
+        if val is None or InsightsUtils.is_invalid(val):
+            key = "unknown"
+        else:
+            key = str(val).lower()
+        buckets["employment"][field_name][key] += 1
 
     @staticmethod
     def extract_state_from_location(location: str) -> Optional[str]:
@@ -302,6 +220,43 @@ class InsightsUtils:
                 return abbr
 
         return None
+
+    @staticmethod
+    def _calculate_employment_stats(
+        jobs: List[EmploymentEntry],
+        buckets: Dict[str, Dict[str, Counter]],
+        five_years_ago: datetime,
+        jobs_last_5y_counter: Counter,
+    ):
+        jobs_last_5y = 0
+
+        for job in jobs:
+            start = InsightsUtils._safe_parse_date(job.start_date)
+            end = InsightsUtils._safe_parse_date(job.end_date)
+
+            if start and start >= five_years_ago:
+                jobs_last_5y += 1
+
+            tenure_key = InsightsUtils._calculate_tenure_key(start, end)
+
+            InsightsUtils._add_employment_value(
+                buckets, "company_name", job.company_name
+            )
+            InsightsUtils._add_employment_value(
+                buckets, "job_title", job.job_title
+            )
+
+            state_code = InsightsUtils.extract_state_from_location(
+                job.location or ""
+            )
+            if state_code:
+                buckets["employment"]["job_location"][state_code] += 1
+            else:
+                buckets["employment"]["job_location"]["unknown"] += 1
+
+            buckets["employment"]["job_tenure"][tenure_key] += 1
+
+        jobs_last_5y_counter[str(jobs_last_5y)] += 1
 
     @staticmethod
     def _chunk(iterable, size: int):
@@ -394,90 +349,12 @@ class InsightsUtils:
                         if not jobs:
                             continue
 
-                        asid_jobs_count_5y = 0
-
-                        for job_entry in jobs:
-                            try:
-                                start = (
-                                    parse_date(job_entry.start_date)
-                                    if job_entry.start_date
-                                    else None
-                                )
-                            except Exception:
-                                start = None
-                            try:
-                                end = (
-                                    parse_date(job_entry.end_date)
-                                    if job_entry.end_date
-                                    else None
-                                )
-                            except Exception:
-                                end = None
-
-                            if start and start >= five_years_ago:
-                                asid_jobs_count_5y += 1
-
-                            if start and end:
-                                tenure_months = (end.year - start.year) * 12 + (
-                                    end.month - start.month
-                                )
-                                if tenure_months < 0:
-                                    tenure_months = 0
-                            elif start and not end:
-                                now = datetime.utcnow()
-                                tenure_months = (now.year - start.year) * 12 + (
-                                    now.month - start.month
-                                )
-                            else:
-                                tenure_months = None
-
-                            if tenure_months is None:
-                                tenure_key = "unknown"
-                            else:
-                                years = tenure_months // 12
-                                months = tenure_months % 12
-
-                                parts = []
-                                if years > 0:
-                                    parts.append(
-                                        f"{years} year{'s' if years != 1 else ''}"
-                                    )
-                                if months > 0:
-                                    parts.append(
-                                        f"{months} month{'s' if months != 1 else ''}"
-                                    )
-
-                                tenure_key = (
-                                    " ".join(parts)
-                                    if parts
-                                    else "Less than 1 month"
-                                )
-
-                            def add_val(field_name, val):
-                                if InsightsUtils.is_invalid(val):
-                                    key = "unknown"
-                                else:
-                                    key = str(val).lower()
-                                buckets["employment"][field_name][key] += 1
-
-                            add_val("company_name", job_entry.company_name)
-                            add_val("job_title", job_entry.job_title)
-                            state_code = (
-                                InsightsUtils.extract_state_from_location(
-                                    job_entry.location or ""
-                                )
-                            )
-                            if state_code:
-                                buckets["employment"]["job_location"][
-                                    state_code
-                                ] += 1
-                            else:
-                                buckets["employment"]["job_location"][
-                                    "unknown"
-                                ] += 1
-                            buckets["employment"]["job_tenure"][tenure_key] += 1
-
-                        jobs_last_5_years_counter[str(asid_jobs_count_5y)] += 1
+                        InsightsUtils._calculate_employment_stats(
+                            jobs=jobs,
+                            buckets=buckets,
+                            five_years_ago=five_years_ago,
+                            jobs_last_5y_counter=jobs_last_5_years_counter,
+                        )
 
         # Pydantic
         def _fill(target, cols, cat):
