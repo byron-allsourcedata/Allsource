@@ -22,6 +22,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import AddCardPopup from "./AddCard";
 import { loadStripe } from "@stripe/stripe-js";
 import { styled } from "@mui/material/styles";
+import { useBillingContext } from "@/context/BillingContext";
 
 interface AddFundsPopup {
 	cardDetails: CardDetails[];
@@ -58,6 +59,7 @@ export const AddFundsPopup: React.FC<AddFundsPopup> = ({
 	const [amountFunds, setAmountFunds] = useState<number>(0);
 	const [selectedCard, setSelectedCard] = useState<string>("");
 	const [loading, setLoading] = useState(false);
+	const { triggerSync } = useBillingContext();
 
 	const countReplenishFunds = [50, 100, 200, 500, 1000];
 	const stripePromise = loadStripe(
@@ -69,10 +71,15 @@ export const AddFundsPopup: React.FC<AddFundsPopup> = ({
 			setLoading(true);
 			const response = await axiosInterceptorInstance.post(
 				"/settings/billing/buy-funds",
-				{ amount: amountFunds, type_funds: "validation_funds" },
+				{
+					amount: amountFunds,
+					type_funds: "validation_funds",
+					payment_method_id: cardDetails[Number(selectedCard)].id,
+				},
 			);
 			if (response.data.success) {
 				showToast("Credits successfully purchased!");
+				triggerSync();
 				handlePopupClose();
 			} else {
 				showErrorToast(response.data.error);

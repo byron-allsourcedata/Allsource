@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 
 from dependencies import (
@@ -19,8 +17,9 @@ from schemas.settings import (
     PlansResponse,
 )
 from schemas.users import VerifyTokenResponse
-from schemas.settings import BuyFundsRequest
+from schemas.settings import BuyFundsRequest, BuyCreditsRequest
 from services.settings import SettingsService
+from services.stripe_service import StripeService
 
 router = APIRouter(dependencies=[Depends(check_user_setting_access)])
 
@@ -278,7 +277,7 @@ def billing_overage(
 def download_billing(
     settings_service: SettingsService,
     invoice_id: str = Query(...),
-    user: dict = Depends(check_user_authorization_without_pixel),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
         team_member = user.get("team_member")
@@ -292,6 +291,34 @@ def download_billing(
                 detail="Access denied. Admins only.",
             )
     return settings_service.download_billing(invoice_id=invoice_id)
+
+
+@router.get("/billing/view-billing")
+def view_billing(
+    settings_service: SettingsService,
+    charge_id: str = Query(...),
+    user: User = Depends(check_user_authorization_without_pixel),
+):
+    if user.get("team_member"):
+        team_member = user.get("team_member")
+        if (
+            team_member.get("team_access_level") != TeamAccessLevel.ADMIN.value
+            or team_member.get("team_access_level")
+            != TeamAccessLevel.OWNER.value
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only.",
+            )
+
+    result = settings_service.get_billing_by_charge_id(charge_id)
+    if result["status"] != "SUCCESS":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Billing information not found.",
+        )
+
+    return result["data"].get("receipt_url")
 
 
 @router.post("/billing/send-billing")
@@ -393,9 +420,10 @@ def change_api_details(
 @router.post("/billing/pay-credits")
 def pay_credits(
     settings_service: SettingsService,
-    user: dict = Depends(check_team_access_owner_user),
+    payload: BuyCreditsRequest,
+    user: User = Depends(check_team_access_owner_user),
 ):
-    return settings_service.pay_credits(user=user)
+    return settings_service.pay_credits(user=user, payload=payload)
 
 
 @router.post("/billing/buy-funds")

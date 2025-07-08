@@ -1,18 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import {
-	Box,
-	Typography,
-	Button,
-	Tooltip,
-	Link,
-	LinearProgress,
-} from "@mui/material";
-import { billingStyles } from "./billingStyles";
+import { Box, Typography, Tooltip, Link, LinearProgress } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
-import axios from "axios";
-import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { AddFundsPopup } from "./AddFunds";
 import { CardDetails } from "./types";
 import CustomButton from "@/components/ui/CustomButton";
@@ -40,7 +29,6 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	commingSoon = false,
 	moneyContactsOverage = "0",
 }) => {
-	const [isLoading, setIsLoading] = useState(true);
 	const limit = Math.round(((limitValue - currentValue) / limitValue) * 100);
 	const [addFundsPopupOpen, setAddFundsPopupOpen] = useState(false);
 
@@ -51,35 +39,6 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 			return 0;
 		} else {
 			return 100 - limit;
-		}
-	};
-
-	const handleBuyCredits = async () => {
-		try {
-			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				`/subscriptions/buy-credits?credits_used=${10}`,
-			);
-			if (response && response.data.status) {
-				showToast(response.data.status);
-				if (response.data.status == "Payment success") {
-					// setProspectData(prospectData + 10);
-				}
-			} else if (response.data.link) {
-				window.location.href = response.data.link;
-			} else {
-				showErrorToast("Payment link not found.");
-			}
-		} catch (error: unknown) {
-			if (axios.isAxiosError(error)) {
-				showErrorToast(error.message);
-			} else if (error instanceof Error) {
-				showErrorToast(error.message);
-			} else {
-				showErrorToast("An unexpected error occurred.");
-			}
-		} finally {
-			setIsLoading(false);
 		}
 	};
 
@@ -110,25 +69,25 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 							className="second-sub-title"
 							sx={{ lineHeight: "20px !important" }}
 						>
-							${moneyContactsOverage}
+							${Number(moneyContactsOverage).toLocaleString("en-US")}
 						</Typography>
 					)}
 					{needButton && (
 						<Box sx={{ flexShrink: 0 }}>
-							{true && (
+							{commingSoon && (
 								<Tooltip title="Coming Soon" arrow>
 									<Box sx={{ display: "inline-block" }}>
 										<CustomButton disabled={true}>Add Funds</CustomButton>
 									</Box>
 								</Tooltip>
 							)}
-							{/* {!commingSoon && (
+							{!commingSoon && (
 								<Box sx={{ display: "inline-block" }}>
 									<CustomButton onClick={() => setAddFundsPopupOpen(true)}>
 										Add Funds
 									</CustomButton>
 								</Box>
-							)} */}
+							)}
 						</Box>
 					)}
 					{!available && (

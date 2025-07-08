@@ -18,9 +18,11 @@ import dayjs from "dayjs";
 import CustomTooltip from "@/components/customToolTip";
 import { billingStyles } from "./billingStyles";
 import DownloadIcon from "@mui/icons-material/Download";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import CustomTablePagination from "@/components/CustomTablePagination";
 import { BillingHistoryItem } from "./types";
+import { useBillingContext } from "@/context/BillingContext";
 
 interface BillingHistoryProps {
 	setIsLoading: (state: boolean) => void;
@@ -38,6 +40,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 	const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>(
 		[],
 	);
+	const { needsSync } = useBillingContext();
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
 	const fetchBillingHistoryData = async (page: number, rowsPerPage: number) => {
@@ -84,7 +87,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 
 	useEffect(() => {
 		fetchBillingHistoryData(page, rowsPerPage);
-	}, [page, rowsPerPage]);
+	}, [page, rowsPerPage, needsSync]);
 
 	const fetchSaveBillingHistory = async (invoice_id: string) => {
 		try {
@@ -97,6 +100,31 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 				window.open(link, "_blank");
 			} else {
 				showErrorToast("Download billing not found.");
+			}
+		} catch (error: unknown) {
+			if (axios.isAxiosError(error)) {
+				showErrorToast(error.message);
+			} else if (error instanceof Error) {
+				showErrorToast(error.message);
+			} else {
+				showErrorToast("An unexpected error occurred.");
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const fetchViewBillingHistory = async (chargeId: string) => {
+		try {
+			setIsLoading(true);
+			const response = await axiosInterceptorInstance.get(
+				`/settings/billing/view-billing?charge_id=${chargeId}`,
+			);
+			const link = response.data;
+			if (link) {
+				window.open(link, "_blank");
+			} else {
+				showErrorToast("The payment you are viewing was not found.");
 			}
 		} catch (error: unknown) {
 			if (axios.isAxiosError(error)) {
@@ -292,7 +320,7 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 											className="table-data"
 											sx={billingStyles.tableBodyColumn}
 										>
-											${history.total}
+											${history.total.toLocaleString("en-US")}
 										</TableCell>
 										<TableCell
 											className="table-data"
@@ -322,27 +350,53 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 														gap: 2,
 													}}
 												>
-													{/* Download Button */}
-													<IconButton
-														onClick={() =>
-															fetchSaveBillingHistory(history.invoice_id)
-														}
-														sx={{
-															":hover": { backgroundColor: "transparent" },
-															padding: 0,
-														}}
-													>
-														<DownloadIcon
+													{/* View Button */}
+													{history.invoice_id.startsWith("ch_") && (
+														<IconButton
+															onClick={() =>
+																fetchViewBillingHistory(history.invoice_id)
+															}
 															sx={{
-																width: "24px",
-																height: "24px",
-																color: "rgba(188, 188, 188, 1)",
-																":hover": {
-																	color: "rgba(56, 152, 252, 1)",
-																},
+																":hover": { backgroundColor: "transparent" },
+																padding: 0,
 															}}
-														/>
-													</IconButton>
+														>
+															<VisibilityIcon
+																sx={{
+																	width: "24px",
+																	height: "24px",
+																	color: "rgba(188, 188, 188, 1)",
+																	":hover": {
+																		color: "rgba(56, 152, 252, 1)",
+																	},
+																}}
+															/>
+														</IconButton>
+													)}
+
+													{/* Download Button */}
+													{history.invoice_id.startsWith("in_") && (
+														<IconButton
+															onClick={() =>
+																fetchSaveBillingHistory(history.invoice_id)
+															}
+															sx={{
+																":hover": { backgroundColor: "transparent" },
+																padding: 0,
+															}}
+														>
+															<DownloadIcon
+																sx={{
+																	width: "24px",
+																	height: "24px",
+																	color: "rgba(188, 188, 188, 1)",
+																	":hover": {
+																		color: "rgba(56, 152, 252, 1)",
+																	},
+																}}
+															/>
+														</IconButton>
+													)}
 
 													{/* Send Invoice Button */}
 													<IconButton

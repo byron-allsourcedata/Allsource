@@ -48,7 +48,7 @@ import hashlib
 import json
 from services.stripe_service import *
 from decimal import Decimal
-from schemas.settings import BuyFundsRequest
+from schemas.settings import BuyFundsRequest, BuyCreditsRequest
 
 
 @injectable
@@ -784,19 +784,38 @@ class SettingsService:
             "is_leads_auto_charging": is_leads_auto_charging,
         }
 
-    def send_billing(self, invoice_id, email, user):
-        result = get_billing_by_invoice_id(invoice_id)
-        if result["status"] != "SUCCESS":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Billing information not found.",
-            )
+    def get_billing_by_charge_id(self, charge_id):
+        return get_billing_by_charge_id(charge_id)
 
-        invoice_number = result["data"].get("id", "")
-        invoice_date = datetime.fromtimestamp(
-            result["data"].get("created", 0)
-        ).strftime("%B %d, %Y")
-        total = result["data"].get("amount_due", 0) / 100
+    def send_billing(self, invoice_id, email, user):
+        if invoice_id.startswith("ch_"):
+            result = get_billing_by_charge_id(invoice_id)
+            if result["status"] != "SUCCESS":
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Billing information not found.",
+                )
+            invoice_number = result["data"].get("id")
+            invoice_date = datetime.fromtimestamp(
+                result["data"].get("created")
+            ).strftime("%B %d, %Y")
+            total = result["data"].get("amount") / 100
+            link_to_email = result["data"].get("receipt_url", "")
+
+        else:
+            result = get_billing_by_invoice_id(invoice_id)
+            if result["status"] != "SUCCESS":
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Billing information not found.",
+                )
+
+            invoice_number = result["data"].get("id", "")
+            invoice_date = datetime.fromtimestamp(
+                result["data"].get("created", 0)
+            ).strftime("%B %d, %Y")
+            total = result["data"].get("amount_due", 0) / 100
+            link_to_email = (result["data"].get("hosted_invoice_url", ""),)
 
         template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PAYMENT_INVOICE_TEMPLATE.value
@@ -811,7 +830,7 @@ class SettingsService:
                 "invoice_number": invoice_number,
                 "invoice_date": invoice_date,
                 "total": f"{total:.2f}",
-                "link": result["data"].get("hosted_invoice_url", ""),
+                "link": link_to_email,
             },
         )
 
@@ -891,7 +910,7 @@ class SettingsService:
             )
         return SettingStatus.SUCCESS
 
-    def pay_credits(self, user: dict):
+    def pay_credits(self, user: User, payload: BuyCreditsRequest):
         user_subscription = self.subscription_service.get_user_subscription(
             user_id=user.get("id")
         )
@@ -907,6 +926,7 @@ class SettingsService:
             quantity=user.get("overage_leads_count"),
             product_description="Charge overage credits",
             charge_type="contacts_overage",
+            payment_method_id=payload.payment_method_id,
         )
         if result["success"]:
             event = result["stripe_payload"]
@@ -927,6 +947,7 @@ class SettingsService:
             "user_id": str(user.get("id")),
             "type_funds": payload.type_funds.value,
             "amount_usd": str(payload.amount),
+            "charge_type": "buy_funds",
         }
 
         result = self.stripe_service.charge_customer_immediately(
@@ -935,6 +956,7 @@ class SettingsService:
             currency="usd",
             description="Buy funds",
             metadata=metadata,
+            payment_method_id=payload.payment_method_id,
         )
 
         if result["success"]:

@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { TrialProvider } from "../context/TrialProvider";
 import { HintsProvider } from "../context/HintsContext";
+import { BillingProvider } from "../context/BillingContext";
 import { SSEProvider } from "../context/SSEContext";
 import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
@@ -69,11 +70,13 @@ export default function RootLayout({
 						<SidebarProvider>
 							<TrialProvider>
 								<HintsProvider>
-									<PrivacyPolicyProvider>
-										<UserProvider>
-											<IntegrationProvider>{children}</IntegrationProvider>
-										</UserProvider>
-									</PrivacyPolicyProvider>
+									<BillingProvider>
+										<PrivacyPolicyProvider>
+											<UserProvider>
+												<IntegrationProvider>{children}</IntegrationProvider>
+											</UserProvider>
+										</PrivacyPolicyProvider>
+									</BillingProvider>
 								</HintsProvider>
 							</TrialProvider>
 						</SidebarProvider>
