@@ -161,7 +161,6 @@ const Signin: React.FC = () => {
 							break;
 
 						case "SUCCESS_ADMIN":
-							await fetchUserData();
 							sessionStorage.setItem("admin", "true");
 							router.push("/admin");
 							break;

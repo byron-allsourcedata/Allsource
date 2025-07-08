@@ -1595,7 +1595,9 @@ const Leads: React.FC = () => {
 											sx={{ textWrap: "nowrap" }}
 										>
 											Resolved Contacts{" "}
-											{data.length === 0 ? "" : `(${count_leads})`}
+											{data.length === 0
+												? ""
+												: `(${count_leads?.toLocaleString("en-US")})`}
 										</Typography>
 										<CustomToolTip
 											title={

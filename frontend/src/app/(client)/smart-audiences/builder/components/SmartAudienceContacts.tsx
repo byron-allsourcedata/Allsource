@@ -618,7 +618,12 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 											</IconButton>
 										),
 									}}
-									sx={{ pb: "2px" }}
+									sx={{
+										pb: "2px",
+										"& input": {
+											paddingLeft: 0,
+										},
+									}}
 								/>
 								{isTableVisible && (
 									<TableContainer component={Paper}>
@@ -837,8 +842,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 							onChange={handleInputChange}
 							sx={{
 								"& .MuiOutlinedInput-root": {
-									borderRadius: "8px",
-									paddingLeft: "8px",
+									borderRadius: "4px",
 									width: "300px",
 									height: "40px",
 									"@media (max-width: 1080px)": {

@@ -1071,7 +1071,9 @@ const Leads: React.FC = () => {
 												style={{ textWrap: "nowrap" }}
 											>
 												Company list{" "}
-												{data.length === 0 ? "" : `(${count_companies})`}
+												{data.length === 0
+													? ""
+													: `(${count_companies?.toLocaleString("en-US")})`}
 											</Typography>
 											<CustomToolTip
 												title={
