@@ -1051,23 +1051,29 @@ def calculate_and_save_significant_fields(
     audience_lookalikes_service: AudienceLookalikesService,
     audience_type: BusinessType,
 ):
-    audience_source_data = audience_lookalikes_service.lookalikes_persistence_service.retrieve_source_insights(
-        source_uuid=source_id, audience_type=audience_type
-    )
-    b2c_insights, b2b_insights, other = (
-        audience_lookalikes_service.calculate_insights(
-            audience_data=audience_source_data,
-            similar_audience_service=similar_audience_service,
+    try:
+        audience_source_data = audience_lookalikes_service.lookalikes_persistence_service.retrieve_source_insights(
+            source_uuid=source_id, audience_type=audience_type
         )
-    )
-    combined_insights = extract_non_zero_values(
-        b2c_insights, b2b_insights, other
-    )
-    db_session.execute(
-        update(AudienceSource)
-        .where(AudienceSource.id == source_id)
-        .values(significant_fields=combined_insights)
-    )
+        b2c_insights, b2b_insights, other = (
+            audience_lookalikes_service.calculate_insights(
+                audience_data=audience_source_data,
+                similar_audience_service=similar_audience_service,
+            )
+        )
+        combined_insights = extract_non_zero_values(
+            b2c_insights, b2b_insights, other
+        )
+        db_session.execute(
+            update(AudienceSource)
+            .where(AudienceSource.id == source_id)
+            .values(significant_fields=combined_insights)
+        )
+    except Exception as e:
+        logging.error(f"Error calculating significant fields: {e}", exc_info=True)
+        logging.error(f"Contunuing anyway")
+
+
 
 
 def check_significant_fields_and_insights(source: AudienceSource) -> bool:
