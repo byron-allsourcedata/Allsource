@@ -372,7 +372,6 @@ class InsightsUtils:
                         jobs = employment_data.get(asid, [])
                         if not jobs:
                             continue
-
                         InsightsUtils._calculate_employment_stats(
                             jobs=jobs,
                             buckets=buckets,
@@ -452,7 +451,6 @@ class InsightsUtils:
             _fill(insights.professional_profile, PROF_COLS, "professional")
         if "education" in categories:
             _fill(insights.education_history, EDUCATION_JSON_COLS, "education")
-
         if "employment" in categories:
             setattr(
                 insights.employment_history,

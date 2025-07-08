@@ -36,6 +36,7 @@ class NotificationPersistence:
             self.db.query(UserAccountNotification)
             .filter(
                 UserAccountNotification.user_id == user_id,
+                UserAccountNotification.is_checked.is_(False),
                 UserAccountNotification.notification_id
                 == account_notification_id,
             )

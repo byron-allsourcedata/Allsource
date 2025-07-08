@@ -203,7 +203,7 @@ class KlaviyoIntegrationsService:
             },
         )
         if response.status_code == 401 and credential:
-            credential.error_message = "Invalid API KEY"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             return
@@ -218,7 +218,7 @@ class KlaviyoIntegrationsService:
             api_key=access_token,
         )
         if response.status_code == 401 and credential:
-            credential.error_message = "Invalid API KEY"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             return
@@ -239,7 +239,7 @@ class KlaviyoIntegrationsService:
         if response.status_code == 201 or response.status_code == 200:
             return self.__mapped_tags(response.json().get("data"))
         elif response.status_code == 401:
-            credential.error_message = "Invalid API Key"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             raise HTTPException(
@@ -283,7 +283,7 @@ class KlaviyoIntegrationsService:
             ),
         )
         if response.status_code == 401:
-            credential.error_message = "Invalid API Key"
+            credential.error_message = "Invalid API key or permissions"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             raise HTTPException(
@@ -618,9 +618,26 @@ class KlaviyoIntegrationsService:
                     api_key=api_key,
                     json={"data": ids},
                 )
-                return resp
+                if status in (200, 201, 202, 204):
+                    return ProccessDataSyncResult.SUCCESS.value
 
-            return resp
+                if status == 401:
+                    return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+                elif status == 403:
+                    return ProccessDataSyncResult.FORBIDDEN.value
+
+                elif status == 404:
+                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+
+                elif status == 429:
+                    return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
+
+                else:
+                    logging.error(resp.text)
+                    return ProccessDataSyncResult.UNEXPECTED_ERROR.value
+
+            return ProccessDataSyncResult.SUCCESS.value
 
         for batch in chunks(profiles, 100):
             with_phone = [p for p in batch if p.get("phone_number")]

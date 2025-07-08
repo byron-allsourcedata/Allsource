@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Link, Typography } from "@mui/material";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { useIntegrationLink } from "@/hooks/useIntegrationLink";
 
 interface CustomNotificationProps {
 	id: number;
@@ -17,6 +18,9 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 	onDismiss,
 }) => {
 	const [show, setShow] = useState(true);
+
+	const learnMoreUrl = useIntegrationLink(message);
+
 	const handleDismiss = () => {
 		try {
 			const response = axiosInstance.post("/notification/dismiss", {
@@ -33,6 +37,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 		{ word: "Enable", link: "/settings?section=billing" },
 		{ word: "Upgrade", link: "/settings?section=subscription" },
 		{ word: "Choose a plan", link: "/settings?section=subscription" },
+		{ word: "Learn more", link: learnMoreUrl },
 	];
 
 	const transformTextToLinks = (text: string | null): JSX.Element => {
@@ -49,6 +54,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({
 					<Link
 						key={index}
 						className="second-sub-title"
+						target="_blank"
 						href={keyword.link}
 						sx={{
 							textDecoration: "none",

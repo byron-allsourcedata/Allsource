@@ -312,6 +312,9 @@ async def ensure_integration(
                     case ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
                         logging.debug(f"too_many_requests: {service_name}")
 
+                    case ProccessDataSyncResult.UNEXPECTED_ERROR.value:
+                        logging.debug(f"Unexpected error: {service_name}")
+
                     case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
                         update_users_integrations(
