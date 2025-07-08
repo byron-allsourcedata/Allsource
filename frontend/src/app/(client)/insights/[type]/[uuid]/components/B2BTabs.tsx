@@ -93,7 +93,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 								},
 							}}
 						/>
-						<Tab
+						{/* <Tab
 							label="Education"
 							className="tab-filled-button"
 							sx={{
@@ -104,7 +104,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 									color: "rgba(32, 33, 36, 1)",
 								},
 							}}
-						/>
+						/> */}
 						<Tab
 							label="Employment"
 							className="tab-filled-button"
@@ -190,10 +190,10 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 						fieldRanks={fieldRanks}
 					/>
 				</TabPanel>
+				{/* <TabPanel value={tabIndex} index={1}>
+					<B2BEducation data={data.education_history} fieldRanks={fieldRanks} />
+				</TabPanel> */}
 				<TabPanel value={tabIndex} index={1}>
-					<B2BEducation data={data.education} fieldRanks={fieldRanks} />
-				</TabPanel>
-				<TabPanel value={tabIndex} index={2}>
 					<B2BEmployment
 						data={data.employment_history}
 						fieldRanks={fieldRanks}

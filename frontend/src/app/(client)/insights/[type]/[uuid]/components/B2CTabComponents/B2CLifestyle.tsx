@@ -101,20 +101,20 @@ const lifestyleMap: {
 		color: "rgba(114, 201, 157, 1)",
 		backgroundColor: "rgba(227, 242, 227, 1)",
 	},
-	{
-		key: "gardening_interest",
-		title: "Gardening Interest",
-		imageSrc: "/garden.svg",
-		color: "rgba(98, 178, 253, 1)",
-		backgroundColor: "rgba(193, 228, 255, 1)",
-	},
-	{
-		key: "beauty_cosmetic_interest",
-		title: "Beauty/Cosmetic Interest",
-		imageSrc: "/cosmetics.svg",
-		color: "rgba(114, 201, 157, 1)",
-		backgroundColor: "rgba(227, 242, 227, 1)",
-	},
+	// {
+	// 	key: "gardening_interest",
+	// 	title: "Gardening Interest",
+	// 	imageSrc: "/garden.svg",
+	// 	color: "rgba(98, 178, 253, 1)",
+	// 	backgroundColor: "rgba(193, 228, 255, 1)",
+	// },
+	// {
+	// 	key: "beauty_cosmetic_interest",
+	// 	title: "Beauty/Cosmetic Interest",
+	// 	imageSrc: "/cosmetics.svg",
+	// 	color: "rgba(114, 201, 157, 1)",
+	// 	backgroundColor: "rgba(227, 242, 227, 1)",
+	// },
 ];
 
 const B2CLifestyle = ({ data, fieldRanks }: B2CLifestyleProps) => {

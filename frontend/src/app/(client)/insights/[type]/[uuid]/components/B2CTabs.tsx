@@ -39,6 +39,8 @@ const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks, isDebug }) => {
 		setIndex(newIndex);
 	};
 
+	console.log(data.lifestyle.own_pets);
+
 	return (
 		<Box>
 			<Box

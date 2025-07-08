@@ -73,7 +73,7 @@ export type EmploymentInfo = {
 
 export type B2BData = {
 	professional_profile: ProfessionalInfo;
-	education: EducationInfo;
+	education_history: EducationInfo;
 	employment_history: EmploymentInfo;
 };
 
