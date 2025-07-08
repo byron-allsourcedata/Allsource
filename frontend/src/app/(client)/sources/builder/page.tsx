@@ -661,6 +661,10 @@ const SourcesImport: React.FC = () => {
 	): Promise<void> => {
 		try {
 			const { data } = parsedData;
+			if (data.length < 501) {
+				throw new Error("The uploaded Csv file is too small!");
+			}
+
 			const headers = data[0];
 			const formatterHeaders = headers.map((el) => el.trim());
 			setHeadersinCSV(formatterHeaders);
@@ -747,6 +751,7 @@ const SourcesImport: React.FC = () => {
 		} catch (error: unknown) {
 			if (error instanceof Error) {
 				showErrorToast(error.message);
+				handleDeleteFile()
 			} else {
 				showErrorToast("An unexpected error occurred during file upload.");
 			}
@@ -1148,6 +1153,9 @@ const SourcesImport: React.FC = () => {
 													"@media (max-width: 390px)": {
 														width: "calc(100vw - 74px)",
 													},
+													"&:hover": {
+														backgroundColor: "#E1F0FF"
+													},
 												}}
 												onDragOver={handleDragOver}
 												onDragLeave={handleDragLeave}
@@ -1161,7 +1169,11 @@ const SourcesImport: React.FC = () => {
 														width: "40px",
 														height: "40px",
 														borderRadius: "4px",
-														backgroundColor: "rgba(234, 235, 255, 1)",
+														backgroundColor: "rgba(56, 152, 252, 0.2)",
+														"&:hover": {
+															backgroundColor: "rgba(56, 152, 252, 0.2)",
+														},
+
 													}}
 												>
 													<FileUploadOutlinedIcon
