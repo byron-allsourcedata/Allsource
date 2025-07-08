@@ -71,8 +71,7 @@ class AudienceInsightsService:
 
         return self._combine_limit_20(sources, lookalikes)
 
-    @staticmethod
-    def _build_response(data: dict, is_debug: bool) -> dict:
+    def _build_response(self, data: dict, is_debug: bool) -> dict:
         # B2B
         professional_profile = data.get("professional_profile", {})
         education_history = data.get("education_history", {})
@@ -92,12 +91,6 @@ class AudienceInsightsService:
                     val.pop("unknown")
 
             for key, val in employment_history.items():
-                if "unknown" in val:
-                    val.pop("unknown")
-
-            for key, val in education_history.items():
-                # TODO: unknown values can be find
-                # without debug in post_graduation time
                 if "unknown" in val:
                     val.pop("unknown")
 

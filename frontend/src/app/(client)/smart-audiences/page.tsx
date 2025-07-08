@@ -1971,15 +1971,9 @@ const SmartAudiences: React.FC = () => {
 																						(row.status === "unvalidated" ||
 																							row?.processed_active_segment_records !==
 																								0)) ? (
-																					row.validated_records > 0 ? (
-																						row.validated_records.toLocaleString(
+																					row.active_segment_records.toLocaleString(
 																							"en-US",
 																						)
-																					) : (
-																						row.active_segment_records.toLocaleString(
-																							"en-US",
-																						)
-																					)
 																				) : row?.processed_active_segment_records >
 																					progress?.processed ? (
 																					<ProgressBar

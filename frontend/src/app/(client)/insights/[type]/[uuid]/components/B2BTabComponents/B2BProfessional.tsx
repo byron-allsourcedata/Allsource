@@ -31,10 +31,12 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 				>
 					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
-							title="Current Company Name"
+							title="Top Employers"
 							data={mapGenericPercentage(data.current_company_name)}
 							gradientColor="155, 223, 196"
 							rank={fieldRanks["current_company_name"]}
+							hidePercent={true}
+							textPadding={false}
 						/>
 					</Box>
 
@@ -58,14 +60,14 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 				<Box
 					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
 				>
-					<Box sx={{ display: "flex", width: "100%" }}>
+					{/* <Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
 							title="Current Duration"
 							data={mapGenericPercentage(data.job_duration)}
 							gradientColor="249, 155, 171"
 							rank={fieldRanks["job_duration"]}
 						/>
-					</Box>
+					</Box> */}
 
 					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
@@ -84,16 +86,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 							rank={fieldRanks["company_size"]}
 						/>
 					</Box>
-				</Box>
 
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "row",
-						width: "66.25%",
-						gap: 2,
-					}}
-				>
 					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
 							title="Annual Sales"
@@ -102,7 +95,17 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 							rank={fieldRanks["annual_sales"]}
 						/>
 					</Box>
-					<Box sx={{ display: "flex", width: "100%" }}>
+				</Box>
+
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: "row",
+						width: "100%",
+						gap: 2,
+					}}
+				>
+					<Box sx={{ display: "flex", width: "49%" }}>
 						<GradientBarChart
 							title="Department"
 							data={mapGenericPercentage(data.department)}
@@ -110,20 +113,20 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 							rank={fieldRanks["department"]}
 						/>
 					</Box>
-				</Box>
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "row",
-						width: "66.25%",
-						gap: 2,
-					}}
-				>
-					<MapChart
-						title="Job Location"
-						regions={mapState(data.job_location)}
-						rank={fieldRanks["job_location"]}
-					/>
+					<Box
+						sx={{
+							display: "flex",
+							flexDirection: "row",
+							width: "100%",
+							gap: 2,
+						}}
+					>
+						<MapChart
+							title="Job Location"
+							regions={mapState(data.job_location)}
+							rank={fieldRanks["job_location"]}
+						/>
+					</Box>
 				</Box>
 			</Box>
 		</Box>

@@ -16,6 +16,7 @@ type GradientBarChartProps = {
 	sortByPercent?: boolean;
 	rank?: number;
 	textPadding?: boolean;
+	hidePercent?: boolean;
 };
 
 const getGradient = (relativePercent: number, gradientColor: string) => {
@@ -36,6 +37,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 	sortByPercent = true,
 	rank,
 	textPadding,
+	hidePercent = false,
 }) => {
 	const [expanded, setExpanded] = useState(false);
 	const sortedData = sortByPercent
@@ -45,7 +47,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 
 	const visibleData = expanded
 		? sortedData.slice(0, 20)
-		: sortedData.slice(0, 5);
+		: sortedData.slice(0, hidePercent ? 8 : 5);
 
 	return (
 		<Box
@@ -113,71 +115,79 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 				sx={{
 					width: "100%",
 					height: "100%",
+					display: "flex",
+					flexDirection: "column",
 				}}
 			>
-				<Box
-					sx={{
-						width: "100%",
-						justifyContent: "space-between",
-						display: "flex",
-						flexDirection: "row",
-						alignItems: "center",
-						mb: 2,
-						pt: textPadding ? 1 : 0,
-					}}
-				>
-					<Typography className="dashboard-card-heading">{title}</Typography>
+				<Box sx={{ flex: 1 }}>
+					{" "}
+					<Box
+						sx={{
+							width: "100%",
+							justifyContent: "space-between",
+							display: "flex",
+							flexDirection: "row",
+							alignItems: "center",
+							mb: 2,
+							pt: textPadding ? 1 : 0,
+						}}
+					>
+						<Typography className="dashboard-card-heading">{title}</Typography>
+					</Box>
+					{visibleData.length === 0 ? (
+						<Box
+							display="flex"
+							justifyContent="center"
+							alignItems="center"
+							height="120px"
+						>
+							<Typography className="second-sub-title">
+								No data available
+							</Typography>
+						</Box>
+					) : (
+						<Stack spacing={textPadding ? 3.5 : 1.25}>
+							{visibleData.map(({ label, percent }, index) => {
+								const relative = percent / maxPercent;
+
+								return (
+									<Box key={index}>
+										<Box display="flex" justifyContent="space-between" mb={0.5}>
+											<Typography
+												className="dashboard-card-text"
+												sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
+											>
+												{label.charAt(0).toUpperCase() + label.slice(1)}
+											</Typography>
+											{!hidePercent && (
+												<Typography
+													className="dashboard-card-text"
+													sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
+												>
+													{percent}%
+												</Typography>
+											)}
+										</Box>
+										{!hidePercent && (
+											<Box
+												height={24}
+												borderRadius={2}
+												sx={{
+													width: `${percent}%`,
+													backgroundColor: getGradient(relative, gradientColor),
+													transition: "background 0.3s ease",
+												}}
+											/>
+										)}
+									</Box>
+								);
+							})}
+						</Stack>
+					)}
 				</Box>
 
-				{visibleData.length === 0 ? (
-					<Box
-						display="flex"
-						justifyContent="center"
-						alignItems="center"
-						height="120px"
-					>
-						<Typography className="second-sub-title">
-							No data available
-						</Typography>
-					</Box>
-				) : (
-					<Stack spacing={textPadding ? 3.5 : 2}>
-						{visibleData.map(({ label, percent }, index) => {
-							const relative = percent / maxPercent;
-
-							return (
-								<Box key={index}>
-									<Box display="flex" justifyContent="space-between" mb={0.5}>
-										<Typography
-											className="dashboard-card-text"
-											sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
-										>
-											{label.charAt(0).toUpperCase() + label.slice(1)}
-										</Typography>
-										<Typography
-											className="dashboard-card-text"
-											sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
-										>
-											{percent}%
-										</Typography>
-									</Box>
-									<Box
-										height={24}
-										borderRadius={2}
-										sx={{
-											width: `${percent}%`,
-											backgroundColor: getGradient(relative, gradientColor),
-											transition: "background 0.3s ease",
-										}}
-									/>
-								</Box>
-							);
-						})}
-					</Stack>
-				)}
-
 				{sortedData.length > 5 && (
-					<Box display="flex" justifyContent="center">
+					<Box display="flex" justifyContent="center" mt="auto" pt={2}>
 						<IconButton
 							onClick={() => setExpanded((prev) => !prev)}
 							size="small"

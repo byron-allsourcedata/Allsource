@@ -39,6 +39,13 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
 	const [loading, setLoading] = useState(false);
 	const [notifications, setNotifications] = useState<Notification[]>([]);
 
+	const [INTEGRATION_LINKS] = useState<{ [key: string]: string }>({
+		klaviyo:
+			"https://allsourceio.zohodesk.com/portal/en/kb/articles/unable-to-add-contact-to-klaviyo-list-missing-integration-permissions",
+		hubspot:
+			"https://allsourceio.zohodesk.com/portal/en/kb/articles/unable-to-add-contact-to-hubspot-list-missing-integration-permissions",
+	});
+
 	useEffect(() => {
 		const accessToken = localStorage.getItem("token");
 		if (accessToken) {
@@ -60,16 +67,23 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
 		}
 	}, [open]);
 
-	const keywords = [
-		{ word: "Enable Overage", link: "/settings?section=billing" },
-		{ word: "billing", link: "/settings?section=billing" },
-		{ word: "Enable", link: "/settings?section=billing" },
-		{ word: "Upgrade", link: "/settings?section=subscription" },
-		{ word: "Choose a plan", link: "/settings?section=subscription" },
-	];
-
 	const transformTextToLinks = (text: string | null): JSX.Element => {
 		if (!text) return <span></span>;
+
+		const matchedKey = Object.keys(INTEGRATION_LINKS).find((key) =>
+			text.includes(key.toLowerCase()),
+		);
+
+		const learnMore = matchedKey ? INTEGRATION_LINKS[matchedKey] : "";
+
+		const keywords = [
+			{ word: "Enable Overage", link: "/settings?section=billing" },
+			{ word: "billing", link: "/settings?section=billing" },
+			{ word: "Enable", link: "/settings?section=billing" },
+			{ word: "Upgrade", link: "/settings?section=subscription" },
+			{ word: "Choose a plan", link: "/settings?section=subscription" },
+			{ word: "Learn more", link: learnMore },
+		];
 
 		const regex = new RegExp(`(${keywords.map((k) => k.word).join("|")})`, "g");
 		const parts = text.split(regex).map((part, index) => {
@@ -78,6 +92,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
 				return (
 					<Link
 						key={index}
+						target="_blank"
 						href={keyword.link}
 						sx={{
 							textDecoration: "none",

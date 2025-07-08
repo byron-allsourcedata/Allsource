@@ -36,13 +36,13 @@ const lifestyleMap: {
 		color: "rgba(240, 129, 140, 1)",
 		backgroundColor: "rgba(252, 212, 215, 1)",
 	},
-	{
-		key: "mail_order_buyer",
-		title: "Mail-Order Buyer",
-		imageSrc: "/mail-order.svg",
-		color: "rgba(249, 217, 103, 1)",
-		backgroundColor: "rgba(255, 243, 189, 1)",
-	},
+	// {
+	// 	key: "mail_order_buyer",
+	// 	title: "Mail-Order Buyer",
+	// 	imageSrc: "/mail-order.svg",
+	// 	color: "rgba(249, 217, 103, 1)",
+	// 	backgroundColor: "rgba(255, 243, 189, 1)",
+	// },
 	{
 		key: "outdoor_interest",
 		title: "Outdoor Interest",
@@ -101,20 +101,20 @@ const lifestyleMap: {
 		color: "rgba(114, 201, 157, 1)",
 		backgroundColor: "rgba(227, 242, 227, 1)",
 	},
-	{
-		key: "gardening_interest",
-		title: "Gardening Interest",
-		imageSrc: "/garden.svg",
-		color: "rgba(98, 178, 253, 1)",
-		backgroundColor: "rgba(193, 228, 255, 1)",
-	},
-	{
-		key: "beauty_cosmetic_interest",
-		title: "Beauty/Cosmetic Interest",
-		imageSrc: "/cosmetics.svg",
-		color: "rgba(114, 201, 157, 1)",
-		backgroundColor: "rgba(227, 242, 227, 1)",
-	},
+	// {
+	// 	key: "gardening_interest",
+	// 	title: "Gardening Interest",
+	// 	imageSrc: "/garden.svg",
+	// 	color: "rgba(98, 178, 253, 1)",
+	// 	backgroundColor: "rgba(193, 228, 255, 1)",
+	// },
+	// {
+	// 	key: "beauty_cosmetic_interest",
+	// 	title: "Beauty/Cosmetic Interest",
+	// 	imageSrc: "/cosmetics.svg",
+	// 	color: "rgba(114, 201, 157, 1)",
+	// 	backgroundColor: "rgba(227, 242, 227, 1)",
+	// },
 ];
 
 const B2CLifestyle = ({ data, fieldRanks }: B2CLifestyleProps) => {

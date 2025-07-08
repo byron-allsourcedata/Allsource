@@ -104,7 +104,7 @@ const Categories: React.FC<PredictableFieldsTabProps> = ({ data }) => {
 					resonates—powered by predictive intelligence.
 				</Typography>
 
-				<Box>
+				{/* <Box>
 					<Link
 						style={{
 							color: "rgba(56, 152, 252, 1) !important",
@@ -117,7 +117,7 @@ const Categories: React.FC<PredictableFieldsTabProps> = ({ data }) => {
 					>
 						Learn more
 					</Link>
-				</Box>
+				</Box> */}
 			</Box>
 		</Box>
 	);

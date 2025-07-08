@@ -17,15 +17,6 @@ from .base import Base
 
 class UserAccountNotification(Base):
     __tablename__ = "users_account_notifications"
-    __table_args__ = (
-        Index("user_notification", "id", "user_id", unique=True),
-        Index(
-            "users_account_notifications_user_id_notification_id_is_checked_",
-            "user_id",
-            "notification_id",
-            "is_checked",
-        ),
-    )
 
     id = Column(
         BigInteger,
@@ -47,4 +38,14 @@ class UserAccountNotification(Base):
         TIMESTAMP,
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+
+    __table_args__ = (
+        Index("user_notification", id, user_id, unique=True),
+        Index(
+            "users_account_notifications_user_id_notification_id_is_checked_",
+            user_id,
+            notification_id,
+            is_checked,
+        ),
     )

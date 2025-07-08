@@ -180,7 +180,7 @@ class SourceAgentService:
         rows = self._run_query(sql, {"ids": asid_list})
 
         contacts: Dict[UUID, ProfContact] = {
-            UUID(asid): ProfContact(
+            asid: ProfContact(
                 job_level=job_level,
                 department=department,
                 company_size=company_size,
@@ -214,13 +214,6 @@ class SourceAgentService:
         if not asids:
             return []
 
-        # sql = (
-        #     f"SELECT {', '.join(columns)} "
-        #     "FROM enrichment_users "
-        #     "WHERE asid IN %(ids)s"
-        # )
-
-        # TODO: replace enrichment_merged to enrichment_users
         sql = (
             f"SELECT {', '.join(columns)} "
             "FROM enrichment_users "

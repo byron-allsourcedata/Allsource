@@ -35,10 +35,12 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 
 					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
-							title="Company Name"
+							title="Top Previous Employers"
 							data={mapGenericPercentage(data.company_name)}
 							gradientColor="155, 223, 196"
 							rank={fieldRanks["company_name"]}
+							hidePercent={true}
+							textPadding={false}
 						/>
 					</Box>
 
@@ -57,9 +59,11 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 				>
 					<Box sx={{ display: "flex", width: "34%" }}>
 						<GradientBarChart
-							title="Job Title"
+							title="Top Job Title"
 							data={mapGenericPercentage(data.job_title)}
 							rank={fieldRanks["job_title"]}
+							hidePercent={true}
+							textPadding={false}
 						/>
 					</Box>
 

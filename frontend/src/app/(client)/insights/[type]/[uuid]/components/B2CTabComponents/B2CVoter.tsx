@@ -25,9 +25,13 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
 		.sort((a, b) => b.percent - a.percent)
 		.slice(0, 6);
 
+	const votingPropensityKey = data.voting_propensity.hasOwnProperty("true")
+		? "true"
+		: "1.0";
+
 	const votingPropensityYes = extractSemiCirclePercent(
 		data.voting_propensity,
-		"0.10000000149011612",
+		votingPropensityKey,
 	);
 
 	const votingPieDataRaw: PercentageMap = {

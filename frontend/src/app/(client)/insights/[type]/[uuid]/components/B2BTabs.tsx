@@ -191,7 +191,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 					/>
 				</TabPanel>
 				<TabPanel value={tabIndex} index={1}>
-					<B2BEducation data={data.education} fieldRanks={fieldRanks} />
+					<B2BEducation data={data.education_history} fieldRanks={fieldRanks} />
 				</TabPanel>
 				<TabPanel value={tabIndex} index={2}>
 					<B2BEmployment
@@ -199,7 +199,6 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 						fieldRanks={fieldRanks}
 					/>
 				</TabPanel>
-				<TabPanel value={tabIndex} index={3}></TabPanel>
 			</Box>
 		</Box>
 	);

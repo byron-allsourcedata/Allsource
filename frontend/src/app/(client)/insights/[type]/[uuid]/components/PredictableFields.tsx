@@ -52,7 +52,7 @@ const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
 						alignItems: "start",
 					}}
 				>
-					<Tabs
+					{/* <Tabs
 						value={tabIndex}
 						onChange={handleTabChange}
 						variant="standard"
@@ -93,7 +93,7 @@ const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
 								},
 							}}
 						/>
-					</Tabs>
+					</Tabs> */}
 				</Box>
 			</Box>
 

@@ -1,5 +1,6 @@
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator
+from datetime import datetime
 from schemas.mapping.audience_insights_mapping import (
     ETHNICITY_MAP,
     LANGUAGE_MAP,
@@ -9,7 +10,6 @@ from schemas.mapping.audience_insights_mapping import (
     CREDIT_SCORE_RANGE_MAP,
     INCOME_RANGE,
 )
-from datetime import datetime
 
 
 class PersonalProfiles(BaseModel):
@@ -142,10 +142,7 @@ class FinancialProfiles(BaseModel):
 
     @staticmethod
     def _map_data(data: dict[str, str], map_dict: dict) -> dict:
-        return {
-            data.get(k, k): v
-            for k, v in map_dict.items()
-        }
+        return {data.get(k, k): v for k, v in map_dict.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "FinancialProfiles":
@@ -262,6 +259,12 @@ class VoterProfiles(BaseModel):
             if not isinstance(val, dict):
                 continue
 
+            # if (
+            #     key in ("congressional_district", "political_party")
+            #     and "unknown" in val
+            # ):
+            #     val.pop("unknown")
+
             setattr(self, key, self._to_percent(val))
 
         return self
@@ -373,13 +376,18 @@ class EmploymentHistoryProfiles(BaseModel):
 
 
 class EducationProfiles(BaseModel):
-    degree: Optional[Dict[str, int]] = Field(default_factory=dict)
-    institution_name: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_description: Optional[Dict[str, int]] = Field(default_factory=dict)
-    post_graduation_time: Optional[Dict[str, int]] = Field(default_factory=dict)
-
+    degree: Optional[Dict[str, float]] = Field(default_factory=dict)
+    institution_name: Optional[Dict[str, float]] = Field(default_factory=dict)
+    education_start_date: Optional[Dict[str, float]] = Field(
+        default_factory=dict
+    )
+    education_end_date: Optional[Dict[str, float]] = Field(default_factory=dict)
+    education_description: Optional[Dict[str, float]] = Field(
+        default_factory=dict
+    )
+    post_graduation_time: Optional[Dict[str, float]] = Field(
+        default_factory=dict
+    )
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
@@ -418,7 +426,7 @@ class EducationProfiles(BaseModel):
                     else:
                         post_graduation_time[years] += 1
             else:
-                post_graduation_time[None] += 1 # if date in invalid format
+                post_graduation_time[None] += 1  # if date in invalid format
 
         return post_graduation_time
 
@@ -429,7 +437,7 @@ class EducationProfiles(BaseModel):
             "3 - 5 years": 0,
             "5 - 10 years": 0,
             "More than 10 years": 0,
-            "unknown": 0
+            "unknown": 0,
         }
 
         post_graduation_time = self._calculate_post_graduation_time()
@@ -459,10 +467,11 @@ class EducationProfiles(BaseModel):
         for key, val in values.items():
             if not isinstance(val, dict):
                 continue
-
             setattr(self, key, self._to_percent(val))
 
-        setattr(self, "post_graduation_time", self._dates_to_bins())
+        bins = self._dates_to_bins()
+        percent_bins = self._to_percent(bins)
+        setattr(self, "post_graduation_time", percent_bins)
 
         return self
 
@@ -561,7 +570,9 @@ class EducationProfile(BaseModel):
     institution_name: Optional[Dict[str, int]] = Field(default_factory=dict)
     education_start_date: Optional[Dict[str, int]] = Field(default_factory=dict)
     education_end_date: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_description: Optional[Dict[str, int]] = Field(default_factory=dict)
+    education_description: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
 
 
 class ProfessionalProfile(BaseModel):
