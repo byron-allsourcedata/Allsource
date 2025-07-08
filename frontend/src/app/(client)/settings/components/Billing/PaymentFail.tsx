@@ -25,9 +25,12 @@ import { CardDetails, CardBrand } from "./types";
 import { styled } from "@mui/material/styles";
 import { billingStyles } from "./billingStyles";
 import { ReturnToAdminButton } from "@/components/ReturnToAdminButton";
+import { useBillingContext } from "@/context/BillingContext";
+import { useSearchParams, usePathname } from "next/navigation";
 
 interface PaymentPopupProps {
 	open: boolean;
+	onClose: () => void;
 	cardDetails: CardDetails[];
 	moneyContactsOverage: string;
 	handleCheckoutSuccess: (item: CardDetails) => void;
@@ -83,6 +86,7 @@ const BorderLinearProgress = styled(LinearProgress)(({}) => ({
 
 const PaymentFail: React.FC<PaymentPopupProps> = ({
 	open,
+	onClose,
 	cardDetails,
 	moneyContactsOverage,
 	handleCheckoutSuccess,
@@ -93,6 +97,9 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 	const [openAddCard, setOpenAddCard] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [visibleButton, setVisibleButton] = useState(false);
+	const { triggerSync } = useBillingContext();
+	const searchParams = useSearchParams();
+	const pathname = usePathname();
 	const router = useRouter();
 
 	const handlePay = async () => {
@@ -100,11 +107,17 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			setLoading(true);
 			const response = await axiosInterceptorInstance.post(
 				"/settings/billing/pay-credits",
-				{},
+				{ payment_method_id: cardDetails[Number(selectedCard)].id },
 			);
-			if (response.data.success == true) {
+			if (response.data.success) {
 				showToast("Credits successfully purchased!");
-				router.push("/settings");
+				triggerSync();
+				onClose();
+				const params = new URLSearchParams(searchParams.toString());
+				params.delete("payment_failed");
+
+				const newUrl = `${pathname}?${params.toString()}`;
+				router.replace(newUrl);
 			} else {
 				showErrorToast(response.data.error);
 			}
@@ -124,7 +137,6 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 			setLoading(false);
 		}
 	};
-	const onClose = () => {};
 
 	const handleAddCard = () => {
 		setOpenAddCard(true);
@@ -149,7 +161,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 
 	return (
 		<>
-			<Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+			<Dialog open={open} onClose={() => {}} maxWidth="sm" fullWidth>
 				<Box
 					sx={{
 						display: "flex",
@@ -178,7 +190,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 						sx={{
 							width: "100%",
 							position: "absolute",
-							top: 70,
+							top: "3.5rem",
 							left: 0,
 							zIndex: 1200,
 						}}
@@ -213,7 +225,7 @@ const PaymentFail: React.FC<PaymentPopupProps> = ({
 								Outstanding Balance:
 							</Typography>
 							<Typography color="textSecondary">
-								${moneyContactsOverage}
+								${Number(moneyContactsOverage).toLocaleString("en-US")}
 							</Typography>
 						</Box>
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
