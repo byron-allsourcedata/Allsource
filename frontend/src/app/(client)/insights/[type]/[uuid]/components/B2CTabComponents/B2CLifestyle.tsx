@@ -36,13 +36,13 @@ const lifestyleMap: {
 		color: "rgba(240, 129, 140, 1)",
 		backgroundColor: "rgba(252, 212, 215, 1)",
 	},
-	{
-		key: "mail_order_buyer",
-		title: "Mail-Order Buyer",
-		imageSrc: "/mail-order.svg",
-		color: "rgba(249, 217, 103, 1)",
-		backgroundColor: "rgba(255, 243, 189, 1)",
-	},
+	// {
+	// 	key: "mail_order_buyer",
+	// 	title: "Mail-Order Buyer",
+	// 	imageSrc: "/mail-order.svg",
+	// 	color: "rgba(249, 217, 103, 1)",
+	// 	backgroundColor: "rgba(255, 243, 189, 1)",
+	// },
 	{
 		key: "outdoor_interest",
 		title: "Outdoor Interest",

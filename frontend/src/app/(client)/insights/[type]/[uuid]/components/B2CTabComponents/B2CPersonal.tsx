@@ -96,7 +96,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 				</Box>
 
 				<Box sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}>
-					<Box sx={{ display: "flex", width: "32%" }}>
+					{/* <Box sx={{ display: "flex", width: "32%" }}>
 						<GradientBarChart
 							title="Education Level"
 							data={[
@@ -108,7 +108,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 							rank={fieldRanks["education_level"]}
 							gradientColor="249, 155, 171"
 						/>
-					</Box>
+					</Box> */}
 
 					{/* <Box sx={{ display: "flex", width: "32%" }}>
 						<PieChartWithLegend
@@ -118,7 +118,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 						/>
 					</Box> */}
 
-					<Box sx={{ display: "flex", width: "32.5%" }}>
+					<Box sx={{ display: "flex", width: "32%" }}>
 						<GradientBarChart
 							title="Languages"
 							data={mapGenericPercentage(data.languages)}
@@ -134,46 +134,6 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 							data={mapGenericPercentage(data.religion)}
 							rank={fieldRanks["religion"]}
 							gradientColor="249, 155, 171"
-						/>
-					</Box>
-				</Box>
-
-				<Box sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}>
-					{/* <Box sx={{ display: "flex", width: "32%" }}>
-						<PieChartWithLegend
-							title="Children"
-							data={mapPieChart(data.have_children)}
-							rank={fieldRanks["has_children"]}
-						/>
-					</Box> */}
-					<Box sx={{ display: "flex", width: "32.5%" }}>
-						<GradientBarChart
-							title="Ethnicity"
-							data={mapGenericPercentage(data.ethnicity)}
-							rank={fieldRanks["ethnicity"]}
-							gradientColor="155, 223, 196"
-							textPadding={true}
-						/>
-					</Box>
-
-					<Box
-						sx={{
-							display: "flex",
-							width: "32%",
-						}}
-					>
-						<VerticalGradientBarChart
-							title="Children Ages"
-							data={[
-								{ label: "0-3", percent: 15 },
-								{ label: "3-5", percent: 10 },
-								{ label: "5-10", percent: 25 },
-								{ label: "10-15", percent: 40 },
-								{ label: "15-18", percent: 7 },
-								{ label: "18+", percent: 3 },
-							]}
-							rank={fieldRanks["children_ages"]}
-							gradientColor="159, 151, 247"
 						/>
 					</Box>
 
@@ -193,14 +153,53 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 				</Box>
 
 				<Box sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}>
-					<Box sx={{ display: "flex", width: "99%" }}>
+					{/* <Box sx={{ display: "flex", width: "32%" }}>
+						<PieChartWithLegend
+							title="Children"
+							data={mapPieChart(data.have_children)}
+							rank={fieldRanks["has_children"]}
+						/>
+					</Box> */}
+
+					<Box sx={{ display: "flex", width: "65.5%" }}>
 						<MapChart
 							title="Location"
 							regions={mapState(data.state)}
 							rank={fieldRanks["state"]}
 						/>
 					</Box>
+					<Box sx={{ display: "flex", width: "32%" }}>
+						<GradientBarChart
+							title="Ethnicity"
+							data={mapGenericPercentage(data.ethnicity)}
+							rank={fieldRanks["ethnicity"]}
+							gradientColor="155, 223, 196"
+						/>
+					</Box>
 
+					{/* <Box
+						sx={{
+							display: "flex",
+							width: "32%",
+						}}
+					>
+						<VerticalGradientBarChart
+							title="Children Ages"
+							data={[
+								{ label: "0-3", percent: 15 },
+								{ label: "3-5", percent: 10 },
+								{ label: "5-10", percent: 25 },
+								{ label: "10-15", percent: 40 },
+								{ label: "15-18", percent: 7 },
+								{ label: "18+", percent: 3 },
+							]}
+							rank={fieldRanks["children_ages"]}
+							gradientColor="159, 151, 247"
+						/>
+					</Box> */}
+				</Box>
+
+				<Box sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}>
 					{/* <Box sx={{ display: "flex", width: "15.25%" }}>
 						<GradientBarChart
 							title="Ethnicity"

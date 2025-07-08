@@ -35,6 +35,8 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 							data={mapGenericPercentage(data.current_company_name)}
 							gradientColor="155, 223, 196"
 							rank={fieldRanks["current_company_name"]}
+							hidePercent={true}
+							textPadding={false}
 						/>
 					</Box>
 

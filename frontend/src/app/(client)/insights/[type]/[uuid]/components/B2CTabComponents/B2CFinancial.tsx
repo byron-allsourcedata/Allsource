@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
 import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
@@ -177,7 +177,13 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 				</Box>
 
 				<Box
-					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
+					sx={{
+						display: "flex",
+						flexDirection: "row",
+						width: "100%",
+						gap: 2,
+						alignItems: "stretch",
+					}}
 				>
 					<Box sx={{ display: "flex", width: "22%" }}>
 						<GradientBarChart
@@ -194,7 +200,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							display: "flex",
 							width: "40%",
 							flexDirection: "column",
-							gap: 2,
+							gap: 2.5,
 						}}
 					>
 						<SemiCircularGradientChart
@@ -209,6 +215,17 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							rank={fieldRanks["bank_card"]}
 						/>
 						<SemiCircularGradientChart
+							title="Donor"
+							percent={semiCircleData.donorPercent}
+							labelLeft="Yes"
+							labelRight="No"
+							colorStops={[
+								{ offset: "11.88%", color: "#9F97F7" },
+								{ offset: "86.9%", color: "#D4D3F4" },
+							]}
+							rank={fieldRanks["credit_card_new_issue"]}
+						/>
+						{/* <SemiCircularGradientChart
 							title="Credit Card Premium"
 							percent={semiCircleData.creditCardPremiumPercent}
 							labelLeft="Yes"
@@ -218,17 +235,18 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 								{ offset: "78.02%", color: "#D7F2E7" },
 							]}
 							rank={fieldRanks["credit_card_premium"]}
-						/>
+						/> */}
 					</Box>
 					<Box
 						sx={{
 							display: "flex",
 							width: "34%",
 							flexDirection: "column",
+							height: "100%",
 							gap: 2,
 						}}
 					>
-						<SemiCircularGradientChart
+						{/* <SemiCircularGradientChart
 							title="Mail Order Donor"
 							percent={semiCircleData.mailOrderDonorPercent}
 							labelLeft="Yes"
@@ -238,8 +256,19 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 								{ offset: "78.02%", color: "#D4D3F4" },
 							]}
 							rank={fieldRanks["mail_order_donor"]}
-						/>
+						/> */}
 						<SemiCircularGradientChart
+							title="Investor"
+							percent={semiCircleData.investorPercent}
+							labelLeft="Yes"
+							labelRight="No"
+							colorStops={[
+								{ offset: "21.13%", color: "#9BDFC4" },
+								{ offset: "78.02%", color: "#D7F2E7" },
+							]}
+							rank={fieldRanks["investor"]}
+						/>
+						{/* <SemiCircularGradientChart
 							title="Credit Card New Issue"
 							percent={semiCircleData.creditCardNewIssuePercent}
 							labelLeft="Yes"
@@ -249,14 +278,14 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 								{ offset: "86.9%", color: "#C1E4FF" },
 							]}
 							rank={fieldRanks["credit_card_new_issue"]}
-						/>
+						/> */}
 					</Box>
 				</Box>
 
 				<Box
 					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
 				>
-					<Box
+					{/* <Box
 						sx={{
 							display: "flex",
 							width: "44%",
@@ -286,7 +315,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							]}
 							rank={fieldRanks["investor"]}
 						/>
-					</Box>
+					</Box> */}
 					{/* <Box sx={{ display: "flex", width: "40%" }}>
 						<GradientBarChart
 							title="Credit Range Of New Credit"
@@ -294,7 +323,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							rank={fieldRanks["credit_range_of_new_credit"]}
 						/>
 					</Box> */}
-					<Box sx={{ display: "flex", width: "53.5%" }}>
+					<Box sx={{ display: "flex", width: "63.25%" }}>
 						<VerticalGradientBarChart
 							title="Number of credit lines"
 							data={numberOfCreditLinesData}

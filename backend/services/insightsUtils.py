@@ -5,6 +5,7 @@ from itertools import islice
 from typing import List, Optional, Dict, Any
 from dateutil.parser import parse as parse_date
 from datetime import datetime, timedelta
+import logging
 
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
@@ -35,6 +36,8 @@ from models.enrichment import (
 
 from schemas.insights import InsightsByCategory
 from services.source_agent.agent import SourceAgentService
+
+logging.basicConfig(level=logging.INFO)
 
 PERSONAL_COLS = [
     "gender",
@@ -549,9 +552,17 @@ class InsightsUtils:
                 new_bucket = new_metrics.get(metric, {}) or {}
                 merged_bucket: Dict[str, int] = {}
                 for key in set(old_bucket) | set(new_bucket):
-                    merged_bucket[key] = old_bucket.get(
-                        key, 0
-                    ) + new_bucket.get(key, 0)
+                    old_val = old_bucket.get(key, 0)
+                    new_val = new_bucket.get(key, 0)
+                    if not isinstance(old_val, (int, float)) or not isinstance(
+                        new_val, (int, float)
+                    ):
+                        logging.warning(
+                            f"In merge_insights_json: Non-numeric merge at key='{key}' → old={old_val} ({type(old_val)}), new={new_val} ({type(new_val)})"
+                        )
+                        continue
+                    merged_bucket[key] = old_val + new_val
+
                 merged_metrics[metric] = merged_bucket
             merged[category] = merged_metrics
         return merged
