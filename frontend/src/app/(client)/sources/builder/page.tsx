@@ -751,7 +751,7 @@ const SourcesImport: React.FC = () => {
 		} catch (error: unknown) {
 			if (error instanceof Error) {
 				showErrorToast(error.message);
-				handleDeleteFile()
+				handleDeleteFile();
 			} else {
 				showErrorToast("An unexpected error occurred during file upload.");
 			}
@@ -1154,7 +1154,7 @@ const SourcesImport: React.FC = () => {
 														width: "calc(100vw - 74px)",
 													},
 													"&:hover": {
-														backgroundColor: "#E1F0FF"
+														backgroundColor: "#E1F0FF",
 													},
 												}}
 												onDragOver={handleDragOver}
@@ -1173,7 +1173,6 @@ const SourcesImport: React.FC = () => {
 														"&:hover": {
 															backgroundColor: "rgba(56, 152, 252, 0.2)",
 														},
-
 													}}
 												>
 													<FileUploadOutlinedIcon
