@@ -27,14 +27,6 @@ data_sync_type = ENUM(
 
 class IntegrationUserSync(Base):
     __tablename__ = "integrations_users_sync"
-    __table_args__ = (
-        Index("integrations_users_sync_created_at_idx", "created_at"),
-        Index("integrations_users_sync_domain_id_idx", "domain_id"),
-        Index("integrations_users_sync_leads_type_idx", "sync_type"),
-        Index(
-            "integrations_users_sync_smart_audience_id_idx", "smart_audience_id"
-        ),
-    )
 
     id = Column(
         BigInteger,
@@ -92,4 +84,18 @@ class IntegrationUserSync(Base):
         UUID(as_uuid=True),
         ForeignKey(EnrichmentUser.id, ondelete="SET NULL"),
         nullable=True,
+    )
+
+    __table_args__ = (
+        Index("integrations_users_sync_created_at_idx", created_at),
+        Index("integrations_users_sync_domain_id_idx", domain_id),
+        Index("integrations_users_sync_leads_type_idx", sync_type),
+        Index(
+            "integrations_users_sync_smart_audience_id_idx", smart_audience_id
+        ),
+        Index(
+            "integrations_users_sync_created_at_sync_type_idx",
+            created_at,
+            sync_type,
+        ),
     )
