@@ -929,7 +929,12 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 												</IconButton>
 											),
 										}}
-										sx={{ pb: "2px" }}
+										sx={{
+											pb: "2px",
+											"& input": {
+												paddingLeft: 0,
+											},
+										}}
 									/>
 									{isTableVisible && (
 										<TableContainer
@@ -1660,8 +1665,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 							onChange={handleInputChange}
 							sx={{
 								"& .MuiOutlinedInput-root": {
-									borderRadius: "8px",
-									paddingLeft: "8px",
+									borderRadius: "4px",
 									width: "300px",
 									height: "40px",
 									"@media (max-width: 1080px)": {

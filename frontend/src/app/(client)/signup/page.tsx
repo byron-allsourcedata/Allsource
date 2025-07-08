@@ -300,7 +300,6 @@ const Signup: React.FC = () => {
 							showErrorToast("Password not valid");
 							break;
 						case "SUCCESS_ADMIN":
-							await fetchUserData();
 							sessionStorage.setItem("admin", "true");
 							router.push("/admin");
 							break;

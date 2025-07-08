@@ -427,6 +427,7 @@ def check_user_authorization(
     privacy_policy_service: PrivacyPolicyService,
     users_auth_service: UsersAuth = Depends(get_users_auth_service),
 ) -> Token:
+    is_admin = is_user_admin(Authorization, user_persistence_service)
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
     exist_privacy_policy = privacy_policy_service.exist_user_privacy_policy(
@@ -440,7 +441,7 @@ def check_user_authorization(
             }
         )
 
-    if not exist_privacy_policy:
+    if not exist_privacy_policy and not is_admin:
         raise_forbidden(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
         )
@@ -468,6 +469,7 @@ def check_user_authorization_without_pixel(
     privacy_policy_service: PrivacyPolicyService,
     users_auth_service: UsersAuth = Depends(get_users_auth_service),
 ) -> Token:
+    is_admin = is_user_admin(Authorization, user_persistence_service)
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
     exist_privacy_policy = privacy_policy_service.exist_user_privacy_policy(
@@ -481,7 +483,7 @@ def check_user_authorization_without_pixel(
             }
         )
 
-    if not exist_privacy_policy:
+    if not exist_privacy_policy and not is_admin:
         raise_forbidden(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
         )
@@ -800,6 +802,37 @@ def check_user_admin(
             detail={"status": "FORBIDDEN"},
         )
     return user
+
+
+def is_user_admin(
+    authorization: Annotated[str, Header()],
+    user_persistence_service: UserPersistence,
+) -> bool:
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401, detail="Invalid Authorization header format"
+        )
+
+    token = authorization.removeprefix("Bearer ").strip()
+
+    try:
+        payload = jwt.decode(
+            token, AuthConfig.secret_key, algorithms=[AuthConfig.algorithm]
+        )
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+    requester_user_id = payload.get("requester_access_user_id") or payload.get(
+        "id"
+    )
+    if not requester_user_id:
+        return False
+
+    user = user_persistence_service.get_user_by_id(requester_user_id)
+    if not user:
+        return False
+
+    return "admin" in user["role"]
 
 
 def check_api_key(
