@@ -12,7 +12,7 @@ from sqlalchemy.sql import (
     literal,
 )
 from sqlalchemy.orm import aliased
-from enums import AudienceSmartStatuses, UserStatusInAdmin
+from enums import AudienceSmartStatuses, UserStatusInAdmin, DataSyncType
 from models import Users
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_smarts import AudienceSmart
@@ -344,6 +344,8 @@ class DashboardAudiencePersistence:
                 )
                 .filter(
                     UserIntegration.user_id == user_id,
+                    IntegrationUserSync.sync_type
+                    == DataSyncType.AUDIENCE.value,
                     IntegrationUserSync.created_at >= from_dt,
                     IntegrationUserSync.created_at <= to_dt,
                 ),
