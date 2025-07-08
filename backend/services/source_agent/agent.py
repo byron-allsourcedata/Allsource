@@ -112,7 +112,14 @@ class SourceAgentService:
                     continue
                 email_l = email.strip().lower()
                 if email_l not in matched:
-                    matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
+                    try:
+                        email_asid_pair = EmailAsid(email=email_l, asid=str(asid))
+                    except Exception as e:
+                        logger.error(
+                            f"Error creating EmailAsid object for {email}: {e}",
+                        )
+                        continue
+                    matched[email_l] = email_asid_pair
                     count_personal += 1
 
             remaining = [e for e in remaining if e not in matched]
@@ -141,7 +148,14 @@ class SourceAgentService:
                     continue
                 email_l = email.strip().lower()
                 if email_l not in matched:
-                    matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
+                    try:
+                        email_asid_pair = EmailAsid(email=email_l, asid=str(asid))
+                    except Exception as e:
+                        logger.error(
+                            f"Error creating EmailAsid object for {email}: {e}",
+                        )
+                        continue
+                    matched[email_l] = email_asid_pair
                     count_other += 1
 
         result = list(matched.values())
