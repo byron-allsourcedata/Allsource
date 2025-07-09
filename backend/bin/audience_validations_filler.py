@@ -63,19 +63,35 @@ def get_enrichment_users(
     column_name: str = None,
 ):
     if validation_type == "job_validation":
-        enrichment_users = audience_smarts_service.get_enrichment_users_for_job_validation(aud_smart_id)
+        enrichment_users = (
+            audience_smarts_service.get_enrichment_users_for_job_validation(
+                aud_smart_id
+            )
+        )
     elif validation_type == "delivery":
-        enrichment_users = audience_smarts_service.get_enrichment_users_for_delivery_validation(aud_smart_id)
+        enrichment_users = audience_smarts_service.get_enrichment_users_for_delivery_validation(
+            aud_smart_id
+        )
     elif validation_type == "confirmation":
-        enrichment_users = audience_smarts_service.get_enrichment_users_for_confirmation_validation(aud_smart_id)
+        enrichment_users = audience_smarts_service.get_enrichment_users_for_confirmation_validation(
+            aud_smart_id
+        )
     elif (
         validation_type == "cas_home_address"
         or validation_type == "cas_office_address"
     ):
-        enrichment_users = audience_smarts_service.get_enrichment_users_for_postal_validation(aud_smart_id, validation_type)
+        enrichment_users = (
+            audience_smarts_service.get_enrichment_users_for_postal_validation(
+                aud_smart_id, validation_type
+            )
+        )
         print(enrichment_users)
     else:
-        enrichment_users = audience_smarts_service.get_enrichment_users_for_free_validations(aud_smart_id, column_name)
+        enrichment_users = (
+            audience_smarts_service.get_enrichment_users_for_free_validations(
+                aud_smart_id, column_name
+            )
+        )
 
     return enrichment_users
 
@@ -226,7 +242,7 @@ async def process_rmq_message(
     db_session: Session,
     channel,
     settingPersistence: AudienceSettingPersistence,
-    audience_smarts_service: AudienceSmartsService
+    audience_smarts_service: AudienceSmartsService,
 ):
     try:
         message_body = json.loads(message.body)
@@ -435,7 +451,9 @@ async def main():
             # db_session = Session()
 
             db_session = await resolver.resolve(Db)
-            audience_smarts_service = await resolver.resolve(AudienceSmartsService)
+            audience_smarts_service = await resolver.resolve(
+                AudienceSmartsService
+            )
 
             settingPersistence = AudienceSettingPersistence(db_session)
 
@@ -449,7 +467,7 @@ async def main():
                     channel=channel,
                     db_session=db_session,
                     settingPersistence=settingPersistence,
-                    audience_smarts_service=audience_smarts_service
+                    audience_smarts_service=audience_smarts_service,
                 )
             )
 

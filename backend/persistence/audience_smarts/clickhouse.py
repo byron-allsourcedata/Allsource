@@ -177,14 +177,16 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         """
         q = self.client.query(sql)
         return int(q.result_rows[0][0]) if q.result_rows else 0
-    
-    def get_enrichment_users_for_delivery_validation(self, smart_audience_id: UUID) -> List[dict]:
+
+    def get_enrichment_users_for_delivery_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
-        
+
         in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
-        
+
         sql = f"""
         SELECT 
             asid,
@@ -193,7 +195,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         FROM enrichment_users
         WHERE asid IN ({in_list})
         """
-        
+
         rows = self.client.query(sql)
 
         columns = ["asid", "personal_email", "business_email"]
@@ -208,9 +210,10 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             for entry in ids
             if entry["asid"] == row["asid"]
         ]
-    
 
-    def get_enrichment_users_for_postal_validation(self, smart_audience_id: UUID, validation_type: str) -> List[dict]:
+    def get_enrichment_users_for_postal_validation(
+        self, smart_audience_id: UUID, validation_type: str
+    ) -> List[dict]:
         if validation_type == "cas_home_address":
             address_prefix = "home_"
         elif validation_type == "cas_office_address":
@@ -255,8 +258,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             if entry["asid"] == row["asid"]
         ]
 
-    
-    def get_enrichment_users_for_confirmation_validation(self, smart_audience_id: UUID) -> List[dict]:
+    def get_enrichment_users_for_confirmation_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -277,7 +281,14 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         rows = self.client.query(sql)
 
-        columns = ["asid", "phone_mobile1", "phone_mobile2", "first_name", "middle_name", "last_name"]
+        columns = [
+            "asid",
+            "phone_mobile1",
+            "phone_mobile2",
+            "first_name",
+            "middle_name",
+            "last_name",
+        ]
         result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
 
         return [
@@ -285,19 +296,20 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 "audience_smart_person_id": entry["id"],
                 "phone_mobile1": row["phone_mobile1"],
                 "phone_mobile2": row["phone_mobile2"],
-                "full_name": f"{row["first_name"] or ''} {row["middle_name"] or ''} {row["last_name"] or ''}".strip(),
+                "full_name": f"{row['first_name'] or ''} {row['middle_name'] or ''} {row['last_name'] or ''}".strip(),
             }
             for row in result_rows
             for entry in ids
             if entry["asid"] == row["asid"]
         ]
-    
 
-    def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID) -> List[dict]:
+    def get_enrichment_users_for_job_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
-        
+
         in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
 
         sql = f"""
@@ -310,32 +322,39 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         """
 
         rows = self.client.query(sql)
-        
+
         columns = ["asid", "employment_json", "linkedin_url"]
         result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
-        
+
         result = []
         for row in result_rows:
             if not row["employment_json"]:
                 continue
             employment_data = json.loads(row["employment_json"])
-            current_jobs = [job for job in employment_data if job.get("end_date") is None]
+            current_jobs = [
+                job for job in employment_data if job.get("end_date") is None
+            ]
             selected_job = current_jobs[0] if current_jobs else None
 
             if selected_job:
                 for entry in ids:
                     if entry["asid"] == row["asid"]:
-                        result.append({
-                            "audience_smart_person_id": entry["id"],
-                            "job_title": selected_job.get("job_title"),
-                            "company_name": selected_job.get("company_name"),
-                            "linkedin_url": row["linkedin_url"],
-                        })
+                        result.append(
+                            {
+                                "audience_smart_person_id": entry["id"],
+                                "job_title": selected_job.get("job_title"),
+                                "company_name": selected_job.get(
+                                    "company_name"
+                                ),
+                                "linkedin_url": row["linkedin_url"],
+                            }
+                        )
 
         return result
-    
 
-    def get_enrichment_users_for_free_validations(self, smart_audience_id: UUID, column_name: str) -> List[dict]:
+    def get_enrichment_users_for_free_validations(
+        self, smart_audience_id: UUID, column_name: str
+    ) -> List[dict]:
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -366,7 +385,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         return [
             {
                 "audience_smart_person_id": entry["id"],
-                column_name: row[1].isoformat() if isinstance(row[1], datetime) else row[1],
+                column_name: row[1].isoformat()
+                if isinstance(row[1], datetime)
+                else row[1],
             }
             for row in rows.result_rows
             for entry in ids

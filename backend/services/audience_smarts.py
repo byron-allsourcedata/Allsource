@@ -499,19 +499,36 @@ class AudienceSmartsService:
             status=status,
             integrations=None,
         )
-    
+
     def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID):
-        return self.audience_smarts_persistence.get_enrichment_users_for_job_validation(smart_audience_id)
-    
-    def get_enrichment_users_for_delivery_validation(self, smart_audience_id: UUID):
-        return self.audience_smarts_persistence.get_enrichment_users_for_delivery_validation(smart_audience_id)
-    
-    def get_enrichment_users_for_postal_validation(self, smart_audience_id: UUID, validation_type: str):
-        return self.audience_smarts_persistence.get_enrichment_users_for_postal_validation(smart_audience_id, validation_type)
-    
-    def get_enrichment_users_for_confirmation_validation(self, smart_audience_id: UUID):
-        return self.audience_smarts_persistence.get_enrichment_users_for_confirmation_validation(smart_audience_id)
-    
-    def get_enrichment_users_for_free_validations(self, smart_audience_id: UUID, column_name: str):
-        return self.audience_smarts_persistence.get_enrichment_users_for_free_validations(smart_audience_id, column_name)
-    
+        return self.audience_smarts_persistence.get_enrichment_users_for_job_validation(
+            smart_audience_id
+        )
+
+    def get_enrichment_users_for_delivery_validation(
+        self, smart_audience_id: UUID
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_delivery_validation(
+            smart_audience_id
+        )
+
+    def get_enrichment_users_for_postal_validation(
+        self, smart_audience_id: UUID, validation_type: str
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_postal_validation(
+            smart_audience_id, validation_type
+        )
+
+    def get_enrichment_users_for_confirmation_validation(
+        self, smart_audience_id: UUID
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_confirmation_validation(
+            smart_audience_id
+        )
+
+    def get_enrichment_users_for_free_validations(
+        self, smart_audience_id: UUID, column_name: str
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_free_validations(
+            smart_audience_id, column_name
+        )

@@ -189,7 +189,6 @@ def download_persons(
     payload: SmartAudienceSyncCreate,
     audience_smarts_service: AudienceSmartsService,
     user=Depends(check_user_authorization_without_pixel),
-
 ):
     result = audience_smarts_service.download_persons(
         smart_audience_id=payload.smart_audience_id,

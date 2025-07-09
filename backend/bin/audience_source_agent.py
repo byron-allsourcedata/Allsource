@@ -1070,10 +1070,10 @@ def calculate_and_save_significant_fields(
             .values(significant_fields=combined_insights)
         )
     except Exception as e:
-        logging.error(f"Error calculating significant fields: {e}", exc_info=True)
+        logging.error(
+            f"Error calculating significant fields: {e}", exc_info=True
+        )
         logging.error(f"Contunuing anyway")
-
-
 
 
 def check_significant_fields_and_insights(source: AudienceSource) -> bool:
