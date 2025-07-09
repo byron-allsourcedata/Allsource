@@ -174,6 +174,7 @@ async def parse_csv_file(
     batch_content = body.decode(encoding, errors="replace")
     csv_file = io.StringIO(batch_content)
     csv_reader = csv.DictReader(csv_file)
+    csv_reader.fieldnames = [field.strip() for field in csv_reader.fieldnames]
     total_rows = sum(1 for _ in csv_reader)
     csv_file.seek(0)
     next(csv_reader, None)
