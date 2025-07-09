@@ -1072,7 +1072,7 @@ def calculate_and_save_significant_fields(
         logging.error(
             f"Error calculating significant fields: {e}", exc_info=True
         )
-        logging.error(f"Contunuing anyway")
+        logging.error("Continuing anyway")
 
 
 def check_significant_fields_and_insights(source: AudienceSource) -> bool:
@@ -1251,12 +1251,12 @@ async def aud_sources_matching(
                     )
 
                 logging.info(f"Source_id {source_id} processing complete.")
-            else:
-                db_session.execute(
-                    update(AudienceSource)
-                    .where(AudienceSource.id == source_id)
-                    .values(matched_records_status="complete")
-                )
+
+            db_session.execute(
+                update(AudienceSource)
+                .where(AudienceSource.id == source_id)
+                .values(matched_records_status="complete")
+            )
 
         if type == "emails" and processed_records >= total_records:
             await process_and_send_chunks(
