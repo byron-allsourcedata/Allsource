@@ -177,9 +177,7 @@ async def process_email_leads(
             continue
 
         sale_amount = (
-            Decimal(person.sale_amount)
-            if include_amount and person.sale_amount is not None
-            else Decimal("0.0")
+            person.get_sale_amount() if include_amount else Decimal("0.0")
         )
 
         if email in matched_persons:
