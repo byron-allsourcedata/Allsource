@@ -661,9 +661,7 @@ const SourcesList: React.FC = () => {
 										variant="contained" /* need chnage < on !== */
 										disabled={isCreateDisabled}
 										onClick={() =>
-											router.push(
-												`/lookalikes/builder?source_uuid=${createdData?.id}`,
-											)
+											router.push(`/insights/sources/${createdData?.id}`)
 										}
 										className="second-sub-title"
 										sx={{
@@ -683,7 +681,7 @@ const SourcesList: React.FC = () => {
 											},
 										}}
 									>
-										Create Lookalike
+										See Insights
 									</Button>
 
 									{!createdSourceHints["actions"].showBody && (
@@ -802,14 +800,12 @@ const SourcesList: React.FC = () => {
 									}}
 									onClick={() => {
 										handleClosePopover();
-										router.push(
-											`/lookalikes/builder?source_uuid=${createdData?.id}`,
-										);
+										router.push(`/insights/sources/${createdData?.id}`);
 									}}
 								>
 									<ListItemText
 										primaryTypographyProps={{ fontSize: "14px" }}
-										primary="Create Lookalike"
+										primary="See Insights"
 									/>
 								</ListItemButton>
 								<ListItemButton

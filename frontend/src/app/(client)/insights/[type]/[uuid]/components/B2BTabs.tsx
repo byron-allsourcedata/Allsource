@@ -38,10 +38,9 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 					position: "sticky",
 					top: 95,
 					zIndex: 1,
-					pt: 2,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",
-					width: "98%",
+					width: "100%",
 					"@media (max-width: 600px)": {
 						flexDirection: "column",
 						display: "flex",
@@ -58,7 +57,6 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
 						display: "flex",
 						mt: 2,
 						width: "100%",
-						padding: "0rem 5rem 0rem",
 						justifyContent: "center",
 						alignItems: "start",
 					}}

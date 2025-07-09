@@ -19,7 +19,8 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 		<Box>
 			<Box
 				sx={{
-					padding: "1.5rem 5rem 1.5rem",
+					padding: "1.5rem",
+					pr: "3rem",
 					width: "100%",
 					display: "flex",
 					flexDirection: "column",
