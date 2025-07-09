@@ -15,7 +15,8 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 		<Box>
 			<Box
 				sx={{
-					padding: "1.5rem 5rem 1.5rem",
+					padding: "1.5rem",
+					pr: "3rem",
 					width: "100%",
 					display: "flex",
 					flexDirection: "column",

@@ -53,7 +53,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 			<Box
 				sx={{
 					padding: "1.5rem",
-					pr: "3rem",
+					pr: "2rem",
 					width: "100%",
 					display: "flex",
 					flexDirection: "column",

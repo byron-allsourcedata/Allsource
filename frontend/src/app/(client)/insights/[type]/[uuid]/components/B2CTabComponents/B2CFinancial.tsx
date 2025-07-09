@@ -59,29 +59,34 @@ function parseIncomeRangeStart(label: string): number {
 }
 
 function parseCreditScoreStart(label: string): number {
-	const lower = label.toLowerCase().trim();
+	const clean = label.trim().toLowerCase();
 
-	if (lower === "unknown" || lower === "u") {
-		return Number.MAX_SAFE_INTEGER;
+	if (clean === "unknown" || clean === "u") {
+		return -1;
 	}
 
-	if (lower.startsWith("under")) {
-		const match = label.match(/under\s*(\d+)/i);
-		return match ? 0 : Number.MAX_SAFE_INTEGER;
+	if (clean.includes("less") || clean.includes("below")) {
+		const match = clean.match(/(\d+)/);
+		return match ? parseInt(match[1], 10) - 1 : -1;
 	}
 
-	if (lower.endsWith("+") || lower.includes("plus")) {
-		const match = label.match(/(\d+)/);
-		return match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER - 1;
+	if (clean.startsWith("under")) {
+		const match = clean.match(/under\s*(\d+)/i);
+		return match ? 0 : -1;
 	}
 
-	const rangeMatch = label.match(/(\d+)\s*-\s*(\d+)/);
+	if (clean.endsWith("+") || clean.includes("plus")) {
+		const match = clean.match(/(\d+)/);
+		return match ? parseInt(match[1], 10) + 1000 : -1;
+	}
+
+	const rangeMatch = clean.match(/(\d+)\s*-\s*(\d+)/);
 	if (rangeMatch) {
 		return parseInt(rangeMatch[1], 10);
 	}
 
-	const match = label.match(/(\d+)/);
-	return match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
+	const match = clean.match(/(\d+)/);
+	return match ? parseInt(match[1], 10) : -1;
 }
 
 function sortIncomeRanges(data: BarData[]): BarData[] {
@@ -92,7 +97,7 @@ function sortIncomeRanges(data: BarData[]): BarData[] {
 
 function sortCreditScoreRanges(data: BarData[]): BarData[] {
 	return [...data].sort(
-		(a, b) => parseCreditScoreStart(a.label) - parseCreditScoreStart(b.label),
+		(a, b) => parseCreditScoreStart(b.label) - parseCreditScoreStart(a.label),
 	);
 }
 
@@ -163,14 +168,16 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							data={creditScoreRangeData}
 							rank={fieldRanks["credit_score_range"]}
 							gradientColor="249, 155, 171"
+							sortByPercent={false}
 						/>
 					</Box>
 
 					<Box sx={{ display: "flex", width: "34%" }}>
 						<GradientBarChart
-							title="Credit Cards"
-							data={creditCardsData}
-							rank={fieldRanks["credit_cards"]}
+							title="Net worth range"
+							data={netWorthRangeData}
+							sortByPercent={false}
+							rank={fieldRanks["net_worth_range"]}
 							gradientColor="152, 223, 192"
 						/>
 					</Box>
@@ -187,10 +194,9 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 				>
 					<Box sx={{ display: "flex", width: "22%" }}>
 						<GradientBarChart
-							title="Net worth range"
-							data={netWorthRangeData}
-							sortByPercent={false}
-							rank={fieldRanks["net_worth_range"]}
+							title="Credit Cards"
+							data={creditCardsData}
+							rank={fieldRanks["credit_cards"]}
 							gradientColor="249, 155, 171"
 						/>
 					</Box>
