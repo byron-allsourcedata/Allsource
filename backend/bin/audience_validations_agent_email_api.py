@@ -184,7 +184,7 @@ async def process_rmq_message(
                                 count_persons_before_validation
                             )
                             rule["delivery"]["count_cost"] = str(
-                               str(write_off_funds.quantize(Decimal("0.01")))
+                                str(write_off_funds.quantize(Decimal("0.01")))
                             )
                 aud_smart.validations = json.dumps(validations)
             db_session.commit()
