@@ -1972,8 +1972,8 @@ const SmartAudiences: React.FC = () => {
 																							row?.processed_active_segment_records !==
 																								0)) ? (
 																					row.active_segment_records.toLocaleString(
-																							"en-US",
-																						)
+																						"en-US",
+																					)
 																				) : row?.processed_active_segment_records >
 																					progress?.processed ? (
 																					<ProgressBar

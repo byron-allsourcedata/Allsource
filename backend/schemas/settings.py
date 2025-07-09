@@ -149,3 +149,8 @@ class PlansResponse(BaseModel):
 class BuyFundsRequest(BaseModel):
     amount: int
     type_funds: TypeFunds
+    payment_method_id: str
+
+
+class BuyCreditsRequest(BaseModel):
+    payment_method_id: str

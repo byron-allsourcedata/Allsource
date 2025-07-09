@@ -12,6 +12,7 @@ import { BillingCards } from "./Billing/BillingCards";
 import { useSearchParams } from "next/navigation";
 import { billingStyles } from "./Billing/billingStyles";
 import { CardDetails, BillingDetailsInterface } from "./Billing/types";
+import { useBillingContext } from "@/context/BillingContext";
 
 export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [contactsCollected, setContactsCollected] = useState(0);
@@ -41,6 +42,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [paymentFailed, setPaymentFailed] = useState(false);
 	const searchParams = useSearchParams();
 	const paymentFailedSearch = searchParams.get("payment_failed");
+	const { needsSync } = useBillingContext();
 
 	const fetchCardData = async () => {
 		try {
@@ -94,7 +96,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 
 	useEffect(() => {
 		fetchCardData();
-	}, []);
+	}, [needsSync]);
 
 	const handleSendInvoicePopupOpen = (invoice_id: string) => {
 		setselectedInvoiceId(invoice_id);
@@ -256,6 +258,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 			</Box>
 			<PaymentFail
 				open={paymentFailed}
+				onClose={() => setPaymentFailed(false)}
 				cardDetails={cardDetails}
 				moneyContactsOverage={moneyContactsOverage}
 				handleCheckoutSuccess={handleCheckoutSuccess}

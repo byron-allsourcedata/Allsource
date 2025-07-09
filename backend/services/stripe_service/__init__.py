@@ -121,24 +121,23 @@ class StripeService:
         currency: str,
         description: str,
         metadata: dict,
+        payment_method_id: str,
     ) -> dict:
         result = {"success": False}
         try:
-            customer = stripe.Customer.retrieve(customer_id)
-            default_payment_method_id = (
-                customer.invoice_settings.default_payment_method
-            )
+            payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
 
-            if not default_payment_method_id:
-                result["error"] = "Customer has no default payment method"
+            if payment_method.customer != customer_id:
+                result["error"] = "Payment method does not belong to customer"
                 return result
 
             payment_intent = stripe.PaymentIntent.create(
                 amount=amount_usd * 100,
                 currency=currency,
                 customer=customer_id,
-                payment_method=default_payment_method_id,
+                payment_method=payment_method_id,
                 confirm=True,
+                off_session=True,
                 automatic_payment_methods={
                     "enabled": True,
                     "allow_redirects": "never",
@@ -224,6 +223,20 @@ def get_card_details_by_customer_id(customer_id):
 
 def add_card_to_customer(customer_id, payment_method_id, is_default: bool):
     try:
+        new_pm = stripe.PaymentMethod.retrieve(payment_method_id)
+        new_fingerprint = new_pm.card.fingerprint
+
+        existing_methods = stripe.PaymentMethod.list(
+            customer=customer_id, type="card"
+        ).data
+
+        for method in existing_methods:
+            if method.card.fingerprint == new_fingerprint:
+                return {
+                    "status": "ERROR",
+                    "message": "This card has already been added!",
+                }
+
         payment_method = stripe.PaymentMethod.attach(
             payment_method_id,
             customer=customer_id,
@@ -251,6 +264,25 @@ def add_card_to_customer(customer_id, payment_method_id, is_default: bool):
 def get_billing_by_invoice_id(invoice_id):
     try:
         invoice = stripe.Invoice.retrieve(invoice_id)
+        return {"status": "SUCCESS", "data": invoice}
+    except stripe.error.InvalidRequestError as e:
+        return {"status": "ERROR", "message": "Invalid request: " + str(e)}
+    except stripe.error.AuthenticationError as e:
+        return {"status": "ERROR", "message": "Authentication error: " + str(e)}
+    except stripe.error.RateLimitError as e:
+        return {"status": "ERROR", "message": "Rate limit exceeded: " + str(e)}
+    except stripe.error.APIError as e:
+        return {"status": "ERROR", "message": "Stripe API error: " + str(e)}
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "message": "An unexpected error occurred: " + str(e),
+        }
+
+
+def get_billing_by_charge_id(invoice_id):
+    try:
+        invoice = stripe.Charge.retrieve(invoice_id)
         return {"status": "SUCCESS", "data": invoice}
     except stripe.error.InvalidRequestError as e:
         return {"status": "ERROR", "message": "Invalid request: " + str(e)}
@@ -319,21 +351,40 @@ def cancel_downgrade(platform_subscription_id):
 
 def save_payment_details_in_stripe(customer_id):
     try:
-        payment_method_id = (
-            stripe.PaymentMethod.list(
-                customer=customer_id,
-                type="card",
-            )
-            .data[0]
-            .get("id")
-        )
+        methods = stripe.PaymentMethod.list(
+            customer=customer_id, type="card"
+        ).data
 
-        stripe.Customer.modify(
-            customer_id,
-            invoice_settings={"default_payment_method": payment_method_id},
-        )
+        if not methods:
+            return False
+
+        fingerprint_map = {}
+        for method in methods:
+            fp = method.card.fingerprint
+            if fp in fingerprint_map:
+                fingerprint_map[fp].append(method)
+            else:
+                fingerprint_map[fp] = [method]
+
+        for same_fp_cards in fingerprint_map.values():
+            if len(same_fp_cards) > 1:
+                for duplicate_card in same_fp_cards[1:]:
+                    stripe.PaymentMethod.detach(duplicate_card.id)
+
+        remaining_methods = stripe.PaymentMethod.list(
+            customer=customer_id, type="card"
+        ).data
+
+        if remaining_methods:
+            stripe.Customer.modify(
+                customer_id,
+                invoice_settings={
+                    "default_payment_method": remaining_methods[0].id
+                },
+            )
 
         return True
+
     except Exception as e:
         return False
 
@@ -375,20 +426,31 @@ def get_last_payment_intent(customer_id):
 
 
 def purchase_product(
-    customer_id, price_id, quantity, product_description, charge_type
+    customer_id,
+    price_id,
+    quantity,
+    product_description,
+    charge_type,
+    payment_method_id: Optional[str] = None,
 ):
     result = {"success": False}
     try:
-        customer = stripe.Customer.retrieve(customer_id)
-        default_payment_method_id = (
-            customer.invoice_settings.default_payment_method
-        )
+        if payment_method_id:
+            payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
 
-        if not default_payment_method_id:
-            result["error"] = (
-                "The customer doesn't have a default payment method."
-            )
-            return result
+            if payment_method.customer != customer_id:
+                result["error"] = "Payment method does not belong to customer"
+                return result
+
+        else:
+            customer = stripe.Customer.retrieve(customer_id)
+            payment_method_id = customer.invoice_settings.default_payment_method
+
+            if not payment_method_id:
+                result["error"] = (
+                    "The customer doesn't have a default payment method."
+                )
+                return result
 
         price = stripe.Price.retrieve(price_id)
         amount = price.unit_amount * quantity
@@ -396,7 +458,7 @@ def purchase_product(
             amount=amount,
             currency=price.currency,
             customer=customer_id,
-            payment_method=default_payment_method_id,
+            payment_method=payment_method_id,
             confirm=True,
             automatic_payment_methods={
                 "enabled": True,
@@ -506,10 +568,8 @@ def get_billing_history_by_userid(customer_id, page, per_page):
 
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     for charge in charges:
-        if (
-            getattr(charge, "metadata", {}).get("charge_type")
-            == "contacts_overage"
-        ):
+        charge_type = getattr(charge, "metadata", {}).get("charge_type", "")
+        if charge_type in {"contacts_overage", "buy_funds"}:
             billing_history.append(charge)
 
     count = len(billing_history)

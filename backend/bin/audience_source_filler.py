@@ -129,9 +129,9 @@ def check_existing_csv_source(
         .first()
     )
     if existing_source:
-        source.significant_fields = existing_source.significant_fields
-        source.insights = existing_source.insights
-        logging.info(f"MD5 hash {hash_csv_file} already exists. Data copied.")
+        # source.significant_fields = existing_source.significant_fields
+        # source.insights = existing_source.insights
+        logging.info(f"MD5 hash {hash_csv_file} already exists.")
     else:
         logging.info(f"New MD5 hash {hash_csv_file} calculated and saved.")
 

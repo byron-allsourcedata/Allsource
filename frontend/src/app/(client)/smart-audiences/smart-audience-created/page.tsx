@@ -415,7 +415,9 @@ const SourcesList: React.FC = () => {
 												(createdData.status === "unvalidated" ||
 													createdData?.processed_active_segment_records !==
 														0)) ? (
-															createdData.active_segment_records.toLocaleString("en-US")
+												createdData.active_segment_records.toLocaleString(
+													"en-US",
+												)
 											) : createdData?.processed_active_segment_records >
 												progress?.processed ? (
 												<ProgressBar
