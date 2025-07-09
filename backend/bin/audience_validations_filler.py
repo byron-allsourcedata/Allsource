@@ -6,7 +6,6 @@ import functools
 import json
 import time
 from uuid import UUID
-from datetime import datetime
 from sqlalchemy import update, create_engine, func
 from aio_pika import IncomingMessage
 from sqlalchemy.exc import IntegrityError
@@ -15,22 +14,22 @@ from dotenv import load_dotenv
 from typing import List
 from decimal import Decimal
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from db_dependencies import Db
+from resolver import Resolver
+
 from config.sentry import SentryConfig
+from services.audience_smarts import AudienceSmartsService
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
 from persistence.audience_settings import AudienceSettingPersistence
 from enums import AudienceSettingAlias
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.enrichment.enrichment_postals import EnrichmentPostal
-from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from utils import send_sse
-from models.enrichment.enrichment_employment_history import (
-    EnrichmentEmploymentHistory,
-)
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -58,183 +57,25 @@ def setup_logging(level):
 
 
 def get_enrichment_users(
-    db_session: Session,
     validation_type: str,
     aud_smart_id: UUID,
+    audience_smarts_service: AudienceSmartsService,
     column_name: str = None,
 ):
     if validation_type == "job_validation":
-        enrichment_users = [
-            {
-                "audience_smart_person_id": user.audience_smart_person_id,
-                "job_title": user.job_title,
-                "company_name": user.company_name,
-                "linkedin_url": user.linkedin_url,
-            }
-            for user in db_session.query(
-                AudienceSmartPerson.id.label("audience_smart_person_id"),
-                EnrichmentEmploymentHistory.job_title,
-                EnrichmentEmploymentHistory.company_name,
-                EnrichmentUserContact.linkedin_url,
-            )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
-            )
-            .outerjoin(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
-            .outerjoin(
-                EnrichmentEmploymentHistory,
-                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid,
-            )
-            .filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                AudienceSmartPerson.is_valid == True,
-            )
-            .distinct(EnrichmentUserContact.asid)
-            .all()
-        ]
+        enrichment_users = audience_smarts_service.get_enrichment_users_for_job_validation(aud_smart_id)
     elif validation_type == "delivery":
-        enrichment_users = [
-            {
-                "audience_smart_person_id": user.audience_smart_person_id,
-                "personal_email": user.personal_email,
-                "business_email": user.business_email,
-            }
-            for user in db_session.query(
-                AudienceSmartPerson.id.label("audience_smart_person_id"),
-                EnrichmentUserContact.personal_email.label("personal_email"),
-                EnrichmentUserContact.business_email.label("business_email"),
-            )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
-            )
-            .outerjoin(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
-            .filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                AudienceSmartPerson.is_valid == True,
-            )
-            .distinct(EnrichmentUserContact.asid)
-            .all()
-        ]
+        enrichment_users = audience_smarts_service.get_enrichment_users_for_delivery_validation(aud_smart_id)
     elif validation_type == "confirmation":
-        enrichment_users = [
-            {
-                "audience_smart_person_id": user.audience_smart_person_id,
-                "phone_mobile1": user.phone_mobile1,
-                "phone_mobile2": user.phone_mobile2,
-                "full_name": f"{user.first_name or ''} {user.middle_name or ''} {user.last_name or ''}".strip(),
-            }
-            for user in db_session.query(
-                AudienceSmartPerson.id.label("audience_smart_person_id"),
-                EnrichmentUserContact.phone_mobile1.label("phone_mobile1"),
-                EnrichmentUserContact.phone_mobile2.label("phone_mobile2"),
-                EnrichmentUserContact.first_name.label("first_name"),
-                EnrichmentUserContact.middle_name.label("middle_name"),
-                EnrichmentUserContact.last_name.label("last_name"),
-            )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
-            )
-            .outerjoin(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
-            .filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                AudienceSmartPerson.is_valid == True,
-            )
-            .distinct(EnrichmentUserContact.asid)
-            .all()
-        ]
+        enrichment_users = audience_smarts_service.get_enrichment_users_for_confirmation_validation(aud_smart_id)
     elif (
         validation_type == "cas_home_address"
         or validation_type == "cas_office_address"
     ):
-        if validation_type == "cas_home_address":
-            address_fields = {
-                "city": EnrichmentPostal.home_city,
-                "state": EnrichmentPostal.home_state,
-                "country": EnrichmentPostal.home_country,
-                "postal_code": EnrichmentPostal.home_postal_code,
-                "address": EnrichmentPostal.home_address_line1,
-            }
-        elif validation_type == "cas_office_address":
-            address_fields = {
-                "city": EnrichmentPostal.business_city,
-                "state": EnrichmentPostal.business_state,
-                "country": EnrichmentPostal.business_country,
-                "postal_code": EnrichmentPostal.business_postal_code,
-                "address": EnrichmentPostal.business_address_line1,
-            }
-
-        enrichment_users = [
-            {
-                "audience_smart_person_id": user.audience_smart_person_id,
-                "postal_code": user.postal_code,
-                "country": user.country,
-                "city": user.city,
-                "state_name": user.state,
-                "address": user.address,
-            }
-            for user in db_session.query(
-                AudienceSmartPerson.id.label("audience_smart_person_id"),
-                address_fields["city"].label("city"),
-                address_fields["state"].label("state"),
-                address_fields["country"].label("country"),
-                address_fields["postal_code"].label("postal_code"),
-                address_fields["address"].label("address"),
-            )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
-            )
-            .outerjoin(
-                EnrichmentPostal,
-                EnrichmentPostal.asid == EnrichmentUser.asid,
-            )
-            .filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                AudienceSmartPerson.is_valid == True,
-            )
-            .all()
-        ]
+        enrichment_users = audience_smarts_service.get_enrichment_users_for_postal_validation(aud_smart_id, validation_type)
+        print(enrichment_users)
     else:
-        enrichment_users = [
-            {
-                "audience_smart_person_id": user.audience_smart_person_id,
-                column_name: (
-                    user.value.isoformat()
-                    if isinstance(user.value, datetime)
-                    else user.value
-                ),
-            }
-            for user in db_session.query(
-                AudienceSmartPerson.id.label("audience_smart_person_id"),
-                getattr(EnrichmentUserContact, column_name).label("value"),
-            )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.asid == AudienceSmartPerson.enrichment_user_asid,
-            )
-            .outerjoin(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
-            .filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                AudienceSmartPerson.is_valid == True,
-            )
-            .distinct(EnrichmentUserContact.asid)
-            .all()
-        ]
+        enrichment_users = audience_smarts_service.get_enrichment_users_for_free_validations(aud_smart_id, column_name)
 
     return enrichment_users
 
@@ -263,55 +104,9 @@ def validation_processed(db_session: Session, ids: List[int]):
     db_session.commit()
 
 
-# async def complete_validation(
-#     db_session: Session, aud_smart_id: int, channel, user_id: int
-# ):
-#     total_validated = (
-#         db_session.query(func.count(AudienceSmartPerson.id))
-#         .filter(
-#             AudienceSmartPerson.smart_audience_id == aud_smart_id,
-#             AudienceSmartPerson.is_valid == True,
-#         )
-#         .scalar()
-#     )
-#     db_session.query(AudienceSmart).filter(
-#         AudienceSmart.id == aud_smart_id
-#     ).update(
-#         {
-#             "validated_records": total_validated,
-#             "status": "ready",
-#         }
-#     )
-
-#     db_session.commit()
-#     await send_sse(
-#         channel=channel,
-#         user_id=user_id,
-#         data={
-#             "smart_audience_id": aud_smart_id,
-#             "total_validated": total_validated,
-#         },
-#     )
-#     logging.info(f"completed validation, status audience smart ready")
-
-
 async def complete_validation(
-    db_session: Session,
-    aud_smart_id: int,
-    channel,
-    user_id: int,
-    priority_values: str,
+    db_session: Session, aud_smart_id: int, channel, user_id: int
 ):
-    smart = (
-        db_session.query(AudienceSmart)
-        .filter(AudienceSmart.id == aud_smart_id)
-        .first()
-    )
-
-    if not smart:
-        logging.warning(f"AudienceSmart with ID {aud_smart_id} not found")
-        return
-
     total_validated = (
         db_session.query(func.count(AudienceSmartPerson.id))
         .filter(
@@ -320,54 +115,16 @@ async def complete_validation(
         )
         .scalar()
     )
-
-    validation_map = {}
-
-    validations = json.loads(smart.validations or "{}")
-
-    count_submitted = int(smart.active_segment_records * 0.7)
-    validated_records = int(count_submitted * 0.5)
-
-    for category, validators in validations.items():
-        if not isinstance(validators, list):
-            continue
-
-        for validator in validators:
-            if not isinstance(validator, dict):
-                continue
-
-            for method, data in validator.items():
-                key = f"{category}-{method}"
-                if data.get("processed") is False:
-                    validation_map[key] = data
-
-    ordered_keys = [key for key in priority_values if key in validation_map]
-
-    prev_validated = smart.active_segment_records
-
-    for key in ordered_keys:
-        data = validation_map[key]
-
-        validated_records = int(prev_validated * 0.5)
-
-        data["count_validated"] = validated_records
-        data["count_submited"] = prev_validated
-        data["count_cost"] = str(Decimal(prev_validated * 1.01))
-
-        prev_validated = validated_records
-
     db_session.query(AudienceSmart).filter(
         AudienceSmart.id == aud_smart_id
     ).update(
         {
-            "validated_records": validated_records,
+            "validated_records": total_validated,
             "status": "ready",
-            "validations": json.dumps(validations),
         }
     )
 
     db_session.commit()
-
     await send_sse(
         channel=channel,
         user_id=user_id,
@@ -376,19 +133,104 @@ async def complete_validation(
             "total_validated": total_validated,
         },
     )
-
     logging.info(f"completed validation, status audience smart ready")
 
 
-async def aud_email_validation(
+# async def complete_validation(
+#     db_session: Session,
+#     aud_smart_id: int,
+#     channel,
+#     user_id: int,
+#     priority_values: str,
+# ):
+#     smart = (
+#         db_session.query(AudienceSmart)
+#         .filter(AudienceSmart.id == aud_smart_id)
+#         .first()
+#     )
+
+#     if not smart:
+#         logging.warning(f"AudienceSmart with ID {aud_smart_id} not found")
+#         return
+
+#     total_validated = (
+#         db_session.query(func.count(AudienceSmartPerson.id))
+#         .filter(
+#             AudienceSmartPerson.smart_audience_id == aud_smart_id,
+#             AudienceSmartPerson.is_valid == True,
+#         )
+#         .scalar()
+#     )
+
+#     validation_map = {}
+
+#     validations = json.loads(smart.validations or "{}")
+
+#     count_submitted = int(smart.active_segment_records * 0.7)
+#     validated_records = int(count_submitted * 0.5)
+
+#     for category, validators in validations.items():
+#         if not isinstance(validators, list):
+#             continue
+
+#         for validator in validators:
+#             if not isinstance(validator, dict):
+#                 continue
+
+#             for method, data in validator.items():
+#                 key = f"{category}-{method}"
+#                 if data.get("processed") is False:
+#                     validation_map[key] = data
+
+#     ordered_keys = [key for key in priority_values if key in validation_map]
+
+#     prev_validated = smart.active_segment_records
+
+#     for key in ordered_keys:
+#         data = validation_map[key]
+
+#         validated_records = int(prev_validated * 0.5)
+
+#         data["count_validated"] = validated_records
+#         data["count_submited"] = prev_validated
+#         data["count_cost"] = str(Decimal(prev_validated * 1.01))
+
+#         prev_validated = validated_records
+
+#     db_session.query(AudienceSmart).filter(
+#         AudienceSmart.id == aud_smart_id
+#     ).update(
+#         {
+#             "validated_records": validated_records,
+#             "status": "ready",
+#             "validations": json.dumps(validations),
+#         }
+#     )
+
+#     db_session.commit()
+
+#     await send_sse(
+#         channel=channel,
+#         user_id=user_id,
+#         data={
+#             "smart_audience_id": aud_smart_id,
+#             "total_validated": total_validated,
+#         },
+#     )
+
+#     logging.info(f"completed validation, status audience smart ready")
+
+
+async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
     channel,
     settingPersistence: AudienceSettingPersistence,
+    audience_smarts_service: AudienceSmartsService
 ):
     try:
         message_body = json.loads(message.body)
-        logging.info("Received message: %s", message_body)
+        # logging.info("Received message: %s", message_body)cle
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         validation_params = message_body.get("validation_params")
@@ -460,9 +302,9 @@ async def aud_email_validation(
                                             break
 
                                 enrichment_users = get_enrichment_users(
-                                    db_session,
                                     validation_type,
                                     aud_smart_id,
+                                    audience_smarts_service,
                                     column_name,
                                 )
                                 validation_cost = get_validation_cost(
@@ -545,7 +387,7 @@ async def aud_email_validation(
                                 return
 
             await complete_validation(
-                db_session, aud_smart_id, channel, user_id, priority_values
+                db_session, aud_smart_id, channel, user_id
             )
             await message.ack()
         except IntegrityError as e:
@@ -576,6 +418,7 @@ async def main():
     db_password = os.getenv("DB_PASSWORD")
     db_host = os.getenv("DB_HOST")
     db_name = os.getenv("DB_NAME")
+    resolver = Resolver()
     while True:
         try:
             logging.info("Starting processing...")
@@ -584,12 +427,15 @@ async def main():
             channel = await connection.channel()
             await channel.set_qos(prefetch_count=1)
 
-            engine = create_engine(
-                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-                pool_pre_ping=True,
-            )
-            Session = sessionmaker(bind=engine)
-            db_session = Session()
+            # engine = create_engine(
+            #     f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+            #     pool_pre_ping=True,
+            # )
+            # Session = sessionmaker(bind=engine)
+            # db_session = Session()
+
+            db_session = await resolver.resolve(Db)
+            audience_smarts_service = await resolver.resolve(AudienceSmartsService)
 
             settingPersistence = AudienceSettingPersistence(db_session)
 
@@ -599,10 +445,11 @@ async def main():
             )
             await queue.consume(
                 functools.partial(
-                    aud_email_validation,
+                    process_rmq_message,
                     channel=channel,
                     db_session=db_session,
                     settingPersistence=settingPersistence,
+                    audience_smarts_service=audience_smarts_service
                 )
             )
 

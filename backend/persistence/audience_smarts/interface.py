@@ -96,3 +96,23 @@ class AudienceSmartsPersistenceInterface(ABC):
     @abstractmethod
     def get_processing_sources(self, id: int) -> Optional[Row]:
         pass
+
+    @abstractmethod
+    def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID) -> List[dict]:
+        pass
+
+    @abstractmethod
+    def get_enrichment_users_for_delivery_validation(self, smart_audience_id: UUID) -> List[dict]:
+        pass
+
+    @abstractmethod
+    def get_enrichment_users_for_postal_validation(self, smart_audience_id: UUID, validation_type: str) -> List[dict]:
+        pass
+
+    @abstractmethod
+    def get_enrichment_users_for_confirmation_validation(self, smart_audience_id: UUID) -> List[dict]:
+        pass
+
+    @abstractmethod
+    def get_enrichment_users_for_free_validations(self, smart_audience_id: UUID, column_name: str) -> List[dict]:
+        pass

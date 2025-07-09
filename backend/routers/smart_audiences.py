@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Body, HTTPException
 from starlette.responses import StreamingResponse
 from dependencies import (
-    get_audience_smarts_service,
     check_user_authorization_without_pixel,
     check_domain,
 )
@@ -26,6 +25,7 @@ router = APIRouter(
 
 @router.get("", response_model=SmartsAudienceObjectResponse)
 def get_audience_smarts(
+    audience_smarts_service: AudienceSmartsService,
     user=Depends(check_user_authorization_without_pixel),
     page: int = Query(1, alias="page", ge=1),
     per_page: int = Query(10, alias="per_page", ge=1, le=500),
@@ -36,9 +36,6 @@ def get_audience_smarts(
     search_query: Optional[str] = Query(None),
     statuses: List[str] = Query([]),
     use_cases: List[str] = Query([]),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     smarts_audience_list, count = audience_smarts_service.get_audience_smarts(
         user=user,
@@ -58,10 +55,8 @@ def get_audience_smarts(
 
 @router.post("/calculate", response_model=int)
 def calculate_smart_audience(
+    audience_smarts_service: AudienceSmartsService,
     request=Body(...),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     return audience_smarts_service.calculate_smart_audience(
         raw_data_sources=request
@@ -70,10 +65,8 @@ def calculate_smart_audience(
 
 @router.post("/validation-cost-calculate", response_model=float)
 def calculate_validation_cost(
+    audience_smarts_service: AudienceSmartsService,
     request=Body(...),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     return audience_smarts_service.calculate_validation_cost(
         count_active_segment=request["count_active_segment"],
@@ -83,10 +76,8 @@ def calculate_validation_cost(
 
 @router.get("/{id}/data-sources", response_model=DataSourcesResponse)
 def get_datasource_by_id(
+    audience_smarts_service: AudienceSmartsService,
     id: UUID,
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     data_sources = audience_smarts_service.get_datasources_by_aud_smart_id(
         id=id,
@@ -100,9 +91,7 @@ def get_datasource_by_id(
 )
 def get_validations_by_id(
     id: UUID,
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
+    audience_smarts_service: AudienceSmartsService,
 ):
     validations = audience_smarts_service.get_validations_by_aud_smart_id(
         id=id,
@@ -113,10 +102,8 @@ def get_validations_by_id(
 @router.post("/builder", response_model=SmartsResponse)
 async def create_smart_audience(
     request: CreateSmartAudienceRequest,
+    audience_smarts_service: AudienceSmartsService,
     user=Depends(check_user_authorization_without_pixel),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     if user.get("team_member"):
         user_id = user.get("team_member").get("id")
@@ -140,10 +127,8 @@ async def create_smart_audience(
 
 @router.get("/get-datasource")
 def get_datasource(
+    audience_smarts_service: AudienceSmartsService,
     user=Depends(check_user_authorization_without_pixel),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     data_source = audience_smarts_service.get_datasource(
         user=user,
@@ -153,20 +138,16 @@ def get_datasource(
 
 @router.get("/check-access")
 def check_access(
+    audience_smarts_service: AudienceSmartsService,
     user=Depends(check_user_authorization_without_pixel),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     return audience_smarts_service.check_access(user=user)
 
 
 @router.get("/search")
 def search_audience_smart(
+    audience_smarts_service: AudienceSmartsService,
     start_letter: str = Query(..., min_length=3),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
     return audience_smarts_service.search_audience_smart(
@@ -176,10 +157,8 @@ def search_audience_smart(
 
 @router.get("/estimates-predictable-validation")
 def estimates_predictable_validation(
+    audience_smarts_service: AudienceSmartsService,
     validations: List[str] = Query([]),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     if len(validations) == 1 and "," in validations[0]:
         validations = validations[0].split(",")
@@ -189,9 +168,7 @@ def estimates_predictable_validation(
 @router.delete("/{id}", response_model=bool)
 def delete_audience_smart(
     id: UUID,
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
+    audience_smarts_service: AudienceSmartsService,
 ):
     return audience_smarts_service.delete_audience_smart(id=id)
 
@@ -200,9 +177,7 @@ def delete_audience_smart(
 def update_audience_smart(
     id: UUID,
     payload: UpdateSmartAudienceRequest,
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
+    audience_smarts_service: AudienceSmartsService,
 ):
     return audience_smarts_service.update_audience_smart(
         id=id, new_name=payload.new_name
@@ -212,10 +187,9 @@ def update_audience_smart(
 @router.post("/download-persons")
 def download_persons(
     payload: SmartAudienceSyncCreate,
+    audience_smarts_service: AudienceSmartsService,
     user=Depends(check_user_authorization_without_pixel),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
+
 ):
     result = audience_smarts_service.download_persons(
         smart_audience_id=payload.smart_audience_id,
@@ -237,9 +211,7 @@ def download_persons(
     "/get-processing-smart-source", response_model=Optional[SmartsResponse]
 )
 def get_processing_source(
+    audience_smarts_service: AudienceSmartsService,
     id: str = Query(...),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     return audience_smarts_service.get_processing_source(id)

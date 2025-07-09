@@ -341,7 +341,7 @@ async def main():
                     process_rmq_message,
                     channel=channel,
                     db_session=db_session,
-                    userPersistence=user_persistence,
+                    user_persistence=user_persistence,
                 )
             )
 
