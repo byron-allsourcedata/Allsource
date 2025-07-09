@@ -238,7 +238,7 @@ async def parse_csv_file(
                 PersonRow(
                     email=email,
                     date=date,
-                    sale_amount=sale_amount,
+                    sale_amount=str(sale_amount),
                 )
             )
 
