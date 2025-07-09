@@ -46,12 +46,15 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
 
         result = self.parse_clickhouse_result(result)
 
-        def pad_with_zeros(zip_code: int | float | None) -> str:
-            if zip_code is None:
+        def pad_with_zeros(zip_code: None | str) -> str:
+            if not zip_code or zip_code.strip().lower() in {
+                "none",
+                "null",
+                "nan",
+            }:
                 return "00000"
-            if math.isnan(zip_code):
-                return "00000"
-            return str(zip_code).zfill(5)
+            cleaned = zip_code.strip()
+            return cleaned.zfill(5) if cleaned.isdigit() else "00000"
 
         result = [
             {
