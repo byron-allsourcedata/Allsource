@@ -101,6 +101,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
 	const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isFirstLoad, setIsFirstLoad] = useState(true);
 	const [Loading, setLoading] = useState(false);
 	const [data, setData] = useState<any[]>([]);
 	const [allData, setAllData] = useState<any[]>([]);
@@ -185,16 +186,39 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		resetDataSyncHints();
 	}, []);
 
+	// // TODO: Add polling
+	// useEffect(() => {
+	// 	if (needsSync) {
+	// 		handleIntegrationsSync();
+	// 		setNeedsSync(false);
+	// 	}
+	// }, [needsSync]);
+	
 	useEffect(() => {
-		if (needsSync) {
-			handleIntegrationsSync();
-			setNeedsSync(false);
-		}
-	}, [needsSync]);
+		// if (!needsSync) return;
+
+		const pollingInterval = 2000; // in milliseconds
+		const intervalId = setInterval(() => {
+			if (!isLoading) {
+				handleIntegrationsSync();
+			}
+		}, pollingInterval);
+
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, [needsSync, isLoading]);
+
 
 	const handleIntegrationsSync = async () => {
 		try {
-			setIsLoading(true);
+			if (isFirstLoad) {
+				setIsLoading(true);
+				setIsFirstLoad(false);
+			}
+			// else {
+			// 	setIsLoading(false);
+			// }
 			let params = null;
 			if (service_name) {
 				params = {
@@ -205,6 +229,23 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				params: params,
 			});
 			const { length: count } = response.data;
+			
+			// // if even one row contacts != processed_contancts => continue polling
+			// const data = response.data;
+			// let needsPooling: boolean = false;
+
+			// for (const idx in data) {
+			// 	const row = data[idx];
+			// 	if (row.contacts != row.processed_contacts) {
+			// 		needsPooling = true;
+			// 		break;
+			// 	}
+			// }
+
+			// if (!needsPooling) {
+			// 	setNeedsSync(false);
+			// }
+
 			setAllData(response.data);
 			setTotalRows(count);
 			let newRowsPerPageOptions: number[] = [];
