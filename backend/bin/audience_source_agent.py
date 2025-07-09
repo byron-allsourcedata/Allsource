@@ -12,6 +12,7 @@ from typing import List, Union, Optional, Tuple
 from uuid import UUID
 
 import boto3
+import dateparser
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
@@ -161,7 +162,7 @@ async def process_email_leads(
         transaction_date_obj = None
         if transaction_date:
             try:
-                transaction_date_obj = datetime.fromisoformat(transaction_date)
+                transaction_date_obj = dateparser.parse(transaction_date)
             except Exception as date_error:
                 logging.warning(
                     f"Error parsing date '{transaction_date}': {date_error}"
@@ -1070,10 +1071,10 @@ def calculate_and_save_significant_fields(
             .values(significant_fields=combined_insights)
         )
     except Exception as e:
-        logging.error(f"Error calculating significant fields: {e}", exc_info=True)
+        logging.error(
+            f"Error calculating significant fields: {e}", exc_info=True
+        )
         logging.error(f"Contunuing anyway")
-
-
 
 
 def check_significant_fields_and_insights(source: AudienceSource) -> bool:
