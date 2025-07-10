@@ -229,8 +229,6 @@ async def aud_validation_agent(
             .count()
         )
 
-        print(validation_count, total_count, validation_type)
-
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             if aud_smart and aud_smart.validations:
