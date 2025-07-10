@@ -177,7 +177,9 @@ async def process_rmq_message(
                     for rule in validations[validation_type]:
                         if "delivery" in rule:
                             rule["delivery"]["processed"] = True
-                            rule["delivery"]["count_validated"] = total_validated
+                            rule["delivery"]["count_validated"] = (
+                                total_validated
+                            )
                             rule["delivery"]["count_submited"] = (
                                 count_persons_before_validation
                             )

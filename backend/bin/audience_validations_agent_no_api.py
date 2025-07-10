@@ -140,12 +140,18 @@ async def aud_validation_agent(
             ),
             "personal_email_last_seen": lambda v: bool(
                 v
-                and (datetime.now(timezone.utc) - datetime.fromisoformat(v).astimezone(timezone.utc)).days
+                and (
+                    datetime.now(timezone.utc)
+                    - datetime.fromisoformat(v).astimezone(timezone.utc)
+                ).days
                 <= recency_personal_days
             ),
             "business_email_last_seen_date": lambda v: bool(
                 v
-                and (datetime.now(timezone.utc) - datetime.fromisoformat(v).astimezone(timezone.utc)).days
+                and (
+                    datetime.now(timezone.utc)
+                    - datetime.fromisoformat(v).astimezone(timezone.utc)
+                ).days
                 <= recency_business_days
             ),
             "mobile_phone_dnc": lambda v: v is False,

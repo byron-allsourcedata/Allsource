@@ -234,6 +234,7 @@ async def complete_validation(
 
 #     logging.info(f"completed validation, status audience smart ready")
 
+
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
@@ -254,11 +255,16 @@ async def process_rmq_message(
 
         priority_record = (
             db_session.query(AudienceSetting.value)
-            .filter(AudienceSetting.alias == AudienceSettingAlias.VALIDATION_PRIORITY.value)
+            .filter(
+                AudienceSetting.alias
+                == AudienceSettingAlias.VALIDATION_PRIORITY.value
+            )
             .first()
         )
 
-        priority_values = priority_record.value.split(",") if priority_record else []
+        priority_values = (
+            priority_record.value.split(",") if priority_record else []
+        )
 
         column_mapping = {
             "personal_email-mx": "personal_email_validation_status",
@@ -296,7 +302,10 @@ async def process_rmq_message(
                 continue
 
             for param in validation_params[validation]:
-                if val_type not in param or param[val_type].get("processed") is True:
+                if (
+                    val_type not in param
+                    or param[val_type].get("processed") is True
+                ):
                     continue
 
                 column_name = column_mapping.get(value)
@@ -320,11 +329,13 @@ async def process_rmq_message(
                 )
 
                 for i in range(0, len(enrichment_users), 100):
-                    batch = enrichment_users[i:i+100]
+                    batch = enrichment_users[i : i + 100]
                     serialized_batch = [
                         {
                             **user,
-                            "audience_smart_person_id": str(user["audience_smart_person_id"]),
+                            "audience_smart_person_id": str(
+                                user["audience_smart_person_id"]
+                            ),
                         }
                         for user in batch
                     ]
@@ -335,12 +346,21 @@ async def process_rmq_message(
                         "batch": serialized_batch,
                         "validation_type": column_name,
                         "validation_cost": validation_cost,
-                        "count_persons_before_validation": len(enrichment_users),
+                        "count_persons_before_validation": len(
+                            enrichment_users
+                        ),
                     }
 
-                    if queue_map[column_name] == AUDIENCE_VALIDATION_AGENT_NOAPI:
-                        msg_body["recency_personal_days"] = recency_days["personal_email"]
-                        msg_body["recency_business_days"] = recency_days["business_email"]
+                    if (
+                        queue_map[column_name]
+                        == AUDIENCE_VALIDATION_AGENT_NOAPI
+                    ):
+                        msg_body["recency_personal_days"] = recency_days[
+                            "personal_email"
+                        ]
+                        msg_body["recency_business_days"] = recency_days[
+                            "business_email"
+                        ]
 
                     await publish_rabbitmq_message_with_channel(
                         channel=channel,
@@ -351,15 +371,18 @@ async def process_rmq_message(
                 validations_sent = True
 
         if not validations_sent:
-            await complete_validation(db_session, aud_smart_id, channel, user_id)
+            await complete_validation(
+                db_session, aud_smart_id, channel, user_id
+            )
 
         await message.ack()
 
     except IntegrityError:
-        logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
+        logging.warning(
+            f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
+        )
         db_session.rollback()
         await message.ack()
-
 
 
 # async def process_rmq_message(
