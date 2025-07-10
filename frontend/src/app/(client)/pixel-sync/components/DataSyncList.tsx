@@ -85,6 +85,7 @@ import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
 interface DataSyncProps {
 	service_name?: string | null;
 	filters?: any;
+	isFirstLoad?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -97,11 +98,17 @@ interface IntegrationsCredentials {
 	is_failed?: boolean;
 }
 
+interface PixelSyncRow {
+	contacts: number;
+	processed_contacts: number;
+}
+
 const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const { needsSync, setNeedsSync } = useIntegrationContext();
 	const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
 	const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isFirstLoad, setIsFirstLoad] = useState(true);
 	const [Loading, setLoading] = useState(false);
 	const [data, setData] = useState<any[]>([]);
 	const [allData, setAllData] = useState<any[]>([]);
@@ -183,16 +190,46 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		resetDataSyncHints();
 	}, []);
 
-	useEffect(() => {
-		if (needsSync) {
-			handleIntegrationsSync();
-			setNeedsSync(false);
+	const isAllContactsSynced = (data: PixelSyncRow[]): boolean => {
+		// if even one row contacts != processed_contancts => not synced => continue polling
+		for (const row of data) {
+			if (row.contacts != row.processed_contacts) {
+				return false;
+			}
 		}
-	}, [needsSync]);
+		return true;
+	}
+	
+	useEffect(() => {
+		if (!needsSync) return;
+		
+		const pollingInterval = 2000; // in milliseconds
+		const intervalId = setInterval(() => {
+			if (!isLoading) {
+				handleIntegrationsSync();
+
+				if (!needsSync) {
+					return;
+				}
+			}
+		}, pollingInterval);
+
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, [needsSync, isLoading]);
+
 
 	const handleIntegrationsSync = async () => {
 		try {
-			setIsLoading(true);
+			if (isFirstLoad) {
+				setIsLoading(true);
+				setIsFirstLoad(false);
+			}
+			else {
+				setIsLoading(false);
+			}
+
 			let params = null;
 			if (service_name) {
 				params = {
@@ -203,6 +240,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				params: params,
 			});
 			const { length: count } = response.data;
+
 			setAllData(response.data);
 			setTotalRows(count);
 			let newRowsPerPageOptions: number[] = [];
@@ -224,6 +262,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				newRowsPerPageOptions.sort((a, b) => a - b);
 			}
 			setRowsPerPageOptions(newRowsPerPageOptions);
+
+			const contacts = response.data;
+			const isSynced = isAllContactsSynced(contacts);
+			if (isSynced) {
+				setNeedsSync(false);
+			}
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				const status = error.response.data.status;
