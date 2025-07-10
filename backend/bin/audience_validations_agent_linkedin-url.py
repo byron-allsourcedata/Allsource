@@ -107,7 +107,6 @@ async def process_rmq_message(
                     resp.status_code != 200 and not data.get("success")
                 ):
                     failed_ids.append(pid)
-                    continue
 
                 for pos in (
                     data.get("person", {})
@@ -210,7 +209,7 @@ async def process_rmq_message(
                     for rule in cat:
                         if key in rule:
                             rule[key]["processed"] = True
-                            rule[key]["count_validated"] = len(success_ids)
+                            rule[key]["count_validated"] = total_validated
                             rule[key]["count_submited"] = (
                                 count_persons_before_validation
                             )
@@ -234,7 +233,7 @@ async def process_rmq_message(
             user_id=user_id,
             data={
                 "smart_audience_id": aud_smart_id,
-                "total_validated": len(success_ids),
+                "total_validated": total_validated,
             },
         )
         logging.info("sent sse with total count")
