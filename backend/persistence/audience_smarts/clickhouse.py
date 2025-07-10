@@ -25,7 +25,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     ):
         self.client = client
         self.postgres = postgres
-        self.client.command("SET max_query_size = 10485760")
 
     def get_use_case_id_by_alias(self, use_case_alias: str) -> Optional[UUID]:
         return self.postgres.get_use_case_id_by_alias(use_case_alias)
@@ -181,6 +180,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_delivery_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
+        self.client.command("SET max_query_size = 10485760")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -217,6 +217,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_postal_validation(
         self, smart_audience_id: UUID, validation_type: str
     ) -> List[dict]:
+        self.client.command("SET max_query_size = 10485760")
         if validation_type == "cas_home_address":
             address_prefix = "home_"
         elif validation_type == "cas_office_address":
@@ -265,6 +266,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_confirmation_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
+        self.client.command("SET max_query_size = 10485760")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -313,6 +315,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_job_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
+        self.client.command("SET max_query_size = 10485760")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -339,34 +342,35 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         result = []
         for row in result_rows:
             if not row["employment_json"]:
-                continue
-            employment_data = json.loads(row["employment_json"])
-            current_jobs = [
-                job for job in employment_data if job.get("end_date") is None
-            ]
-            selected_job = current_jobs[0] if current_jobs else None
+                selected_job = {
+                    "company_name": None,
+                    "job_title": None,
+                }
+            else:
+                employment_data = json.loads(row["employment_json"])
+                current_jobs = [
+                    job for job in employment_data if job.get("end_date") is None
+                ]
+                selected_job = current_jobs[0] if current_jobs else None
 
-            if selected_job:
-                for entry in ids:
-                    if entry["asid"] == row["asid"]:
-                        result.append(
-                            {
-                                "audience_smart_person_id": asid_to_id_map[
-                                    row["asid"]
-                                ],
-                                "job_title": selected_job.get("job_title"),
-                                "company_name": selected_job.get(
-                                    "company_name"
-                                ),
-                                "linkedin_url": row["linkedin_url"],
-                            }
-                        )
-
+            result.append(
+                {
+                    "audience_smart_person_id": asid_to_id_map[
+                        row["asid"]
+                    ],
+                    "job_title": selected_job.get("job_title", None) if selected_job else None,
+                    "company_name": selected_job.get(
+                        "company_name", None
+                    ) if selected_job else None,
+                    "linkedin_url": row["linkedin_url"],
+                }
+            )
         return result
 
     def get_enrichment_users_for_free_validations(
         self, smart_audience_id: UUID, column_name: str
     ) -> List[dict]:
+        self.client.command("SET max_query_size = 10485760")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
