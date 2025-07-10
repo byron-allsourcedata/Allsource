@@ -84,6 +84,7 @@ import GoHighLevelDataSync from "../../data-sync/components/GoHighLevelDataSync"
 interface DataSyncProps {
 	service_name?: string | null;
 	filters?: any;
+	isFirstLoad?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -94,6 +95,11 @@ interface IntegrationsCredentials {
 	service_name: string;
 	is_with_suppression?: boolean;
 	is_failed?: boolean;
+}
+
+interface PixelSyncRow {
+	contacts: number;
+	processed_contacts: number;
 }
 
 const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
@@ -186,21 +192,27 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		resetDataSyncHints();
 	}, []);
 
-	// // TODO: Add polling
-	// useEffect(() => {
-	// 	if (needsSync) {
-	// 		handleIntegrationsSync();
-	// 		setNeedsSync(false);
-	// 	}
-	// }, [needsSync]);
+	const isAllContactsSynced = (data: PixelSyncRow[]): boolean => {
+		// if even one row contacts != processed_contancts => not synced => continue polling
+		for (const row of data) {
+			if (row.contacts != row.processed_contacts) {
+				return false;
+			}
+		}
+		return true;
+	}
 	
 	useEffect(() => {
-		// if (!needsSync) return;
-
+		if (!needsSync) return;
+		
 		const pollingInterval = 2000; // in milliseconds
 		const intervalId = setInterval(() => {
 			if (!isLoading) {
 				handleIntegrationsSync();
+
+				if (!needsSync) {
+					return;
+				}
 			}
 		}, pollingInterval);
 
@@ -216,9 +228,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setIsLoading(true);
 				setIsFirstLoad(false);
 			}
-			// else {
-			// 	setIsLoading(false);
-			// }
+			else {
+				setIsLoading(false);
+			}
+
 			let params = null;
 			if (service_name) {
 				params = {
@@ -229,22 +242,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				params: params,
 			});
 			const { length: count } = response.data;
-			
-			// // if even one row contacts != processed_contancts => continue polling
-			// const data = response.data;
-			// let needsPooling: boolean = false;
-
-			// for (const idx in data) {
-			// 	const row = data[idx];
-			// 	if (row.contacts != row.processed_contacts) {
-			// 		needsPooling = true;
-			// 		break;
-			// 	}
-			// }
-
-			// if (!needsPooling) {
-			// 	setNeedsSync(false);
-			// }
 
 			setAllData(response.data);
 			setTotalRows(count);
@@ -267,6 +264,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				newRowsPerPageOptions.sort((a, b) => a - b);
 			}
 			setRowsPerPageOptions(newRowsPerPageOptions);
+
+			const contacts = response.data;
+			const isSynced = isAllContactsSynced(contacts);
+			if (isSynced) {
+				setNeedsSync(false);
+			}
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				const status = error.response.data.status;
