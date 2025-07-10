@@ -196,7 +196,9 @@ async def process_rmq_message(
             .count()
         )
 
-        logging.info(f"validation_count, total_count: {validation_count}, {total_count}")
+        logging.info(
+            f"validation_count, total_count: {validation_count}, {total_count}"
+        )
 
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
@@ -226,7 +228,6 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-
 
         await send_sse(
             channel=channel,

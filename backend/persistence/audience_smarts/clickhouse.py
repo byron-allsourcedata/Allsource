@@ -349,19 +349,21 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             else:
                 employment_data = json.loads(row["employment_json"])
                 current_jobs = [
-                    job for job in employment_data if job.get("end_date") is None
+                    job
+                    for job in employment_data
+                    if job.get("end_date") is None
                 ]
                 selected_job = current_jobs[0] if current_jobs else None
 
             result.append(
                 {
-                    "audience_smart_person_id": asid_to_id_map[
-                        row["asid"]
-                    ],
-                    "job_title": selected_job.get("job_title", None) if selected_job else None,
-                    "company_name": selected_job.get(
-                        "company_name", None
-                    ) if selected_job else None,
+                    "audience_smart_person_id": asid_to_id_map[row["asid"]],
+                    "job_title": selected_job.get("job_title", None)
+                    if selected_job
+                    else None,
+                    "company_name": selected_job.get("company_name", None)
+                    if selected_job
+                    else None,
                     "linkedin_url": row["linkedin_url"],
                 }
             )
