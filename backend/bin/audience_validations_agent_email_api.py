@@ -177,14 +177,14 @@ async def process_rmq_message(
                     for rule in validations[validation_type]:
                         if "delivery" in rule:
                             rule["delivery"]["processed"] = True
-                            rule["delivery"]["count_validated"] = (
-                                total_validated
+                            rule["delivery"]["count_validated"] = len(
+                                success_ids
                             )
                             rule["delivery"]["count_submited"] = (
                                 count_persons_before_validation
                             )
                             rule["delivery"]["count_cost"] = str(
-                                write_off_funds
+                                write_off_funds.quantize(Decimal("0.01"))
                             )
                 aud_smart.validations = json.dumps(validations)
             db_session.commit()
@@ -202,7 +202,7 @@ async def process_rmq_message(
             user_id=user_id,
             data={
                 "smart_audience_id": aud_smart_id,
-                "total_validated": total_validated,
+                "total_validated": len(success_ids),
             },
         )
         logging.info("sent sse with total count")

@@ -206,11 +206,13 @@ async def process_rmq_message(
                     for rule in cat:
                         if key in rule:
                             rule[key]["processed"] = True
-                            rule[key]["count_validated"] = total_validated
+                            rule[key]["count_validated"] = len(success_ids)
                             rule[key]["count_submited"] = (
                                 count_persons_before_validation
                             )
-                            rule[key]["count_cost"] = str(write_off_funds)
+                            rule[key]["count_cost"] = str(
+                                write_off_funds.quantize(Decimal("0.01"))
+                            )
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -223,12 +225,44 @@ async def process_rmq_message(
                 },
             )
 
+        # try:
+        #     await channel.close()
+        #     await connection.close()
+        # except BaseException as e:
+        #     logging.error(f"Close conn: {e}", exc_info=True)
+
+        # rmq_connection = RabbitMQConnection()
+        # connection = await rmq_connection.connect()
+        # channel = await connection.channel()
+
+        # persons_ids = [str(id) for id in persons]
+        # message_body = {
+        #     "lookalike_id": str(lookalike_id),
+        #     "user_id": user_id,
+        #     "enrichment_user": persons_ids,
+        # }
+
+        # await publish_rabbitmq_message_with_channel(
+        #     channel=channel,
+        #     queue_name=self.AUDIENCE_LOOKALIKES_MATCHING,
+        #     message_body=message_body,
+        # )
+
+        # await channel.close()
+        # await connection.close()
+
+        # db_session.commit()
+
+        # rmq_connection = RabbitMQConnection()
+        # connection = await rmq_connection.connect()
+        # channel = await connection.channel()
+
         await send_sse(
             channel=channel,
             user_id=user_id,
             data={
                 "smart_audience_id": aud_smart_id,
-                "total_validated": total_validated,
+                "total_validated": len(success_ids),
             },
         )
         logging.info("sent sse with total count")

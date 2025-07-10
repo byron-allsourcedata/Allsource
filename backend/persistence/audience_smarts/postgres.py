@@ -462,6 +462,49 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             )
         ]
 
+    def get_person_asids_by_smart_aud_id(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
+        return [
+            {"id": row[0], "asid": row[1]}
+            for row in (
+                self.db.query(
+                    AudienceSmartPerson.id,
+                    AudienceSmartPerson.enrichment_user_asid,
+                )
+                .filter(
+                    AudienceSmartPerson.smart_audience_id == smart_audience_id,
+                    AudienceSmartPerson.is_valid == True,
+                )
+                .all()
+            )
+        ]
+
+    def get_enrichment_users_for_job_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
+        raise NotImplementedError("Implemented for clickhouse persistence")
+
+    def get_enrichment_users_for_delivery_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
+        raise NotImplementedError("Implemented for clickhouse persistence")
+
+    def get_enrichment_users_for_postal_validation(
+        self, smart_audience_id: UUID, validation_type: str
+    ) -> List[dict]:
+        raise NotImplementedError("Implemented for clickhouse persistence")
+
+    def get_enrichment_users_for_confirmation_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
+        raise NotImplementedError("Implemented for clickhouse persistence")
+
+    def get_enrichment_users_for_free_validations(
+        self, smart_audience_id: UUID, column_name: str
+    ) -> List[dict]:
+        raise NotImplementedError("Implemented for clickhouse persistence")
+
     def get_synced_person_ids(self, data_sync_id: int) -> List[UUID]:
         return [
             row[0]

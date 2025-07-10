@@ -176,7 +176,7 @@ const ValidationsTable = ({
 									{validation.count_validated.toLocaleString("en-US")}
 								</Typography>
 								<Typography sx={{ flex: 1 }} className="black-table-header">
-									{validation.count_cost.toLocaleString("en-US")} Funds
+									${validation.count_cost.toLocaleString("en-US")}
 								</Typography>
 							</Box>
 						),
