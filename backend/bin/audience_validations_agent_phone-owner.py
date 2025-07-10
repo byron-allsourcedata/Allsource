@@ -265,11 +265,13 @@ async def process_rmq_message(
                     for rule in cat:
                         if key in rule:
                             rule[key]["processed"] = True
-                            rule[key]["count_validated"] = total_validated
+                            rule[key]["count_validated"] = len(success_ids)
                             rule[key]["count_submited"] = (
                                 count_persons_before_validation
                             )
-                            rule[key]["count_cost"] = str(write_off_funds)
+                            rule[key]["count_cost"] = str(
+                                write_off_funds.quantize(Decimal("0.01"))
+                            )
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -287,7 +289,7 @@ async def process_rmq_message(
             user_id=user_id,
             data={
                 "smart_audience_id": aud_smart_id,
-                "total_validated": total_validated,
+                "total_validated": len(success_ids),
             },
         )
         logging.info("sent sse with total count")
@@ -341,7 +343,7 @@ async def main():
                     process_rmq_message,
                     channel=channel,
                     db_session=db_session,
-                    userPersistence=user_persistence,
+                    user_persistence=user_persistence,
                 )
             )
 

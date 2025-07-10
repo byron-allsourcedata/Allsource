@@ -3,14 +3,17 @@ import json
 from sqlalchemy.orm import Session
 from typing import Dict
 from enums import AudienceSettingAlias
+from db_dependencies import Db
 
 from models.audience_settings import AudienceSetting
+from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class AudienceSettingPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_average_success_validations(self) -> Dict[str, float]:

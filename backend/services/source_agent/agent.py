@@ -113,7 +113,9 @@ class SourceAgentService:
                 email_l = email.strip().lower()
                 if email_l not in matched:
                     try:
-                        email_asid_pair = EmailAsid(email=email_l, asid=str(asid))
+                        email_asid_pair = EmailAsid(
+                            email=email_l, asid=str(asid)
+                        )
                     except Exception as e:
                         logger.error(
                             f"Error creating EmailAsid object for {email}: {e}",
@@ -149,7 +151,9 @@ class SourceAgentService:
                 email_l = email.strip().lower()
                 if email_l not in matched:
                     try:
-                        email_asid_pair = EmailAsid(email=email_l, asid=str(asid))
+                        email_asid_pair = EmailAsid(
+                            email=email_l, asid=str(asid)
+                        )
                     except Exception as e:
                         logger.error(
                             f"Error creating EmailAsid object for {email}: {e}",
