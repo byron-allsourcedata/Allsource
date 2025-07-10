@@ -1,16 +1,24 @@
 import csv
 import io
 import re
-from typing import List, Dict
-from utils import format_phone_number
-from persistence.leads_persistence import LeadsPersistence
 from datetime import datetime, timedelta
+from typing import List, Dict
+
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
+from resolver import injectable
+from utils import format_phone_number
 
 
+@injectable
 class LeadsService:
-    def __init__(self, leads_persistence_service: LeadsPersistence, domain):
+    def __init__(
+        self,
+        leads_persistence_service: LeadsPersistence,
+        user_sync_persistence: IntegrationsUserSyncPersistence,
+    ):
         self.leads_persistence_service = leads_persistence_service
-        self.domain = domain
+        self.user_sync_persistence = user_sync_persistence
 
     def format_phone_number(self, phones):
         phone_list = phones.split(",")
@@ -32,6 +40,7 @@ class LeadsService:
 
     def get_leads(
         self,
+        domain,
         page,
         per_page,
         from_date,
@@ -52,7 +61,7 @@ class LeadsService:
     ):
         leads, count, max_page, states, leads_requests = (
             self.leads_persistence_service.filter_leads(
-                domain_id=self.domain.id,
+                domain_id=domain.id,
                 page=page,
                 per_page=per_page,
                 from_date=from_date,
@@ -223,6 +232,7 @@ class LeadsService:
 
     def download_leads(
         self,
+        domain,
         from_date=None,
         to_date=None,
         regions=None,
@@ -242,7 +252,7 @@ class LeadsService:
         if leads_ids == 0:
             result_five_x_five_users, states, leads_requests = (
                 self.leads_persistence_service.get_full_user_leads_by_filters(
-                    domain_id=self.domain.id,
+                    domain_id=domain.id,
                     from_date=from_date,
                     to_date=to_date,
                     regions=regions,
@@ -262,7 +272,7 @@ class LeadsService:
         else:
             result_five_x_five_users, states, leads_requests = (
                 self.leads_persistence_service.get_full_user_leads_by_ids(
-                    self.domain.id, leads_ids
+                    domain.id, leads_ids
                 )
             )
 
@@ -465,12 +475,12 @@ class LeadsService:
             "max_page": max_page,
         }
 
-    def search_contact(self, start_letter):
+    def search_contact(self, start_letter, domain):
         start_letter = start_letter.replace("+", "").strip().lower()
         if start_letter.split()[0].isdecimal():
             start_letter = start_letter.replace(" ", "")
         leads_data = self.leads_persistence_service.search_contact(
-            start_letter=start_letter, domain_id=self.domain.id
+            start_letter=start_letter, domain_id=domain.id
         )
         results = set()
         for lead in leads_data:
@@ -487,9 +497,9 @@ class LeadsService:
         limited_results = list(results)[:10]
         return limited_results
 
-    def search_location(self, start_letter):
+    def search_location(self, start_letter, domain):
         location_data = self.leads_persistence_service.search_location(
-            start_letter=start_letter, domain_id=self.domain.id
+            start_letter=start_letter, domain_id=domain.id
         )
         results_set = set()
 
@@ -505,13 +515,32 @@ class LeadsService:
         url = re.sub(r"^https?://", "", url)
         return re.sub(r"^www\.", "", url)
 
-    def search_page_url(self, start_letter: str) -> List[Dict[str, str]]:
+    def search_page_url(
+        self, start_letter: str, domain
+    ) -> List[Dict[str, str]]:
         start_letter = self.format_url(start_letter)
 
         page_url_data = self.leads_persistence_service.search_page_url(
-            start_letter=start_letter, domain_id=self.domain.id
+            start_letter=start_letter, domain_id=domain.id
         )
         result_urls = [row[0].lower() for row in page_url_data]
         unique_urls = list(dict.fromkeys(result_urls))
         results_list = [{"page_url": page_url} for page_url in unique_urls]
         return results_list
+
+    def data_sync_leads_type(
+        self,
+        domain_id: str,
+        limit: int,
+        leads_type: str,
+        last_sent_lead_id: int = None,
+    ):
+        leads_data = (
+            self.leads_persistence_service.fetch_leads_by_domain_and_leads_type(
+                domain_id=domain_id,
+                limit=limit,
+                data_sync_leads_type=leads_type,
+                last_sent_lead_id=last_sent_lead_id,
+            )
+        )
+        return leads_data

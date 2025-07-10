@@ -3,20 +3,25 @@ import logging
 import os
 import sys
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from db_dependencies import Db
+from resolver import Resolver
+from services.data_sync_imported_lead import DataSyncImportedService
+from services.leads import LeadsService
 from models import Users
 from config.sentry import SentryConfig
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from sqlalchemy import create_engine, and_, or_, select
+from sqlalchemy import and_, or_, select
 from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 from enums import (
     DataSyncImportedStatus,
@@ -301,8 +306,12 @@ async def send_leads_to_rmq(
     await send_leads_to_queue(channel, processed_lead)
 
 
-async def process_user_integrations(channel, session):
-    user_integrations, data_syncs = fetch_data_syncs(session)
+async def process_user_integrations(
+    db_session: Db,
+    leads_service: LeadsService,
+    data_sync_imported_service: DataSyncImportedService,
+):
+    user_integrations, data_syncs = fetch_data_syncs(db_session)
     for i, data_sync in enumerate(data_syncs):
         if (
             data_sync.sync_status == False
@@ -339,22 +348,21 @@ async def process_user_integrations(channel, session):
         if data_sync.is_active == False:
             continue
 
-        lead_users = get_previous_imported_leads(session, data_sync.id)
+        lead_users = get_previous_imported_leads(db_session, data_sync.id)
         logging.info(
             f"Pixel sync {data_sync.id} Re imported leads= {len(lead_users)}"
         )
         data_sync_limit = user_integrations[i].limit
         if data_sync_limit - len(lead_users) > 0:
-            additional_leads = fetch_leads_by_domain(
-                session,
-                data_sync.domain_id,
-                data_sync_limit - len(lead_users),
-                data_sync.last_sent_lead_id,
-                data_sync.leads_type,
+            additional_leads = leads_service.data_sync_leads_type(
+                domain_id=data_sync.domain_id,
+                limit=data_sync_limit - len(lead_users),
+                leads_type=data_sync.leads_type,
+                last_sent_lead_id=data_sync.last_sent_lead_id,
             )
             lead_users.extend(additional_leads)
 
-        update_data_sync_integration(session, data_sync.id)
+        update_data_sync_integration(db_session, data_sync.id)
         if not lead_users:
             logging.info(f"Pixel sync {data_sync.id} Lead users empty")
             continue
@@ -363,20 +371,18 @@ async def process_user_integrations(channel, session):
             f"Pixel sync {data_sync.id} lead users len = {len(lead_users)}"
         )
         lead_users = sorted(lead_users, key=lambda x: x.id)
-        await send_leads_to_rmq(
-            session,
-            channel,
-            lead_users,
-            data_sync,
-            user_integrations[i].service_name,
+        await data_sync_imported_service.save_and_send_data_imported_leads(
+            lead_users=lead_users,
+            data_sync=data_sync,
+            user_integrations_service_name=user_integrations[i].service_name,
         )
         last_lead_id = lead_users[-1].id
         if last_lead_id:
             logging.info(
                 f"Pixel sync {data_sync.id} last_lead_id = {last_lead_id}"
             )
-            update_last_sent_lead(session, data_sync.id, last_lead_id)
-            update_data_sync_integration(session, data_sync.id)
+            update_last_sent_lead(db_session, data_sync.id, last_lead_id)
+            update_data_sync_integration(db_session, data_sync.id)
 
 
 async def main():
@@ -392,18 +398,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
-    engine = create_engine(
-        f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-        pool_pre_ping=True,
-    )
-    Session = sessionmaker(bind=engine)
-
+    resolver = Resolver()
     while True:
         db_session = None
         rabbitmq_connection = None
@@ -418,9 +413,16 @@ async def main():
                 name=CRON_DATA_SYNC_LEADS,
                 durable=True,
             )
-            db_session = Session()
-
-            await process_user_integrations(channel, db_session)
+            db_session = await resolver.resolve(Db)
+            leads_service = await resolver.resolve(LeadsService)
+            data_sync_imported_service = await resolver.resolve(
+                DataSyncImportedService
+            )
+            await process_user_integrations(
+                db_session=db_session,
+                leads_service=leads_service,
+                data_sync_imported_service=data_sync_imported_service,
+            )
 
             logging.info("Processing completed. Sleeping for 10 minutes...")
         except Exception as e:

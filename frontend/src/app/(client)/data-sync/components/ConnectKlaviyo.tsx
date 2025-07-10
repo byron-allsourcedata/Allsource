@@ -339,6 +339,22 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 					},
 				);
 				if (response.status === 201 || response.status === 200) {
+					if (response.data !== "SUCCESS") {
+						if (response.data === "LIST_NOT_EXISTS") {
+							showErrorToast("The selected list does not exist.");
+						} else if (response.data === "AUTHENTICATION_FAILED") {
+							showErrorToast(
+								"Authentication failed. Please reconnect your account.",
+							);
+						} else if (response.data === "FORBIDDEN") {
+							showErrorToast("You do not have permission to sync this data.");
+						} else if (response.data === "PAYMENT_REQUIRED") {
+							showErrorToast("Payment required to continue.");
+						} else if (response.data === "QUOTA_EXHAUSTED") {
+							showErrorToast("Quota exhausted. Please upgrade your plan.");
+						}
+						return;
+					}
 					resetToDefaultValues();
 					onClose();
 					showToast("Data sync created successfully");

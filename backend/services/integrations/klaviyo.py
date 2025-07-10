@@ -3,7 +3,7 @@ import json
 import logging
 import os
 from datetime import datetime
-from typing import Tuple, Annotated, Dict, Any
+from typing import Tuple, Annotated, Dict, Any, List
 
 import httpcore
 import httpx
@@ -24,8 +24,18 @@ from persistence.integrations.integrations_persistence import (
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from resolver import injectable
-from schemas.integrations.integrations import *
-from schemas.integrations.klaviyo import *
+from schemas.integrations.integrations import (
+    DataMap,
+    IntegrationCredentials,
+    ContactFiled,
+    ContactSuppression,
+)
+from schemas.integrations.klaviyo import (
+    KlaviyoList,
+    KlaviyoProfile,
+    KlaviyoTags,
+)
+from services.data_sync_imported_lead import DataSyncImportedService
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
@@ -52,6 +62,7 @@ class KlaviyoIntegrationsService:
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
+        data_sync_imported_service: DataSyncImportedService,
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
@@ -59,6 +70,7 @@ class KlaviyoIntegrationsService:
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
+        self.data_sync_imported_service = data_sync_imported_service
 
     def __handle_request(
         self,
@@ -173,17 +185,11 @@ class KlaviyoIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persisntece.create_integration(
+        integration = self.integrations_persisntece.create_integration(
             integration_data
         )
 
-        if not integartion:
-            raise HTTPException(
-                status_code=409,
-                detail={"status": IntegrationsStatus.CREATE_IS_FAILED.value},
-            )
-
-        return integartion
+        return integration
 
     def __mapped_list(self, list) -> KlaviyoList:
         return KlaviyoList(id=list["id"], list_name=list["attributes"]["name"])
@@ -318,7 +324,7 @@ class KlaviyoIntegrationsService:
     ):
         domain_id = domain.id if domain else None
         try:
-            if self.test_api_key(credentials.klaviyo.api_key) == False:
+            if not self.test_api_key(credentials.klaviyo.api_key):
                 raise HTTPException(
                     status_code=400,
                     detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
@@ -358,6 +364,42 @@ class KlaviyoIntegrationsService:
             api_key=api_key,
         )
 
+    async def try_to_insert_to_list(
+        self,
+        lead_users: List[LeadUser],
+        access_token: str,
+        is_email_validation_enabled: bool,
+        list_id: str,
+    ):
+        profile = None
+        for lead_user in lead_users:
+            five_x_five_user = (
+                self.leads_persistence.get_five_x_five_user_by_id(
+                    id=lead_user.five_x_five_user_id
+                )
+            )
+            profile = await self.__create_profile(
+                lead_user,
+                five_x_five_user,
+                access_token,
+                None,
+                is_email_validation_enabled,
+            )
+            if isinstance(profile, str):
+                continue
+            else:
+                break
+
+        if not profile:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        list_response = await self.__add_profiles_to_list(
+            list_id=list_id,
+            profiles=[profile],
+            api_key=access_token,
+        )
+        return list_response
+
     async def create_sync(
         self,
         leads_type: str,
@@ -369,9 +411,29 @@ class KlaviyoIntegrationsService:
         tags_id: str = None,
         data_map: List[DataMap] = [],
     ):
-        credentials = self.get_credentials(
+        credentials: UserIntegration = self.get_credentials(
             domain_id=domain_id, user_id=user.get("id")
         )
+
+        lead_users = await self.leads_persistence.get_leads_users_by_user_id(
+            user_id=user.get("id"), limit=credentials.limit
+        )
+
+        if lead_users:
+            result_insert = await self.try_to_insert_to_list(
+                lead_users=lead_users,
+                access_token=credentials.access_token,
+                is_email_validation_enabled=user.get(
+                    "is_email_validation_enabled"
+                ),
+                list_id=list_id,
+            )
+            if result_insert not in (
+                ProccessDataSyncResult.SUCCESS.value,
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ):
+                return result_insert.upper()
+
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
@@ -385,12 +447,22 @@ class KlaviyoIntegrationsService:
                 "created_by": created_by,
             }
         )
+
+        if lead_users:
+            await self.data_sync_imported_service.save_and_send_data_imported_leads(
+                lead_users,
+                data_sync=sync,
+                user_integrations_service_name="klaviyo",
+            )
+
         if tags_id:
             self.create_tag_relationships_lists(
                 tags_id=tags_id,
                 list_id=list_id,
                 api_key=credentials.access_token,
             )
+
+        return "SUCCESS"
 
     async def process_data_sync_lead(
         self,

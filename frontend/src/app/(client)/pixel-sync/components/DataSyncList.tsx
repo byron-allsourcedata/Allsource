@@ -80,6 +80,7 @@ import { width } from "@mui/system";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import GoHighLevelDataSync from "../../data-sync/components/GoHighLevelDataSync";
+import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -134,10 +135,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
 	const [openMetaConnect, setOpenMetaConnect] = useState(false);
 	const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
+	const [openHubspotConnect, setOpenHubspotConnect] = useState(false);
+
 	const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false);
-	const [openAttentiveConnect, setAttentiveConnect] = useState(false);
-	const [openShopifuConnect, setOpenShopifyConnect] = useState(false);
-	const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false);
 	const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false);
 	const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false);
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
@@ -156,10 +156,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleCloseIntegrate = () => {
 		setOpenMetaConnect(false);
 		setOpenKlaviyoConnect(false);
+		setOpenHubspotConnect(false);
 		setOpenSalesForceConnect(false);
-		setOpenShopifyConnect(false);
-		setAttentiveConnect(false);
-		setOpenBigcommerceConnect(false);
 		setOpenOmnisendConnect(false);
 		setOpenSendlaneConnect(false);
 		setOpenS3Connect(false);
@@ -702,7 +700,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookConnect(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenHubspotIconPopup(true);
+						setOpenHubspotConnect(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setOpenSalesForceConnect(true);
 					}
@@ -1914,14 +1912,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
-				<KlaviyoIntegrationPopup
-					open={openKlaviyoConnect}
+				<HubspotIntegrationPopup
+					open={openHubspotConnect}
 					handleClose={() => {
-						setOpenKlaviyoConnect(false), setIsInvalidApiKey(false);
+						setOpenHubspotConnect(false), setIsInvalidApiKey(false);
 					}}
 					initApiKey={
 						integrationsCredentials.find(
-							(integartion) => integartion.service_name === "klaviyo",
+							(integartion) => integartion.service_name === "hubspot",
 						)?.access_token
 					}
 					invalid_api_key={isInvalidApiKey}
