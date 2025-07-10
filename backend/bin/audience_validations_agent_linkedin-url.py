@@ -196,6 +196,10 @@ async def process_rmq_message(
             .count()
         )
 
+        logging.info(
+            f"validation_count, total_count: {validation_count}, {total_count}"
+        )
+
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
@@ -224,38 +228,6 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-
-        # try:
-        #     await channel.close()
-        #     await connection.close()
-        # except BaseException as e:
-        #     logging.error(f"Close conn: {e}", exc_info=True)
-
-        # rmq_connection = RabbitMQConnection()
-        # connection = await rmq_connection.connect()
-        # channel = await connection.channel()
-
-        # persons_ids = [str(id) for id in persons]
-        # message_body = {
-        #     "lookalike_id": str(lookalike_id),
-        #     "user_id": user_id,
-        #     "enrichment_user": persons_ids,
-        # }
-
-        # await publish_rabbitmq_message_with_channel(
-        #     channel=channel,
-        #     queue_name=self.AUDIENCE_LOOKALIKES_MATCHING,
-        #     message_body=message_body,
-        # )
-
-        # await channel.close()
-        # await connection.close()
-
-        # db_session.commit()
-
-        # rmq_connection = RabbitMQConnection()
-        # connection = await rmq_connection.connect()
-        # channel = await connection.channel()
 
         await send_sse(
             channel=channel,
