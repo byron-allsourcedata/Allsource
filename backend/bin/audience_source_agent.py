@@ -163,6 +163,11 @@ async def process_email_leads(
         if transaction_date:
             try:
                 transaction_date_obj = dateparser.parse(transaction_date)
+
+                if transaction_date_obj is not None:
+                    transaction_date_obj = transaction_date_obj.replace(
+                        tzinfo=None
+                    )
             except Exception as date_error:
                 logging.warning(
                     f"Error parsing date '{transaction_date}': {date_error}"
