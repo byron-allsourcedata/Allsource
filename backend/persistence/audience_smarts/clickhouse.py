@@ -186,6 +186,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             return []
 
         in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
+        ids.sort(key=lambda e: e["id"])
+
+        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
 
         sql = f"""
         SELECT 
@@ -202,7 +205,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
         return [
             {
-                "audience_smart_person_id": entry["id"],
+                "audience_smart_person_id": asid_to_id_map[row["asid"]],
                 "personal_email": row["personal_email"],
                 "business_email": row["business_email"],
             }
@@ -226,6 +229,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             return []
 
         in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
+        ids.sort(key=lambda e: e["id"])
+
+        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
 
         sql = f"""
         SELECT 
@@ -246,7 +252,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         return [
             {
-                "audience_smart_person_id": entry["id"],
+                "audience_smart_person_id": asid_to_id_map[row["asid"]],
                 "postal_code": row["postal_code"],
                 "country": row["country"],
                 "city": row["city"],
@@ -254,8 +260,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 "address": row["address"],
             }
             for row in result_rows
-            for entry in ids
-            if entry["asid"] == row["asid"]
         ]
 
     def get_enrichment_users_for_confirmation_validation(
@@ -264,6 +268,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
+
+        ids.sort(key=lambda e: e["id"])
+        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
 
         in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
 
@@ -293,7 +300,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         return [
             {
-                "audience_smart_person_id": entry["id"],
+                "audience_smart_person_id": asid_to_id_map[row["asid"]],
                 "phone_mobile1": row["phone_mobile1"],
                 "phone_mobile2": row["phone_mobile2"],
                 "full_name": f"{row['first_name'] or ''} {row['middle_name'] or ''} {row['last_name'] or ''}".strip(),
@@ -309,6 +316,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
+        
+        ids.sort(key=lambda e: e["id"])
+        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
 
         in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
 
@@ -341,7 +351,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                     if entry["asid"] == row["asid"]:
                         result.append(
                             {
-                                "audience_smart_person_id": entry["id"],
+                                "audience_smart_person_id": asid_to_id_map[row["asid"]],
                                 "job_title": selected_job.get("job_title"),
                                 "company_name": selected_job.get(
                                     "company_name"
@@ -360,7 +370,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             return []
 
         in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
-        # asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
+        ids.sort(key=lambda e: e["id"])
+
+        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
 
         sql = f"""
         SELECT 
@@ -372,26 +384,15 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         rows = self.client.query(sql)
 
-        # columns = ["asid", column_name]
-        # result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
+        columns = ["asid", column_name]
+        result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
 
-        # return [
-        #     {
-        #         "audience_smart_person_id":  asid_to_id_map[row["asid"]],
-        #         column_name: row[column_name].isoformat() if isinstance(row[column_name], datetime) else row[column_name],
-        #     }
-        #     for row in result_rows
-        # ]
         return [
             {
-                "audience_smart_person_id": entry["id"],
-                column_name: row[1].isoformat()
-                if isinstance(row[1], datetime)
-                else row[1],
+                "audience_smart_person_id":  asid_to_id_map[row["asid"]],
+                column_name: row[column_name].isoformat() if isinstance(row[column_name], datetime) else row[column_name],
             }
-            for row in rows.result_rows
-            for entry in ids
-            if entry["asid"] == row[0]
+            for row in result_rows
         ]
 
     def check_access_for_user(self, user: dict) -> bool:

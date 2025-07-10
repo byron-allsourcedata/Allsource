@@ -6,13 +6,12 @@ import functools
 import json
 import time
 from uuid import UUID
-from sqlalchemy import update, create_engine, func
+from sqlalchemy import update, func
 from aio_pika import IncomingMessage
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from typing import List
-from decimal import Decimal
 
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -85,7 +84,6 @@ def get_enrichment_users(
                 aud_smart_id, validation_type
             )
         )
-        print(enrichment_users)
     else:
         enrichment_users = (
             audience_smarts_service.get_enrichment_users_for_free_validations(
@@ -246,7 +244,7 @@ async def process_rmq_message(
 ):
     try:
         message_body = json.loads(message.body)
-        # logging.info("Received message: %s", message_body)cle
+        logging.info("Received message: %s", message_body)
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         validation_params = message_body.get("validation_params")
@@ -430,10 +428,6 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
     resolver = Resolver()
     while True:
         try:
@@ -442,13 +436,6 @@ async def main():
             connection = await rmq_connection.connect()
             channel = await connection.channel()
             await channel.set_qos(prefetch_count=1)
-
-            # engine = create_engine(
-            #     f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-            #     pool_pre_ping=True,
-            # )
-            # Session = sessionmaker(bind=engine)
-            # db_session = Session()
 
             db_session = await resolver.resolve(Db)
             audience_smarts_service = await resolver.resolve(

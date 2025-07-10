@@ -464,7 +464,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
 
     def get_person_asids_by_smart_aud_id(
         self, smart_audience_id: UUID
-    ) -> List[UUID]:
+    ) -> List[dict]:
         return [
             {"id": row[0], "asid": row[1]}
             for row in (
