@@ -316,7 +316,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
-        
+
         ids.sort(key=lambda e: e["id"])
         asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
 
@@ -351,7 +351,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                     if entry["asid"] == row["asid"]:
                         result.append(
                             {
-                                "audience_smart_person_id": asid_to_id_map[row["asid"]],
+                                "audience_smart_person_id": asid_to_id_map[
+                                    row["asid"]
+                                ],
                                 "job_title": selected_job.get("job_title"),
                                 "company_name": selected_job.get(
                                     "company_name"
@@ -389,8 +391,10 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         return [
             {
-                "audience_smart_person_id":  asid_to_id_map[row["asid"]],
-                column_name: row[column_name].isoformat() if isinstance(row[column_name], datetime) else row[column_name],
+                "audience_smart_person_id": asid_to_id_map[row["asid"]],
+                column_name: row[column_name].isoformat()
+                if isinstance(row[column_name], datetime)
+                else row[column_name],
             }
             for row in result_rows
         ]

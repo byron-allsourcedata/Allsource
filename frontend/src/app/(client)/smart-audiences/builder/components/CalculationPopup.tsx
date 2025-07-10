@@ -65,8 +65,8 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 					className="form-input"
 					sx={{ marginBottom: 2 }}
 				>
-					Proceeding will deduct{" "}
-					${CalculationData.validationCost.toLocaleString("en-US")} funds from
+					Proceeding will deduct $
+					{CalculationData.validationCost.toLocaleString("en-US")} funds from
 					your account. Make sure you have enough funds to complete the
 					transaction.
 				</Typography>
@@ -153,7 +153,8 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 					className="second-sub-title"
 					sx={{ marginBottom: 2 }}
 				>
-					${Math.abs(
+					$
+					{Math.abs(
 						CalculationData.availableCredits - CalculationData.validationCost,
 					).toLocaleString("en-US")}{" "}
 					Funds

@@ -234,7 +234,7 @@ async def process_rmq_message(
         # rmq_connection = RabbitMQConnection()
         # connection = await rmq_connection.connect()
         # channel = await connection.channel()
-        
+
         # persons_ids = [str(id) for id in persons]
         # message_body = {
         #     "lookalike_id": str(lookalike_id),
