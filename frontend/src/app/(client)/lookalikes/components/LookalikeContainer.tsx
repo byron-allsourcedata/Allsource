@@ -89,7 +89,6 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 			);
 			const updatedItem = response.data;
 
-			console.log({ updatedItem });
 			setLookalikeSize(updatedItem.size);
 			return {
 				size_progress: updatedItem.processed_train_model_size || 0,
