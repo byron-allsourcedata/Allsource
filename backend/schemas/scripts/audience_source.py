@@ -1,3 +1,5 @@
+import re
+from decimal import Decimal
 from typing import List, Optional, Union
 
 from pydantic import BaseModel
@@ -33,10 +35,21 @@ class DataBodyNormalize(BaseModel):
 class PersonRow(BaseModel):
     email: Optional[str] = ""
     date: Optional[str] = ""
-    sale_amount: Optional[float] = 0.0
+    sale_amount: Optional[str] = "0.0"
     user_id: Optional[int] = None
     lead_id: Optional[int] = None
     status: Optional[str] = None
+
+    def get_sale_amount(self) -> Decimal:
+        if not self.sale_amount:
+            return Decimal("0.0")
+
+        cleaned = re.sub(r"[^\d.]", "", self.sale_amount)
+
+        try:
+            return Decimal(cleaned)
+        except (ValueError, ArithmeticError):
+            return Decimal("0.0")
 
 
 class DataBodyFromSource(BaseModel):

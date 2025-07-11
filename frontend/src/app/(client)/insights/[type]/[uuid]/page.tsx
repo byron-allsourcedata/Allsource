@@ -1,5 +1,5 @@
 "use client";
-import { Box, Typography, Tabs, Tab, IconButton } from "@mui/material";
+import { Box, Typography, Tabs, Tab, IconButton, Button } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -162,15 +162,16 @@ const Insights = () => {
 					display: "flex",
 					flexDirection: "row",
 					alignItems: "center",
+					justifyContent: "space-between",
+					gap: 2,
 					position: "sticky",
 					top: 0,
-					pt: "10px",
-					pr: type === "sources" ? "5rem" : "1.5rem",
-					pl: 0,
 					zIndex: 1,
-					backgroundColor: "#fff",
-					justifyContent: "space-between",
 					width: "100%",
+					backgroundColor: "#fff",
+					pt: "10px",
+					pr: "3rem",
+					pl: 0,
 					"@media (max-width: 600px)": {
 						flexDirection: "column",
 						display: "flex",
@@ -192,7 +193,7 @@ const Insights = () => {
 					},
 				}}
 			>
-				<Box sx={{ display: "flex", width: "100%" }}>
+				<Box sx={{ flex: 1, display: "flex", alignItems: "center", gap: 1 }}>
 					<IconButton
 						onClick={() => {
 							router.push("/insights");
@@ -259,7 +260,7 @@ const Insights = () => {
 
 				<Box
 					sx={{
-						flexGrow: 1,
+						flex: 1,
 						display: "flex",
 						width: "100%",
 						justifyContent: "center",
@@ -349,7 +350,35 @@ const Insights = () => {
 						/>
 					</Tabs>
 				</Box>
-				<Box sx={{ display: "flex", width: "80%" }}></Box>
+				<Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+					{type === "sources" && (
+						<Button
+							variant="contained" /* need chnage < on !== */
+							onClick={() =>
+								router.push(`/lookalikes/builder?source_uuid=${uuid}`)
+							}
+							className="second-sub-title"
+							sx={{
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								textTransform: "none",
+								padding: "10px 24px",
+								color: "#fff !important",
+								":hover": {
+									backgroundColor: "rgba(30, 136, 229, 1)",
+								},
+								":active": {
+									backgroundColor: "rgba(56, 152, 252, 1)",
+								},
+								":disabled": {
+									backgroundColor: "rgba(56, 152, 252, 1)",
+									opacity: 0.6,
+								},
+							}}
+						>
+							Create Lookalike
+						</Button>
+					)}
+				</Box>
 			</Box>
 			<Box
 				sx={{

@@ -54,7 +54,7 @@ const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks, isDebug }) => {
 					pt: 2,
 					backgroundColor: "#fff",
 					justifyContent: "space-between",
-					width: "98%",
+					width: "100%",
 					"@media (max-width: 600px)": {
 						flexDirection: "column",
 						display: "flex",

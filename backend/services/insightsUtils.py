@@ -24,15 +24,6 @@ from services.utils_constants.location_constants import (
 )
 from services.source_agent.agent import EmploymentEntry
 
-from models.enrichment import (
-    EnrichmentUser,
-    EnrichmentPersonalProfiles,
-    EnrichmentFinancialRecord,
-    EnrichmentLifestyle,
-    EnrichmentVoterRecord,
-    EnrichmentProfessionalProfile,
-    EnrichmentEmploymentHistory,
-)
 
 from schemas.insights import InsightsByCategory
 from services.source_agent.agent import SourceAgentService
@@ -41,7 +32,7 @@ logging.basicConfig(level=logging.INFO)
 
 PERSONAL_COLS = [
     "gender",
-    "state_abbr       AS state",
+    "home_postal_state_id       AS state",
     "religion",
     "homeowner",
     "age",
@@ -301,7 +292,7 @@ class InsightsUtils:
     @staticmethod
     def process_insights_for_asids(
         insights,
-        asids: List[uuid.UUID],
+        asids: list[uuid.UUID],
         source_agent: SourceAgentService,
         audience_type: BusinessType,
     ):
@@ -325,13 +316,13 @@ class InsightsUtils:
             columns = COLUMNS_BY_CATEGORY[cat]
 
             for batch in InsightsUtils._chunk(asids, MAX_IDS_PER_BATCH):
-                if cat != "employment":
-                    rows = source_agent.fetch_fields_by_asids(batch, columns)
-                else:
+                if cat == "employment":
                     # employment_json -> List[EmploymentEntry]
                     employment_data = source_agent.get_employment_by_asids(
                         batch
                     )
+                else:
+                    rows = source_agent.fetch_fields_by_asids(batch, columns)
 
                 for idx, row in enumerate(
                     rows if cat != "employment" else batch

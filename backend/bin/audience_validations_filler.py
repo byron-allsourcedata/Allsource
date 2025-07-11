@@ -263,6 +263,156 @@ async def complete_validation(
 #     logging.info(f"completed validation, status audience smart ready")
 
 
+# async def process_rmq_message(
+#     message: IncomingMessage,
+#     db_session: Session,
+#     channel,
+#     settingPersistence: AudienceSettingPersistence,
+#     audience_smarts_service: AudienceSmartsService,
+# ):
+#     try:
+#         body = json.loads(message.body)
+#         user_id = body.get("user_id")
+#         aud_smart_id = body.get("aud_smart_id")
+#         validation_params = body.get("validation_params", {})
+
+#         recency_days = {
+#             "personal_email": 0,
+#             "business_email": 0,
+#         }
+
+#         priority_record = (
+#             db_session.query(AudienceSetting.value)
+#             .filter(
+#                 AudienceSetting.alias
+#                 == AudienceSettingAlias.VALIDATION_PRIORITY.value
+#             )
+#             .first()
+#         )
+
+#         priority_values = (
+#             priority_record.value.split(",") if priority_record else []
+#         )
+
+#         column_mapping = {
+#             "personal_email-mx": "personal_email_validation_status",
+#             "personal_email-recency": "personal_email_last_seen",
+#             "personal_email-delivery": "personal_email",
+#             "business_email-mx": "business_email_validation_status",
+#             "business_email-recency": "business_email_last_seen_date",
+#             "business_email-delivery": "business_email",
+#             "phone-dnc_filter": "mobile_phone_dnc",
+#             "linked_in-job_validation": "job_validation",
+#             "phone-confirmation": "confirmation",
+#             "postal_cas_verification-cas_home_address": "cas_home_address",
+#             "postal_cas_verification-cas_office_address": "cas_office_address",
+#         }
+
+#         queue_map = {
+#             "personal_email_validation_status": AUDIENCE_VALIDATION_AGENT_NOAPI,
+#             "personal_email_last_seen": AUDIENCE_VALIDATION_AGENT_NOAPI,
+#             "business_email_validation_status": AUDIENCE_VALIDATION_AGENT_NOAPI,
+#             "business_email_last_seen_date": AUDIENCE_VALIDATION_AGENT_NOAPI,
+#             "job_validation": AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
+#             "confirmation": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
+#             "cas_home_address": AUDIENCE_VALIDATION_AGENT_POSTAL,
+#             "cas_office_address": AUDIENCE_VALIDATION_AGENT_POSTAL,
+#             "business_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
+#             "personal_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
+#             "mobile_phone_dnc": AUDIENCE_VALIDATION_AGENT_NOAPI,
+#         }
+
+#         validations_sent = False
+
+#         for value in priority_values:
+#             validation, val_type = value.split("-")
+#             if validation not in validation_params:
+#                 continue
+
+#             for param in validation_params[validation]:
+#                 if (
+#                     val_type not in param
+#                     or param[val_type].get("processed") is True
+#                 ):
+#                     continue
+
+#                 column_name = column_mapping.get(value)
+#                 if not column_name:
+#                     continue
+
+#                 if val_type == "recency":
+#                     recency_days[validation] = param[val_type].get("days", 0)
+
+#                 enrichment_users = get_enrichment_users(
+#                     val_type, aud_smart_id, audience_smarts_service, column_name
+#                 )
+
+#                 if not enrichment_users:
+#                     continue
+
+#                 validation_cost = get_validation_cost(settingPersistence, value)
+#                 validation_processed(
+#                     db_session,
+#                     [u["audience_smart_person_id"] for u in enrichment_users],
+#                 )
+
+#                 for i in range(0, len(enrichment_users), 100):
+#                     batch = enrichment_users[i : i + 100]
+#                     serialized_batch = [
+#                         {
+#                             **user,
+#                             "audience_smart_person_id": str(
+#                                 user["audience_smart_person_id"]
+#                             ),
+#                         }
+#                         for user in batch
+#                     ]
+
+#                     msg_body = {
+#                         "aud_smart_id": str(aud_smart_id),
+#                         "user_id": user_id,
+#                         "batch": serialized_batch,
+#                         "validation_type": column_name,
+#                         "validation_cost": validation_cost,
+#                         "count_persons_before_validation": len(
+#                             enrichment_users
+#                         ),
+#                     }
+
+#                     if (
+#                         queue_map[column_name]
+#                         == AUDIENCE_VALIDATION_AGENT_NOAPI
+#                     ):
+#                         msg_body["recency_personal_days"] = recency_days[
+#                             "personal_email"
+#                         ]
+#                         msg_body["recency_business_days"] = recency_days[
+#                             "business_email"
+#                         ]
+
+#                     await publish_rabbitmq_message_with_channel(
+#                         channel=channel,
+#                         queue_name=queue_map[column_name],
+#                         message_body=msg_body,
+#                     )
+
+#                 validations_sent = True
+
+#         if not validations_sent:
+#             await complete_validation(
+#                 db_session, aud_smart_id, channel, user_id
+#             )
+
+#         await message.ack()
+
+#     except IntegrityError:
+#         logging.warning(
+#             f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
+#         )
+#         db_session.rollback()
+#         await message.ack()
+
+
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,

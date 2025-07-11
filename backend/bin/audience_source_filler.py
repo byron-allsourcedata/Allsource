@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from itertools import islice
 from typing import List, Dict, Union
 
+import dateparser
+
 import aioboto3
 import boto3
 import chardet
@@ -88,32 +90,15 @@ def extract_amount(amount_raw: str) -> float:
 
 
 def parse_date(date_str: str) -> str | None:
-    if not date_str:
+    try:
+        transaction_date_obj = dateparser.parse(date_str)
+        if transaction_date_obj is None:
+            logging.warning(f"Unknown date format: {date_str}")
+            return None
+        return transaction_date_obj.isoformat()
+    except Exception:
+        logging.warning(f"Unknown date format: {date_str}")
         return None
-
-    if date_str.endswith("Z"):
-        date_str = date_str[:-1] + "+0000"
-
-    formats = [
-        "%m/%d/%Y %H:%M",
-        "%Y-%m-%dT%H:%M:%S%z",
-        "%Y-%m-%dT%H:%M:%S",
-        "%Y-%m-%d",
-    ]
-
-    for fmt in formats:
-        try:
-            parsed_date = datetime.strptime(date_str, fmt)
-            if parsed_date.tzinfo is not None:
-                parsed_date = parsed_date.astimezone(timezone.utc).replace(
-                    tzinfo=None
-                )
-            return parsed_date.isoformat()
-        except ValueError:
-            continue
-
-    logging.warning(f"Unknown date format: {date_str}")
-    return None
 
 
 def check_existing_csv_source(
@@ -129,9 +114,9 @@ def check_existing_csv_source(
         .first()
     )
     if existing_source:
-        source.significant_fields = existing_source.significant_fields
-        source.insights = existing_source.insights
-        logging.info(f"MD5 hash {hash_csv_file} already exists. Data copied.")
+        # source.significant_fields = existing_source.significant_fields
+        # source.insights = existing_source.insights
+        logging.info(f"MD5 hash {hash_csv_file} already exists.")
     else:
         logging.info(f"New MD5 hash {hash_csv_file} calculated and saved.")
 
@@ -189,6 +174,7 @@ async def parse_csv_file(
     batch_content = body.decode(encoding, errors="replace")
     csv_file = io.StringIO(batch_content)
     csv_reader = csv.DictReader(csv_file)
+    csv_reader.fieldnames = [field.strip() for field in csv_reader.fieldnames]
     total_rows = sum(1 for _ in csv_reader)
     csv_file.seek(0)
     next(csv_reader, None)
@@ -253,7 +239,7 @@ async def parse_csv_file(
                 PersonRow(
                     email=email,
                     date=date,
-                    sale_amount=sale_amount,
+                    sale_amount=str(sale_amount),
                 )
             )
 
