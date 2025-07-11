@@ -29,6 +29,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_use_case_id_by_alias(self, use_case_alias: str) -> Optional[UUID]:
         return self.postgres.get_use_case_id_by_alias(use_case_alias)
 
+    def get_audience_smart_validations_by_id(self, aud_smart_id: UUID):
+        return self.postgres.get_audience_smart_validations_by_id(aud_smart_id)
+
     def create_audience_smarts_data_sources(
         self,
         smart_audience_id: UUID,

@@ -532,3 +532,11 @@ class AudienceSmartsService:
         return self.audience_smarts_persistence.get_enrichment_users_for_free_validations(
             smart_audience_id, column_name
         )
+
+    def get_audience_smart_validations_by_id(
+        self,
+        smart_audience_id: UUID,
+    ):
+        return self.audience_smarts_persistence.get_audience_smart_validations_by_id(
+            smart_audience_id
+        )
