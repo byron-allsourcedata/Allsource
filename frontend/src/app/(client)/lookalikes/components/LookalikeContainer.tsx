@@ -90,9 +90,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 				`/audience-lookalikes/get-processing-lookalikes?id=${id}`,
 			);
 			const updatedItem = response.data;
-			console.log(updatedItem.status);
 			if (updatedItem.status === "failed") {
-				console.log(updatedItem.status);
 				setLookalikeStatusFailed(true);
 				return {
 					size_progress: 0,
