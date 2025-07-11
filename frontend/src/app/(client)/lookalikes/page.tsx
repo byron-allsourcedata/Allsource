@@ -100,6 +100,7 @@ interface TableRowData {
 	size: number;
 	processed_size: number;
 	train_model_size: number;
+	status: string;
 	processed_train_model_size: number;
 	significant_fields: Record<string, any>;
 	similarity_score: Record<string, any>;

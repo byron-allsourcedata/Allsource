@@ -42,6 +42,14 @@ class AudienceLookalikesPostgresPersistence(
     def __init__(self, db: Db):
         self.db = db
 
+    def change_lookalike_status(self, status: str, lookalike_id: UUID):
+        self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(status=status)
+        )
+        self.db.commit()
+
     def get_source_info(self, uuid_of_source, user_id):
         source = (
             self.db.query(AudienceSource, Users.full_name)
@@ -75,6 +83,7 @@ class AudienceLookalikesPostgresPersistence(
             AudienceLookalikes.lookalike_size,
             AudienceLookalikes.created_date,
             AudienceLookalikes.size,
+            AudienceLookalikes.status,
             AudienceLookalikes.processed_size,
             AudienceLookalikes.train_model_size,
             AudienceLookalikes.processed_train_model_size,
@@ -384,6 +393,7 @@ class AudienceLookalikesPostgresPersistence(
                 AudienceLookalikes.size,
                 AudienceLookalikes.processed_size,
                 AudienceLookalikes.lookalike_size,
+                AudienceLookalikes.status,
                 AudienceLookalikes.processed_train_model_size,
                 AudienceLookalikes.train_model_size,
                 AudienceSource.name,

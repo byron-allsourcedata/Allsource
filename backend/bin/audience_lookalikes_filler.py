@@ -1,22 +1,18 @@
+import asyncio
+import json
 import logging
 import os
 import sys
-import asyncio
-import functools
-import json
+
 import aio_pika
-from aio_pika import IncomingMessage
 from dotenv import load_dotenv
-
-from sqlalchemy.orm import Session
-
-from enums import LookalikeStatus
-from services.lookalikes import AudienceLookalikesService
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from services.lookalikes import AudienceLookalikesService
+from enums import LookalikeStatus
 from config.util import get_int_env
 from db_dependencies import Db
 from resolver import Resolver
@@ -191,7 +187,6 @@ async def main():
                 "x-consumer-timeout": 14400000,
             },
         )
-
         while True:
             try:
                 reader_queue = await channel.declare_queue(

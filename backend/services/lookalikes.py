@@ -466,9 +466,6 @@ class AudienceLookalikesService:
         return result
 
     def change_status(self, status: str, lookalike_id: UUID):
-        self.db.execute(
-            update(AudienceLookalikes)
-            .where(AudienceLookalikes.id == lookalike_id)
-            .values(status=status)
+        self.lookalikes_persistence_service.change_lookalike_status(
+            status=status, lookalike_id=lookalike_id
         )
-        self.db.commit()
