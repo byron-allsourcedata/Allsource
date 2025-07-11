@@ -60,7 +60,10 @@ def format_ids(ids):
 
 
 async def aud_smarts_reader(
-    message: IncomingMessage, db_session: Session, channel, audience_smarts_service: AudienceSmartsService
+    message: IncomingMessage,
+    db_session: Session,
+    channel,
+    audience_smarts_service: AudienceSmartsService,
 ):
     try:
         message_body = json.loads(message.body)
@@ -75,24 +78,22 @@ async def aud_smarts_reader(
 
         raw_params = validation_params
 
-        selected = OrderedDict(
-            (k, v) for k, v in raw_params.items() if v
-        )
+        selected = OrderedDict((k, v) for k, v in raw_params.items() if v)
 
         order_columns = []
         for group, validators in selected.items():
-            for validator_dict in validators:           
+            for validator_dict in validators:
                 validator = next(iter(validator_dict))
                 map_key = f"{group}-{validator}"
                 column = DATABASE_COLUMN_MAPPING.get(map_key)
                 if column:
                     order_columns.append(column)
-        
+
         order_by_parts = []
         for col in order_columns:
             order_by_parts.append(f"isNull({col}) ASC")
             order_by_parts.append(f"{col}")
-        
+
         order_by_clause = ", ".join(order_by_parts)
 
         logging.info(
@@ -161,7 +162,9 @@ async def aud_smarts_reader(
 
                 persons = [row[0] for row in final_query.all()]
 
-                sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(persons, order_by_clause)
+                sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(
+                    persons, order_by_clause
+                )
 
                 if not sorted_persons:
                     break
@@ -223,9 +226,8 @@ async def main():
             channel = await connection.channel()
             await channel.set_qos(prefetch_count=1)
 
-
             db_session = await resolver.resolve(Db)
-            
+
             audience_smarts_service = await resolver.resolve(
                 AudienceSmartsService
             )
@@ -236,7 +238,10 @@ async def main():
             )
             await reader_queue.consume(
                 functools.partial(
-                    aud_smarts_reader, db_session=db_session, channel=channel, audience_smarts_service=audience_smarts_service
+                    aud_smarts_reader,
+                    db_session=db_session,
+                    channel=channel,
+                    audience_smarts_service=audience_smarts_service,
                 )
             )
 

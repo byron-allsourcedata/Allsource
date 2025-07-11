@@ -180,8 +180,10 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         # """
         # q = self.client.query(sql)
         # return int(q.result_rows[0][0]) if q.result_rows else 0
-    
-    def sorted_enrichment_users_for_validation(self, ids: List[UUID], order_by_clause: str):
+
+    def sorted_enrichment_users_for_validation(
+        self, ids: List[UUID], order_by_clause: str
+    ):
         self.client.command("SET max_query_size = 10485760")
         ids_sql_list = ", ".join(f"'{i}'" for i in ids)
 
