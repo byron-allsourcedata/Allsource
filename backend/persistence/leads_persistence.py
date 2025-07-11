@@ -1618,7 +1618,6 @@ class LeadsPersistence:
                 LeadUser.five_x_five_user_id.label("five_x_five_user_id"),
             )
             .join(UserDomains, UserDomains.id == LeadUser.domain_id)
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .join(
                 IntegrationUserSync,
                 IntegrationUserSync.domain_id == UserDomains.id,
@@ -1627,14 +1626,9 @@ class LeadsPersistence:
                 LeadUser.domain_id == domain_id,
                 IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
                 LeadUser.id > last_sent_lead_id,
-                LeadUser.is_active == True,
-                UserDomains.is_enable == True,
-                (LeadsVisits.start_date < past_date)
-                | (
-                    LeadsVisits.start_date == past_date
-                    and LeadsVisits.start_time <= past_time
-                ),
-                LeadUser.is_confirmed == True,
+                LeadUser.is_active,
+                UserDomains.is_enable,
+                LeadUser.is_confirmed,
             )
         )
 
