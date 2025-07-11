@@ -198,11 +198,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			}
 		}
 		return true;
-	}
-	
+	};
+
 	useEffect(() => {
 		if (!needsSync) return;
-		
+
 		const pollingInterval = 2000; // in milliseconds
 		const intervalId = setInterval(() => {
 			if (!isLoading) {
@@ -219,14 +219,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		};
 	}, [needsSync, isLoading]);
 
-
 	const handleIntegrationsSync = async () => {
 		try {
 			if (isFirstLoad) {
 				setIsLoading(true);
 				setIsFirstLoad(false);
-			}
-			else {
+			} else {
 				setIsLoading(false);
 			}
 

@@ -267,14 +267,31 @@ class GoogleAdsIntegrationsService:
         validations: dict = {},
     ):
         profiles = []
+        results = []
         for enrichment_user in enrichment_users:
-            result = self.__mapped_googleads_profile(
+            profile = self.__mapped_googleads_profile(
                 enrichment_user, target_schema, validations
             )
-            if result:
-                profiles.append(result)
+            if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": profile,
+                    }
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
+            profiles.append(profile)
+
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
         list_response = self.__add_profile_to_list(
             access_token=user_integration.access_token,
@@ -291,7 +308,12 @@ class GoogleAdsIntegrationsService:
                 profiles=profiles,
             )
 
-        return list_response
+        if list_response != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = list_response
+
+        return results
 
     async def process_data_sync_lead(
         self,
@@ -511,7 +533,7 @@ class GoogleAdsIntegrationsService:
     ) -> GoogleAdsProfile:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         business_email, personal_email, phone = (
             self.sync_persistence.get_verified_email_and_phone(
@@ -530,7 +552,7 @@ class GoogleAdsIntegrationsService:
         last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         enrichment_user_postal = enrichment_user.postal
         city = None

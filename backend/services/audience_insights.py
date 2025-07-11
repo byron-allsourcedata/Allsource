@@ -1,22 +1,7 @@
-from typing import List
 from uuid import UUID
 
-from pydantic.v1 import UUID4
-
 from persistence.audience_insights import AudienceInsightsPersistence
-from schemas.insights import AudienceInsightData, PersonalProfiles
-from enums import BaseEnum
-from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException
-
-from schemas.lookalikes import CalculateRequest
-from schemas.mapping.audience_insights_mapping import YES_NO_UNKNOWN_MAPS
-from schemas.similar_audiences import AudienceFeatureImportance
-from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.exceptions import (
-    EqualTrainTargets,
-    EmptyTrainDataset,
-)
+from schemas.insights import AudienceInsightData
 
 
 class AudienceInsightsService:

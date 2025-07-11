@@ -45,9 +45,44 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 		: data;
 	const maxPercent = Math.max(...sortedData.map((d) => d.percent)) || 1;
 
-	const visibleData = expanded
-		? sortedData.slice(0, 20)
-		: sortedData.slice(0, hidePercent ? 8 : 5);
+	const MAX_VISIBLE = 20;
+
+	let processedData: BarData[] = [];
+	if (sortedData.length > MAX_VISIBLE) {
+		const visibleTop = sortedData.slice(0, MAX_VISIBLE);
+		const others = sortedData.slice(MAX_VISIBLE);
+		const othersTotal = others.reduce((sum, item) => sum + item.percent, 0);
+
+		processedData = [
+			...visibleTop,
+			{ label: "Everything else", percent: parseFloat(othersTotal.toFixed(2)) },
+		];
+	} else {
+		processedData = sortedData;
+	}
+
+	const shouldShowEverythingElse =
+		!hidePercent && sortedData.length > MAX_VISIBLE;
+
+	const visibleWithoutOther = expanded
+		? processedData.slice(0, MAX_VISIBLE)
+		: processedData.slice(0, hidePercent ? 8 : 5);
+
+	const visibleSum = visibleWithoutOther.reduce(
+		(sum, item) => sum + item.percent,
+		0,
+	);
+	const remainingPercent = Math.max(0, 100 - visibleSum);
+
+	const visibleData = shouldShowEverythingElse
+		? [
+				...visibleWithoutOther,
+				{
+					label: "Everything else",
+					percent: parseFloat(remainingPercent.toFixed(2)),
+				},
+			]
+		: visibleWithoutOther;
 
 	return (
 		<Box
@@ -148,6 +183,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 					) : (
 						<Stack spacing={textPadding ? 3.5 : 1.25}>
 							{visibleData.map(({ label, percent }, index) => {
+								const isEverythingElse = label === "Everything else";
 								const relative = percent / maxPercent;
 
 								return (
@@ -155,15 +191,27 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 										<Box display="flex" justifyContent="space-between" mb={0.5}>
 											<Typography
 												className="dashboard-card-text"
-												sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
+												sx={{
+													color: isEverythingElse
+														? "rgba(66, 66, 66, 0.6)"
+														: "rgba(66, 66, 66, 1)",
+													fontStyle: isEverythingElse ? "italic" : "normal",
+													fontWeight: 400,
+												}}
 											>
-												{hidePercent ? `${index + 1}. ` : ""}{" "}
+												{hidePercent ? `${index + 1}. ` : ""}
 												{label.charAt(0).toUpperCase() + label.slice(1)}
 											</Typography>
 											{!hidePercent && (
 												<Typography
 													className="dashboard-card-text"
-													sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
+													sx={{
+														color: isEverythingElse
+															? "rgba(66, 66, 66, 0.6)"
+															: "rgba(66, 66, 66, 1)",
+														fontStyle: isEverythingElse ? "italic" : "normal",
+														fontWeight: 400,
+													}}
 												>
 													{percent}%
 												</Typography>

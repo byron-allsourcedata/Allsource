@@ -163,6 +163,11 @@ async def process_email_leads(
         if transaction_date:
             try:
                 transaction_date_obj = dateparser.parse(transaction_date)
+
+                if transaction_date_obj is not None:
+                    transaction_date_obj = transaction_date_obj.replace(
+                        tzinfo=None
+                    )
             except Exception as date_error:
                 logging.warning(
                     f"Error parsing date '{transaction_date}': {date_error}"
@@ -177,9 +182,7 @@ async def process_email_leads(
             continue
 
         sale_amount = (
-            Decimal(person.sale_amount)
-            if include_amount and person.sale_amount is not None
-            else Decimal("0.0")
+            person.get_sale_amount() if include_amount else Decimal("0.0")
         )
 
         if email in matched_persons:
@@ -1074,7 +1077,7 @@ def calculate_and_save_significant_fields(
         logging.error(
             f"Error calculating significant fields: {e}", exc_info=True
         )
-        logging.error(f"Contunuing anyway")
+        logging.error("Continuing anyway")
 
 
 def check_significant_fields_and_insights(source: AudienceSource) -> bool:
@@ -1253,12 +1256,12 @@ async def aud_sources_matching(
                     )
 
                 logging.info(f"Source_id {source_id} processing complete.")
-            else:
-                db_session.execute(
-                    update(AudienceSource)
-                    .where(AudienceSource.id == source_id)
-                    .values(matched_records_status="complete")
-                )
+
+            db_session.execute(
+                update(AudienceSource)
+                .where(AudienceSource.id == source_id)
+                .values(matched_records_status="complete")
+            )
 
         if type == "emails" and processed_records >= total_records:
             await process_and_send_chunks(

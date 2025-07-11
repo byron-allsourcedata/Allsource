@@ -25,10 +25,12 @@ from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
 from enums import AudienceSmartStatuses
 from schemas.audience_smart import AccessCheckResponse
+from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class AudienceSmartsService:
     VALID_DAYS = {30, 60, 90}
     GENDER_MAPPDING = {0: "male", 1: "female", 2: "unknown"}
@@ -496,4 +498,45 @@ class AudienceSmartsService:
             processed_active_segment_records=processed_active_segment_records,
             status=status,
             integrations=None,
+        )
+
+    def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID):
+        return self.audience_smarts_persistence.get_enrichment_users_for_job_validation(
+            smart_audience_id
+        )
+
+    def get_enrichment_users_for_delivery_validation(
+        self, smart_audience_id: UUID
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_delivery_validation(
+            smart_audience_id
+        )
+
+    def get_enrichment_users_for_postal_validation(
+        self, smart_audience_id: UUID, validation_type: str
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_postal_validation(
+            smart_audience_id, validation_type
+        )
+
+    def get_enrichment_users_for_confirmation_validation(
+        self, smart_audience_id: UUID
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_confirmation_validation(
+            smart_audience_id
+        )
+
+    def get_enrichment_users_for_free_validations(
+        self, smart_audience_id: UUID, column_name: str
+    ):
+        return self.audience_smarts_persistence.get_enrichment_users_for_free_validations(
+            smart_audience_id, column_name
+        )
+
+    def get_audience_smart_validations_by_id(
+        self,
+        smart_audience_id: UUID,
+    ):
+        return self.audience_smarts_persistence.get_audience_smart_validations_by_id(
+            smart_audience_id
         )

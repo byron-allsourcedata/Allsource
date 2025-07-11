@@ -204,7 +204,8 @@ class AudienceLookalikesPostgresPersistence(
             .join(Users, Users.id == AudienceSource.created_by_user_id)
             .filter(
                 AudienceLookalikes.user_id == user_id,
-                AudienceLookalikes.size == AudienceLookalikes.processed_size,
+                AudienceLookalikes.train_model_size
+                == AudienceLookalikes.processed_train_model_size,
             )
         )
 

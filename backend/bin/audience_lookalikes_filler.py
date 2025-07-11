@@ -116,7 +116,6 @@ async def aud_sources_reader(
             channel,
             lookalike_id=audience_lookalike.id,
             user_id=audience_lookalike.user_id,
-            persons=user_ids,
         )
         await channel.close()
         await connection.close()
@@ -136,6 +135,7 @@ async def aud_sources_reader(
                 "processed": 0,
             },
         )
+        logging.info("Done")
     except BaseException as e:
         db_session.rollback()
         audience_lookalikes_service.change_status(

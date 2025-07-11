@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 import json
 import logging
 
@@ -41,7 +42,10 @@ class RabbitmqService:
             await channel.close()
 
     async def publish_rabbitmq_message_with_channel(
-        self, channel, queue_name: str, message_body: MessageBody | dict
+        self,
+        channel,
+        queue_name: str,
+        message_body: MessageBody | Mapping[str, object] | dict,
     ):
         return await publish_rabbitmq_message_with_channel(
             channel=channel,

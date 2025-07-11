@@ -4,14 +4,21 @@ from uuid import UUID
 import json
 
 from sqlalchemy import update
-
+from db_dependencies import Clickhouse
 from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
-from enums import BaseEnum, BusinessType
+from enums import BaseEnum
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
+from persistence.audience_sources_matched_persons import (
+    AudienceSourcesMatchedPersonsPersistence,
+)
+from persistence.enrichment.users import EnrichmentUsersPersistence
+from persistence.enrichment_lookalike_scores import (
+    EnrichmentLookalikeScoresPersistence,
+)
 from persistence.user_persistence import UserDict
 from resolver import injectable
 from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
@@ -20,8 +27,6 @@ from schemas.similar_audiences import (
 )
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.exceptions import (
-    EqualTrainTargets,
-    EmptyTrainDataset,
     LessThenTwoTrainDataset,
 )
 
@@ -109,9 +114,17 @@ class AudienceLookalikesService:
         self,
         lookalikes_persistence_service: AudienceLookalikesPersistence,
         sources_persistence: AudienceSourcesPersistence,
+        matched_source: AudienceSourcesMatchedPersonsPersistence,
+        enrichment_users: EnrichmentUsersPersistence,
+        enrichment_scores: EnrichmentLookalikeScoresPersistence,
+        click: Clickhouse,
     ):
         self.lookalikes_persistence_service = lookalikes_persistence_service
         self.sources_persistence = sources_persistence
+        self.matched_sources = matched_source
+        self.enrichment_users = enrichment_users
+        self.enrichment_scores = enrichment_scores
+        self.click = click
 
     def get_lookalikes(
         self,
@@ -469,3 +482,37 @@ class AudienceLookalikesService:
         self.lookalikes_persistence_service.change_lookalike_status(
             status=status, lookalike_id=lookalike_id
         )
+      
+    def get_lookalike_asids(self, lookalike_id: UUID) -> list[UUID] | None:
+        """
+        Fetches 'top' users for provided lookalike and returns their asids
+        """
+        lookalike = self.lookalikes_persistence_service.get_lookalike(
+            lookalike_id
+        )
+
+        if not lookalike:
+            return None
+
+        self.click.command("SET max_query_size = 20485760")
+        source_id: UUID = lookalike.source_uuid
+        total_rows = self.lookalikes_persistence_service.get_max_size(
+            lookalike.lookalike_size
+        )
+
+        source_asids: list[UUID] = (
+            self.matched_sources.matched_asids_for_source(source_id=source_id)
+        )
+
+        enrichment_lookalike_scores = self.enrichment_scores.select_top(
+            lookalike_id=lookalike_id,
+            source_asids=source_asids,
+            top_count=total_rows,
+        )
+
+        n_scores = len(enrichment_lookalike_scores)
+        logging.info(f"Total row in pixel file: {n_scores}")
+
+        asids: list[UUID] = [s["asid"] for s in enrichment_lookalike_scores]
+
+        return asids

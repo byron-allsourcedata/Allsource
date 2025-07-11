@@ -212,22 +212,6 @@ def get_audience_sources_service(
     )
 
 
-def get_audience_smarts_service(
-    audience_smarts_persistence: AudienceSmartsPersistence,
-    lookalikes_persistence_service: AudienceLookalikesPersistence,
-    audience_sources_persistence: AudienceSourcesPersistence,
-    audience_settings_persistence: AudienceSettingPersistence = Depends(
-        get_audience_setting_persistence
-    ),
-):
-    return AudienceSmartsService(
-        audience_smarts_persistence=audience_smarts_persistence,
-        lookalikes_persistence_service=lookalikes_persistence_service,
-        audience_sources_persistence=audience_sources_persistence,
-        audience_settings_persistence=audience_settings_persistence,
-    )
-
-
 def get_stripe_service():
     return StripeService()
 

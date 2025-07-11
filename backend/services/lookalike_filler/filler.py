@@ -24,7 +24,7 @@ from persistence.enrichment_lookalike_scores import (
 from persistence.enrichment_users import EnrichmentUsersPersistence
 from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
-from services.lookalike_filler.rabbitmq import RabbitFillerService
+from services.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
 from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
@@ -34,7 +34,7 @@ from services.similar_audiences.similar_audience_scores import (
     SimilarAudiencesScoresService,
     measure,
 )
-from config.util import get_int_env, getenv
+from config.util import get_int_env, try_get_int_env
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class LookalikeFillerService:
         enrichment_scores: EnrichmentLookalikeScoresPersistence,
         audience_lookalikes: AudienceLookalikesPersistence,
         matched_sources: AudienceSourcesMatchedPersonsPersistence,
-        rabbit: RabbitFillerService,
+        rabbit: RabbitLookalikesMatchingService,
     ):
         self.db = db
         self.clickhouse = clickhouse
@@ -109,7 +109,10 @@ class LookalikeFillerService:
         return rows_stream, column_names
 
     def get_enrichment_users_partition(
-        self, significant_fields: dict, bucket: list[int]
+        self,
+        significant_fields: dict,
+        bucket: list[int],
+        limit: int | None = None,
     ) -> tuple[StreamContext, list[str]]:
         """
         Returns a stream of blocks of enrichment users and a list of column names for a partition
@@ -127,8 +130,10 @@ class LookalikeFillerService:
 
         client = ClickhouseConfig.get_client()
 
+        limit_clause = f" LIMIT {limit}" if limit else ""
+
         rows_stream = client.query_row_block_stream(
-            f"SELECT {columns} FROM enrichment_users WHERE cityHash64(asid) % 100 IN ({in_clause})",
+            f"SELECT {columns} FROM enrichment_users WHERE cityHash64(asid) % 100 IN ({in_clause}){limit_clause}",
             settings={"max_block_size": 1000000},
         )
         column_names = rows_stream.source.column_names
@@ -196,6 +201,15 @@ class LookalikeFillerService:
         lookalike = self.lookalikes.get_lookalike(lookalike_id)
         significant_fields = lookalike.significant_fields
         top_n: int = lookalike.size
+
+        BULK_SIZE = get_int_env("LOOKALIKE_BULK_SIZE")
+        thread_count = get_int_env("LOOKALIKE_THREAD_COUNT")
+
+        LOOKALIKE_MAX_SIZE = try_get_int_env("LOOKALIKE_MAX_SIZE")
+        limit = self.get_lookalike_limit(
+            thread_count=thread_count, total_limit=LOOKALIKE_MAX_SIZE
+        )
+
         value_by_asid: dict[UUID, float] = {
             asid: float(val)
             for val, asid in self.profile_fetcher.get_value_and_user_asids(
@@ -204,8 +218,10 @@ class LookalikeFillerService:
         }
         users_count = self.enrichment_users.count()
 
+        dataset_size = LOOKALIKE_MAX_SIZE if LOOKALIKE_MAX_SIZE else users_count
+
         self.lookalikes.update_dataset_size(
-            lookalike_id=lookalike_id, dataset_size=users_count
+            lookalike_id=lookalike_id, dataset_size=dataset_size
         )
 
         rows_stream, column_names = self.get_enrichment_users(
@@ -216,9 +232,6 @@ class LookalikeFillerService:
         batch_buffer = []
 
         top_scores: list[PersonScore] = []
-
-        BULK_SIZE = get_int_env("LOOKALIKE_BULK_SIZE")
-        thread_count = get_int_env("LOOKALIKE_THREAD_COUNT")
 
         config = self.audiences_scores.prepare_config(lookalike_id)
         from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -245,6 +258,7 @@ class LookalikeFillerService:
                     bucket=bucket,
                     top_n=top_n,
                     model=model,
+                    limit=limit,
                 )
 
                 futures.append(future)
@@ -275,6 +289,7 @@ class LookalikeFillerService:
         bucket: list[int],
         top_n: int,
         model: CatBoostRegressor,
+        limit: int | None = None,
     ) -> list[PersonScore]:
         db = next(get_db())
         BULK_SIZE: int = get_int_env("LOOKALIKE_BULK_SIZE")
@@ -282,6 +297,7 @@ class LookalikeFillerService:
         rows_stream, column_names = self.get_enrichment_users_partition(
             significant_fields=significant_fields,
             bucket=bucket,
+            limit=limit,
         )
 
         batch_buffer = []
@@ -441,11 +457,18 @@ class LookalikeFillerService:
         }
 
     async def inform_lookalike_agent(
-        self, channel, lookalike_id: UUID, user_id: int, persons: list[UUID]
+        self, channel, lookalike_id: UUID, user_id: int
     ):
         await self.rabbit.inform_lookalike_agent(
-            channel=channel,
-            lookalike_id=lookalike_id,
-            user_id=user_id,
-            persons=persons,
+            channel=channel, lookalike_id=lookalike_id, user_id=user_id
         )
+
+    def get_lookalike_limit(
+        self, thread_count: int, total_limit: int | None
+    ) -> int | None:
+        if total_limit is not None:
+            limit = total_limit // thread_count
+        else:
+            limit = None
+
+        return limit

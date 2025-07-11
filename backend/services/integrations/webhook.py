@@ -248,7 +248,7 @@ class WebhookIntegrationService:
         if response.status_code == 405:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 400:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
@@ -409,6 +409,8 @@ class WebhookIntegrationService:
         mapped_fields = {mapping["type"] for mapping in data_map}
         for mapping in data_map:
             five_x_five_field = mapping["type"]
+            if five_x_five_field == "company_industry":
+                five_x_five_field = "primary_industry"
             value_field = getattr(five_x_five_user, five_x_five_field, "")
             if value_field:
                 if isinstance(value_field, datetime):

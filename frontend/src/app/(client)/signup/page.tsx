@@ -221,7 +221,7 @@ const Signup: React.FC = () => {
 
 	const passwordValidation = isPasswordValid(formValues.password);
 
-	const checkPrivacyPolicy = async (): Promise<void> => {
+	const needConfirmPrivacyPolicy = async (): Promise<void> => {
 		return new Promise((resolve) => {
 			setPrivacyPolicyPromiseResolver(() => resolve);
 			router.push("/privacy-policy");
@@ -278,12 +278,14 @@ const Signup: React.FC = () => {
 							localStorage.setItem("token", responseData.token);
 						}
 					}
-
 					switch (responseData.status) {
 						case "NEED_CHOOSE_PLAN":
-							await checkPrivacyPolicy();
+							await needConfirmPrivacyPolicy();
 							get_me();
 							router.push("/settings?section=subscription");
+							break;
+						case "NEED_ACCEPT_PRIVACY_POLICY":
+							navigateTo("/privacy-policy");
 							break;
 						case "EMAIL_ALREADY_EXISTS":
 							showErrorToast(
@@ -315,7 +317,7 @@ const Signup: React.FC = () => {
 							router.push("/dashboard");
 							break;
 						case "PAYMENT_NEEDED":
-							await checkPrivacyPolicy();
+							// await needConfirmPrivacyPolicy();
 							get_me();
 							router.push(`${response.data.stripe_payment_url}`);
 							break;
@@ -330,17 +332,17 @@ const Signup: React.FC = () => {
 							);
 							break;
 						case "FILL_COMPANY_DETAILS":
-							await checkPrivacyPolicy();
+							// await needConfirmPrivacyPolicy();
 							get_me();
 							router.push("/dashboard");
 							break;
 						case "PIXEL_INSTALLATION_NEEDED":
-							await checkPrivacyPolicy();
+							// await needConfirmPrivacyPolicy();
 							get_me();
 							router.push("/dashboard");
 							break;
 						default:
-							await checkPrivacyPolicy();
+							// await needConfirmPrivacyPolicy();
 							get_me();
 							router.push("/dashboard");
 							break;
@@ -419,37 +421,35 @@ const Signup: React.FC = () => {
 										localStorage.setItem("token", responseData.token);
 									}
 								}
-
 								switch (response.data.status) {
 									case "SUCCESS":
-										await checkPrivacyPolicy();
+										await needConfirmPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										break;
 									case "SUCCESS_ADMIN":
-										await checkPrivacyPolicy();
 										await fetchUserData();
 										sessionStorage.setItem("admin", "true");
 										router.push("/admin");
 										break;
 									case "NEED_CHOOSE_PLAN":
-										await checkPrivacyPolicy();
+										await needConfirmPrivacyPolicy();
 										get_me();
 										router.push("/settings?section=subscription");
 										break;
 									case "FILL_COMPANY_DETAILS":
-										await checkPrivacyPolicy();
+										await needConfirmPrivacyPolicy();
 										get_me();
 										navigateTo("/dashboard");
 										break;
 									case "NEED_BOOK_CALL":
-										await checkPrivacyPolicy();
+										await needConfirmPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										sessionStorage.setItem("is_slider_opened", "true");
 										break;
 									case "PAYMENT_NEEDED":
-										await checkPrivacyPolicy();
+										await needConfirmPrivacyPolicy();
 										get_me();
 										router.push(`${response.data.stripe_payment_url}`);
 										break;
@@ -473,7 +473,7 @@ const Signup: React.FC = () => {
 										showErrorToast("Incorrect_referral code");
 										break;
 									case "PIXEL_INSTALLATION_NEEDED":
-										await checkPrivacyPolicy();
+										await needConfirmPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										break;
@@ -483,7 +483,7 @@ const Signup: React.FC = () => {
 										);
 										break;
 									default:
-										await checkPrivacyPolicy();
+										await needConfirmPrivacyPolicy();
 										get_me();
 										router.push("/dashboard");
 										break;

@@ -69,6 +69,7 @@ import { Paginator } from "@/components/PaginationComponent";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import GoHighLevelDataSync from "./GoHighLevelDataSync";
+import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -136,6 +137,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openZapierConnect, setOPenZapierComnect] = useState(false);
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
 	const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
+	const [openHubspotConnect, setOpenHubspotConnect] = useState(false);
 
 	const paginationProps = usePagination(totalRows ?? 0);
 	const handleCloseIntegrate = () => {
@@ -682,7 +684,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookConnect(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenWebhookConnect(true);
+						setOpenHubspotConnect(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setOpenSalesForceConnect(true);
 					}
@@ -1696,14 +1698,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
-				<WebhookConnectPopup
-					open={openWebhookConnect}
+				<HubspotIntegrationPopup
+					open={openHubspotConnect}
 					handleClose={() => {
-						setOpenWebhookConnect(false), setIsInvalidApiKey(false);
+						setOpenHubspotConnect(false), setIsInvalidApiKey(false);
 					}}
 					initApiKey={
 						integrationsCredentials.find(
-							(integartion) => integartion.service_name === "webhook",
+							(integartion) => integartion.service_name === "hubspot",
 						)?.access_token
 					}
 					invalid_api_key={isInvalidApiKey}
