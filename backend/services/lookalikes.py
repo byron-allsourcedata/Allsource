@@ -3,6 +3,8 @@ from typing import List, Tuple, Dict, Set
 from uuid import UUID
 import json
 
+from sqlalchemy import update
+
 from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
@@ -462,3 +464,11 @@ class AudienceLookalikesService:
 
         result = {key: value for key, value in lookalike.items()}
         return result
+
+    def change_status(self, status: str, lookalike_id: UUID):
+        self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(status=status)
+        )
+        self.db.commit()

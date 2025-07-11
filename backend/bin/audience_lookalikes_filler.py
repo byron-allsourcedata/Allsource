@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 
 from sqlalchemy.orm import Session
 
+from enums import LookalikeStatus
+from services.lookalikes import AudienceLookalikesService
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -82,10 +84,14 @@ async def aud_sources_reader(
     connection,
     channel,
     filler: LookalikeFillerService,
+    audience_lookalikes_service: AudienceLookalikesService,
 ):
     message_body_json = json.loads(message_body)
     logging.info(f"msg body {message_body_json}")
     lookalike_id = message_body_json["lookalike_id"]
+    audience_lookalikes_service.change_status(
+        status=LookalikeStatus.STARTED.value, lookalike_id=lookalike_id
+    )
     try:
         audience_lookalike = filler.get_lookalike(lookalike_id)
 
@@ -136,6 +142,9 @@ async def aud_sources_reader(
         )
     except BaseException as e:
         db_session.rollback()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.FAILED.value, lookalike_id=lookalike_id
+        )
         logging.error(f"Error processing message: {e}", exc_info=True)
         await asyncio.sleep(5)
         await publish_rabbitmq_message_with_channel(
@@ -171,6 +180,9 @@ async def main():
 
         db_session = await resolver.resolve(Db)
         filler = await resolver.resolve(LookalikeFillerService)
+        audience_lookalikes_service = await resolver.resolve(
+            AudienceLookalikesService
+        )
 
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_LOOKALIKES_READER,
@@ -197,6 +209,7 @@ async def main():
                     connection=connection,
                     channel=channel,
                     filler=filler,
+                    audience_lookalikes_service=audience_lookalikes_service,
                 )
 
             except aio_pika.exceptions.QueueEmpty as e:

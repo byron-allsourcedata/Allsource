@@ -12,6 +12,9 @@ from dotenv import load_dotenv
 from sqlalchemy import update, select
 from sqlalchemy.orm import Session
 
+from enums import LookalikeStatus
+from services.lookalikes import AudienceLookalikesService
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -62,6 +65,7 @@ async def aud_sources_matching(
     db_session: Session,
     channel,
     source_agent: SourceAgentService,
+    audience_lookalikes_service: AudienceLookalikesService,
 ):
     try:
         message_body = json.loads(message.body)
@@ -138,11 +142,17 @@ async def aud_sources_matching(
         )
         logging.info(f"ack")
         await message.ack()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.SUCCESS.value, lookalike_id=lookalike_id
+        )
 
     except BaseException as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
         await message.reject(requeue=True)
         db_session.rollback()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.FAILED.value, lookalike_id=lookalike_id
+        )
 
 
 async def main():
@@ -168,6 +178,9 @@ async def main():
 
             db_session = await resolver.resolve(Db)
             source_agent = await resolver.resolve(SourceAgentService)
+            audience_lookalikes_service = await resolver.resolve(
+                AudienceLookalikesService
+            )
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_LOOKALIKES_MATCHING,
@@ -179,6 +192,7 @@ async def main():
                     channel=channel,
                     db_session=db_session,
                     source_agent=source_agent,
+                    audience_lookalikes_service=audience_lookalikes_service,
                 )
             )
 

@@ -20,6 +20,13 @@ class LookalikeSize(Enum):
     BROAD = "broad"
 
 
+class LookalikeStatus(Enum):
+    NEW = "new"
+    STARTED = "started"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = "aud_sources_matching"
     AUDIENCE_SOURCES_READER = "aud_sources_files"
