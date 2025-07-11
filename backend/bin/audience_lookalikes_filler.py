@@ -134,6 +134,7 @@ async def aud_sources_reader(
                 "processed": 0,
             },
         )
+        logging.info("Done")
     except BaseException as e:
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
