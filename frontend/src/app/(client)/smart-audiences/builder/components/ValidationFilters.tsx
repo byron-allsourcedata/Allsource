@@ -358,16 +358,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 			setValidate(false);
 		}
 
-		if (useCaseType === "Postal") {
-			if (targetAudience === "Both") {
-				setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
-			} else if (targetAudience === "B2C") {
-				setSelectedOptionsPostalCAS(["CAS home address"]);
-			} else if (targetAudience === "B2B") {
-				setSelectedOptionsPostalCAS(["CAS office address"]);
-			}
-			setValidate(false);
-		}
+		// if (useCaseType === "Postal") {
+		// 	if (targetAudience === "Both") {
+		// 		setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
+		// 	} else if (targetAudience === "B2C") {
+		// 		setSelectedOptionsPostalCAS(["CAS home address"]);
+		// 	} else if (targetAudience === "B2B") {
+		// 		setSelectedOptionsPostalCAS(["CAS office address"]);
+		// 	}
+		// 	setValidate(false);
+		// }
 
 		if (
 			(targetAudience === "B2B" || targetAudience === "Both") &&
@@ -545,8 +545,9 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 												!isValidate ? (
 													<CloseIcon
 														sx={{
-															color: "rgba(32, 33, 36, 1)",
-															fontSize: "16px",
+															backgroundColor: "transparent",
+															color: "#828282 !important",
+															fontSize: "14px !important",
 														}}
 													/>
 												) : undefined
@@ -642,14 +643,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																)}
 															<Typography
 																className="table-data"
-																sx={{
-																	color: "rgba(0, 129, 251, 1) !important",
-																	fontSize: "14px !important",
-																	backgroundColor:
-																		"rgba(204, 230, 254, 1) !important",
-																	borderRadius: "3px",
-																	padding: "4px 12px",
-																}}
+																sx={smartAudiences.labelFree}
 															>
 																Free
 															</Typography>
@@ -728,6 +722,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																Recommended
 															</Typography>
 														)}
+													<Typography
+														className="table-data"
+														sx={smartAudiences.labelFree}
+													>
+														Free
+													</Typography>
 												</Box>
 											</Box>
 
@@ -857,19 +857,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																		Recommended
 																	</Typography>
 																)}
-															<Typography
-																className="table-data"
-																sx={{
-																	color: "rgba(0, 129, 251, 1) !important",
-																	fontSize: "14px !important",
-																	backgroundColor:
-																		"rgba(204, 230, 254, 1) !important",
-																	borderRadius: "3px",
-																	padding: "4px 12px",
-																}}
-															>
-																Free
-															</Typography>
 														</Box>
 													}
 													sx={{ userSelect: "none", cursor: "pointer" }}
@@ -1022,14 +1009,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																)}
 															<Typography
 																className="table-data"
-																sx={{
-																	color: "rgba(0, 129, 251, 1) !important",
-																	fontSize: "14px !important",
-																	backgroundColor:
-																		"rgba(204, 230, 254, 1) !important",
-																	borderRadius: "3px",
-																	padding: "4px 12px",
-																}}
+																sx={smartAudiences.labelFree}
 															>
 																Free
 															</Typography>
@@ -1107,6 +1087,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																Recommended
 															</Typography>
 														)}
+													<Typography
+														className="table-data"
+														sx={smartAudiences.labelFree}
+													>
+														Free
+													</Typography>
 												</Box>
 											</Box>
 											<IconButton
@@ -1377,6 +1363,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																				Recommended
 																			</Typography>
 																		)}
+																		{option === "DNC filter" && (
+																			<Typography
+																				className="table-data"
+																				sx={smartAudiences.labelFree}
+																			>
+																				Free
+																			</Typography>
+																		)}
 																	</Box>
 																}
 																sx={{ userSelect: "none", cursor: "pointer" }}
@@ -1484,7 +1478,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																control={
 																	<Checkbox
 																		size="small"
-																		disabled={isValidate}
+																		// disabled={isValidate}
+																		disabled={true}
 																		checked={selectedOptionsPostalCAS.includes(
 																			option,
 																		)}
