@@ -79,14 +79,13 @@ def update_stats_validations(
     db_session: Session,
     validation_type: str,
     count_persons_before_validation: int,
-    count_failed_person: int,
+    count_valid_persons: int,
 ):
     validation_key = VALIDATION_MAPPING.get(validation_type)
 
-    valid_persons_count = count_persons_before_validation - count_failed_person
     new_data = {
         "total_count": count_persons_before_validation,
-        "valid_count": valid_persons_count,
+        "valid_count": count_valid_persons,
     }
     existing_record = (
         db_session.query(AudienceSetting)
@@ -247,6 +246,7 @@ async def aud_validation_agent(
 
                 if target_category and key:
                     for rule in validations.get(target_category, []):
+                        update_stats_validations(db_session=db_session, validation_type=f"{target_category}-{key}", count_persons_before_validation=count_persons_before_validation, count_valid_persons=total_validated)
                         if key in rule:
                             rule[key]["processed"] = True
                             rule[key]["count_validated"] = total_validated
