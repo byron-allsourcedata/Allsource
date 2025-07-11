@@ -92,10 +92,8 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 			console.log({ updatedItem });
 			setLookalikeSize(updatedItem.size);
 			return {
-				size_progress:
-					updatedItem.processed_size + updatedItem.processed_train_model_size ||
-					0,
-				size: updatedItem.size + updatedItem.train_model_size || 0,
+				size_progress: updatedItem.processed_train_model_size || 0,
+				size: updatedItem.train_model_size || 0,
 				id: id,
 			};
 		} catch {
