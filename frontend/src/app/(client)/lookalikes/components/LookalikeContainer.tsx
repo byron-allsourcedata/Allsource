@@ -82,14 +82,25 @@ const truncateText = (text: string, maxLength: number) => {
 const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 	const { smartLookaLikeProgress } = useSSE();
 
+	const [lookalikeStatusFailed, setLookalikeStatusFailed] = useState(false);
+
 	const fetchData = async (id: string): Promise<PollingData> => {
 		try {
 			const response = await axiosInstance.get(
 				`/audience-lookalikes/get-processing-lookalikes?id=${id}`,
 			);
 			const updatedItem = response.data;
+			console.log(updatedItem.status);
+			if (updatedItem.status === "failed") {
+				console.log(updatedItem.status);
+				setLookalikeStatusFailed(true);
+				return {
+					size_progress: 0,
+					size: 0,
+					id: id,
+				};
+			}
 
-			console.log({ updatedItem });
 			setLookalikeSize(updatedItem.size);
 			return {
 				size_progress:
@@ -260,7 +271,9 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 									width: "7.25rem",
 								}}
 							>
-								{mergedTotal === mergedProgress && mergedProgress !== 0 ? (
+								{lookalikeStatusFailed ? (
+									0
+								) : mergedTotal === mergedProgress && mergedProgress !== 0 ? (
 									lookalikeSize.toLocaleString("en-US")
 								) : (
 									<ProgressBar
@@ -304,7 +317,9 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							<Box>
 								{" "}
 								Size:{" "}
-								{mergedTotal === mergedProgress && mergedProgress !== 0 ? (
+								{lookalikeStatusFailed ? (
+									0
+								) : mergedTotal === mergedProgress && mergedProgress !== 0 ? (
 									row.size.toLocaleString("en-US")
 								) : (
 									<ProgressBar

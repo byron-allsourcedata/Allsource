@@ -243,7 +243,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 				const hasPending = tableData.some(
 					(item) =>
 						item.train_model_size !== item.processed_train_model_size &&
-						item.train_model_size !== 0,
+						item.train_model_size !== 0 &&
+						!["success", "failed"].includes(item.status as string),
 				);
 
 				if (hasPending) {
