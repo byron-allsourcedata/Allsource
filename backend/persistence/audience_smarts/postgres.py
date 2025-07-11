@@ -57,6 +57,14 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         )
         return use_case[0] if use_case else None
 
+    def get_audience_smart_validations_by_id(self, aud_smart_id: UUID):
+        audience_smart = (
+            self.db.query(AudienceSmart.validations)
+            .filter_by(id=str(aud_smart_id))
+            .first()
+        )
+        return audience_smart.validations
+
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         Lalp = aliased(AudienceLookalikesPerson)
         Smp = aliased(AudienceSourcesMatchedPerson)
