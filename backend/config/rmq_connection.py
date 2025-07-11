@@ -1,7 +1,7 @@
 import os
-from typing import Union
+from typing import Mapping, Union
 
-from aio_pika import connect, Message, DeliveryMode, Connection
+from aio_pika import connect, Message
 import json
 import logging
 
@@ -37,7 +37,9 @@ class RabbitMQConnection:
 
 
 async def publish_rabbitmq_message_with_channel(
-    channel, queue_name: str, message_body: Union[MessageBody, dict]
+    channel,
+    queue_name: str,
+    message_body: Union[MessageBody, Mapping[str, object], dict],
 ):
     try:
         if isinstance(message_body, BaseModel):
