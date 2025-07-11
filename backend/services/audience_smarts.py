@@ -180,6 +180,7 @@ class AudienceSmartsService:
         need_validate: bool,
         data_sources: dict,
         active_segment_records: int,
+        validation_params: dict
     ):
         queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
         rabbitmq_connection = RabbitMQConnection()
@@ -191,6 +192,7 @@ class AudienceSmartsService:
             "need_validate": need_validate,
             "data_sources": self.transform_datasource(data_sources),
             "active_segment": active_segment_records,
+            "validation_params": validation_params
         }
 
         try:
@@ -263,6 +265,7 @@ class AudienceSmartsService:
             need_validate,
             data_sources,
             active_segment_records,
+            validation_params
         )
 
         return SmartsResponse(
@@ -528,6 +531,13 @@ class AudienceSmartsService:
     ):
         return self.audience_smarts_persistence.get_enrichment_users_for_free_validations(
             smart_audience_id, column_name
+        )
+
+    def sorted_enrichment_users_for_validation(
+        self, persons: List[UUID], order_by_clause: str
+    ):
+        return self.audience_smarts_persistence.sorted_enrichment_users_for_validation(
+            persons, order_by_clause
         )
 
     def get_audience_smart_validations_by_id(

@@ -513,6 +513,11 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
     ) -> List[dict]:
         raise NotImplementedError("Implemented for clickhouse persistence")
 
+    def sorted_enrichment_users_for_validation(
+        self, ids: List[UUID], order_by_clause: str
+    ) -> List[dict]:
+        raise NotImplementedError("Implemented for clickhouse persistence")
+
     def get_synced_person_ids(self, data_sync_id: int) -> List[UUID]:
         return [
             row[0]
