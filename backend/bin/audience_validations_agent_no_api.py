@@ -246,7 +246,12 @@ async def aud_validation_agent(
 
                 if target_category and key:
                     for rule in validations.get(target_category, []):
-                        update_stats_validations(db_session=db_session, validation_type=f"{target_category}-{key}", count_persons_before_validation=count_persons_before_validation, count_valid_persons=total_validated)
+                        update_stats_validations(
+                            db_session=db_session,
+                            validation_type=f"{target_category}-{key}",
+                            count_persons_before_validation=count_persons_before_validation,
+                            count_valid_persons=total_validated,
+                        )
                         if key in rule:
                             rule[key]["processed"] = True
                             rule[key]["count_validated"] = total_validated
