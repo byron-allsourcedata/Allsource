@@ -1335,7 +1335,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 										Available Funds
 									</Typography>
 									<Typography>
-										{availableCredits?.toLocaleString("en-US")} Funds
+										${availableCredits?.toLocaleString("en-US")} Funds
 									</Typography>
 								</Box>
 							</Box>
@@ -1411,7 +1411,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 										Validation Cost
 									</Typography>
 									<Typography>
-										{validationCost?.toLocaleString("en-US")} Funds
+										${validationCost?.toLocaleString("en-US")} Funds
 									</Typography>
 									{typeof availableCredits === "number" &&
 									typeof validationCost === "number" ? (

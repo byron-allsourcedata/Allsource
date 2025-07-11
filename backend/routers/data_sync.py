@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Query, HTTPException, status
 from starlette.responses import StreamingResponse
 
 from dependencies import (
-    get_audience_smarts_service,
     IntegrationService,
     check_domain,
     check_user_authorization,
@@ -118,10 +117,8 @@ async def create_sync(
 async def create_smart_audience_sync(
     data: SmartAudienceSyncCreate,
     integration_service: IntegrationService,
+    audience_smarts_service: AudienceSmartsService,
     service_name: str = Query(...),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
     user=Depends(check_user_authorization),
 ):
     if user.get("team_member"):
@@ -254,10 +251,8 @@ async def create_tag(
 
 @router.post("/download-persons")
 def download_persons(
+    audience_smarts_service: AudienceSmartsService,
     id: int = Query(...),
-    audience_smarts_service: AudienceSmartsService = Depends(
-        get_audience_smarts_service
-    ),
 ):
     result = audience_smarts_service.download_synced_persons(data_sync_id=id)
 

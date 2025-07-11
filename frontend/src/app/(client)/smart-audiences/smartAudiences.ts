@@ -374,4 +374,11 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
 		borderRadius: "3px",
 		padding: "4px 12px",
 	},
+	labelFree: {
+		color: "rgba(0, 129, 251, 1) !important",
+		fontSize: "14px !important",
+		backgroundColor: "rgba(204, 230, 254, 1) !important",
+		borderRadius: "3px",
+		padding: "4px 12px",
+	},
 };

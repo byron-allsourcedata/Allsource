@@ -107,7 +107,6 @@ async def process_rmq_message(
                     resp.status_code != 200 and not data.get("success")
                 ):
                     failed_ids.append(pid)
-                    continue
 
                 for pos in (
                     data.get("person", {})
@@ -196,6 +195,10 @@ async def process_rmq_message(
             .count()
         )
 
+        logging.info(
+            f"validation_count, total_count: {validation_count}, {total_count}"
+        )
+
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
@@ -210,7 +213,9 @@ async def process_rmq_message(
                             rule[key]["count_submited"] = (
                                 count_persons_before_validation
                             )
-                            rule[key]["count_cost"] = str(write_off_funds)
+                            rule[key]["count_cost"] = str(
+                                write_off_funds.quantize(Decimal("0.01"))
+                            )
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(

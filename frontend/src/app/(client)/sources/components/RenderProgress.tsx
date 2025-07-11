@@ -19,9 +19,21 @@ const renderPogress = (
 		(processedSseVal && processedSseVal === totalDB) ||
 		(processedDB === totalDB && processedDB !== 0);
 
-	if (allProcessed) {
+	if (status === "complete" && allProcessed) {
 		const matched = Math.max(matchedDB, matchedSseVal);
 		return matched.toLocaleString("en-US");
+	}
+
+	if (allProcessed) {
+		return (
+			<ProgressBar
+				progress={{
+					total: totalDB,
+					processed: processedDB,
+					matched: matchedDB,
+				}}
+			/>
+		);
 	}
 
 	if (processedDB !== 0) {

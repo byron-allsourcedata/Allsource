@@ -59,13 +59,6 @@ const Signin: React.FC = () => {
 		...(isShopifyDataComplete && { shopify_data: initialShopifyData }),
 	});
 
-	const checkPrivacyPolicy = async (): Promise<void> => {
-		return new Promise((resolve) => {
-			setPrivacyPolicyPromiseResolver(() => resolve);
-			router.push("/privacy-policy");
-		});
-	};
-
 	const validateField = (name: string, value: string) => {
 		const newErrors: { [key: string]: string } = { ...errors };
 
@@ -155,7 +148,6 @@ const Signin: React.FC = () => {
 					}
 					switch (responseData.status) {
 						case "SUCCESS":
-							await checkPrivacyPolicy();
 							await fetchUserData();
 							router.push("/dashboard");
 							break;
@@ -167,6 +159,10 @@ const Signin: React.FC = () => {
 
 						case "NON_SHOPIFY_ACCOUNT":
 							showErrorToast("non shopify account");
+							break;
+
+						case "NEED_ACCEPT_PRIVACY_POLICY":
+							router.push("/privacy-policy");
 							break;
 
 						case "INCORRECT_PASSWORD_OR_EMAIL":
@@ -199,7 +195,6 @@ const Signin: React.FC = () => {
 							break;
 
 						case "FILL_COMPANY_DETAILS":
-							await checkPrivacyPolicy();
 							let data = await fetchUserData();
 							const { is_pixel_installed, is_source_imported } =
 								data?.get_started;
