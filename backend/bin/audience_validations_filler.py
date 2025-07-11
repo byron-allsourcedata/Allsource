@@ -263,7 +263,6 @@ async def complete_validation(
 #     logging.info(f"completed validation, status audience smart ready")
 
 
-
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
@@ -280,7 +279,11 @@ async def process_rmq_message(
         recency_business_days = 0
 
         try:
-            valitations = audience_smarts_service.get_audience_smart_validations_by_id(aud_smart_id)
+            valitations = (
+                audience_smarts_service.get_audience_smart_validations_by_id(
+                    aud_smart_id
+                )
+            )
 
             priority_record = (
                 db_session.query(AudienceSetting.value)
@@ -301,14 +304,13 @@ async def process_rmq_message(
                 src_key, v_type = pr.split("-")
                 src_section = validation_params.get(src_key, [])
 
-                for param in src_section: 
+                for param in src_section:
                     if v_type not in param:
                         continue
 
                     details = param[v_type]
                     if details.get("processed"):
                         continue
-
 
                     column_name = DATABASE_COLUMN_MAPPING.get(pr)
                     logging.info("Processing column %s", column_name)
@@ -330,14 +332,18 @@ async def process_rmq_message(
                     break
                 if target:
                     break
-            
+
             if not target:
-                await complete_validation(db_session, aud_smart_id, channel, user_id)
+                await complete_validation(
+                    db_session, aud_smart_id, channel, user_id
+                )
                 await message.ack()
                 return
-            
+
             column_name = target["column_name"]
-            validation_cost = get_validation_cost(settingPersistence, target["priority_key"])
+            validation_cost = get_validation_cost(
+                settingPersistence, target["priority_key"]
+            )
             enrichment_users = get_enrichment_users(
                 target["validation_type"],
                 aud_smart_id,
@@ -346,11 +352,14 @@ async def process_rmq_message(
             )
 
             if not enrichment_users:
-                logging.info("No enrichment users for %s (%s)", aud_smart_id, column_name)
-                await complete_validation(db_session, aud_smart_id, channel, user_id)
+                logging.info(
+                    "No enrichment users for %s (%s)", aud_smart_id, column_name
+                )
+                await complete_validation(
+                    db_session, aud_smart_id, channel, user_id
+                )
                 await message.ack()
                 return
-
 
             validation_processed(
                 db_session,
@@ -358,7 +367,6 @@ async def process_rmq_message(
             )
 
             queue_name = QUEUE_MAPPING[column_name]
-
 
             for i in range(0, len(enrichment_users), 100):
                 batch = enrichment_users[i : i + 100]
@@ -369,14 +377,21 @@ async def process_rmq_message(
                         "aud_smart_id": str(aud_smart_id),
                         "user_id": user_id,
                         "batch": [
-                            {**user, "audience_smart_person_id": str(user["audience_smart_person_id"])}
+                            {
+                                **user,
+                                "audience_smart_person_id": str(
+                                    user["audience_smart_person_id"]
+                                ),
+                            }
                             for user in batch
                         ],
-                        "validation_type":                 column_name,
-                        "validation_cost":                 validation_cost,
-                        "count_persons_before_validation": len(enrichment_users),
-                        "recency_business_days":           recency_business_days,
-                        "recency_personal_days":           recency_personal_days,
+                        "validation_type": column_name,
+                        "validation_cost": validation_cost,
+                        "count_persons_before_validation": len(
+                            enrichment_users
+                        ),
+                        "recency_business_days": recency_business_days,
+                        "recency_personal_days": recency_personal_days,
                     },
                 )
 

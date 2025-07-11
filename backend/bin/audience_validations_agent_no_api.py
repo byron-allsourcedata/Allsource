@@ -43,11 +43,11 @@ AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = (
 )
 
 CATEGORY_BY_COLUMN = {
-    "personal_email_validation_status":  "personal_email",
-    "business_email_validation_status":  "business_email",
-    "personal_email_last_seen":          "personal_email",
-    "business_email_last_seen_date":     "business_email",
-    "mobile_phone_dnc":                  "phone",
+    "personal_email_validation_status": "personal_email",
+    "business_email_validation_status": "business_email",
+    "personal_email_last_seen": "personal_email",
+    "business_email_last_seen_date": "business_email",
+    "mobile_phone_dnc": "phone",
 }
 
 COLUMN_MAPPING = {
@@ -248,11 +248,15 @@ async def aud_validation_agent(
                 if target_category and key:
                     for rule in validations.get(target_category, []):
                         if key in rule:
-                            rule[key]["processed"]        = True
-                            rule[key]["count_validated"]  = total_validated
-                            rule[key]["count_submited"]   = count_persons_before_validation
-                            rule[key]["count_cost"]       = str(write_off_funds.quantize(Decimal("0.01")))
-                            break  
+                            rule[key]["processed"] = True
+                            rule[key]["count_validated"] = total_validated
+                            rule[key]["count_submited"] = (
+                                count_persons_before_validation
+                            )
+                            rule[key]["count_cost"] = str(
+                                write_off_funds.quantize(Decimal("0.01"))
+                            )
+                            break
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(

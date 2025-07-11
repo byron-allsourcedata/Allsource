@@ -63,7 +63,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             .filter_by(id=str(aud_smart_id))
             .first()
         )
-        return audience_smart.validations 
+        return audience_smart.validations
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         Lalp = aliased(AudienceLookalikesPerson)
