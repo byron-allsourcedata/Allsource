@@ -14,6 +14,10 @@ class AudienceSmartsPersistenceInterface(ABC):
         pass
 
     @abstractmethod
+    def get_audience_smart_validations_by_id(self, aud_smart_id: UUID):
+        pass
+
+    @abstractmethod
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         pass
 
