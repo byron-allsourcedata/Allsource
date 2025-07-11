@@ -133,7 +133,6 @@ async def aud_smarts_reader(
                     "aud_smart_id": str(aud_smart_id),
                     "user_id": user_id,
                     "need_validate": need_validate,
-                    "validation_params": validation_params,
                     "count_iterations": common_count,
                     "count": count,
                     "enrichment_users_ids": [

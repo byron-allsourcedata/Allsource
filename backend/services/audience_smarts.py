@@ -180,7 +180,6 @@ class AudienceSmartsService:
         need_validate: bool,
         data_sources: dict,
         active_segment_records: int,
-        validation_params: dict,
     ):
         queue_name = QueueName.AUDIENCE_SMARTS_FILLER.value
         rabbitmq_connection = RabbitMQConnection()
@@ -192,7 +191,6 @@ class AudienceSmartsService:
             "need_validate": need_validate,
             "data_sources": self.transform_datasource(data_sources),
             "active_segment": active_segment_records,
-            "validation_params": validation_params,
         }
 
         try:
@@ -265,7 +263,6 @@ class AudienceSmartsService:
             need_validate,
             data_sources,
             active_segment_records,
-            validation_params,
         )
 
         return SmartsResponse(
