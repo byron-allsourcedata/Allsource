@@ -62,7 +62,6 @@ async def aud_smarts_matching(
         need_validate = message_body.get("need_validate")
         count_iterations = message_body.get("count_iterations")
         count = message_body.get("count")
-        validation_params = message_body.get("validation_params")
 
         try:
             bulk_data = [
@@ -109,7 +108,6 @@ async def aud_smarts_matching(
                 message_body = {
                     "aud_smart_id": str(aud_smart_id),
                     "user_id": user_id,
-                    "validation_params": validation_params,
                 }
                 await publish_rabbitmq_message_with_channel(
                     channel=channel,
