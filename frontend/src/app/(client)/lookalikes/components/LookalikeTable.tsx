@@ -64,6 +64,7 @@ interface TableRowData {
 	size: number;
 	processed_size: number;
 	train_model_size: number;
+	status: string;
 	processed_train_model_size: number;
 	significant_fields: Record<string, any>;
 	similarity_score: Record<string, any>;
@@ -242,7 +243,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 				const hasPending = tableData.some(
 					(item) =>
 						item.train_model_size !== item.processed_train_model_size &&
-						item.train_model_size !== 0,
+						item.train_model_size !== 0 &&
+						!["success", "failed"].includes(item.status as string),
 				);
 
 				if (hasPending) {
@@ -572,8 +574,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 									: row.lookalike_size;
 							})();
 							const isRowDisabled =
-								loader_for_table ||
-								row.processed_size + row.processed_train_model_size === 0;
+								!["success", "failed"].includes(row.status as string) &&
+								(loader_for_table ||
+									row.processed_size + row.processed_train_model_size === 0);
 							return (
 								<>
 									<TableRow
@@ -930,8 +933,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 													}}
 												/>
 											)} */}
-											{row.processed_train_model_size ===
-												row.train_model_size && row.train_model_size !== 0 ? (
+											{row.status === "failed" ? (
+												0
+											) : row.processed_train_model_size ===
+													row.train_model_size && row.train_model_size !== 0 ? (
 												row.size.toLocaleString("en-US")
 											) : (
 												<ProgressBar
