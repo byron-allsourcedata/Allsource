@@ -383,9 +383,12 @@ class SalesForceIntegrationsService:
         validations: dict = {},
     ):
         profiles = []
+        results = []
         access_token = self.get_access_token(user_integration.access_token)
         if not access_token:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            return [
+                {"status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value}
+            ]
 
         for enrichment_user in enrichment_users:
             profile = self.__mapped_sales_force_profile(
@@ -394,24 +397,41 @@ class SalesForceIntegrationsService:
                 validations,
                 integration_data_sync.data_map,
             )
+
+            if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": profile,
+                    }
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
             if profile:
                 profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
         response_result = self.bulk_upsert_leads(
             profiles=profiles,
             instance_url=user_integration.instance_url,
             access_token=access_token,
         )
-        if response_result in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-        ):
-            return profile
 
-        return ProccessDataSyncResult.SUCCESS.value
+        if response_result != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = response_result
+
+        return results
 
     async def process_data_sync_lead(
         self,
@@ -524,7 +544,7 @@ class SalesForceIntegrationsService:
     ) -> dict:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         business_email, personal_email, phone = (
             self.sync_persistence.get_verified_email_and_phone(
@@ -543,15 +563,15 @@ class SalesForceIntegrationsService:
         last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         professional_profiles = enrichment_user.professional_profiles
         if not professional_profiles:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         company = professional_profiles.current_company_name
         if not company:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         primary_industry = professional_profiles.primary_industry
         current_job_title = professional_profiles.current_job_title

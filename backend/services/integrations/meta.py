@@ -499,21 +499,45 @@ class MetaIntegrationsService:
         validations: dict = {},
     ):
         profiles = []
+        results = []
         for enrichment_user in enrichment_users:
             profile = self.__hash_mapped_meta_user(
                 enrichment_user, target_schema, validations
             )
+            if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": profile,
+                    }
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
             if profile:
                 profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
-        return self.__create_user(
+        bulk_result = self.__create_user(
             custom_audience_id=integration_data_sync.list_id,
             access_token=user_integration.access_token,
             profiles=profiles,
         )
+
+        if bulk_result != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = bulk_result
+
+        return results
 
     async def process_data_sync_lead(
         self,
@@ -679,7 +703,7 @@ class MetaIntegrationsService:
         last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         enrichment_personal_profiles = enrichment_user.personal_profiles
         enrichment_user_postal = enrichment_user.postal

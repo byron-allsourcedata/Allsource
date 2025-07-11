@@ -690,19 +690,19 @@ class KlaviyoIntegrationsService:
                     api_key=api_key,
                     json={"data": ids},
                 )
-                if status in (200, 201, 202, 204):
+                if resp.status_code in (200, 201, 202, 204):
                     return ProccessDataSyncResult.SUCCESS.value
 
-                if status == 401:
+                if resp.status_code == 401:
                     return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
-                elif status == 403:
+                elif resp.status_code == 403:
                     return ProccessDataSyncResult.FORBIDDEN.value
 
-                elif status == 404:
+                elif resp.status_code == 404:
                     return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
-                elif status == 429:
+                elif resp.status_code == 429:
                     return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
                 else:
@@ -716,14 +716,14 @@ class KlaviyoIntegrationsService:
             no_phone = [p for p in batch if not p.get("phone_number")]
 
             if with_phone:
-                resp = await send_batch(with_phone, include_sms=True)
-                if resp.status_code == 404:
-                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+                response = await send_batch(with_phone, include_sms=True)
+                if response != ProccessDataSyncResult.SUCCESS.value:
+                    return response
 
             if no_phone:
-                resp = await send_batch(no_phone, include_sms=False)
-                if resp.status_code == 404:
-                    return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+                response = await send_batch(no_phone, include_sms=False)
+                if response != ProccessDataSyncResult.SUCCESS.value:
+                    return response
 
         return ProccessDataSyncResult.SUCCESS.value
 

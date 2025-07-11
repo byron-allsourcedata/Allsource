@@ -416,6 +416,7 @@ class ProccessDataSyncResult(Enum):
     SUCCESS = "success"
     PLATFORM_VALIDATION_FAILED = "platform_validation_failed"
     UNEXPECTED_ERROR = "unexpected_error"
+    FORBIDDEN = "forbidden"
     LEAD_PROFILE_ERROR = "lead_profile_error"
     LIST_NOT_EXISTS = "list_not_exists"
     AUTHENTICATION_FAILED = "authentication_failed"

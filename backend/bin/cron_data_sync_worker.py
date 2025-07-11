@@ -6,9 +6,10 @@ import os
 import sys
 import time
 from collections import Counter
+from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Row
+from sqlalchemy import Row, update
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -144,24 +145,36 @@ def update_users_integrations(
         session.commit()
 
 
-def update_data_sync_imported_leads(
+def bulk_update_imported_leads(
     session: Session,
-    status: str,
-    lead_id: int,
+    updates: list[dict],
     integration_data_sync: IntegrationUserSync,
     user_integration: UserIntegration,
 ):
-    session.query(DataSyncImportedLead).filter(
-        DataSyncImportedLead.lead_users_id == lead_id,
-        DataSyncImportedLead.data_sync_id == integration_data_sync.id,
-    ).update({"status": status})
+    for update_item in updates:
+        stmt = (
+            update(DataSyncImportedLead)
+            .where(
+                DataSyncImportedLead.lead_users_id == update_item["lead_id"],
+                DataSyncImportedLead.data_sync_id == integration_data_sync.id,
+            )
+            .values(
+                status=update_item["status"],
+                updated_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            )
+        )
+        session.execute(stmt)
 
-    if status == ProccessDataSyncResult.SUCCESS.value:
+    has_success = any(
+        u["status"] == ProccessDataSyncResult.SUCCESS.value for u in updates
+    )
+
+    if has_success:
         integration_data_sync.last_sync_date = get_utc_aware_date()
-        if integration_data_sync.sync_status == False:
+        if not integration_data_sync.sync_status:
             integration_data_sync.sync_status = True
 
-        if user_integration.is_failed == True:
+        if user_integration.is_failed:
             user_integration.is_failed = False
             user_integration.error_message = None
 
@@ -315,6 +328,8 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.DATA_SYNC_ERROR.value,
                         )
+                        await message.ack()
+                        return
 
                     case ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
                         logging.debug(f"too_many_requests: {service_name}")
@@ -336,6 +351,9 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.QUOTA_EXHAUSTED.value,
                         )
+                        await message.ack()
+                        return
+
                     case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
                         update_users_integrations(
@@ -350,6 +368,8 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.PAYMENT_REQUIRED.value,
                         )
+                        await message.ack()
+                        return
 
                     case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                         logging.debug(f"authentication_failed: {service_name}")
@@ -366,15 +386,18 @@ async def ensure_integration(
                             notification_persistence,
                             NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value,
                         )
+                        await message.ack()
+                        return
 
-                if import_status != DataSyncImportedStatus.SENT.value:
-                    update_data_sync_imported_leads(
-                        session=db_session,
-                        status=import_status,
-                        lead_id=result["lead_id"],
-                        integration_data_sync=data_sync,
-                        user_integration=user_integration,
-                    )
+            bulk_update_imported_leads(
+                session=db_session,
+                updates=[
+                    {"lead_id": r["lead_id"], "status": r["status"]}
+                    for r in results
+                ],
+                integration_data_sync=data_sync,
+                user_integration=user_integration,
+            )
 
             logging.info(f"Processed message for service: {service_name}")
             await message.ack()
