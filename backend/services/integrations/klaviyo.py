@@ -608,7 +608,7 @@ class KlaviyoIntegrationsService:
                 "email": profile.email,
             }
         if response.status_code == 400:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 409:
@@ -621,7 +621,7 @@ class KlaviyoIntegrationsService:
                 "email": profile.email,
             }
 
-        return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
 
     async def __add_profiles_to_list(
         self,

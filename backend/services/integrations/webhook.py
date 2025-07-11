@@ -248,7 +248,7 @@ class WebhookIntegrationService:
         if response.status_code == 405:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 400:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
 
         return ProccessDataSyncResult.SUCCESS.value
 

@@ -284,6 +284,13 @@ async def ensure_integration(
                             DataSyncImportedStatus.INCORRECT_FORMAT.value
                         )
 
+                    case (
+                        ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
+                    ):
+                        logging.debug(
+                            f"Platform validation failed: {service_name}"
+                        )
+
                     case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
                         logging.debug(f"incorrect_format: {service_name}")
                         import_status = (

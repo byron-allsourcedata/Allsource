@@ -6,6 +6,7 @@ from typing import List, Tuple, Annotated
 from uuid import UUID
 
 import httpx
+import logging
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException, Depends
@@ -48,6 +49,8 @@ from utils import (
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
+
+logger = logging.getLogger(__name__)
 
 
 @injectable
@@ -600,6 +603,10 @@ class MetaIntegrationsService:
 
         if result.get("error", {}).get("type") == "OAuthException":
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+        if response.get("error"):
+            logger.error(response["error"])
+            return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
