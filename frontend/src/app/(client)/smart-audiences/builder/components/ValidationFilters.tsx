@@ -643,14 +643,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																)}
 															<Typography
 																className="table-data"
-																sx={{
-																	color: "rgba(0, 129, 251, 1) !important",
-																	fontSize: "14px !important",
-																	backgroundColor:
-																		"rgba(204, 230, 254, 1) !important",
-																	borderRadius: "3px",
-																	padding: "4px 12px",
-																}}
+																sx={smartAudiences.labelFree}
 															>
 																Free
 															</Typography>
@@ -729,6 +722,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																Recommended
 															</Typography>
 														)}
+													<Typography
+														className="table-data"
+														sx={smartAudiences.labelFree}
+													>
+														Free
+													</Typography>
 												</Box>
 											</Box>
 
@@ -858,19 +857,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																		Recommended
 																	</Typography>
 																)}
-															<Typography
-																className="table-data"
-																sx={{
-																	color: "rgba(0, 129, 251, 1) !important",
-																	fontSize: "14px !important",
-																	backgroundColor:
-																		"rgba(204, 230, 254, 1) !important",
-																	borderRadius: "3px",
-																	padding: "4px 12px",
-																}}
-															>
-																Free
-															</Typography>
 														</Box>
 													}
 													sx={{ userSelect: "none", cursor: "pointer" }}
@@ -1023,14 +1009,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																)}
 															<Typography
 																className="table-data"
-																sx={{
-																	color: "rgba(0, 129, 251, 1) !important",
-																	fontSize: "14px !important",
-																	backgroundColor:
-																		"rgba(204, 230, 254, 1) !important",
-																	borderRadius: "3px",
-																	padding: "4px 12px",
-																}}
+																sx={smartAudiences.labelFree}
 															>
 																Free
 															</Typography>
@@ -1108,6 +1087,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																Recommended
 															</Typography>
 														)}
+													<Typography
+														className="table-data"
+														sx={smartAudiences.labelFree}
+													>
+														Free
+													</Typography>
 												</Box>
 											</Box>
 											<IconButton
@@ -1376,6 +1361,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																				sx={smartAudiences.labelText}
 																			>
 																				Recommended
+																			</Typography>
+																		)}
+																		{option === "DNC filter" && (
+																			<Typography
+																				className="table-data"
+																				sx={smartAudiences.labelFree}
+																			>
+																				Free
 																			</Typography>
 																		)}
 																	</Box>
