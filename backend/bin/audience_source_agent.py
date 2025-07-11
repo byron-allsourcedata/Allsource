@@ -464,17 +464,26 @@ async def process_user_id(
 
         updates = []
 
+        unique_emails = list(
+            {email for email in user_best_email.values() if email}
+        )
+        matched_users = source_agent_service.get_user_ids_by_emails(
+            unique_emails
+        )
+
+        # Создаем map email → asid
+        email_to_asid = {
+            match.email.strip().lower(): UUID(match.asid)
+            for match in matched_users
+        }
+
         for lead_id, five_x_id in lead_to_five_x.items():
             email = user_best_email.get(five_x_id)
             if not email:
                 continue
 
-            matches = source_agent_service.get_user_ids_by_emails([email])
-            if not matches:
-                continue
-
-            asid = UUID(matches[0].asid)
-            if asid in existing_asids:
+            asid = email_to_asid.get(email)
+            if not asid or asid in existing_asids:
                 continue
 
             first_visit = (
@@ -509,6 +518,7 @@ async def process_user_id(
                 }
             )
             existing_asids.add(asid)
+
         if updates:
             db_session.bulk_insert_mappings(
                 AudienceSourcesMatchedPerson, updates
