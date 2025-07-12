@@ -40,10 +40,10 @@ DATABASE_COLUMN_MAPPING = {
     "business_email-recency": "business_email_last_seen_date",
     "business_email-delivery": "business_email",
     "phone-dnc_filter": "mobile_phone_dnc",
-    "linked_in-job_validation": "job_validation",
-    "phone-confirmation": "confirmation",
-    "postal_cas_verification-cas_home_address": "cas_home_address",
-    "postal_cas_verification-cas_office_address": "cas_office_address",
+    "linked_in-job_validation": "linkedin_url",
+    "phone-confirmation": "phone_mobile1",
+    "postal_cas_verification-cas_home_address": "home_postal_code",
+    "postal_cas_verification-cas_office_address": "business_postal_code",
 }
 
 
