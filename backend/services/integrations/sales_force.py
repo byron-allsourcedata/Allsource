@@ -650,7 +650,6 @@ class SalesForceIntegrationsService:
 
         first_phone = get_valid_phone(five_x_five_user)
         phone_number = validate_and_format_phone(first_phone)
-        mobile_phone = getattr(five_x_five_user, "mobile_phone", None)
 
         location = {
             "address1": getattr(five_x_five_user, "personal_address")
@@ -712,9 +711,6 @@ class SalesForceIntegrationsService:
             "Email": first_email,
             "Phone": ", ".join(phone_number.split(", ")[-3:])
             if phone_number
-            else None,
-            "MobilePhone": ", ".join(mobile_phone.split(", ")[-3:])
-            if mobile_phone
             else None,
             "Company": company_name,
             "Title": getattr(five_x_five_user, "job_title", None),
