@@ -484,7 +484,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                     AudienceSmartPerson.smart_audience_id == smart_audience_id,
                     AudienceSmartPerson.is_valid == True,
                 )
-                .order_by(AudienceSmartPerson.sort_order) 
+                .order_by(AudienceSmartPerson.sort_order)
                 .all()
             )
         ]
