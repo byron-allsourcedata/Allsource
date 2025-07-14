@@ -545,3 +545,35 @@ class AudienceSmartsService:
         return self.audience_smarts_persistence.get_audience_smart_validations_by_id(
             smart_audience_id
         )
+
+    def update_stats_validations(
+        self,
+        validation_type: str,
+        count_persons_before_validation: int,
+        count_valid_persons: int,
+    ):
+
+        new_data = {
+            "total_count": count_persons_before_validation,
+            "valid_count": count_valid_persons,
+        }
+        stats = self.audience_settings_persistence.get_stats_validations()
+        stats = json.loads(stats.value) if stats else {}
+
+        if stats:
+            current = stats.get(
+                validation_type, {"total_count": 0, "valid_count": 0}
+            )
+
+            updated_data = {
+                "total_count": current.get("total_count")
+                + new_data["total_count"],
+                "valid_count": current.get("valid_count")
+                + new_data["valid_count"],
+            }
+
+            stats[validation_type] = updated_data
+            self.audience_settings_persistence.upsert_stats_validations(stats)
+
+        else:
+            self.audience_settings_persistence.set_stats_item_validations({validation_type: new_data})

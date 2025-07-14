@@ -79,6 +79,7 @@ class AudienceSettingAlias(Enum):
     AVERAGE_SUCCESS_VALIDATIONS = "average_success_validations"
     VALIDATION_PRIORITY = "validation_priority"
     VALIDATION_COST = "validation_cost"
+    STATS_VALIDATIONS = "stats_validations"
 
 
 class LeadStatus(Enum):

@@ -45,3 +45,31 @@ class AudienceSettingPersistence:
         ).first()
 
         return priority.value
+
+    def get_stats_validations(self) -> str:
+        return (
+            self.db.query(AudienceSetting).filter(
+                AudienceSetting.alias
+                == AudienceSettingAlias.STATS_VALIDATIONS.value
+            )
+        ).first()
+
+    def set_stats_item_validations(self, stats_item):
+        new_record = AudienceSetting(
+            alias=AudienceSettingAlias.STATS_VALIDATIONS.value,
+            value=json.dumps(stats_item),
+        )
+        self.db.add(new_record) 
+    
+
+    def upsert_stats_validations(self, data: dict):
+        record = self.get_stats_validations()
+
+        if record:
+            record.value = json.dumps(data)
+        else:
+            record = AudienceSetting(
+                alias=AudienceSettingAlias.STATS_VALIDATIONS.value,
+                value=json.dumps(data),
+            )
+            self.db.add(record)

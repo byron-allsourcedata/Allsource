@@ -7,23 +7,25 @@ import json
 import time
 from decimal import Decimal
 from aio_pika import IncomingMessage, Channel
-from sqlalchemy import create_engine, func, select
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from db_dependencies import Db
+from resolver import Resolver
 from config.sentry import SentryConfig
 from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from persistence.million_verifier import MillionVerifierPersistence
 from models.audience_smarts_persons import AudienceSmartPerson
 from persistence.user_persistence import UserPersistence
 from models.audience_smarts_validations import AudienceSmartValidation
+from services.audience_smarts import AudienceSmartsService
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -49,6 +51,7 @@ async def process_rmq_message(
     channel: Channel,
     million_verifier_service: MillionVerifierIntegrationsService,
     user_persistence: UserPersistence,
+    audience_smarts_service: AudienceSmartsService
 ):
     try:
         body = json.loads(message.body)
@@ -175,6 +178,11 @@ async def process_rmq_message(
                 validations = json.loads(aud_smart.validations)
                 if validation_type in validations:
                     for rule in validations[validation_type]:
+                        audience_smarts_service.update_stats_validations(
+                            validation_type=f"{validation_type}-delivery",
+                            count_persons_before_validation=count_persons_before_validation,
+                            count_valid_persons=total_validated,
+                        )
                         if "delivery" in rule:
                             rule["delivery"]["processed"] = True
                             rule["delivery"]["count_validated"] = (
@@ -226,10 +234,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
+    resolver = Resolver()
     while True:
         try:
             logging.info("Starting processing...")
@@ -238,24 +243,19 @@ async def main():
             channel = await connection.channel()
             await channel.set_qos(prefetch_count=1)
 
-            engine = create_engine(
-                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-                pool_pre_ping=True,
-            )
-            Session = sessionmaker(bind=engine)
-            db_session = Session()
+            db_session = await resolver.resolve(Db)
 
+            audience_smarts_service = await resolver.resolve(
+                AudienceSmartsService
+            )
             user_persistence = UserPersistence(db_session)
+            million_verifier_service = await resolver.resolve(MillionVerifierIntegrationsService)
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_VALIDATION_AGENT_EMAIL_API,
                 durable=True,
             )
-            million_verifier_service = MillionVerifierIntegrationsService(
-                million_verifier_persistence=MillionVerifierPersistence(
-                    db_session
-                )
-            )
+            
             await queue.consume(
                 functools.partial(
                     process_rmq_message,
@@ -263,6 +263,7 @@ async def main():
                     db_session=db_session,
                     million_verifier_service=million_verifier_service,
                     user_persistence=user_persistence,
+                    audience_smarts_service=audience_smarts_service
                 ),
             )
 
