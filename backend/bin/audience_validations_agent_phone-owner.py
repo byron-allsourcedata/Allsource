@@ -182,7 +182,9 @@ async def process_rmq_message(
                     continue
 
         if write_off_funds:
-            count_subtracted = user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            count_subtracted = user_persistence.deduct_validation_funds(
+                user_id, write_off_funds
+            )
             db_session.flush()
 
         if len(verifications):
@@ -256,7 +258,7 @@ async def process_rmq_message(
             .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
             .count()
         )
-      
+
         aud_smart = db_session.get(AudienceSmart, aud_smart_id)
         validations = {}
 
@@ -270,18 +272,21 @@ async def process_rmq_message(
                         rule[key].setdefault("count_cost", "0.00")
 
                         rule[key]["count_validated"] = total_validated
-                        rule[key]["count_submited"] = count_persons_before_validation
+                        rule[key]["count_submited"] = (
+                            count_persons_before_validation
+                        )
 
                         previous_cost = Decimal(rule[key]["count_cost"])
                         rule[key]["count_cost"] = str(
-                            (previous_cost + count_subtracted).quantize(Decimal("0.01"))
+                            (previous_cost + count_subtracted).quantize(
+                                Decimal("0.01")
+                            )
                         )
 
                         if validation_count == total_count:
                             rule[key]["processed"] = True
 
             aud_smart.validations = json.dumps(validations)
-
 
         if validation_count == total_count:
             audience_smarts_service.update_stats_validations(
@@ -298,7 +303,7 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-        
+
         db_session.commit()
 
         await send_sse(

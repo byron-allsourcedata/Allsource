@@ -146,7 +146,9 @@ async def process_rmq_message(
         logging.info(f"Success ids: len{len(success_ids)}")
 
         if write_off_funds:
-            count_subtracted = user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            count_subtracted = user_persistence.deduct_validation_funds(
+                user_id, write_off_funds
+            )
             db_session.flush()
 
         if verifications:
@@ -211,17 +213,21 @@ async def process_rmq_message(
                         rule[key].setdefault("count_cost", "0.00")
 
                         rule[key]["count_validated"] = total_validated
-                        rule[key]["count_submited"] = count_persons_before_validation
+                        rule[key]["count_submited"] = (
+                            count_persons_before_validation
+                        )
 
                         previous_cost = Decimal(rule[key]["count_cost"])
                         rule[key]["count_cost"] = str(
-                            (previous_cost + count_subtracted).quantize(Decimal("0.01"))
+                            (previous_cost + count_subtracted).quantize(
+                                Decimal("0.01")
+                            )
                         )
 
                         if validation_count == total_count:
                             rule[key]["processed"] = True
             aud_smart.validations = json.dumps(validations)
-        
+
         if validation_count == total_count:
             audience_smarts_service.update_stats_validations(
                 validation_type="linked_in-job_validation",
@@ -237,7 +243,7 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-        
+
         db_session.commit()
 
         await send_sse(

@@ -141,7 +141,9 @@ async def aud_validation_agent(
         logging.info(f"Success ids len: {len(success_ids)}")
 
         if write_off_funds:
-            count_subtracted = user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            count_subtracted = user_persistence.deduct_validation_funds(
+                user_id, write_off_funds
+            )
             db_session.flush()
 
         if failed_ids:
@@ -198,15 +200,19 @@ async def aud_validation_agent(
 
             if target_category and key:
                 for rule in validations.get(target_category, []):
-                    if key in rule:                        
+                    if key in rule:
                         rule[key].setdefault("count_cost", "0.00")
 
                         rule[key]["count_validated"] = total_validated
-                        rule[key]["count_submited"] = count_persons_before_validation
+                        rule[key]["count_submited"] = (
+                            count_persons_before_validation
+                        )
 
                         previous_cost = Decimal(rule[key]["count_cost"])
                         rule[key]["count_cost"] = str(
-                            (previous_cost + count_subtracted).quantize(Decimal("0.01"))
+                            (previous_cost + count_subtracted).quantize(
+                                Decimal("0.01")
+                            )
                         )
 
                         if validation_count == total_count:
@@ -214,7 +220,7 @@ async def aud_validation_agent(
                         break
 
             aud_smart.validations = json.dumps(validations)
-        
+
         if validation_count == total_count:
             target_category = CATEGORY_BY_COLUMN.get(validation_type)
             key = COLUMN_MAPPING.get(validation_type)
@@ -233,7 +239,7 @@ async def aud_validation_agent(
                     "validation_params": validations,
                 },
             )
-        
+
         db_session.commit()
 
         await send_sse(

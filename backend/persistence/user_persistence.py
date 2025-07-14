@@ -820,11 +820,7 @@ class UserPersistence:
         )
 
     def deduct_validation_funds(self, user_id: int, amount: Decimal) -> Decimal:
-        user = (
-            self.db.query(Users)
-            .filter(Users.id == user_id)
-            .first()
-        )
+        user = self.db.query(Users).filter(Users.id == user_id).first()
 
         if not user or user.validation_funds <= 0:
             return Decimal("0")

@@ -263,8 +263,6 @@ async def complete_validation(
 #     logging.info(f"completed validation, status audience smart ready")
 
 
-
-
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,

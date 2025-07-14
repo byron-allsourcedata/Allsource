@@ -112,7 +112,9 @@ async def process_rmq_message(
                     )
                 )
         if write_off_funds:
-            count_subtracted = user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            count_subtracted = user_persistence.deduct_validation_funds(
+                user_id, write_off_funds
+            )
             db_session.flush()
 
         success_ids = [
@@ -173,25 +175,28 @@ async def process_rmq_message(
 
         if aud_smart and aud_smart.validations:
             validations = json.loads(aud_smart.validations)
-            
+
             if validation_type in validations:
                 for rule in validations[validation_type]:
                     if "delivery" in rule:
                         rule["delivery"].setdefault("count_cost", "0.00")
 
                         rule["delivery"]["count_validated"] = total_validated
-                        rule["delivery"]["count_submited"] = count_persons_before_validation
+                        rule["delivery"]["count_submited"] = (
+                            count_persons_before_validation
+                        )
 
                         previous_cost = Decimal(rule["delivery"]["count_cost"])
                         rule["delivery"]["count_cost"] = str(
-                            (previous_cost + count_subtracted).quantize(Decimal("0.01"))
+                            (previous_cost + count_subtracted).quantize(
+                                Decimal("0.01")
+                            )
                         )
 
                         if validation_count == total_count:
                             rule["delivery"]["processed"] = True
         aud_smart.validations = json.dumps(validations)
 
-        
         if validation_count == total_count:
             audience_smarts_service.update_stats_validations(
                 validation_type=f"{validation_type}-delivery",
@@ -207,7 +212,7 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-        
+
         db_session.commit()
 
         await send_sse(
