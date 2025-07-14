@@ -223,7 +223,10 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 												borderRadius={2}
 												sx={{
 													maxWidth: "100%",
-													width: `${relative * 100}%`,
+													width:
+														percent > 100
+															? `${relative * 100}%`
+															: `${percent}%`,
 													backgroundColor: getGradient(relative, gradientColor),
 													transition: "background 0.3s ease",
 												}}
