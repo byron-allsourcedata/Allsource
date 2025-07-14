@@ -2,13 +2,7 @@ from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
 from schemas.mapping.audience_insights_mapping import (
-    ETHNICITY_MAP,
-    LANGUAGE_MAP,
-    RELIGION_MAP,
     YES_NO_UNKNOWN_MAPS,
-    NET_WORTH_RANGE_MAP,
-    CREDIT_SCORE_RANGE_MAP,
-    INCOME_RANGE,
 )
 
 
@@ -89,13 +83,6 @@ class PersonalProfiles(BaseModel):
                     }
                     setattr(self, key, percent)
             else:
-                if key == "ethnicity":
-                    val = self._map_keys(val, ETHNICITY_MAP)
-                elif key == "languages":
-                    val = self._map_keys(val, LANGUAGE_MAP)
-                elif key == "religion":
-                    val = self._map_keys(val, RELIGION_MAP)
-
                 setattr(self, key, self._to_percent(val))
 
         return self
@@ -152,20 +139,10 @@ class FinancialProfiles(BaseModel):
             if not isinstance(val, dict):
                 continue
 
-            if key == "net_worth_range":
-                mapped = self._map_data(NET_WORTH_RANGE_MAP, val)
-                setattr(self, key, self._to_percent(mapped))
+            if key == "credit_cards":
+                continue
 
-            elif key == "credit_score_range":
-                mapped = self._map_data(CREDIT_SCORE_RANGE_MAP, val)
-                setattr(self, key, self._to_percent(mapped))
-
-            elif key == "income_range":
-                mapped = self._map_data(INCOME_RANGE, val)
-                setattr(self, key, self._to_percent(mapped))
-
-            else:
-                setattr(self, key, self._to_percent(val))
+            setattr(self, key, self._to_percent(val))
 
         return self
 
@@ -215,9 +192,24 @@ class LifestyleProfiles(BaseModel):
     @model_validator(mode="after")
     def calculate_percentages(self) -> "LifestyleProfiles":
         values = self.model_dump()
+
+        special_null_fields = {"online_purchaser", "travel_interest", "smoker"}
         for key, val in values.items():
-            if isinstance(val, dict):
-                setattr(self, key, self._to_percent(val))
+            if not isinstance(val, dict):
+                continue
+
+            if key in special_null_fields:
+                normalized_val: Dict[str, int] = {}
+                for k, v in val.items():
+                    if k is None or k.lower() == "unknown":
+                        normalized_val["false"] = (
+                            normalized_val.get("False", 0) + v
+                        )
+                    else:
+                        normalized_val[k] = normalized_val.get(k, 0) + v
+                val = normalized_val
+
+            setattr(self, key, self._to_percent(val))
         return self
 
 
