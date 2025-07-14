@@ -2,7 +2,7 @@ from typing import List, Dict, Optional, Tuple
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import func
+from sqlalchemy import func, update
 
 from config import ClickhouseConfig
 from db_dependencies import Clickhouse, Db
@@ -37,6 +37,11 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
     def get_source_info(self, uuid_of_source, user_id) -> Optional[SourceInfo]:
         return self.get_source_info(
             uuid_of_source=uuid_of_source, user_id=user_id
+        )
+
+    def change_lookalike_status(self, status: str, lookalike_id: UUID):
+        self.postgres.change_lookalike_status(
+            status=status, lookalike_id=lookalike_id
         )
 
     def get_lookalikes(

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 
 
@@ -9,7 +9,7 @@ class PixelInstallationRequest(BaseModel):
 
 
 class EmailFormRequest(BaseModel):
-    email: str = Field(...)
+    email: EmailStr
 
 
 class ManualFormResponse(BaseModel):

@@ -353,6 +353,7 @@ class MailchimpIntegrationsService:
         validations: dict = {},
     ):
         profiles = []
+        results = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_member_into_list(
                 enrichment_user,
@@ -360,23 +361,38 @@ class MailchimpIntegrationsService:
                 validations,
                 integration_data_sync.data_map,
             )
+            if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": profile,
+                    }
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
             if profile:
                 profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
-        profile = self.__create_profile(
+        profile_response = self.__create_profile(
             user_integration, integration_data_sync, profiles
         )
-        if profile in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.LIST_NOT_EXISTS.value,
-        ):
-            return profile
 
-        return ProccessDataSyncResult.SUCCESS.value
+        if profile_response != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = profile_response
+
+        return results
 
     async def process_data_sync_lead(
         self,
@@ -449,7 +465,7 @@ class MailchimpIntegrationsService:
             batch = self.client.batches.start({"operations": operations})
         except ApiClientError as error:
             logging.error("Batch operation failed: %s", error.text)
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
@@ -489,12 +505,9 @@ class MailchimpIntegrationsService:
             if error.status_code == 404:
                 return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
-        try:
-            response = self.sync_contacts_bulk(
-                integration_data_sync.list_id, profiles
-            )
-        except ApiClientError as error:
-            raise error
+        response = self.sync_contacts_bulk(
+            integration_data_sync.list_id, profiles
+        )
 
         return response
 
@@ -536,7 +549,7 @@ class MailchimpIntegrationsService:
     ):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         business_email, personal_email, phone = (
             self.sync_persistence.get_verified_email_and_phone(
@@ -555,7 +568,7 @@ class MailchimpIntegrationsService:
         last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         result = {
             "email_address": main_email,

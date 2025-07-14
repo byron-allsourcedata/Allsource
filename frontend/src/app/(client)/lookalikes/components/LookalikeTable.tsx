@@ -9,14 +9,12 @@ import {
 	IconButton,
 	Box,
 	Typography,
-	Tooltip,
 	Button,
 	DialogActions,
 	DialogContent,
 	DialogContentText,
 	Popover,
 	TextField,
-	InputAdornment,
 	LinearProgress,
 	Collapse,
 	Link,
@@ -31,19 +29,14 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
-import { useSearchParams } from "next/navigation";
 import { lookalikesStyles } from "./lookalikeStyles";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ProgressBar from "./ProgressLoader";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import { audienceStyles } from "../../audience/audienceStyles";
-import TableCustomCell from "../../sources/components/table/TableCustomCell";
 import { useSSE } from "@/context/SSEContext";
-import { padding } from "@mui/system";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
-import { QrCodeScannerOutlined } from "@mui/icons-material";
 import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import HintCard from "../../components/HintCard";
 import SmartCell from "@/components/table/SmartCell";
@@ -52,23 +45,7 @@ import {
 	type PaginatorProps,
 } from "@/components/PaginationComponent";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
-
-interface TableRowData {
-	id: string;
-	name: string;
-	source: string;
-	source_type: string;
-	lookalike_size: string;
-	created_date: Date;
-	created_by: string;
-	size: number;
-	processed_size: number;
-	train_model_size: number;
-	processed_train_model_size: number;
-	significant_fields: Record<string, any>;
-	similarity_score: Record<string, any>;
-	target_schema: string;
-}
+import { TableRowData } from "../page";
 
 interface LookalikeTableProps {
 	tableData: TableRowData[];
@@ -79,6 +56,19 @@ interface LookalikeTableProps {
 	loader_for_table: boolean;
 	paginationProps: PaginatorProps;
 	isDebug: boolean;
+}
+
+function formatEta(seconds?: number): string {
+	if (seconds === undefined || seconds === null || seconds <= 0) return "";
+
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+
+	if (mins === 0) return `~${secs} sec left`;
+	if (mins > 0 && mins < 60) return `~${mins} min ${secs} sec left`;
+	const hours = Math.floor(mins / 60);
+	const remainingMins = mins % 60;
+	return `~${hours}h ${remainingMins}m left`;
 }
 
 const audienceSize = [
@@ -242,7 +232,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 				const hasPending = tableData.some(
 					(item) =>
 						item.train_model_size !== item.processed_train_model_size &&
-						item.train_model_size !== 0,
+						item.train_model_size !== 0 &&
+						!["success", "failed"].includes(item.status as string),
 				);
 
 				if (hasPending) {
@@ -572,8 +563,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 									: row.lookalike_size;
 							})();
 							const isRowDisabled =
-								loader_for_table ||
-								row.processed_size + row.processed_train_model_size === 0;
+								!["success", "failed"].includes(row.status as string) &&
+								(loader_for_table ||
+									row.processed_size + row.processed_train_model_size === 0);
 							return (
 								<>
 									<TableRow
@@ -930,16 +922,29 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 													}}
 												/>
 											)} */}
-											{row.processed_train_model_size ===
-												row.train_model_size && row.train_model_size !== 0 ? (
+											{row.status === "failed" ? (
+												0
+											) : row.processed_train_model_size ===
+													row.train_model_size && row.train_model_size !== 0 ? (
 												row.size.toLocaleString("en-US")
 											) : (
-												<ProgressBar
-													progress={{
-														total: row.train_model_size || 0,
-														processed: row.processed_train_model_size || 0,
-													}}
-												/>
+												<Box>
+													<ProgressBar
+														progress={{
+															total: row.train_model_size || 0,
+															processed: row.processed_train_model_size || 0,
+														}}
+													/>
+													{typeof row.eta_seconds === "number" &&
+														row.eta_seconds > 0 && (
+															<Typography
+																variant="caption"
+																sx={{ color: "gray", mt: 0.5 }}
+															>
+																{formatEta(row.eta_seconds)}
+															</Typography>
+														)}
+												</Box>
 											)}
 										</SmartCell>
 

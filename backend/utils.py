@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import sys
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
 from urllib.parse import urlparse, parse_qs
@@ -19,6 +20,24 @@ from services.integrations.million_verifier import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def setup_logging(logger, level):
+    logger.basicConfig(
+        level=level,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+
+def parse_log_level():
+    log_level = logging.INFO
+    if len(sys.argv) > 1:
+        arg = sys.argv[1].upper()
+        if arg == "DEBUG":
+            log_level = logging.DEBUG
+
+    return log_level
 
 
 def get_utc_aware_date():

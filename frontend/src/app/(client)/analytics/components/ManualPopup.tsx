@@ -4,10 +4,9 @@ import {
 	Box,
 	Button,
 	Typography,
-	Modal,
 	IconButton,
-	Divider,
-	Input,
+	FormControl,
+	FormHelperText,
 	InputBase,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -59,6 +58,7 @@ const Popup: React.FC<PopupProps> = ({
 	const { manualInstallHints, resetManualInstall, changeManualInstallHint } =
 		useGetStartedHints();
 	const [email, setEmail] = useState("");
+	const [error, setError] = useState("");
 	const verifyRef = useRef<HTMLDivElement | null>(null);
 
 	const handleCopy = () => {
@@ -66,6 +66,18 @@ const Popup: React.FC<PopupProps> = ({
 		showToast("Copied to clipboard");
 		onInstallStatusChange("success");
 		scrollToBottom();
+	};
+
+	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const value = e.target.value;
+		setEmail(value);
+		if (!emailRegex.test(value)) {
+			setError("Invalid email address");
+		} else {
+			setError("");
+		}
 	};
 
 	const handleButtonClick = () => {
@@ -275,41 +287,46 @@ const Popup: React.FC<PopupProps> = ({
 							},
 						}}
 					>
-						<InputBase
-							id="email_send"
-							type="text"
-							placeholder="Enter Email ID"
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-							className="paragraph"
-							sx={{
-								padding: "0.5rem 2em 0.5em 1em",
-								width: "65%",
-								border: "1px solid #e4e4e4",
-								borderRadius: "4px",
-								maxHeight: "2.5em",
-								fontSize: "14px !important",
-								textAlign: "left",
-								backgroundColor: "rgba(255, 255, 255, 1)",
-								boxShadow: "none",
-								outline: "none",
-								"&:focus": {
-									borderColor: "#3f51b5",
-								},
-								"@media (max-width: 600px)": {
+						<FormControl
+							error={!!error}
+							sx={{ width: "100%", maxWidth: "500px", marginTop: "1rem" }}
+						>
+							<InputBase
+								id="email_send"
+								type="text"
+								placeholder="Enter Email ID"
+								value={email}
+								onChange={handleChange}
+								className="paragraph"
+								sx={{
+									padding: "0.5rem 2em 0.5em 1em",
 									width: "100%",
-								},
-							}}
-						/>
+									border: "1px solid #e4e4e4",
+									borderRadius: "4px",
+									maxHeight: "2.5em",
+									fontSize: "14px !important",
+									textAlign: "left",
+									backgroundColor: "rgba(255, 255, 255, 1)",
+									boxShadow: "none",
+									outline: "none",
+									"&:focus": {
+										borderColor: "#3f51b5",
+									},
+								}}
+							/>
+							{error && <FormHelperText>{error}</FormHelperText>}
+						</FormControl>
 
 						<Button
 							onClick={handleButtonClick}
+							disabled={!!error}
 							sx={{
 								ml: 2,
 								border: "1px solid rgba(56, 152, 252, 1)",
 								textTransform: "none",
-								background: "#fff",
-								color: "rgba(56, 152, 252, 1)",
+								background: !!error ? "#e0e0e0" : "#fff",
+								color: !!error ? "#9e9e9e" : "rgba(56, 152, 252, 1)",
+								borderColor: !!error ? "#c7c7c7" : "rgba(56, 152, 252, 1)",
 								fontFamily: "var(--font-nunito)",
 								padding: "0.65em 2em",
 								mr: 1,

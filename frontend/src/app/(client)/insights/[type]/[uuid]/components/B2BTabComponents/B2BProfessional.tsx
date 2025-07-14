@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
-import { USHeatMapCard } from "../USMap";
 
-import { mapState, mapGenericPercentage } from "./mappingUtils";
+import { mapGenericPercentage } from "./mappingUtils";
 import { FieldRankMap, ProfessionalInfo } from "@/types/insights";
 import MapChart from "../MapChart";
+import { aggregateByState } from "../B2BTabComponents/mapChartUtils";
 
 interface B2BProffesionalProps {
 	data: ProfessionalInfo;
@@ -124,8 +124,9 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 					>
 						<MapChart
 							title="Job Location"
-							regions={mapState(data.job_location)}
+							regions={aggregateByState(data.job_location)}
 							rank={fieldRanks["job_location"]}
+							hasCityMode={true}
 						/>
 					</Box>
 				</Box>

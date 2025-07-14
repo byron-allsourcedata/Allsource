@@ -382,6 +382,7 @@ class HubspotIntegrationsService:
         validations: dict = {},
     ):
         profiles = []
+        results = []
         for enrichment_user in enrichment_users:
             profile = await self.__mapped_profile(
                 enrichment_user,
@@ -389,16 +390,37 @@ class HubspotIntegrationsService:
                 validations,
                 integration_data_sync.data_map,
             )
-            if profile:
-                profiles.append(profile)
+            if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": profile,
+                    }
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
+            profiles.append(profile)
 
         if not profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+            return results
 
         list_response = await self.__create_profiles(
             user_integration.access_token, profiles
         )
-        return list_response
+
+        if list_response != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = list_response
+
+        return results
 
     async def process_data_sync_lead(
         self,
@@ -445,6 +467,7 @@ class HubspotIntegrationsService:
             for result in results:
                 if result["status"] == ProccessDataSyncResult.SUCCESS.value:
                     result["status"] = result_bulk
+
         return results
 
     async def fetch_all_contacts(self, access_token, emails, after=None):
@@ -578,7 +601,7 @@ class HubspotIntegrationsService:
     ) -> dict[str, Any] | None:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         business_email, personal_email, phone = (
             self.sync_persistence.get_verified_email_and_phone(
@@ -597,7 +620,7 @@ class HubspotIntegrationsService:
         last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
-            return None
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         result = {
             "email": main_email,

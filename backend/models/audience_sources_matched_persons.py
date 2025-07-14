@@ -21,14 +21,6 @@ from .base import Base, update_timestamps
 
 class AudienceSourcesMatchedPerson(Base):
     __tablename__ = "audience_sources_matched_persons"
-    __table_args__ = (
-        Index(
-            "audience_sources_matched_persons_source_id_email_idx",
-            "source_id",
-            "email",
-        ),
-        Index("audience_sources_matched_persons_source_id_idx", "source_id"),
-    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -89,6 +81,21 @@ class AudienceSourcesMatchedPerson(Base):
     count = Column(Integer, nullable=True, server_default=text("1"))
     count_min = Column(Integer, nullable=True, server_default=text("1"))
     count_max = Column(Integer, nullable=True, server_default=text("1"))
+
+    __table_args__ = (
+        Index(
+            "audience_sources_matched_persons_source_id_email_idx",
+            source_id,
+            email,
+        ),
+        Index("audience_sources_matched_persons_source_id_idx", source_id),
+        Index(
+            "audience_sources_matched_persons_source_id_enrichment_user_asid",
+            source_id,
+            enrichment_user_asid,
+            unique=True,
+        ),
+    )
 
 
 event.listen(AudienceSourcesMatchedPerson, "before_update", update_timestamps)

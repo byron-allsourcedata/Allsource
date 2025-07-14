@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
 )
 
+from enums import LookalikeStatus
 from .base import Base
 
 
@@ -27,6 +28,9 @@ class AudienceLookalikes(Base):
     )
     name = Column(String(128), nullable=False)
     lookalike_size = Column(String(32), nullable=False)
+    status = Column(
+        String(32), nullable=False, server_default=LookalikeStatus.NEW.value
+    )
     created_date = Column(
         TIMESTAMP,
         nullable=False,

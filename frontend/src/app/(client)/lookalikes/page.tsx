@@ -89,7 +89,7 @@ interface FetchDataParams {
 	appliedDates: { start: Date | null; end: Date | null };
 }
 
-interface TableRowData {
+export interface TableRowData {
 	id: string;
 	name: string;
 	source: string;
@@ -100,10 +100,12 @@ interface TableRowData {
 	size: number;
 	processed_size: number;
 	train_model_size: number;
+	status: string;
 	processed_train_model_size: number;
 	significant_fields: Record<string, any>;
 	similarity_score: Record<string, any>;
 	target_schema: string;
+	eta_seconds?: number;
 }
 
 const CreateLookalike: React.FC = () => {

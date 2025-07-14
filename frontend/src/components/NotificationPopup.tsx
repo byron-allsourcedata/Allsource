@@ -92,11 +92,23 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
 				return (
 					<Link
 						key={index}
-						target="_blank"
+						{...(keyword.word === "Learn more" && {
+							target: "_blank",
+							rel: "noopener noreferrer",
+						})}
 						href={keyword.link}
 						sx={{
-							textDecoration: "none",
+							display: "inline-flex",
+							alignItems: "center",
+							fontFamily: "var(--font-nunito)",
+							fontSize: "14px",
+							fontWeight: 500,
+							lineHeight: "19.6px",
+							gap: 1,
+							textDecoration:
+								keyword.word === "Learn more" ? "underline" : "none",
 							color: "rgba(20, 110, 246, 1) !important",
+							"@media (max-width: 600px)": { fontSize: "11px !important" },
 						}}
 					>
 						{part}

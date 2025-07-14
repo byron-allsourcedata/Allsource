@@ -69,7 +69,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
 						<GradientBarChart
 							title="Political Party"
 							data={politicalPartyData}
-							rank={fieldRanks["political_party"]}
+							rank={fieldRanks["party_affiliation"]}
 						/>
 					</Box>
 

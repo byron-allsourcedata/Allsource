@@ -1,20 +1,18 @@
+import asyncio
+import json
 import logging
 import os
 import sys
-import asyncio
-import functools
-import json
+
 import aio_pika
-from aio_pika import IncomingMessage
 from dotenv import load_dotenv
-
-from sqlalchemy.orm import Session
-
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from services.lookalikes import AudienceLookalikesService
+from enums import LookalikeStatus
 from config.util import get_int_env
 from db_dependencies import Db
 from resolver import Resolver
@@ -82,10 +80,14 @@ async def aud_sources_reader(
     connection,
     channel,
     filler: LookalikeFillerService,
+    audience_lookalikes_service: AudienceLookalikesService,
 ):
     message_body_json = json.loads(message_body)
     logging.info(f"msg body {message_body_json}")
     lookalike_id = message_body_json["lookalike_id"]
+    audience_lookalikes_service.change_status(
+        status=LookalikeStatus.STARTED.value, lookalike_id=lookalike_id
+    )
     try:
         audience_lookalike = filler.get_lookalike(lookalike_id)
 
@@ -114,7 +116,6 @@ async def aud_sources_reader(
             channel,
             lookalike_id=audience_lookalike.id,
             user_id=audience_lookalike.user_id,
-            persons=user_ids,
         )
         await channel.close()
         await connection.close()
@@ -137,6 +138,9 @@ async def aud_sources_reader(
         logging.info("Done")
     except BaseException as e:
         db_session.rollback()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.FAILED.value, lookalike_id=lookalike_id
+        )
         logging.error(f"Error processing message: {e}", exc_info=True)
         await asyncio.sleep(5)
         await publish_rabbitmq_message_with_channel(
@@ -172,6 +176,9 @@ async def main():
 
         db_session = await resolver.resolve(Db)
         filler = await resolver.resolve(LookalikeFillerService)
+        audience_lookalikes_service = await resolver.resolve(
+            AudienceLookalikesService
+        )
 
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_LOOKALIKES_READER,
@@ -180,7 +187,6 @@ async def main():
                 "x-consumer-timeout": 14400000,
             },
         )
-
         while True:
             try:
                 reader_queue = await channel.declare_queue(
@@ -198,6 +204,7 @@ async def main():
                     connection=connection,
                     channel=channel,
                     filler=filler,
+                    audience_lookalikes_service=audience_lookalikes_service,
                 )
 
             except aio_pika.exceptions.QueueEmpty as e:

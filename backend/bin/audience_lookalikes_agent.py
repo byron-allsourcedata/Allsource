@@ -6,15 +6,22 @@ import logging
 import os
 import sys
 import time
+from uuid import UUID
 
 from aio_pika import IncomingMessage
 from dotenv import load_dotenv
 from sqlalchemy import update, select
 from sqlalchemy.orm import Session
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from enums import LookalikeStatus
+from services.lookalikes import AudienceLookalikesService
+
+from services.lookalike_agent.agent import LookalikeAgentService
+from services.lookalike_filler.rabbitmq import LookalikesMatchingMessage
 from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
@@ -62,14 +69,30 @@ async def aud_sources_matching(
     db_session: Session,
     channel,
     source_agent: SourceAgentService,
+    audience_lookalikes_service: AudienceLookalikesService,
+    agent_service: LookalikeAgentService,
 ):
     try:
-        message_body = json.loads(message.body)
+        message_body: LookalikesMatchingMessage = json.loads(message.body)
         user_id = message_body.get("user_id")
         lookalike_id = message_body.get("lookalike_id")
-        enrichment_user_ids: list[str] = message_body.get("enrichment_user")
+        lookalike_id = UUID(lookalike_id)
+
         logging.info(f"Processing lookalike_id with ID: {lookalike_id}")
-        logging.info(f"Processing len: {len(enrichment_user_ids)}")
+
+        logging.info("Fetching top enrichment users")
+
+        enrichment_user_ids = agent_service.get_top_enrichment_users(
+            lookalike_id
+        )
+
+        if enrichment_user_ids is None:
+            logging.warning(
+                f"No enrichment users found for lookalike_id: {lookalike_id}"
+            )
+            return
+
+        logging.info(f"Processing {len(enrichment_user_ids)} enrichment users")
 
         lookalike_persons_to_add: list[AudienceLookalikesPerson] = []
         for enrichment_user_id in enrichment_user_ids:
@@ -147,11 +170,17 @@ async def aud_sources_matching(
         )
         logging.info("Done processing lookalike_id with ID: {lookalike_id}")
         await message.ack()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.SUCCESS.value, lookalike_id=lookalike_id
+        )
 
     except BaseException as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
         await message.reject(requeue=True)
         db_session.rollback()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.FAILED.value, lookalike_id=lookalike_id
+        )
 
 
 async def main():
@@ -177,6 +206,10 @@ async def main():
 
             db_session = await resolver.resolve(Db)
             source_agent = await resolver.resolve(SourceAgentService)
+            audience_lookalikes_service = await resolver.resolve(
+                AudienceLookalikesService
+            )
+            agent_service = await resolver.resolve(LookalikeAgentService)
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_LOOKALIKES_MATCHING,
@@ -188,6 +221,8 @@ async def main():
                     channel=channel,
                     db_session=db_session,
                     source_agent=source_agent,
+                    audience_lookalikes_service=audience_lookalikes_service,
+                    agent_service=agent_service,
                 )
             )
 

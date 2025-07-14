@@ -122,7 +122,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 						<GradientBarChart
 							title="Languages"
 							data={mapGenericPercentage(data.languages)}
-							rank={fieldRanks["languages"]}
+							rank={fieldRanks["language_code"]}
 							gradientColor="155, 223, 196"
 							textPadding={true}
 						/>

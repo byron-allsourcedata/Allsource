@@ -1,6 +1,7 @@
 import logging
 import math
 from datetime import datetime, timedelta, timezone
+from typing import List
 
 import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select, case
@@ -8,12 +9,11 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
 
 from db_dependencies import Db
-from resolver import injectable
-from utils import format_phone_number
+from enums import DataSyncType
+from models import UserDomains, IntegrationUserSync
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
 from models.five_x_five_emails import FiveXFiveEmails
-from models.leads_requests import LeadsRequests
 from models.five_x_five_locations import FiveXFiveLocations
 from models.five_x_five_names import FiveXFiveNames
 from models.five_x_five_phones import FiveXFivePhones
@@ -22,9 +22,8 @@ from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users_locations import FiveXFiveUsersLocations
 from models.five_x_five_users_phones import FiveXFiveUsersPhones
 from models.leads import Lead
-from enums import ProccessDataSyncResult
-from utils import extract_first_email
 from models.leads_orders import LeadOrders
+from models.leads_requests import LeadsRequests
 from models.leads_users import LeadUser
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
@@ -32,6 +31,8 @@ from models.leads_visits import LeadsVisits
 from models.state import States
 from models.subscription_transactions import SubscriptionTransactions
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
+from resolver import injectable
+from utils import format_phone_number, extract_first_email
 
 logger = logging.getLogger(__name__)
 
@@ -1335,6 +1336,16 @@ class LeadsPersistence:
             .first()
         )
 
+    async def get_leads_users_by_user_id(
+        self, user_id: int, limit: int = None
+    ) -> List[LeadUser]:
+        query = self.db.query(LeadUser).filter(LeadUser.user_id == user_id)
+
+        if limit is not None:
+            query = query.limit(limit)
+
+        return query.all()
+
     def get_leads_user_filter_by_email(self, domain_id: int, email: str):
         return (
             self.db.query(LeadUser)
@@ -1582,3 +1593,117 @@ class LeadsPersistence:
             .first()
             is not None
         )
+
+    def get_five_x_five_user_by_id(self, id: int) -> FiveXFiveUser:
+        return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == id).one()
+
+    def fetch_leads_by_domain_and_leads_type(
+        self,
+        domain_id: int,
+        limit: int,
+        data_sync_leads_type: str,
+        last_sent_lead_id=None,
+    ):
+        current_date_time = datetime.now(timezone.utc)
+        past_time = current_date_time - timedelta(hours=2)
+        past_date = past_time.date()
+        past_time = past_time.time()
+        if last_sent_lead_id is None:
+            last_sent_lead_id = 0
+
+        query = (
+            self.db.query(
+                LeadUser.id.label("id"),
+                LeadUser.user_id.label("user_id"),
+                LeadUser.five_x_five_user_id.label("five_x_five_user_id"),
+            )
+            .join(UserDomains, UserDomains.id == LeadUser.domain_id)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.domain_id == UserDomains.id,
+            )
+            .filter(
+                LeadUser.domain_id == domain_id,
+                IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
+                LeadUser.id > last_sent_lead_id,
+                LeadUser.is_active,
+                UserDomains.is_enable,
+                LeadUser.is_confirmed,
+            )
+        )
+
+        if data_sync_leads_type != "allContacts":
+            if data_sync_leads_type == "converted_sales":
+                query = (
+                    query.outerjoin(
+                        LeadsUsersAddedToCart,
+                        LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+                    )
+                    .outerjoin(
+                        LeadsUsersOrdered,
+                        LeadsUsersOrdered.lead_user_id == LeadUser.id,
+                    )
+                    .filter(
+                        or_(
+                            and_(
+                                LeadUser.behavior_type
+                                != "product_added_to_cart",
+                                LeadUser.is_converted_sales == True,
+                            ),
+                            and_(
+                                LeadUser.is_converted_sales == True,
+                                LeadsUsersOrdered.ordered_at.isnot(None),
+                                LeadsUsersAddedToCart.added_at
+                                < LeadsUsersOrdered.ordered_at,
+                            ),
+                        )
+                    )
+                )
+
+            elif data_sync_leads_type == "viewed_product":
+                query = query.filter(
+                    and_(
+                        LeadUser.behavior_type == "viewed_product",
+                        LeadUser.is_converted_sales == False,
+                    )
+                )
+
+            elif data_sync_leads_type == "visitor":
+                query = query.filter(
+                    and_(
+                        LeadUser.behavior_type == "visitor",
+                        LeadUser.is_converted_sales == False,
+                    )
+                )
+
+            elif data_sync_leads_type == "abandoned_cart":
+                query = (
+                    query.outerjoin(
+                        LeadsUsersAddedToCart,
+                        LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+                    )
+                    .outerjoin(
+                        LeadsUsersOrdered,
+                        LeadsUsersOrdered.lead_user_id == LeadUser.id,
+                    )
+                    .filter(
+                        and_(
+                            LeadUser.behavior_type == "product_added_to_cart",
+                            LeadUser.is_converted_sales == False,
+                            LeadsUsersAddedToCart.added_at.isnot(None),
+                            or_(
+                                LeadsUsersAddedToCart.added_at
+                                > LeadsUsersOrdered.ordered_at,
+                                and_(
+                                    LeadsUsersOrdered.ordered_at.is_(None),
+                                    LeadsUsersAddedToCart.added_at.isnot(None),
+                                ),
+                            ),
+                        )
+                    )
+                )
+        result = (
+            query.distinct(LeadUser.id).order_by(LeadUser.id).limit(limit).all()
+        )
+
+        return result or []

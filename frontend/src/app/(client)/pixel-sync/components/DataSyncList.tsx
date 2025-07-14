@@ -80,10 +80,12 @@ import { width } from "@mui/system";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import GoHighLevelDataSync from "../../data-sync/components/GoHighLevelDataSync";
+import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
 
 interface DataSyncProps {
 	service_name?: string | null;
 	filters?: any;
+	isFirstLoad?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -96,11 +98,17 @@ interface IntegrationsCredentials {
 	is_failed?: boolean;
 }
 
+interface PixelSyncRow {
+	contacts: number;
+	processed_contacts: number;
+}
+
 const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const { needsSync, setNeedsSync } = useIntegrationContext();
 	const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
 	const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isFirstLoad, setIsFirstLoad] = useState(true);
 	const [Loading, setLoading] = useState(false);
 	const [data, setData] = useState<any[]>([]);
 	const [allData, setAllData] = useState<any[]>([]);
@@ -134,10 +142,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
 	const [openMetaConnect, setOpenMetaConnect] = useState(false);
 	const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
+	const [openHubspotConnect, setOpenHubspotConnect] = useState(false);
+
 	const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false);
-	const [openAttentiveConnect, setAttentiveConnect] = useState(false);
-	const [openShopifuConnect, setOpenShopifyConnect] = useState(false);
-	const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false);
 	const [openOmnisendConnect, setOpenOmnisendConnect] = useState(false);
 	const [openMailchimpConnect, setOpenMailchimpConnect] = useState(false);
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
@@ -156,10 +163,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleCloseIntegrate = () => {
 		setOpenMetaConnect(false);
 		setOpenKlaviyoConnect(false);
+		setOpenHubspotConnect(false);
 		setOpenSalesForceConnect(false);
-		setOpenShopifyConnect(false);
-		setAttentiveConnect(false);
-		setOpenBigcommerceConnect(false);
 		setOpenOmnisendConnect(false);
 		setOpenSendlaneConnect(false);
 		setOpenS3Connect(false);
@@ -185,16 +190,44 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		resetDataSyncHints();
 	}, []);
 
-	useEffect(() => {
-		if (needsSync) {
-			handleIntegrationsSync();
-			setNeedsSync(false);
+	const isAllContactsSynced = (data: PixelSyncRow[]): boolean => {
+		// if even one row contacts != processed_contancts => not synced => continue polling
+		for (const row of data) {
+			if (row.contacts != row.processed_contacts) {
+				return false;
+			}
 		}
-	}, [needsSync]);
+		return true;
+	};
+
+	useEffect(() => {
+		if (!needsSync) return;
+
+		const pollingInterval = 2000; // in milliseconds
+		const intervalId = setInterval(() => {
+			if (!isLoading) {
+				handleIntegrationsSync();
+
+				if (!needsSync) {
+					return;
+				}
+			}
+		}, pollingInterval);
+
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, [needsSync, isLoading]);
 
 	const handleIntegrationsSync = async () => {
 		try {
-			setIsLoading(true);
+			if (isFirstLoad) {
+				setIsLoading(true);
+				setIsFirstLoad(false);
+			} else {
+				setIsLoading(false);
+			}
+
 			let params = null;
 			if (service_name) {
 				params = {
@@ -205,6 +238,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				params: params,
 			});
 			const { length: count } = response.data;
+
 			setAllData(response.data);
 			setTotalRows(count);
 			let newRowsPerPageOptions: number[] = [];
@@ -226,6 +260,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				newRowsPerPageOptions.sort((a, b) => a - b);
 			}
 			setRowsPerPageOptions(newRowsPerPageOptions);
+
+			const contacts = response.data;
+			const isSynced = isAllContactsSynced(contacts);
+			if (isSynced) {
+				setNeedsSync(false);
+			}
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				const status = error.response.data.status;
@@ -702,7 +742,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookConnect(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenHubspotIconPopup(true);
+						setOpenHubspotConnect(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setOpenSalesForceConnect(true);
 					}
@@ -1914,14 +1954,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
-				<KlaviyoIntegrationPopup
-					open={openKlaviyoConnect}
+				<HubspotIntegrationPopup
+					open={openHubspotConnect}
 					handleClose={() => {
-						setOpenKlaviyoConnect(false), setIsInvalidApiKey(false);
+						setOpenHubspotConnect(false), setIsInvalidApiKey(false);
 					}}
 					initApiKey={
 						integrationsCredentials.find(
-							(integartion) => integartion.service_name === "klaviyo",
+							(integartion) => integartion.service_name === "hubspot",
 						)?.access_token
 					}
 					invalid_api_key={isInvalidApiKey}

@@ -98,6 +98,12 @@ class AudienceSmartsPersistenceInterface(ABC):
         pass
 
     @abstractmethod
+    def sorted_enrichment_users_for_validation(
+        self, ids: List[UUID], order_by_clause: str
+    ):
+        pass
+
+    @abstractmethod
     def get_processing_sources(self, id: int) -> Optional[Row]:
         pass
 

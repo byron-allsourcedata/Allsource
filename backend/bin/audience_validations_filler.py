@@ -429,7 +429,7 @@ async def process_rmq_message(
         recency_business_days = 0
 
         try:
-            valitations = (
+            validations = (
                 audience_smarts_service.get_audience_smart_validations_by_id(
                     aud_smart_id
                 )
@@ -444,7 +444,7 @@ async def process_rmq_message(
                 .first()
             )
 
-            validation_params = json.loads(valitations)
+            validation_params = json.loads(validations)
 
             priority_values = priority_record.value.split(",")
 

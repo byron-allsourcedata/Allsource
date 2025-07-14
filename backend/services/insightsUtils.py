@@ -28,7 +28,7 @@ from services.source_agent.agent import EmploymentEntry
 from schemas.insights import InsightsByCategory
 from services.source_agent.agent import SourceAgentService
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 PERSONAL_COLS = [
     "gender",
@@ -308,9 +308,12 @@ class InsightsUtils:
         buckets: Dict[str, Dict[str, Counter]] = {
             cat: defaultdict(Counter) for cat in COLUMNS_BY_CATEGORY
         }
-
+        # Employment cols(nubmer of jobs)
         jobs_last_5_years_counter: Counter = Counter()
         five_years_ago = datetime.utcnow() - timedelta(days=365 * 5)
+
+        # Financial cols(credit cards counter)
+        credit_cards_user_counter: Dict[str, set[uuid.UUID]] = defaultdict(set)
 
         for cat in categories:
             columns = COLUMNS_BY_CATEGORY[cat]
@@ -350,12 +353,17 @@ class InsightsUtils:
                                     .replace("'", "")
                                     .replace('"', "")
                                 )
-                                for card in (
+                                user_cards = set(
                                     c.strip().lower()
                                     for c in raw.split(",")
                                     if c.strip()
-                                ):
+                                )
+
+                                for card in user_cards:
                                     buckets[cat][field][card] += 1
+                                    credit_cards_user_counter[card].add(
+                                        asids[idx]
+                                    )
                                 continue
                             else:
                                 key = str(val).lower()
@@ -437,6 +445,18 @@ class InsightsUtils:
             _fill(insights.personal_profile, PERSONAL_COLS, "personal")
         if "financial" in categories:
             _fill(insights.financial, FINANCIAL_COLS, "financial")
+
+            total_users = len(set().union(*credit_cards_user_counter.values()))
+            if total_users > 0:
+                insights.financial.credit_cards = {
+                    k: round(len(v) / total_users * 100, 2)
+                    for k, v in credit_cards_user_counter.items()
+                }
+            else:
+                insights.financial.credit_cards = {
+                    k: 0.0 for k in credit_cards_user_counter
+                }
+
         if "lifestyle" in categories:
             _fill(insights.lifestyle, LIFESTYLE_COLS, "lifestyle")
         if "voter" in categories:
@@ -548,7 +568,7 @@ class InsightsUtils:
                     if not isinstance(old_val, (int, float)) or not isinstance(
                         new_val, (int, float)
                     ):
-                        logging.warning(
+                        logger.warning(
                             f"In merge_insights_json: Non-numeric merge at key='{key}' → old={old_val} ({type(old_val)}), new={new_val} ({type(new_val)})"
                         )
                         continue

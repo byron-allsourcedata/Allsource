@@ -20,6 +20,13 @@ class LookalikeSize(Enum):
     BROAD = "broad"
 
 
+class LookalikeStatus(Enum):
+    NEW = "new"
+    STARTED = "started"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = "aud_sources_matching"
     AUDIENCE_SOURCES_READER = "aud_sources_files"
@@ -414,7 +421,9 @@ class ProccessDataSyncResult(Enum):
     INCORRECT_FORMAT = "incorrect_format"
     FAILED = "failed"
     SUCCESS = "success"
+    PLATFORM_VALIDATION_FAILED = "platform_validation_failed"
     UNEXPECTED_ERROR = "unexpected_error"
+    FORBIDDEN = "forbidden"
     LEAD_PROFILE_ERROR = "lead_profile_error"
     LIST_NOT_EXISTS = "list_not_exists"
     AUTHENTICATION_FAILED = "authentication_failed"
