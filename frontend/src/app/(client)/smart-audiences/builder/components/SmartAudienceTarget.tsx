@@ -42,6 +42,7 @@ import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
 import { BuilderKey } from "../../context/hintsCardsContent";
+import { useBillingContext } from "@/context/BillingContext";
 
 interface Recency {
 	days: number;
@@ -153,6 +154,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 	const [filteredLookalikeData, setFilteredLookalikeData] = useState<
 		DataItem[]
 	>([]);
+	const { needsSync } = useBillingContext();
 
 	// Generate Active Segments
 	const [value, setValue] = useState<number | null>(0);
@@ -448,6 +450,12 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 			setFilteredLookalikeData(getFilteredData(lookalikeData));
 		}
 	}, [sourceType, sourceData, lookalikeData, selectedSources]);
+
+	useEffect(() => {
+		if (needsSync) {
+			handleCalculateActiveSegments(value ?? 0);
+		}
+	}, [needsSync]);
 
 	return (
 		<Box sx={{ mb: 4 }}>

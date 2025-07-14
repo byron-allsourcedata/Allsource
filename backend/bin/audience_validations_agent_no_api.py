@@ -5,28 +5,25 @@ import asyncio
 import functools
 import json
 import time
-import boto3
-import random
 from datetime import datetime, timezone
-from uuid import UUID
-from sqlalchemy import update
 from decimal import Decimal
-from aio_pika import IncomingMessage, Message, Channel
+from aio_pika import IncomingMessage, Channel
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import create_engine, func, select
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from config.sentry import SentryConfig
+from db_dependencies import Db
+from resolver import Resolver
 from models.audience_smarts import AudienceSmart
 from utils import send_sse
-from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.users import Users
 from persistence.user_persistence import UserPersistence
+from services.audience_smarts import AudienceSmartsService
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -75,54 +72,12 @@ def setup_logging(level):
     )
 
 
-def update_stats_validations(
-    db_session: Session,
-    validation_type: str,
-    count_persons_before_validation: int,
-    count_failed_person: int,
-):
-    validation_key = VALIDATION_MAPPING.get(validation_type)
-
-    valid_persons_count = count_persons_before_validation - count_failed_person
-    new_data = {
-        "total_count": count_persons_before_validation,
-        "valid_count": valid_persons_count,
-    }
-    existing_record = (
-        db_session.query(AudienceSetting)
-        .filter(AudienceSetting.alias == "counts_validations")
-        .first()
-    )
-    if existing_record:
-        current_data = json.loads(existing_record.value)
-
-        existing_data = current_data.get(
-            validation_key, {"total_count": 0, "valid_count": 0}
-        )
-
-        updated_data = {
-            "total_count": existing_data.get("total_count")
-            + new_data["total_count"],
-            "valid_count": existing_data.get("valid_count")
-            + new_data["valid_count"],
-        }
-
-        current_data[validation_key] = updated_data
-        existing_record.value = json.dumps(current_data)
-
-    else:
-        new_record = AudienceSetting(
-            alias="counts_validations",
-            value=json.dumps({validation_key: new_data}),
-        )
-        db_session.add(new_record)
-
-
 async def aud_validation_agent(
     message: IncomingMessage,
     db_session: Session,
     channel: Channel,
     user_persistence: UserPersistence,
+    audience_smarts_service: AudienceSmartsService,
 ):
     try:
         body = json.loads(message.body)
@@ -137,6 +92,7 @@ async def aud_validation_agent(
         validation_type = body.get("validation_type")
         validation_cost = body.get("validation_cost")
         write_off_funds = Decimal(0)
+        count_subtracted = Decimal(0)
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         validation_rules = {
@@ -185,11 +141,9 @@ async def aud_validation_agent(
         logging.info(f"Success ids len: {len(success_ids)}")
 
         if write_off_funds:
-            user_persistence.deduct_validation_funds(user_id, write_off_funds)
-            # if not resultOperation:
-            #     logging.error("Not enough validation funds")
-            #     await message.reject(requeue=True)
-            #     return
+            count_subtracted = user_persistence.deduct_validation_funds(
+                user_id, write_off_funds
+            )
             db_session.flush()
 
         if failed_ids:
@@ -237,28 +191,45 @@ async def aud_validation_agent(
             .count()
         )
 
-        if validation_count == total_count:
-            aud_smart = db_session.get(AudienceSmart, aud_smart_id)
-            if aud_smart and aud_smart.validations:
-                validations = json.loads(aud_smart.validations)
+        aud_smart = db_session.get(AudienceSmart, aud_smart_id)
+        if aud_smart and aud_smart.validations:
+            validations = json.loads(aud_smart.validations)
 
-                target_category = CATEGORY_BY_COLUMN.get(validation_type)
-                key = COLUMN_MAPPING.get(validation_type)
+            target_category = CATEGORY_BY_COLUMN.get(validation_type)
+            key = COLUMN_MAPPING.get(validation_type)
 
-                if target_category and key:
-                    for rule in validations.get(target_category, []):
-                        if key in rule:
+            if target_category and key:
+                for rule in validations.get(target_category, []):
+                    if key in rule:
+                        rule[key].setdefault("count_cost", "0.00")
+
+                        rule[key]["count_validated"] = total_validated
+                        rule[key]["count_submited"] = (
+                            count_persons_before_validation
+                        )
+
+                        previous_cost = Decimal(rule[key]["count_cost"])
+                        rule[key]["count_cost"] = str(
+                            (previous_cost + count_subtracted).quantize(
+                                Decimal("0.01")
+                            )
+                        )
+
+                        if validation_count == total_count:
                             rule[key]["processed"] = True
-                            rule[key]["count_validated"] = total_validated
-                            rule[key]["count_submited"] = (
-                                count_persons_before_validation
-                            )
-                            rule[key]["count_cost"] = str(
-                                write_off_funds.quantize(Decimal("0.01"))
-                            )
-                            break
-                aud_smart.validations = json.dumps(validations)
-                db_session.commit()
+                        break
+
+            aud_smart.validations = json.dumps(validations)
+
+        if validation_count == total_count:
+            target_category = CATEGORY_BY_COLUMN.get(validation_type)
+            key = COLUMN_MAPPING.get(validation_type)
+
+            audience_smarts_service.update_stats_validations(
+                validation_type=f"{target_category}-{key}",
+                count_persons_before_validation=count_persons_before_validation,
+                count_valid_persons=total_validated,
+            )
             await publish_rabbitmq_message_with_channel(
                 channel=channel,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -268,6 +239,8 @@ async def aud_validation_agent(
                     "validation_params": validations,
                 },
             )
+
+        db_session.commit()
 
         await send_sse(
             channel=channel,
@@ -302,10 +275,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
+    resolver = Resolver()
     while True:
         try:
             logging.info("Starting processing...")
@@ -314,14 +284,12 @@ async def main():
             channel = await connection.channel()
             await channel.set_qos(prefetch_count=1)
 
-            engine = create_engine(
-                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-                pool_pre_ping=True,
-            )
-            Session = sessionmaker(bind=engine)
-            db_session = Session()
+            db_session = await resolver.resolve(Db)
 
             user_persistence = UserPersistence(db_session)
+            audience_smarts_service = await resolver.resolve(
+                AudienceSmartsService
+            )
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_VALIDATION_AGENT_NOAPI,
@@ -333,6 +301,7 @@ async def main():
                     channel=channel,
                     db_session=db_session,
                     user_persistence=user_persistence,
+                    audience_smarts_service=audience_smarts_service,
                 )
             )
 

@@ -169,6 +169,14 @@ def check_team_invitations_limit(
     return settings_service.check_team_invitations_limit(user=user)
 
 
+@router.get("/billing/cards-details")
+def get_billing_cards_details(
+    settings_service: SettingsService,
+    user: User = Depends(check_user_authorization_without_pixel),
+):
+    return settings_service.get_billing_cards_details(user.get("customer_id"))
+
+
 @router.get("/billing")
 def get_billing(
     settings_service: SettingsService,
