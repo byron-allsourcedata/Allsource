@@ -453,9 +453,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
 	useEffect(() => {
 		if (needsSync) {
-			handleCalculateActiveSegments(value ?? 0)
+			handleCalculateActiveSegments(value ?? 0);
 		}
-	}, [needsSync])
+	}, [needsSync]);
 
 	return (
 		<Box sx={{ mb: 4 }}>

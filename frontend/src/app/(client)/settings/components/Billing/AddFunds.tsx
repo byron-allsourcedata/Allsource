@@ -80,7 +80,7 @@ export const AddFundsPopup: React.FC<AddFundsPopup> = ({
 			if (response.data.success) {
 				showToast("Credits successfully purchased!");
 				await triggerSync();
-				setNeedsSync(false)
+				setNeedsSync(false);
 				handlePopupClose();
 			} else {
 				showErrorToast(response.data.error);

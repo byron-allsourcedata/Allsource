@@ -176,6 +176,7 @@ def get_billing_cards_details(
 ):
     return settings_service.get_billing_cards_details(user.get("customer_id"))
 
+
 @router.get("/billing")
 def get_billing(
     settings_service: SettingsService,

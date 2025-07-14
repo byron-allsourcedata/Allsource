@@ -16,7 +16,7 @@ import { smartAudiences } from "../../smartAudiences";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AddFundsPopup } from "../../../settings/components/Billing/AddFunds";
 import { CardDetails } from "../../../settings/components/Billing/types";
-import { styled } from "@mui/material/styles"
+import { styled } from "@mui/material/styles";
 
 interface ValidationPopupProps {
 	open: boolean;
@@ -40,7 +40,7 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 }) => {
 	const [addFundsPopupOpen, setAddFundsPopupOpen] = useState(false);
 	const [cardDetails, setCardDetails] = useState<CardDetails[]>([]);
-	const [isLoading, setIsLoading] = useState(false)
+	const [isLoading, setIsLoading] = useState(false);
 
 	const handleCheckoutSuccess = (data: CardDetails) => {
 		setCardDetails((prevDetails) =>
@@ -58,13 +58,15 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 	const handleBuyCredits = async () => {
 		try {
 			setIsLoading(true);
-			const response = await axiosInstance.get("/settings/billing/cards-details");
+			const response = await axiosInstance.get(
+				"/settings/billing/cards-details",
+			);
 			if (response.status == 200) {
 				setCardDetails(response.data.card_details);
-				setAddFundsPopupOpen(true)
-				onClose()
+				setAddFundsPopupOpen(true);
+				onClose();
 			}
-		} catch  {
+		} catch {
 		} finally {
 			setIsLoading(false);
 		}
@@ -141,7 +143,8 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 						${CalculationData.availableCredits.toLocaleString("en-US")} Funds
 					</Typography>
 
-					{CalculationData.availableCredits >= CalculationData.validationCost ? (
+					{CalculationData.availableCredits >=
+					CalculationData.validationCost ? (
 						<Typography
 							className="form-input"
 							sx={{
@@ -165,7 +168,8 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 						>
 							✗ You need{" "}
 							{(
-								CalculationData.validationCost - CalculationData.availableCredits
+								CalculationData.validationCost -
+								CalculationData.availableCredits
 							).toLocaleString("en-US")}{" "}
 							more funds to proceed.
 						</Typography>
@@ -186,7 +190,8 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 						${CalculationData.validationCost.toLocaleString("en-US")} Funds
 					</Typography>
 
-					{CalculationData.availableCredits >= CalculationData.validationCost ? (
+					{CalculationData.availableCredits >=
+					CalculationData.validationCost ? (
 						<Typography
 							variant="body1"
 							className="form-input"
@@ -216,7 +221,8 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 						Funds
 					</Typography>
 
-					{CalculationData.availableCredits >= CalculationData.validationCost ? (
+					{CalculationData.availableCredits >=
+					CalculationData.validationCost ? (
 						<Typography variant="body1" className="form-input">
 							Do you want to continue?
 						</Typography>
@@ -227,8 +233,11 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({
 						</Typography>
 					)}
 				</DialogContent>
-				<DialogActions sx={{ flexDirection: "column", gap: 1, padding: "16px" }}>
-					{CalculationData.availableCredits >= CalculationData.validationCost ? (
+				<DialogActions
+					sx={{ flexDirection: "column", gap: 1, padding: "16px" }}
+				>
+					{CalculationData.availableCredits >=
+					CalculationData.validationCost ? (
 						<Box sx={{ width: "100%" }}>
 							<Button
 								fullWidth
