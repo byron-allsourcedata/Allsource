@@ -167,18 +167,34 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         ids = self.postgres.collect_user_ids_for_smart_audience(data)
         if not ids:
             return 0
-        in_list = ", ".join(f"'{i}'" for i in ids)
-        linkedin_filter = ""
-        if data.get("use_case") == "linkedin":
-            linkedin_filter = "AND linkedin_url IS NOT NULL"
+        return len(ids)
+        # in_list = ", ".join(f"'{i}'" for i in ids)
+        # linkedin_filter = ""
+        # if data.get("use_case") == "linkedin":
+        #     linkedin_filter = "AND linkedin_url IS NOT NULL"
+        # sql = f"""
+        # SELECT count(*)
+        # FROM enrichment_users
+        # WHERE asid IN ({in_list})
+        # {linkedin_filter}
+        # """
+        # q = self.client.query(sql)
+        # return int(q.result_rows[0][0]) if q.result_rows else 0
+
+    def sorted_enrichment_users_for_validation(
+        self, ids: List[UUID], order_by_clause: str
+    ):
+        self.client.command("SET max_query_size = 10485760")
+        ids_sql_list = ", ".join(f"'{i}'" for i in ids)
+
         sql = f"""
-        SELECT count(*) 
-        FROM enrichment_users 
-        WHERE asid IN ({in_list})
-        {linkedin_filter}
+        SELECT asid
+        FROM enrichment_users
+        WHERE asid IN ({ids_sql_list})
+        ORDER BY {order_by_clause}
         """
-        q = self.client.query(sql)
-        return int(q.result_rows[0][0]) if q.result_rows else 0
+        result = self.client.query(sql)
+        return [row[0] for row in result.result_rows]
 
     def get_enrichment_users_for_delivery_validation(
         self, smart_audience_id: UUID

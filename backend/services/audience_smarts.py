@@ -533,6 +533,13 @@ class AudienceSmartsService:
             smart_audience_id, column_name
         )
 
+    def sorted_enrichment_users_for_validation(
+        self, persons: List[UUID], order_by_clause: str
+    ):
+        return self.audience_smarts_persistence.sorted_enrichment_users_for_validation(
+            persons, order_by_clause
+        )
+
     def get_audience_smart_validations_by_id(
         self,
         smart_audience_id: UUID,

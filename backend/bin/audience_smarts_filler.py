@@ -8,18 +8,21 @@ import time
 
 from aio_pika import IncomingMessage
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker, Session, aliased
+from sqlalchemy.orm import Session, aliased
+from collections import OrderedDict
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from resolver import Resolver
+from db_dependencies import Db
 from config.sentry import SentryConfig
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
 )
+from services.audience_smarts import AudienceSmartsService
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 
@@ -27,7 +30,21 @@ load_dotenv()
 
 AUDIENCE_SMARTS_AGENT = "aud_smarts_agent"
 AUDIENCE_SMARTS_FILLER = "aud_smarts_filler"
-SELECTED_ROW_COUNT = 1000
+SELECTED_ROW_COUNT = 100000
+
+DATABASE_COLUMN_MAPPING = {
+    "personal_email-mx": "personal_email_validation_status",
+    "personal_email-recency": "personal_email_last_seen",
+    "personal_email-delivery": "personal_email",
+    "business_email-mx": "business_email_validation_status",
+    "business_email-recency": "business_email_last_seen_date",
+    "business_email-delivery": "business_email",
+    "phone-dnc_filter": "mobile_phone_dnc",
+    "linked_in-job_validation": "job_validation",
+    "phone-confirmation": "confirmation",
+    "postal_cas_verification-cas_home_address": "cas_home_address",
+    "postal_cas_verification-cas_office_address": "cas_office_address",
+}
 
 
 def setup_logging(level):
@@ -43,7 +60,10 @@ def format_ids(ids):
 
 
 async def aud_smarts_reader(
-    message: IncomingMessage, db_session: Session, channel
+    message: IncomingMessage,
+    db_session: Session,
+    channel,
+    audience_smarts_service: AudienceSmartsService,
 ):
     try:
         message_body = json.loads(message.body)
@@ -55,6 +75,26 @@ async def aud_smarts_reader(
         active_segment = data.get("active_segment")
         need_validate = data.get("need_validate")
         validation_params = data.get("validation_params")
+
+        raw_params = validation_params
+
+        selected = OrderedDict((k, v) for k, v in raw_params.items() if v)
+
+        order_columns = []
+        for group, validators in selected.items():
+            for validator_dict in validators:
+                validator = next(iter(validator_dict))
+                map_key = f"{group}-{validator}"
+                column = DATABASE_COLUMN_MAPPING.get(map_key)
+                if column:
+                    order_columns.append(column)
+
+        order_by_parts = []
+        for col in order_columns:
+            order_by_parts.append(f"isNull({col}) ASC")
+            order_by_parts.append(f"{col}")
+
+        order_by_clause = ", ".join(order_by_parts)
 
         logging.info(
             f"For smart audience with {aud_smart_id} need_validate = {need_validate}"
@@ -122,7 +162,11 @@ async def aud_smarts_reader(
 
                 persons = [row[0] for row in final_query.all()]
 
-                if not persons:
+                sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(
+                    persons, order_by_clause
+                )
+
+                if not sorted_persons:
                     break
 
                 logging.info(
@@ -133,11 +177,10 @@ async def aud_smarts_reader(
                     "aud_smart_id": str(aud_smart_id),
                     "user_id": user_id,
                     "need_validate": need_validate,
-                    "validation_params": validation_params,
                     "count_iterations": common_count,
                     "count": count,
                     "enrichment_users_ids": [
-                        str(person_id) for person_id in persons
+                        str(person_id) for person_id in sorted_persons
                     ],
                 }
                 await publish_rabbitmq_message_with_channel(
@@ -145,7 +188,7 @@ async def aud_smarts_reader(
                     queue_name=AUDIENCE_SMARTS_AGENT,
                     message_body=message_body,
                 )
-                logging.info(f"sent {len(persons)} persons")
+                logging.info(f"sent {len(sorted_persons)} persons")
 
                 offset += SELECTED_ROW_COUNT
                 count += 1
@@ -174,10 +217,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
+    resolver = Resolver()
     while True:
         try:
             logging.info("Starting processing...")
@@ -186,12 +226,11 @@ async def main():
             channel = await connection.channel()
             await channel.set_qos(prefetch_count=1)
 
-            engine = create_engine(
-                f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-                pool_pre_ping=True,
+            db_session = await resolver.resolve(Db)
+
+            audience_smarts_service = await resolver.resolve(
+                AudienceSmartsService
             )
-            Session = sessionmaker(bind=engine)
-            db_session = Session()
 
             reader_queue = await channel.declare_queue(
                 name=AUDIENCE_SMARTS_FILLER,
@@ -199,7 +238,10 @@ async def main():
             )
             await reader_queue.consume(
                 functools.partial(
-                    aud_smarts_reader, db_session=db_session, channel=channel
+                    aud_smarts_reader,
+                    db_session=db_session,
+                    channel=channel,
+                    audience_smarts_service=audience_smarts_service,
                 )
             )
 

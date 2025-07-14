@@ -24,7 +24,7 @@ from persistence.enrichment_lookalike_scores import (
 from persistence.enrichment_users import EnrichmentUsersPersistence
 from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
-from services.lookalike_filler.rabbitmq import RabbitFillerService
+from services.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
 from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
@@ -62,7 +62,7 @@ class LookalikeFillerService:
         enrichment_scores: EnrichmentLookalikeScoresPersistence,
         audience_lookalikes: AudienceLookalikesPersistence,
         matched_sources: AudienceSourcesMatchedPersonsPersistence,
-        rabbit: RabbitFillerService,
+        rabbit: RabbitLookalikesMatchingService,
     ):
         self.db = db
         self.clickhouse = clickhouse
@@ -457,13 +457,10 @@ class LookalikeFillerService:
         }
 
     async def inform_lookalike_agent(
-        self, channel, lookalike_id: UUID, user_id: int, persons: list[UUID]
+        self, channel, lookalike_id: UUID, user_id: int
     ):
         await self.rabbit.inform_lookalike_agent(
-            channel=channel,
-            lookalike_id=lookalike_id,
-            user_id=user_id,
-            persons=persons,
+            channel=channel, lookalike_id=lookalike_id, user_id=user_id
         )
 
     def get_lookalike_limit(
