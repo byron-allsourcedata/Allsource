@@ -166,7 +166,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 						<GradientBarChart
 							title="Credit score range"
 							data={creditScoreRangeData}
-							rank={fieldRanks["credit_score_range"]}
+							rank={fieldRanks["credit_rating"]}
 							gradientColor="249, 155, 171"
 							sortByPercent={false}
 						/>
@@ -177,7 +177,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							title="Net worth range"
 							data={netWorthRangeData}
 							sortByPercent={false}
-							rank={fieldRanks["net_worth_range"]}
+							rank={fieldRanks["net_worth"]}
 							gradientColor="152, 223, 192"
 						/>
 					</Box>
@@ -333,7 +333,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 						<VerticalGradientBarChart
 							title="Number of credit lines"
 							data={numberOfCreditLinesData}
-							rank={fieldRanks["number_of_credit_lines"]}
+							rank={fieldRanks["credit_lines"]}
 							gradientColor="249, 233, 156"
 						/>
 					</Box>

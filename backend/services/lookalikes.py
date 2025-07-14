@@ -475,8 +475,7 @@ class AudienceLookalikesService:
         if not lookalike:
             return None
 
-        result = {key: value for key, value in lookalike.items()}
-        return result
+        return lookalike
 
     def change_status(self, status: str, lookalike_id: UUID):
         self.lookalikes_persistence_service.change_lookalike_status(
