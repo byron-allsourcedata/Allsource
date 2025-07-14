@@ -13,6 +13,7 @@ import {
 	DialogContent,
 	DialogContentText,
 	Tooltip,
+	Link,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -55,6 +56,8 @@ const SourcesList: React.FC = () => {
 	const { hasNotification } = useNotification();
 	const [loading, setLoading] = useState(false);
 	const [createdData, setCreatedData] = useState<Source>(createdSource);
+	const source = createdData;
+
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [anchorElFullName, setAnchorElFullName] =
@@ -69,6 +72,12 @@ const SourcesList: React.FC = () => {
 	} = useSourcesHints();
 
 	const isOpenFullName = Boolean(anchorElFullName);
+
+	const isDisabled =
+		source == null ||
+		source?.matched_records === 0 ||
+		source?.matched_records_status === "pending";
+	const sourceUrl = isDisabled ? "#" : `/insights/sources/${source.id}`;
 
 	const handleOpenPopoverFullName = (
 		event: React.MouseEvent<HTMLElement>,
@@ -369,7 +378,18 @@ const SourcesList: React.FC = () => {
 											Name
 										</Typography>
 										<Typography variant="subtitle1" className="table-data">
-											{createdData?.name}
+											<Link
+												href={sourceUrl}
+												underline="none"
+												sx={{
+													color: isDisabled
+														? "rgba(95, 99, 104, 1)"
+														: "rgba(56, 152, 252, 1)",
+													cursor: isDisabled ? "inherit" : "pointer",
+												}}
+											>
+												{createdData?.name}
+											</Link>
 										</Typography>
 									</Box>
 									<Box
@@ -661,9 +681,7 @@ const SourcesList: React.FC = () => {
 										variant="contained" /* need chnage < on !== */
 										disabled={isCreateDisabled}
 										onClick={() =>
-											router.push(
-												`/lookalikes/builder?source_uuid=${createdData?.id}`,
-											)
+											router.push(`/insights/sources/${createdData?.id}`)
 										}
 										className="second-sub-title"
 										sx={{
@@ -683,7 +701,7 @@ const SourcesList: React.FC = () => {
 											},
 										}}
 									>
-										Create Lookalike
+										See Insights
 									</Button>
 
 									{!createdSourceHints["actions"].showBody && (
@@ -802,14 +820,12 @@ const SourcesList: React.FC = () => {
 									}}
 									onClick={() => {
 										handleClosePopover();
-										router.push(
-											`/lookalikes/builder?source_uuid=${createdData?.id}`,
-										);
+										router.push(`/insights/sources/${createdData?.id}`);
 									}}
 								>
 									<ListItemText
 										primaryTypographyProps={{ fontSize: "14px" }}
-										primary="Create Lookalike"
+										primary="See Insights"
 									/>
 								</ListItemButton>
 								<ListItemButton

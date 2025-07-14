@@ -6,15 +6,22 @@ import logging
 import os
 import sys
 import time
+from uuid import UUID
 
 from aio_pika import IncomingMessage
 from dotenv import load_dotenv
 from sqlalchemy import update, select
 from sqlalchemy.orm import Session
 
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+
+from services.lookalike_agent.agent import LookalikeAgentService
+from services.lookalike_filler.rabbitmq import LookalikesMatchingMessage
+
 from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
@@ -62,16 +69,31 @@ async def aud_sources_matching(
     db_session: Session,
     channel,
     source_agent: SourceAgentService,
+    agent_service: LookalikeAgentService,
 ):
     try:
-        message_body = json.loads(message.body)
+        message_body: LookalikesMatchingMessage = json.loads(message.body)
         user_id = message_body.get("user_id")
         lookalike_id = message_body.get("lookalike_id")
-        enrichment_user_ids = message_body.get("enrichment_user")
-        logging.info(f"Processing lookalike_id with ID: {lookalike_id}")
-        logging.info(f"Processing len: {len(enrichment_user_ids)}")
+        lookalike_id = UUID(lookalike_id)
 
-        lookalike_persons_to_add = []
+        logging.info(f"Processing lookalike_id with ID: {lookalike_id}")
+
+        logging.info("Fetching top enrichment users")
+
+        enrichment_user_ids = agent_service.get_top_enrichment_users(
+            lookalike_id
+        )
+
+        if enrichment_user_ids is None:
+            logging.warning(
+                f"No enrichment users found for lookalike_id: {lookalike_id}"
+            )
+            return
+
+        logging.info(f"Processing {len(enrichment_user_ids)} enrichment users")
+
+        lookalike_persons_to_add: list[AudienceLookalikesPerson] = []
         for enrichment_user_id in enrichment_user_ids:
             matched_person = AudienceLookalikesPerson(
                 lookalike_id=lookalike_id,
@@ -79,9 +101,13 @@ async def aud_sources_matching(
             )
             lookalike_persons_to_add.append(matched_person)
 
+        logging.info(f"Saving {len(lookalike_persons_to_add)} new records")
+
         if lookalike_persons_to_add:
             db_session.bulk_save_objects(lookalike_persons_to_add)
             db_session.flush()
+
+        logging.info(f"Saved {len(lookalike_persons_to_add)} records")
 
         processed_size, total_records = db_session.execute(
             update(AudienceLookalikes)
@@ -104,6 +130,7 @@ async def aud_sources_matching(
         ).scalar_one_or_none()
         existing_insights: dict | None = row or {}
 
+        logging.info("Computing insights...")
         loop = asyncio.get_running_loop()
         new_insights = await loop.run_in_executor(
             None,
@@ -112,6 +139,8 @@ async def aud_sources_matching(
             db_session,
             source_agent,
         )
+
+        logging.info("Insights are calculated. Saving...")
         merged = InsightsUtils.merge_insights_json(
             existing_insights, new_insights
         )
@@ -127,6 +156,8 @@ async def aud_sources_matching(
 
         db_session.commit()
 
+        logging.info("Insights are saved. Sending client SSE")
+
         await send_sse(
             channel,
             user_id,
@@ -136,7 +167,7 @@ async def aud_sources_matching(
                 "processed": processed_size,
             },
         )
-        logging.info(f"ack")
+        logging.info("Done processing lookalike_id with ID: {lookalike_id}")
         await message.ack()
 
     except BaseException as e:
@@ -168,6 +199,7 @@ async def main():
 
             db_session = await resolver.resolve(Db)
             source_agent = await resolver.resolve(SourceAgentService)
+            agent_service = await resolver.resolve(LookalikeAgentService)
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_LOOKALIKES_MATCHING,
@@ -179,6 +211,7 @@ async def main():
                     channel=channel,
                     db_session=db_session,
                     source_agent=source_agent,
+                    agent_service=agent_service,
                 )
             )
 

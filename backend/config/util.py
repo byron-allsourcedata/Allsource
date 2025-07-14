@@ -26,3 +26,14 @@ def get_int_env(var: str, optional: bool = False) -> int:
         return int(value)
     except ValueError:
         raise ValueError(f"Environment variable {var} is not an integer")
+
+
+def try_get_int_env(var: str) -> int | None:
+    value = os.getenv(var)
+    if value is None:
+        return None
+
+    try:
+        return int(value)
+    except ValueError:
+        return None

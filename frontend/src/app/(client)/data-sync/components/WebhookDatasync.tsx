@@ -105,6 +105,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 		{ type: "personal_state", value: "personal_state" },
 		{ type: "company_name", value: "company_name" },
 		{ type: "company_domain", value: "company_domain" },
+		{ type: "company_industry", value: "company_industry" },
 		{ type: "job_title", value: "job_title" },
 		{ type: "last_updated", value: "last_updated" },
 		{ type: "age_min", value: "age_min" },

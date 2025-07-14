@@ -64,12 +64,21 @@ async def aud_smarts_matching(
         count = message_body.get("count")
 
         try:
+            already_processed = (
+                db_session.query(AudienceSmart.processed_active_segment_records)
+                .filter(AudienceSmart.id == aud_smart_id)
+                .scalar()
+            ) or 0
+
+            start_index = already_processed 
+            
             bulk_data = [
                 {
                     "smart_audience_id": str(aud_smart_id),
                     "enrichment_user_asid": enrichment_user_id,
+                    "sort_order": start_index + idx
                 }
-                for enrichment_user_id in enrichment_users_ids
+                for idx, enrichment_user_id in enumerate(enrichment_users_ids)
             ]
             db_session.bulk_insert_mappings(AudienceSmartPerson, bulk_data)
             db_session.flush()
