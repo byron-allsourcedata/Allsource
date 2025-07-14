@@ -16,8 +16,9 @@ import dateparser
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
-from sqlalchemy import update, func, or_
-from sqlalchemy.orm import Session
+from sqlalchemy import update, func
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import Session, aliased
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -38,7 +39,7 @@ from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, EmailType, BusinessType
-from utils import get_utc_aware_date
+from utils import get_utc_aware_date, parse_log_level, setup_logging
 from models.leads_visits import LeadsVisits
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import (
@@ -68,14 +69,6 @@ AUDIENCE_SOURCES_MATCHING = "aud_sources_matching"
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 BATCH_SIZE = 5000
 DATE_LIMIT = 180
-
-
-def setup_logging(level):
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
 
 
 def create_sts_client(key_id, key_secret):
@@ -408,12 +401,6 @@ async def process_user_id(
 
     db_session.commit()
     with db_session.begin():
-        existing_asids = {
-            row[0]
-            for row in db_session.query(
-                AudienceSourcesMatchedPerson.enrichment_user_asid
-            ).filter(AudienceSourcesMatchedPerson.source_id == source_id)
-        }
         results_query = (
             db_session.query(
                 LeadUser.id, FiveXFiveUser.id.label("five_x_five_user_id")
@@ -425,61 +412,137 @@ async def process_user_id(
             .all()
         )
 
-        lead_to_five_x = {
-            lead_id: five_x_id for lead_id, five_x_id in results_query
-        }
-        five_x_ids = list(lead_to_five_x.values())
+        lead_to_user_data = {}
+        five_x_five_leads_dict = {}
+        five_x_ids = []
+        lead_ids = []
 
-        emails_links = (
+        for lead_id, five_x_id in results_query:
+            lead_to_user_data[lead_id] = {
+                "is_found": False,
+                "f_user_id": five_x_id,
+                "asid": None,
+                "email": None,
+                "business": [],
+                "personal": [],
+                "additional_personal": [],
+            }
+            five_x_five_leads_dict[five_x_id] = lead_id
+            five_x_ids.append(five_x_id)
+            lead_ids.append(lead_id)
+
+        emails_data = (
             db_session.query(
                 FiveXFiveUsersEmails.user_id,
                 FiveXFiveUsersEmails.type,
-                FiveXFiveUsersEmails.email_id,
+                FiveXFiveEmails.email,
+            )
+            .join(
+                FiveXFiveEmails,
+                FiveXFiveUsersEmails.email_id == FiveXFiveEmails.id,
             )
             .filter(FiveXFiveUsersEmails.user_id.in_(five_x_ids))
             .all()
         )
 
-        email_ids = list({el.email_id for el in emails_links})
-        email_rows = (
-            db_session.query(FiveXFiveEmails.id, FiveXFiveEmails.email)
-            .filter(FiveXFiveEmails.id.in_(email_ids))
-            .all()
-        )
-        email_map = {eid: email.strip().lower() for eid, email in email_rows}
+        business_email_dict = {}
+        personal_email_dict = {}
+        additional_email_dict = {}
 
-        priority = {
-            EmailType.BUSINESS.value: 0,
-            EmailType.PERSONAL.value: 1,
-            EmailType.ADDITIONAL_PERSONAL.value: 2,
+        for user_id, email_type, emails in emails_data:
+            lead_id = five_x_five_leads_dict.get(user_id)
+            if not lead_id:
+                logging.warning(
+                    f"lead_id: {lead_id} not found in five_x_five_id: {user_id} "
+                )
+                continue
+
+            emails_arr = emails.split(",")
+
+            for email in emails_arr:
+                email = email.strip().lower()
+                lead_to_user_data[lead_id][email_type].append(email)
+                if email_type == EmailType.BUSINESS.value:
+                    business_email_dict[email] = lead_id
+
+                if email_type == EmailType.PERSONAL.value:
+                    personal_email_dict[email] = lead_id
+
+                if email_type == EmailType.ADDITIONAL_PERSONAL.value:
+                    additional_email_dict[email] = lead_id
+
+        business_matched_users = source_agent_service.get_user_ids_by_emails(
+            business_email_dict.keys()
+        )
+
+        for business_matched_user in business_matched_users:
+            email = business_matched_user.email
+            lead_id = business_email_dict.get(email)
+            if not lead_id:
+                logging.warning(
+                    f"Business matched user lead_id: {lead_id} not found for email: {email} "
+                )
+                continue
+            lead_to_user_data[lead_id]["is_found"] = True
+            lead_to_user_data[lead_id]["asid"] = business_matched_user.asid
+            lead_to_user_data[lead_id]["email"] = email
+
+        personal_email_dict = {
+            email: lead_id
+            for email, lead_id in personal_email_dict.items()
+            if not lead_to_user_data[lead_id]["is_found"]
         }
 
-        user_best_email = {}
-        for link in sorted(
-            emails_links, key=lambda l: priority.get(l.type, 99)
-        ):
-            email = email_map.get(link.email_id)
-            if email and link.user_id not in user_best_email:
-                user_best_email[link.user_id] = email
-
-        updates = []
-
-        unique_emails = list(
-            {email for email in user_best_email.values() if email}
-        )
-        matched_users = source_agent_service.get_user_ids_by_emails(
-            unique_emails
+        personal_matched_users = source_agent_service.get_user_ids_by_emails(
+            personal_email_dict.keys()
         )
 
-        email_to_asid = {
-            match.email.strip().lower(): UUID(match.asid)
-            for match in matched_users
+        for personal_matched_user in personal_matched_users:
+            email = personal_matched_user.email
+            lead_id = personal_email_dict.get(email)
+            if not lead_id:
+                logging.warning(
+                    f"Personal matched user lead_id: {lead_id} not found for email: {email} "
+                )
+                continue
+
+            if lead_to_user_data[lead_id]["is_found"] == True:
+                continue
+
+            lead_to_user_data[lead_id]["is_found"] = True
+            lead_to_user_data[lead_id]["asid"] = personal_matched_user.asid
+            lead_to_user_data[lead_id]["email"] = email
+
+        additional_email_dict = {
+            email: lead_id
+            for email, lead_id in additional_email_dict.items()
+            if not lead_to_user_data[lead_id]["is_found"]
         }
+
+        additional_matched_users = source_agent_service.get_user_ids_by_emails(
+            additional_email_dict.keys()
+        )
+
+        for additional_matched_user in additional_matched_users:
+            email = additional_matched_user.email.strip().lower()
+            lead_id = additional_email_dict.get(email)
+            if not lead_id:
+                logging.warning(
+                    f"lead_id: {lead_id} not found for email: {email} "
+                )
+                continue
+
+            if lead_to_user_data[lead_id]["is_found"] == True:
+                continue
+
+            lead_to_user_data[lead_id]["is_found"] = True
+            lead_to_user_data[lead_id]["asid"] = additional_matched_user.asid
+            lead_to_user_data[lead_id]["email"] = email
 
         lead_first_ids = {
             lu.id: lu.first_visit_id
             for lu in db_session.query(LeadUser.id, LeadUser.first_visit_id)
-            .filter(LeadUser.id.in_(lead_to_five_x.keys()))
+            .filter(LeadUser.id.in_(lead_ids))
             .all()
         }
 
@@ -491,37 +554,43 @@ async def process_user_id(
             .all()
         )
         visits_by_id = {v.id: v for v in first_visits}
-
+        LV = aliased(LeadsVisits)
         subquery = (
             db_session.query(
-                LeadsVisits,
+                LV.id.label("visit_id"),
                 func.row_number()
                 .over(
-                    partition_by=LeadsVisits.lead_id,
-                    order_by=LeadsVisits.id.desc(),
+                    partition_by=LV.lead_id,
+                    order_by=LV.id.desc(),
                 )
                 .label("rn"),
             )
-            .filter(LeadsVisits.lead_id.in_(lead_to_five_x.keys()))
+            .filter(LV.lead_id.in_(lead_ids))
             .subquery()
         )
 
-        last_visits = (
-            db_session.query(subquery).filter(subquery.c.rn == 1).all()
+        last_visits_objs = (
+            db_session.query(LeadsVisits)
+            .join(subquery, LeadsVisits.id == subquery.c.visit_id)
+            .filter(subquery.c.rn == 1)
+            .all()
         )
-
-        last_visits_objs = [row[0] for row in last_visits]
 
         visits_by_lead_id = {v.lead_id: v for v in last_visits_objs}
 
-        for lead_id, five_x_id in lead_to_five_x.items():
-            email = user_best_email.get(five_x_id)
+        updates = []
+
+        for lead_id, data in lead_to_user_data.items():
+            if not data["is_found"]:
+                continue
+
+            asid = data["asid"]
+            email = data["email"]
 
             first_visit_id = lead_first_ids.get(lead_id)
             first_visit = visits_by_id.get(first_visit_id)
             last_visit = visits_by_lead_id.get(lead_id)
 
-            asid = email_to_asid.get(email)
             if not first_visit or not last_visit:
                 continue
 
@@ -533,20 +602,22 @@ async def process_user_id(
             updates.append(
                 {
                     "source_id": source_id,
-                    "enrichment_user_asid": asid,
+                    "enrichment_user_asid": UUID(asid),
                     "email": email,
                     **calc,
                 }
             )
-            existing_asids.add(asid)
 
         if updates:
-            db_session.bulk_insert_mappings(
-                AudienceSourcesMatchedPerson, updates
+            stmt = insert(AudienceSourcesMatchedPerson).values(updates)
+            stmt.on_conflict_do_nothing(
+                index_elements=["source_id", "enrichment_user_asid"]
             )
+            db_session.execute(stmt)
             logging.info(
                 f"Inserted {len(updates)} new persons for source_id {source_id}"
             )
+
     return len(updates)
 
 
@@ -1331,15 +1402,8 @@ async def aud_sources_matching(
 
 async def main():
     await SentryConfig.async_initilize()
-    log_level = logging.INFO
-    if len(sys.argv) > 1:
-        arg = sys.argv[1].upper()
-        if arg == "DEBUG":
-            log_level = logging.DEBUG
-        elif arg != "INFO":
-            sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
-    setup_logging(log_level)
+    setup_logging(logging, level=parse_log_level())
 
     resolver = Resolver()
 

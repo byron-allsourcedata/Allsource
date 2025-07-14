@@ -28,7 +28,7 @@ from services.source_agent.agent import EmploymentEntry
 from schemas.insights import InsightsByCategory
 from services.source_agent.agent import SourceAgentService
 
-logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 PERSONAL_COLS = [
     "gender",
@@ -548,7 +548,7 @@ class InsightsUtils:
                     if not isinstance(old_val, (int, float)) or not isinstance(
                         new_val, (int, float)
                     ):
-                        logging.warning(
+                        logger.warning(
                             f"In merge_insights_json: Non-numeric merge at key='{key}' → old={old_val} ({type(old_val)}), new={new_val} ({type(new_val)})"
                         )
                         continue
