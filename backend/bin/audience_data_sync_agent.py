@@ -39,7 +39,7 @@ from sqlalchemy.orm import Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
-from db_dependencies import Db
+from db_dependencies import Db, Clickhouse
 from dependencies import (
     NotificationPersistence,
 )
