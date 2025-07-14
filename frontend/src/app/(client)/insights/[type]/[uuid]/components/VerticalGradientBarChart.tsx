@@ -39,6 +39,7 @@ export const VerticalGradientBarChart: React.FC<
 			sx={{
 				width: "100%",
 				borderRadius: "6px",
+				overflow: "hidden",
 				boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
 				position: "relative",
 				height: "100%",
