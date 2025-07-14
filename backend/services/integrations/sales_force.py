@@ -644,9 +644,7 @@ class SalesForceIntegrationsService:
         ):
             return first_email
 
-        company_name = getattr(five_x_five_user, "company_name", None)
-        if not company_name:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        company_name = getattr(five_x_five_user, "company_name", "Undefined")
 
         first_phone = get_valid_phone(five_x_five_user)
         phone_number = validate_and_format_phone(first_phone)
