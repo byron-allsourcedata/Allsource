@@ -35,6 +35,7 @@ export const SemiCircularGradientChart: React.FC<
 				borderRadius: "6px",
 				boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
 				position: "relative",
+				overflow: "hidden",
 				flexGrow: 1,
 			}}
 		>

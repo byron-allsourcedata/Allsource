@@ -154,7 +154,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 				<Box
 					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
 				>
-					<Box sx={{ display: "flex", width: "22%" }}>
+					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
 							title="Income range"
 							data={incomeRangeData}
@@ -162,7 +162,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							rank={fieldRanks["income_range"]}
 						/>
 					</Box>
-					<Box sx={{ display: "flex", width: "40%" }}>
+					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
 							title="Credit score range"
 							data={creditScoreRangeData}
@@ -172,7 +172,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 						/>
 					</Box>
 
-					<Box sx={{ display: "flex", width: "34%" }}>
+					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
 							title="Net worth range"
 							data={netWorthRangeData}
@@ -192,7 +192,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 						alignItems: "stretch",
 					}}
 				>
-					<Box sx={{ display: "flex", width: "22%" }}>
+					<Box sx={{ display: "flex", width: "100%" }}>
 						<GradientBarChart
 							title="Credit Cards"
 							data={creditCardsData}
@@ -204,7 +204,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 					<Box
 						sx={{
 							display: "flex",
-							width: "40%",
+							width: "100%",
 							flexDirection: "column",
 							gap: 2.5,
 						}}
@@ -246,7 +246,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 					<Box
 						sx={{
 							display: "flex",
-							width: "34%",
+							width: "100%",
 							flexDirection: "column",
 							height: "100%",
 							gap: 2,
@@ -329,7 +329,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 							rank={fieldRanks["credit_range_of_new_credit"]}
 						/>
 					</Box> */}
-					<Box sx={{ display: "flex", width: "63.25%" }}>
+					<Box sx={{ display: "flex", width: "66.25%" }}>
 						<VerticalGradientBarChart
 							title="Number of credit lines"
 							data={numberOfCreditLinesData}
