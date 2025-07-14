@@ -10,6 +10,7 @@ from sqlalchemy import (
     text,
     Index,
     event,
+    BigInteger,
 )
 
 from models.audience_smarts import AudienceSmart
@@ -62,6 +63,7 @@ class AudienceSmartPerson(Base):
     is_validation_processed = Column(
         Boolean, nullable=True, server_default=text("true")
     )
+    sort_order = Column(BigInteger, nullable=False, server_default=text("0"))
     created_at = Column(
         TIMESTAMP,
         nullable=False,

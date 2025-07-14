@@ -59,7 +59,7 @@ export const AddFundsPopup: React.FC<AddFundsPopup> = ({
 	const [amountFunds, setAmountFunds] = useState<number>(0);
 	const [selectedCard, setSelectedCard] = useState<string>("");
 	const [loading, setLoading] = useState(false);
-	const { triggerSync } = useBillingContext();
+	const { triggerSync, setNeedsSync } = useBillingContext();
 
 	const countReplenishFunds = [50, 100, 200, 500, 1000];
 	const stripePromise = loadStripe(
@@ -79,7 +79,8 @@ export const AddFundsPopup: React.FC<AddFundsPopup> = ({
 			);
 			if (response.data.success) {
 				showToast("Credits successfully purchased!");
-				triggerSync();
+				await triggerSync();
+				setNeedsSync(false);
 				handlePopupClose();
 			} else {
 				showErrorToast(response.data.error);

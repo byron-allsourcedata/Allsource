@@ -23,6 +23,7 @@ from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
 )
 from services.audience_smarts import AudienceSmartsService
+from persistence.audience_settings import AudienceSettingPersistence
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 
@@ -40,10 +41,10 @@ DATABASE_COLUMN_MAPPING = {
     "business_email-recency": "business_email_last_seen_date",
     "business_email-delivery": "business_email",
     "phone-dnc_filter": "mobile_phone_dnc",
-    "linked_in-job_validation": "job_validation",
-    "phone-confirmation": "confirmation",
-    "postal_cas_verification-cas_home_address": "cas_home_address",
-    "postal_cas_verification-cas_office_address": "cas_office_address",
+    "linked_in-job_validation": "linkedin_url",
+    "phone-confirmation": "phone_mobile1",
+    "postal_cas_verification-cas_home_address": "home_postal_code",
+    "postal_cas_verification-cas_office_address": "business_postal_code",
 }
 
 
@@ -64,6 +65,7 @@ async def aud_smarts_reader(
     db_session: Session,
     channel,
     audience_smarts_service: AudienceSmartsService,
+    audience_settings_persistence: AudienceSettingPersistence,
 ):
     try:
         message_body = json.loads(message.body)
@@ -76,9 +78,13 @@ async def aud_smarts_reader(
         need_validate = data.get("need_validate")
         validation_params = data.get("validation_params")
 
-        raw_params = validation_params
+        priority_raw = audience_settings_persistence.get_validation_priority()
+        priority_list = priority_raw.split(",")
+        priority_index = {k: i for i, k in enumerate(priority_list)}
 
-        selected = OrderedDict((k, v) for k, v in raw_params.items() if v)
+        selected = OrderedDict(
+            (k, v) for k, v in validation_params.items() if v
+        )
 
         order_columns = []
         for group, validators in selected.items():
@@ -87,10 +93,14 @@ async def aud_smarts_reader(
                 map_key = f"{group}-{validator}"
                 column = DATABASE_COLUMN_MAPPING.get(map_key)
                 if column:
-                    order_columns.append(column)
+                    order_columns.append(
+                        (priority_index.get(map_key, 1e9), column)
+                    )
+
+        order_columns.sort(key=lambda t: t[0])
 
         order_by_parts = []
-        for col in order_columns:
+        for _, col in order_columns:
             order_by_parts.append(f"isNull({col}) ASC")
             order_by_parts.append(f"{col}")
 
@@ -231,6 +241,9 @@ async def main():
             audience_smarts_service = await resolver.resolve(
                 AudienceSmartsService
             )
+            audience_settings_persistence = await resolver.resolve(
+                AudienceSettingPersistence
+            )
 
             reader_queue = await channel.declare_queue(
                 name=AUDIENCE_SMARTS_FILLER,
@@ -242,6 +255,7 @@ async def main():
                     db_session=db_session,
                     channel=channel,
                     audience_smarts_service=audience_smarts_service,
+                    audience_settings_persistence=audience_settings_persistence,
                 )
             )
 
