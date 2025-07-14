@@ -51,7 +51,7 @@ async def process_rmq_message(
     channel: Channel,
     million_verifier_service: MillionVerifierIntegrationsService,
     user_persistence: UserPersistence,
-    audience_smarts_service: AudienceSmartsService
+    audience_smarts_service: AudienceSmartsService,
 ):
     try:
         body = json.loads(message.body)
@@ -249,13 +249,15 @@ async def main():
                 AudienceSmartsService
             )
             user_persistence = UserPersistence(db_session)
-            million_verifier_service = await resolver.resolve(MillionVerifierIntegrationsService)
+            million_verifier_service = await resolver.resolve(
+                MillionVerifierIntegrationsService
+            )
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_VALIDATION_AGENT_EMAIL_API,
                 durable=True,
             )
-            
+
             await queue.consume(
                 functools.partial(
                     process_rmq_message,
@@ -263,7 +265,7 @@ async def main():
                     db_session=db_session,
                     million_verifier_service=million_verifier_service,
                     user_persistence=user_persistence,
-                    audience_smarts_service=audience_smarts_service
+                    audience_smarts_service=audience_smarts_service,
                 ),
             )
 

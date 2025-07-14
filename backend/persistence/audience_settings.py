@@ -59,8 +59,7 @@ class AudienceSettingPersistence:
             alias=AudienceSettingAlias.STATS_VALIDATIONS.value,
             value=json.dumps(stats_item),
         )
-        self.db.add(new_record) 
-    
+        self.db.add(new_record)
 
     def upsert_stats_validations(self, data: dict):
         record = self.get_stats_validations()

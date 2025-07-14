@@ -552,7 +552,6 @@ class AudienceSmartsService:
         count_persons_before_validation: int,
         count_valid_persons: int,
     ):
-
         new_data = {
             "total_count": count_persons_before_validation,
             "valid_count": count_valid_persons,
@@ -576,4 +575,6 @@ class AudienceSmartsService:
             self.audience_settings_persistence.upsert_stats_validations(stats)
 
         else:
-            self.audience_settings_persistence.set_stats_item_validations({validation_type: new_data})
+            self.audience_settings_persistence.set_stats_item_validations(
+                {validation_type: new_data}
+            )

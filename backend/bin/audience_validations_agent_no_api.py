@@ -77,7 +77,7 @@ async def aud_validation_agent(
     db_session: Session,
     channel: Channel,
     user_persistence: UserPersistence,
-    audience_smarts_service: AudienceSmartsService
+    audience_smarts_service: AudienceSmartsService,
 ):
     try:
         body = json.loads(message.body)
@@ -288,8 +288,7 @@ async def main():
                     channel=channel,
                     db_session=db_session,
                     user_persistence=user_persistence,
-                    audience_smarts_service=audience_smarts_service
-                    
+                    audience_smarts_service=audience_smarts_service,
                 )
             )
 
