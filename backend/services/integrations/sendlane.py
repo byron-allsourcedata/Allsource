@@ -346,7 +346,7 @@ class SendlaneIntegrationService:
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
-        return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
 
     async def __create_contact(
         self, five_x_five_user, access_token, list_id: int

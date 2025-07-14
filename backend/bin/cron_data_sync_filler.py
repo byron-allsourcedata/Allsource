@@ -2,21 +2,27 @@ import asyncio
 import logging
 import os
 import sys
+from collections import defaultdict
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from sqlalchemy.sql import exists
+from db_dependencies import Db
+from resolver import Resolver
+from services.data_sync_imported_lead import DataSyncImportedService
+from services.leads import LeadsService
 from models import Users
 from config.sentry import SentryConfig
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from sqlalchemy import create_engine, and_, or_, select
+from sqlalchemy import and_, or_, select
 from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 from enums import (
     DataSyncImportedStatus,
@@ -58,18 +64,30 @@ async def send_leads_to_queue(channel, processed_lead):
 
 
 def fetch_data_syncs(session):
-    results = (
-        session.query(UserIntegration, IntegrationUserSync)
-        .join(
-            IntegrationUserSync,
-            IntegrationUserSync.integration_id == UserIntegration.id,
+    user_integrations = (
+        session.query(UserIntegration)
+        .filter(
+            exists().where(
+                IntegrationUserSync.integration_id == UserIntegration.id
+            )
         )
         .all()
     )
-    user_integrations = [res[0] for res in results]
-    data_syncs = [res[1] for res in results]
+    integration_ids = [ui.id for ui in user_integrations]
+    if not integration_ids:
+        return user_integrations, {}
 
-    return user_integrations, data_syncs
+    data_syncs = (
+        session.query(IntegrationUserSync)
+        .filter(IntegrationUserSync.integration_id.in_(integration_ids))
+        .all()
+    )
+
+    syncs_by_integration_id = defaultdict(list)
+    for sync in data_syncs:
+        syncs_by_integration_id[sync.integration_id].append(sync)
+
+    return user_integrations, syncs_by_integration_id
 
 
 def update_data_sync_integration(session, data_sync_id):
@@ -230,7 +248,6 @@ def get_previous_imported_leads(session, data_sync_id):
             DataSyncImportedLead.lead_users_id == LeadUser.id,
         )
         .join(UserDomains, UserDomains.id == LeadUser.domain_id)
-        .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
         .filter(
             DataSyncImportedLead.data_sync_id == data_sync_id,
             DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
@@ -238,6 +255,10 @@ def get_previous_imported_leads(session, data_sync_id):
             UserDomains.is_enable == True,
         )
         .all()
+    )
+
+    logging.info(
+        f"Pixel sync {data_sync_id} Re imported leads= {len(lead_users)}"
     )
 
     return lead_users
@@ -301,82 +322,88 @@ async def send_leads_to_rmq(
     await send_leads_to_queue(channel, processed_lead)
 
 
-async def process_user_integrations(channel, session):
-    user_integrations, data_syncs = fetch_data_syncs(session)
-    for i, data_sync in enumerate(data_syncs):
-        if (
-            data_sync.sync_status == False
-            or user_integrations[i].is_failed == True
-        ):
-            if (
-                user_integrations[i].service_name
-                == SourcePlatformEnum.WEBHOOK.value
-            ):
+async def process_user_integrations(
+    db_session: Db,
+    leads_service: LeadsService,
+    data_sync_imported_service: DataSyncImportedService,
+):
+    user_integrations, syncs_by_integration_id = fetch_data_syncs(db_session)
+    for user_integration in user_integrations:
+        integration_id = user_integration.id
+        data_syncs = syncs_by_integration_id.get(integration_id, [])
+        for data_sync in data_syncs:
+            if not data_sync.sync_status or user_integration.is_failed:
                 if (
-                    data_sync.last_sync_date is not None
-                    and data_sync.last_sync_date.replace(tzinfo=timezone.utc)
-                    > (datetime.now(timezone.utc) - timedelta(hours=24))
-                ) or (
-                    data_sync.created_at.replace(tzinfo=timezone.utc)
-                    > (datetime.now(timezone.utc) - timedelta(hours=24))
+                    user_integration.service_name
+                    == SourcePlatformEnum.WEBHOOK.value
                 ):
-                    logging.info(
-                        f"Attempt after failed Webhook, last_sync_date = {data_sync.last_sync_date}"
+                    recent_time = datetime.now(timezone.utc) - timedelta(
+                        hours=24
                     )
+                    last_sync = data_sync.last_sync_date
+                    created_at = data_sync.created_at
 
+                    if (
+                        last_sync
+                        and last_sync.replace(tzinfo=timezone.utc) > recent_time
+                    ) or (
+                        created_at
+                        and created_at.replace(tzinfo=timezone.utc)
+                        > recent_time
+                    ):
+                        logging.info(
+                            f"Attempt after failed Webhook, last_sync_date = {last_sync}"
+                        )
+                    else:
+                        logging.info(
+                            f"Skip, Integration is failed {user_integration.is_failed}, Data sync status {data_sync.sync_status}"
+                        )
+                        continue
                 else:
                     logging.info(
-                        f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}"
+                        f"Skip, Integration is failed {user_integration.is_failed}, Data sync status {data_sync.sync_status}"
                     )
                     continue
 
-            else:
-                logging.info(
-                    f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}"
-                )
+            if not data_sync.is_active:
                 continue
 
-        if data_sync.is_active == False:
-            continue
+            lead_users = get_previous_imported_leads(db_session, data_sync.id)
 
-        lead_users = get_previous_imported_leads(session, data_sync.id)
-        logging.info(
-            f"Pixel sync {data_sync.id} Re imported leads= {len(lead_users)}"
-        )
-        data_sync_limit = user_integrations[i].limit
-        if data_sync_limit - len(lead_users) > 0:
-            additional_leads = fetch_leads_by_domain(
-                session,
-                data_sync.domain_id,
-                data_sync_limit - len(lead_users),
-                data_sync.last_sent_lead_id,
-                data_sync.leads_type,
-            )
-            lead_users.extend(additional_leads)
+            data_sync_limit = user_integration.limit
+            if data_sync_limit - len(lead_users) > 0:
+                additional_leads = leads_service.data_sync_leads_type(
+                    domain_id=data_sync.domain_id,
+                    limit=data_sync_limit - len(lead_users),
+                    leads_type=data_sync.leads_type,
+                    last_sent_lead_id=data_sync.last_sent_lead_id,
+                )
+                lead_users.extend(additional_leads)
 
-        update_data_sync_integration(session, data_sync.id)
-        if not lead_users:
-            logging.info(f"Pixel sync {data_sync.id} Lead users empty")
-            continue
+            update_data_sync_integration(db_session, data_sync.id)
 
-        logging.info(
-            f"Pixel sync {data_sync.id} lead users len = {len(lead_users)}"
-        )
-        lead_users = sorted(lead_users, key=lambda x: x.id)
-        await send_leads_to_rmq(
-            session,
-            channel,
-            lead_users,
-            data_sync,
-            user_integrations[i].service_name,
-        )
-        last_lead_id = lead_users[-1].id
-        if last_lead_id:
+            if not lead_users:
+                logging.info(f"Pixel sync {data_sync.id} Lead users empty")
+                continue
+
             logging.info(
-                f"Pixel sync {data_sync.id} last_lead_id = {last_lead_id}"
+                f"Pixel sync {data_sync.id} lead users len = {len(lead_users)}"
             )
-            update_last_sent_lead(session, data_sync.id, last_lead_id)
-            update_data_sync_integration(session, data_sync.id)
+            lead_users = sorted(lead_users, key=lambda x: x.id)
+
+            await data_sync_imported_service.save_and_send_data_imported_leads(
+                lead_users=lead_users,
+                data_sync=data_sync,
+                user_integrations_service_name=user_integration.service_name,
+            )
+
+            last_lead_id = lead_users[-1].id
+            if last_lead_id:
+                logging.info(
+                    f"Pixel sync {data_sync.id} last_lead_id = {last_lead_id}"
+                )
+                update_last_sent_lead(db_session, data_sync.id, last_lead_id)
+                update_data_sync_integration(db_session, data_sync.id)
 
 
 async def main():
@@ -392,18 +419,7 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-
-    db_username = os.getenv("DB_USERNAME")
-    db_password = os.getenv("DB_PASSWORD")
-    db_host = os.getenv("DB_HOST")
-    db_name = os.getenv("DB_NAME")
-
-    engine = create_engine(
-        f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
-        pool_pre_ping=True,
-    )
-    Session = sessionmaker(bind=engine)
-
+    resolver = Resolver()
     while True:
         db_session = None
         rabbitmq_connection = None
@@ -418,9 +434,16 @@ async def main():
                 name=CRON_DATA_SYNC_LEADS,
                 durable=True,
             )
-            db_session = Session()
-
-            await process_user_integrations(channel, db_session)
+            db_session = await resolver.resolve(Db)
+            leads_service = await resolver.resolve(LeadsService)
+            data_sync_imported_service = await resolver.resolve(
+                DataSyncImportedService
+            )
+            await process_user_integrations(
+                db_session=db_session,
+                leads_service=leads_service,
+                data_sync_imported_service=data_sync_imported_service,
+            )
 
             logging.info("Processing completed. Sleeping for 10 minutes...")
         except Exception as e:

@@ -93,12 +93,22 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 	const { smartLookaLikeProgress } = useSSE();
 	const [etaMap, setEtaMap] = useState<Record<string, number | null>>({});
 
+	const [lookalikeStatusFailed, setLookalikeStatusFailed] = useState(false);
+
 	const fetchData = async (id: string): Promise<PollingData> => {
 		try {
 			const response = await axiosInstance.get(
 				`/audience-lookalikes/get-processing-lookalikes?id=${id}`,
 			);
 			const updatedItem = response.data;
+			if (updatedItem.status === "failed") {
+				setLookalikeStatusFailed(true);
+				return {
+					size_progress: 0,
+					size: 0,
+					id: id,
+				};
+			}
 
 			setLookalikeSize(updatedItem.size);
 			setEtaMap((prev) => ({
@@ -285,7 +295,9 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 									paddingBottom: "1.5rem",
 								}}
 							>
-								{mergedTotal === mergedProgress && mergedProgress !== 0 ? (
+								{lookalikeStatusFailed ? (
+									0
+								) : mergedTotal === mergedProgress && mergedProgress !== 0 ? (
 									lookalikeSize.toLocaleString("en-US")
 								) : (
 									<Box
@@ -374,7 +386,9 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							<Box>
 								{" "}
 								Size:{" "}
-								{mergedTotal === mergedProgress && mergedProgress !== 0 ? (
+								{lookalikeStatusFailed ? (
+									0
+								) : mergedTotal === mergedProgress && mergedProgress !== 0 ? (
 									row.size.toLocaleString("en-US")
 								) : (
 									<>

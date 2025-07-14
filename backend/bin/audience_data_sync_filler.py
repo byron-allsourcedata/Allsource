@@ -3,9 +3,6 @@ import logging
 import os
 import sys
 
-import sentry_sdk
-
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -16,9 +13,9 @@ from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from sqlalchemy import create_engine, select
+from sqlalchemy import select
 from dotenv import load_dotenv
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from datetime import datetime, timezone
 from enums import (
     DataSyncImportedStatus,
@@ -39,12 +36,11 @@ from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
 from db_dependencies import Db
-from dependencies import PlansPersistence
 
 load_dotenv()
 
 AUDIENCE_DATA_SYNC_PERSONS = "audience_data_sync_persons"
-LONG_SLEEP = 60 * 10
+LONG_SLEEP = 60 * 5
 SHORT_SLEEP = 10
 
 
@@ -381,7 +377,7 @@ async def main():
 
     setup_logging(log_level)
     logging.info("Started")
-    sleep_interval = SHORT_SLEEP
+    sleep_interval = LONG_SLEEP
     while True:
         db_session = None
         rabbitmq_connection = None

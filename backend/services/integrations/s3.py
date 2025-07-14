@@ -323,6 +323,7 @@ class S3IntegrationService:
         validations: dict = {},
     ):
         profiles = []
+        results = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_s3_contact(
                 enrichment_user,
@@ -330,7 +331,26 @@ class S3IntegrationService:
                 validations,
                 integration_data_sync.data_map,
             )
+
+            if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": profile,
+                    }
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "enrichment_user_id": enrichment_user.id,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
             profiles.append(profile)
+
+        if not profiles:
+            return results
 
         list_response = self.__send_contacts(
             access_token=user_integration.access_token,
@@ -338,10 +358,12 @@ class S3IntegrationService:
             profiles=profiles,
         )
 
-        if list_response == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        if list_response != ProccessDataSyncResult.SUCCESS.value:
+            for result in results:
+                if result["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    result["status"] = list_response
 
-        return ProccessDataSyncResult.SUCCESS.value
+        return results
 
     def upload_file_to_bucket(
         self,

@@ -16,7 +16,7 @@ import dateparser
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
-from sqlalchemy import update, func
+from sqlalchemy import update, func, or_
 from sqlalchemy.orm import Session
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -464,40 +464,70 @@ async def process_user_id(
 
         updates = []
 
+        unique_emails = list(
+            {email for email in user_best_email.values() if email}
+        )
+        matched_users = source_agent_service.get_user_ids_by_emails(
+            unique_emails
+        )
+
+        email_to_asid = {
+            match.email.strip().lower(): UUID(match.asid)
+            for match in matched_users
+        }
+
+        lead_first_ids = {
+            lu.id: lu.first_visit_id
+            for lu in db_session.query(LeadUser.id, LeadUser.first_visit_id)
+            .filter(LeadUser.id.in_(lead_to_five_x.keys()))
+            .all()
+        }
+
+        first_visit_ids = [fid for fid in lead_first_ids.values() if fid]
+
+        first_visits = (
+            db_session.query(LeadsVisits)
+            .filter(LeadsVisits.id.in_(first_visit_ids))
+            .all()
+        )
+        visits_by_id = {v.id: v for v in first_visits}
+
+        subquery = (
+            db_session.query(
+                LeadsVisits,
+                func.row_number()
+                .over(
+                    partition_by=LeadsVisits.lead_id,
+                    order_by=LeadsVisits.id.desc(),
+                )
+                .label("rn"),
+            )
+            .filter(LeadsVisits.lead_id.in_(lead_to_five_x.keys()))
+            .subquery()
+        )
+
+        last_visits = (
+            db_session.query(subquery).filter(subquery.c.rn == 1).all()
+        )
+
+        last_visits_objs = [row[0] for row in last_visits]
+
+        visits_by_lead_id = {v.lead_id: v for v in last_visits_objs}
+
         for lead_id, five_x_id in lead_to_five_x.items():
             email = user_best_email.get(five_x_id)
-            if not email:
-                continue
 
-            matches = source_agent_service.get_user_ids_by_emails([email])
-            if not matches:
-                continue
+            first_visit_id = lead_first_ids.get(lead_id)
+            first_visit = visits_by_id.get(first_visit_id)
+            last_visit = visits_by_lead_id.get(lead_id)
 
-            asid = UUID(matches[0].asid)
-            if asid in existing_asids:
-                continue
-
-            first_visit = (
-                db_session.query(LeadsVisits)
-                .join(LeadUser, LeadUser.first_visit_id == LeadsVisits.id)
-                .filter(LeadUser.id == lead_id)
-                .first()
-            )
-
-            last_visit = (
-                db_session.query(LeadsVisits)
-                .filter_by(lead_id=lead_id)
-                .order_by(LeadsVisits.id.desc())
-                .first()
-            )
-
+            asid = email_to_asid.get(email)
             if not first_visit or not last_visit:
                 continue
 
             fd = datetime.combine(first_visit.end_date, first_visit.end_time)
             ls = datetime.combine(last_visit.start_date, last_visit.start_time)
             le = datetime.combine(last_visit.end_date, last_visit.end_time)
-
             calc = calculate_website_visitor_user_value(fd, ls, le)
 
             updates.append(
@@ -509,6 +539,7 @@ async def process_user_id(
                 }
             )
             existing_asids.add(asid)
+
         if updates:
             db_session.bulk_insert_mappings(
                 AudienceSourcesMatchedPerson, updates

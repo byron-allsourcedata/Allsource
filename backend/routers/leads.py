@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
-from dependencies import get_leads_service
+from dependencies import check_pixel_install_domain
 from enums import BaseEnum
+from models import UserDomains
 from schemas.leads import LeadsRequest
 from services.leads import LeadsService
 
@@ -11,6 +12,8 @@ router = APIRouter()
 
 @router.get("")
 async def get_leads(
+    leads_service: LeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
         10, alias="per_page", ge=1, le=500, description="Items per page"
@@ -41,9 +44,9 @@ async def get_leads(
     timezone_offset: float = Query(
         0, description="timezone offset in integer format"
     ),
-    leads_service: LeadsService = Depends(get_leads_service),
 ):
     return leads_service.get_leads(
+        domain=domain,
         sort_by=sort_by,
         sort_order=sort_order,
         page=page,
@@ -66,34 +69,40 @@ async def get_leads(
 
 @router.get("/search-location")
 async def search_location(
+    leads_service: LeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     start_letter: str = Query(..., min_length=3),
-    leads_service: LeadsService = Depends(get_leads_service),
 ):
-    return leads_service.search_location(start_letter)
+    return leads_service.search_location(start_letter, domain)
 
 
 @router.get("/search-page-url")
 async def search_page_url(
+    leads_service: LeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     start_letter: str = Query(..., min_length=2),
-    leads_service: LeadsService = Depends(get_leads_service),
 ):
-    return leads_service.search_page_url(start_letter)
+    return leads_service.search_page_url(start_letter, domain)
 
 
 @router.get("/search-contact")
 async def search_contact(
+    leads_service: LeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     start_letter: str = Query(..., min_length=3),
-    leads_service: LeadsService = Depends(get_leads_service),
 ):
-    return leads_service.search_contact(start_letter)
+    return leads_service.search_contact(start_letter, domain)
 
 
 @router.post("/download_leads")
 async def download_leads(
+    leads_service: LeadsService,
     leads_request: LeadsRequest,
-    leads_service: LeadsService = Depends(get_leads_service),
+    domain: UserDomains = Depends(check_pixel_install_domain),
 ):
-    result = leads_service.download_leads(leads_ids=leads_request.leads_ids)
+    result = leads_service.download_leads(
+        domain=domain, leads_ids=leads_request.leads_ids
+    )
     if result:
         return StreamingResponse(
             result,
@@ -105,6 +114,8 @@ async def download_leads(
 
 @router.get("/download_leads")
 async def download_leads(
+    leads_service: LeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     from_date: int = Query(None, description="Start date in integer format"),
     to_date: int = Query(None, description="End date in integer format"),
     regions: str = Query(None, description="Comma-separated list of regions"),
@@ -128,9 +139,9 @@ async def download_leads(
     ),
     from_time: str = Query(None, description="Start time in integer format"),
     to_time: str = Query(None, description="End time in integer format"),
-    leads_service: LeadsService = Depends(get_leads_service),
 ):
     result = leads_service.download_leads(
+        domain=domain,
         from_date=from_date,
         to_date=to_date,
         regions=regions,

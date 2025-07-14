@@ -359,22 +359,19 @@ class GoHighLevelIntegrationsService:
             result = self.upsert_contact(
                 access_token=access_token, contact_data=contact_data
             )
-            if result == ProccessDataSyncResult.INCORRECT_FORMAT.value:
-                results.append(
-                    {
-                        "lead_id": enrichment_user.id,
-                        "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                    }
-                )
-            else:
-                results.append(
-                    {
-                        "lead_id": enrichment_user.id,
-                        "status": ProccessDataSyncResult.SUCCESS.value,
-                    }
-                )
+            results.append(
+                {
+                    "enrichment_user_id": enrichment_user.id,
+                    "status": result,
+                }
+            )
+            if result in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                continue
 
-        return ProccessDataSyncResult.SUCCESS.value
+        return result
 
     async def process_data_sync_lead(
         self,
@@ -389,7 +386,7 @@ class GoHighLevelIntegrationsService:
             refresh_token=user_integration.access_token,
         )
         for lead_user, five_x_five_user in user_data:
-            contact_data = await elf.__mapped_profile_lead(
+            contact_data = await self.__mapped_profile_lead(
                 five_x_five_user=five_x_five_user,
                 data_map=integration_data_sync.data_map,
                 location_id=user_integration.location_id,

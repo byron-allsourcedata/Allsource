@@ -17,11 +17,11 @@ from sqlalchemy.orm import Session
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-
+from enums import LookalikeStatus
+from services.lookalikes import AudienceLookalikesService
 
 from services.lookalike_agent.agent import LookalikeAgentService
 from services.lookalike_filler.rabbitmq import LookalikesMatchingMessage
-
 from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
@@ -69,6 +69,7 @@ async def aud_sources_matching(
     db_session: Session,
     channel,
     source_agent: SourceAgentService,
+    audience_lookalikes_service: AudienceLookalikesService,
     agent_service: LookalikeAgentService,
 ):
     try:
@@ -169,11 +170,17 @@ async def aud_sources_matching(
         )
         logging.info("Done processing lookalike_id with ID: {lookalike_id}")
         await message.ack()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.SUCCESS.value, lookalike_id=lookalike_id
+        )
 
     except BaseException as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
         await message.reject(requeue=True)
         db_session.rollback()
+        audience_lookalikes_service.change_status(
+            status=LookalikeStatus.FAILED.value, lookalike_id=lookalike_id
+        )
 
 
 async def main():
@@ -199,6 +206,9 @@ async def main():
 
             db_session = await resolver.resolve(Db)
             source_agent = await resolver.resolve(SourceAgentService)
+            audience_lookalikes_service = await resolver.resolve(
+                AudienceLookalikesService
+            )
             agent_service = await resolver.resolve(LookalikeAgentService)
 
             queue = await channel.declare_queue(
@@ -211,6 +221,7 @@ async def main():
                     channel=channel,
                     db_session=db_session,
                     source_agent=source_agent,
+                    audience_lookalikes_service=audience_lookalikes_service,
                     agent_service=agent_service,
                 )
             )

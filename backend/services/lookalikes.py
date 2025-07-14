@@ -3,6 +3,7 @@ from typing import List, Tuple, Dict, Set
 from uuid import UUID
 import json
 
+from sqlalchemy import update
 from db_dependencies import Clickhouse
 from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
@@ -476,6 +477,11 @@ class AudienceLookalikesService:
 
         return lookalike
 
+    def change_status(self, status: str, lookalike_id: UUID):
+        self.lookalikes_persistence_service.change_lookalike_status(
+            status=status, lookalike_id=lookalike_id
+        )
+      
     def get_lookalike_asids(self, lookalike_id: UUID) -> list[UUID] | None:
         """
         Fetches 'top' users for provided lookalike and returns their asids

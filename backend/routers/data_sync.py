@@ -103,7 +103,7 @@ async def create_sync(
     data = {k: v for k, v in data.model_dump().items() if v}
     async with integration_service as service:
         service = getattr(service, service_name.lower())
-        await service.create_sync(
+        return await service.create_sync(
             **data,
             domain_id=domain.id,
             created_by=user.get("team_member").get("full_name")
