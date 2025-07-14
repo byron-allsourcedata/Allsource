@@ -111,6 +111,7 @@ async def process_rmq_message(
         failed_ids = []
         verifications = []
         write_off_funds = Decimal(0)
+        count_subtracted = Decimal(0)
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")
@@ -183,11 +184,7 @@ async def process_rmq_message(
         logging.info(f"success_ids len: {len(success_ids)}")
 
         if write_off_funds:
-            user_persistence.deduct_validation_funds(user_id, write_off_funds)
-            # if not resultOperation:
-            #     logging.error("Not enough validation funds")
-            #     await message.reject(requeue=True)
-            #     return
+            count_subtracted = user_persistence.deduct_validation_funds(user_id, write_off_funds)
             db_session.flush()
 
         if verifications:
@@ -245,30 +242,37 @@ async def process_rmq_message(
             .count()
         )
 
-        if validation_count == total_count:
-            aud_smart = db_session.get(AudienceSmart, aud_smart_id)
-            validations = {}
-            if aud_smart and aud_smart.validations:
-                validations = json.loads(aud_smart.validations)
-                key = COLUMN_MAPPING.get(validation_type)
-                for cat in validations.values():
-                    for rule in cat:
-                        audience_smarts_service.update_stats_validations(
-                            validation_type=f"postal_cas_verification-{validation_type}",
-                            count_persons_before_validation=count_persons_before_validation,
-                            count_valid_persons=total_validated,
+        aud_smart = db_session.get(AudienceSmart, aud_smart_id)
+        validations = {}
+
+        if aud_smart and aud_smart.validations:
+            validations = json.loads(aud_smart.validations)
+            key = COLUMN_MAPPING.get(validation_type)
+
+            for cat in validations.values():
+                for rule in cat:
+                    if key in rule:
+                        rule[key].setdefault("count_cost", "0.00")
+
+                        rule[key]["count_validated"] = total_validated
+                        rule[key]["count_submited"] = count_persons_before_validation
+
+                        previous_cost = Decimal(rule[key]["count_cost"])
+                        rule[key]["count_cost"] = str(
+                            (previous_cost + count_subtracted).quantize(Decimal("0.01"))
                         )
-                        if key in rule:
+
+                        if validation_count == total_count:
                             rule[key]["processed"] = True
-                            rule[key]["count_validated"] = total_validated
-                            rule[key]["count_submited"] = (
-                                count_persons_before_validation
-                            )
-                            rule[key]["count_cost"] = str(
-                                write_off_funds.quantize(Decimal("0.01"))
-                            )
-                aud_smart.validations = json.dumps(validations)
-                db_session.commit()
+
+            aud_smart.validations = json.dumps(validations)
+        
+        if validation_count == total_count:
+            audience_smarts_service.update_stats_validations(
+                validation_type=f"postal_cas_verification-{validation_type}",
+                count_persons_before_validation=count_persons_before_validation,
+                count_valid_persons=total_validated,
+            )
             await publish_rabbitmq_message_with_channel(
                 channel=channel,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -278,6 +282,9 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
+        
+        db_session.commit()
+
         await send_sse(
             channel=channel,
             user_id=user_id,

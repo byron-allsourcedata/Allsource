@@ -819,15 +819,21 @@ class UserPersistence:
             is not None
         )
 
-    def deduct_validation_funds(self, user_id: int, amount: Decimal):
-        user = self.db.query(Users).filter(Users.id == user_id).first()
+    def deduct_validation_funds(self, user_id: int, amount: Decimal) -> Decimal:
+        user = (
+            self.db.query(Users)
+            .filter(Users.id == user_id)
+            .first()
+        )
 
-        # if user and user.validation_funds >= amount:
-        #     user.validation_funds -= amount
-        #     return True
-        # return False
+        if not user or user.validation_funds <= 0:
+            return Decimal("0")
 
-        user.validation_funds -= amount
+        to_deduct = min(user.validation_funds, amount)
+
+        user.validation_funds -= to_deduct
+
+        return to_deduct
 
     def by_email(self, email: str) -> Optional[Users]:
         return self.db.execute(
