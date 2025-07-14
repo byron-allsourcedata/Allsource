@@ -474,8 +474,8 @@ class AudienceLookalikesService:
         if not lookalike:
             return None
 
-        result = {key: value for key, value in lookalike.items()}
-        return result
+        return lookalike
+
 
     def get_lookalike_asids(self, lookalike_id: UUID) -> list[UUID] | None:
         """

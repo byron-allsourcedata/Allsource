@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo, useRef } from "react";
 
 interface PollingData {
 	id: string;
-	size: number;
-	size_progress: number;
+	train_model_size: number;
+	processed_train_model_size: number;
+	eta_seconds: number | null;
 }
 
 interface sseProgress {
@@ -22,13 +23,17 @@ export const usePolling = (
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
 	const mergedProgress = useMemo(
-		() => Math.max(data.size_progress ?? 0, sseProgress?.processed ?? 0),
-		[data.size_progress, sseProgress?.processed],
+		() =>
+			Math.max(
+				data.processed_train_model_size ?? 0,
+				sseProgress?.processed ?? 0,
+			),
+		[data.processed_train_model_size, sseProgress?.processed],
 	);
 
 	const mergedTotal = useMemo(
-		() => Math.max(data.size ?? 0, sseProgress?.total ?? 0),
-		[data.size, sseProgress?.total],
+		() => Math.max(data.train_model_size ?? 0, sseProgress?.total ?? 0),
+		[data.train_model_size, sseProgress?.total],
 	);
 
 	useEffect(() => {
@@ -36,31 +41,30 @@ export const usePolling = (
 
 		const poll = async () => {
 			try {
-				const { size_progress, size } = data;
+				const { processed_train_model_size, train_model_size } = data;
 
-				if (size_progress < size || size_progress === 0) {
-					console.log(`Polling for item ${data.id}`);
+				if (
+					processed_train_model_size < train_model_size ||
+					processed_train_model_size === 0
+				) {
 					const updatedItem = await fetchDataCallback(data.id);
-
 					if (
 						updatedItem &&
-						updatedItem.size !== undefined &&
-						updatedItem.size_progress !== undefined
+						updatedItem.train_model_size !== undefined &&
+						updatedItem.processed_train_model_size !== undefined
 					) {
 						setData(updatedItem);
 					}
 				} else {
-					console.log(`Polling stopped for item ${data.id}`);
 					clearInterval(intervalRef.current!);
-					intervalRef.current = null;
 					setIsPolling(false);
 				}
 			} catch (error) {
-				console.error(`Error during polling for item ${data.id}:`, error);
+				console.error(`Polling error:`, error);
 			}
 		};
 
-		intervalRef.current = setInterval(poll, 10000);
+		intervalRef.current = setInterval(poll, 5000);
 		poll();
 
 		return () => {

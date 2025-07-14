@@ -36,8 +36,9 @@ interface TableContainerProps {
 
 interface PollingData {
 	id: string;
-	size: number;
-	size_progress: number;
+	train_model_size: number;
+	processed_train_model_size: number;
+	eta_seconds: number | null;
 }
 
 const audienceSize = [
@@ -63,6 +64,15 @@ const audienceSize = [
 	},
 ];
 
+const formatETA = (seconds: number): string => {
+	const minutes = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	if (minutes > 0) {
+		return `${minutes}m ${secs}s left`;
+	}
+	return `${secs}s left`;
+};
+
 const setSourceType = (sourceType: string) => {
 	return sourceType
 		.split(",")
@@ -81,6 +91,7 @@ const truncateText = (text: string, maxLength: number) => {
 
 const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 	const { smartLookaLikeProgress } = useSSE();
+	const [etaMap, setEtaMap] = useState<Record<string, number | null>>({});
 
 	const fetchData = async (id: string): Promise<PollingData> => {
 		try {
@@ -89,27 +100,39 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 			);
 			const updatedItem = response.data;
 
-			console.log({ updatedItem });
 			setLookalikeSize(updatedItem.size);
+			setEtaMap((prev) => ({
+				...prev,
+				[id]: updatedItem.eta_seconds,
+			}));
+
 			return {
-				size_progress:
-					updatedItem.processed_size + updatedItem.processed_train_model_size ||
-					0,
-				size: updatedItem.size + updatedItem.train_model_size || 0,
-				id: id,
+				id,
+				train_model_size: updatedItem.train_model_size || 0,
+				processed_train_model_size: updatedItem.processed_train_model_size || 0,
+				eta_seconds: updatedItem.eta_seconds,
 			};
 		} catch {
 			return {
-				size_progress: 0,
-				size: 0,
-				id: id,
+				id,
+				train_model_size: 0,
+				processed_train_model_size: 0,
+				eta_seconds: null,
 			};
 		}
 	};
 
+	const firstRow = tableData[0];
+	const progress = smartLookaLikeProgress[firstRow.id] || {};
+
 	const { mergedProgress, mergedTotal } = usePolling(
-		tableData[0],
-		smartLookaLikeProgress[tableData[0].id] || null,
+		{
+			id: firstRow.id,
+			train_model_size: progress.total || 0,
+			processed_train_model_size: progress.processed || 0,
+			eta_seconds: null,
+		},
+		progress,
 		fetchData,
 	);
 
@@ -256,19 +279,66 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							<TableCell
 								sx={{
 									position: "relative",
-									maxWidth: "8.25rem",
-									width: "7.25rem",
+									maxWidth: "10rem",
+									width: "10rem",
+									paddingTop: "1.5rem",
+									paddingBottom: "1.5rem",
 								}}
 							>
 								{mergedTotal === mergedProgress && mergedProgress !== 0 ? (
 									lookalikeSize.toLocaleString("en-US")
 								) : (
-									<ProgressBar
-										progress={{
-											total: mergedTotal || 0,
-											processed: mergedProgress || 0,
-										}}
-									/>
+									<Box
+										display="flex"
+										flexDirection="column"
+										alignItems="center"
+									>
+										{/* Процент сверху */}
+										<Typography
+											sx={{
+												color: "#202124",
+												fontSize: "12px",
+												fontFamily: "var(--font-nunito)",
+												fontWeight: 400,
+												backgroundColor: "white",
+											}}
+										>
+											{mergedTotal > 0
+												? (() => {
+														const percent =
+															(mergedProgress / mergedTotal) * 100;
+														const isInteger = percent % 1 === 0;
+
+														return `${isInteger ? Math.round(percent) : percent.toFixed(2)}% done`;
+													})()
+												: "0% done"}
+										</Typography>
+
+										<Box position="relative" width="100%">
+											<ProgressBar
+												progress={{
+													total: mergedTotal || 0,
+													processed: mergedProgress || 0,
+												}}
+											/>
+										</Box>
+										{typeof etaMap[row.id] === "number" && (
+											<Box>
+												<Typography
+													sx={{
+														color: "#202124",
+														fontSize: "12px",
+														fontFamily: "var(--font-nunito)",
+														fontWeight: 500,
+														backgroundColor: "white",
+														px: 0.5,
+													}}
+												>
+													{formatETA(etaMap[row.id]!)}
+												</Typography>
+											</Box>
+										)}
+									</Box>
 								)}
 							</TableCell>
 						</TableRow>
@@ -307,12 +377,19 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 								{mergedTotal === mergedProgress && mergedProgress !== 0 ? (
 									row.size.toLocaleString("en-US")
 								) : (
-									<ProgressBar
-										progress={{
-											total: mergedTotal || 0,
-											processed: mergedProgress || 0,
-										}}
-									/>
+									<>
+										<ProgressBar
+											progress={{
+												total: mergedTotal || 0,
+												processed: mergedProgress || 0,
+											}}
+										/>
+										{etaMap[row.id] !== null && (
+											<Typography variant="caption" color="textSecondary">
+												{formatETA(etaMap[row.id]!)}
+											</Typography>
+										)}
+									</>
 								)}
 							</Box>
 						</Box>

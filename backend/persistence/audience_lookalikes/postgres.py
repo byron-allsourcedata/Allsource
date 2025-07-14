@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 import pytz
@@ -139,7 +139,6 @@ class AudienceLookalikesPostgresPersistence(
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-
             query = query.filter(
                 AudienceLookalikes.created_date >= start_date,
                 AudienceLookalikes.created_date <= end_date,
@@ -159,9 +158,29 @@ class AudienceLookalikesPostgresPersistence(
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
-        result_query = [
-            row._asdict() for row in query.limit(per_page).offset(offset).all()
-        ]
+        now = datetime.utcnow()
+        rows = query.limit(per_page).offset(offset).all()
+
+        result_query = []
+        for row in rows:
+            row_dict = row._asdict()
+
+            eta_seconds = None
+            processed = row_dict.get("processed_train_model_size")
+            total = row_dict.get("train_model_size")
+            created_date = row_dict.get("created_date")
+
+            if processed is not None and total:
+                remaining = total - processed
+                if remaining > 0 and created_date:
+                    time_elapsed = (now - created_date).total_seconds()
+                    if time_elapsed > 0 and processed > 0:
+                        speed = processed / time_elapsed
+                        if speed > 0:
+                            eta_seconds = int(remaining / speed)
+
+            row_dict["eta_seconds"] = eta_seconds
+            result_query.append(row_dict)
 
         count = query.count()
         max_page = math.ceil(count / per_page)
@@ -384,6 +403,7 @@ class AudienceLookalikesPostgresPersistence(
                 AudienceLookalikes.name,
                 AudienceLookalikes.size,
                 AudienceLookalikes.processed_size,
+                AudienceLookalikes.created_date,
                 AudienceLookalikes.lookalike_size,
                 AudienceLookalikes.processed_train_model_size,
                 AudienceLookalikes.train_model_size,
@@ -401,7 +421,37 @@ class AudienceLookalikesPostgresPersistence(
             .filter(AudienceLookalikes.id == id)
         ).first()
 
-        return dict(query._asdict()) if query else None
+        if not query:
+            return None
+
+        result = dict(query._asdict())
+
+        try:
+            now = datetime.now(timezone.utc)
+            created = result["created_date"]
+
+            if (
+                created.tzinfo is None
+                or created.tzinfo.utcoffset(created) is None
+            ):
+                created = created.replace(tzinfo=timezone.utc)
+
+            processed = result["processed_train_model_size"] or 0
+            total = result["train_model_size"] or 0
+
+            elapsed_seconds = (now - created).total_seconds()
+
+            if elapsed_seconds >= 1 and 0 < processed < total:
+                speed = processed / elapsed_seconds
+                remaining = total - processed
+                eta_seconds = int(remaining / speed) if speed > 0 else None
+                result["eta_seconds"] = eta_seconds
+            else:
+                result["eta_seconds"] = None
+        except Exception as e:
+            result["eta_seconds"] = None
+
+        return result
 
     def retrieve_source_insights(
         self,
