@@ -104,9 +104,10 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 			if (updatedItem.status === "failed") {
 				setLookalikeStatusFailed(true);
 				return {
-					size_progress: 0,
-					size: 0,
+					train_model_size: 0,
+					processed_train_model_size: 0,
 					id: id,
+					eta_seconds: null,
 				};
 			}
 
