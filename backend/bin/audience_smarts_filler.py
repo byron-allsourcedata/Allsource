@@ -65,7 +65,7 @@ async def aud_smarts_reader(
     db_session: Session,
     channel,
     audience_smarts_service: AudienceSmartsService,
-    audience_settings_persistence: AudienceSettingPersistence
+    audience_settings_persistence: AudienceSettingPersistence,
 ):
     try:
         message_body = json.loads(message.body)
@@ -82,7 +82,9 @@ async def aud_smarts_reader(
         priority_list = priority_raw.split(",")
         priority_index = {k: i for i, k in enumerate(priority_list)}
 
-        selected = OrderedDict((k, v) for k, v in validation_params.items() if v)
+        selected = OrderedDict(
+            (k, v) for k, v in validation_params.items() if v
+        )
 
         order_columns = []
         for group, validators in selected.items():
@@ -91,18 +93,18 @@ async def aud_smarts_reader(
                 map_key = f"{group}-{validator}"
                 column = DATABASE_COLUMN_MAPPING.get(map_key)
                 if column:
-                    order_columns.append((priority_index.get(map_key, 1e9), column))
-        
+                    order_columns.append(
+                        (priority_index.get(map_key, 1e9), column)
+                    )
+
         order_columns.sort(key=lambda t: t[0])
 
-
         order_by_parts = []
-        for _, col in order_columns:   
+        for _, col in order_columns:
             order_by_parts.append(f"isNull({col}) ASC")
             order_by_parts.append(f"{col}")
 
         order_by_clause = ", ".join(order_by_parts)
-
 
         logging.info(
             f"For smart audience with {aud_smart_id} need_validate = {need_validate}"
@@ -253,7 +255,7 @@ async def main():
                     db_session=db_session,
                     channel=channel,
                     audience_smarts_service=audience_smarts_service,
-                    audience_settings_persistence=audience_settings_persistence
+                    audience_settings_persistence=audience_settings_persistence,
                 )
             )
 
