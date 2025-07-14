@@ -187,12 +187,12 @@ def update_audience_smart(
 @router.post("/download-persons")
 def download_persons(
     payload: SmartAudienceSyncCreate,
-    audience_smarts_service: AudienceSmartsService
+    audience_smarts_service: AudienceSmartsService,
 ):
     result = audience_smarts_service.download_persons(
         smart_audience_id=payload.smart_audience_id,
         sent_contacts=payload.sent_contacts,
-        data_map=payload.data_map
+        data_map=payload.data_map,
     )
 
     if result:

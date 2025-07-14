@@ -120,7 +120,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
     def squash_sequences(self, row: tuple) -> tuple:
         return tuple(
-            ",".join(map(str, cell)) if isinstance(cell, (list, tuple)) else cell
+            ",".join(map(str, cell))
+            if isinstance(cell, (list, tuple))
+            else cell
             for cell in row
         )
 
@@ -140,12 +142,12 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             FROM enrichment_users
             WHERE asid IN ({in_list})
             LIMIT {sent_contacts}
-        """ 
+        """
         q = self.client.query(sql)
         norm_rows = [self.squash_sequences(row) for row in q.result_rows]
         col_names = q.column_names
 
-        return [PersonRecord(**dict(zip(col_names,  row))) for row in norm_rows]
+        return [PersonRecord(**dict(zip(col_names, row))) for row in norm_rows]
 
     def get_synced_persons_by_smart_aud_id(
         self, data_sync_id: int, enrichment_field_names: List[str]

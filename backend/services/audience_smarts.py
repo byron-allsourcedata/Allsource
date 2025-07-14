@@ -395,9 +395,7 @@ class AudienceSmartsService:
 
         return {"lookalikes": lookalikes, "sources": source_list}
 
-    def download_persons(
-        self, smart_audience_id, sent_contacts, data_map
-    ):
+    def download_persons(self, smart_audience_id, sent_contacts, data_map):
         types = [contact.type for contact in data_map]
         values = [contact.value for contact in data_map]
         leads = self.audience_smarts_persistence.get_persons_by_smart_aud_id(
