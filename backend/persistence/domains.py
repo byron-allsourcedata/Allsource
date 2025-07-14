@@ -181,7 +181,11 @@ class UserDomainsPersistence:
             )
             .outerjoin(added_to_cart, added_to_cart.lead_user_id == LeadUser.id)
             .outerjoin(ordered, ordered.lead_user_id == LeadUser.id)
-            .filter(UserDomains.user_id == user_id)
+            .filter(
+                UserDomains.user_id == user_id,
+                LeadUser.is_active,
+                LeadUser.is_confirmed,
+            )
             .group_by(
                 UserDomains.id,
                 UserDomains.domain,
