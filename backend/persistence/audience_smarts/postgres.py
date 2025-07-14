@@ -460,7 +460,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         return [
             row[0]
             for row in (
-                self.db.query(AudienceSmartPerson.enrichment_user_id)
+                self.db.query(AudienceSmartPerson.enrichment_user_asid)
                 .filter(
                     AudienceSmartPerson.smart_audience_id == smart_audience_id,
                     AudienceSmartPerson.is_valid == True,
