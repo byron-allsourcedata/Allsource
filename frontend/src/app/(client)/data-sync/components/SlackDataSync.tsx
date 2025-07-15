@@ -36,6 +36,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectSlackPopupProps {
 	open: boolean;
@@ -738,6 +739,17 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 						height: "100%",
 					}}
 				>
+					<Box
+						sx={{
+							marginTop: "16px",
+							width: "95%",
+						}}
+					>
+						<UserTip
+							title="Data Sync Speed"
+							content="Slack's standard sync speed is 150 contacts per minute."
+						/>
+					</Box>
 					<Box
 						sx={{
 							width: "100%",

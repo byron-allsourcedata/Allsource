@@ -39,6 +39,7 @@ import {
 } from "../../../../components/ToastNotification";
 import LinearProgress from "@mui/material/LinearProgress";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectMetaPopupProps {
 	open: boolean;
@@ -923,6 +924,18 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						},
 					}}
 				>
+					<Box
+						sx={{
+							// margin: "0px 32px",
+							marginTop: "16px",
+							width: "95%",
+						}}
+					>
+						<UserTip
+							title="Data Sync Speed"
+							content="Hubspot's standard sync speed is 150 contacts per minute."
+						/>
+					</Box>
 					<Box
 						sx={{
 							width: "100%",

@@ -46,6 +46,8 @@ import {
 } from "@/app/(client)/components/BookACallPopup";
 import { AxiosError } from "axios";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
+import { InfoIcon } from "@/icon";
+import UserTip from "@/components/UserTip";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -1330,7 +1332,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
@@ -2352,9 +2353,26 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 							</TabPanel>
 						</TabContext>
 					</Box>
+					{/* User Hint */}
 					<Box
-						sx={{ width: "100%", position: "sticky", bottom: 0, zIndex: 9999 }}
+						sx={{
+							margin: "0px 16px",
+							marginBottom: "16px",
+
+							"@media (max-width:900px)": {
+								margin: "0px",
+								marginBottom: "16px",
+							},
+						}}
 					>
+						<UserTip
+							title="Export Count Difference"
+							content="Salesforce requires some mandatory fields: First Name, Last Name, Email and Company Name. Contacts missing either field will be skipped, so the total and exported counts may differ."
+						/>
+					</Box>
+					{/* Buttons */}
+					<Box sx={{ flexGrow: 1 }} />
+					<Box sx={{ width: "100%", bottom: 0, zIndex: 9999 }}>
 						<Box
 							sx={{
 								zIndex: 1302,

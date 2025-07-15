@@ -38,6 +38,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface BingAdsDataSyncProps {
 	open: boolean;
@@ -1329,6 +1330,18 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 											gap: "16px",
 										}}
 									>
+										<Box
+											sx={{
+												// margin: "0px 32px",
+												marginTop: "16px",
+												width: "95%",
+											}}
+										>
+											<UserTip
+												title="Data Sync Speed"
+												content="BingAds' standard sync speed is 150 contacts per minute."
+											/>
+										</Box>
 										<Box
 											sx={{
 												p: 2,

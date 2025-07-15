@@ -30,6 +30,7 @@ import CustomizedProgressBar from "../../../../components/CustomizedProgressBar"
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
+import UserTip from "@/components/UserTip";
 
 interface CreateKlaviyoProps {
 	handleClose: () => void;
@@ -307,6 +308,17 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
 						height: "100%",
 					}}
 				>
+					<Box
+						sx={{
+							marginTop: "16px",
+							width: "95%",
+						}}
+					>
+						<UserTip
+							title="Data Sync Speed"
+							content="Zapier's standard sync speed is 150 contacts per minute."
+						/>
+					</Box>
 					<Box
 						sx={{
 							width: "100%",

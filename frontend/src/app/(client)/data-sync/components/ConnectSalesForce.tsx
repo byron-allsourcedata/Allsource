@@ -27,6 +27,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface SalesForceDataSyncProps {
 	open: boolean;
@@ -493,6 +494,17 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 						height: "100%",
 					}}
 				>
+					<Box
+						sx={{
+							marginTop: "16px",
+							width: "95%",
+						}}
+					>
+						<UserTip
+							title="Data Sync Speed"
+							content="SalesForce's standard sync speed is 150 contacts per minute."
+						/>
+					</Box>
 					<Box
 						sx={{
 							width: "100%",
