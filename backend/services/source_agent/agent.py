@@ -86,8 +86,14 @@ class SourceAgentService:
                 continue
             email_l = email.strip().lower()
             if email_l not in matched:
-                matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
-                count_business += 1
+                try:
+                    matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
+                    count_business += 1
+                except:
+                    logger.error(
+                        f"Error validating EmailAsid for {email}",
+                    )
+                    continue
 
         remaining = [e for e in emails_clean if e not in matched]
 
