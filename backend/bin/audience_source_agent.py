@@ -485,7 +485,7 @@ async def process_user_id(
                 continue
             if business_matched_user.asid in already_matched_asids:
                 logging.debug(
-                    f"Business matched email: {email}, asid: {personal_matched_user.asid} already exists"
+                    f"Business matched email: {email}, asid: {business_matched_user.asid} already exists"
                 )
                 continue
 
@@ -551,7 +551,7 @@ async def process_user_id(
 
             if additional_matched_user.asid in already_matched_asids:
                 logging.debug(
-                    f"Additional matched email: {email}, asid: {personal_matched_user.asid} already exists"
+                    f"Additional matched email: {email}, asid: {additional_matched_user.asid} already exists"
                 )
                 continue
 
