@@ -474,7 +474,7 @@ async def process_user_id(
         business_matched_users = source_agent_service.get_user_ids_by_emails(
             business_email_dict.keys()
         )
-
+        already_matched_asids = set()
         for business_matched_user in business_matched_users:
             email = business_matched_user.email
             lead_id = business_email_dict.get(email)
@@ -483,9 +483,16 @@ async def process_user_id(
                     f"Business matched user lead_id: {lead_id} not found for email: {email} "
                 )
                 continue
+            if business_matched_user.asid in already_matched_asids:
+                logging.debug(
+                    f"Business matched email: {email}, asid: {personal_matched_user.asid} already exists"
+                )
+                continue
+
             lead_to_user_data[lead_id]["is_found"] = True
             lead_to_user_data[lead_id]["asid"] = business_matched_user.asid
             lead_to_user_data[lead_id]["email"] = email
+            already_matched_asids.add(business_matched_user.asid)
 
         personal_email_dict = {
             email: lead_id
@@ -509,9 +516,16 @@ async def process_user_id(
             if lead_to_user_data[lead_id]["is_found"] == True:
                 continue
 
+            if personal_matched_user.asid in already_matched_asids:
+                logging.debug(
+                    f"Personal mathed email: {email}, asid: {personal_matched_user.asid} already exists"
+                )
+                continue
+
             lead_to_user_data[lead_id]["is_found"] = True
             lead_to_user_data[lead_id]["asid"] = personal_matched_user.asid
             lead_to_user_data[lead_id]["email"] = email
+            already_matched_asids.add(personal_matched_user.asid)
 
         additional_email_dict = {
             email: lead_id
@@ -535,9 +549,16 @@ async def process_user_id(
             if lead_to_user_data[lead_id]["is_found"] == True:
                 continue
 
+            if additional_matched_user.asid in already_matched_asids:
+                logging.debug(
+                    f"Additional matched email: {email}, asid: {personal_matched_user.asid} already exists"
+                )
+                continue
+
             lead_to_user_data[lead_id]["is_found"] = True
             lead_to_user_data[lead_id]["asid"] = additional_matched_user.asid
             lead_to_user_data[lead_id]["email"] = email
+            already_matched_asids.add(additional_matched_user.asid)
 
         lead_first_ids = {
             lu.id: lu.first_visit_id
@@ -1319,7 +1340,7 @@ async def aud_sources_matching(
                 )
 
         logging.info(
-            f"Updated processed and matched records for source_id {count}."
+            f"Updated processed and matched records forUpdated source_id {count}."
         )
 
         total_records, processed_records, matched_records = db_session.execute(
