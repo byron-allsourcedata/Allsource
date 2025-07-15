@@ -171,7 +171,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         return [SyncedPersonRecord(**dict(zip(col_names, row))) for row in rows]
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
-        self.client.command("SET max_query_size = 10485760")
+        self.client.command("SET max_query_size = 104857600")
         ids = self.postgres.collect_user_ids_for_smart_audience(data)
         if not ids:
             return 0
@@ -192,7 +192,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def sorted_enrichment_users_for_validation(
         self, ids: List[UUID], order_by_clause: str
     ):
-        self.client.command("SET max_query_size = 10485760")
+        self.client.command("SET max_query_size = 104857600")
         ids_sql_list = ", ".join(f"'{i}'" for i in ids)
 
         sql = f"""
@@ -207,7 +207,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_delivery_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 10485760")
+        self.client.command("SET max_query_size = 104857600")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -244,7 +244,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_postal_validation(
         self, smart_audience_id: UUID, validation_type: str
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 10485760")
+        self.client.command("SET max_query_size = 104857600")
         if validation_type == "cas_home_address":
             address_prefix = "home_"
         elif validation_type == "cas_office_address":
@@ -293,7 +293,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_confirmation_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 10485760")
+        self.client.command("SET max_query_size = 104857600")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -342,7 +342,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_job_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 10485760")
+        self.client.command("SET max_query_size = 104857600")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
@@ -399,7 +399,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_enrichment_users_for_free_validations(
         self, smart_audience_id: UUID, column_name: str
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 10485760")
+        self.client.command("SET max_query_size = 104857600")
         ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
         if not ids:
             return []
