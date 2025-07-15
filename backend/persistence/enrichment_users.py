@@ -2,10 +2,8 @@ import logging
 from typing import List
 from uuid import UUID
 
-from sqlalchemy import select
 
 from db_dependencies import Db, Clickhouse
-from models import EnrichmentUser
 from resolver import injectable
 
 
@@ -29,6 +27,7 @@ class EnrichmentUsersPersistence:
 
         sql = "SELECT asid FROM enrichment_users WHERE asid IN %(ids)s"
 
+        self.clickhouse.command("SET max_query_size = 104857600")
         result = self.clickhouse.query(sql, {"ids": [str(a) for a in asids]})
 
         found = [row[0] for row in result.result_rows]

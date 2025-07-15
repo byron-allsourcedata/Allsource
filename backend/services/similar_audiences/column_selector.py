@@ -15,8 +15,7 @@ from models import (
 from resolver import injectable
 
 
-@injectable
-class AudienceColumnSelector:
+class AudienceColumnSelectorBase:
     def __init__(self):
         pass
 
@@ -245,3 +244,6 @@ class AudienceColumnSelector:
                 "annual_sales"
             ),
         }
+
+
+AudienceColumnSelector = injectable(AudienceColumnSelectorBase)
