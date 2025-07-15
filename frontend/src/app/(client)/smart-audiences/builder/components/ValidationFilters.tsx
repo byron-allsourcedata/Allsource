@@ -92,6 +92,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 	const [isOpenPostalCAS, setIsOpenPostalCAS] = useState(false);
 	const [isOpenLinkedIn, setIsOpenLinkedIn] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
+	const [peronalRecencySelected, setPersonalRecencySelected] = useState(false);
+	const [businessRecencySelected, setBusinessRecencySelected] = useState(false);
 
 	const [selectedOptionsPersonalEmail, setSelectedOptionsPersonalEmail] =
 		useState<string[]>([]);
@@ -179,8 +181,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 			) {
 				if (option === "Recency") {
 					setSelectedOptionsPersonalEmail((prev) => [...prev, option]);
+					setPersonalRecencySelected(true);
 				} else if (option === "RecencyBusiness") {
 					setSelectedOptionsBusinessEmail((prev) => [...prev, option]);
+					setBusinessRecencySelected(true);
 				}
 			}
 		}
@@ -358,16 +362,17 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 			setValidate(false);
 		}
 
-		// if (useCaseType === "Postal") {
-		// 	if (targetAudience === "Both") {
-		// 		setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
-		// 	} else if (targetAudience === "B2C") {
-		// 		setSelectedOptionsPostalCAS(["CAS home address"]);
-		// 	} else if (targetAudience === "B2B") {
-		// 		setSelectedOptionsPostalCAS(["CAS office address"]);
-		// 	}
-		// 	setValidate(false);
-		// }
+		if (useCaseType === "Postal") {
+			if (targetAudience === "Both") {
+				// setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
+				setSelectedOptionsPostalCAS(["CAS home address"]);
+			} else if (targetAudience === "B2C") {
+				setSelectedOptionsPostalCAS(["CAS home address"]);
+			} else if (targetAudience === "B2B") {
+				// setSelectedOptionsPostalCAS(["CAS office address"]);
+			}
+			setValidate(false);
+		}
 
 		if (
 			(targetAudience === "B2B" || targetAudience === "Both") &&
@@ -679,13 +684,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 													onChange={(event) => {
 														const isChecked = event.target.checked;
 
-														handleOptionClick(
-															setSelectedOptionsPersonalEmail,
-															"Recency",
-														);
-
 														if (!isChecked) {
 															handleNestedSelect("Recency", "");
+															handleOptionClick(
+																setSelectedOptionsPersonalEmail,
+																"Recency",
+															);
 														}
 													}}
 													sx={{
@@ -780,6 +784,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 														{["30 days", "60 days", "90 days"].map(
 															(selectOption: string) => (
 																<MenuItem
+																	disabled={
+																		selectOption === "60 days" ||
+																		selectOption === "30 days"
+																	}
 																	className="second-sub-title"
 																	key={selectOption}
 																	value={selectOption}
@@ -1045,13 +1053,12 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 													onChange={(event) => {
 														const isChecked = event.target.checked;
 
-														handleOptionClick(
-															setSelectedOptionsBusinessEmail,
-															"RecencyBusiness",
-														);
-
 														if (!isChecked) {
 															handleNestedSelect("RecencyBusiness", "");
+															handleOptionClick(
+																setSelectedOptionsBusinessEmail,
+																"RecencyBusiness",
+															);
 														}
 													}}
 													sx={{
@@ -1147,6 +1154,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 														{["30 days", "60 days", "90 days"].map(
 															(selectOption: string) => (
 																<MenuItem
+																	disabled={
+																		selectOption === "60 days" ||
+																		selectOption === "30 days"
+																	}
 																	className="second-sub-title"
 																	key={selectOption}
 																	value={selectOption}
@@ -1479,7 +1490,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																	<Checkbox
 																		size="small"
 																		// disabled={isValidate}
-																		disabled={true}
+																		disabled={option === "CAS office address"}
 																		checked={selectedOptionsPostalCAS.includes(
 																			option,
 																		)}

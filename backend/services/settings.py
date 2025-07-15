@@ -654,6 +654,9 @@ class SettingsService:
 
         return f"${(final_amount / 100):,.0f}"
 
+    def get_billing_cards_details(self, customer_id: str):
+        return {"card_details": get_card_details_by_customer_id(customer_id)}
+
     def get_billing(self, user: User):
         result = {}
         current_plan = self.plan_persistence.get_current_plan(

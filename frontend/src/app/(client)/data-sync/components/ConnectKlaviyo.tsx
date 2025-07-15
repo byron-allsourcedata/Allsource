@@ -45,6 +45,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectKlaviyoPopupProps {
 	open: boolean;
@@ -785,11 +786,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
+					<UserTip limit={150} service="Klaviyo" />
 					<Box
 						sx={{
 							width: "100%",

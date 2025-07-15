@@ -35,6 +35,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectGoogleAdsPopupProps {
 	open: boolean;
@@ -779,11 +780,11 @@ const LinkedinDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
+					<UserTip limit={100} service="Linkedin" />
 					<Box
 						sx={{
 							width: "100%",

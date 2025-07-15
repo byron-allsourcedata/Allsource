@@ -27,6 +27,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { InfoIcon } from "@/icon";
+import UserTip from "@/components/UserTip";
 
 interface OnmisendDataSyncProps {
 	open: boolean;
@@ -551,11 +553,11 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
+					<UserTip limit={100} service="Hubspot" />
 					<Box
 						sx={{
 							width: "100%",

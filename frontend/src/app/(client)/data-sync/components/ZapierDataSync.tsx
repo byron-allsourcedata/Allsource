@@ -30,6 +30,7 @@ import CustomizedProgressBar from "../../../../components/CustomizedProgressBar"
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
+import UserTip from "@/components/UserTip";
 
 interface CreateKlaviyoProps {
 	handleClose: () => void;
@@ -302,11 +303,11 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
+					<UserTip limit={150} service="Zapier" />
 					<Box
 						sx={{
 							width: "100%",

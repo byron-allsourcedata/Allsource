@@ -38,6 +38,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface BingAdsDataSyncProps {
 	open: boolean;
@@ -1329,6 +1330,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 											gap: "16px",
 										}}
 									>
+										<UserTip limit={500} service="BingAds" />
 										<Box
 											sx={{
 												p: 2,
