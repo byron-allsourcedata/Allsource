@@ -40,7 +40,6 @@ class AudienceDataSyncImportedPersons(Base):
     updated_at = Column(TIMESTAMP, nullable=True)
     enrichment_user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(EnrichmentUser.id, ondelete="CASCADE"),
         nullable=False,
     )
 

@@ -393,7 +393,7 @@ class HubspotIntegrationsService:
             if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
                 results.append(
                     {
-                        "enrichment_user_id": enrichment_user.id,
+                        "enrichment_user_id": enrichment_user.asid,
                         "status": profile,
                     }
                 )
@@ -401,7 +401,7 @@ class HubspotIntegrationsService:
             else:
                 results.append(
                     {
-                        "enrichment_user_id": enrichment_user.id,
+                        "enrichment_user_id": enrichment_user.asid,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
