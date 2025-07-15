@@ -415,8 +415,12 @@ class KlaviyoIntegrationsService:
             domain_id=domain_id, user_id=user.get("id")
         )
 
-        lead_users = await self.leads_persistence.get_leads_users_by_user_id(
-            user_id=user.get("id"), limit=credentials.limit
+        lead_users = (
+            self.leads_persistence.fetch_leads_by_domain_and_leads_type(
+                domain_id=domain_id,
+                limit=credentials.limit,
+                data_sync_leads_type=leads_type,
+            )
         )
 
         if lead_users:
@@ -607,8 +611,31 @@ class KlaviyoIntegrationsService:
                 "phone_number": phone_number,
                 "email": profile.email,
             }
+
         if response.status_code == 400:
+            response_json = response.json()
+            errors = response_json.get("errors", [])
+            if any(
+                err.get("detail", "")
+                .lower()
+                .startswith("invalid phone number format")
+                for err in errors
+            ):
+                json_data["data"]["attributes"].pop("phone_number", None)
+                retry_response = await self.__async_handle_request(
+                    method="POST",
+                    url="https://a.klaviyo.com/api/profiles/",
+                    api_key=api_key,
+                    json=json_data,
+                )
+                if retry_response.status_code in (200, 201):
+                    return {
+                        **retry_response.json().get("data", {}),
+                        "phone_number": None,
+                        "email": profile.email,
+                    }
             return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
+
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if response.status_code == 409:

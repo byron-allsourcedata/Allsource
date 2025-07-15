@@ -497,7 +497,7 @@ class Personal(BaseModel):
 class Financial(BaseModel):
     income_range: Optional[Dict[str, int]] = Field(default_factory=dict)
     credit_score_range: Optional[Dict[str, int]] = Field(default_factory=dict)
-    credit_cards: Optional[Dict[str, int]] = Field(default_factory=dict)
+    credit_cards: Optional[Dict[str, float]] = Field(default_factory=dict)
     net_worth_range: Optional[Dict[str, int]] = Field(default_factory=dict)
     bank_card: Optional[Dict[str, int]] = Field(default_factory=dict)
     mail_order_donor: Optional[Dict[str, int]] = Field(default_factory=dict)
