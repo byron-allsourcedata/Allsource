@@ -7,8 +7,18 @@ import re
 import sys
 import time
 from decimal import Decimal
+from typing import List
 
-import requests
+from smartystreets_python_sdk import (
+    StaticCredentials,
+    ClientBuilder,
+    exceptions as smarty_exc,
+)
+from smartystreets_python_sdk.us_street import Candidate
+from smartystreets_python_sdk import Batch
+from smartystreets_python_sdk.us_street import Lookup as StreetLookup
+from smartystreets_python_sdk.us_street.client import Client as USStreetClient
+from smartystreets_python_sdk.us_street.match_type import MatchType
 from aio_pika import IncomingMessage, Channel
 from dotenv import load_dotenv
 from sqlalchemy import func, select
@@ -37,12 +47,22 @@ load_dotenv()
 AUDIENCE_VALIDATION_AGENT_POSTAL = "aud_validation_agent_postal"
 AUDIENCE_VALIDATION_PROGRESS = "AUDIENCE_VALIDATION_PROGRESS"
 AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
-EXPERIANAPERTURE_API_KEY = os.getenv("EXPERIANAPERTURE_API_KEY")
 
 COLUMN_MAPPING = {
     "cas_home_address": "cas_home_address",
     "cas_office_address": "cas_office_address",
 }
+
+AUTH_ID = os.getenv("SMARTY_AUTH_ID")
+AUTH_TOKEN = os.getenv("SMARTY_AUTH_TOKEN")
+
+builder = ClientBuilder(StaticCredentials(AUTH_ID, AUTH_TOKEN))
+
+builder.max_retries = 0
+
+SMARTY_CLIENT: USStreetClient = builder.build_us_street_api_client()
+
+batc = Batch()
 
 
 def setup_logging(level):
@@ -53,40 +73,29 @@ def setup_logging(level):
     )
 
 
-def tokenize_address(text: str) -> set[str]:
-    tokens = re.findall(r"\w+", text.lower())
-    filtered = {
-        tok for tok in tokens if not re.fullmatch(r"\d{5}(?:-\d{4})?", tok)
-    }
-    return filtered
+_WHITESPACE = re.compile(r"\s+")
 
 
-def compare_addresses(
-    normalized_address: str, normalized_addr_text: str
+def _norm(text: str) -> str:
+    return _WHITESPACE.sub(" ", text).strip().casefold()
+
+
+def verify_address(
+    candidates: List[Candidate],
+    req_street: str,
+    req_city: str,
+    req_state: str,
 ) -> bool:
-    tokens_req = tokenize_address(normalized_address)
-    tokens_text = tokenize_address(normalized_addr_text)
-    return tokens_req.issubset(tokens_text)
+    want_street = _norm(req_street)
+    want_city = _norm(req_city)
+    want_state = _norm(req_state)
 
-
-def verify_address(addresses, address, city, state_name):
-    normalized_address = re.sub(r"\s+", " ", address.lower().strip())
-    normalized_city = city.lower().strip()
-    normalized_state = state_name.lower().strip()
-    is_verified = False
-
-    for addr in addresses:
-        addr_text = addr.get("text", "").lower()
-        normalized_addr_text = re.sub(r"\s+", " ", addr_text.strip())
-        if (
-            compare_addresses(normalized_address, normalized_addr_text)
-            and normalized_city in normalized_addr_text
-            and normalized_state in normalized_addr_text
-        ):
-            is_verified = True
-            break
-
-    return is_verified
+    for c in candidates:
+        full = _norm(f"{c.delivery_line_1} {c.last_line}")
+        logging.info(f"full result: {full}")
+        if want_city in full and want_state in full and want_street in full:
+            return True
+    return False
 
 
 async def process_rmq_message(
@@ -113,67 +122,72 @@ async def process_rmq_message(
         write_off_funds = Decimal(0)
         count_subtracted = Decimal(0)
 
-        for record in batch:
-            person_id = record.get("audience_smart_person_id")
-            postal_code = record.get("postal_code")
-            country = record.get("country")
-            city = record.get("city")
-            state_name = record.get("state_name")
-            address = record.get("address")
+        smarty_lookups = []
+        lookup_by_person_id = {}
 
-            if not postal_code or not city or not state_name:
+        for record in batch:
+            person_id = record["audience_smart_person_id"]
+            street = record.get("address", "")
+            city = record.get("city", "")
+            state = record.get("state_name", "")
+            zipcode = record.get("postal_code", "")
+
+            logging.info(f"{zipcode} {state} {city} {street}")
+
+            if not (street and city and state and zipcode):
                 failed_ids.append(person_id)
                 continue
 
             write_off_funds += Decimal(validation_cost)
 
-            existing_verification = (
+            existing = (
                 db_session.query(AudiencePostalVerification)
-                .filter(AudiencePostalVerification.postal_code == postal_code)
+                .filter_by(postal_code=zipcode)
                 .first()
             )
-
-            if not existing_verification:
-                response = requests.post(
-                    "https://api.experianaperture.io/address/lookup/v2",
-                    json={
-                        "country_iso": country or "USA",
-                        "datasets": ["us-address"],
-                        "key": {"type": "postal_code", "value": postal_code},
-                    },
-                    headers={
-                        "Auth-Token": EXPERIANAPERTURE_API_KEY,
-                        "Content-Type": "application/json",
-                        "Add-Addresses": "true",
-                    },
-                )
-                response_data = response.json()
-                logging.debug(f"response: {response.status_code}")
-
-                if response.status_code == 402:
+            if existing:
+                logging.info("There is such a Postal in our database")
+                if not existing.is_verified:
                     failed_ids.append(person_id)
-                    continue
+                continue
 
-                elif response.status_code != 200 and not response_data.get(
-                    "success"
-                ):
-                    logging.debug(f"response: {response_data}")
-                    failed_ids.append(person_id)
+            lookup = StreetLookup()
+            lookup.input_id = str(person_id)
+            lookup.street = street
+            lookup.city = city
+            lookup.state = state
+            lookup.zipcode = zipcode
+            lookup.candidates = 5
+            lookup.match = MatchType.INVALID
 
-                addresses = response_data.get("result", {}).get("addresses", [])
-                is_verified = verify_address(
-                    addresses, address, city, state_name
-                )
-                verifications.append(
-                    {"postal_code": postal_code, "is_verified": is_verified}
-                )
+            smarty_lookups.append(lookup)
+            lookup_by_person_id[person_id] = lookup
 
+        if smarty_lookups:
+            try:
+                for lookup in smarty_lookups:
+                    batc.add(lookup)
+
+                SMARTY_CLIENT.send_batch(batc)
+            except smarty_exc.SmartyException as err:
+                logging.error("Smarty error: %s", err)
+                failed_ids.extend(list(lookup_by_person_id.keys()))
             else:
-                logging.debug("There is such a Postal in our database")
-                is_verified = existing_verification.is_verified
-
-            if not is_verified:
-                failed_ids.append(person_id)
+                for pid, lookup in lookup_by_person_id.items():
+                    candidates = lookup.result
+                    logging.info(f"Finded {len(candidates)} candidates")
+                    is_ok = verify_address(
+                        candidates,
+                        lookup.street,
+                        lookup.city,
+                        lookup.state,
+                    )
+                    logging.info(f"is ok {is_ok}")
+                    verifications.append(
+                        {"postal_code": lookup.zipcode, "is_verified": is_ok}
+                    )
+                    if not is_ok:
+                        failed_ids.append(pid)
 
         success_ids = [
             rec["audience_smart_person_id"]

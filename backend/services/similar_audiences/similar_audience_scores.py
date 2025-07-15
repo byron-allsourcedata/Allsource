@@ -200,50 +200,6 @@ class SimilarAudiencesScoresService:
         print(f"Total insert time: {total_insert_time:.3f} sec")
         print(f"Total update time: {total_update_time:.3f} sec")
 
-    def calculate_score_dict_batch(
-        self,
-        model: CatBoostRegressor,
-        persons: List[dict],
-        config: NormalizationConfig,
-    ) -> List[float]:
-        df = DataFrame(persons)
-        return self.calculate_score_batches(model, df, config=config)
-
-    def calculate_score_batches(
-        self,
-        model: CatBoostRegressor,
-        df: DataFrame,
-        config: NormalizationConfig,
-    ) -> List[float]:
-        df_normed, _ = self.normalization_service.normalize_dataframe(
-            df, config
-        )
-        result = model.predict(
-            df_normed, thread_count=get_int_env("LOOKALIKE_THREAD_COUNT")
-        )
-        return result.tolist()
-
-    @deprecated("use v3")
-    def calculate_batch_scores_v2(
-        self,
-        asids: List[UUID],
-        batch: list[dict[str, Any]],
-        model: CatBoostRegressor,
-        lookalike_id: UUID,
-        config: NormalizationConfig,
-    ) -> tuple[float, float]:
-        scores, duration = measure(
-            lambda _: self.calculate_score_dict_batch(model, batch, config)
-        )
-
-        _, insert_time = measure(
-            lambda _: self.enrichment_lookalike_scores_persistence.bulk_insert(
-                lookalike_id, list(zip(asids, scores))
-            )
-        )
-
-        return duration, insert_time
-
     def calculate_batch_scores_v3(
         self,
         asids: list[UUID],
@@ -257,6 +213,29 @@ class SimilarAudiencesScoresService:
         )
 
         return duration, list(zip(asids, scores))
+
+    def calculate_score_dict_batch(
+        self,
+        model: CatBoostRegressor,
+        persons: list[dict],
+        config: NormalizationConfig,
+    ) -> list[float]:
+        df = DataFrame(persons)
+        return self.calculate_score_batches(model, df, config=config)
+
+    def calculate_score_batches(
+        self,
+        model: CatBoostRegressor,
+        df: DataFrame,
+        config: NormalizationConfig,
+    ) -> list[float]:
+        df_normed, _ = self.normalization_service.normalize_dataframe(
+            df, config
+        )
+        result = model.predict(
+            df_normed, thread_count=get_int_env("LOOKALIKE_THREAD_COUNT")
+        )
+        return result.tolist()
 
     def top_scores(
         self,
@@ -273,23 +252,6 @@ class SimilarAudiencesScoresService:
         return sorted(combined.items(), key=lambda x: x[1], reverse=True)[
             :top_n
         ]
-
-    @deprecated("deprecated")
-    def calculate_batch_scores(
-        self,
-        asids: List[UUID],
-        batch: list[dict[str, Any]],
-        model: CatBoostRegressor,
-        lookalike_id: UUID,
-    ) -> tuple[float, float]:
-        config = self.prepare_config(lookalike_id)
-        return self.calculate_batch_scores_v2(
-            asids=asids,
-            batch=batch,
-            model=model,
-            lookalike_id=lookalike_id,
-            config=config,
-        )
 
     def prepare_config(self, lookalike_id: UUID) -> NormalizationConfig:
         lookalike = self.lookalikes.get_lookalike(lookalike_id)

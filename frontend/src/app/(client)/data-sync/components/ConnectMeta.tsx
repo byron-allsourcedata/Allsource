@@ -39,6 +39,7 @@ import {
 } from "../../../../components/ToastNotification";
 import LinearProgress from "@mui/material/LinearProgress";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectMetaPopupProps {
 	open: boolean;
@@ -923,6 +924,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						},
 					}}
 				>
+					<UserTip limit={500} service="Meta" />
 					<Box
 						sx={{
 							width: "100%",

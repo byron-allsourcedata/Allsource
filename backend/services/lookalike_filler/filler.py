@@ -1,6 +1,5 @@
-from concurrent.futures import Future
+from concurrent.futures import Future, ProcessPoolExecutor
 import logging
-from py_compile import _get_default_invalidation_mode
 import statistics
 import time
 from typing import Tuple, Dict, List, TypedDict
@@ -25,6 +24,7 @@ from persistence.enrichment_users import EnrichmentUsersPersistence
 from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
 from services.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
+from services.lookalike_filler.worker import filler_worker
 from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
@@ -46,8 +46,7 @@ class SimilarityStats(TypedDict):
     median: float | None
 
 
-@injectable
-class LookalikeFillerService:
+class LookalikeFillerServiceBase:
     def __init__(
         self,
         db: Db,
@@ -245,12 +244,12 @@ class LookalikeFillerService:
 
         buckets = self.get_buckets(thread_count)
 
-        with ThreadPoolExecutor(max_workers=thread_count) as executor:
+        with ProcessPoolExecutor(max_workers=thread_count) as executor:
             futures: list[Future[list[PersonScore]]] = []
 
             for bucket in buckets:
                 future = executor.submit(
-                    self.filler_worker,
+                    filler_worker,
                     significant_fields=significant_fields,
                     config=config,
                     value_by_asid=value_by_asid,
@@ -273,8 +272,14 @@ class LookalikeFillerService:
                 )
 
                 logging.info(f"sort done")
+            logging.info("done")
 
-        self.clickhouse.command("SET max_query_size = 20485760")
+        logging.info("running clickhouse query")
+
+        # strange multiprocessing issue, clickhouse client is 'locked' by concurrent client, but is should execute synchronously..
+        # so i re-init the client
+        self.clickhouse = ClickhouseConfig.get_client()
+        _ = self.clickhouse.command("SET max_query_size = 20485760")
         self.enrichment_scores.bulk_insert(
             lookalike_id=lookalike_id, scores=top_scores
         )
@@ -472,3 +477,6 @@ class LookalikeFillerService:
             limit = None
 
         return limit
+
+
+LookalikeFillerService = injectable(LookalikeFillerServiceBase)

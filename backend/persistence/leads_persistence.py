@@ -1604,10 +1604,6 @@ class LeadsPersistence:
         data_sync_leads_type: str,
         last_sent_lead_id=None,
     ):
-        current_date_time = datetime.now(timezone.utc)
-        past_time = current_date_time - timedelta(hours=2)
-        past_date = past_time.date()
-        past_time = past_time.time()
         if last_sent_lead_id is None:
             last_sent_lead_id = 0
 

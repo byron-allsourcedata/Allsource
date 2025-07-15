@@ -40,6 +40,7 @@ import { builderHintCards } from "../context/hintsCardsContent";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
 import { BuilderKey } from "../context/hintsCardsContent";
+import BadSourceErrorModal from "./components/BadSourceErrorModal";
 
 interface Row {
 	id: number;
@@ -127,6 +128,8 @@ const SourcesImport: React.FC = () => {
 		DomainsLeads[]
 	>([]);
 	const [showTargetStep, setShowTargetStep] = useState(false);
+
+	const [showModal, setShowModal] = useState(false);
 
 	type SkeletonState = Record<BuilderKey, boolean>;
 
@@ -913,6 +916,12 @@ const SourcesImport: React.FC = () => {
 								</Box>
 							</Box>
 						)}
+						<BadSourceErrorModal
+							open={showModal}
+							onClose={() => {
+								setShowModal(false);
+							}}
+						/>
 						<Box
 							sx={{
 								flex: 1,

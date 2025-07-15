@@ -631,7 +631,7 @@ async def process_user_id(
 
         if updates:
             stmt = insert(AudienceSourcesMatchedPerson).values(updates)
-            stmt.on_conflict_do_nothing(
+            stmt = stmt.on_conflict_do_nothing(
                 index_elements=["source_id", "enrichment_user_asid"]
             )
             db_session.execute(stmt)

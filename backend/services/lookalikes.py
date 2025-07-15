@@ -481,7 +481,7 @@ class AudienceLookalikesService:
         self.lookalikes_persistence_service.change_lookalike_status(
             status=status, lookalike_id=lookalike_id
         )
-      
+
     def get_lookalike_asids(self, lookalike_id: UUID) -> list[UUID] | None:
         """
         Fetches 'top' users for provided lookalike and returns their asids

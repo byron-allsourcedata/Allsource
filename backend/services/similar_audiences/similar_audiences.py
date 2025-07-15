@@ -17,7 +17,6 @@ from schemas.similar_audiences import (
 )
 from .audience_data_normalization import (
     AudienceDataNormalizationService,
-    AudienceDataNormalizationServiceDep,
     default_normalization_config,
 )
 from .exceptions import (
@@ -178,7 +177,7 @@ class SimilarAudienceService:
 
 
 def get_similar_audiences_service(
-    audience_data_normalization_service: AudienceDataNormalizationServiceDep,
+    audience_data_normalization_service: AudienceDataNormalizationService,
 ):
     return SimilarAudienceService(
         audience_data_normalization_service=audience_data_normalization_service

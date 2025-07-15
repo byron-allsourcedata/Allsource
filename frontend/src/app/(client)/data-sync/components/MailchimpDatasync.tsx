@@ -35,6 +35,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectMailChimpPopupProps {
 	open: boolean;
@@ -853,11 +854,11 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
+					<UserTip limit={500} service="Mailchimps" />
 					<Box
 						sx={{
 							width: "100%",

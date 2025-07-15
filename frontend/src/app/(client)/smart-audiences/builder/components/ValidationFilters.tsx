@@ -362,16 +362,17 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 			setValidate(false);
 		}
 
-		// if (useCaseType === "Postal") {
-		// 	if (targetAudience === "Both") {
-		// 		setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
-		// 	} else if (targetAudience === "B2C") {
-		// 		setSelectedOptionsPostalCAS(["CAS home address"]);
-		// 	} else if (targetAudience === "B2B") {
-		// 		setSelectedOptionsPostalCAS(["CAS office address"]);
-		// 	}
-		// 	setValidate(false);
-		// }
+		if (useCaseType === "Postal") {
+			if (targetAudience === "Both") {
+				// setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
+				setSelectedOptionsPostalCAS(["CAS home address"]);
+			} else if (targetAudience === "B2C") {
+				setSelectedOptionsPostalCAS(["CAS home address"]);
+			} else if (targetAudience === "B2B") {
+				// setSelectedOptionsPostalCAS(["CAS office address"]);
+			}
+			setValidate(false);
+		}
 
 		if (
 			(targetAudience === "B2B" || targetAudience === "Both") &&
@@ -1489,7 +1490,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 																	<Checkbox
 																		size="small"
 																		// disabled={isValidate}
-																		disabled={true}
+																		disabled={option === "CAS office address"}
 																		checked={selectedOptionsPostalCAS.includes(
 																			option,
 																		)}

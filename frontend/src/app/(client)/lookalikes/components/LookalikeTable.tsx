@@ -47,7 +47,6 @@ import {
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { TableRowData } from "../page";
 
-
 interface LookalikeTableProps {
 	tableData: TableRowData[];
 	order?: "asc" | "desc";

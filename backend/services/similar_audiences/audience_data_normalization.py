@@ -8,7 +8,6 @@ from pandas import DataFrame
 from pandas.errors import PerformanceWarning
 import numpy as np
 from config.folders import Folders
-from resolver import injectable
 from schemas.similar_audiences import (
     AudienceData,
     NormalizationConfig,
@@ -81,8 +80,7 @@ def default_normalization_config() -> NormalizationConfig:
     )
 
 
-@injectable
-class AudienceDataNormalizationService:
+class AudienceDataNormalizationServiceBase:
     def __init__(self):
         pass
 
@@ -227,10 +225,10 @@ class AudienceDataNormalizationService:
 
 
 def get_audience_data_normalization_service():
-    return AudienceDataNormalizationService()
+    return AudienceDataNormalizationServiceBase()
 
 
-AudienceDataNormalizationServiceDep = Annotated[
-    AudienceDataNormalizationService,
+AudienceDataNormalizationService = Annotated[
+    AudienceDataNormalizationServiceBase,
     Depends(get_audience_data_normalization_service),
 ]

@@ -33,6 +33,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectS3PopupProps {
 	open: boolean;
@@ -646,6 +647,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 						height: "100%",
 					}}
 				>
+					<UserTip limit={500} service="S3" />
 					<Box
 						sx={{
 							width: "100%",

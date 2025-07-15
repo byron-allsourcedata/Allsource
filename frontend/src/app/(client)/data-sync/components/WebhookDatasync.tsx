@@ -34,6 +34,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import UserTip from "@/components/UserTip";
 
 interface ConnectWebhookPopupProps {
 	open: boolean;
@@ -706,11 +707,11 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
+					<UserTip limit={150} service="Webhook" />
 					<Box
 						sx={{
 							width: "100%",
