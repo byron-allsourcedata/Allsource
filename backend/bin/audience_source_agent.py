@@ -1340,7 +1340,7 @@ async def aud_sources_matching(
                 )
 
         logging.info(
-            f"Updated processed and matched records forUpdated source_id {count}."
+            f"Updated processed and matched records for source_id {count}."
         )
 
         total_records, processed_records, matched_records = db_session.execute(
