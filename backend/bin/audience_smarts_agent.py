@@ -72,14 +72,19 @@ async def aud_smarts_matching(
 
             start_index = already_processed
 
-            bulk_data = [
-                {
-                    "smart_audience_id": str(aud_smart_id),
-                    "enrichment_user_asid": enrichment_user_id,
-                    "sort_order": start_index + idx,
-                }
-                for idx, enrichment_user_id in enumerate(enrichment_users_ids)
-            ]
+            bulk_data = []
+            for idx, enrichment_user_id in enumerate(enrichment_users_ids):
+                if enrichment_user_id in (None, "", "None"):
+                    continue
+
+                bulk_data.append(
+                    {
+                        "smart_audience_id": aud_smart_id,
+                        "enrichment_user_asid": enrichment_user_id,
+                        "sort_order": start_index + idx,
+                    }
+                )
+
             db_session.bulk_insert_mappings(AudienceSmartPerson, bulk_data)
             db_session.flush()
 
