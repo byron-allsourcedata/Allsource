@@ -745,22 +745,11 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
-					<Box
-						sx={{
-							marginTop: "16px",
-							width: "95%",
-						}}
-					>
-						<UserTip
-							title="Data Sync Speed"
-							content="Omnisend's standard sync speed is 150 contacts per minute."
-						/>
-					</Box>
+					<UserTip limit={150} service="Omnisend" />
 					<Box
 						sx={{
 							width: "100%",

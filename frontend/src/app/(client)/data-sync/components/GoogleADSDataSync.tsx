@@ -776,22 +776,11 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
-					<Box
-						sx={{
-							marginTop: "16px",
-							width: "95%",
-						}}
-					>
-						<UserTip
-							title="GoogleAds' Sync Speed"
-							content="Hubspot's standard sync speed is 150 contacts per minute."
-						/>
-					</Box>
+					<UserTip limit={500} service="GoogleAds" />
 					<Box
 						sx={{
 							width: "100%",

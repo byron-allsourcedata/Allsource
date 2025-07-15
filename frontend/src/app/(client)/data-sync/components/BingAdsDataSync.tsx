@@ -1330,18 +1330,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 											gap: "16px",
 										}}
 									>
-										<Box
-											sx={{
-												// margin: "0px 32px",
-												marginTop: "16px",
-												width: "95%",
-											}}
-										>
-											<UserTip
-												title="Data Sync Speed"
-												content="BingAds' standard sync speed is 150 contacts per minute."
-											/>
-										</Box>
+										<UserTip limit={500} service="BingAds" />
 										<Box
 											sx={{
 												p: 2,

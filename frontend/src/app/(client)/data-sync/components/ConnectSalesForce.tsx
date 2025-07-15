@@ -489,22 +489,11 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
-					<Box
-						sx={{
-							marginTop: "16px",
-							width: "95%",
-						}}
-					>
-						<UserTip
-							title="Data Sync Speed"
-							content="SalesForce's standard sync speed is 150 contacts per minute."
-						/>
-					</Box>
+					<UserTip limit={500} service="SalesForce" />
 					<Box
 						sx={{
 							width: "100%",

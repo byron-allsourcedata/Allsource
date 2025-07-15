@@ -647,17 +647,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 						height: "100%",
 					}}
 				>
-					<Box
-						sx={{
-							marginTop: "16px",
-							width: "95%",
-						}}
-					>
-						<UserTip
-							title="Data Sync Speed"
-							content="S3's standard sync speed is 150 contacts per minute."
-						/>
-					</Box>
+					<UserTip limit={500} service="S3" />
 					<Box
 						sx={{
 							width: "100%",

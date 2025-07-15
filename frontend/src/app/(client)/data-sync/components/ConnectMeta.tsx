@@ -924,18 +924,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						},
 					}}
 				>
-					<Box
-						sx={{
-							// margin: "0px 32px",
-							marginTop: "16px",
-							width: "95%",
-						}}
-					>
-						<UserTip
-							title="Data Sync Speed"
-							content="Hubspot's standard sync speed is 150 contacts per minute."
-						/>
-					</Box>
+					<UserTip limit={500} service="Meta" />
 					<Box
 						sx={{
 							width: "100%",

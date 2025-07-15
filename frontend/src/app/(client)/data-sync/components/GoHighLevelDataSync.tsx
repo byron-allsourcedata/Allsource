@@ -485,22 +485,11 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
-					<Box
-						sx={{
-							marginTop: "16px",
-							width: "95%",
-						}}
-					>
-						<UserTip
-							title="Data Sync Speed"
-							content="GoHighLevel's standard sync speed is 150 contacts per minute."
-						/>
-					</Box>
+					<UserTip limit={50} service="GoHighLevel" />
 					<Box
 						sx={{
 							width: "100%",

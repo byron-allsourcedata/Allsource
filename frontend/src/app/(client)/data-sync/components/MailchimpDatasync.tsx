@@ -854,22 +854,11 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
 					}}
 				>
-					<Box
-						sx={{
-							marginTop: "16px",
-							width: "95%",
-						}}
-					>
-						<UserTip
-							title="Data Sync Speed"
-							content="Mailchimps's standard sync speed is 150 contacts per minute."
-						/>
-					</Box>
+					<UserTip limit={500} service="Mailchimps" />
 					<Box
 						sx={{
 							width: "100%",
