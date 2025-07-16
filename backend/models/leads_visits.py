@@ -37,7 +37,7 @@ class LeadsVisits(Base):
     pages_count = Column(Integer, nullable=True)
     average_time_sec = Column(Integer, nullable=False, default=10)
     full_time_sec = Column(Integer, nullable=False, default=10)
-    ip = Column(VARCHAR(32), nullable=True)
+    ip = Column(VARCHAR(64), nullable=True)
     lead_id = Column(
         BigInteger,
         ForeignKey("leads_users.id", ondelete="CASCADE"),
