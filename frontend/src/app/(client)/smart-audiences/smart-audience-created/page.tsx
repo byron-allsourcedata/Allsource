@@ -412,9 +412,7 @@ const SourcesList: React.FC = () => {
 													createdData?.active_segment_records) ||
 											(createdData?.processed_active_segment_records ===
 												createdData?.active_segment_records &&
-												(
-													createdData?.processed_active_segment_records !==
-														0)) ? (
+												createdData?.processed_active_segment_records !== 0) ? (
 												createdData.active_segment_records.toLocaleString(
 													"en-US",
 												)

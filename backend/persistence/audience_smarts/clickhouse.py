@@ -176,7 +176,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         return final_result
 
-
     def get_synced_persons_by_smart_aud_id(
         self, data_sync_id: int, enrichment_field_names: List[str]
     ) -> List[SyncedPersonRecord]:
