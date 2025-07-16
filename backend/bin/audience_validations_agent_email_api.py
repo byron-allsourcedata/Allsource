@@ -11,7 +11,6 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
-from services.exceptions import InsufficientCreditsError, MillionVerifierError
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
