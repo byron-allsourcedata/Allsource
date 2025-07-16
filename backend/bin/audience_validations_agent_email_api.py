@@ -11,6 +11,8 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
+from services.exceptions import InsufficientCreditsError, MillionVerifierError
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -78,7 +80,7 @@ async def process_rmq_message(
 
                 write_off_funds += Decimal(validation_cost)
 
-                if not million_verifier_service.is_email_verify(email):
+                if not await million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
 
@@ -99,7 +101,7 @@ async def process_rmq_message(
 
                 write_off_funds += Decimal(validation_cost)
 
-                if not million_verifier_service.is_email_verify(email):
+                if not await million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
 
@@ -226,6 +228,23 @@ async def process_rmq_message(
         logging.info("sent sse with total count")
 
         await message.ack()
+
+    except MillionVerifierError as e:
+        logging.error(
+            f"MillionVerifierError while processing data sync: {e}",
+            exc_info=True,
+        )
+        db_session.rollback()
+        await message.reject(requeue=True)
+        await asyncio.sleep(60 * 5)
+
+    except InsufficientCreditsError as e:
+        logging.error(
+            f"InsufficientCreditsError while processing data sync: {e}"
+        )
+        db_session.rollback()
+        await message.reject(requeue=True)
+        await asyncio.sleep(60 * 5)
 
     except Exception as e:
         logging.error(f"Error processing validation: {e}", exc_info=True)
