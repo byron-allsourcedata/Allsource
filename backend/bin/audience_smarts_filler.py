@@ -183,7 +183,7 @@ async def aud_smarts_reader(
 
                     if not sorted_persons:
                         break
-                else: 
+                else:
                     sorted_persons = persons
 
                 logging.info(
