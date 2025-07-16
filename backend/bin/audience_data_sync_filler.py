@@ -131,34 +131,12 @@ def update_data_sync_integration(
     return no_of_contacts
 
 
-def fetch_enrichment_users_from_clickhouse(
-    ch_client: Clickhouse,
-    enrichment_user_asids: list[str],
-    limit: int,
-):
-    if not enrichment_user_asids:
-        return []
-
-    asids_list_str = ", ".join(
-        f"'{asid}'" for asid in enrichment_user_asids[:limit]
-    )
-    query = f"""
-        SELECT asid
-        FROM enrichment_users
-        WHERE asid IN ({asids_list_str})
-        ORDER BY asid
-        LIMIT {limit}
-    """
-    result = ch_client.query(query)
-    return [{"asid": row[0]} for row in result.result_rows]
-
-
 def get_enrichment_user_ids_from_pg(
     db_session: Session,
     data_sync_id: int,
     limit: int,
     last_sent_enrichment_id: Optional[UUID] = None,
-) -> list[str]:
+) -> list[dict[str, str]]:
     query = (
         db_session.query(AudienceSmartPerson.enrichment_user_asid)
         .join(
@@ -182,7 +160,11 @@ def get_enrichment_user_ids_from_pg(
         )
 
     enrichment_user_ids = query.limit(limit).all()
-    return [str(row.enrichment_user_asid) for row in enrichment_user_ids]
+    return [
+        {"asid": str(row.enrichment_user_asid)}
+        for row in enrichment_user_ids
+        if row.enrichment_user_asid
+    ]
 
 
 def update_last_sent_enrichment_user(
@@ -210,7 +192,7 @@ def get_previous_imported_enrichment_users(
         )
         .join(
             AudienceDataSyncImportedPersons,
-            AudienceDataSyncImportedPersons.enrichment_user_id
+            AudienceDataSyncImportedPersons.enrichment_user_asid
             == AudienceSmartPerson.enrichment_user_asid,
         )
         .join(
@@ -258,7 +240,7 @@ async def send_leads_to_rmq(
     records = [
         {
             "status": DataSyncImportedStatus.SENT.value,
-            "enrichment_user_id": enrichment_user_asid,
+            "enrichment_user_asid": enrichment_user_asid,
             "service_name": user_integrations_service_name,
             "data_sync_id": data_sync.id,
             "created_at": datetime.now(timezone.utc),
@@ -270,10 +252,10 @@ async def send_leads_to_rmq(
         insert(AudienceDataSyncImportedPersons)
         .values(records)
         .on_conflict_do_nothing(
-            index_elements=["enrichment_user_id", "data_sync_id"]
+            index_elements=["enrichment_user_asid", "data_sync_id"]
         )
         .returning(
-            AudienceDataSyncImportedPersons.enrichment_user_id,
+            AudienceDataSyncImportedPersons.enrichment_user_asid,
             AudienceDataSyncImportedPersons.id,
         )
     )
@@ -281,24 +263,24 @@ async def send_leads_to_rmq(
     result = session.execute(stmt)
     session.commit()
 
-    inserted_map = {row.enrichment_user_id: row.id for row in result}
+    inserted_map = {row.enrichment_user_asid: row.id for row in result}
     missing = set(enrichment_user_asids) - set(inserted_map.keys())
     if missing:
         q = select(
-            AudienceDataSyncImportedPersons.enrichment_user_id,
+            AudienceDataSyncImportedPersons.enrichment_user_asid,
             AudienceDataSyncImportedPersons.id,
         ).where(
             AudienceDataSyncImportedPersons.data_sync_id == data_sync.id,
         )
-        for eid, pid in session.execute(q):
-            inserted_map[eid] = pid
+        for asid, pid in session.execute(q):
+            inserted_map[asid] = pid
 
     arr_enrichment_users = [
         {
             "data_sync_imported_id": str(imported_id),
-            "enrichment_user_id": str(eid),
+            "enrichment_user_asid": str(asid),
         }
-        for eid, imported_id in inserted_map.items()
+        for asid, imported_id in inserted_map.items()
     ]
 
     msg = {
@@ -359,14 +341,7 @@ async def process_user_integrations(
                 limit=query_limit,
                 last_sent_enrichment_id=data_sync.last_sent_enrichment_id,
             )
-
-            additional_leads = fetch_enrichment_users_from_clickhouse(
-                ch_client=ch_session,
-                enrichment_user_asids=enrichment_user_asids,
-                limit=query_limit,
-            )
-
-            enrichment_users.extend(additional_leads)
+            enrichment_users.extend(enrichment_user_asids)
 
         if not enrichment_users:
             logging.info(f"enrichment_users empty")
