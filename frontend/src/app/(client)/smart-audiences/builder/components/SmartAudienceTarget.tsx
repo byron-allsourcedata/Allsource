@@ -412,10 +412,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 				target_schema: targetAudience.toLowerCase(),
 				data_sources: selectedSources,
 				validation_params: validationFilters,
-				contacts_to_validate: isValidateSkip ? null : value,
+				contacts_to_validate: isValidateSkip ? AudienceSize : value,
 				is_validate_skip: isValidateSkip,
 				smart_audience_name: audienceName,
-				active_segment_records: value,
+				active_segment_records: isValidateSkip ? AudienceSize : value,
 				total_records: AudienceSize,
 			};
 

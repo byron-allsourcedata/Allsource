@@ -268,12 +268,12 @@ const DetailsPopup: React.FC<DetailsPopupProps> = ({
 							}}
 						>
 							<Typography className="first-sub-title">{name}</Typography>
-							<IconButton size="small">
+							{/* <IconButton size="small">
 								<DownloadIcon
 									fontSize="medium"
 									sx={{ color: "rgba(128, 128, 128, 1)" }}
 								/>
-							</IconButton>
+							</IconButton> */}
 						</Box>
 					</Box>
 

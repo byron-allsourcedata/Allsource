@@ -76,7 +76,7 @@ async def aud_smarts_reader(
         data_sources = data.get("data_sources")
         active_segment = data.get("active_segment")
         need_validate = data.get("need_validate")
-        validation_params = data.get("validation_params")
+        validation_params = data.get("validation_params") or {}
 
         priority_raw = audience_settings_persistence.get_validation_priority()
         priority_list = priority_raw.split(",")
@@ -172,12 +172,19 @@ async def aud_smarts_reader(
 
                 persons = [row[0] for row in final_query.all()]
 
-                sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(
-                    persons, order_by_clause
-                )
+                logging.info(f"len(persons), {len(persons)}")
 
-                if not sorted_persons:
-                    break
+                if order_by_clause:
+                    sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(
+                        persons, order_by_clause
+                    )
+
+                    logging.info(f"len(sorted_persons), {len(sorted_persons)}")
+
+                    if not sorted_persons:
+                        break
+                else:
+                    sorted_persons = persons
 
                 logging.info(
                     f"current count {count}, common count {active_segment // SELECTED_ROW_COUNT}"
@@ -213,7 +220,7 @@ async def aud_smarts_reader(
     except BaseException as e:
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
-        await message.ack()
+        await message.nack()
 
 
 async def main():
