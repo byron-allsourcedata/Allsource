@@ -86,24 +86,24 @@ def check_correct_data_sync(
     if data_sync_imported_lead.status != DataSyncImportedStatus.SENT.value:
         return False
 
-    if data_sync_imported_lead.enrichment_user_id != UUID(enrichment_user_id):
-        return False
+    # if data_sync_imported_lead.enrichment_user_id != UUID(enrichment_user_id):
+    #     return False
 
     return True
 
 
 def get_enrichment_users_from_clickhouse(
     ch_client: Clickhouse,
-    enrichment_user_ids: list[str],
+    enrichment_user_asids: list[str],
 ) -> list[EnrichmentUser]:
-    if not enrichment_user_ids:
+    if not enrichment_user_asids:
         return []
 
-    ids_str = ", ".join(f"'{uid}'" for uid in enrichment_user_ids)
+    asids_str = ", ".join(f"'{asid}'" for asid in enrichment_user_asids)
     query = f"""
         SELECT *
         FROM enrichment_users
-        WHERE asid IN ({ids_str})
+        WHERE asid IN ({asids_str})
     """
     result = ch_client.query(query)
     columns = result.column_names
@@ -221,7 +221,7 @@ def get_enrichment_users_from_clickhouse(
 def get_lead_attributes_from_ch(
     pg_session,
     ch_client: Clickhouse,
-    enrichment_user_ids: list[str],
+    enrichment_user_asids: list[str],
     data_sync_id: int,
 ):
     result = (
@@ -249,7 +249,7 @@ def get_lead_attributes_from_ch(
     user_integration, data_sync, target_schema, validations = result
 
     enrichment_users = get_enrichment_users_from_clickhouse(
-        ch_client, enrichment_user_ids
+        ch_client, enrichment_user_asids
     )
 
     return (
@@ -335,8 +335,8 @@ def bulk_update_data_sync_imported_leads(
         stmt = (
             update(AudienceDataSyncImportedPersons)
             .where(
-                AudienceDataSyncImportedPersons.enrichment_user_id
-                == u["enrichment_user_id"],
+                AudienceDataSyncImportedPersons.enrichment_user_asid
+                == u["enrichment_user_asid"],
                 AudienceDataSyncImportedPersons.data_sync_id
                 == integration_data_sync.id,
             )
@@ -415,29 +415,29 @@ async def ensure_integration(
     try:
         message_body = json.loads(message.body)
         data_sync_id = message_body["data_sync_id"]
-        enrichment_user_ids = []
+        enrichment_user_asids = []
 
         for enrichment_users in message_body.get("arr_enrichment_users"):
-            enrichment_user_id = enrichment_users.get("enrichment_user_id")
-            enrichment_user_ids.append(enrichment_user_id)
+            enrichment_user_asid = enrichment_users.get("enrichment_user_asid")
+            enrichment_user_asids.append(enrichment_user_asid)
 
             if not check_correct_data_sync(
-                enrichment_user_id,
+                enrichment_user_asid,
                 enrichment_users["data_sync_imported_id"],
                 pg_session,
             ):
                 logging.debug(
-                    f"Data sync not correct for user {enrichment_user_id}"
+                    f"Data sync not correct for user {enrichment_user_asid}"
                 )
                 continue
 
-        if not enrichment_user_ids:
+        if not enrichment_user_asids:
             logging.warning(f"Data sync not correct")
             await message.ack()
             return
 
         logging.info(f"Data sync id: {data_sync_id}")
-        logging.info(f"Lead Users count: {len(enrichment_user_ids)}")
+        logging.info(f"Lead Users count: {len(enrichment_user_asids)}")
 
         (
             enrichment_users,
@@ -446,7 +446,7 @@ async def ensure_integration(
             target_schema,
             validations,
         ) = get_lead_attributes_from_ch(
-            pg_session, ch_session, enrichment_user_ids, data_sync_id
+            pg_session, ch_session, enrichment_user_asids, data_sync_id
         )
         if not user_integration or not integration_data_sync:
             logging.warning(f"Data sync not correct")
@@ -484,7 +484,6 @@ async def ensure_integration(
                 raise
 
             for result in results:
-                print(result)
                 match result["status"]:
                     case ProccessDataSyncResult.INCORRECT_FORMAT.value:
                         logging.debug(f"incorrect_format: {service_name}")
@@ -527,23 +526,23 @@ async def ensure_integration(
                         await message.ack()
                         return
 
-                    # case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
-                    #     logging.debug(f"payment_required: {service_name}")
-                    #     update_users_integrations(
-                    #         pg_session,
-                    #         ProccessDataSyncResult.PAYMENT_REQUIRED.value,
-                    #         integration_data_sync.id,
-                    #         service_name,
-                    #         integration_data_sync.integration_id,
-                    #     )
-                    #     await send_error_msg(
-                    #         user_integration.user_id,
-                    #         service_name,
-                    #         notification_persistence,
-                    #         NotificationTitles.PAYMENT_INTEGRATION_REQUIRED.value,
-                    #     )
-                    #     await message.ack()
-                    #     return
+                    case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
+                        logging.debug(f"payment_required: {service_name}")
+                        update_users_integrations(
+                            pg_session,
+                            ProccessDataSyncResult.PAYMENT_REQUIRED.value,
+                            integration_data_sync.id,
+                            service_name,
+                            integration_data_sync.integration_id,
+                        )
+                        await send_error_msg(
+                            user_integration.user_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.PAYMENT_INTEGRATION_REQUIRED.value,
+                        )
+                        await message.ack()
+                        return
 
                     case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
@@ -567,7 +566,7 @@ async def ensure_integration(
                 session=pg_session,
                 updates=[
                     {
-                        "enrichment_user_id": r["enrichment_user_id"],
+                        "enrichment_user_asid": r["enrichment_user_asid"],
                         "status": r["status"],
                     }
                     for r in results
