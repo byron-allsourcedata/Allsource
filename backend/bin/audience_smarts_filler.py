@@ -213,7 +213,7 @@ async def aud_smarts_reader(
     except BaseException as e:
         db_session.rollback()
         logging.error(f"Error processing message: {e}", exc_info=True)
-        await message.ack()
+        await message.nack()
 
 
 async def main():

@@ -237,8 +237,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 "business_email": row["business_email"],
             }
             for row in result_rows
-            for entry in ids
-            if entry["asid"] == row["asid"]
         ]
 
     def get_enrichment_users_for_postal_validation(
@@ -335,8 +333,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 "full_name": f"{row['first_name'] or ''} {row['middle_name'] or ''} {row['last_name'] or ''}".strip(),
             }
             for row in result_rows
-            for entry in ids
-            if entry["asid"] == row["asid"]
         ]
 
     def get_enrichment_users_for_job_validation(
