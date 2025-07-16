@@ -22,7 +22,14 @@ from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from models.enrichment.enrichment_users import EnrichmentUser
 from utils import get_utc_aware_date
-from models.audience_smarts_persons import AudienceSmartPerson
+from models.enrichment.enrichment_professional_profiles import (
+    EnrichmentProfessionalProfile,
+)
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment.enrichment_personal_profiles import (
+    EnrichmentPersonalProfiles,
+)
+from models.enrichment.enrichment_postals import EnrichmentPostal
 from models.audience_smarts import AudienceSmart
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
@@ -43,7 +50,7 @@ from sqlalchemy.orm import Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
-from db_dependencies import Db
+from db_dependencies import Db, Clickhouse
 from dependencies import (
     NotificationPersistence,
 )
@@ -66,7 +73,7 @@ def setup_logging(level):
 
 
 def check_correct_data_sync(
-    enrichment_user_id: int, data_sync_imported_id: int, session: Session
+    enrichment_user_asid: int, data_sync_imported_id: int, session: Session
 ):
     data_sync_imported_lead = (
         session.query(AudienceDataSyncImportedPersons)
@@ -79,58 +86,181 @@ def check_correct_data_sync(
     if data_sync_imported_lead.status != DataSyncImportedStatus.SENT.value:
         return False
 
-    if data_sync_imported_lead.enrichment_user_id != UUID(enrichment_user_id):
+    if data_sync_imported_lead.enrichment_user_asid != UUID(
+        enrichment_user_asid
+    ):
         return False
 
     return True
 
 
-def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
+def get_enrichment_users_from_clickhouse(
+    ch_client: Clickhouse,
+    enrichment_user_asids: list[str],
+) -> list[EnrichmentUser]:
+    if not enrichment_user_asids:
+        return []
+
+    asids_str = ", ".join(f"'{asid}'" for asid in enrichment_user_asids)
+    query = f"""
+        SELECT *
+        FROM enrichment_users
+        WHERE asid IN ({asids_str})
+    """
+    result = ch_client.query(query)
+    columns = result.column_names
+
+    enrichment_users = []
+    for row in result.result_rows:
+        row_dict = dict(zip(columns, row))
+
+        enrichment_user = EnrichmentUser(
+            asid=row_dict["asid"],
+        )
+
+        # Связь: contacts
+        enrichment_user.contacts = EnrichmentUserContact(
+            asid=row_dict["asid"],
+            up_id=row_dict.get("up_id"),
+            rsid=row_dict.get("rsid"),
+            name_prefix=row_dict.get("name_prefix"),
+            first_name=row_dict.get("first_name"),
+            middle_name=row_dict.get("middle_name"),
+            last_name=row_dict.get("last_name"),
+            name_suffix=row_dict.get("name_suffix"),
+            business_email=row_dict.get("business_email"),
+            personal_email=row_dict.get("personal_email"),
+            other_emails=row_dict.get("other_emails"),
+            phone_mobile1=row_dict.get("phone_mobile1"),
+            phone_mobile2=row_dict.get("phone_mobile2"),
+            business_email_last_seen_date=row_dict.get(
+                "business_email_last_seen_date"
+            ),
+            personal_email_last_seen=row_dict.get("personal_email_last_seen"),
+            mobile_phone_dnc=row_dict.get("mobile_phone_dnc"),
+            business_email_validation_status=row_dict.get(
+                "business_email_validation_status"
+            ),
+            personal_email_validation_status=row_dict.get(
+                "personal_email_validation_status"
+            ),
+            linkedin_url=row_dict.get("linkedin_url"),
+            email=row_dict.get("email"),
+        )
+
+        # Связь: personal_profiles
+        enrichment_user.personal_profiles = EnrichmentPersonalProfiles(
+            asid=row_dict["asid"],
+            age=row_dict.get("age"),
+            gender=row_dict.get("gender"),
+            homeowner=row_dict.get("homeowner"),
+            length_of_residence_years=row_dict.get("length_of_residence_years"),
+            marital_status=row_dict.get("marital_status"),
+            business_owner=row_dict.get("business_owner"),
+            birth_day=row_dict.get("birth_day"),
+            birth_month=row_dict.get("birth_month"),
+            birth_year=row_dict.get("birth_year"),
+            has_children=row_dict.get("has_children"),
+            number_of_children=row_dict.get("number_of_children"),
+            religion=row_dict.get("religion"),
+            ethnicity=row_dict.get("ethnicity"),
+            language_code=row_dict.get("language_code"),
+            state_abbr=row_dict.get("state_abbr"),
+            zip_code5=row_dict.get("zip_code5"),
+        )
+
+        # Связь: professional_profiles
+        enrichment_user.professional_profiles = EnrichmentProfessionalProfile(
+            asid=row_dict["asid"],
+            current_job_title=row_dict.get("current_job_title"),
+            current_company_name=row_dict.get("current_company_name"),
+            job_start_date=row_dict.get("job_start_date"),
+            job_duration=row_dict.get("job_duration"),
+            job_location=row_dict.get("job_location"),
+            job_level=row_dict.get("job_level"),
+            department=row_dict.get("department"),
+            company_size=row_dict.get("company_size"),
+            primary_industry=row_dict.get("primary_industry"),
+            annual_sales=row_dict.get("annual_sales"),
+        )
+
+        # Связь: postal
+        enrichment_user.postal = EnrichmentPostal(
+            asid=row_dict["asid"],
+            home_address_line1=row_dict.get("home_address_line_1"),
+            home_address_line2=row_dict.get("home_address_line_2"),
+            home_city=row_dict.get("home_city"),
+            home_state=row_dict.get("home_state"),
+            home_postal_code=row_dict.get("home_postal_code"),
+            home_country=row_dict.get("home_country"),
+            home_address_last_seen=row_dict.get("home_address_last_seen"),
+            home_address_validation_status=row_dict.get(
+                "home_address_validation_status"
+            ),
+            business_address_line1=row_dict.get("business_address_line_1"),
+            business_address_line2=row_dict.get("business_address_line_2"),
+            business_city=row_dict.get("business_city"),
+            business_state=row_dict.get("business_state"),
+            business_postal_code=row_dict.get("business_postal_code"),
+            business_country=row_dict.get("business_country"),
+            business_address_last_seen=row_dict.get(
+                "business_address_last_seen"
+            ),
+            business_address_validation_status=row_dict.get(
+                "business_address_validation_status"
+            ),
+            address_source=row_dict.get("address_source"),
+            raw_url_date=row_dict.get("raw_url_date"),
+            raw_last_updated=row_dict.get("raw_last_updated"),
+            created_date=row_dict.get("created_date"),
+        )
+
+        enrichment_users.append(enrichment_user)
+
+    return enrichment_users
+
+
+def get_lead_attributes_from_ch(
+    pg_session,
+    ch_client: Clickhouse,
+    enrichment_user_asids: list[str],
+    data_sync_id: int,
+):
     result = (
-        session.query(
-            EnrichmentUser,
+        pg_session.query(
             UserIntegration,
             IntegrationUserSync,
             AudienceSmart.target_schema,
             AudienceSmart.validations,
         )
         .join(
-            AudienceSmartPerson,
-            AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id,
+            IntegrationUserSync,
+            IntegrationUserSync.integration_id == UserIntegration.id,
         )
         .join(
             AudienceSmart,
-            AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
+            AudienceSmart.id == IntegrationUserSync.smart_audience_id,
         )
-        .join(
-            IntegrationUserSync,
-            IntegrationUserSync.smart_audience_id == AudienceSmart.id,
-        )
-        .join(
-            UserIntegration,
-            UserIntegration.id == IntegrationUserSync.integration_id,
-        )
-        .filter(
-            EnrichmentUser.id.in_(enrichment_user_ids),
-            IntegrationUserSync.id == data_sync_id,
-        )
-        .all()
+        .filter(IntegrationUserSync.id == data_sync_id)
+        .first()
     )
-    if result:
-        enrichment_users = [row[0] for row in result]
-        user_integration = result[0][1]
-        data_sync = result[0][2]
-        target_schema = result[0][3]
-        validations = result[0][4]
-        return (
-            enrichment_users,
-            user_integration,
-            data_sync,
-            target_schema,
-            validations,
-        )
-    else:
+
+    if not result:
         return [], None, None, None, None
+
+    user_integration, data_sync, target_schema, validations = result
+
+    enrichment_users = get_enrichment_users_from_clickhouse(
+        ch_client, enrichment_user_asids
+    )
+
+    return (
+        enrichment_users,
+        user_integration,
+        data_sync,
+        target_schema,
+        validations,
+    )
 
 
 def update_users_integrations(
@@ -207,8 +337,8 @@ def bulk_update_data_sync_imported_leads(
         stmt = (
             update(AudienceDataSyncImportedPersons)
             .where(
-                AudienceDataSyncImportedPersons.enrichment_user_id
-                == u["enrichment_user_id"],
+                AudienceDataSyncImportedPersons.enrichment_user_asid
+                == u["enrichment_user_asid"],
                 AudienceDataSyncImportedPersons.data_sync_id
                 == integration_data_sync.id,
             )
@@ -280,35 +410,36 @@ async def send_error_msg(
 async def ensure_integration(
     message: IncomingMessage,
     integration_service: IntegrationService,
-    session: Db,
+    pg_session: Db,
+    ch_session: Clickhouse,
     notification_persistence: NotificationPersistence,
 ):
     try:
         message_body = json.loads(message.body)
         data_sync_id = message_body["data_sync_id"]
-        enrichment_user_ids = []
+        enrichment_user_asids = []
 
         for enrichment_users in message_body.get("arr_enrichment_users"):
-            enrichment_user_id = enrichment_users.get("enrichment_user_id")
-            enrichment_user_ids.append(enrichment_user_id)
+            enrichment_user_asid = enrichment_users.get("enrichment_user_asid")
+            enrichment_user_asids.append(enrichment_user_asid)
 
             if not check_correct_data_sync(
-                enrichment_user_id,
+                enrichment_user_asid,
                 enrichment_users["data_sync_imported_id"],
-                session,
+                pg_session,
             ):
                 logging.debug(
-                    f"Data sync not correct for user {enrichment_user_id}"
+                    f"Data sync not correct for user {enrichment_user_asid}"
                 )
                 continue
 
-        if not enrichment_user_ids:
+        if not enrichment_user_asids:
             logging.warning(f"Data sync not correct")
             await message.ack()
             return
 
         logging.info(f"Data sync id: {data_sync_id}")
-        logging.info(f"Lead Users count: {len(enrichment_user_ids)}")
+        logging.info(f"Lead Users count: {len(enrichment_user_asids)}")
 
         (
             enrichment_users,
@@ -316,7 +447,9 @@ async def ensure_integration(
             integration_data_sync,
             target_schema,
             validations,
-        ) = get_lead_attributes(session, enrichment_user_ids, data_sync_id)
+        ) = get_lead_attributes_from_ch(
+            pg_session, ch_session, enrichment_user_asids, data_sync_id
+        )
         if not user_integration or not integration_data_sync:
             logging.warning(f"Data sync not correct")
             await message.ack()
@@ -363,7 +496,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                         logging.debug(f"list_not_exists: {service_name}")
                         update_users_integrations(
-                            session=session,
+                            session=pg_session,
                             status=ProccessDataSyncResult.LIST_NOT_EXISTS.value,
                             integration_data_sync_id=integration_data_sync.id,
                             service_name=service_name,
@@ -380,7 +513,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                         logging.debug(f"authentication_failed: {service_name}")
                         update_users_integrations(
-                            session,
+                            pg_session,
                             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                             integration_data_sync.id,
                             service_name,
@@ -398,7 +531,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
                         logging.debug(f"payment_required: {service_name}")
                         update_users_integrations(
-                            session,
+                            pg_session,
                             ProccessDataSyncResult.PAYMENT_REQUIRED.value,
                             integration_data_sync.id,
                             service_name,
@@ -416,7 +549,7 @@ async def ensure_integration(
                     case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
                         logging.debug(f"Quota exhausted: {service_name}")
                         update_users_integrations(
-                            session=session,
+                            session=pg_session,
                             status=ProccessDataSyncResult.QUOTA_EXHAUSTED.value,
                             integration_data_sync_id=integration_data_sync.id,
                             service_name=service_name,
@@ -432,10 +565,10 @@ async def ensure_integration(
                         return
 
             bulk_update_data_sync_imported_leads(
-                session=session,
+                session=pg_session,
                 updates=[
                     {
-                        "enrichment_user_id": r["enrichment_user_id"],
+                        "enrichment_user_asid": r["enrichment_user_asid"],
                         "status": r["status"],
                     }
                     for r in results
@@ -450,13 +583,13 @@ async def ensure_integration(
 
     except PendingRollbackError:
         logging.error("PendingRollbackError occurred, rolling back session.")
-        session.rollback()
+        pg_session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
     except Exception as e:
         logging.error(f"Error processing message {e}", exc_info=True)
-        session.rollback()
+        pg_session.rollback()
         await asyncio.sleep(5)
         await message.reject(requeue=True)
 
@@ -485,6 +618,7 @@ async def main():
                 durable=True,
             )
             db_session = await resolver.resolve(Db)
+            ch_client = await resolver.resolve(Clickhouse)
             notification_persistence = await resolver.resolve(
                 NotificationPersistence
             )
@@ -494,7 +628,8 @@ async def main():
                     functools.partial(
                         ensure_integration,
                         integration_service=service,
-                        session=db_session,
+                        pg_session=db_session,
+                        ch_session=ch_client,
                         notification_persistence=notification_persistence,
                     )
                 )

@@ -23,7 +23,6 @@ from enums import (
     DataSyncType,
 )
 from utils import get_utc_aware_date
-from models.enrichment.enrichment_users import EnrichmentUser
 from typing import Optional
 from uuid import UUID
 from models.audience_smarts_persons import AudienceSmartPerson
@@ -35,7 +34,7 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
-from db_dependencies import Db
+from db_dependencies import Db, Clickhouse
 
 load_dotenv()
 
@@ -131,18 +130,14 @@ def update_data_sync_integration(
     return no_of_contacts
 
 
-def fetch_enrichment_users_by_data_sync(
-    session: Session,
+def get_enrichment_user_ids_from_pg(
+    db_session: Session,
     data_sync_id: int,
     limit: int,
     last_sent_enrichment_id: Optional[UUID] = None,
-):
+) -> list[dict[str, str]]:
     query = (
-        session.query(EnrichmentUser)
-        .join(
-            AudienceSmartPerson,
-            AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id,
-        )
+        db_session.query(AudienceSmartPerson.enrichment_user_asid)
         .join(
             AudienceSmart,
             AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
@@ -153,19 +148,25 @@ def fetch_enrichment_users_by_data_sync(
         )
         .filter(
             IntegrationUserSync.id == data_sync_id,
-            AudienceSmartPerson.is_valid == True,
-            IntegrationUserSync.sync_type != DataSyncType.CONTACT.value,
+            IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value,
+            AudienceSmartPerson.is_valid.is_(True),
         )
     )
 
-    if last_sent_enrichment_id is not None:
-        query = query.filter(EnrichmentUser.id > last_sent_enrichment_id)
+    if last_sent_enrichment_id:
+        query = query.filter(
+            AudienceSmartPerson.enrichment_user_asid > last_sent_enrichment_id
+        )
 
-    result = query.order_by(EnrichmentUser.id).limit(limit).all()
-    return result
+    enrichment_user_ids = query.limit(limit).all()
+    return [
+        {"asid": str(row.enrichment_user_asid)}
+        for row in enrichment_user_ids
+        if row.enrichment_user_asid
+    ]
 
 
-def update_last_sent_encrihment_user(
+def update_last_sent_enrichment_user(
     session, data_sync_id, last_encrichment_id
 ):
     session.query(IntegrationUserSync).filter(
@@ -181,21 +182,17 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
     session.db.commit()
 
 
-def get_previous_imported_encrhment_users(
+def get_previous_imported_enrichment_users(
     session, data_sync_id, data_sync_limit, service_name
 ):
     query = (
         session.query(
-            EnrichmentUser.id,
-        )
-        .join(
-            AudienceSmartPerson,
-            AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id,
+            AudienceSmartPerson.enrichment_user_asid,
         )
         .join(
             AudienceDataSyncImportedPersons,
-            AudienceDataSyncImportedPersons.enrichment_user_id
-            == EnrichmentUser.id,
+            AudienceDataSyncImportedPersons.enrichment_user_asid
+            == AudienceSmartPerson.enrichment_user_asid,
         )
         .join(
             AudienceSmart,
@@ -215,44 +212,49 @@ def get_previous_imported_encrhment_users(
             == DataSyncImportedStatus.SENT.value,
             UserIntegration.service_name == service_name,
         )
-        .order_by(EnrichmentUser.id)
+        .order_by(AudienceSmartPerson.enrichment_user_asid)
         .limit(data_sync_limit)
     )
 
-    return query.all()
+    return [
+        {"asid": str(row.enrichment_user_asid)}
+        for row in query
+        if row.enrichment_user_asid
+    ]
 
 
 async def send_leads_to_rmq(
     session,
     channel,
-    encrhment_users,
+    enrichment_users,
     data_sync,
     user_integrations_service_name,
 ):
-    enrichment_user_ids = [
-        encrhment_user.id for encrhment_user in encrhment_users
+    enrichment_user_asids = [
+        enrichment_user["asid"]
+        if isinstance(enrichment_user, dict)
+        else enrichment_user.id
+        for enrichment_user in enrichment_users
     ]
-    arr_enrichment_users = []
-
     records = [
         {
             "status": DataSyncImportedStatus.SENT.value,
-            "enrichment_user_id": eid,
+            "enrichment_user_asid": enrichment_user_asid,
             "service_name": user_integrations_service_name,
             "data_sync_id": data_sync.id,
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        for eid in enrichment_user_ids
+        for enrichment_user_asid in enrichment_user_asids
     ]
     stmt = (
         insert(AudienceDataSyncImportedPersons)
         .values(records)
         .on_conflict_do_nothing(
-            index_elements=["enrichment_user_id", "data_sync_id"]
+            index_elements=["enrichment_user_asid", "data_sync_id"]
         )
         .returning(
-            AudienceDataSyncImportedPersons.enrichment_user_id,
+            AudienceDataSyncImportedPersons.enrichment_user_asid,
             AudienceDataSyncImportedPersons.id,
         )
     )
@@ -260,25 +262,24 @@ async def send_leads_to_rmq(
     result = session.execute(stmt)
     session.commit()
 
-    inserted_map = {row.enrichment_user_id: row.id for row in result}
-    missing = set(enrichment_user_ids) - set(inserted_map.keys())
+    inserted_map = {row.enrichment_user_asid: row.id for row in result}
+    missing = set(enrichment_user_asids) - set(inserted_map.keys())
     if missing:
         q = select(
-            AudienceDataSyncImportedPersons.enrichment_user_id,
+            AudienceDataSyncImportedPersons.enrichment_user_asid,
             AudienceDataSyncImportedPersons.id,
         ).where(
             AudienceDataSyncImportedPersons.data_sync_id == data_sync.id,
-            AudienceDataSyncImportedPersons.enrichment_user_id.in_(missing),
         )
-        for eid, pid in session.execute(q):
-            inserted_map[eid] = pid
+        for asid, pid in session.execute(q):
+            inserted_map[asid] = pid
 
     arr_enrichment_users = [
         {
             "data_sync_imported_id": str(imported_id),
-            "enrichment_user_id": str(eid),
+            "enrichment_user_asid": str(asid),
         }
-        for eid, imported_id in inserted_map.items()
+        for asid, imported_id in inserted_map.items()
     ]
 
     msg = {
@@ -289,9 +290,9 @@ async def send_leads_to_rmq(
 
 
 async def process_user_integrations(
-    channel, session, subscription_service: SubscriptionService
+    channel, pg_session, ch_session, subscription_service: SubscriptionService
 ):
-    user_integrations, data_syncs = fetch_data_syncs(session)
+    user_integrations, data_syncs = fetch_data_syncs(pg_session)
     for i, data_sync in enumerate(data_syncs):
         if not subscription_service.is_user_has_active_subscription(
             user_integrations[i].user_id
@@ -312,7 +313,7 @@ async def process_user_integrations(
             continue
 
         imported_count = update_data_sync_integration(
-            session=session,
+            session=pg_session,
             data_sync_id=data_sync.id,
             data_sync=data_sync,
             last_sync_date=False,
@@ -324,43 +325,43 @@ async def process_user_integrations(
         limit = user_integrations[i].limit
         data_sync_limit = min(limit, data_sync.sent_contacts - imported_count)
 
-        encrhment_users = get_previous_imported_encrhment_users(
-            session=session,
+        enrichment_users = get_previous_imported_enrichment_users(
+            session=pg_session,
             data_sync_id=data_sync.id,
             data_sync_limit=data_sync_limit,
             service_name=user_integrations[i].service_name,
         )
-        logging.info(f"Re imported leads= {len(encrhment_users)}")
-        query_limit = data_sync_limit - len(encrhment_users)
+        logging.info(f"Re imported leads= {len(enrichment_users)}")
+        query_limit = data_sync_limit - len(enrichment_users)
         if query_limit > 0 and query_limit <= data_sync_limit:
-            additional_leads = fetch_enrichment_users_by_data_sync(
-                session=session,
+            enrichment_user_asids = get_enrichment_user_ids_from_pg(
+                db_session=pg_session,
                 data_sync_id=data_sync.id,
-                limit=data_sync_limit - len(encrhment_users),
+                limit=query_limit,
                 last_sent_enrichment_id=data_sync.last_sent_enrichment_id,
             )
-            encrhment_users.extend(additional_leads)
+            enrichment_users.extend(enrichment_user_asids)
 
-        if not encrhment_users:
-            logging.info(f"encrhment_users empty")
+        if not enrichment_users:
+            logging.info(f"enrichment_users empty")
             continue
 
-        logging.info(f"encrhment_users len = {len(encrhment_users)}")
-        encrhment_users = sorted(encrhment_users, key=lambda x: x.id)
+        logging.info(f"enrichment_users len = {len(enrichment_users)}")
+        enrichment_users = sorted(enrichment_users, key=lambda x: x["asid"])
         await send_leads_to_rmq(
-            session,
+            pg_session,
             channel,
-            encrhment_users,
+            enrichment_users,
             data_sync,
             user_integrations[i].service_name,
         )
-        last_encrichment_id = encrhment_users[-1].id
-        if last_encrichment_id:
-            logging.info(f"last_lead_id = {last_encrichment_id}")
-            update_last_sent_encrihment_user(
-                session, data_sync.id, last_encrichment_id
+        last_enrichment_asid = enrichment_users[-1]["asid"]
+        if last_enrichment_asid:
+            logging.info(f"last_lead_id = {last_enrichment_asid}")
+            update_last_sent_enrichment_user(
+                pg_session, data_sync.id, last_enrichment_asid
             )
-            update_data_sync_integration(session, data_sync.id, data_sync)
+            update_data_sync_integration(pg_session, data_sync.id, data_sync)
 
 
 async def main():
@@ -379,7 +380,9 @@ async def main():
     logging.info("Started")
     sleep_interval = LONG_SLEEP
     while True:
-        db_session = None
+        pg_session = None
+        ch_session = None
+
         rabbitmq_connection = None
         resolver = Resolver()
         try:
@@ -392,12 +395,13 @@ async def main():
                 durable=True,
             )
             if queue.declaration_result.message_count == 0:
-                db_session = await resolver.resolve(Db)
+                pg_session = await resolver.resolve(Db)
+                ch_session = await resolver.resolve(Clickhouse)
                 subscription_service = await resolver.resolve(
                     SubscriptionService
                 )
                 await process_user_integrations(
-                    channel, db_session, subscription_service
+                    channel, pg_session, ch_session, subscription_service
                 )
                 logging.info("Processing completed. Sleeping for 10 sec...")
             else:
@@ -406,9 +410,12 @@ async def main():
             logging.error("Unhandled Exception:", exc_info=True)
             SentryConfig.capture(err)
         finally:
-            if db_session:
-                logging.info("Closing the database session...")
-                db_session.close()
+            if pg_session:
+                logging.info("Closing the database postgresql session...")
+                pg_session.close()
+            if ch_session:
+                logging.info("Closing the database clickhouse session...")
+                ch_session.close()
             if rabbitmq_connection:
                 logging.info("Closing RabbitMQ connection...")
                 await rabbitmq_connection.close()
