@@ -15,6 +15,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from services.exceptions import InsufficientCreditsError, MillionVerifierError
 from resolver import Resolver
 from config.sentry import SentryConfig
 from sqlalchemy.exc import PendingRollbackError
@@ -283,19 +284,30 @@ async def ensure_integration(
                 status_counts = Counter(r.get("status") for r in results)
                 logging.info(f"Status summary: {dict(status_counts)}")
 
+            except MillionVerifierError as e:
+                logging.error(
+                    f"MillionVerifierError while processing data sync: {e}",
+                    exc_info=True,
+                )
+                await message.ack()
+                return
+
+            except InsufficientCreditsError as e:
+                logging.error(
+                    f"InsufficientCreditsError while processing data sync: {e}"
+                )
+                await message.ack()
+                return
+
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)
                 await message.ack()
-                raise
+                return
 
-            import_status = DataSyncImportedStatus.SENT.value
             for result in results:
                 match result["status"]:
                     case ProccessDataSyncResult.INCORRECT_FORMAT.value:
                         logging.debug(f"incorrect_format: {service_name}")
-                        import_status = (
-                            DataSyncImportedStatus.INCORRECT_FORMAT.value
-                        )
 
                     case (
                         ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
@@ -306,13 +318,9 @@ async def ensure_integration(
 
                     case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
                         logging.debug(f"incorrect_format: {service_name}")
-                        import_status = (
-                            DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
-                        )
 
                     case ProccessDataSyncResult.SUCCESS.value:
                         logging.debug(f"success: {service_name}")
-                        import_status = DataSyncImportedStatus.SUCCESS.value
 
                     case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
                         logging.debug(f"list_not_exists: {service_name}")
@@ -415,9 +423,8 @@ async def ensure_integration(
 
     except Exception as e:
         logging.error(f"Error processing message {e}", exc_info=True)
-        db_session.rollback()
+        await message.ack()
         await asyncio.sleep(5)
-        await message.reject(requeue=True)
 
 
 async def main():

@@ -185,7 +185,7 @@ class WebhookService:
         )
         return {"status": result_status, "user": user_data}
 
-    def shopify_billing_update_webhook(self, payload):
+    async def shopify_billing_update_webhook(self, payload):
         subscription_info = payload.get("app_subscription")
         shop_id = subscription_info.get("admin_graphql_api_shop_id").split(
             "Shop/"
@@ -214,7 +214,7 @@ class WebhookService:
 
         payment_period = None
         payment_amount = None
-        with self.integration_service as service:
+        async with self.integration_service as service:
             shopify_charge = service.shopify.get_charge_by_id(
                 user_data, charge_id
             )

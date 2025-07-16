@@ -14,7 +14,7 @@ const IntegrationContext = createContext<IntegrationContextType | undefined>(
 export const IntegrationProvider: React.FC<{ children: React.ReactNode }> = ({
 	children,
 }) => {
-	const [needsSync, setNeedsSync] = useState(false);
+	const [needsSync, setNeedsSync] = useState(true);
 
 	// Метод для безопасного вызова синхронизации
 	const triggerSync = useCallback(() => {

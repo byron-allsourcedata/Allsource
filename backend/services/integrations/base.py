@@ -1,5 +1,4 @@
 import ssl
-from datetime import datetime, timedelta
 
 import httpx
 import truststore
@@ -25,7 +24,11 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.user_persistence import UserPersistence
 from resolver import injectable, Resolver
-from utils import extract_first_email, format_phone_number
+from utils import (
+    format_phone_number,
+    get_valid_email_without_million,
+    get_valid_location,
+)
 from .attentive import AttentiveIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
 from .bing_ads import BingAdsIntegrationsService
@@ -222,7 +225,7 @@ class IntegrationService:
             return True
         return False
 
-    async def get_leads_for_zapier(self, domain):
+    async def get_leads_for_zapier(self, domain: UserDomains):
         five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(
             domain.id
         )
@@ -230,78 +233,17 @@ class IntegrationService:
         if not five_x_five_users:
             return []
         for five_x_five_user in five_x_five_users:
-            email_fields = [
-                "business_email",
-                "personal_emails",
-                "additional_personal_emails",
-            ]
-
-            async def get_valid_email(user) -> str:
-                thirty_days_ago = datetime.now() - timedelta(days=30)
-                thirty_days_ago_str = thirty_days_ago.strftime(
-                    "%Y-%m-%d %H:%M:%S"
-                )
-                verity = 0
-                for field in email_fields:
-                    email = getattr(user, field, None)
-                    if email:
-                        emails = extract_first_email(email)
-                        for e in emails:
-                            if (
-                                e
-                                and field == "business_email"
-                                and five_x_five_user.business_email_last_seen
-                            ):
-                                if (
-                                    five_x_five_user.business_email_last_seen.strftime(
-                                        "%Y-%m-%d %H:%M:%S"
-                                    )
-                                    > thirty_days_ago_str
-                                ):
-                                    return e.strip()
-                            if (
-                                e
-                                and field == "personal_emails"
-                                and five_x_five_user.personal_emails_last_seen
-                            ):
-                                personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                if (
-                                    personal_emails_last_seen_str
-                                    > thirty_days_ago_str
-                                ):
-                                    return e.strip()
-                            if (
-                                e
-                                and await self.million_verifier_integrations.is_email_verify(
-                                    email=e.strip()
-                                )
-                            ):
-                                return e.strip()
-                            verity += 1
-                if verity > 0:
-                    return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-            first_email = await get_valid_email(five_x_five_user)
+            first_email = await get_valid_email_without_million(
+                five_x_five_user
+            )
 
             if first_email in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
                 next
+            location = get_valid_location(five_x_five_user)
 
-            location = {
-                "address": getattr(five_x_five_user, "personal_address")
-                or getattr(five_x_five_user, "company_address", None),
-                "city": getattr(five_x_five_user, "personal_city")
-                or getattr(five_x_five_user, "company_city", None),
-                "region": getattr(five_x_five_user, "personal_state")
-                or getattr(five_x_five_user, "company_state", None),
-                "zip": getattr(five_x_five_user, "personal_zip")
-                or getattr(five_x_five_user, "company_zip", None),
-            }
             valid_users.append(
                 {
                     "id": five_x_five_user.id,
@@ -339,6 +281,8 @@ class IntegrationService:
             )
             if len(valid_users) >= 3:
                 return valid_users
+
+        return valid_users
 
     def get_user_by_shop_domain(self, shop_domain):
         return self.integrations_user_sync_persistence.get_user_by_shop_domain(

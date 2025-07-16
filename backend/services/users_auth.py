@@ -264,7 +264,7 @@ class UsersAuth:
         self.db.commit()
         return user_object
 
-    def create_account_google(self, auth_google_data: AuthGoogleData):
+    async def create_account_google(self, auth_google_data: AuthGoogleData):
         teams_token = auth_google_data.teams_token
         admin_token = auth_google_data.admin_token
         referral_token = auth_google_data.referral_token
@@ -294,7 +294,7 @@ class UsersAuth:
 
         if shopify_data:
             try:
-                with self.integration_service as service:
+                async with self.integration_service as service:
                     shopify_access_token = service.shopify.get_shopify_token(
                         shopify_data=shopify_data
                     )
@@ -413,12 +413,12 @@ class UsersAuth:
         self.user_persistence_service.book_call_confirmed(user_object.id)
 
         if shopify_data:
-            self._process_shopify_integration(
+            await self._process_shopify_integration(
                 user_object, shopify_data, shopify_access_token, shop_id
             )
 
         if shop_hash:
-            self._process_big_commerce_integration(user_object, shop_hash)
+            await self._process_big_commerce_integration(user_object, shop_hash)
 
         self.user_persistence_service.email_confirmed(user_object.id)
 
@@ -510,7 +510,7 @@ class UsersAuth:
                     return {"status": LoginStatus.FILL_COMPANY_DETAILS}
         return {"status": LoginStatus.NEED_CONFIRM_EMAIL}
 
-    def login_google(self, auth_google_data: AuthGoogleData):
+    async def login_google(self, auth_google_data: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         google_request = google_requests.Request()
         idinfo = id_token.verify_oauth2_token(
@@ -531,7 +531,7 @@ class UsersAuth:
 
         if shopify_data:
             try:
-                with self.integration_service as service:
+                async with self.integration_service as service:
                     shopify_access_token = service.shopify.get_shopify_token(
                         shopify_data=shopify_data
                     )
@@ -593,7 +593,7 @@ class UsersAuth:
                     shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
 
                 if shopify_status is None:
-                    self._process_shopify_integration(
+                    await self._process_shopify_integration(
                         user_object, shopify_data, shopify_access_token, shop_id
                     )
 
@@ -631,7 +631,7 @@ class UsersAuth:
             logger.info("Password Verification Failed")
             return {"status": LoginStatus.INCORRECT_PASSWORD_OR_EMAIL}
 
-    def create_account(self, user_form: UserSignUpForm):
+    async def create_account(self, user_form: UserSignUpForm):
         if not user_form.password or " " in user_form.password:
             logger.debug("Invalid password provided.")
             return {
@@ -679,15 +679,21 @@ class UsersAuth:
 
         if shopify_data:
             try:
-                with self.integration_service as service:
+                async with self.integration_service as service:
                     shopify_access_token = service.shopify.get_shopify_token(
                         shopify_data=shopify_data
                     )
+                    if not shopify_access_token:
+                        logger.error("Invalid Shopify access token or shop ID.")
+                        return {
+                            "is_success": True,
+                            "status": OauthShopify.ERROR_SHOPIFY_TOKEN.value,
+                        }
                     shop_id = service.shopify.get_shopify_shop_id(
                         shopify_data=shopify_data,
                         shopify_access_token=shopify_access_token,
                     )
-                if not shopify_access_token or not shop_id:
+                if not shop_id:
                     logger.error("Invalid Shopify access token or shop ID.")
                     return {
                         "is_success": True,
@@ -785,7 +791,7 @@ class UsersAuth:
         logger.info("Token created")
 
         if shopify_data:
-            self._process_shopify_integration(
+            await self._process_shopify_integration(
                 user_object, shopify_data, shopify_access_token, shop_id
             )
             self.user_persistence_service.email_confirmed(user_object.id)
@@ -794,7 +800,7 @@ class UsersAuth:
             )
 
         if shop_hash:
-            self._process_big_commerce_integration(user_object, shop_hash)
+            await self._process_big_commerce_integration(user_object, shop_hash)
             self.user_persistence_service.email_confirmed(user_object.id)
 
         self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -852,8 +858,8 @@ class UsersAuth:
 
         return {"is_success": True, "status": status, "token": token}
 
-    def _process_big_commerce_integration(self, user_object, shop_hash):
-        with self.integration_service as service:
+    async def _process_big_commerce_integration(self, user_object, shop_hash):
+        async with self.integration_service as service:
             external_apps_installations = service.bigcommerce.get_external_apps_installations_by_shop_hash(
                 shop_hash
             )
@@ -873,7 +879,7 @@ class UsersAuth:
                         credentials, domain, user_object.__dict__
                     )
 
-    def _process_shopify_integration(
+    async def _process_shopify_integration(
         self, user_object, shopify_data, shopify_access_token, shop_id
     ):
         domain = self.user_persistence_service.save_user_domain(
@@ -884,7 +890,7 @@ class UsersAuth:
                 shop_domain=shopify_data.shop, access_token=shopify_access_token
             )
         )
-        with self.integration_service as service:
+        async with self.integration_service as service:
             service.shopify.add_integration(
                 credentials, domain, user_object.__dict__, shop_id
             )
@@ -949,7 +955,7 @@ class UsersAuth:
             "token": token,
         }
 
-    def login_account(self, login_form: UserLoginForm):
+    async def login_account(self, login_form: UserLoginForm):
         email = login_form.email
         user_object = self.user_persistence_service.get_user_by_email(email)
         if not user_object:
@@ -970,7 +976,7 @@ class UsersAuth:
 
         if shopify_data:
             try:
-                with self.integration_service as service:
+                async with self.integration_service as service:
                     shopify_access_token = service.shopify.get_shopify_token(
                         shopify_data=shopify_data
                     )
@@ -1024,7 +1030,7 @@ class UsersAuth:
                 shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
 
             if shopify_status is None:
-                self._process_shopify_integration(
+                await self._process_shopify_integration(
                     user_object, shopify_data, shopify_access_token, shop_id
                 )
         authorization_data = self.get_user_authorization_information(

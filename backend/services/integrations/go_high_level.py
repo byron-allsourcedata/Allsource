@@ -361,7 +361,7 @@ class GoHighLevelIntegrationsService:
             )
             results.append(
                 {
-                    "enrichment_user_id": enrichment_user.id,
+                    "enrichment_user_asid": enrichment_user.asid,
                     "status": result,
                 }
             )
@@ -514,7 +514,7 @@ class GoHighLevelIntegrationsService:
 
         business_email, personal_email, phone = (
             self.sync_persistence.get_verified_email_and_phone(
-                enrichment_user.id
+                enrichment_user.asid
             )
         )
         main_email, main_phone = resolve_main_email_and_phone(
