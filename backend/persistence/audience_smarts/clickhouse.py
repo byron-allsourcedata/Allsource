@@ -165,7 +165,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         return final_result
 
-
     def get_synced_persons_by_smart_aud_id(
         self, data_sync_id: int, enrichment_field_names: List[str]
     ) -> List[SyncedPersonRecord]:
@@ -246,7 +245,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
         sql = f"""
         SELECT 
-            {', '.join(select_columns)}
+            {", ".join(select_columns)}
         FROM enrichment_users
         WHERE asid IN ({in_list})
         """
@@ -269,8 +268,10 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 results.append(row_mapper(empty_row))
 
         return results
-    
-    def get_enrichment_users_for_delivery_validation(self, smart_audience_id: UUID) -> List[dict]:
+
+    def get_enrichment_users_for_delivery_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
         select_columns = ["asid", "personal_email", "business_email"]
         column_names = ["asid", "personal_email", "business_email"]
 
@@ -284,7 +285,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 "business_email": row["business_email"],
             },
         )
-    
 
     def get_enrichment_users_for_postal_validation(
         self, smart_audience_id: UUID, validation_type: str
@@ -305,7 +305,14 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             f"{prefix}address_line_1 AS address",
         ]
 
-        column_names = ["asid", "city", "state", "country", "postal_code", "address"]
+        column_names = [
+            "asid",
+            "city",
+            "state",
+            "country",
+            "postal_code",
+            "address",
+        ]
 
         return self._get_enrichment_users_generic(
             smart_audience_id,
@@ -321,10 +328,16 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             },
         )
 
-    def get_enrichment_users_for_confirmation_validation(self, smart_audience_id: UUID) -> List[dict]:
+    def get_enrichment_users_for_confirmation_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
         select_columns = [
-            "asid", "phone_mobile1", "phone_mobile2",
-            "first_name", "middle_name", "last_name"
+            "asid",
+            "phone_mobile1",
+            "phone_mobile2",
+            "first_name",
+            "middle_name",
+            "last_name",
         ]
         column_names = select_columns
 
@@ -337,13 +350,21 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 "phone_mobile1": row["phone_mobile1"],
                 "phone_mobile2": row["phone_mobile2"],
                 "full_name": " ".join(
-                    filter(None, [row["first_name"], row["middle_name"], row["last_name"]])
+                    filter(
+                        None,
+                        [
+                            row["first_name"],
+                            row["middle_name"],
+                            row["last_name"],
+                        ],
+                    )
                 ).strip(),
             },
         )
 
-
-    def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID) -> List[dict]:
+    def get_enrichment_users_for_job_validation(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
         select_columns = ["asid", "employment_json", "linkedin_url"]
         column_names = select_columns
 
@@ -353,15 +374,21 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             if employment_data:
                 try:
                     jobs = json.loads(employment_data)
-                    current_jobs = [j for j in jobs if j.get("end_date") is None]
+                    current_jobs = [
+                        j for j in jobs if j.get("end_date") is None
+                    ]
                     selected_job = current_jobs[0] if current_jobs else None
                 except Exception:
                     pass
 
             return {
                 "audience_smart_person_id": row["audience_smart_person_id"],
-                "job_title": selected_job.get("job_title") if selected_job else None,
-                "company_name": selected_job.get("company_name") if selected_job else None,
+                "job_title": selected_job.get("job_title")
+                if selected_job
+                else None,
+                "company_name": selected_job.get("company_name")
+                if selected_job
+                else None,
                 "linkedin_url": row["linkedin_url"],
             }
 
@@ -371,8 +398,6 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             column_names=column_names,
             row_mapper=job_mapper,
         )
-
-    
 
     def get_enrichment_users_for_free_validations(
         self, smart_audience_id: UUID, column_name: str
@@ -384,7 +409,9 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             val = row[column_name]
             return {
                 "audience_smart_person_id": row["audience_smart_person_id"],
-                column_name: val.isoformat() if isinstance(val, datetime) else val,
+                column_name: val.isoformat()
+                if isinstance(val, datetime)
+                else val,
             }
 
         return self._get_enrichment_users_generic(
