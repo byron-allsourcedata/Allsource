@@ -121,6 +121,8 @@ export const SettingsSubscription: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
+	const [ visiblePlans ] = usePlans(tabValue === 0 ? "month" : "year")
+
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
 	};
@@ -518,8 +520,8 @@ export const SettingsSubscription: React.FC = () => {
 						overflowX: "auto",
 					}}
 				>
-					{plans?.length > 0 ? (
-						plans.map((plan, index) => {
+					{visiblePlans?.length > 0 ? (
+						visiblePlans.map((plan, index) => {
 							if (isTrial === false && plan.title === "Free Trial") {
 								return null;
 							}
@@ -539,14 +541,11 @@ export const SettingsSubscription: React.FC = () => {
 									buttonText = "Speak to Us";
 									disabled = false;
 								}
-							} else {
-								if (plan.title === "Basic") {
-									buttonText = "Current Plan";
-									disabled = true;
-								} else {
-									buttonText = "Speak to Us";
-									disabled = false;
-								}
+							} 
+
+							if (plan.is_active) {
+								buttonText = "Current Plan"
+								disabled = true
 							}
 
 							return (
@@ -560,6 +559,7 @@ export const SettingsSubscription: React.FC = () => {
 									<PlanCard
 										plan={plan}
 										isRecommended={plan.is_recommended}
+										isActive={plan.is_active}
 										buttonProps={{
 											onChoose: handle,
 											text: buttonText,
