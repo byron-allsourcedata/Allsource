@@ -55,7 +55,7 @@ class AudienceDataSyncImportedPersons(Base):
             unique=True,
         ),
         Index(
-            "audience_data_sync_imported_persons_enrichment_user_asid_data_sync",
+            "audience_data_sync_imported_persons_enrichment_user_asid",
             enrichment_user_asid,
             data_sync_id,
             unique=True,
