@@ -172,9 +172,13 @@ async def aud_smarts_reader(
 
                 persons = [row[0] for row in final_query.all()]
 
+                logging.info(f"len(persons), {len(persons)}")
+
                 sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(
                     persons, order_by_clause
                 )
+
+                logging.info(f"len(sorted_persons), {len(sorted_persons)}")
 
                 if not sorted_persons:
                     break
