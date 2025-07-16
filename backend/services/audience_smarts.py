@@ -131,9 +131,7 @@ class AudienceSmartsService:
     def estimates_predictable_validation(
         self, validations: List[str]
     ) -> Dict[str, float]:
-        stats_raw = (
-            self.audience_settings_persistence.get_stats_validations()
-        )
+        stats_raw = self.audience_settings_persistence.get_stats_validations()
         stats = json.loads(stats_raw.value) if stats_raw else {}
 
         product = 1.0
@@ -164,14 +162,16 @@ class AudienceSmartsService:
         stats_raw = self.audience_settings_persistence.get_stats_validations()
         stats = json.loads(stats_raw.value) if stats_raw else {}
 
-        priority_row = self.audience_settings_persistence.get_validation_priority()
-        priority_order = (
-            priority_row.split(",") if priority_row else []
+        priority_row = (
+            self.audience_settings_persistence.get_validation_priority()
         )
+        priority_order = priority_row.split(",") if priority_row else []
 
         validations_sorted = sorted(
             validations,
-            key=lambda x: priority_order.index(x) if x in priority_order else len(priority_order) + validations.index(x),
+            key=lambda x: priority_order.index(x)
+            if x in priority_order
+            else len(priority_order) + validations.index(x),
         )
 
         current_cnt = float(count_active_segment)
