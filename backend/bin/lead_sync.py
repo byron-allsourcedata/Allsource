@@ -652,6 +652,7 @@ async def process_user_data(
 ):
     global count
     domain_count_hash = {}
+    ip = possible_lead["IP"]
     partner_uid_decoded = urllib.parse.unquote(
         str(possible_lead["PARTNER_UID"]).lower()
     )
@@ -962,6 +963,7 @@ async def process_user_data(
             session=session,
             behavior_type=behavior_type,
             lead_user=lead_user,
+            ip=ip,
         ).id
         if is_first_request == True:
             lead_user.first_visit_id = lead_visit_id
@@ -1142,7 +1144,12 @@ def process_leads_requests(
 
 
 def add_new_leads_visits(
-    visited_datetime, lead_id, session, behavior_type, lead_user
+    visited_datetime: datetime,
+    lead_id: int,
+    session: Db,
+    behavior_type: str,
+    lead_user: LeadUser,
+    ip: str,
 ):
     start_date = visited_datetime.date()
     start_time = visited_datetime.time()
@@ -1156,6 +1163,7 @@ def add_new_leads_visits(
         end_time=end_time,
         pages_count=1,
         lead_id=lead_id,
+        ip=ip,
         behavior_type=behavior_type,
     )
     session.add(leads_visits)
