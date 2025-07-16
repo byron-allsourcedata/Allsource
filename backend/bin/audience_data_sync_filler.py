@@ -35,7 +35,6 @@ from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
 from db_dependencies import Db, Clickhouse
-from dependencies import PlansPersistence
 
 load_dotenv()
 

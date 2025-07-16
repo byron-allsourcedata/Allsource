@@ -73,7 +73,7 @@ def setup_logging(level):
 
 
 def check_correct_data_sync(
-    enrichment_user_id: int, data_sync_imported_id: int, session: Session
+    enrichment_user_asid: int, data_sync_imported_id: int, session: Session
 ):
     data_sync_imported_lead = (
         session.query(AudienceDataSyncImportedPersons)
@@ -86,8 +86,10 @@ def check_correct_data_sync(
     if data_sync_imported_lead.status != DataSyncImportedStatus.SENT.value:
         return False
 
-    # if data_sync_imported_lead.enrichment_user_id != UUID(enrichment_user_id):
-    #     return False
+    if data_sync_imported_lead.enrichment_user_asid != UUID(
+        enrichment_user_asid
+    ):
+        return False
 
     return True
 
@@ -185,8 +187,8 @@ def get_enrichment_users_from_clickhouse(
         # Связь: postal
         enrichment_user.postal = EnrichmentPostal(
             asid=row_dict["asid"],
-            home_address_line1=row_dict.get("home_address_line1"),
-            home_address_line2=row_dict.get("home_address_line2"),
+            home_address_line1=row_dict.get("home_address_line_1"),
+            home_address_line2=row_dict.get("home_address_line_2"),
             home_city=row_dict.get("home_city"),
             home_state=row_dict.get("home_state"),
             home_postal_code=row_dict.get("home_postal_code"),
@@ -195,8 +197,8 @@ def get_enrichment_users_from_clickhouse(
             home_address_validation_status=row_dict.get(
                 "home_address_validation_status"
             ),
-            business_address_line1=row_dict.get("business_address_line1"),
-            business_address_line2=row_dict.get("business_address_line2"),
+            business_address_line1=row_dict.get("business_address_line_1"),
+            business_address_line2=row_dict.get("business_address_line_2"),
             business_city=row_dict.get("business_city"),
             business_state=row_dict.get("business_state"),
             business_postal_code=row_dict.get("business_postal_code"),
