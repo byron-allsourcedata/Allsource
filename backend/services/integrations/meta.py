@@ -628,8 +628,8 @@ class MetaIntegrationsService:
         if result.get("error", {}).get("type") == "OAuthException":
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
-        if response.get("error"):
-            logger.error(response["error"])
+        if result.get("error"):
+            logger.error(result["error"])
             return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
 
         return ProccessDataSyncResult.SUCCESS.value
