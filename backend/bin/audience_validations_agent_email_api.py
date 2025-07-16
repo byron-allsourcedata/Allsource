@@ -16,6 +16,7 @@ from services.exceptions import InsufficientCreditsError, MillionVerifierError
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from services.exceptions import InsufficientCreditsError, MillionVerifierError
 from db_dependencies import Db
 from resolver import Resolver
 from config.sentry import SentryConfig
@@ -235,16 +236,16 @@ async def process_rmq_message(
             exc_info=True,
         )
         db_session.rollback()
+        await asyncio.sleep(60 * 1)
         await message.reject(requeue=True)
-        await asyncio.sleep(60 * 5)
 
     except InsufficientCreditsError as e:
         logging.error(
             f"InsufficientCreditsError while processing data sync: {e}"
         )
         db_session.rollback()
+        await asyncio.sleep(60 * 1)
         await message.reject(requeue=True)
-        await asyncio.sleep(60 * 5)
 
     except Exception as e:
         logging.error(f"Error processing validation: {e}", exc_info=True)
