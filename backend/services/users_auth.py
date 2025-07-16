@@ -800,7 +800,7 @@ class UsersAuth:
             )
 
         if shop_hash:
-            self._process_big_commerce_integration(user_object, shop_hash)
+            await self._process_big_commerce_integration(user_object, shop_hash)
             self.user_persistence_service.email_confirmed(user_object.id)
 
         self.user_persistence_service.book_call_confirmed(user_object.id)
@@ -1030,7 +1030,7 @@ class UsersAuth:
                 shopify_status = OauthShopify.NON_SHOPIFY_ACCOUNT
 
             if shopify_status is None:
-                self._process_shopify_integration(
+                await self._process_shopify_integration(
                     user_object, shopify_data, shopify_access_token, shop_id
                 )
         authorization_data = self.get_user_authorization_information(
