@@ -344,7 +344,7 @@ const SourcesList: React.FC = () => {
 										<Typography variant="subtitle1" className="table-data">
 											{createdData.status === "unvalidated" ? (
 												<Image
-													src="./danger_yellow.svg"
+													src="/danger_yellow.svg"
 													alt="danger"
 													width={20}
 													height={20}
@@ -412,7 +412,7 @@ const SourcesList: React.FC = () => {
 													createdData?.active_segment_records) ||
 											(createdData?.processed_active_segment_records ===
 												createdData?.active_segment_records &&
-												(createdData.status === "unvalidated" ||
+												(
 													createdData?.processed_active_segment_records !==
 														0)) ? (
 												createdData.active_segment_records.toLocaleString(

@@ -1871,7 +1871,7 @@ const SmartAudiences: React.FC = () => {
 																			>
 																				{row.status === "unvalidated" ? (
 																					<Image
-																						src="./danger_yellow.svg"
+																						src="/danger_yellow.svg"
 																						alt="danger"
 																						width={20}
 																						height={20}
@@ -1968,7 +1968,7 @@ const SmartAudiences: React.FC = () => {
 																							row?.active_segment_records) ||
 																					(row?.processed_active_segment_records ===
 																						row?.active_segment_records &&
-																						(row.status === "unvalidated" ||
+																						(
 																							row?.processed_active_segment_records !==
 																								0)) ? (
 																					row.active_segment_records.toLocaleString(
@@ -2112,7 +2112,9 @@ const SmartAudiences: React.FC = () => {
 																									selectedRowData?.status ===
 																										"ready" ||
 																									selectedRowData?.status ===
-																										"n_a"
+																										"n_a" ||
+																									selectedRowData?.status ===
+																										"unvalidated"
 																								)
 																							}
 																							sx={{
@@ -2138,8 +2140,6 @@ const SmartAudiences: React.FC = () => {
 																							disabled={
 																								selectedRowData?.active_segment_records !==
 																									selectedRowData?.processed_active_segment_records ||
-																								selectedRowData?.status ===
-																									"unvalidated" ||
 																								selectedRowData?.status ===
 																									"validating"
 																							}

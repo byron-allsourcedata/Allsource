@@ -129,25 +129,36 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_persons_by_smart_aud_id(
         self, smart_audience_id: UUID, sent_contacts: int, fields: List[str]
     ) -> List[PersonRecord]:
+        self.client.command("SET max_query_size = 104857600")
+
         ids = self.postgres.get_person_ids_by_smart_aud_id(
             smart_audience_id, sent_contacts
         )
         if not ids:
             return []
 
+        if "asid" not in fields:
+            fields = ["asid"] + fields
+
         cols = ", ".join(fields)
         in_list = ", ".join(f"'{i}'" for i in ids)
+
         sql = f"""
             SELECT {cols}
             FROM enrichment_users
             WHERE asid IN ({in_list})
             LIMIT {sent_contacts}
         """
+
         q = self.client.query(sql)
         norm_rows = [self.squash_sequences(row) for row in q.result_rows]
         col_names = q.column_names
 
-        asid_index = col_names.index("asid")
+        try:
+            asid_index = col_names.index("asid")
+        except ValueError:
+            raise RuntimeError("Missing 'asid' column in query result")
+
         found_records = {
             row[asid_index]: PersonRecord(**dict(zip(col_names, row)))
             for row in norm_rows
@@ -164,6 +175,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
                 final_result.append(PersonRecord(**empty_data))
 
         return final_result
+
 
     def get_synced_persons_by_smart_aud_id(
         self, data_sync_id: int, enrichment_field_names: List[str]
