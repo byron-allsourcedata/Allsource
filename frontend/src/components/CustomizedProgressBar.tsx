@@ -21,7 +21,7 @@ const PageWithLoader: React.FC = () => {
 	const computeTop = () => {
 		if (hasNotification && hasSubheader) return "10.85rem";
 		if (hasSubheader) return "8.25rem";
-		if (hasNotification) return "6.25rem";
+		if (hasNotification) return "7.15rem";
 		return "4.25rem";
 	};
 
