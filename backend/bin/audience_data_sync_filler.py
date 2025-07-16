@@ -39,7 +39,7 @@ from db_dependencies import Db, Clickhouse
 load_dotenv()
 
 AUDIENCE_DATA_SYNC_PERSONS = "audience_data_sync_persons"
-LONG_SLEEP = 60 * 5
+LONG_SLEEP = 60
 SHORT_SLEEP = 10
 
 
