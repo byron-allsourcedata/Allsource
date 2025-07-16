@@ -121,7 +121,7 @@ export const SettingsSubscription: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
-	const [ visiblePlans ] = usePlans(tabValue === 0 ? "month" : "year")
+	const [visiblePlans] = usePlans(tabValue === 0 ? "month" : "year");
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
@@ -541,11 +541,11 @@ export const SettingsSubscription: React.FC = () => {
 									buttonText = "Speak to Us";
 									disabled = false;
 								}
-							} 
+							}
 
 							if (plan.is_active) {
-								buttonText = "Current Plan"
-								disabled = true
+								buttonText = "Current Plan";
+								disabled = true;
 							}
 
 							return (
