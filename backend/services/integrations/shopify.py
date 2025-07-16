@@ -603,10 +603,6 @@ class ShopifyIntegrationService:
 
         return integration
 
-    def __save_customer(self, customer: ShopifyCustomer, user_id: int):
-        with self.integration_persistence as service:
-            service.shopify.save_customer(customer.model_dump(), user_id)
-
     def __create_or_update_shopify_customer(
         self, customer, shop_domain: str, access_token: str
     ):
@@ -732,17 +728,6 @@ class ShopifyIntegrationService:
                 {"last_sync_date": datetime.now()}, id=sync.id
             )
         return {"status": "Success"}
-
-    def __import_sync(self, user_id: int):
-        credentials = self.get_credentials(user_id)
-        customers = [
-            self.__mapped_customer(customer)
-            for customer in self.__get_customers(
-                credentials.shopify.shop_domain,
-                credentials.shopify.access_token,
-            )
-        ]
-        self.__save_customer(customers, user_id)
 
     # -------------------------------MAPPED-SHOPIFY-DATA------------------------------------ #
 

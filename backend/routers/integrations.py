@@ -360,7 +360,7 @@ async def bigcommerce_auth(
     with httpx.Client() as client:
         token_response = client.post(BigcommerceConfig.token_url, data=payload)
         if token_response.status_code != 200:
-            return "The pixel is not installed. Please visit https://allsourcedata.io and complete the integration there."
+            return "The pixel is not installed. Please visit https://app.allsourcedata.io/ and complete the integration there."
 
         token_data = token_response.json()
 
