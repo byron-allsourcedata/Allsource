@@ -290,7 +290,7 @@ async def send_leads_to_rmq(
 
 
 async def process_user_integrations(
-    channel, pg_session, ch_session, subscription_service: SubscriptionService
+    channel, pg_session, subscription_service: SubscriptionService
 ):
     user_integrations, data_syncs = fetch_data_syncs(pg_session)
     for i, data_sync in enumerate(data_syncs):
@@ -331,6 +331,7 @@ async def process_user_integrations(
             data_sync_limit=data_sync_limit,
             service_name=user_integrations[i].service_name,
         )
+        logging.info(f"Processes Data sync id: {data_sync.id}")
         logging.info(f"Re imported leads= {len(enrichment_users)}")
         query_limit = data_sync_limit - len(enrichment_users)
         if query_limit > 0 and query_limit <= data_sync_limit:
@@ -381,8 +382,6 @@ async def main():
     sleep_interval = LONG_SLEEP
     while True:
         pg_session = None
-        ch_session = None
-
         rabbitmq_connection = None
         resolver = Resolver()
         try:
@@ -396,12 +395,11 @@ async def main():
             )
             if queue.declaration_result.message_count == 0:
                 pg_session = await resolver.resolve(Db)
-                ch_session = await resolver.resolve(Clickhouse)
                 subscription_service = await resolver.resolve(
                     SubscriptionService
                 )
                 await process_user_integrations(
-                    channel, pg_session, ch_session, subscription_service
+                    channel, pg_session, subscription_service
                 )
                 logging.info("Processing completed. Sleeping for 10 sec...")
             else:
@@ -413,9 +411,6 @@ async def main():
             if pg_session:
                 logging.info("Closing the database postgresql session...")
                 pg_session.close()
-            if ch_session:
-                logging.info("Closing the database clickhouse session...")
-                ch_session.close()
             if rabbitmq_connection:
                 logging.info("Closing RabbitMQ connection...")
                 await rabbitmq_connection.close()
