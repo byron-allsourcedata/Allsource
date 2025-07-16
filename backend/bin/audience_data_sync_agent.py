@@ -73,7 +73,7 @@ def setup_logging(level):
 
 
 def check_correct_data_sync(
-    enrichment_user_asid: int, data_sync_imported_id: int, session: Session
+    enrichment_user_asid: str, data_sync_imported_id: int, session: Session
 ):
     data_sync_imported_lead = (
         session.query(AudienceDataSyncImportedPersons)

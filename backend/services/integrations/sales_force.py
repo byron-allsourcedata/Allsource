@@ -574,7 +574,10 @@ class SalesForceIntegrationsService:
         if not professional_profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        company = professional_profiles.current_company_name
+        company = (
+            getattr(professional_profiles, "current_company_name", None)
+            or "undefined"
+        )
         if not company:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
