@@ -79,6 +79,12 @@ class AudienceInsightsService:
                 if "unknown" in val:
                     val.pop("unknown")
 
+            for key, val in education_history.items():
+                if "unknown" in val:
+                    val.pop("unknown")
+                if "Unknown" in val:
+                    val.pop("Unknown")
+
             # B2C
             for key, val in personal_info.items():
                 if "unknown" in val:
