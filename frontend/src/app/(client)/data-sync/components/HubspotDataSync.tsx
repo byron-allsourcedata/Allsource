@@ -557,7 +557,14 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={100} service="Hubspot" />
+					<UserTip
+						limit={100}
+						service="Hubspot"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",
