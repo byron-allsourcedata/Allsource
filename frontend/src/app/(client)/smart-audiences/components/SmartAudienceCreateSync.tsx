@@ -1338,27 +1338,14 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 					}}
 				>
 					<Box sx={{ width: "100%" }}>
-						{/* User Hint */}
-						<Box
+						<UserTip
+							title="Export Count Difference"
+							content="For example, Salesforce requires some mandatory fields: First Name, Last Name, Email and Company Name. Contacts missing either field will be skipped, so the total and exported counts may differ."
 							sx={{
-								margin: "0px 16px",
-								marginBottom: "16px",
-
-								"@media (max-width:900px)": {
-									margin: "0px",
-									marginBottom: "16px",
-								},
+								width: "100%",
+								padding: "16px 24px 0px 24px",
 							}}
-						>
-							<UserTip
-								title="Export Count Difference"
-								content="For example, Salesforce requires some mandatory fields: First Name, Last Name, Email and Company Name. Contacts missing either field will be skipped, so the total and exported counts may differ."
-								sx={{
-									marginTop: "16px",
-									width: "100%",
-								}}
-							/>
-						</Box>
+						/>
 						<TabContext value={value}>
 							<Box
 								sx={{
