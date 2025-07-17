@@ -493,7 +493,14 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={500} service="SalesForce" />
+					<UserTip
+						limit={500}
+						service="SalesForce"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

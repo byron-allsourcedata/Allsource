@@ -738,7 +738,14 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={150} service="Slack" />
+					<UserTip
+						limit={150}
+						service="Slack"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

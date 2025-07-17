@@ -924,7 +924,14 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						},
 					}}
 				>
-					<UserTip limit={500} service="Meta" />
+					<UserTip
+						limit={500}
+						service="Meta"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

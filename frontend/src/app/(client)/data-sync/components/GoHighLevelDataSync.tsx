@@ -489,7 +489,14 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={50} service="GoHighLevel" />
+					<UserTip
+						limit={50}
+						service="GoHighLevel"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

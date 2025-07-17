@@ -307,7 +307,14 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
 						height: "100%",
 					}}
 				>
-					<UserTip limit={150} service="Zapier" />
+					<UserTip
+						limit={150}
+						service="Zapier"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

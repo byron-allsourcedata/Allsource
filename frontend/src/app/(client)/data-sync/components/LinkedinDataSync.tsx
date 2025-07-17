@@ -784,7 +784,14 @@ const LinkedinDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={100} service="Linkedin" />
+					<UserTip
+						limit={100}
+						service="Linkedin"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

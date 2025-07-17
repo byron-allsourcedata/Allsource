@@ -1330,7 +1330,14 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 											gap: "16px",
 										}}
 									>
-										<UserTip limit={500} service="BingAds" />
+										<UserTip
+											limit={500}
+											service="BingAds"
+											sx={{
+												width: "100%",
+												padding: "16px 24px 0px 24px",
+											}}
+										/>
 										<Box
 											sx={{
 												p: 2,
