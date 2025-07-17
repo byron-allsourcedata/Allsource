@@ -749,7 +749,14 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={150} service="Omnisend" />
+					<UserTip
+						limit={150}
+						service="Omnisend"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",
