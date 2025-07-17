@@ -148,7 +148,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             validations=validation_params if need_validate else json.dumps({}),
             total_records=total_records,
             target_schema=target_schema,
-            validated_records=0 if need_validate else active_segment_records,
+            validated_records=0,
             active_segment_records=active_segment_records,
             status=status,
         )
