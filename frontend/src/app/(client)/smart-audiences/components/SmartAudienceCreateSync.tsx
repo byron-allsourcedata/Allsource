@@ -1354,6 +1354,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 								title="Export Count Difference"
 								content="For example, Salesforce requires some mandatory fields: First Name, Last Name, Email and Company Name. Contacts missing either field will be skipped, so the total and exported counts may differ."
 								sx={{
+									marginTop: "16px",
 									width: "100%",
 								}}
 							/>
