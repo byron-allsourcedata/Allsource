@@ -258,21 +258,23 @@ async def send_leads_to_rmq(
             AudienceDataSyncImportedPersons.id,
         )
     )
-
-    result = session.execute(stmt)
+    session.execute(stmt)
     session.commit()
 
-    inserted_map = {row.enrichment_user_asid: row.id for row in result}
-    missing = set(enrichment_user_asids) - set(inserted_map.keys())
-    if missing:
-        q = select(
-            AudienceDataSyncImportedPersons.enrichment_user_asid,
-            AudienceDataSyncImportedPersons.id,
-        ).where(
-            AudienceDataSyncImportedPersons.data_sync_id == data_sync.id,
-        )
-        for asid, pid in session.execute(q):
-            inserted_map[asid] = pid
+    results = select(
+        AudienceDataSyncImportedPersons.enrichment_user_asid,
+        AudienceDataSyncImportedPersons.id,
+    ).where(
+        AudienceDataSyncImportedPersons.enrichment_user_asid.in_(
+            enrichment_user_asids
+        ),
+        AudienceDataSyncImportedPersons.data_sync_id == data_sync.id,
+    )
+
+    inserted_map = {
+        row["enrichment_user_asid"]: row["id"]
+        for row in session.execute(results).mappings().all()
+    }
 
     arr_enrichment_users = [
         {
