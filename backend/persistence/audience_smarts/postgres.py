@@ -524,7 +524,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             row[0]
             for row in (
                 self.db.query(
-                    AudienceDataSyncImportedPersons.enrichment_user_id
+                    AudienceDataSyncImportedPersons.enrichment_user_asid
                 )
                 .filter(
                     AudienceDataSyncImportedPersons.data_sync_id == data_sync_id

@@ -3,6 +3,7 @@ from typing import Optional, List, Dict
 import json
 import io
 import csv
+from utils import to_snake_case
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
@@ -470,19 +471,21 @@ class AudienceSmartsService:
         return output
 
     def download_synced_persons(self, data_sync_id):
-        exclude_fields = {
-            "id",
-            "asid",
-            "up_id",
-            "rsid",
-            "name_prefix",
-            "name_suffix",
-        }
-
-        fields = EnrichmentUserContact.get_fields(exclude_fields=exclude_fields)
-        headers = EnrichmentUserContact.get_headers(
-            exclude_fields=exclude_fields
-        )
+        headers = [
+            "First Name",
+            "Middle Name",
+            "Last Name",
+            "Phone Mobile1",
+            "Phone Mobile2",
+            "Linkedin url",
+            "Business Email",
+            "Personal Email",
+            "Other Emails",
+            "Business Email Last Seen Date",
+            "Personal Email Last Seen",
+            "Mobile Phone DNC",
+        ]
+        fields = [to_snake_case(h) for h in headers]
 
         persons = (
             self.audience_smarts_persistence.get_synced_persons_by_smart_aud_id(
@@ -490,24 +493,12 @@ class AudienceSmartsService:
             )
         )
 
-        fields.insert(-1, "state")
-        headers.insert(-1, "State")
-        fields.insert(-1, "gender")
-        headers.insert(-1, "Gender")
-
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(headers)
 
         for lead in persons:
-            relevant_data = [
-                self.GENDER_MAPPDING.get(
-                    getattr(lead, field, ""), getattr(lead, field, "")
-                )
-                if field == "gender"
-                else getattr(lead, field, "")
-                for field in fields
-            ]
+            relevant_data = [getattr(lead, field, "") for field in fields]
             writer.writerow(relevant_data)
 
         output.seek(0)
