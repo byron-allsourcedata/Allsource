@@ -135,7 +135,13 @@ async def process_email_leads(
         logging.info("No matching emails found in ClickHouse.")
         return 0
 
-    email_to_user_id = {m.email: m.asid for m in matches}
+    seen_asids = set()
+    email_to_user_id = {}
+
+    for m in matches:
+        if m.asid not in seen_asids:
+            email_to_user_id[m.email] = m.asid
+            seen_asids.add(m.asid)
 
     filtered_persons = [
         p
@@ -272,8 +278,24 @@ async def process_email_leads(
                 matched_persons_to_add.append(new_p)
 
         if matched_persons_to_add:
+            values_to_insert = [
+                {
+                    "source_id": p.source_id,
+                    "email": p.email,
+                    "count": p.count,
+                    "amount": p.amount if include_amount else None,
+                    "start_date": p.start_date,
+                    "recency": p.recency,
+                    "enrichment_user_asid": p.enrichment_user_asid,
+                }
+                for p in matched_persons_to_add
+            ]
+            stmt = insert(AudienceSourcesMatchedPerson).values(values_to_insert)
+            stmt = stmt.on_conflict_do_nothing(
+                index_elements=["source_id", "enrichment_user_asid"]
+            )
+            db_session.execute(stmt)
             logging.info(f"Adding {len(matched_persons_to_add)} new persons")
-            db_session.bulk_save_objects(matched_persons_to_add)
 
         if matched_persons_to_update:
             logging.info(f"Updating {len(matched_persons_to_update)} persons")
