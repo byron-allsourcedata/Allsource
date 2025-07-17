@@ -858,7 +858,14 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={500} service="Mailchimps" />
+					<UserTip
+						limit={500}
+						service="Mailchimps"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

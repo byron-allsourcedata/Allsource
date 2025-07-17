@@ -7,9 +7,11 @@ import { BarData } from "../VerticalGradientBarChart";
 import { FieldRankMap, FinancialInfo } from "@/types/insights";
 
 function parseNetWorthStart(label: string): number {
-	if (label === "Unknown") return Number.MAX_SAFE_INTEGER - 1;
-	if (label.startsWith("Less than")) return 0;
-	if (label.startsWith("Greater than")) {
+	const normalizedLabel = label.toLowerCase();
+
+	if (normalizedLabel === "unknown") return Number.MAX_SAFE_INTEGER - 1;
+	if (normalizedLabel.startsWith("less than")) return 0;
+	if (normalizedLabel.startsWith("greater than")) {
 		const match = label.match(/\$([\d,]+)/);
 		return match
 			? parseInt(match[1].replace(/,/g, ""), 10) + 1

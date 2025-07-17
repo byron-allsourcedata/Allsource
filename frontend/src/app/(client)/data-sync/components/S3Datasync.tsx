@@ -647,7 +647,14 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 						height: "100%",
 					}}
 				>
-					<UserTip limit={500} service="S3" />
+					<UserTip
+						limit={500}
+						service="S3"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
 					<Box
 						sx={{
 							width: "100%",

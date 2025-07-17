@@ -101,7 +101,7 @@ async def create_user(
     user_form: UserSignUpForm,
     users_service: UsersAuth = Depends(get_users_auth_service),
 ):
-    user_data = users_service.create_account(user_form)
+    user_data = await users_service.create_account(user_form)
     if user_data.get("is_success"):
         return UserSignUpFormResponse(
             status=user_data.get("status"), token=user_data.get("token")
@@ -117,7 +117,7 @@ async def login_user(
     user_form: UserLoginForm,
     users_service: UsersAuth = Depends(get_users_auth_service),
 ):
-    user_data = users_service.login_account(user_form)
+    user_data = await users_service.login_account(user_form)
     return UserLoginFormResponse(
         status=user_data.get("status"),
         token=user_data.get("token"),
@@ -132,7 +132,7 @@ async def create_user_google(
     auth_google_token: AuthGoogleData,
     users: UsersAuth = Depends(get_users_auth_service),
 ):
-    user_data = users.create_account_google(auth_google_token)
+    user_data = await users.create_account_google(auth_google_token)
     return UserSignUpFormResponse(
         status=user_data.get("status"), token=user_data.get("token")
     )
@@ -143,7 +143,7 @@ async def create_user_google(
     auth_google_token: AuthGoogleData,
     users: UsersAuth = Depends(get_users_auth_service),
 ):
-    user_data = users.login_google(auth_google_token)
+    user_data = await users.login_google(auth_google_token)
     return UserLoginFormResponse(
         status=user_data.get("status"),
         token=user_data.get("token"),

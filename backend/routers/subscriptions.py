@@ -68,7 +68,9 @@ async def create_customer_session(
                 detail="Access denied. Admins only.",
             )
 
-    return payments_service.create_customer_session(alias=alias, user=user)
+    return await payments_service.create_customer_session(
+        alias=alias, user=user
+    )
 
 
 @router.get("/basic-plan-upgrade")
@@ -293,7 +295,7 @@ async def update_payment_webhook(
 
 
 @router.post("/cancel-plan")
-def cancel_user_subscription(
+async def cancel_user_subscription(
     unsubscribe_request: UnsubscribeRequest,
     payments_service: PaymentsService = Depends(get_payments_service),
     user: dict = Depends(check_user_authorization_without_pixel),
@@ -309,13 +311,13 @@ def cancel_user_subscription(
                 detail="Access denied. Admins only.",
             )
 
-    return payments_service.cancel_user_subscription(
+    return await payments_service.cancel_user_subscription(
         user=user, reason_unsubscribe=unsubscribe_request.reason_unsubscribe
     )
 
 
 @router.get("/upgrade-and-downgrade-user-subscription")
-def upgrade_and_downgrade_user_subscription(
+async def upgrade_and_downgrade_user_subscription(
     alias: str,
     payments_service: PaymentsService = Depends(get_payments_service),
     user: dict = Depends(check_user_authentication),
@@ -331,7 +333,7 @@ def upgrade_and_downgrade_user_subscription(
                 detail="Access denied. Admins only.",
             )
 
-    return payments_service.upgrade_and_downgrade_user_subscription(
+    return await payments_service.upgrade_and_downgrade_user_subscription(
         alias=alias, user=user
     )
 
@@ -380,8 +382,8 @@ async def shopify_billing_update_webhook(
     request: fastRequest, webhook_service: WebhookService = Depends(get_webhook)
 ):
     payload = await request.json()
-    result_update_subscription = webhook_service.shopify_billing_update_webhook(
-        payload=payload
+    result_update_subscription = (
+        await webhook_service.shopify_billing_update_webhook(payload=payload)
     )
     if result_update_subscription.get("status"):
         user = result_update_subscription["user"]

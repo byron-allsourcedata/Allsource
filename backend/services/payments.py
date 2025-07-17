@@ -143,10 +143,10 @@ class PaymentsService:
         )
         stripe.SubscriptionSchedule.release(schedule.id)
 
-    def create_customer_session(self, alias: str, user: dict):
+    async def create_customer_session(self, alias: str, user: dict):
         if user.get("source_platform") == SourcePlatformEnum.SHOPIFY.value:
             plan = self.plan_persistence.get_plan_by_alias(alias)
-            with self.integration_service as service:
+            async with self.integration_service as service:
                 return service.shopify.initialize_subscription_charge(
                     plan=plan, user=user
                 )
@@ -195,7 +195,7 @@ class PaymentsService:
             "status": get_subscription_status(schedule_downgrade_subscription)
         }
 
-    def cancel_user_subscription(self, user, reason_unsubscribe):
+    async def cancel_user_subscription(self, user, reason_unsubscribe):
         subscription_data = {}
         user_subscription = self.plan_persistence.get_user_subscription(
             user_id=user.get("id")
@@ -204,7 +204,7 @@ class PaymentsService:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
 
         if user.get("source_platform") == SourcePlatformEnum.SHOPIFY.value:
-            with self.integration_service as service:
+            async with self.integration_service as service:
                 subscription_data = service.shopify.cancel_current_subscription(
                     user=user
                 )
@@ -234,7 +234,7 @@ class PaymentsService:
             )
             return SubscriptionStatus.SUCCESS
 
-    def upgrade_and_downgrade_user_subscription(
+    async def upgrade_and_downgrade_user_subscription(
         self, alias: str, user
     ) -> dict[str, SubscriptionStatus] | dict[str, str] | dict[str, str]:
         subscription = self.plan_persistence.get_user_subscription(
@@ -244,7 +244,7 @@ class PaymentsService:
             return {"status": SubscriptionStatus.INCOMPLETE}
         if user.get("source_platform") == SourcePlatformEnum.SHOPIFY.value:
             plan = self.plan_persistence.get_plan_by_alias(alias)
-            with self.integration_service as service:
+            async with self.integration_service as service:
                 return service.shopify.initialize_subscription_charge(
                     plan=plan, user=user
                 )

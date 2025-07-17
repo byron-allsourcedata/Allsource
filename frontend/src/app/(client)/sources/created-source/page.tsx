@@ -45,6 +45,7 @@ interface Source {
 	total_records: number;
 	matched_records: number;
 	matched_records_status: string;
+	is_disabled: boolean;
 }
 
 const SourcesList: React.FC = () => {

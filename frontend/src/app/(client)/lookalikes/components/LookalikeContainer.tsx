@@ -94,6 +94,9 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 	const [etaMap, setEtaMap] = useState<Record<string, number | null>>({});
 
 	const [lookalikeStatusFailed, setLookalikeStatusFailed] = useState(false);
+	const [lookalikeStatus, setLookalikeStatus] = useState<
+		"success" | "failed" | "new" | "started" | null
+	>(null);
 
 	const fetchData = async (id: string): Promise<PollingData> => {
 		try {
@@ -111,6 +114,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 				};
 			}
 
+			setLookalikeStatus(updatedItem.status);
 			setLookalikeSize(updatedItem.size);
 			setEtaMap((prev) => ({
 				...prev,
@@ -389,7 +393,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 								Size:{" "}
 								{lookalikeStatusFailed ? (
 									0
-								) : mergedTotal === mergedProgress && mergedProgress !== 0 ? (
+								) : lookalikeStatus === "success" ? (
 									row.size.toLocaleString("en-US")
 								) : (
 									<>

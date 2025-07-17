@@ -7,11 +7,12 @@ import {
 	AccordionSummary,
 	AccordionDetails,
 	useTheme,
-	Button,
 	IconButton,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import BadSourceErrorModal from "@/app/(client)/sources/builder/components/BadSourceErrorModal";
+import { useNavigateContext } from "../../../context/navigateContext";
 
 export type FeatureObject = Record<string, number>;
 
@@ -38,6 +39,8 @@ function FeatureListTable<T extends FeatureObject>({
 }: Props<T>) {
 	const theme = useTheme();
 	const [showAll, setShowAll] = useState(false);
+	const [openModalBadSource, setOpenModalBadSource] = useState(true);
+	const { handleTabChange } = useNavigateContext();
 
 	const allPairs = useMemo(() => {
 		const safeFeatures = features ?? {};
@@ -51,90 +54,101 @@ function FeatureListTable<T extends FeatureObject>({
 	const renderContent = () => {
 		if (allPairs.length === 0) {
 			return (
-				<Box sx={{ p: 2 }}>
-					<Typography variant="body2" color="text.secondary">
-						No fields selected
-					</Typography>
-				</Box>
+				<>
+					<BadSourceErrorModal
+						open={openModalBadSource}
+						onClose={() => {
+							setOpenModalBadSource(false);
+							handleTabChange({} as React.SyntheticEvent, 0);
+						}}
+					/>
+					<Box sx={{ p: 2 }}>
+						<Typography variant="body2" color="text.secondary">
+							No fields selected
+						</Typography>
+					</Box>
+				</>
 			);
 		}
 
 		return (
-			<Box sx={{ pt: 2, px: 2 }}>
-				<Grid
-					container
-					alignItems="center"
-					sx={{
-						borderBottom: `1px solid ${theme.palette.divider}`,
-						pb: 1,
-						mb: 1,
-					}}
-				>
-					<Grid item xs={9}>
-						<Typography
-							className="black-table-header"
-							sx={{
-								fontWeight: "500 !important",
-								color: "rgba(32, 33, 36, 1) !important",
-							}}
-						>
-							{columnHeaders[0]}
-						</Typography>
-					</Grid>
-					<Grid item xs={3} textAlign="left">
-						<Typography
-							className="black-table-header"
-							sx={{
-								fontWeight: "500 !important",
-								color: "rgba(32, 33, 36, 1) !important",
-							}}
-						>
-							{columnHeaders[1]}
-						</Typography>
-					</Grid>
-				</Grid>
-
-				{visiblePairs.map(([k, v], index) => (
+			<>
+				<Box sx={{ pt: 2, px: 2 }}>
 					<Grid
 						container
-						key={String(k)}
 						alignItems="center"
 						sx={{
-							borderBottom:
-								index !== visiblePairs.length - 1
-									? `1px solid ${theme.palette.divider}`
-									: "none",
-							py: 1,
+							borderBottom: `1px solid ${theme.palette.divider}`,
+							pb: 1,
+							mb: 1,
 						}}
 					>
 						<Grid item xs={9}>
-							<Typography className="black-table-header">
-								{formatKey(String(k))}
+							<Typography
+								className="black-table-header"
+								sx={{
+									fontWeight: "500 !important",
+									color: "rgba(32, 33, 36, 1) !important",
+								}}
+							>
+								{columnHeaders[0]}
 							</Typography>
 						</Grid>
 						<Grid item xs={3} textAlign="left">
-							<Typography className="black-table-header">
-								{(v * 100).toFixed(1)}%
+							<Typography
+								className="black-table-header"
+								sx={{
+									fontWeight: "500 !important",
+									color: "rgba(32, 33, 36, 1) !important",
+								}}
+							>
+								{columnHeaders[1]}
 							</Typography>
 						</Grid>
 					</Grid>
-				))}
 
-				{allPairs.length > 5 && (
-					<Box sx={{ textAlign: "center", mt: 1 }}>
-						<IconButton
-							sx={{ borderRadius: 1, padding: 0 }}
-							onClick={() => setShowAll((s) => !s)}
-							size="small"
+					{visiblePairs.map(([k, v], index) => (
+						<Grid
+							container
+							key={String(k)}
+							alignItems="center"
+							sx={{
+								borderBottom:
+									index !== visiblePairs.length - 1
+										? `1px solid ${theme.palette.divider}`
+										: "none",
+								py: 1,
+							}}
 						>
-							<Typography sx={{ fontSize: 14, mr: 0.5, borderRadius: 0 }}>
-								{showAll ? "Show Less" : `Show More (${allPairs.length - 5})`}
-							</Typography>
-							{showAll ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-						</IconButton>
-					</Box>
-				)}
-			</Box>
+							<Grid item xs={9}>
+								<Typography className="black-table-header">
+									{formatKey(String(k))}
+								</Typography>
+							</Grid>
+							<Grid item xs={3} textAlign="left">
+								<Typography className="black-table-header">
+									{(v * 100).toFixed(1)}%
+								</Typography>
+							</Grid>
+						</Grid>
+					))}
+
+					{allPairs.length > 5 && (
+						<Box sx={{ textAlign: "center", mt: 1 }}>
+							<IconButton
+								sx={{ borderRadius: 1, padding: 0 }}
+								onClick={() => setShowAll((s) => !s)}
+								size="small"
+							>
+								<Typography sx={{ fontSize: 14, mr: 0.5, borderRadius: 0 }}>
+									{showAll ? "Show Less" : `Show More (${allPairs.length - 5})`}
+								</Typography>
+								{showAll ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+							</IconButton>
+						</Box>
+					)}
+				</Box>
+			</>
 		);
 	};
 

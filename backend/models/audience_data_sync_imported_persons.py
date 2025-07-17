@@ -40,14 +40,23 @@ class AudienceDataSyncImportedPersons(Base):
     updated_at = Column(TIMESTAMP, nullable=True)
     enrichment_user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(EnrichmentUser.id, ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
+    )
+    enrichment_user_asid = Column(
+        UUID(as_uuid=True),
+        nullable=True,
     )
 
     __table_args__ = (
         Index(
             "audience_data_sync_imported_persons_enrichment_user_id_data_syn",
             enrichment_user_id,
+            data_sync_id,
+            unique=True,
+        ),
+        Index(
+            "audience_data_sync_imported_persons_enrichment_user_asid",
+            enrichment_user_asid,
             data_sync_id,
             unique=True,
         ),

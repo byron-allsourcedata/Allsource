@@ -116,27 +116,76 @@ class AudienceSmartsService:
         )
         return count_deleted > 0
 
+    # def estimates_predictable_validation(
+    #     self, validations: List[str]
+    # ) -> Dict[str, float]:
+    #     stats = (
+    #         self.audience_settings_persistence.get_average_success_validations()
+    #     )
+    #     product = 1.0
+    #     for key in validations:
+    #         product *= stats.get(key, 1.0)
+
+    #     return product
+
     def estimates_predictable_validation(
         self, validations: List[str]
     ) -> Dict[str, float]:
-        stats = (
-            self.audience_settings_persistence.get_average_success_validations()
-        )
+        stats_raw = self.audience_settings_persistence.get_stats_validations()
+        stats = json.loads(stats_raw.value) if stats_raw else {}
+
         product = 1.0
         for key in validations:
-            product *= stats.get(key, 1.0)
+            vstat = stats.get(key, {})
+            valid = vstat.get("valid_count", 1.0)
+            total = vstat.get("total_count", 1.0)
+            product *= valid / total
 
         return product
+
+    # def calculate_validation_cost(
+    #     self, count_active_segment: int, validations: List[str]
+    # ) -> float:
+    #     stats = self.audience_settings_persistence.get_cost_validations()
+    #     costs = 0
+    #     for key in validations:
+    #         costs += count_active_segment * stats.get(key, 1.0)
+
+    #     return round(costs, 2)
 
     def calculate_validation_cost(
         self, count_active_segment: int, validations: List[str]
     ) -> float:
-        stats = self.audience_settings_persistence.get_cost_validations()
-        costs = 0
-        for key in validations:
-            costs += count_active_segment * stats.get(key, 1.0)
+        costs_raw = self.audience_settings_persistence.get_cost_validations()
+        cost_map = costs_raw or {}
 
-        return round(costs, 2)
+        stats_raw = self.audience_settings_persistence.get_stats_validations()
+        stats = json.loads(stats_raw.value) if stats_raw else {}
+
+        priority_row = (
+            self.audience_settings_persistence.get_validation_priority()
+        )
+        priority_order = priority_row.split(",") if priority_row else []
+
+        validations_sorted = sorted(
+            validations,
+            key=lambda x: priority_order.index(x)
+            if x in priority_order
+            else len(priority_order) + validations.index(x),
+        )
+
+        current_cnt = float(count_active_segment)
+        total_cost = 0.0
+
+        for key in validations_sorted:
+            total_cost += current_cnt * cost_map.get(key, 1.0)
+
+            vstat = stats.get(key, {})
+            valid = vstat.get("valid_count", 1.0)
+            total = vstat.get("total_count", 1.0)
+            current_cnt *= valid / total
+
+        return round(total_cost, 2)
 
     def update_audience_smart(self, id: UUID, new_name: str) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(

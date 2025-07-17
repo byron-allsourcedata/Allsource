@@ -1,4 +1,4 @@
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Callable
 from uuid import UUID
 import json
 from datetime import datetime
@@ -129,25 +129,52 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def get_persons_by_smart_aud_id(
         self, smart_audience_id: UUID, sent_contacts: int, fields: List[str]
     ) -> List[PersonRecord]:
+        self.client.command("SET max_query_size = 104857600")
+
         ids = self.postgres.get_person_ids_by_smart_aud_id(
             smart_audience_id, sent_contacts
         )
         if not ids:
             return []
 
+        if "asid" not in fields:
+            fields = ["asid"] + fields
+
         cols = ", ".join(fields)
         in_list = ", ".join(f"'{i}'" for i in ids)
+
         sql = f"""
             SELECT {cols}
             FROM enrichment_users
             WHERE asid IN ({in_list})
             LIMIT {sent_contacts}
         """
+
         q = self.client.query(sql)
         norm_rows = [self.squash_sequences(row) for row in q.result_rows]
         col_names = q.column_names
 
-        return [PersonRecord(**dict(zip(col_names, row))) for row in norm_rows]
+        try:
+            asid_index = col_names.index("asid")
+        except ValueError:
+            raise RuntimeError("Missing 'asid' column in query result")
+
+        found_records = {
+            row[asid_index]: PersonRecord(**dict(zip(col_names, row)))
+            for row in norm_rows
+        }
+
+        final_result = []
+        for asid in ids:
+            record = found_records.get(asid)
+            if record:
+                final_result.append(record)
+            else:
+                empty_data = {key: None for key in col_names}
+                empty_data["asid"] = asid
+                final_result.append(PersonRecord(**empty_data))
+
+        return final_result
 
     def get_synced_persons_by_smart_aud_id(
         self, data_sync_id: int, enrichment_field_names: List[str]
@@ -202,122 +229,120 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         ORDER BY {order_by_clause}
         """
         result = self.client.query(sql)
-        return [row[0] for row in result.result_rows]
+        sorted_found = [row[0] for row in result.result_rows]
+
+        sorted_set = set(sorted_found)
+        missing = [id_ for id_ in ids if id_ not in sorted_set]
+
+        return sorted_found + missing
+
+    def _get_enrichment_users_generic(
+        self,
+        smart_audience_id: UUID,
+        select_columns: List[str],
+        column_names: List[str],
+        row_mapper: Callable[[dict], dict],
+    ) -> List[dict]:
+        self.client.command("SET max_query_size = 104857600")
+
+        ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
+        if not ids:
+            return []
+
+        ids.sort(key=lambda e: e["id"])
+        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
+        asids = list(asid_to_id_map.keys())
+        in_list = ", ".join(f"'{asid}'" for asid in asids)
+
+        sql = f"""
+        SELECT 
+            {", ".join(select_columns)}
+        FROM enrichment_users
+        WHERE asid IN ({in_list})
+        """
+
+        rows = self.client.query(sql)
+        result_rows = [dict(zip(column_names, row)) for row in rows.result_rows]
+        found_by_asid = {row["asid"]: row for row in result_rows}
+
+        results = []
+        for entry in ids:
+            asid = entry["asid"]
+            row = found_by_asid.get(asid)
+            if row:
+                row["audience_smart_person_id"] = entry["id"]
+                results.append(row_mapper(row))
+            else:
+                empty_row = {col: None for col in column_names}
+                empty_row["asid"] = asid
+                empty_row["audience_smart_person_id"] = entry["id"]
+                results.append(row_mapper(empty_row))
+
+        return results
 
     def get_enrichment_users_for_delivery_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 104857600")
-        ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
-        if not ids:
-            return []
+        select_columns = ["asid", "personal_email", "business_email"]
+        column_names = ["asid", "personal_email", "business_email"]
 
-        in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
-        ids.sort(key=lambda e: e["id"])
-
-        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
-
-        sql = f"""
-        SELECT 
-            asid,
-            personal_email,
-            business_email,
-        FROM enrichment_users
-        WHERE asid IN ({in_list})
-        """
-
-        rows = self.client.query(sql)
-
-        columns = ["asid", "personal_email", "business_email"]
-        result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
-        return [
-            {
-                "audience_smart_person_id": asid_to_id_map[row["asid"]],
+        return self._get_enrichment_users_generic(
+            smart_audience_id,
+            select_columns=select_columns,
+            column_names=column_names,
+            row_mapper=lambda row: {
+                "audience_smart_person_id": row["audience_smart_person_id"],
                 "personal_email": row["personal_email"],
                 "business_email": row["business_email"],
-            }
-            for row in result_rows
-            for entry in ids
-            if entry["asid"] == row["asid"]
-        ]
+            },
+        )
 
     def get_enrichment_users_for_postal_validation(
         self, smart_audience_id: UUID, validation_type: str
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 104857600")
         if validation_type == "cas_home_address":
-            address_prefix = "home_"
+            prefix = "home_"
         elif validation_type == "cas_office_address":
-            address_prefix = "business_"
+            prefix = "business_"
         else:
             raise ValueError("Invalid validation type")
 
-        ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
-        if not ids:
-            return []
+        select_columns = [
+            "asid",
+            f"{prefix}city AS city",
+            f"{prefix}state AS state",
+            f"{prefix}country AS country",
+            f"{prefix}postal_code AS postal_code",
+            f"{prefix}address_line_1 AS address",
+        ]
 
-        in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
-        ids.sort(key=lambda e: e["id"])
+        column_names = [
+            "asid",
+            "city",
+            "state",
+            "country",
+            "postal_code",
+            "address",
+        ]
 
-        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
-
-        sql = f"""
-        SELECT 
-            asid,
-            {address_prefix}city AS city,
-            {address_prefix}state AS state,
-            {address_prefix}country AS country,
-            {address_prefix}postal_code AS postal_code,
-            {address_prefix}address_line_1 AS address
-        FROM enrichment_users
-        WHERE asid IN ({in_list})
-        """
-
-        rows = self.client.query(sql)
-
-        columns = ["asid", "city", "state", "country", "postal_code", "address"]
-        result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
-
-        return [
-            {
-                "audience_smart_person_id": asid_to_id_map[row["asid"]],
+        return self._get_enrichment_users_generic(
+            smart_audience_id,
+            select_columns=select_columns,
+            column_names=column_names,
+            row_mapper=lambda row: {
+                "audience_smart_person_id": row["audience_smart_person_id"],
                 "postal_code": row["postal_code"],
                 "country": row["country"],
                 "city": row["city"],
                 "state_name": row["state"],
                 "address": row["address"],
-            }
-            for row in result_rows
-        ]
+            },
+        )
 
     def get_enrichment_users_for_confirmation_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 104857600")
-        ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
-        if not ids:
-            return []
-
-        ids.sort(key=lambda e: e["id"])
-        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
-
-        in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
-
-        sql = f"""
-        SELECT 
-            asid,
-            phone_mobile1,
-            phone_mobile2,
-            first_name,
-            middle_name,
-            last_name
-        FROM enrichment_users
-        WHERE asid IN ({in_list})
-        """
-
-        rows = self.client.query(sql)
-
-        columns = [
+        select_columns = [
             "asid",
             "phone_mobile1",
             "phone_mobile2",
@@ -325,112 +350,87 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             "middle_name",
             "last_name",
         ]
-        result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
+        column_names = select_columns
 
-        return [
-            {
-                "audience_smart_person_id": asid_to_id_map[row["asid"]],
+        return self._get_enrichment_users_generic(
+            smart_audience_id,
+            select_columns=select_columns,
+            column_names=column_names,
+            row_mapper=lambda row: {
+                "audience_smart_person_id": row["audience_smart_person_id"],
                 "phone_mobile1": row["phone_mobile1"],
                 "phone_mobile2": row["phone_mobile2"],
-                "full_name": f"{row['first_name'] or ''} {row['middle_name'] or ''} {row['last_name'] or ''}".strip(),
-            }
-            for row in result_rows
-            for entry in ids
-            if entry["asid"] == row["asid"]
-        ]
+                "full_name": " ".join(
+                    filter(
+                        None,
+                        [
+                            row["first_name"],
+                            row["middle_name"],
+                            row["last_name"],
+                        ],
+                    )
+                ).strip(),
+            },
+        )
 
     def get_enrichment_users_for_job_validation(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 104857600")
-        ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
-        if not ids:
-            return []
+        select_columns = ["asid", "employment_json", "linkedin_url"]
+        column_names = select_columns
 
-        ids.sort(key=lambda e: e["id"])
-        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
+        def job_mapper(row):
+            employment_data = row.get("employment_json")
+            selected_job = None
+            if employment_data:
+                try:
+                    jobs = json.loads(employment_data)
+                    current_jobs = [
+                        j for j in jobs if j.get("end_date") is None
+                    ]
+                    selected_job = current_jobs[0] if current_jobs else None
+                except Exception:
+                    pass
 
-        in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
+            return {
+                "audience_smart_person_id": row["audience_smart_person_id"],
+                "job_title": selected_job.get("job_title")
+                if selected_job
+                else None,
+                "company_name": selected_job.get("company_name")
+                if selected_job
+                else None,
+                "linkedin_url": row["linkedin_url"],
+            }
 
-        sql = f"""
-        SELECT 
-            asid,
-            employment_json,
-            linkedin_url
-        FROM enrichment_users
-        WHERE asid IN ({in_list})
-        """
-
-        rows = self.client.query(sql)
-
-        columns = ["asid", "employment_json", "linkedin_url"]
-        result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
-
-        result = []
-        for row in result_rows:
-            if not row["employment_json"]:
-                selected_job = {
-                    "company_name": None,
-                    "job_title": None,
-                }
-            else:
-                employment_data = json.loads(row["employment_json"])
-                current_jobs = [
-                    job
-                    for job in employment_data
-                    if job.get("end_date") is None
-                ]
-                selected_job = current_jobs[0] if current_jobs else None
-
-            result.append(
-                {
-                    "audience_smart_person_id": asid_to_id_map[row["asid"]],
-                    "job_title": selected_job.get("job_title", None)
-                    if selected_job
-                    else None,
-                    "company_name": selected_job.get("company_name", None)
-                    if selected_job
-                    else None,
-                    "linkedin_url": row["linkedin_url"],
-                }
-            )
-        return result
+        return self._get_enrichment_users_generic(
+            smart_audience_id,
+            select_columns=select_columns,
+            column_names=column_names,
+            row_mapper=job_mapper,
+        )
 
     def get_enrichment_users_for_free_validations(
         self, smart_audience_id: UUID, column_name: str
     ) -> List[dict]:
-        self.client.command("SET max_query_size = 104857600")
-        ids = self.postgres.get_person_asids_by_smart_aud_id(smart_audience_id)
-        if not ids:
-            return []
+        select_columns = ["asid", column_name]
+        column_names = ["asid", column_name]
 
-        in_list = ", ".join(f"'{entry['asid']}'" for entry in ids)
-        ids.sort(key=lambda e: e["id"])
-
-        asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
-
-        sql = f"""
-        SELECT 
-            asid,
-            {column_name}
-        FROM enrichment_users
-        WHERE asid IN ({in_list})
-        """
-
-        rows = self.client.query(sql)
-
-        columns = ["asid", column_name]
-        result_rows = [dict(zip(columns, row)) for row in rows.result_rows]
-
-        return [
-            {
-                "audience_smart_person_id": asid_to_id_map[row["asid"]],
-                column_name: row[column_name].isoformat()
-                if isinstance(row[column_name], datetime)
-                else row[column_name],
+        def mapper(row):
+            val = row[column_name]
+            return {
+                "audience_smart_person_id": row["audience_smart_person_id"],
+                column_name: val.isoformat()
+                if isinstance(val, datetime)
+                else val,
             }
-            for row in result_rows
-        ]
+
+        return self._get_enrichment_users_generic(
+            smart_audience_id,
+            select_columns=select_columns,
+            column_names=column_names,
+            row_mapper=mapper,
+        )
 
     def check_access_for_user(self, user: dict) -> bool:
         return self.postgres.check_access_for_user(user)

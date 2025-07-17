@@ -13,6 +13,7 @@ from schemas.audience import (
     NewSource,
     SourcesObjectResponse,
     SourceResponse,
+    CreateSource,
     DomainsLeads,
     DomainsSourceResponse,
 )
@@ -103,7 +104,7 @@ def substitution_headings(
     )
 
 
-@router.post("/create", response_model=SourceResponse)
+@router.post("/create", response_model=CreateSource)
 async def create_source(
     payload: NewSource,
     user=Depends(check_user_authorization_without_pixel),
@@ -142,7 +143,7 @@ def get_sample_customers_list(
     )
 
 
-@router.get("/get-processing-source", response_model=Optional[SourceResponse])
+@router.get("/get-processing-source", response_model=Optional[CreateSource])
 def get_processing_source(
     id: UUID = Query(...),
     sources_service: AudienceSourceService = Depends(

@@ -275,7 +275,7 @@ class GoogleAdsIntegrationsService:
             if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
                 results.append(
                     {
-                        "enrichment_user_id": enrichment_user.id,
+                        "enrichment_user_asid": enrichment_user.asid,
                         "status": profile,
                     }
                 )
@@ -283,7 +283,7 @@ class GoogleAdsIntegrationsService:
             else:
                 results.append(
                     {
-                        "enrichment_user_id": enrichment_user.id,
+                        "enrichment_user_asid": enrichment_user.asid,
                         "status": ProccessDataSyncResult.SUCCESS.value,
                     }
                 )
@@ -537,7 +537,7 @@ class GoogleAdsIntegrationsService:
 
         business_email, personal_email, phone = (
             self.sync_persistence.get_verified_email_and_phone(
-                enrichment_user.id
+                enrichment_user.asid
             )
         )
         main_email, main_phone = resolve_main_email_and_phone(

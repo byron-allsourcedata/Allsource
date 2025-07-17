@@ -7,6 +7,7 @@ import httpx
 
 from persistence.million_verifier import MillionVerifierPersistence
 from resolver import injectable
+from services.exceptions import InsufficientCreditsError, MillionVerifierError
 
 logging.basicConfig(
     level=logging.INFO,
@@ -101,12 +102,14 @@ class MillionVerifierIntegrationsService:
             return checked_email.is_verify
 
         result = await self.__check_verify_email(email)
-        if result.get("error"):
-            return False
 
-        if result.get("credits") == 0:
-            logger.warning(result.get("error"))
-            raise Exception(f"Insufficient credits for million_verifier")
+        if result.get("credits") <= 0:
+            raise InsufficientCreditsError(
+                "Insufficient credits for million_verifier"
+            )
+
+        if result.get("error"):
+            raise MillionVerifierError(result.get("error"))
 
         subresult_value = result.get("subresult")
 

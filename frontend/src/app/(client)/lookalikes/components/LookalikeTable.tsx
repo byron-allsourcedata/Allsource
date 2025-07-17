@@ -924,8 +924,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 											)} */}
 											{row.status === "failed" ? (
 												0
-											) : row.processed_train_model_size ===
-													row.train_model_size && row.train_model_size !== 0 ? (
+											) : row.status === "success" ? (
 												row.size.toLocaleString("en-US")
 											) : (
 												<Box>

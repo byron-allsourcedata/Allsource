@@ -40,6 +40,7 @@ import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import { ExpandLessIcon, ExpandMoreIcon, SearchIcon } from "@/icon";
 import scrollToBlock from "@/utils/autoscroll";
 import CustomButton from "@/components/ui/CustomButton";
+import UserTip from "@/components/UserTip";
 
 export const dynamic = "force-dynamic";
 
@@ -462,25 +463,22 @@ const CreateLookalikePage: React.FC = () => {
 															</TableHead>
 															<TableBody>
 																{filteredData.map((row, index) => {
-																	const isDisabled =
-																		row.matched_records === 0 ||
-																		row.matched_records_status === "pending";
 																	return (
 																		<TableRow
 																			key={index}
-																			hover={!isDisabled}
+																			hover={!row.is_disabled}
 																			onClick={() =>
-																				!isDisabled && handleSelectRow(row)
+																				!row.isDisabled && handleSelectRow(row)
 																			}
 																			sx={{
 																				display: "flex",
 																				justifyContent: "space-between",
 																				width: "100%",
-																				opacity: isDisabled ? 0.5 : 1,
-																				pointerEvents: isDisabled
+																				opacity: row.is_disabled ? 0.5 : 1,
+																				pointerEvents: row.is_disabled
 																					? "none"
 																					: "auto",
-																				cursor: isDisabled
+																				cursor: row.is_disabled
 																					? "not-allowed"
 																					: "pointer",
 																			}}
@@ -866,6 +864,13 @@ const CreateLookalikePage: React.FC = () => {
 							>
 								Lookalikes
 							</Typography>
+							<UserTip
+								title="Building Your Lookalike Audience"
+								content="Our AI is analyzing your audience against 2+ million data points to find similar users. This deep matching ensures high precision—thank you for your patience!"
+								sx={{
+									marginBottom: "16px",
+								}}
+							/>
 							{lookalike.length > 0 ? (
 								<LookalikeContainer tableData={lookalike} />
 							) : (
@@ -876,7 +881,7 @@ const CreateLookalikePage: React.FC = () => {
 									display: "flex",
 									justifyContent: "end",
 									gap: 2,
-									mt: 1,
+									mt: 2,
 									alignItems: "center",
 								}}
 							>

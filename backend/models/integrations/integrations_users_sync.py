@@ -82,7 +82,6 @@ class IntegrationUserSync(Base):
     campaign_name = Column(VARCHAR, nullable=True)
     last_sent_enrichment_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(EnrichmentUser.id, ondelete="SET NULL"),
         nullable=True,
     )
 
