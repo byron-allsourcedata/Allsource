@@ -40,6 +40,7 @@ import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import { ExpandLessIcon, ExpandMoreIcon, SearchIcon } from "@/icon";
 import scrollToBlock from "@/utils/autoscroll";
 import CustomButton from "@/components/ui/CustomButton";
+import UserTip from "@/components/UserTip";
 
 export const dynamic = "force-dynamic";
 
@@ -866,6 +867,13 @@ const CreateLookalikePage: React.FC = () => {
 							>
 								Lookalikes
 							</Typography>
+							<UserTip
+								title="Building Your Lookalike Audience"
+								content="Our AI is analyzing your audience against 2+ million data points to find similar users. This deep matching ensures high precision—thank you for your patience!"
+								sx={{
+									marginBottom: "16px",
+								}}
+							/>
 							{lookalike.length > 0 ? (
 								<LookalikeContainer tableData={lookalike} />
 							) : (
@@ -876,7 +884,7 @@ const CreateLookalikePage: React.FC = () => {
 									display: "flex",
 									justifyContent: "end",
 									gap: 2,
-									mt: 1,
+									mt: 2,
 									alignItems: "center",
 								}}
 							>
