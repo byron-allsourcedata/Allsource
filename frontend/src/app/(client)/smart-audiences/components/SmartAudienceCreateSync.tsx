@@ -837,7 +837,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			}
 		} else if (value === "3" || value === "4") {
 			if (canSendDataSync()) {
-				if (isDownloadAction) {
+				if (isDownloadAction || activeService == "CSV") {
 					downloadPersons();
 				} else {
 					createDataSync();

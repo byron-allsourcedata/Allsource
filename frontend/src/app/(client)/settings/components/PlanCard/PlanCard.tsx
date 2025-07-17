@@ -44,7 +44,8 @@ export const PlanCard: React.FC<{
 		variant?: "contained" | "outlined";
 	};
 	isRecommended?: boolean;
-}> = ({ plan, buttonProps, isRecommended }) => {
+	isActive?: boolean;
+}> = ({ plan, buttonProps, isRecommended, isActive = false }) => {
 	const alias = "";
 
 	return (
@@ -93,13 +94,13 @@ export const PlanCard: React.FC<{
 				<Box
 					sx={{
 						padding: "30px 24px",
-						border: isRecommended
+						border: isActive
 							? "1px solid rgba(56, 152, 252, 1)"
 							: "1px solid rgba(237, 237, 237, 1)",
-						backgroundColor: isRecommended
+						backgroundColor: isActive
 							? "rgba(249, 252, 255, 1)"
 							: "transparent",
-						borderRadius: isRecommended ? "4px 0 4px 4px" : "4px",
+						borderRadius: isActive ? "4px 0 4px 4px" : "4px",
 						boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.08)",
 						height: "100%",
 						position: "relative",

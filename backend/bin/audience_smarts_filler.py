@@ -162,7 +162,16 @@ async def aud_smarts_reader(
                     )
                 )
 
-                combined_query = lalp_query.union(smp_query).subquery()
+                has_lookalikes = lookalike_include or lookalike_exclude
+                has_source = source_include or source_exclude
+                if has_lookalikes and has_source:
+                    combined_query = lalp_query.union(smp_query).subquery()
+                elif has_source:
+                    combined_query = smp_query.subquery()
+                elif has_lookalikes:
+                    combined_query = lalp_query.subquery()
+                else:
+                    raise RuntimeError("smart audience is empty")
 
                 final_query = (
                     db_session.query(combined_query.c.enrichment_user_asid)

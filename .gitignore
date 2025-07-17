@@ -5,3 +5,4 @@ backend/.DS_Store
 .idea/*
 
 catboost_info/
+backend/bin/test_*.py
