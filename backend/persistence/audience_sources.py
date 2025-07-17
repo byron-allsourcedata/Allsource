@@ -54,6 +54,7 @@ class AudienceSourcesPersistence:
                 AudienceSource.matched_records,
                 AudienceSource.matched_records_status,
                 AudienceSource.processed_records,
+                AudienceSource.significant_fields,
             )
             .join(Users, Users.id == AudienceSource.created_by_user_id)
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)

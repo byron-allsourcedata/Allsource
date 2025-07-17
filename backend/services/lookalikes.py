@@ -222,6 +222,9 @@ class AudienceLookalikesService:
                 "number_of_customers": source.total_records,
                 "matched_records": source.matched_records,
                 "matched_records_status": source.matched_records_status,
+                "is_disabled": source.matched_records_status == "pending"
+                or source.matched_records == 0
+                or source.significant_fields is None,
             }
             for source, created_by in sources
         ]

@@ -463,25 +463,22 @@ const CreateLookalikePage: React.FC = () => {
 															</TableHead>
 															<TableBody>
 																{filteredData.map((row, index) => {
-																	const isDisabled =
-																		row.matched_records === 0 ||
-																		row.matched_records_status === "pending";
 																	return (
 																		<TableRow
 																			key={index}
-																			hover={!isDisabled}
+																			hover={!row.is_disabled}
 																			onClick={() =>
-																				!isDisabled && handleSelectRow(row)
+																				!row.isDisabled && handleSelectRow(row)
 																			}
 																			sx={{
 																				display: "flex",
 																				justifyContent: "space-between",
 																				width: "100%",
-																				opacity: isDisabled ? 0.5 : 1,
-																				pointerEvents: isDisabled
+																				opacity: row.is_disabled ? 0.5 : 1,
+																				pointerEvents: row.is_disabled
 																					? "none"
 																					: "auto",
-																				cursor: isDisabled
+																				cursor: row.is_disabled
 																					? "not-allowed"
 																					: "pointer",
 																			}}

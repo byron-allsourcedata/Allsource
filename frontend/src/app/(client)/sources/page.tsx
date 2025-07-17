@@ -88,6 +88,7 @@ interface Source {
 	total_records: number;
 	matched_records: number;
 	matched_records_status: string;
+	is_disabled: boolean;
 }
 
 interface FetchDataParams {
@@ -1642,7 +1643,8 @@ const Sources: React.FC = () => {
 																						<ListItemButton
 																							disabled={
 																								selectedRowData?.matched_records ===
-																								0
+																									0 ||
+																								selectedRowData?.is_disabled
 																							}
 																							sx={{
 																								padding: "4px 16px",

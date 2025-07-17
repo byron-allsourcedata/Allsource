@@ -94,6 +94,22 @@ class SourceResponse(BaseModel):
     matched_records: int
     matched_records_status: str
     processed_records: int
+    is_disabled: bool
+
+
+class CreateSource(BaseModel):
+    id: UUID
+    name: str
+    target_schema: str
+    source_origin: str
+    source_type: str
+    created_at: datetime
+    created_by: str
+    domain: Optional[str] = None
+    total_records: Optional[int] = None
+    matched_records: int
+    matched_records_status: str
+    processed_records: int
 
     model_config = {"from_attributes": True}
 

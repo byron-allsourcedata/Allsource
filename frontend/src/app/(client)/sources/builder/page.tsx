@@ -916,12 +916,6 @@ const SourcesImport: React.FC = () => {
 								</Box>
 							</Box>
 						)}
-						<BadSourceErrorModal
-							open={showModal}
-							onClose={() => {
-								setShowModal(false);
-							}}
-						/>
 						<Box
 							sx={{
 								flex: 1,

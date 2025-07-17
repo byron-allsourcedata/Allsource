@@ -20,6 +20,7 @@ import {
 	FieldRankMap,
 	SignificantFields,
 } from "@/types/insights";
+import { useNavigateContext } from "../../context/navigateContext";
 
 const getFieldRankMap = (
 	significantFields: Record<string, number> | undefined | null,
@@ -45,13 +46,14 @@ const Insights = () => {
 	const isDebug: boolean = searchParams.get("is_debug") === "true";
 	const [loading, setLoading] = useState(false);
 	const { hasNotification } = useNotification();
-	const [tabIndex, setTabIndex] = useState(0);
+	const { handleTabChange, tabIndex } = useNavigateContext();
 	const [name, setName] = useState<string>("");
 	const [audience_type, setType] = useState("");
 	const [predictableFields, setPredictableFields] = useState<SignificantFields>(
 		{},
 	);
 	const [fieldRanks, setFieldRanks] = useState<FieldRankMap>({});
+	const [hasSignificantFields, setHasSignificantFields] = useState(false);
 
 	const [b2cData, setB2CData] = useState<B2CData>({
 		personal_info: {
@@ -115,10 +117,6 @@ const Insights = () => {
 		},
 	});
 
-	const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
-		setTabIndex(newIndex);
-	};
-
 	const fetchData = async () => {
 		setLoading(true);
 		try {
@@ -137,6 +135,7 @@ const Insights = () => {
 			setPredictableFields(response.data.significant_fields);
 			setName(response.data.name);
 			setType(response.data.audience_type);
+			setHasSignificantFields(response.data.significant_fields ? true : false);
 			const significantFields = response.data.significant_fields;
 			const fieldRankMap = getFieldRankMap(significantFields);
 			setFieldRanks(fieldRankMap);
@@ -357,6 +356,7 @@ const Insights = () => {
 							onClick={() =>
 								router.push(`/lookalikes/builder?source_uuid=${uuid}`)
 							}
+							disabled={!hasSignificantFields}
 							className="second-sub-title"
 							sx={{
 								backgroundColor: "rgba(56, 152, 252, 1)",

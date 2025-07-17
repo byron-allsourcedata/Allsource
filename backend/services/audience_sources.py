@@ -14,6 +14,7 @@ from schemas.audience import (
     Row,
     SourcesObjectResponse,
     SourceResponse,
+    CreateSource,
     NewSource,
     DomainsSourceResponse,
 )
@@ -169,6 +170,7 @@ class AudienceSourceService:
                     "matched_records": source[9],
                     "matched_records_status": source[10],
                     "processed_records": source[11],
+                    "is_disabled": True if source[12] is None else False,
                 }
             )
 
@@ -658,7 +660,7 @@ class AudienceSourceService:
 
     async def create_source(
         self, user: User, payload: NewSource
-    ) -> SourceResponse:
+    ) -> CreateSource:
         creating_data = {
             "user_id": user.get("id"),
             "target_schema": payload.target_schema,
@@ -700,7 +702,7 @@ class AudienceSourceService:
         if domain_name:
             setattr(created_data, "domain", domain_name)
 
-        response = SourceResponse.model_validate(created_data)
+        response = CreateSource.model_validate(created_data)
         return response
 
     def delete_source(self, id) -> bool:
@@ -719,8 +721,8 @@ class AudienceSourceService:
         domains = [domain for _, domain in result]
         return DomainsSourceResponse(domains=domains, has_more=has_more)
 
-    def get_processing_source(self, id: UUID) -> Optional[SourceResponse]:
+    def get_processing_source(self, id: UUID) -> Optional[CreateSource]:
         row = self.audience_sources_persistence.get_processing_sources(id)
         if not row:
             return None
-        return SourceResponse.model_validate(row)
+        return CreateSource.model_validate(row)
