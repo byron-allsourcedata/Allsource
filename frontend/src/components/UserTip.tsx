@@ -21,7 +21,6 @@ const UserTip = ({
 	return (
 		<Box
 			sx={{
-				// margin: "0px 32px",
 				marginTop: "16px",
 				width: "95%",
 				...sx,
