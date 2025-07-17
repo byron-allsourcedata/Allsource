@@ -163,7 +163,7 @@ async def aud_sources_matching(
             channel,
             user_id,
             {
-                "lookalike_id": lookalike_id,
+                "lookalike_id": str(lookalike_id),
                 "total": total_records,
                 "processed": processed_size,
             },
