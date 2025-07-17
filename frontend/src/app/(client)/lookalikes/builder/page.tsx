@@ -866,7 +866,7 @@ const CreateLookalikePage: React.FC = () => {
 							</Typography>
 							<UserTip
 								title="Building Your Lookalike Audience"
-								content="Our AI is analyzing your audience against 2+ million data points to find similar users. This deep matching ensures high precision—thank you for your patience!"
+								content="Our AI is analyzing your audience against 250+ million data points to find similar users. This deep matching ensures high precision—thank you for your patience!"
 								sx={{
 									marginBottom: "16px",
 								}}
