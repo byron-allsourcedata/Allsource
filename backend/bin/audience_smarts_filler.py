@@ -124,106 +124,161 @@ async def aud_smarts_reader(
         source_include = format_ids(data_sources["source_ids"]["include"])
         source_exclude = format_ids(data_sources["source_ids"]["exclude"])
 
-        while offset < active_segment:
-            try:
-                lalp_query = (
-                    db_session.query(
-                        AudienceLALP.enrichment_user_asid.label(
-                            "enrichment_user_asid"
-                        )
+        # while offset < active_segment:
+        try:
+            # lalp_query = (
+            #     db_session.query(
+            #         AudienceLALP.enrichment_user_asid.label(
+            #             "enrichment_user_asid"
+            #         )
+            #     )
+            #     .filter(
+            #         AudienceLALP.lookalike_id.in_(lookalike_include)
+            #         if lookalike_include
+            #         else True
+            #     )
+            #     .filter(
+            #         ~AudienceLALP.lookalike_id.in_(lookalike_exclude)
+            #         if lookalike_exclude
+            #         else True
+            #     )
+            # )
+
+            # smp_query = (
+            #     db_session.query(
+            #         AudienceSMP.enrichment_user_asid.label(
+            #             "enrichment_user_asid"
+            #         )
+            #     )
+            #     .filter(
+            #         AudienceSMP.source_id.in_(source_include)
+            #         if source_include
+            #         else True
+            #     )
+            #     .filter(
+            #         ~AudienceSMP.source_id.in_(source_exclude)
+            #         if source_exclude
+            #         else True
+            #     )
+            # )
+
+            # has_lookalikes = lookalike_include or lookalike_exclude
+            # has_source = source_include or source_exclude
+            # if has_lookalikes and has_source:
+            #     combined_query = lalp_query.union(smp_query).subquery()
+            # elif has_source:
+            #     combined_query = smp_query.subquery()
+            # elif has_lookalikes:
+            #     combined_query = lalp_query.subquery()
+            # else:
+            #     raise RuntimeError("smart audience is empty")
+
+            # final_query = (
+            #     db_session.query(combined_query.c.enrichment_user_asid)
+            #     .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
+            #     .offset(offset)
+            # )
+
+            # persons = [row[0] for row in final_query.all() if row[0]]
+
+            lalp_ids = db_session.query(AudienceLALP.enrichment_user_asid).all()
+            smp_ids = db_session.query(AudienceSMP.enrichment_user_asid).all()
+
+            lalp_set = {row[0] for row in lalp_ids}
+            smp_set = {row[0] for row in smp_ids}
+
+            all_ids = lalp_set.union(smp_set)
+
+            if lookalike_include:
+                include_ids = {
+                    row[0]
+                    for row in db_session.query(
+                        AudienceLALP.enrichment_user_asid
                     )
-                    .filter(
-                        AudienceLALP.lookalike_id.in_(lookalike_include)
-                        if lookalike_include
-                        else True
+                    .filter(AudienceLALP.lookalike_id.in_(lookalike_include))
+                    .all()
+                }
+                all_ids &= include_ids
+
+            if lookalike_exclude:
+                exclude_ids = {
+                    row[0]
+                    for row in db_session.query(
+                        AudienceLALP.enrichment_user_asid
                     )
-                    .filter(
-                        ~AudienceLALP.lookalike_id.in_(lookalike_exclude)
-                        if lookalike_exclude
-                        else True
+                    .filter(AudienceLALP.lookalike_id.in_(lookalike_exclude))
+                    .all()
+                }
+                all_ids -= exclude_ids
+
+            if source_include:
+                include_ids = {
+                    row[0]
+                    for row in db_session.query(
+                        AudienceSMP.enrichment_user_asid
                     )
+                    .filter(AudienceSMP.source_id.in_(source_include))
+                    .all()
+                }
+                all_ids &= include_ids
+
+            if source_exclude:
+                exclude_ids = {
+                    row[0]
+                    for row in db_session.query(
+                        AudienceSMP.enrichment_user_asid
+                    )
+                    .filter(AudienceSMP.source_id.in_(source_exclude))
+                    .all()
+                }
+                all_ids -= exclude_ids
+
+            persons = list(all_ids)
+
+            logging.info(f"len(persons), {len(persons)}")
+
+            if order_by_clause:
+                sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(
+                    persons, order_by_clause
                 )
 
-                smp_query = (
-                    db_session.query(
-                        AudienceSMP.enrichment_user_asid.label(
-                            "enrichment_user_asid"
-                        )
-                    )
-                    .filter(
-                        AudienceSMP.source_id.in_(source_include)
-                        if source_include
-                        else True
-                    )
-                    .filter(
-                        ~AudienceSMP.source_id.in_(source_exclude)
-                        if source_exclude
-                        else True
-                    )
-                )
+                logging.info(f"len(sorted_persons), {len(sorted_persons)}")
 
-                has_lookalikes = lookalike_include or lookalike_exclude
-                has_source = source_include or source_exclude
-                if has_lookalikes and has_source:
-                    combined_query = lalp_query.union(smp_query).subquery()
-                elif has_source:
-                    combined_query = smp_query.subquery()
-                elif has_lookalikes:
-                    combined_query = lalp_query.subquery()
-                else:
-                    raise RuntimeError("smart audience is empty")
-
-                final_query = (
-                    db_session.query(combined_query.c.enrichment_user_asid)
-                    .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
-                    .offset(offset)
-                )
-
-                persons = [row[0] for row in final_query.all() if row[0]]
-
-                logging.info(f"len(persons), {len(persons)}")
-
-                if order_by_clause:
-                    sorted_persons = audience_smarts_service.sorted_enrichment_users_for_validation(
-                        persons, order_by_clause
-                    )
-
-                    logging.info(f"len(sorted_persons), {len(sorted_persons)}")
-
-                    if not sorted_persons:
-                        break
-                else:
+                if not sorted_persons:
                     sorted_persons = persons
 
-                logging.info(
-                    f"current count {count}, common count {active_segment // SELECTED_ROW_COUNT}"
-                )
+            else:
+                sorted_persons = persons
 
-                message_body = {
-                    "aud_smart_id": str(aud_smart_id),
-                    "user_id": user_id,
-                    "need_validate": need_validate,
-                    "count_iterations": common_count,
-                    "count": count,
-                    "enrichment_users_ids": [
-                        str(person_id) for person_id in sorted_persons
-                    ],
-                }
-                await publish_rabbitmq_message_with_channel(
-                    channel=channel,
-                    queue_name=AUDIENCE_SMARTS_AGENT,
-                    message_body=message_body,
-                )
-                logging.info(f"sent {len(sorted_persons)} persons")
+            logging.info(
+                f"current count {count}, common count {active_segment // SELECTED_ROW_COUNT}"
+            )
 
-                offset += SELECTED_ROW_COUNT
-                count += 1
+            message_body = {
+                "aud_smart_id": str(aud_smart_id),
+                "user_id": user_id,
+                "need_validate": need_validate,
+                "count_iterations": common_count,
+                "count": count,
+                "enrichment_users_ids": [
+                    str(person_id) for person_id in sorted_persons
+                ],
+            }
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
+                queue_name=AUDIENCE_SMARTS_AGENT,
+                message_body=message_body,
+            )
+            logging.info(f"sent {len(sorted_persons)} persons")
 
-            except IntegrityError as e:
-                logging.warning(
-                    f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
-                )
-                break
+            offset += SELECTED_ROW_COUNT
+            count += 1
+
+        except IntegrityError as e:
+            logging.warning(
+                f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
+            )
+            await message.nack()
 
         await message.ack()
     except BaseException as e:
