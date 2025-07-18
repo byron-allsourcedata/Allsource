@@ -280,3 +280,19 @@ def to_snake_case(value: str) -> str:
     value = re.sub(r"([A-Z]+)", r"_\1", value)
     value = re.sub(r"__+", "_", value)
     return value.lower().strip("_")
+
+
+def maybe_unlimited(
+    value: int | None, clamp_min: int | None = None
+) -> tuple[int, bool]:
+    if value is None:
+        limit = -1
+    else:
+        limit = value
+
+    is_unlimited = limit == -1
+
+    if clamp_min is not None:
+        limit = max(limit, clamp_min)
+
+    return limit, is_unlimited
