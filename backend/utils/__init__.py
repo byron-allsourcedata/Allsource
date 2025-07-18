@@ -4,7 +4,6 @@ import json
 import logging
 import os
 import re
-import sys
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
 from urllib.parse import urlparse, parse_qs
@@ -13,31 +12,24 @@ import httpx
 import regex
 
 from config.rmq_connection import publish_rabbitmq_message_with_channel
+from config.sentry import SentryConfig
 from enums import ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
 
+from .logs import setup_logging, parse_log_level
+
+
 logger = logging.getLogger(__name__)
 
 
-def setup_logging(logger, level):
-    logger.basicConfig(
-        level=level,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+async def setup_script():
+    await SentryConfig.async_initilize()
 
-
-def parse_log_level():
-    log_level = logging.INFO
-    if len(sys.argv) > 1:
-        arg = sys.argv[1].upper()
-        if arg == "DEBUG":
-            log_level = logging.DEBUG
-
-    return log_level
+    log_level = parse_log_level()
+    setup_logging(logging, log_level)
 
 
 def get_utc_aware_date():
