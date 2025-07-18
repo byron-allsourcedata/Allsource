@@ -146,15 +146,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 	const [showHint, setShowHint] = useState(true);
 	const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
 	const [headerTitle, setHeaderTitle] = useState<string>("Install on CMS");
-	const [shop_domain, setDomain] = useState<string>(() => {
-		if (
-			typeof window !== "undefined" &&
-			sessionStorage.getItem("current_domain")
-		) {
-			return sessionStorage.getItem("current_domain") || "";
-		}
-		return "";
-	});
 	const [access_token, setAccessToken] = useState("");
 	const [accessTokenExists, setAccessTokenExists] = useState(false);
 	const [storeHash, setstoreHash] = useState("");
@@ -173,7 +164,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 	}, [typeof window !== "undefined" ? sessionStorage.getItem("me") : null]);
 	const [errors, setErrors] = useState({
 		access_token: "",
-		shop_domain: "",
 	});
 
 	useEffect(() => {
@@ -188,7 +178,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 					"/integrations/credentials/shopify",
 				);
 				if (response_shopify.status === 200) {
-					setDomain(response_shopify.data.shop_domain);
 					setAccessToken(response_shopify.data.access_token);
 					if (response_shopify.data.access_token) {
 						setAccessTokenExists(true);
@@ -287,13 +276,14 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 	};
 
 	const handleSubmit = async () => {
+		const shop_domain_raw = sessionStorage.getItem("current_domain");
+		const shop_domain = shop_domain_raw ?? "";
 		const newErrors = {
 			access_token: validateField(access_token, "access_token"),
-			shop_domain: validateField(shop_domain, "shop_domain"),
 		};
 		setErrors(newErrors);
 
-		if (newErrors.access_token || newErrors.shop_domain) {
+		if (newErrors.access_token) {
 			return;
 		}
 
@@ -336,7 +326,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 	};
 
 	const handleInstallButtonClick = () => {
-		let url = shop_domain.trim();
+		const shop_domain_raw = sessionStorage.getItem("current_domain");
+		let url = shop_domain_raw ?? "";
 
 		if (url) {
 			if (!/^https?:\/\//i.test(url)) {
@@ -355,12 +346,12 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 	};
 
 	const isFormValid = () => {
+		const shop_domain_raw = sessionStorage.getItem("current_domain");
 		const errors = {
 			access_token: validateField(access_token, "access_token"),
-			shop_domain: validateField(shop_domain, "shop_domain"),
 		};
 
-		return !errors.shop_domain && !errors.access_token;
+		return !errors.access_token;
 	};
 
 	return (
@@ -613,95 +604,10 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												display: "flex",
 												flexDirection: "row",
 												alignItems: "center",
-												padding: 0,
 												justifyContent: "start",
 											}}
 										>
 											<Image src="/2.svg" alt="2" width={20} height={20} />
-											{sourcePlatform !== "shopify" && (
-												<Typography
-													className="first-sub-title"
-													sx={{
-														...maintext,
-														textAlign: "left",
-														padding: "1em 0em 1em 1em",
-														fontWeight: "500",
-													}}
-												>
-													Enter your Shopify shop domain in the designated
-													field. This allows our system to identify your store.
-												</Typography>
-											)}
-										</Box>
-										<Box
-											component="pre"
-											sx={{
-												display: "flex",
-												width: "60%",
-												justifyContent: "center",
-												position: "relative",
-												margin: 0,
-												pl: 4.25,
-											}}
-										>
-											<TextField
-												fullWidth
-												label="Shop Domain"
-												variant="outlined"
-												placeholder="Enter your Shop Domain"
-												margin="normal"
-												value={
-													isFocused
-														? shop_domain
-															? shop_domain.replace(/^https?:\/\//, "")
-															: ""
-														: shop_domain
-															? `https://${shop_domain.replace(
-																	/^https?:\/\//,
-																	"",
-																)}`
-															: "https://"
-												}
-												sx={styles.formField}
-												onFocus={handleFocus}
-												onBlur={handleBlur}
-												InputProps={{ sx: styles.formInput }}
-												onChange={(e) => setDomain(e.target.value)}
-												InputLabelProps={{ sx: styles.inputLabel }}
-												disabled={sourcePlatform === "shopify"}
-											/>
-											{cmsHints["enterShopDomain"]?.show && (
-												<HintCard
-													card={cmsHintCards["enterShopDomain"]}
-													positionLeft={420}
-													positionTop={35}
-													isOpenBody={cmsHints["enterShopDomain"].showBody}
-													toggleClick={() =>
-														changeCMSHint(
-															"enterShopDomain",
-															"showBody",
-															"toggle",
-														)
-													}
-													closeClick={() =>
-														changeCMSHint(
-															"enterShopDomain",
-															"showBody",
-															"close",
-														)
-													}
-												/>
-											)}
-										</Box>
-										<Box
-											sx={{
-												display: "flex",
-												flexDirection: "row",
-												alignItems: "center",
-												justifyContent: "start",
-											}}
-										>
-											<Image src="/3.svg" alt="3" width={20} height={20} />
 											{sourcePlatform !== "shopify" && (
 												<Typography
 													className="first-sub-title"
@@ -778,7 +684,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													justifyContent: "start",
 												}}
 											>
-												<Image src="/4.svg" alt="4" width={20} height={20} />
+												<Image src="/3.svg" alt="3" width={20} height={20} />
 												<Typography
 													className="first-sub-title"
 													sx={{
