@@ -179,7 +179,7 @@ async def aud_smarts_reader(
                     .offset(offset)
                 )
 
-                persons = [row[0] for row in final_query.all()]
+                persons = [row[0] for row in final_query.all() if row[0]]
 
                 logging.info(f"len(persons), {len(persons)}")
 
