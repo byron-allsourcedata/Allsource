@@ -66,7 +66,10 @@ def fetch_data_syncs(session):
             IntegrationUserSync,
             IntegrationUserSync.integration_id == UserIntegration.id,
         )
-        .filter(IntegrationUserSync.sent_contacts > 0)
+        .filter(
+            IntegrationUserSync.sent_contacts > 0,
+            IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value,
+        )
         .all()
     )
 

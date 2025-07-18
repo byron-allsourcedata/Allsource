@@ -64,30 +64,24 @@ async def send_leads_to_queue(channel, processed_lead):
 
 
 def fetch_data_syncs(session):
-    user_integrations = (
-        session.query(UserIntegration)
-        .filter(
-            exists().where(
-                IntegrationUserSync.integration_id == UserIntegration.id
-            )
+    rows = (
+        session.query(UserIntegration, IntegrationUserSync)
+        .join(
+            IntegrationUserSync,
+            IntegrationUserSync.integration_id == UserIntegration.id,
         )
-        .all()
-    )
-    integration_ids = [ui.id for ui in user_integrations]
-    if not integration_ids:
-        return user_integrations, {}
-
-    data_syncs = (
-        session.query(IntegrationUserSync)
-        .filter(IntegrationUserSync.integration_id.in_(integration_ids))
+        .filter(IntegrationUserSync.sync_type == DataSyncType.CONTACT.value)
         .all()
     )
 
+    user_integrations_dict = {}
     syncs_by_integration_id = defaultdict(list)
-    for sync in data_syncs:
-        syncs_by_integration_id[sync.integration_id].append(sync)
 
-    return user_integrations, syncs_by_integration_id
+    for ui, sync in rows:
+        user_integrations_dict[ui.id] = ui
+        syncs_by_integration_id[ui.id].append(sync)
+
+    return list(user_integrations_dict.values()), syncs_by_integration_id
 
 
 def update_data_sync_integration(session, data_sync_id):
