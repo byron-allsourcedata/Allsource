@@ -383,7 +383,6 @@ class EducationProfiles(BaseModel):
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
-        # TODO
         filtered_data = data.copy()
         total = sum(filtered_data.values())
 
@@ -462,6 +461,21 @@ class EducationProfiles(BaseModel):
             setattr(self, key, self._to_percent(val))
 
         bins = self._dates_to_bins()
+        percent_bins = self._to_percent(bins)
+        setattr(self, "post_graduation_time", percent_bins)
+
+        return self
+
+    def calculate_percentages_without_unknown(self) -> "EducationProfiles":
+        values = self.model_dump()
+
+        for key, val in values.items():
+            if not isinstance(val, dict):
+                continue
+            setattr(self, key, self._to_percent(val))
+
+        bins = self._dates_to_bins()
+        bins.pop("unknown") # drop unknown
         percent_bins = self._to_percent(bins)
         setattr(self, "post_graduation_time", percent_bins)
 

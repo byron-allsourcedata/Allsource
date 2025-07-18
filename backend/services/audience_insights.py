@@ -115,6 +115,13 @@ class AudienceInsightsService:
             },
         )
 
+        # Exceptional case with post_graduation_time,
+        # because it needs to be calculate in real time
+        if not is_debug:
+            education_history_ = parsed.b2b.education_history
+            new_education_history = education_history_.calculate_percentages_without_unknown()
+            parsed.b2b.education_history = new_education_history
+
         parsed = parsed.model_dump()
         parsed["is_debug"] = is_debug
 
