@@ -79,7 +79,7 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 			let plans = period === "month" ? monthly : yearly;
 
 			if (freeTrial) {
-				plans = [{ ...freeTrialPlan, is_active: true }, ...plans];
+				plans = [...plans];
 			}
 
 			const planIndex = plans.findIndex(
