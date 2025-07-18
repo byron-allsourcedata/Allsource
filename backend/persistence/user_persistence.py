@@ -3,7 +3,6 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, TypedDict
 from decimal import Decimal
-import typing
 
 import pytz
 from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
@@ -18,7 +17,6 @@ from enums import (
 )
 from models import (
     AudienceLookalikes,
-    LeadUser,
     SubscriptionPlan,
     UserSubscriptions,
 )
@@ -157,18 +155,21 @@ class UserPersistence:
         ).scalar()
 
     def get_user_by_id(
-        self, user_id, result_as_object=False
-    ) -> Optional[UserDict]:
-        user, partner_is_active = (
-            self.db.query(Users, Partner.is_active)
+        self, user_id: int, result_as_object=False
+    ) -> UserDict | None:
+        query_result = self.db.execute(
+            select(Users, Partner.is_active)
             .filter(Users.id == user_id)
             .outerjoin(Partner, Partner.user_id == user_id)
-            .first()
-        )
+        ).first()
+
+        if query_result is None:
+            return None
+
+        user, partner_is_active = query_result.tuple()
 
         result_user = None
         if user:
-            user: Users = typing.cast(Users, user)
             result_user = {
                 "id": user.id,
                 "email": user.email,
