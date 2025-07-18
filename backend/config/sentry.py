@@ -6,6 +6,17 @@ import sentry_sdk
 logger = logging.getLogger(__name__)
 
 
+def before_send(event, hint):
+    # Check if exception info exists and is a KeyboardInterrupt
+    exc_info = hint.get("exc_info")
+    if exc_info is not None:
+        exc_type, _, _ = exc_info
+        if issubclass(exc_type, KeyboardInterrupt):
+            return None  # drop the event
+
+    return event  # send everything else
+
+
 class SentryConfig:
     SENTRY_DSN: str | None = os.getenv("SENTRY_DSN")
 
@@ -22,6 +33,7 @@ class SentryConfig:
             logger.info("Error alerts are enabled")
             sentry_sdk.init(
                 dsn=SentryConfig.SENTRY_DSN,
+                before_send=before_send,
                 send_default_pii=True,
             )
         else:
@@ -33,6 +45,7 @@ class SentryConfig:
             logger.info("Error alerts are enabled")
             sentry_sdk.init(
                 dsn=SentryConfig.SENTRY_DSN,
+                before_send=before_send,
                 send_default_pii=True,
             )
         else:
