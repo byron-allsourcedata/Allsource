@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography, Button } from "@mui/material";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface DomainStatusLabelsProps {
 	isPixelInstalled: boolean;
@@ -22,6 +22,7 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 	dataSyncFailed,
 }) => {
 	const router = useRouter();
+	const pathname = usePathname();
 
 	const statuses: LabelConfig[] = [];
 
@@ -80,11 +81,18 @@ const DomainStatusLabels: React.FC<DomainStatusLabelsProps> = ({
 
 	const renderAddDataSyncButton = () => {
 		if (isPixelInstalled && !dataSynced && !dataSyncFailed) {
+			const handleClick = () => {
+				if (pathname === "/pixel-sync") {
+					window.dispatchEvent(new Event("open-sync-popup"));
+				} else {
+					router.push("/pixel-sync");
+				}
+			};
 			return (
 				<Button
 					variant="outlined"
 					color="primary"
-					onClick={() => router.push("/pixel-sync")}
+					onClick={handleClick}
 					sx={{
 						textTransform: "none",
 						borderRadius: "200px",
