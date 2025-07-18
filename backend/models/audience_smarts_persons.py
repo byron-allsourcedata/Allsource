@@ -11,6 +11,7 @@ from sqlalchemy import (
     Index,
     event,
     BigInteger,
+    BOOLEAN,
 )
 
 from models.audience_smarts import AudienceSmart
@@ -20,26 +21,6 @@ from .base import Base, update_timestamps
 
 class AudienceSmartPerson(Base):
     __tablename__ = "audience_smarts_persons"
-
-    __table_args__ = (
-        Index(
-            "au_sm_ps_is_validation_processed_smart_audience_id_idx",
-            "is_validation_processed",
-            "smart_audience_id",
-        ),
-        Index(
-            "au_sm_ps_is_valid_smart_audience_id_idx",
-            "is_valid",
-            "smart_audience_id",
-        ),
-        Index(
-            "audience_smarts_persons_smart_audience_id_idx", "smart_audience_id"
-        ),
-        Index(
-            "audience_smarts_persons_enrichment_user_id_idx",
-            "enrichment_user_id",
-        ),
-    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -73,6 +54,32 @@ class AudienceSmartPerson(Base):
         TIMESTAMP,
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    is_synced = Column(BOOLEAN, nullable=False, server_default=text("FALSE"))
+
+    __table_args__ = (
+        Index(
+            "au_sm_ps_is_validation_processed_smart_audience_id_idx",
+            is_validation_processed,
+            smart_audience_id,
+        ),
+        Index(
+            "au_sm_ps_is_valid_smart_audience_id_idx",
+            is_valid,
+            smart_audience_id,
+        ),
+        Index(
+            "audience_smarts_persons_smart_audience_id_idx", smart_audience_id
+        ),
+        Index(
+            "audience_smarts_persons_enrichment_user_id_idx",
+            enrichment_user_id,
+        ),
+        Index(
+            "audience_smarts_persons_is_synced_is_valid_idx",
+            is_synced,
+            is_valid,
+        ),
     )
 
 

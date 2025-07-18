@@ -74,14 +74,17 @@ def fetch_data_syncs(session):
         .all()
     )
 
-    user_integrations_dict = {}
+    user_integrations = []
     syncs_by_integration_id = defaultdict(list)
+    seen_ids = set()
 
     for ui, sync in rows:
-        user_integrations_dict[ui.id] = ui
+        if ui.id not in seen_ids:
+            seen_ids.add(ui.id)
+            user_integrations.append(ui)
         syncs_by_integration_id[ui.id].append(sync)
 
-    return list(user_integrations_dict.values()), syncs_by_integration_id
+    return user_integrations, syncs_by_integration_id
 
 
 def update_data_sync_integration(session, data_sync_id):
