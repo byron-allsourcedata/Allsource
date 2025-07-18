@@ -29,6 +29,7 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
 from sqlalchemy.dialects.postgresql import insert
 from services.subscriptions import SubscriptionService
+from models.users import Users
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.audience_data_sync_imported_persons import (
@@ -183,7 +184,7 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
 
 
 def get_previous_imported_enrichment_users(
-    session, data_sync_id, data_sync_limit, service_name
+    session, data_sync_id, data_sync_limit
 ):
     query = (
         session.query(
@@ -210,9 +211,7 @@ def get_previous_imported_enrichment_users(
             AudienceDataSyncImportedPersons.data_sync_id == data_sync_id,
             AudienceDataSyncImportedPersons.status
             == DataSyncImportedStatus.SENT.value,
-            UserIntegration.service_name == service_name,
         )
-        .order_by(AudienceSmartPerson.enrichment_user_asid)
         .limit(data_sync_limit)
     )
 
@@ -303,7 +302,7 @@ async def process_user_integrations(
                 f"Skip, subscription is not active for user {user_integrations[i].user_id}"
             )
             continue
-
+        logging.info(f"Processes Data sync id: {data_sync.id}")
         if (
             data_sync.sync_status == False
             or user_integrations[i].is_failed == True
@@ -320,7 +319,7 @@ async def process_user_integrations(
             data_sync=data_sync,
             last_sync_date=False,
         )
-        if (data_sync.sent_contacts - imported_count) == 0:
+        if (data_sync.sent_contacts - imported_count) <= 0:
             logging.info(f"Skip, Integration sent_contacts == imported_count")
             continue
 
@@ -331,9 +330,8 @@ async def process_user_integrations(
             session=pg_session,
             data_sync_id=data_sync.id,
             data_sync_limit=data_sync_limit,
-            service_name=user_integrations[i].service_name,
         )
-        logging.info(f"Processes Data sync id: {data_sync.id}")
+
         logging.info(f"Re imported leads= {len(enrichment_users)}")
         query_limit = data_sync_limit - len(enrichment_users)
         if query_limit > 0 and query_limit <= data_sync_limit:
@@ -351,6 +349,38 @@ async def process_user_integrations(
 
         logging.info(f"enrichment_users len = {len(enrichment_users)}")
         enrichment_users = sorted(enrichment_users, key=lambda x: x["asid"])
+
+        user = (
+            pg_session.query(Users)
+            .filter(Users.id == user_integrations[i].user_id)
+            .with_for_update()
+            .first()
+        )
+
+        if user is None:
+            logging.warning(f"User {user_integrations[i].user_id} not found")
+            continue
+
+        # Проверка лимита smart_audience_quota
+        quota = user.smart_audience_quota
+        if quota is None:
+            quota = -1
+
+        is_unlimited = quota == -1
+
+        if not is_unlimited and quota <= 0:
+            logging.info(
+                f"Skip: User {user.id} has 0 smart_audience_quota credits for data sync"
+            )
+            continue
+        elif quota > 0:
+            if len(enrichment_users) > quota:
+                logging.info(
+                    f"User {user.id} has only {quota} credits left."
+                    + f"Limiting enrichment_users from {len(enrichment_users)} to {quota}"
+                )
+                enrichment_users = enrichment_users[:quota]
+
         await send_leads_to_rmq(
             pg_session,
             channel,

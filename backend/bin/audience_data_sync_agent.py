@@ -14,12 +14,14 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from persistence.audience_quota import AudienceQuotaPersistence
 from config.sentry import SentryConfig
 from uuid import UUID
 from resolver import Resolver
 from sqlalchemy import select, update
-from sqlalchemy.exc import PendingRollbackError
+from sqlalchemy.exc import PendingRollbackError, SQLAlchemyError
 from dotenv import load_dotenv
+from models import Users
 from models.enrichment.enrichment_users import EnrichmentUser
 from utils import get_utc_aware_date
 from models.enrichment.enrichment_professional_profiles import (
@@ -413,6 +415,7 @@ async def ensure_integration(
     pg_session: Db,
     ch_session: Clickhouse,
     notification_persistence: NotificationPersistence,
+    audience_quotas: AudienceQuotaPersistence,
 ):
     try:
         message_body = json.loads(message.body)
@@ -455,6 +458,9 @@ async def ensure_integration(
             await message.ack()
             return
 
+        service_name = user_integration.service_name
+        user_id = user_integration.user_id
+
         service_map = {
             "meta": integration_service.meta,
             "google_ads": integration_service.google_ads,
@@ -464,13 +470,31 @@ async def ensure_integration(
             "mailchimp": integration_service.mailchimp,
             "go_high_level": integration_service.go_high_level,
         }
-        service_name = user_integration.service_name
+
         service = service_map.get(service_name)
+        user_quota = audience_quotas.by_user_id(user_id)
+        if user_quota is None:
+            user_quota = -1
+
+        is_unlimited = user_quota == -1
 
         if service:
             try:
                 if validations:
                     validations = json.loads(validations)
+
+                if not is_unlimited and user_quota <= 0:
+                    logging.info(f"User #{user_id} has 0 quota, skipping")
+                    await message.ack()
+                    return
+
+                if user_quota > 0 and len(enrichment_users) > user_quota:
+                    logging.info(
+                        f"User {user_id} quota={user_quota}, "
+                        + f"truncating {len(enrichment_users)}→{user_quota}"
+                    )
+                    enrichment_users = enrichment_users[:user_quota]
+
                 results = await service.process_data_sync(
                     user_integration,
                     integration_data_sync,
@@ -577,6 +601,23 @@ async def ensure_integration(
                 user_integration=user_integration,
             )
 
+            # Deduct successful leads in short FOR UPDATE transaction
+            successful = sum(
+                1
+                for r in results
+                if r["status"] == ProccessDataSyncResult.SUCCESS.value
+            )
+            if successful > 0:
+                try:
+                    with pg_session.begin():
+                        new_quota = audience_quotas.deduct(user_id, successful)
+                    logging.info(
+                        f"Deducted {successful} credits from user {user_id}; "
+                        + f"new quota={new_quota}"
+                    )
+                except SQLAlchemyError as e:
+                    logging.error(f"Quota deduction failed: {e}", exc_info=True)
+
             logging.info(f"Processed message for service: {service_name}")
             await message.ack()
             return
@@ -622,6 +663,7 @@ async def main():
             notification_persistence = await resolver.resolve(
                 NotificationPersistence
             )
+            audience_quotas = await resolver.resolve(AudienceQuotaPersistence)
             integration_service = await resolver.resolve(IntegrationService)
             async with integration_service as service:
                 await queue.consume(
@@ -631,6 +673,7 @@ async def main():
                         pg_session=db_session,
                         ch_session=ch_client,
                         notification_persistence=notification_persistence,
+                        audience_quotas=audience_quotas,
                     )
                 )
                 await asyncio.Future()
