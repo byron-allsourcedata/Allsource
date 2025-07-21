@@ -437,3 +437,14 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
     def check_access_for_user(self, user: dict) -> bool:
         return self.postgres.check_access_for_user(user)
+
+    def get_include_exclude_query(
+        self,
+        lookalike_include,
+        lookalike_exclude,
+        source_include,
+        source_exclude,
+    ):
+        return self.postgres.get_include_exclude_query(
+            lookalike_include, lookalike_exclude, source_include, source_exclude
+        )

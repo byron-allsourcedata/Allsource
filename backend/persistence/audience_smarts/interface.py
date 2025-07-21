@@ -22,6 +22,16 @@ class AudienceSmartsPersistenceInterface(ABC):
         pass
 
     @abstractmethod
+    def get_include_exclude_query(
+        self,
+        lookalike_include,
+        lookalike_exclude,
+        source_include,
+        source_exclude,
+    ):
+        pass
+
+    @abstractmethod
     def create_audience_smarts_data_sources(
         self, smart_audience_id: UUID, data_sources: List[Dict]
     ) -> None:

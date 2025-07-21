@@ -338,6 +338,17 @@ class AudienceSmartsService:
             transformed_data_source
         )
 
+    def get_include_exclude_query(
+        self,
+        lookalike_include,
+        lookalike_exclude,
+        source_include,
+        source_exclude,
+    ):
+        return self.audience_smarts_persistence.get_include_exclude_query(
+            lookalike_include, lookalike_exclude, source_include, source_exclude
+        )
+
     def get_datasources_by_aud_smart_id(self, id: UUID) -> DataSourcesResponse:
         data_sources = (
             self.audience_smarts_persistence.get_datasources_by_aud_smart_id(id)
