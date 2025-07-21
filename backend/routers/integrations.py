@@ -391,9 +391,9 @@ async def bigcommerce_auth(
                     domain=domain,
                     user=user,
                 )
-            return RedirectResponse(f"{redirect_url}?install_bigcommerce=true")
+            return RedirectResponse(f"{redirect_url}&install_bigcommerce=true")
         except Exception:
-            return RedirectResponse(f"{redirect_url}?install_bigcommerce=false")
+            return RedirectResponse(f"{redirect_url}&install_bigcommerce=false")
     else:
         with httpx.Client() as client:
             shop_response = client.get(

@@ -25,9 +25,9 @@ export function usePlanAlias(): string | null {
 		if (!me) return;
 
 		let alias = me.plan_alias;
-		if (alias.endsWith("_monthly")) {
+		if (alias?.endsWith("_monthly")) {
 			alias = alias.substring(0, alias.length - 8);
-		} else if (alias.endsWith("_yearly")) {
+		} else if (alias?.endsWith("_yearly")) {
 			alias = alias.substring(0, alias.length - 7);
 		}
 

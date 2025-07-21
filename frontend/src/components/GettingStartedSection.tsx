@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Link as MuiLink, Grid, Typography } from "@mui/material";
 import { dashboardStyles } from "@/app/(client)/analytics/dashboardStyles";
 import {
@@ -32,6 +32,7 @@ const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
 	const [installationStatus, setInstallationStatus] = useState<
 		"success" | "failed" | null
 	>(null);
+	const verifyRef = useRef<HTMLDivElement | null>(null);
 	const [stepData, setStepData] = useState<StepConfig[]>([
 		{
 			label: "Choose a domain",
@@ -61,10 +62,17 @@ const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
 			),
 		},
 	]);
+	const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
+		setTimeout(() => {
+			ref.current?.scrollIntoView({ behavior: "smooth" });
+		}, 1000);
+	};
 
 	const handleInstallStatusChange = (status: "success" | "failed" | null) => {
 		setInstallationStatus(status);
-
+		if (status === "success") {
+			scrollToRef(verifyRef);
+		}
 		const updatedStepData = [...stepData];
 		if (status === "success") {
 			updatedStepData[1].status = "completed";
@@ -170,13 +178,7 @@ const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
 	const shouldShowVerifyComponent =
 		selectedDomain !== "" && selectedMethod !== "" && selectedMethod !== null;
 
-	const isGoogleOrManualMethod =
-		selectedMethod === "google" || selectedMethod === "manual";
-
-	const shouldRenderBasedOnStatus =
-		!isGoogleOrManualMethod || installationStatus === "success";
-
-	const isCenteredLayout = !showStepper;
+	const shouldRenderBasedOnStatus = installationStatus === "success";
 
 	return (
 		<>
@@ -186,25 +188,50 @@ const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
 					sx={{
 						height: "100%",
 						pr: 2,
-						justifyContent: isCenteredLayout ? "center" : undefined,
-						alignItems: isCenteredLayout ? "center" : undefined,
 						"@media (max-width: 1200px)": { gap: 4, pr: 0 },
 					}}
 				>
+					{showStepper && (
+						<Grid
+							item
+							xs={12}
+							md={4}
+							order={{ xs: 1, md: 2 }}
+							sx={{ display: { xs: "none", md: "block" } }}
+						>
+							<VerticalStepper steps={stepData} />
+						</Grid>
+					)}
+
 					<Grid
 						item
 						xs={12}
-						sx={{ display: { md: "none" }, overflow: "hidden" }}
+						md={showStepper ? 8 : 12}
+						order={{ xs: 2, md: 1 }}
+						sx={{
+							display: "flex",
+							flexDirection: "column",
+							gap: 2,
+						}}
 					>
 						<Typography
 							variant="h4"
 							component="h1"
 							className="first-sub-title"
-							sx={dashboardStyles.title}
+							sx={{
+								...dashboardStyles.title,
+								display: { md: "none" },
+							}}
 						>
 							Install Your Pixel
 						</Typography>
-						{showStepper && <VerticalStepper steps={stepData} />}
+
+						{showStepper && (
+							<Box sx={{ display: { md: "none" } }}>
+								<VerticalStepper steps={stepData} />
+							</Box>
+						)}
+
 						<DomainSelector
 							onDomainSelected={(domain) => {
 								setSelectedDomain(domain ? domain.domain : "");
@@ -212,71 +239,27 @@ const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
 							selectedDomainProp={selectedDomain}
 							addDomain={addDomain}
 						/>
+
 						{selectedDomain !== "" && (
 							<PixelInstallation
 								onInstallStatusChange={handleInstallStatusChange}
 								onInstallSelected={(method) => {
 									handleInstallSelected(method);
+									setSelectedMethod(method);
 									setShowHintVerify(true);
 								}}
 							/>
 						)}
 
 						{shouldShowVerifyComponent && shouldRenderBasedOnStatus && (
-							<VerifyPixelIntegration
-								domain={selectedDomain}
-								showHint={showHintVerify}
-							/>
-						)}
-					</Grid>
-					<Grid
-						item
-						xs={12}
-						lg={showStepper ? 8 : 12}
-						sx={{
-							display: { xs: "none", md: "block" },
-							order: { xs: 2, sm: 2, md: 2, lg: 1 },
-						}}
-					>
-						<Box sx={{ overflow: "visible" }}>
-							<DomainSelector
-								onDomainSelected={(domain) => {
-									setSelectedDomain(domain ? domain.domain : "");
-								}}
-								selectedDomainProp={selectedDomain}
-								addDomain={addDomain}
-							/>
-							{selectedDomain !== "" && (
-								<PixelInstallation
-									onInstallStatusChange={handleInstallStatusChange}
-									onInstallSelected={(method) => {
-										handleInstallSelected(method);
-										setSelectedMethod(method);
-										setShowHintVerify(true);
-									}}
-								/>
-							)}
-							{shouldShowVerifyComponent && shouldRenderBasedOnStatus && (
+							<Box ref={verifyRef}>
 								<VerifyPixelIntegration
 									domain={selectedDomain}
 									showHint={showHintVerify}
 								/>
-							)}
-						</Box>
+							</Box>
+						)}
 					</Grid>
-					{showStepper && (
-						<Grid
-							item
-							xs={12}
-							lg={4}
-							sx={{
-								display: { xs: "none", md: "block" },
-								order: { xs: 1, sm: 1, md: 1, lg: 2 },
-							}}
-						>
-							<VerticalStepper steps={stepData} />
-						</Grid>
-					)}
 				</Grid>
 			</GetStartedHintsProvider>
 		</>

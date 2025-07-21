@@ -30,6 +30,8 @@ import { useGetStartedHints } from "./context/PixelInstallHintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 import { useRef } from "react";
 import CustomButton from "@/components/ui/CustomButton";
+import CircularProgress from "@mui/material/CircularProgress";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 interface HintCardInterface {
 	description: string;
@@ -136,9 +138,15 @@ interface PopupProps {
 	handleClose: () => void;
 	pixelCode: string;
 	pixel_client_id: string;
+	onInstallStatusChange: (status: "success" | "failed" | null) => void;
 }
 
-const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
+const Popup: React.FC<PopupProps> = ({
+	open,
+	pixelCode,
+	pixel_client_id,
+	onInstallStatusChange,
+}) => {
 	const { cmsHints, changeCMSHint, resetCMSHints } = useGetStartedHints();
 	const shopifyRef = useRef<HTMLDivElement | null>(null);
 	const wordpressRef = useRef<HTMLDivElement | null>(null);
@@ -150,6 +158,9 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 	const [accessTokenExists, setAccessTokenExists] = useState(false);
 	const [storeHash, setstoreHash] = useState("");
 	const [storeHashError, setStoreHashError] = useState(false);
+	const [loading, setLoading] = useState(false);
+	const [shopifyInstalled, setShopifyInstall] = useState(false);
+	const [bigcommerceInstalled, setBigcommerceInstalled] = useState(false);
 	const sourcePlatform = useMemo(() => {
 		if (typeof window !== "undefined") {
 			const savedMe = sessionStorage.getItem("me");
@@ -172,6 +183,10 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 			const installBigcommerce = query.get("install_bigcommerce");
 			if (installBigcommerce) {
 				setSelectedCMS("Bigcommerce");
+				if (installBigcommerce === "true") {
+					onInstallStatusChange("success");
+					setBigcommerceInstalled(true);
+				}
 			}
 			try {
 				const response_shopify = await axiosInstance.get(
@@ -216,6 +231,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 		setIsFocused(false);
 	};
 	const handleCopyToClipboard = () => {
+		onInstallStatusChange("success");
 		navigator.clipboard.writeText(pixel_client_id);
 		showToast("Site ID copied to clipboard!");
 	};
@@ -233,13 +249,20 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 	};
 
 	const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
-		ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+		ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 	};
 
 	const handleButtonClick = async (cms: string) => {
 		setSelectedCMS(cms);
 		setShowHint(false);
 		setHeaderTitle(`Install with ${cms}`);
+		if (cms === "Shopify" && shopifyInstalled) {
+			onInstallStatusChange("success");
+		} else if (cms === "Bigcommerce" && bigcommerceInstalled) {
+			onInstallStatusChange("success");
+		} else {
+			onInstallStatusChange(null);
+		}
 		const targetRef = cmsRefMap[cms];
 		if (targetRef) {
 			setTimeout(() => scrollToRef(targetRef), 100);
@@ -299,6 +322,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 		};
 
 		try {
+			setLoading(true);
 			const response = await axiosInstance.post("/integrations/", body, {
 				params: {
 					service_name: "shopify",
@@ -307,6 +331,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 
 			if (response.status === 200) {
 				showToast("Successfully installed pixel");
+				setShopifyInstall(true);
+				onInstallStatusChange("success");
 			} else {
 				showErrorToast("Failed to install pixel");
 			}
@@ -322,6 +348,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 			} else {
 				showErrorToast(`An unexpected error occurred ${data?.status}`);
 			}
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -429,6 +457,14 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 								flexDirection: "column",
 								alignItems: "center",
 								padding: 2,
+								"@media (max-width: 600px)": {
+									width: "100%",
+									display: "flex",
+									flexDirection: "row",
+									alignItems: "center",
+									justifyContent: "start",
+									gap: 1,
+								},
 							}}
 						>
 							<Box
@@ -479,7 +515,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 										alignItems: "center",
 										padding: 2,
 										"@media (max-width: 600px)": {
-											width: "90%",
+											width: "100%",
 											display: "flex",
 											flexDirection: "row",
 											alignItems: "center",
@@ -538,7 +574,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 										alignItems: "center",
 										padding: 2,
 										"@media (max-width: 600px)": {
-											width: "90%",
+											width: "100%",
 											display: "flex",
 											flexDirection: "row",
 											alignItems: "center",
@@ -614,7 +650,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													sx={{
 														...maintext,
 														textAlign: "left",
-														padding: "1em 0em 1em 1em",
+														padding: "1em 0em 0.5em 1em",
 														fontWeight: "500",
 													}}
 												>
@@ -624,6 +660,36 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												</Typography>
 											)}
 										</Box>
+										<Box
+											sx={{
+												display: "flex",
+												flexDirection: "row",
+												alignItems: "center",
+												justifyContent: "start",
+												pl: 3.5,
+												mb: 1,
+											}}
+										>
+											<Link
+												href={
+													"https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify"
+												}
+												target="_blank"
+												underline="hover"
+												sx={{
+													display: "inline-flex",
+													alignItems: "center",
+													color: "#3898FC",
+													fontSize: 14,
+													fontFamily: "var(--font-nunito)",
+													ml: 1,
+												}}
+											>
+												How to create token&nbsp;
+												<OpenInNewIcon sx={{ fontSize: 16 }} />
+											</Link>
+										</Box>
+
 										<Box
 											component="pre"
 											sx={{
@@ -730,12 +796,18 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													sx={{ display: "flex", justifyContent: "flex-end" }}
 												>
 													<CustomButton
-														disabled={!isFormValid()}
+														disabled={
+															!isFormValid() || loading || shopifyInstalled
+														}
 														variant="contained"
 														onClick={handleSubmit}
 														sx={{ padding: "10px 47px" }}
 													>
-														Install
+														{loading ? (
+															<CircularProgress size={24} color="inherit" />
+														) : (
+															"Install"
+														)}
 													</CustomButton>
 													{cmsHints["installScript"]?.show && (
 														<HintCard
@@ -804,10 +876,11 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												variant="contained"
 												sx={{ ml: 5 }}
 												onClick={() => {
-													window.open(
-														"https://wordpress.org/plugins/allsource",
-														"_blank",
-													);
+													onInstallStatusChange("success"),
+														window.open(
+															"https://wordpress.org/plugins/allsource",
+															"_blank",
+														);
 												}}
 											>
 												Get plugin
@@ -931,59 +1004,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												</Box>
 												during the checkout process
 											</Typography>
-										</Box>
-										<Box
-											sx={{
-												display: "flex",
-												flexDirection: "row",
-												alignItems: "center",
-												padding: "1em 0em 0em 0em",
-												justifyContent: "start",
-											}}
-										>
-											<Image src="/4.svg" alt="4" width={20} height={20} />
-											<Typography
-												className="first-sub-title"
-												sx={{
-													...maintext,
-													textAlign: "left",
-													padding: "1em",
-													fontWeight: "500",
-												}}
-											>
-												Verify if Allsource is receiving data from your site
-											</Typography>
-										</Box>
-										<Box position="relative">
-											<CustomButton
-												variant="outlined"
-												sx={{ ml: 5 }}
-												onClick={handleInstallButtonClick}
-											>
-												View installation
-											</CustomButton>
-											{cmsHints["scriptInstallation"]?.show && (
-												<HintCard
-													card={cmsHintCards["scriptInstallation"]}
-													positionLeft={235}
-													positionTop={20}
-													isOpenBody={cmsHints["scriptInstallation"].showBody}
-													toggleClick={() =>
-														changeCMSHint(
-															"scriptInstallation",
-															"showBody",
-															"toggle",
-														)
-													}
-													closeClick={() =>
-														changeCMSHint(
-															"scriptInstallation",
-															"showBody",
-															"close",
-														)
-													}
-												/>
-											)}
 										</Box>
 									</Box>
 								</>
