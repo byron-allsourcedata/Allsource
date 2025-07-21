@@ -172,6 +172,14 @@ body {
 	color: #5f6368;
 }
 
+.seventh-sub-title {
+	font-family: var(--font-nunito);
+	font-size: 14px;
+	line-height: normal;
+	font-weight: 500;
+	color: #202124;
+}
+
 .table-heading {
 	font-family: var(--font-nunito);
 	font-size: 12px;

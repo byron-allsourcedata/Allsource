@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytz
 from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql import case as caseSQl, literal_column
 
 from db_dependencies import Db
 from enums import (
@@ -494,6 +495,17 @@ class UserPersistence:
             .exists()
         )
 
+        subscription_plan_case = caseSQl(
+            (
+                and_(
+                    Users.current_subscription_id == None,
+                    Users.total_leads == 0,
+                ),
+                literal_column("'N/A'"),
+            ),
+            else_=SubscriptionPlan.title,
+        ).label("subscription_plan")
+
         query = (
             self.db.query(
                 Users.id,
@@ -507,17 +519,18 @@ class UserPersistence:
                 Users.is_email_validation_enabled.label(
                     "is_email_validation_enabled"
                 ),
-                SubscriptionPlan.title.label("subscription_plan"),
+                subscription_plan_case,
+                # SubscriptionPlan.title.label("subscription_plan"),
                 status_case.label("user_status"),
                 case((subq_domain_resolved, True), else_=False).label(
                     "is_another_domain_resolved"
                 ),
             )
-            .join(
+            .outerjoin(
                 UserSubscriptions,
                 UserSubscriptions.id == Users.current_subscription_id,
             )
-            .join(
+            .outerjoin(
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )

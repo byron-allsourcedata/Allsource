@@ -430,6 +430,11 @@ def check_user_authorization(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
         )
 
+    if not user.get("current_subscription_id") and not is_admin:
+        raise_forbidden(
+            {"status": UserAuthorizationStatus.NEED_PAY_BASIC.value}
+        )
+
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         stripe_payment_url = get_stripe_payment_url(
             user.get("customer_id"),
@@ -442,7 +447,10 @@ def check_user_authorization(
             }
         )
 
-    if auth_status != UserAuthorizationStatus.SUCCESS:
+    if (
+        auth_status != UserAuthorizationStatus.SUCCESS
+        or auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
+    ):
         raise_forbidden({"status": auth_status.value})
     return user
 
@@ -472,6 +480,11 @@ def check_user_authorization_without_pixel(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
         )
 
+    if not user.get("current_subscription_id") and not is_admin:
+        raise_forbidden(
+            {"status": UserAuthorizationStatus.NEED_PAY_BASIC.value}
+        )
+
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         stripe_payment_url = get_stripe_payment_url(
             user.get("customer_id"),
@@ -488,6 +501,7 @@ def check_user_authorization_without_pixel(
         UserAuthorizationStatus.SUCCESS,
         UserAuthorizationStatus.PAYMENT_FAILED,
         UserAuthorizationStatus.NEED_CHOOSE_PLAN,
+        UserAuthorizationStatus.NEED_PAY_BASIC,
         UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED,
     }
 
@@ -508,6 +522,7 @@ def check_user_setting_access(
         auth_status != UserAuthorizationStatus.SUCCESS
         and auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
         and auth_status != UserAuthorizationStatus.PAYMENT_FAILED
+        and auth_status != UserAuthorizationStatus.NEED_PAY_BASIC
         and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
     ):
         raise HTTPException(

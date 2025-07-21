@@ -26,6 +26,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { fetchUserData } from "@/services/meService";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import PageWithLoader from "@/components/FirstLevelLoader";
+import { flagStore } from "@/services/oneDollar";
 
 const UTM_STORAGE_KEY = "utm_params";
 
@@ -281,6 +282,7 @@ const Signup: React.FC = () => {
 					switch (responseData.status) {
 						case "NEED_CHOOSE_PLAN":
 							await needConfirmPrivacyPolicy();
+							await checkOneDollarSubscription();
 							get_me();
 							router.push("/settings?section=subscription");
 							break;
@@ -364,6 +366,25 @@ const Signup: React.FC = () => {
 		setShowPassword(!showPassword);
 	};
 
+	const checkOneDollarSubscription = (): Promise<void> => {
+		return new Promise((resolve) => {
+			axiosInstance
+				.get("/has-current-subscription")
+				.then((response) => {
+					if (response.status === 200 && response.data === "ok") {
+						resolve();
+						flagStore.set(false);
+					} else {
+						flagStore.set(true);
+						resolve();
+					}
+				})
+				.catch(() => {
+					flagStore.set(true);
+				});
+		});
+	};
+
 	const CustomCheckCircleIcon = ({ isSuccess }: { isSuccess: boolean }) => (
 		<Image
 			src={isSuccess ? "/tick-circle-green.svg" : "/tick-circle.svg"}
@@ -424,6 +445,7 @@ const Signup: React.FC = () => {
 								switch (response.data.status) {
 									case "SUCCESS":
 										await needConfirmPrivacyPolicy();
+										await checkOneDollarSubscription();
 										get_me();
 										router.push("/dashboard");
 										break;
@@ -438,8 +460,9 @@ const Signup: React.FC = () => {
 										router.push("/settings?section=subscription");
 										break;
 									case "FILL_COMPANY_DETAILS":
+										await get_me();
 										await needConfirmPrivacyPolicy();
-										get_me();
+										await checkOneDollarSubscription();
 										navigateTo("/dashboard");
 										break;
 									case "NEED_BOOK_CALL":
@@ -484,6 +507,7 @@ const Signup: React.FC = () => {
 										break;
 									default:
 										await needConfirmPrivacyPolicy();
+										await checkOneDollarSubscription();
 										get_me();
 										router.push("/dashboard");
 										break;

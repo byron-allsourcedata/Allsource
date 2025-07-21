@@ -238,3 +238,12 @@ async def get_started_info(
     return GetStartedResponse(
         is_pixel_installed=is_pixel_installed, is_source_imported=has_source
     )
+
+
+@router.get("/has-current-subscription")
+def has_current_subsciption(
+    user=Depends(check_user_authorization),
+):
+    if user.get("current_subscription_id"):
+        return {"status": "ok"}
+    return {"status": "error"}

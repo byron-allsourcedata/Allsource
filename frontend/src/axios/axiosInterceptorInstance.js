@@ -1,6 +1,7 @@
 "use client";
 import axios from "axios";
 import { showErrorToast } from "@/components/ToastNotification";
+import { flagStore } from "@/services/oneDollar";
 
 const axiosInterceptorInstance = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -80,6 +81,9 @@ axiosInterceptorInstance.interceptors.response.use(
 						case "NEED_ACCEPT_PRIVACY_POLICY":
 							navigateTo("/privacy-policy");
 							break;
+						case "NEED_PAY_BASIC":
+							flagStore.set(true);
+							break;
 						case "PIXEL_INSTALLATION_NEEDED":
 							break;
 						case "FILL_COMPANY_DETAILS":
@@ -89,9 +93,6 @@ axiosInterceptorInstance.interceptors.response.use(
 							localStorage.clear();
 							sessionStorage.clear();
 							navigateTo("/signin");
-							break;
-						case "NEED_CHOOSE_PLAN":
-							navigateTo("/settings?section=subscription");
 							break;
 						case "PAYMENT_NEEDED":
 							navigateTo(`${error.response.data.stripe_payment_url}`);

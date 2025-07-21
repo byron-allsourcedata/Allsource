@@ -17,6 +17,8 @@ import { useSidebar } from "@/context/SidebarContext";
 import { fetchUserData } from "@/services/meService";
 import PixelSubheader from "./components/PixelSubheader";
 import { useHasSubheader } from "@/hooks/useHasSubheader";
+import OneDollarPopup from "./analytics/components/OneDollarPopup";
+import { useGlobalFlag } from "@/hooks/useOneDollar";
 
 interface ClientLayoutProps {
 	children: ReactNode;
@@ -24,6 +26,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 	const pathname = usePathname(); // Get the current path
+	const isUnauthorized = useGlobalFlag();
 	const { isGetStartedPage, setIsGetStartedPage, setInstalledResources } =
 		useSidebar();
 	const excludedPaths = [
@@ -138,95 +141,105 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						NotificationData={latestNotification}
 						onDismissNotification={handleDismissNotification}
 					/>
-					<PixelSubheader />
-					<Grid
-						container
+					{isUnauthorized && <OneDollarPopup />}
+					<Box
 						sx={{
-							display: "flex",
-							flexWrap: "nowrap",
-							overflowX: "hidden",
-							overflowY: "auto",
-							border: "none",
-							"@media (max-width: 899px)": {
-								paddingTop: "68px",
-								paddingRight: 0,
-								flexWrap: "wrap",
-							},
+							flexGrow: 1,
+							...(isUnauthorized && {
+								filter: "blur(12px)",
+							}),
 						}}
 					>
+						<PixelSubheader />
 						<Grid
-							item
-							xs={12}
+							container
 							sx={{
-								padding: "0px",
-								display: { xs: "block", md: "none" },
-								width: "100%",
+								display: "flex",
+								flexWrap: "nowrap",
+								overflowX: "hidden",
+								overflowY: "auto",
+								border: "none",
+								"@media (max-width: 899px)": {
+									paddingTop: "68px",
+									paddingRight: 0,
+									flexWrap: "wrap",
+								},
 							}}
-						>
-							<FreeTrialLabel />
-						</Grid>
-						{isLoading && <CustomizedProgressBar />}
-						<Grid
-							item
-							xs={12}
-							md="auto"
-							lg="auto"
-							sx={{
-								padding: "0px",
-								display: { xs: "none", md: "block" },
-								flexBasis: "170px",
-								minWidth: "170px",
-								maxWidth: "170px",
-								position: "sticky",
-								top: 0,
-								overflowY: "hidden",
-							}}
-						>
-							<SliderProvider>
-								<Sidebar
-									setShowSlider={setSlider}
-									isGetStartedPage={shouldShowGetStarted}
-									loading={loading}
-									setLoading={setIsLoading}
-									hasNotification={Boolean(
-										latestNotification || newNotification,
-									)}
-									hasSubheader={hasSubheader}
-								/>
-							</SliderProvider>
-						</Grid>
-						<NotificationProvider
-							hasNotification={Boolean(latestNotification || newNotification)}
 						>
 							<Grid
 								item
 								xs={12}
-								md
-								lg
 								sx={{
-									position: "relative",
-									flexGrow: 1,
-									padding: "0px 0px 12px 24px",
-									minWidth: 0,
-									overflowY: "auto",
-									"@media (max-width: 899px)": {
-										overflowY: "hidden",
-										padding: "0 0 16px 16px",
-									},
-									"@media (max-width: 599px)": {
-										padding: "0 0px 16px 16px",
-									},
+									padding: "0px",
+									display: { xs: "block", md: "none" },
+									width: "100%",
 								}}
 							>
-								{showSlider && (
-									<SliderProvider>
-										<Slider setShowSliders={setSlider} />
-									</SliderProvider>
-								)}
-								{children}
+								<FreeTrialLabel />
 							</Grid>
-						</NotificationProvider>
-					</Grid>
+							{isLoading && <CustomizedProgressBar />}
+							<Grid
+								item
+								xs={12}
+								md="auto"
+								lg="auto"
+								sx={{
+									padding: "0px",
+									display: { xs: "none", md: "block" },
+									flexBasis: "170px",
+									minWidth: "170px",
+									maxWidth: "170px",
+									position: "sticky",
+									top: 0,
+									overflowY: "hidden",
+								}}
+							>
+								<SliderProvider>
+									<Sidebar
+										setShowSlider={setSlider}
+										isGetStartedPage={shouldShowGetStarted}
+										loading={loading}
+										setLoading={setIsLoading}
+										hasNotification={Boolean(
+											latestNotification || newNotification,
+										)}
+										hasSubheader={hasSubheader}
+									/>
+								</SliderProvider>
+							</Grid>
+							<NotificationProvider
+								hasNotification={Boolean(latestNotification || newNotification)}
+							>
+								<Grid
+									item
+									xs={12}
+									md
+									lg
+									sx={{
+										position: "relative",
+										flexGrow: 1,
+										padding: "0px 0px 12px 24px",
+										minWidth: 0,
+										overflowY: "auto",
+										"@media (max-width: 899px)": {
+											overflowY: "hidden",
+											padding: "0 0 16px 16px",
+										},
+										"@media (max-width: 599px)": {
+											padding: "0 0px 16px 16px",
+										},
+									}}
+								>
+									{showSlider && (
+										<SliderProvider>
+											<Slider setShowSliders={setSlider} />
+										</SliderProvider>
+									)}
+									{children}
+								</Grid>
+							</NotificationProvider>
+						</Grid>
+					</Box>
 				</Box>
 			)}
 		</>

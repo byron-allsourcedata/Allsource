@@ -12,6 +12,7 @@ import { useUser } from "../../../context/UserContext";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import PersonIcon from "@mui/icons-material/Person";
 import useAxios from "axios-hooks";
+import { flagStore } from "@/services/oneDollar";
 
 const EmailVerificate: React.FC = () => {
 	const [canResend, setCanResend] = useState(true);
@@ -106,6 +107,25 @@ const EmailVerificate: React.FC = () => {
 		});
 	};
 
+	const checkOneDollarSubscription = (): Promise<void> => {
+		return new Promise((resolve) => {
+			axiosInterceptorInstance
+				.get("/has-current-subscription")
+				.then((response) => {
+					if (response.status === 200 && response.data === "ok") {
+						resolve();
+						flagStore.set(false);
+					} else {
+						flagStore.set(true);
+						resolve();
+					}
+				})
+				.catch(() => {
+					flagStore.set(true);
+				});
+		});
+	};
+
 	useEffect(() => {
 		const interval = setInterval(() => {
 			(async () => {
@@ -116,7 +136,9 @@ const EmailVerificate: React.FC = () => {
 						response.status === 200 &&
 						response.data.status === "EMAIL_VERIFIED"
 					) {
+						localStorage.setItem("email_verified", "true");
 						await checkPrivacyPolicy();
+						await checkOneDollarSubscription();
 						localStorage.setItem("welcome_popup", "true");
 						showToast("Verification done successfully");
 						clearInterval(interval);
