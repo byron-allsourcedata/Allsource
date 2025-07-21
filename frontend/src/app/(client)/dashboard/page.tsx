@@ -552,9 +552,6 @@ const AudienceDashboard: React.FC = () => {
 			setSourceData(sourcesArray);
 			setHasValid(Boolean(data.has_valid));
 		} catch {
-			showErrorToast(
-				"An error occurred while loading sources. Please try again later.",
-			);
 		} finally {
 			setLoading(false);
 		}
