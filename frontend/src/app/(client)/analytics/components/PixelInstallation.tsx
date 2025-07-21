@@ -146,36 +146,34 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 	const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
 		ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
 	};
+	const query = new URLSearchParams(window.location.search);
+	const authorizationCode = query.get("code");
+	const installBigcommerce = query.get("install_bigcommerce");
 
-	useEffect(() => {
-		const handleRedirect = async () => {
-			const query = new URLSearchParams(window.location.search);
-			const authorizationCode = query.get("code");
-			const installBigcommerce = query.get("install_bigcommerce");
-			if (installBigcommerce) {
-				setShowCMSInline(true);
-				UpdateInstallMethod("cms");
-				setCMSOpen(true);
-				if (installBigcommerce == "true") {
-					showToast("Connect to Bigcommerce Successfully. Pixel Installed");
-				} else {
-					showErrorToast(
-						"Failed to connect to BigCommerce. Your domain does not match the domain registered on BigCommerce.",
-					);
-				}
+	const handleRedirect = async () => {
+		if (installBigcommerce) {
+			setShowCMSInline(true);
+			UpdateInstallMethod("cms");
+			setCMSOpen(true);
+			const response = await axiosInterceptorInstance.get("/install-pixel/cms");
+			setCmsData(response.data);
+			if (installBigcommerce === "true") {
+				showToast("Connect to Bigcommerce Successfully. Pixel Installed");
+			} else {
+				showErrorToast(
+					"Failed to connect to BigCommerce. Your domain does not match the domain registered on BigCommerce.",
+				);
 			}
+		}
 
-			if (authorizationCode) {
-				try {
-					setGoogleOpen(true);
-					setShowGoogleInline(true);
-					UpdateInstallMethod("google");
-				} catch (error) {}
-			}
-		};
-
-		handleRedirect();
-	}, []);
+		if (authorizationCode) {
+			try {
+				setGoogleOpen(true);
+				setShowGoogleInline(true);
+				UpdateInstallMethod("google");
+			} catch (error) {}
+		}
+	};
 
 	const handleManualClose = () => setOpen(false);
 	const handleGoogleClose = () => setGoogleOpen(false);
@@ -214,6 +212,10 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 			setIsLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		handleRedirect();
+	}, []);
 
 	return (
 		<Box
@@ -567,6 +569,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 							handleClose={handleCRMClose}
 							pixelCode={cmsData.manual || ""}
 							pixel_client_id={cmsData.pixel_client_id || ""}
+							onInstallStatusChange={UpdateInstallStatus}
 						/>
 					</Box>
 				)}

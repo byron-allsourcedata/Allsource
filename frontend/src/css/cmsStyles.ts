@@ -72,7 +72,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 		lineHeight: "22.4px",
 		color: "#fff",
 		"&:hover": {
-			backgroundColor: "rgba(88, 90, 178, 1)",
+			backgroundColor: "rgba(56, 152, 252, 1)",
 		},
 		"@media (max-width: 600px)": {
 			marginBottom: 0.35,

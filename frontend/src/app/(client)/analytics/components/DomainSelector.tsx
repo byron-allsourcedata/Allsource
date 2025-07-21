@@ -197,7 +197,6 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 	return (
 		<Box
 			sx={{
-				height: "100%",
 				padding: "1rem",
 				border: "1px solid #e4e4e4",
 				borderRadius: "4px",
