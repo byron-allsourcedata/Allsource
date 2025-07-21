@@ -70,7 +70,7 @@ class PlanName(BaseModel):
 
 class LimitedDetail(BaseModel):
     detail_type: str
-    limit_value: int
+    limit_value: int | None
     current_value: int
 
 

@@ -116,70 +116,27 @@ async def aud_smarts_reader(
         if active_segment % SELECTED_ROW_COUNT != 0:
             common_count += 1
 
-        AudienceLALP = aliased(AudienceLookalikesPerson)
-        AudienceSMP = aliased(AudienceSourcesMatchedPerson)
-
         lookalike_include = format_ids(data_sources["lookalike_ids"]["include"])
         lookalike_exclude = format_ids(data_sources["lookalike_ids"]["exclude"])
         source_include = format_ids(data_sources["source_ids"]["include"])
         source_exclude = format_ids(data_sources["source_ids"]["exclude"])
 
+        final_query = audience_smarts_service.get_include_exclude_query(
+            lookalike_include, lookalike_exclude, source_include, source_exclude
+        )
+
         while offset < active_segment:
             try:
-                lalp_query = (
-                    db_session.query(
-                        AudienceLALP.enrichment_user_asid.label(
-                            "enrichment_user_asid"
-                        )
-                    )
-                    .filter(
-                        AudienceLALP.lookalike_id.in_(lookalike_include)
-                        if lookalike_include
-                        else True
-                    )
-                    .filter(
-                        ~AudienceLALP.lookalike_id.in_(lookalike_exclude)
-                        if lookalike_exclude
-                        else True
-                    )
-                )
+                start = time.perf_counter()
+                persons = [
+                    row[0]
+                    for row in final_query.limit(
+                        min(SELECTED_ROW_COUNT, active_segment - offset)
+                    ).offset(offset)
+                ]
+                end = time.perf_counter()
 
-                smp_query = (
-                    db_session.query(
-                        AudienceSMP.enrichment_user_asid.label(
-                            "enrichment_user_asid"
-                        )
-                    )
-                    .filter(
-                        AudienceSMP.source_id.in_(source_include)
-                        if source_include
-                        else True
-                    )
-                    .filter(
-                        ~AudienceSMP.source_id.in_(source_exclude)
-                        if source_exclude
-                        else True
-                    )
-                )
-
-                has_lookalikes = lookalike_include or lookalike_exclude
-                has_source = source_include or source_exclude
-                if has_lookalikes and has_source:
-                    combined_query = lalp_query.union(smp_query).subquery()
-                elif has_source:
-                    combined_query = smp_query.subquery()
-                elif has_lookalikes:
-                    combined_query = lalp_query.subquery()
-                else:
-                    raise RuntimeError("smart audience is empty")
-
-                final_query = (
-                    db_session.query(combined_query.c.enrichment_user_asid)
-                    .limit(min(SELECTED_ROW_COUNT, active_segment - offset))
-                    .offset(offset)
-                )
-
-                persons = [row[0] for row in final_query.all()]
+                logging.info(f"Query time: {end - start:.4f} seconds")
 
                 logging.info(f"len(persons), {len(persons)}")
 
@@ -191,7 +148,8 @@ async def aud_smarts_reader(
                     logging.info(f"len(sorted_persons), {len(sorted_persons)}")
 
                     if not sorted_persons:
-                        break
+                        sorted_persons = persons
+
                 else:
                     sorted_persons = persons
 
@@ -223,7 +181,7 @@ async def aud_smarts_reader(
                 logging.warning(
                     f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
                 )
-                break
+                await message.nack()
 
         await message.ack()
     except BaseException as e:

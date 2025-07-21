@@ -6,6 +6,7 @@ import pytz
 from sqlalchemy import desc, asc, or_, union
 from sqlalchemy.orm import Session, aliased, load_only
 from sqlalchemy.sql import func
+from collections import defaultdict
 
 from db_dependencies import Db
 from models import SubscriptionPlan, UserSubscriptions
@@ -57,6 +58,74 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         )
         return use_case[0] if use_case else None
 
+    def get_include_exclude_query(
+        self,
+        lookalike_include=(),
+        lookalike_exclude=(),
+        source_include=(),
+        source_exclude=(),
+    ):
+        include_conditions = [
+            (
+                AudienceLookalikesPerson,
+                AudienceLookalikesPerson.lookalike_id,
+                lookalike_include,
+            ),
+            (
+                AudienceSourcesMatchedPerson,
+                AudienceSourcesMatchedPerson.source_id,
+                source_include,
+            ),
+        ]
+
+        exclude_conditions = [
+            (
+                AudienceLookalikesPerson,
+                AudienceLookalikesPerson.lookalike_id,
+                lookalike_exclude,
+            ),
+            (
+                AudienceSourcesMatchedPerson,
+                AudienceSourcesMatchedPerson.source_id,
+                source_exclude,
+            ),
+        ]
+
+        include_union = None
+
+        for model, field, values in include_conditions:
+            if values:
+                query = self.db.query(
+                    model.enrichment_user_asid.label("enrichment_user_asid")
+                ).filter(field.in_(values))
+                if include_union is None:
+                    include_union = query
+                else:
+                    include_union = include_union.union(query)
+
+        if not include_union:
+            raise RuntimeError("Includes in smart audience are empty")
+
+        include_subq = include_union.subquery()
+        final_query = self.db.query(include_subq.c.enrichment_user_asid)
+
+        for model, field, values in exclude_conditions:
+            if values:
+                exclude_subq = (
+                    self.db.query(
+                        model.enrichment_user_asid.label("enrichment_user_asid")
+                    )
+                    .filter(field.in_(values))
+                    .subquery()
+                )
+                final_query = final_query.outerjoin(
+                    exclude_subq,
+                    include_subq.c.enrichment_user_asid
+                    == exclude_subq.c.enrichment_user_asid,
+                ).filter(exclude_subq.c.enrichment_user_asid.is_(None))
+
+        return final_query
+
     def get_audience_smart_validations_by_id(self, aud_smart_id: UUID):
         audience_smart = (
             self.db.query(AudienceSmart.validations)
@@ -65,37 +134,127 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         )
         return audience_smart.validations
 
+    # def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
+    #     Lalp = aliased(AudienceLookalikesPerson)
+    #     Smp = aliased(AudienceSourcesMatchedPerson)
+
+    #     lalp_q = (
+    #         self.db.query(Lalp.enrichment_user_asid.label("uid"))
+    #         .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
+    #         .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
+    #     )
+    #     smp_q = (
+    #         self.db.query(Smp.enrichment_user_asid.label("uid"))
+    #         .filter(Smp.source_id.in_(data["source_ids"]["include"]))
+    #         .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
+    #     )
+    #     combined_subq = lalp_q.union(smp_q).subquery()
+    #     count_q = (
+    #         self.db.query(func.count(EnrichmentUser.id))
+    #         .select_from(EnrichmentUser)
+    #         .join(combined_subq, combined_subq.c.uid == EnrichmentUser.id)
+    #         .join(
+    #             EnrichmentUserContact,
+    #             EnrichmentUserContact.asid == EnrichmentUser.asid,
+    #         )
+    #     )
+
+    #     if data.get("use_case") == "linkedin":
+    #         count_q = count_q.filter(
+    #             EnrichmentUserContact.linkedin_url.isnot(None)
+    #         )
+
+    #     return count_q.scalar()
+
+    # def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
+    #     Lalp = aliased(AudienceLookalikesPerson)
+    #     Smp = aliased(AudienceSourcesMatchedPerson)
+
+    #     lalp_ids = (
+    #         self.db.query(Lalp.enrichment_user_asid, Lalp.lookalike_id)
+    #         .filter(
+    #             or_(
+    #                 Lalp.lookalike_id.in_(data["lookalike_ids"]["include"] + data["lookalike_ids"]["exclude"]),
+    #                 True
+    #             )
+    #         )
+    #         .all()
+    #     )
+
+    #     smp_ids = (
+    #         self.db.query(Smp.enrichment_user_asid, Smp.source_id)
+    #         .filter(
+    #             or_(
+    #                 Smp.source_id.in_(data["source_ids"]["include"] + data["source_ids"]["exclude"]),
+    #                 True
+    #             )
+    #         )
+    #         .all()
+    #     )
+
+    #     lalp_filtered = {
+    #         row.enrichment_user_asid
+    #         for row in lalp_ids
+    #         if row.lookalike_id in data["lookalike_ids"]["include"]
+    #         and row.lookalike_id not in data["lookalike_ids"]["exclude"]
+    #     }
+
+    #     smp_filtered = {
+    #         row.enrichment_user_asid
+    #         for row in smp_ids
+    #         if row.source_id in data["source_ids"]["include"]
+    #         and row.source_id not in data["source_ids"]["exclude"]
+    #     }
+
+    #     combined_ids = lalp_filtered.union(smp_filtered)
+
+    #     if not combined_ids:
+    #         return 0
+    #     return combined_ids
+
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
-        Lalp = aliased(AudienceLookalikesPerson)
-        Smp = aliased(AudienceSourcesMatchedPerson)
-
-        lalp_q = (
-            self.db.query(Lalp.enrichment_user_asid.label("uid"))
-            .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
-            .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
-        )
-        smp_q = (
-            self.db.query(Smp.enrichment_user_asid.label("uid"))
-            .filter(Smp.source_id.in_(data["source_ids"]["include"]))
-            .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
-        )
-        combined_subq = lalp_q.union(smp_q).subquery()
-        count_q = (
-            self.db.query(func.count(EnrichmentUser.id))
-            .select_from(EnrichmentUser)
-            .join(combined_subq, combined_subq.c.uid == EnrichmentUser.id)
-            .join(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
+        query = self.get_final_query(
+            lookalike_include=data["lookalike_ids"]["include"],
+            lookalike_exclude=data["lookalike_ids"]["exclude"],
+            source_include=data["source_ids"]["include"],
+            source_exclude=data["source_ids"]["exclude"],
         )
 
-        if data.get("use_case") == "linkedin":
-            count_q = count_q.filter(
-                EnrichmentUserContact.linkedin_url.isnot(None)
-            )
+        return query.count()
 
-        return count_q.scalar()
+        # Lalp = aliased(AudienceLookalikesPerson)
+        # Smp = aliased(AudienceSourcesMatchedPerson)
+
+        # lalp_rows = self.db.query(
+        #     Lalp.enrichment_user_asid, Lalp.lookalike_id
+        # ).all()
+        # smp_rows = self.db.query(Smp.enrichment_user_asid, Smp.source_id).all()
+
+        # lalp_dict = defaultdict(set)
+        # for row in lalp_rows:
+        #     lalp_dict[row.enrichment_user_asid].add(row.lookalike_id)
+
+        # smp_dict = defaultdict(set)
+        # for row in smp_rows:
+        #     smp_dict[row.enrichment_user_asid].add(row.source_id)
+
+        # lalp_filtered = {
+        #     asid
+        #     for asid, ids in lalp_dict.items()
+        #     if ids & set(data["lookalike_ids"]["include"])
+        #     and not ids & set(data["lookalike_ids"]["exclude"])
+        # }
+
+        # smp_filtered = {
+        #     asid
+        #     for asid, ids in smp_dict.items()
+        #     if ids & set(data["source_ids"]["include"])
+        #     and not ids & set(data["source_ids"]["exclude"])
+        # }
+
+        # combined_ids = lalp_filtered.union(smp_filtered)
+
+        # return len(combined_ids)
 
     def create_audience_smarts_data_sources(
         self,
@@ -148,7 +307,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             validations=validation_params if need_validate else json.dumps({}),
             total_records=total_records,
             target_schema=target_schema,
-            validated_records=0 if need_validate else active_segment_records,
+            validated_records=0,
             active_segment_records=active_segment_records,
             status=status,
         )
@@ -524,7 +683,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             row[0]
             for row in (
                 self.db.query(
-                    AudienceDataSyncImportedPersons.enrichment_user_id
+                    AudienceDataSyncImportedPersons.enrichment_user_asid
                 )
                 .filter(
                     AudienceDataSyncImportedPersons.data_sync_id == data_sync_id

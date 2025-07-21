@@ -562,10 +562,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 									? `${toNormalText(sizeObj.label)} ${sizeObj.text}`
 									: row.lookalike_size;
 							})();
-							const isRowDisabled =
-								!["success", "failed"].includes(row.status as string) &&
-								(loader_for_table ||
-									row.processed_size + row.processed_train_model_size === 0);
+							const isRowDisabled = row.status !== "success";
 							return (
 								<>
 									<TableRow

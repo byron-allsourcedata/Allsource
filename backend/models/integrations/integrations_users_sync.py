@@ -80,10 +80,6 @@ class IntegrationUserSync(Base):
     )
     campaign_id = Column(VARCHAR, nullable=True)
     campaign_name = Column(VARCHAR, nullable=True)
-    last_sent_enrichment_id = Column(
-        UUID(as_uuid=True),
-        nullable=True,
-    )
 
     __table_args__ = (
         Index("integrations_users_sync_created_at_idx", created_at),

@@ -118,7 +118,7 @@ class ZapierIntegrationService:
     ):
         results = []
         for lead_user, five_x_five_user in user_data:
-            data = self.__mapped_lead(
+            data = await self.__mapped_lead(
                 five_x_five_user, is_email_validation_enabled
             )
             if data in (

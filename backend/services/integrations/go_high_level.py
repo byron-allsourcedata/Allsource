@@ -83,7 +83,7 @@ class GoHighLevelIntegrationsService:
 
     def refresh_ghl_token(
         self, integration_id: int, refresh_token: str
-    ) -> dict:
+    ) -> str:
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
@@ -297,12 +297,12 @@ class GoHighLevelIntegrationsService:
             "Version": self.VERSION,
         }
         response = self.__handle_request(method="GET", url=url, headers=headers)
-        result = response.json()
-        if not result.get("customFields"):
+        if response.status_code == 401:
             raise HTTPException(
                 status_code=409,
                 detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
             )
+        result = response.json()
         return result
 
     def create_custom_field(
@@ -311,7 +311,7 @@ class GoHighLevelIntegrationsService:
         location_id: str,
         key: str,
         field_type: str = "TEXT",
-    ):
+    ) -> dict:
         url = f"https://services.leadconnectorhq.com/locations/{location_id}/customFields"
         headers = {
             "Authorization": f"Bearer {access_token}",
@@ -324,12 +324,17 @@ class GoHighLevelIntegrationsService:
             json={"name": key, "dataType": field_type},
             headers=headers,
         )
-        result = response.json()
-        if not result.get("customField"):
+        if response.status_code == 401:
             raise HTTPException(
                 status_code=409,
                 detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
             )
+
+        # TODO: Get Related Domains field
+        # self.__handle_request()
+
+        result = response.json()
+        # print(result)
         return result
 
     async def process_data_sync(
@@ -353,7 +358,6 @@ class GoHighLevelIntegrationsService:
                 validations=validations,
                 data_map=integration_data_sync.data_map,
                 location_id=user_integration.location_id,
-                access_token=access_token,
             )
 
             result = self.upsert_contact(
@@ -449,7 +453,6 @@ class GoHighLevelIntegrationsService:
             return first_email
 
         first_phone = get_valid_phone(five_x_five_user)
-
         address_parts = get_valid_location(five_x_five_user)
 
         profile = {
@@ -471,6 +474,9 @@ class GoHighLevelIntegrationsService:
         custom_fields = []
         fields = self.list_custom_fields(access_token, location_id)
         existing_fields = {f["name"]: f for f in fields["customFields"]}
+        # print(first_email)
+        # print(existing_fields)
+
         for field in data_map:
             t = field["type"]
             key = field["value"]
@@ -482,14 +488,26 @@ class GoHighLevelIntegrationsService:
                 val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
 
             if key not in existing_fields:
-                new_field = self.create_custom_field(
-                    access_token=access_token,
-                    location_id=location_id,
-                    key=key,
-                )
-                existing_fields[key] = new_field["customField"]
+                try:
+                    new_field = self.create_custom_field(
+                        access_token=access_token,
+                        location_id=location_id,
+                        key=key,
+                    )
 
-            field_info = existing_fields[key]
+                    item = new_field.get("customField")
+                    if item:
+                        existing_fields[key] = item
+                    else:
+                        logging.error(f"Failed to create custom field: '{key}' (empty result)")
+                except Exception as e:
+                    logging.error(f"Failed to create custom field '{key}', Exception: {e}")
+
+            field_info = existing_fields.get(key)
+            if not field_info:
+                logging.error(f"Skipping unknown custom field: {key}")
+                continue
+
             field_key = field_info["id"]
             custom_fields.append({"id": field_key, "field_value": val})
 
@@ -506,7 +524,6 @@ class GoHighLevelIntegrationsService:
         validations: dict,
         data_map: list,
         location_id: str,
-        access_token: str,
     ):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:

@@ -241,9 +241,9 @@ const SmartAudiencesBuilder: React.FC = () => {
 									<MenuItem className="second-sub-title" value={"Google"}>
 										Google
 									</MenuItem>
-									<MenuItem className="second-sub-title" value={"Bing"}>
+									{/* <MenuItem className="second-sub-title" value={"Bing"}>
 										Bing
-									</MenuItem>
+									</MenuItem> */}
 									<MenuItem className="second-sub-title" value={"Email"}>
 										Email
 									</MenuItem>

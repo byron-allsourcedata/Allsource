@@ -89,6 +89,16 @@ const DataSync = () => {
 	};
 
 	useEffect(() => {
+		const openPopupHandler = () => setOpenCreateDataSyncPopup(true);
+
+		window.addEventListener("open-sync-popup", openPopupHandler);
+
+		return () => {
+			window.removeEventListener("open-sync-popup", openPopupHandler);
+		};
+	}, []);
+
+	useEffect(() => {
 		const fetchIntegrations = async () => {
 			try {
 				setIsLoading(true);

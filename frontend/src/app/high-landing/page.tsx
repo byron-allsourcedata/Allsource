@@ -17,7 +17,6 @@ const GoHighLevelLanding = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const code = searchParams.get("code");
-	const state = searchParams.get("state");
 	const error = searchParams.get("error");
 
 	useEffect(() => {
@@ -26,7 +25,6 @@ const GoHighLevelLanding = () => {
 				showErrorToast(`Error connect to GoHighLevel: ${error}`);
 				return;
 			}
-			const codeVerifier = localStorage.getItem("codeVerifier");
 			try {
 				const response = await axiosInstance.post(
 					"/integrations/",

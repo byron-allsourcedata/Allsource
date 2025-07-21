@@ -6,7 +6,7 @@ from db_dependencies import Db
 from enums import PaymentStatus
 from models import UserSubscriptions, Users, SubscriptionPlan, LeadUser
 from resolver import injectable
-from utils import end_of_month
+from utils import end_of_month, maybe_unlimited
 
 
 @injectable
@@ -35,13 +35,20 @@ class UserSubscriptionsPersistence:
             select(Users).where(Users.id == user_id)
         ).scalar()
 
-        blocked_leads = (
+        limit = plan.leads_credits
+        limit, is_unlimited = maybe_unlimited(limit, clamp_min=0)
+
+        blocked_leads_query = (
             self.db.query(LeadUser)
             .filter_by(user_id=user_id, is_active=False)
             .order_by(LeadUser.id.asc())
-            .limit(plan.leads_credits)
-            .all()
         )
+
+        if not is_unlimited:
+            blocked_leads_query = blocked_leads_query.limit(limit)
+
+        blocked_leads = blocked_leads_query.all()
+
         to_unlock_count = len(blocked_leads)
         for lead in blocked_leads:
             lead.is_active = True

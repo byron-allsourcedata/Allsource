@@ -268,7 +268,7 @@ class ShopifyIntegrationService:
                     )
 
             if response.status_code not in {200, 201}:
-                logger.error(f"Connection error: {response.text}")
+                logger.warning(f"Connection error: {response.text}")
                 return None
 
             return response

@@ -180,6 +180,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         self, data_sync_id: int, enrichment_field_names: List[str]
     ) -> List[SyncedPersonRecord]:
         ids = self.postgres.get_synced_person_ids(data_sync_id)
+
         if not ids:
             return []
 
@@ -192,10 +193,12 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             WHERE asid IN ({in_list})
         """
         q = self.client.query(sql)
-        rows = q.result_rows
+        norm_rows = [self.squash_sequences(row) for row in q.result_rows]
         col_names = q.column_names
 
-        return [SyncedPersonRecord(**dict(zip(col_names, row))) for row in rows]
+        return [
+            SyncedPersonRecord(**dict(zip(col_names, row))) for row in norm_rows
+        ]
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         self.client.command("SET max_query_size = 104857600")
@@ -434,3 +437,14 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
 
     def check_access_for_user(self, user: dict) -> bool:
         return self.postgres.check_access_for_user(user)
+
+    def get_include_exclude_query(
+        self,
+        lookalike_include,
+        lookalike_exclude,
+        source_include,
+        source_exclude,
+    ):
+        return self.postgres.get_include_exclude_query(
+            lookalike_include, lookalike_exclude, source_include, source_exclude
+        )

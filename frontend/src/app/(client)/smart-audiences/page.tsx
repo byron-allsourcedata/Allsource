@@ -1876,7 +1876,8 @@ const SmartAudiences: React.FC = () => {
 																						width={20}
 																						height={20}
 																					/>
-																				) : row.status === "n_a" ? (
+																				) : row.status === "n_a" ||
+																					row.validated_records === 0 ? (
 																					<Box textAlign="center">N/A</Box>
 																				) : row.validated_records === 0 &&
 																					row.status === "validating" &&

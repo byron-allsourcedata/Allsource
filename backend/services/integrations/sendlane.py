@@ -261,7 +261,7 @@ class SendlaneIntegrationService:
         profiles = []
         results = []
         for lead_user, five_x_five_user in user_data:
-            profile = self.__mapped_profile(
+            profile = await self.__mapped_profile(
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,

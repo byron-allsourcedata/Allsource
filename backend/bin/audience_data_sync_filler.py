@@ -13,7 +13,7 @@ from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from sqlalchemy import select
+from sqlalchemy import select, update
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
@@ -23,12 +23,13 @@ from enums import (
     DataSyncType,
 )
 from utils import get_utc_aware_date
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
 from sqlalchemy.dialects.postgresql import insert
 from services.subscriptions import SubscriptionService
+from models.users import Users
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.audience_data_sync_imported_persons import (
@@ -66,7 +67,9 @@ def fetch_data_syncs(session):
             IntegrationUserSync,
             IntegrationUserSync.integration_id == UserIntegration.id,
         )
-        .filter(IntegrationUserSync.sent_contacts > 0)
+        .filter(
+            IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value,
+        )
         .all()
     )
 
@@ -134,7 +137,6 @@ def get_enrichment_user_ids_from_pg(
     db_session: Session,
     data_sync_id: int,
     limit: int,
-    last_sent_enrichment_id: Optional[UUID] = None,
 ) -> list[dict[str, str]]:
     query = (
         db_session.query(AudienceSmartPerson.enrichment_user_asid)
@@ -150,13 +152,9 @@ def get_enrichment_user_ids_from_pg(
             IntegrationUserSync.id == data_sync_id,
             IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value,
             AudienceSmartPerson.is_valid.is_(True),
+            AudienceSmartPerson.is_synced.is_(False),
         )
     )
-
-    if last_sent_enrichment_id:
-        query = query.filter(
-            AudienceSmartPerson.enrichment_user_asid > last_sent_enrichment_id
-        )
 
     enrichment_user_ids = query.limit(limit).all()
     return [
@@ -164,15 +162,6 @@ def get_enrichment_user_ids_from_pg(
         for row in enrichment_user_ids
         if row.enrichment_user_asid
     ]
-
-
-def update_last_sent_enrichment_user(
-    session, data_sync_id, last_encrichment_id
-):
-    session.query(IntegrationUserSync).filter(
-        IntegrationUserSync.id == data_sync_id
-    ).update({IntegrationUserSync.last_sent_enrichment_id: last_encrichment_id})
-    session.commit()
 
 
 def update_data_sync_imported_leads(session, status, data_sync_id):
@@ -183,7 +172,7 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
 
 
 def get_previous_imported_enrichment_users(
-    session, data_sync_id, data_sync_limit, service_name
+    session, data_sync_id, data_sync_limit
 ):
     query = (
         session.query(
@@ -210,9 +199,7 @@ def get_previous_imported_enrichment_users(
             AudienceDataSyncImportedPersons.data_sync_id == data_sync_id,
             AudienceDataSyncImportedPersons.status
             == DataSyncImportedStatus.SENT.value,
-            UserIntegration.service_name == service_name,
         )
-        .order_by(AudienceSmartPerson.enrichment_user_asid)
         .limit(data_sync_limit)
     )
 
@@ -258,21 +245,23 @@ async def send_leads_to_rmq(
             AudienceDataSyncImportedPersons.id,
         )
     )
-
-    result = session.execute(stmt)
+    session.execute(stmt)
     session.commit()
 
-    inserted_map = {row.enrichment_user_asid: row.id for row in result}
-    missing = set(enrichment_user_asids) - set(inserted_map.keys())
-    if missing:
-        q = select(
-            AudienceDataSyncImportedPersons.enrichment_user_asid,
-            AudienceDataSyncImportedPersons.id,
-        ).where(
-            AudienceDataSyncImportedPersons.data_sync_id == data_sync.id,
-        )
-        for asid, pid in session.execute(q):
-            inserted_map[asid] = pid
+    results = select(
+        AudienceDataSyncImportedPersons.enrichment_user_asid,
+        AudienceDataSyncImportedPersons.id,
+    ).where(
+        AudienceDataSyncImportedPersons.enrichment_user_asid.in_(
+            enrichment_user_asids
+        ),
+        AudienceDataSyncImportedPersons.data_sync_id == data_sync.id,
+    )
+
+    inserted_map = {
+        row["enrichment_user_asid"]: row["id"]
+        for row in session.execute(results).mappings().all()
+    }
 
     arr_enrichment_users = [
         {
@@ -289,6 +278,41 @@ async def send_leads_to_rmq(
     await send_leads_to_queue(channel, msg)
 
 
+def update_synced_persons(
+    pg_session: Db, new_enrichment_user_asids: List[UUID], data_sync_id: int
+):
+    enrichment_user_asids = [
+        enrichment_user["asid"]
+        if isinstance(enrichment_user, dict)
+        else enrichment_user.id
+        for enrichment_user in new_enrichment_user_asids
+    ]
+    subquery = (
+        select(AudienceSmartPerson.id)
+        .join(
+            AudienceSmart,
+            AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
+        )
+        .join(
+            IntegrationUserSync,
+            IntegrationUserSync.smart_audience_id == AudienceSmart.id,
+        )
+        .where(
+            IntegrationUserSync.id == data_sync_id,
+            AudienceSmartPerson.enrichment_user_asid.in_(enrichment_user_asids),
+        )
+    )
+
+    stmt = (
+        update(AudienceSmartPerson)
+        .where(AudienceSmartPerson.id.in_(subquery))
+        .values(is_synced=True)
+    )
+
+    pg_session.execute(stmt)
+    pg_session.commit()
+
+
 async def process_user_integrations(
     channel, pg_session, subscription_service: SubscriptionService
 ):
@@ -301,7 +325,7 @@ async def process_user_integrations(
                 f"Skip, subscription is not active for user {user_integrations[i].user_id}"
             )
             continue
-
+        logging.info(f"Processes Data sync id: {data_sync.id}")
         if (
             data_sync.sync_status == False
             or user_integrations[i].is_failed == True
@@ -318,7 +342,7 @@ async def process_user_integrations(
             data_sync=data_sync,
             last_sync_date=False,
         )
-        if (data_sync.sent_contacts - imported_count) == 0:
+        if (data_sync.sent_contacts - imported_count) <= 0:
             logging.info(f"Skip, Integration sent_contacts == imported_count")
             continue
 
@@ -329,26 +353,55 @@ async def process_user_integrations(
             session=pg_session,
             data_sync_id=data_sync.id,
             data_sync_limit=data_sync_limit,
-            service_name=user_integrations[i].service_name,
         )
-        logging.info(f"Processes Data sync id: {data_sync.id}")
+        new_enrichment_user_asids = []
         logging.info(f"Re imported leads= {len(enrichment_users)}")
         query_limit = data_sync_limit - len(enrichment_users)
         if query_limit > 0 and query_limit <= data_sync_limit:
-            enrichment_user_asids = get_enrichment_user_ids_from_pg(
+            new_enrichment_user_asids = get_enrichment_user_ids_from_pg(
                 db_session=pg_session,
                 data_sync_id=data_sync.id,
                 limit=query_limit,
-                last_sent_enrichment_id=data_sync.last_sent_enrichment_id,
             )
-            enrichment_users.extend(enrichment_user_asids)
+            enrichment_users.extend(new_enrichment_user_asids)
 
         if not enrichment_users:
             logging.info(f"enrichment_users empty")
             continue
 
         logging.info(f"enrichment_users len = {len(enrichment_users)}")
-        enrichment_users = sorted(enrichment_users, key=lambda x: x["asid"])
+
+        user = (
+            pg_session.query(Users)
+            .filter(Users.id == user_integrations[i].user_id)
+            .with_for_update()
+            .first()
+        )
+
+        if user is None:
+            logging.warning(f"User {user_integrations[i].user_id} not found")
+            continue
+
+        # Проверка лимита smart_audience_quota
+        quota = user.smart_audience_quota
+        if quota is None:
+            quota = -1
+
+        is_unlimited = quota == -1
+
+        if not is_unlimited and quota <= 0:
+            logging.info(
+                f"Skip: User {user.id} has 0 smart_audience_quota credits for data sync"
+            )
+            continue
+        elif quota > 0:
+            if len(enrichment_users) > quota:
+                logging.info(
+                    f"User {user.id} has only {quota} credits left."
+                    + f"Limiting enrichment_users from {len(enrichment_users)} to {quota}"
+                )
+                enrichment_users = enrichment_users[:quota]
+
         await send_leads_to_rmq(
             pg_session,
             channel,
@@ -356,13 +409,14 @@ async def process_user_integrations(
             data_sync,
             user_integrations[i].service_name,
         )
-        last_enrichment_asid = enrichment_users[-1]["asid"]
-        if last_enrichment_asid:
-            logging.info(f"last_lead_id = {last_enrichment_asid}")
-            update_last_sent_enrichment_user(
-                pg_session, data_sync.id, last_enrichment_asid
+        if new_enrichment_user_asids:
+            update_synced_persons(
+                pg_session=pg_session,
+                new_enrichment_user_asids=new_enrichment_user_asids,
+                data_sync_id=data_sync.id,
             )
-            update_data_sync_integration(pg_session, data_sync.id, data_sync)
+
+        update_data_sync_integration(pg_session, data_sync.id, data_sync)
 
 
 async def main():
