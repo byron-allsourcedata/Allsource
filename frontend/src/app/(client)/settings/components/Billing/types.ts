@@ -18,7 +18,7 @@ type Detail<T> = { detail_type: string; value: T };
 type LimitDetail = {
 	detail_type: string;
 	current_value: number;
-	limit_value: number;
+	limit_value: number | null;
 };
 
 export interface SubscriptionDetails {
