@@ -42,7 +42,16 @@ class PartnersService:
                 return subsciption.title
 
     def get_partners(
-        self, is_master, search, start_date, end_date, page, rowsPerPage
+        self,
+        is_master,
+        search,
+        start_date,
+        end_date,
+        page,
+        rowsPerPage,
+        exclude_test_users,
+        sort_by,
+        sort_order,
     ) -> PartnersObjectResponse:
         offset = page * rowsPerPage
         limit = rowsPerPage
@@ -50,7 +59,15 @@ class PartnersService:
         search_term = f"%{search}%" if search else None
 
         partners, total_count = self.partners_persistence.get_partners(
-            is_master, search_term, start_date, end_date, offset, limit
+            is_master,
+            search_term,
+            start_date,
+            end_date,
+            offset,
+            limit,
+            exclude_test_users,
+            sort_by,
+            sort_order,
         )
 
         result = [

@@ -22,15 +22,26 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 @router.get("/")
 def get_partners(
     isMaster: Optional[bool] = Query(False),
+    sort_by: str = Query(None),
+    sort_order: str = Query(None),
     search: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
     rows_per_page: int = Query(10),
+    exclude_test_users: bool = Query(False),
     get_partners_service: PartnersService = Depends(get_partners_service),
 ):
     result = get_partners_service.get_partners(
-        isMaster, search, start_date, end_date, page, rows_per_page
+        isMaster,
+        search,
+        start_date,
+        end_date,
+        page,
+        rows_per_page,
+        exclude_test_users,
+        sort_by,
+        sort_order,
     )
 
     return result.get("data")

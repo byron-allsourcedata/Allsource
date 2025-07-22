@@ -19,7 +19,7 @@ import Account from "./components/Account";
 import InviteAdmin from "./components/InviteAdmin";
 import CustomCards from "./components/CustomCards";
 import FilterPopup from "./components/FilterPopup";
-import CustomizedProgressBar from "@/components/ProgressBar";
+import CustomizedProgressBar from "@/app/(admin)/components/AdminProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
 import CustomSwitch from "@/components/ui/CustomSwitch";

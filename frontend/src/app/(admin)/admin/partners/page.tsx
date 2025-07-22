@@ -4,6 +4,7 @@ import { useState } from "react";
 import { styled } from "@mui/material/styles";
 import PartnersAdmin from "@/components/PartnersAdmin";
 import PartnersAccounts from "@/components/PartnersAccounts";
+import AdminProgressBar from "@/app/(admin)/components/AdminProgressBar";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -74,7 +75,6 @@ const Partners: React.FC = () => {
                 `,
 					gridTemplateRows: "auto 1fr",
 					gridTemplateColumns: "0px 1fr",
-					height: "92vh",
 				}}
 			>
 				<Box
@@ -88,19 +88,7 @@ const Partners: React.FC = () => {
 							xs={12}
 							sx={{ display: "flex", flexDirection: "column" }}
 						>
-							{loading && (
-								<Box
-									sx={{
-										width: "100%",
-										position: "fixed",
-										top: "4.2rem",
-										left: "7.6rem",
-										zIndex: 1200,
-									}}
-								>
-									<BorderLinearProgress variant="indeterminate" />
-								</Box>
-							)}
+							{loading && <AdminProgressBar />}
 							<Box sx={{ display: "flex", flexDirection: "column" }}>
 								<Box sx={{ width: "100%", padding: 0, margin: 0 }}>
 									{masterData?.id && (
