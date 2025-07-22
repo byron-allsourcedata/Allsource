@@ -4,15 +4,16 @@ from starlette.responses import StreamingResponse
 from dependencies import (
     IntegrationService,
     check_domain,
-    check_user_authorization,
-    check_user_authentication,
     check_user_authorization_without_pixel,
+    check_user_authentication,
 )
 from enums import TeamAccessLevel, BaseEnum
 from schemas.integrations.integrations import *
 from services.audience_smarts import AudienceSmartsService
 
-router = APIRouter(dependencies=[Depends(check_user_authorization)])
+router = APIRouter(
+    dependencies=[Depends(check_user_authorization_without_pixel)]
+)
 
 
 @router.get("/sync")
@@ -21,7 +22,7 @@ async def get_sync(
     service_name: str | None = Query(None),
     integrations_users_sync_id: int | None = Query(None),
     domain=Depends(check_domain),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     return integration_service.get_sync_domain(
         domain.id, user.get("id"), service_name, integrations_users_sync_id
@@ -33,7 +34,7 @@ async def get_smart_sync(
     integration_service: IntegrationService,
     service_name: str | None = Query(None),
     integrations_users_sync_id: int | None = Query(None),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     return integration_service.get_all_audience_sync(
         user, service_name, integrations_users_sync_id
@@ -63,7 +64,7 @@ def has_data_sync_and_contacts(
 async def switch_toggle(
     data: SyncRequest,
     integration_service: IntegrationService,
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
         team_member = user.get("team_member")
@@ -86,7 +87,7 @@ async def create_sync(
     data: SyncCreate,
     integration_service: IntegrationService,
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     if user.get("team_member"):
@@ -119,7 +120,7 @@ async def create_smart_audience_sync(
     integration_service: IntegrationService,
     audience_smarts_service: AudienceSmartsService,
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     if user.get("team_member"):
         team_member = user.get("team_member")
@@ -148,7 +149,7 @@ async def delete_sync(
     integration_service: IntegrationService,
     list_id: str = Query(...),
     service_name: str | None = Query(None),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     if user.get("team_member"):
@@ -169,7 +170,7 @@ async def delete_sync(
 async def switch_toggle(
     data: SyncCreate,
     integration_service: IntegrationService,
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     if user.get("team_member"):
@@ -191,7 +192,7 @@ async def edit_sync(
     data: SyncCreate,
     integration_service: IntegrationService,
     service_name: str | None = Query(None),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     if user.get("team_member"):
@@ -241,7 +242,7 @@ async def create_tag(
     integrations_service: IntegrationService,
     tag_data: CreateListOrTags,
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     async with integrations_service as service:

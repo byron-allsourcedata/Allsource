@@ -5,13 +5,14 @@ from dependencies import (
     check_team_access_standard_user,
     UserDomainsService,
     check_domain,
-    check_user_authorization,
     check_user_authorization_without_pixel,
 )
 from schemas.domains import DomainScheme, UpdateDomainRequest
 from enums import TeamAccessLevel
 
-router = APIRouter(dependencies=[Depends(check_user_authorization)])
+router = APIRouter(
+    dependencies=[Depends(check_user_authorization_without_pixel)]
+)
 
 
 @router.post("/", status_code=201)

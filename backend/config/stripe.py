@@ -8,6 +8,7 @@ class StripeConfig(Base):
     success_url = (
         f"{os.getenv('SITE_HOST_URL')}/{os.getenv('STRIPE_SUCCESS_URL')}"
     )
+    one_dollar_success_url = f"{os.getenv('SITE_HOST_URL')}/{os.getenv('STRIPE_ONE_DOLLAR_SUCCESS_URL')}"
     cancel_url = (
         f"{os.getenv('SITE_HOST_URL')}/{os.getenv('STRIPE_CANCEL_URL')}"
     )

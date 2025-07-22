@@ -9,6 +9,7 @@ from dependencies import (
     get_users_email_verification_service,
     get_users_service,
     check_user_authorization,
+    check_user_authorization_without_pixel,
     check_pixel_install_domain,
     check_user_authentication,
     get_notification_service,
@@ -90,7 +91,7 @@ async def get_notification(
 
 @router.get("/check-user-authorization")
 def check_user_authorization(
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain: UserDomains = Depends(check_pixel_install_domain),
 ):
     return {"status": "SUCCESS"}
@@ -242,7 +243,7 @@ async def get_started_info(
 
 @router.get("/has-current-subscription")
 def has_current_subsciption(
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authentication),
 ):
     if user.get("current_subscription_id"):
         return {"status": "ok"}

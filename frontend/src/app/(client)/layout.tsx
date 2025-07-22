@@ -119,6 +119,95 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
 	const hasSubheader = useHasSubheader();
 
+	const renderGrid = () => (
+		<Grid
+			container
+			sx={{
+				display: "flex",
+				flexWrap: "nowrap",
+				overflowX: "hidden",
+				overflowY: "auto",
+				border: "none",
+				"@media (max-width: 899px)": {
+					paddingTop: "68px",
+					paddingRight: 0,
+					flexWrap: "wrap",
+				},
+			}}
+		>
+			<Grid
+				item
+				xs={12}
+				sx={{
+					padding: "0px",
+					display: { xs: "block", md: "none" },
+					width: "100%",
+				}}
+			>
+				<FreeTrialLabel />
+			</Grid>
+			{isLoading && <CustomizedProgressBar />}
+			<Grid
+				item
+				xs={12}
+				md="auto"
+				lg="auto"
+				sx={{
+					padding: "0px",
+					display: { xs: "none", md: "block" },
+					flexBasis: "170px",
+					minWidth: "170px",
+					maxWidth: "170px",
+					position: "sticky",
+					top: 0,
+					overflowY: "hidden",
+				}}
+			>
+				<SliderProvider>
+					<Sidebar
+						setShowSlider={setSlider}
+						isGetStartedPage={shouldShowGetStarted}
+						loading={loading}
+						setLoading={setIsLoading}
+						hasNotification={Boolean(latestNotification || newNotification)}
+						hasSubheader={hasSubheader}
+					/>
+				</SliderProvider>
+			</Grid>
+			<NotificationProvider
+				hasNotification={Boolean(latestNotification || newNotification)}
+			>
+				<Grid
+					item
+					xs={12}
+					md
+					lg
+					sx={{
+						position: "relative",
+						flexGrow: 1,
+						padding: "0px 0px 12px 24px",
+						minWidth: 0,
+						overflowY: "auto",
+						"@media (max-width: 899px)": {
+							overflowY: "hidden",
+							padding: "0 0 16px 16px",
+						},
+						"@media (max-width: 599px)": {
+							padding: "0 0px 16px 16px",
+						},
+					}}
+				>
+					{showSlider && (
+						<SliderProvider>
+							<Slider setShowSliders={setSlider} />
+						</SliderProvider>
+					)}
+					{children}
+				</Grid>
+			</NotificationProvider>
+		</Grid>
+	);
+
 	return (
 		<>
 			{!isAuthenticated ? (
@@ -142,104 +231,20 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						onDismissNotification={handleDismissNotification}
 					/>
 					{isUnauthorized && <OneDollarPopup />}
-					<Box
-						sx={{
-							flexGrow: 1,
-							...(isUnauthorized && {
-								filter: "blur(12px)",
-							}),
-						}}
-					>
-						<PixelSubheader />
-						<Grid
-							container
+					{isUnauthorized && (
+						<Box
 							sx={{
-								display: "flex",
-								flexWrap: "nowrap",
-								overflowX: "hidden",
-								overflowY: "auto",
-								border: "none",
-								"@media (max-width: 899px)": {
-									paddingTop: "68px",
-									paddingRight: 0,
-									flexWrap: "wrap",
-								},
+								flexGrow: 1,
+								...(isUnauthorized && {
+									filter: "blur(12px)",
+								}),
 							}}
 						>
-							<Grid
-								item
-								xs={12}
-								sx={{
-									padding: "0px",
-									display: { xs: "block", md: "none" },
-									width: "100%",
-								}}
-							>
-								<FreeTrialLabel />
-							</Grid>
-							{isLoading && <CustomizedProgressBar />}
-							<Grid
-								item
-								xs={12}
-								md="auto"
-								lg="auto"
-								sx={{
-									padding: "0px",
-									display: { xs: "none", md: "block" },
-									flexBasis: "170px",
-									minWidth: "170px",
-									maxWidth: "170px",
-									position: "sticky",
-									top: 0,
-									overflowY: "hidden",
-								}}
-							>
-								<SliderProvider>
-									<Sidebar
-										setShowSlider={setSlider}
-										isGetStartedPage={shouldShowGetStarted}
-										loading={loading}
-										setLoading={setIsLoading}
-										hasNotification={Boolean(
-											latestNotification || newNotification,
-										)}
-										hasSubheader={hasSubheader}
-									/>
-								</SliderProvider>
-							</Grid>
-							<NotificationProvider
-								hasNotification={Boolean(latestNotification || newNotification)}
-							>
-								<Grid
-									item
-									xs={12}
-									md
-									lg
-									sx={{
-										position: "relative",
-										flexGrow: 1,
-										padding: "0px 0px 12px 24px",
-										minWidth: 0,
-										overflowY: "auto",
-										"@media (max-width: 899px)": {
-											overflowY: "hidden",
-											padding: "0 0 16px 16px",
-										},
-										"@media (max-width: 599px)": {
-											padding: "0 0px 16px 16px",
-										},
-									}}
-								>
-									{showSlider && (
-										<SliderProvider>
-											<Slider setShowSliders={setSlider} />
-										</SliderProvider>
-									)}
-									{children}
-								</Grid>
-							</NotificationProvider>
-						</Grid>
-					</Box>
+							<PixelSubheader />
+							{renderGrid()}
+						</Box>
+					)}
+					{!isUnauthorized && renderGrid()}
 				</Box>
 			)}
 		</>

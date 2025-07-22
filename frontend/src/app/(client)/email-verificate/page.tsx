@@ -139,7 +139,6 @@ const EmailVerificate: React.FC = () => {
 						localStorage.setItem("email_verified", "true");
 						await checkPrivacyPolicy();
 						await checkOneDollarSubscription();
-						localStorage.setItem("welcome_popup", "true");
 						showToast("Verification done successfully");
 						clearInterval(interval);
 						router.push("/get-started");

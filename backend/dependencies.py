@@ -511,6 +511,27 @@ def check_user_authorization_without_pixel(
     return user
 
 
+def check_team_admin(
+    Authorization: Annotated[str, Header()],
+    user_persistence_service: UserPersistence,
+) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    if user.get("team_member"):
+        team_member = user.get("team_member")
+        if team_member.get("team_access_level") not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only.",
+            )
+    return user
+
+
+TeamAdmin = Annotated[dict, Depends(check_team_admin)]
+
+
 def check_user_setting_access(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from dependencies import (
-    check_user_authorization,
+    check_user_authorization_without_pixel,
     check_domain,
 )
 from schemas.audience import AudienceRequest
@@ -22,7 +22,7 @@ async def get_user_audience_list(
 async def post_audience(
     audience_request: AudienceRequest,
     audience_service: AudienceService,
-    user: dict = Depends(check_user_authorization),
+    user: dict = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     return audience_service.create_audience(

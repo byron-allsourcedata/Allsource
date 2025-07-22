@@ -87,17 +87,25 @@ const VerifyToken = () => {
 								if (response.data.status === "EMAIL_ALREADY_VERIFIED") {
 									showInfoToast("Email has already been verified");
 								} else if (response.data.status === "SUCCESS") {
-									localStorage.setItem("email_verified", "true");
 									showToast("You have successfully verified your email");
 								}
-								await checkPrivacyPolicy();
-								await checkOneDollarSubscription();
-								localStorage.setItem("welcome_popup", "true");
 								const newToken = response.data.token;
 								localStorage.removeItem("token");
 								localStorage.setItem("token", newToken);
+								// await checkPrivacyPolicy();
+								// await checkOneDollarSubscription();
+								const timer = setTimeout(() => {
+									window.close();
+								}, 3000);
 
-								router.push("/get-started");
+								//  clearTimeout(timer);
+
+								// localStorage.setItem("welcome_popup", "true");
+								// const newToken = response.data.token;
+								// localStorage.removeItem("token");
+								// localStorage.setItem("token", newToken);
+
+								// router.push("/get-started");
 							}
 						} else if (response.data.status === "INCORRECT_TOKEN") {
 							showErrorToast("The link is incorrect or outdated");

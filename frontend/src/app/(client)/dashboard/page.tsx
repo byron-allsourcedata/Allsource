@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import { dashboardStyles } from "../analytics/dashboardStyles";
 import CustomTooltip from "@/components/customToolTip";
@@ -16,12 +16,14 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import SmartAudienceCard from "./components/SmartAudienceCard";
 import { showErrorToast } from "@/components/ToastNotification";
 import { TableData } from "@/types/lookalike";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import ProgressBar from "@/components/ProgressBar";
 import {
 	CardsSection,
 	FirstTimeScreenCommonVariant1,
 } from "@/components/first-time-screens";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import WelcomePopup from "../analytics/components/WelcomePopup";
 
 interface EventDate {
 	relative: string;
@@ -89,7 +91,6 @@ const cardData: FirstTimeScreenCardData[] = [
 ];
 
 const AudienceDashboard: React.FC = () => {
-	const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
 	const [values, setValues] = useState({
 		pixel_contacts: 0,
 		sources: 0,
@@ -117,6 +118,9 @@ const AudienceDashboard: React.FC = () => {
 		smart_audience: [],
 		data_sync: [],
 	});
+
+	const searchParams = useSearchParams();
+	const welcomePopup = searchParams.get("welcome_popup");
 
 	const [eventCards, setEventCards] = useState<Record<string, EventCardData[]>>(
 		{
@@ -596,10 +600,6 @@ const AudienceDashboard: React.FC = () => {
 			? chainedCards[tabMap[selectedCard]]
 			: [];
 
-	useEffect(() => {
-		const storedPopup = localStorage.getItem("welcome_popup");
-		setWelcomePopup(storedPopup);
-	}, []);
 	return (
 		<Box pr={2}>
 			<Grid
@@ -1050,8 +1050,17 @@ const AudienceDashboard: React.FC = () => {
 					</>
 				)}
 			</Grid>
+			{welcomePopup && <WelcomePopup />}
 		</Box>
 	);
 };
 
-export default AudienceDashboard;
+const AudienceDashboardPage: React.FC = () => {
+	return (
+		<Suspense fallback={<ProgressBar />}>
+			<AudienceDashboard />
+		</Suspense>
+	);
+};
+
+export default AudienceDashboardPage;

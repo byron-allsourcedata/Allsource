@@ -10,7 +10,6 @@ import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import CalendarPopup from "@/components/CustomCalendar";
 
-import WelcomePopup from "./WelcomePopup";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import { TabPanel } from "./analytics/TabPanel";
@@ -372,7 +371,6 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
 				</Box>
 			)}
 			{showSlider && <Slider />}
-			{welcomePopup && <WelcomePopup />}
 		</>
 	);
 };

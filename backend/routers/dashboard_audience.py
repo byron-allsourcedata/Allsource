@@ -4,7 +4,6 @@ from dependencies import (
     get_audience_dashboard_service,
     check_user_authorization_without_pixel,
 )
-from dependencies import check_user_authorization
 from services.audience_dashboard import DashboardAudienceService
 
 router = APIRouter()
@@ -43,7 +42,7 @@ def get_contact(
     dashboard_service: DashboardAudienceService = Depends(
         get_audience_dashboard_service
     ),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_audience_dashboard_data(
         from_date=from_date, to_date=to_date, user=user
@@ -58,7 +57,7 @@ def get_contacts_for_pixel_contacts_by_domain_id(
     dashboard_service: DashboardAudienceService = Depends(
         get_audience_dashboard_service
     ),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_contacts_for_pixel_contacts_by_domain_id(
         user=user, domain_id=domain_id, from_date=from_date, to_date=to_date
@@ -70,6 +69,6 @@ def get_events(
     dashboard_service: DashboardAudienceService = Depends(
         get_audience_dashboard_service
     ),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_events(user=user)
