@@ -123,7 +123,7 @@ async def read_item(
 
         document.body.appendChild(popup);
     }
-    )({ success: true, message: "hehe"})
+    )({ success: true, message: "" })
     """
 
         if found_in_cache:
