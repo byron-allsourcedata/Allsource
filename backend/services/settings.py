@@ -94,6 +94,8 @@ class SettingsService:
                 "is_pass_exists": user_info.password is not None,
                 "company_website_visits": user_info.company_website_visits,
                 "is_email_confirmed": user_info.is_email_confirmed,
+                "has_subscription": user.get("current_subscription_id")
+                is not None,
             }
 
     def change_account_details(

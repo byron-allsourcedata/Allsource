@@ -136,6 +136,9 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 			border: "none",
 			background: "none",
 		},
+		"&:disabled": {
+			border: "none",
+		},
 		"&.MuiButton-contained": {
 			color: "rgba(56, 152, 252, 1)",
 			background: "transparent",

@@ -244,7 +244,12 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							{renderGrid()}
 						</Box>
 					)}
-					{!isUnauthorized && renderGrid()}
+					{!isUnauthorized && (
+						<>
+							<PixelSubheader />
+							{renderGrid()}
+						</>
+					)}
 				</Box>
 			)}
 		</>
