@@ -1011,7 +1011,7 @@ class SettingsService:
             ],
             monthly_limits=[
                 Advantage(
-                    good=True, name="Contact Downloads:", value="1,000 – 65,000"
+                    good=True, name="Contact Downloads:", value="500 – 65,000"
                 ),
                 Advantage(good=False, name="Smart Audience:", value="0"),
             ],
