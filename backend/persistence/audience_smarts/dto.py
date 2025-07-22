@@ -20,6 +20,7 @@ class AudienceSmartDTO(BaseModel):
     use_case_id: Optional[UUID]
     validations: Optional[Dict]
     target_schema: Optional[str]
+    n_a: bool
 
     model_config = {
         "from_attributes": True,

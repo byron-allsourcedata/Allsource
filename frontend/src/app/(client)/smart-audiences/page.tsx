@@ -81,7 +81,11 @@ import SmartCell from "@/components/table/SmartCell";
 import { Paginator } from "@/components/PaginationComponent";
 import { usePagination } from "@/hooks/usePagination";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
-import RenderProgress from "../sources/components/RenderProgress";
+import {
+	renderActiveSegmentProgress,
+	renderValidatedCountOrLink,
+	renderValidatedStatusIcon,
+} from "./components/RenderProgress";
 
 interface Smarts {
 	id: string;
@@ -95,6 +99,7 @@ interface Smarts {
 	processed_active_segment_records: number;
 	status: string;
 	integrations: string[];
+	n_a: boolean;
 }
 
 interface FetchDataParams {
@@ -933,10 +938,6 @@ const SmartAudiences: React.FC = () => {
 		};
 
 		handleApplyFilters(newFilters);
-	};
-
-	const truncateText = (text: string, maxLength: number) => {
-		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 	};
 
 	const preRenderStatus = (status: string) => {
@@ -1869,48 +1870,22 @@ const SmartAudiences: React.FC = () => {
 																					},
 																				}}
 																			>
-																				{row.status === "unvalidated" ? (
-																					<Image
-																						src="/danger_yellow.svg"
-																						alt="danger"
-																						width={20}
-																						height={20}
-																					/>
-																				) : row.status === "n_a" ||
-																					row.validated_records === 0 ? (
-																					<Box textAlign="center">N/A</Box>
-																				) : row.validated_records === 0 &&
-																					row.status === "validating" &&
-																					!progressValidation?.total ? (
-																					<Box
-																						sx={{
-																							display: "flex",
-																							justifyContent: "center",
-																						}}
-																					>
-																						<ThreeDotsLoader />
-																					</Box>
-																				) : (
-																					<Box
-																						sx={{
-																							cursor: "pointer",
-																							color: "rgba(56, 152, 252, 1)",
-																						}}
-																						onClick={() => {
+																				{renderValidatedStatusIcon(
+																					row.status,
+																					row.n_a,
+																					row.validated_records,
+																					progressValidation?.total,
+																				) ??
+																					renderValidatedCountOrLink(
+																						row.status,
+																						row.n_a,
+																						row.validated_records,
+																						progressValidation?.total,
+																						() => {
 																							setSelectedRowData(row);
 																							handleValidationsHistoryPopupOpen();
-																						}}
-																					>
-																						{progressValidation?.total >
-																						row.validated_records
-																							? progressValidation?.total.toLocaleString(
-																									"en-US",
-																								)
-																							: row.validated_records.toLocaleString(
-																									"en-US",
-																								)}
-																					</Box>
-																				)}
+																						},
+																					)}
 																			</SmartCell>
 
 																			{/* Created Column */}
@@ -1959,38 +1934,10 @@ const SmartAudiences: React.FC = () => {
 																					},
 																				}}
 																			>
-																				{progressValidation?.total > 0 ? (
-																					Math.max(
-																						progressValidation.total,
-																						row.validated_records,
-																					).toLocaleString("en-US")
-																				) : (progress?.processed &&
-																						progress?.processed ===
-																							row?.active_segment_records) ||
-																					(row?.processed_active_segment_records ===
-																						row?.active_segment_records &&
-																						row?.processed_active_segment_records !==
-																							0) ? (
-																					row.active_segment_records.toLocaleString(
-																						"en-US",
-																					)
-																				) : row?.processed_active_segment_records >
-																					progress?.processed ? (
-																					<ProgressBar
-																						progress={{
-																							total:
-																								row?.active_segment_records,
-																							processed:
-																								row?.processed_active_segment_records,
-																						}}
-																					/>
-																				) : (
-																					<ProgressBar
-																						progress={{
-																							...progress,
-																							total: row.active_segment_records,
-																						}}
-																					/>
+																				{renderActiveSegmentProgress(
+																					row.active_segment_records,
+																					row.processed_active_segment_records,
+																					progress?.processed,
 																				)}
 																			</SmartCell>
 
@@ -2302,7 +2249,11 @@ const SmartAudiences: React.FC = () => {
 									<CreateSyncPopup
 										open={dataSyncPopupOpen}
 										id={selectedRowData?.id}
-										activeSegmentRecords={selectedRowData?.validated_records}
+										activeSegmentRecords={
+											selectedRowData?.n_a
+												? selectedRowData?.active_segment_records
+												: selectedRowData?.validated_records
+										}
 										onClose={handleDataSyncPopupClose}
 										integrationsList={selectedRowData?.integrations}
 										isDownloadAction={isDownloadAction}

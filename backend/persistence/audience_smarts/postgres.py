@@ -339,6 +339,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             use_case_id=new_audience.use_case_id,
             validations=json.loads(new_audience.validations),
             target_schema=new_audience.target_schema,
+            n_a=new_audience.validations == {},
         )
 
     def get_audience_smarts(
@@ -367,6 +368,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                 AudienceSmart.status,
                 AudienceSmartsUseCase.integrations,
                 AudienceSmart.processed_active_segment_records,
+                AudienceSmart.validations,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
@@ -607,6 +609,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                 AudienceSmart.active_segment_records,
                 AudienceSmart.processed_active_segment_records,
                 AudienceSmart.status,
+                AudienceSmart.validations,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
