@@ -89,23 +89,14 @@ const VerifyToken = () => {
 								} else if (response.data.status === "SUCCESS") {
 									showToast("You have successfully verified your email");
 								}
+								await checkPrivacyPolicy();
+								await checkOneDollarSubscription();
+
 								const newToken = response.data.token;
 								localStorage.removeItem("token");
 								localStorage.setItem("token", newToken);
-								// await checkPrivacyPolicy();
-								// await checkOneDollarSubscription();
-								const timer = setTimeout(() => {
-									window.close();
-								}, 3000);
 
-								//  clearTimeout(timer);
-
-								// localStorage.setItem("welcome_popup", "true");
-								// const newToken = response.data.token;
-								// localStorage.removeItem("token");
-								// localStorage.setItem("token", newToken);
-
-								// router.push("/get-started");
+								router.push("/get-started");
 							}
 						} else if (response.data.status === "INCORRECT_TOKEN") {
 							showErrorToast("The link is incorrect or outdated");
