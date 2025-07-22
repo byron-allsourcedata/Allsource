@@ -1,4 +1,6 @@
+from collections.abc import Sequence
 import logging
+from sqlalchemy.orm.query import RowReturningQuery
 from typing import Optional, List, Dict
 import json
 import io
@@ -340,11 +342,11 @@ class AudienceSmartsService:
 
     def get_include_exclude_query(
         self,
-        lookalike_include,
-        lookalike_exclude,
-        source_include,
-        source_exclude,
-    ):
+        lookalike_include: Sequence[UUID],
+        lookalike_exclude: Sequence[UUID],
+        source_include: Sequence[UUID],
+        source_exclude: Sequence[UUID],
+    ) -> RowReturningQuery[tuple[UUID]]:
         return self.audience_smarts_persistence.get_include_exclude_query(
             lookalike_include, lookalike_exclude, source_include, source_exclude
         )

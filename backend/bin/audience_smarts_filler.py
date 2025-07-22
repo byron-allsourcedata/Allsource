@@ -129,7 +129,7 @@ async def aud_smarts_reader(
             try:
                 start = time.perf_counter()
                 persons = [
-                    row[0]
+                    row.t[0]
                     for row in final_query.limit(
                         min(SELECTED_ROW_COUNT, active_segment - offset)
                     ).offset(offset)
