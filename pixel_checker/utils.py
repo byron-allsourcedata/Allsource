@@ -1,6 +1,5 @@
 import logging
 import os
-from typing import Optional
 from urllib.parse import urlparse
 
 import httpx
@@ -8,7 +7,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
-def extract_domain(url: str) -> Optional[str]:
+def extract_domain(url: str) -> str | None:
     if not url:
         return None
 
@@ -26,7 +25,7 @@ def extract_domain(url: str) -> Optional[str]:
     return domain
 
 
-def get_domain_from_headers(referer: str, origin: str) -> Optional[str]:
+def get_domain_from_headers(referer: str | None, origin: str | None) -> str | None:
     if origin:
         return extract_domain(origin)
     elif referer:

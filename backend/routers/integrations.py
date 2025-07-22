@@ -23,9 +23,8 @@ from config.rmq_connection import (
 )
 from dependencies import (
     IntegrationService,
-    check_user_authorization,
-    check_domain,
     check_user_authorization_without_pixel,
+    check_domain,
     check_pixel_install_domain,
     check_user_authentication,
     UserPersistence,
@@ -108,7 +107,7 @@ async def get_integrations_credentials(
 async def get_credential_service(
     platform: str,
     integration_service: IntegrationService,
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain: UserDomains = Depends(check_domain),
 ):
     async with integration_service as service:
@@ -218,7 +217,7 @@ async def get_list(
     integration_service: IntegrationService,
     ad_account_id: str = Query(None),
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     async with integration_service as service:
@@ -235,7 +234,7 @@ async def create_list(
     list_data: CreateListOrTags,
     integrations_service: IntegrationService,
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     async with integrations_service as service:
@@ -248,7 +247,7 @@ async def create_campaign(
     list_data: CreateCampaign,
     integrations_service: IntegrationService,
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     async with integrations_service as service:
@@ -264,7 +263,7 @@ async def create_campaign(
 @router.get("/sync/sender", status_code=200)
 async def get_sender(
     integrations_service: IntegrationService,
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     async with integrations_service as service:
@@ -275,7 +274,7 @@ async def get_sender(
 async def get_ad_accounts(
     integration_service: IntegrationService,
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     async with integration_service as service:
@@ -290,7 +289,7 @@ async def set_suppression(
     suppression_data: SupperssionSet,
     integration_service: IntegrationService,
     service_name: str = Query(...),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_pixel_install_domain),
 ):
     if user.get("team_member"):
@@ -391,9 +390,9 @@ async def bigcommerce_auth(
                     domain=domain,
                     user=user,
                 )
-            return RedirectResponse(f"{redirect_url}?install_bigcommerce=true")
+            return RedirectResponse(f"{redirect_url}&install_bigcommerce=true")
         except Exception:
-            return RedirectResponse(f"{redirect_url}?install_bigcommerce=false")
+            return RedirectResponse(f"{redirect_url}&install_bigcommerce=false")
     else:
         with httpx.Client() as client:
             shop_response = client.get(

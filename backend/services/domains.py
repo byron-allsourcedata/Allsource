@@ -1,4 +1,5 @@
 from typing import List
+from typing_extensions import deprecated
 
 from fastapi import HTTPException
 import uuid
@@ -80,10 +81,20 @@ class UserDomainsService:
             for i, domain in enumerate(sorted_domains)
         ]
 
-    def get_verify_domains(self) -> List[str]:
+    @deprecated("use .get_verified_data_providers instead")
+    def get_verify_domains(self) -> list[str]:
         domains = self.domain_persistence.get_verify_domains()
         domain_list_name = [domain.domain for domain in domains]
         return domain_list_name
+
+    def get_verified_data_providers(self) -> list[str]:
+        domains = self.domain_persistence.get_verify_domains()
+        data_provider_ids = [
+            domain.data_provider_id
+            for domain in domains
+            if domain.data_provider_id is not None
+        ]
+        return data_provider_ids
 
     def pixel_installed_anywhere(self, user):
         domains = self.domain_persistence.get_domains_by_user(user.get("id"))

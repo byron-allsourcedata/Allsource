@@ -94,6 +94,8 @@ class SettingsService:
                 "is_pass_exists": user_info.password is not None,
                 "company_website_visits": user_info.company_website_visits,
                 "is_email_confirmed": user_info.is_email_confirmed,
+                "has_subscription": user.get("current_subscription_id")
+                is not None,
             }
 
     def change_account_details(
@@ -1009,7 +1011,7 @@ class SettingsService:
             ],
             monthly_limits=[
                 Advantage(
-                    good=True, name="Contact Downloads:", value="1,000 – 65,000"
+                    good=True, name="Contact Downloads:", value="500 – 65,000"
                 ),
                 Advantage(good=False, name="Smart Audience:", value="0"),
             ],

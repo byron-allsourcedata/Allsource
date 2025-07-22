@@ -9,6 +9,7 @@ import {
 } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { usePrivacyPolicyContext } from "../../../../context/PrivacyPolicyContext";
+import { flagStore } from "@/services/oneDollar";
 
 const VerifyToken = () => {
 	const router = useRouter();
@@ -28,6 +29,25 @@ const VerifyToken = () => {
 		return new Promise((resolve) => {
 			setPrivacyPolicyPromiseResolver(() => resolve);
 			router.push("/privacy-policy");
+		});
+	};
+
+	const checkOneDollarSubscription = (): Promise<void> => {
+		return new Promise((resolve) => {
+			axiosInstance
+				.get("/has-current-subscription")
+				.then((response) => {
+					if (response.status === 200 && response.data === "ok") {
+						resolve();
+						flagStore.set(false);
+					} else {
+						flagStore.set(true);
+						resolve();
+					}
+				})
+				.catch(() => {
+					flagStore.set(true);
+				});
 		});
 	};
 
@@ -69,13 +89,23 @@ const VerifyToken = () => {
 								} else if (response.data.status === "SUCCESS") {
 									showToast("You have successfully verified your email");
 								}
-								await checkPrivacyPolicy();
-								localStorage.setItem("welcome_popup", "true");
 								const newToken = response.data.token;
 								localStorage.removeItem("token");
 								localStorage.setItem("token", newToken);
+								// await checkPrivacyPolicy();
+								// await checkOneDollarSubscription();
+								const timer = setTimeout(() => {
+									window.close();
+								}, 3000);
 
-								router.push("/get-started");
+								//  clearTimeout(timer);
+
+								// localStorage.setItem("welcome_popup", "true");
+								// const newToken = response.data.token;
+								// localStorage.removeItem("token");
+								// localStorage.setItem("token", newToken);
+
+								// router.push("/get-started");
 							}
 						} else if (response.data.status === "INCORRECT_TOKEN") {
 							showErrorToast("The link is incorrect or outdated");

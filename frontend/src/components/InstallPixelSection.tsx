@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import { dashboardStyles } from "@/app/(client)/analytics/dashboardStyles";
 import PixelInstallation from "@/app/(client)/analytics/components/PixelInstallation";
@@ -19,9 +19,18 @@ const InstallPixelSection: React.FC<InstallPixelSectionProps> = ({
 	const [installationStatus, setInstallationStatus] = useState<
 		"success" | "failed" | null
 	>(null);
+	const verifyRef = useRef<HTMLDivElement | null>(null);
 
 	const handleInstallStatusChange = (status: "success" | "failed" | null) => {
 		setInstallationStatus(status);
+		if (status === "success") {
+			scrollToRef(verifyRef);
+		}
+	};
+	const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
+		setTimeout(() => {
+			ref.current?.scrollIntoView({ behavior: "smooth" });
+		}, 1000);
 	};
 
 	useEffect(() => {
@@ -51,11 +60,7 @@ const InstallPixelSection: React.FC<InstallPixelSectionProps> = ({
 	const shouldShowVerifyComponent =
 		selectedDomain !== "" && selectedMethod !== "" && selectedMethod !== null;
 
-	const isGoogleOrManualMethod =
-		selectedMethod === "google" || selectedMethod === "manual";
-
-	const shouldRenderBasedOnStatus =
-		!isGoogleOrManualMethod || installationStatus === "success";
+	const shouldRenderBasedOnStatus = installationStatus === "success";
 
 	return (
 		<>
@@ -68,46 +73,7 @@ const InstallPixelSection: React.FC<InstallPixelSectionProps> = ({
 						"@media (max-width: 1200px)": { gap: 4, pr: 0 },
 					}}
 				>
-					<Grid
-						item
-						xs={12}
-						sx={{ display: { md: "none" }, overflow: "hidden" }}
-					>
-						<Typography
-							variant="h4"
-							component="h1"
-							className="first-sub-title"
-							sx={dashboardStyles.title}
-						>
-							Install Your Pixel
-						</Typography>
-						{selectedDomain !== "" && (
-							<PixelInstallation
-								step={1}
-								onInstallStatusChange={handleInstallStatusChange}
-								onInstallSelected={(method) => {
-									setShowHintVerify(true);
-								}}
-							/>
-						)}
-
-						{shouldShowVerifyComponent && shouldRenderBasedOnStatus && (
-							<VerifyPixelIntegration
-								step={2}
-								domain={selectedDomain}
-								showHint={showHintVerify}
-							/>
-						)}
-					</Grid>
-					<Grid
-						item
-						xs={12}
-						lg={12}
-						sx={{
-							display: { xs: "none", md: "block" },
-							order: { xs: 2, sm: 2, md: 2, lg: 1 },
-						}}
-					>
+					<Grid item xs={12} lg={12} md={12}>
 						<Box sx={{ overflow: "visible" }}>
 							{selectedDomain !== "" && (
 								<PixelInstallation
@@ -120,11 +86,13 @@ const InstallPixelSection: React.FC<InstallPixelSectionProps> = ({
 								/>
 							)}
 							{shouldShowVerifyComponent && shouldRenderBasedOnStatus && (
-								<VerifyPixelIntegration
-									step={2}
-									domain={selectedDomain}
-									showHint={showHintVerify}
-								/>
+								<Box ref={verifyRef}>
+									<VerifyPixelIntegration
+										step={2}
+										domain={selectedDomain}
+										showHint={showHintVerify}
+									/>
+								</Box>
 							)}
 						</Box>
 					</Grid>

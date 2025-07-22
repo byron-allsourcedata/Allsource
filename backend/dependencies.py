@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Query, status
 from jose import jwt, JWTError
 from slack_sdk.signature import SignatureVerifier
 from sqlalchemy.orm import Session
@@ -87,6 +87,24 @@ from services.webhook import WebhookService
 from db_dependencies import get_db
 
 logger = logging.getLogger(__name__)
+
+
+def check_service_secret_key(
+    secret_key: str = Query(..., description="The secret key to verify access"),
+) -> str:
+    secret_pixel_key = os.getenv("SECRET_PIXEL_KEY")
+    if secret_pixel_key is None or secret_key != secret_pixel_key:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    return secret_key
+
+
+SecretPixelKey = Annotated[str, Depends(check_service_secret_key)]
+"""
+    Used for authentication of pixel_checker service
+
+    Must be provided as a query parameter
+"""
 
 
 async def verify_signature(request: Request):
@@ -430,6 +448,11 @@ def check_user_authorization(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
         )
 
+    if not user.get("current_subscription_id") and not is_admin:
+        raise_forbidden(
+            {"status": UserAuthorizationStatus.NEED_PAY_BASIC.value}
+        )
+
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         stripe_payment_url = get_stripe_payment_url(
             user.get("customer_id"),
@@ -442,7 +465,10 @@ def check_user_authorization(
             }
         )
 
-    if auth_status != UserAuthorizationStatus.SUCCESS:
+    if (
+        auth_status != UserAuthorizationStatus.SUCCESS
+        or auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
+    ):
         raise_forbidden({"status": auth_status.value})
     return user
 
@@ -472,6 +498,11 @@ def check_user_authorization_without_pixel(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
         )
 
+    if not user.get("current_subscription_id") and not is_admin:
+        raise_forbidden(
+            {"status": UserAuthorizationStatus.NEED_PAY_BASIC.value}
+        )
+
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         stripe_payment_url = get_stripe_payment_url(
             user.get("customer_id"),
@@ -488,6 +519,7 @@ def check_user_authorization_without_pixel(
         UserAuthorizationStatus.SUCCESS,
         UserAuthorizationStatus.PAYMENT_FAILED,
         UserAuthorizationStatus.NEED_CHOOSE_PLAN,
+        UserAuthorizationStatus.NEED_PAY_BASIC,
         UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED,
     }
 
@@ -495,6 +527,27 @@ def check_user_authorization_without_pixel(
         raise_forbidden({"status": auth_status.value})
 
     return user
+
+
+def check_team_admin(
+    Authorization: Annotated[str, Header()],
+    user_persistence_service: UserPersistence,
+) -> Token:
+    user = check_user_authentication(Authorization, user_persistence_service)
+    if user.get("team_member"):
+        team_member = user.get("team_member")
+        if team_member.get("team_access_level") not in {
+            TeamAccessLevel.ADMIN.value,
+            TeamAccessLevel.OWNER.value,
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admins only.",
+            )
+    return user
+
+
+TeamAdmin = Annotated[dict, Depends(check_team_admin)]
 
 
 def check_user_setting_access(
@@ -508,6 +561,7 @@ def check_user_setting_access(
         auth_status != UserAuthorizationStatus.SUCCESS
         and auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
         and auth_status != UserAuthorizationStatus.PAYMENT_FAILED
+        and auth_status != UserAuthorizationStatus.NEED_PAY_BASIC
         and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
     ):
         raise HTTPException(

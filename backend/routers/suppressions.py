@@ -4,6 +4,7 @@ from services.suppression import SuppressionService
 from dependencies import (
     get_suppression_service,
     check_user_authorization,
+    check_user_authorization_without_pixel,
     check_domain,
 )
 from fastapi.responses import FileResponse
@@ -20,7 +21,7 @@ router = APIRouter()
 @router.get("/sample-suppression-list")
 def get_sample_suppression_list(
     suppression_service: SuppressionService = Depends(get_suppression_service),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     file_path = suppression_service.get_sample_suppression_list()
     return FileResponse(
@@ -35,7 +36,7 @@ def get_sample_suppression_list(
 @router.post("/suppression-list")
 async def process_suppression_list(
     suppression_service: SuppressionService = Depends(get_suppression_service),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
     file: UploadFile = File(...),
 ):
@@ -46,7 +47,7 @@ async def process_suppression_list(
 async def actual_contect_days(
     days: int,
     suppression_service: SuppressionService = Depends(get_suppression_service),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
     return suppression_service.process_actual_contect_days(
@@ -62,7 +63,7 @@ async def get_suppression_list(
     ),
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.get_suppression_list(page, per_page, domain.id)
 
@@ -72,7 +73,7 @@ async def delete_suppression_list(
     suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.delete_suppression_list(
         suppression_request.suppression_list_id, domain.id
@@ -84,7 +85,7 @@ async def download_suppression_list(
     suppression_list_id: int = Query(...),
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     response = suppression_service.download_suppression_list(
         suppression_list_id, domain.id
@@ -99,7 +100,7 @@ async def process_suppression_multiple_emails(
     suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_suppression_multiple_emails(
         suppression_request.data, domain.id
@@ -110,7 +111,7 @@ async def process_suppression_multiple_emails(
 async def process_collecting_contacts(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_collecting_contacts(domain.id)
 
@@ -119,7 +120,7 @@ async def process_collecting_contacts(
 async def get_rules(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.get_rules(domain.id)
 
@@ -128,7 +129,7 @@ async def get_rules(
 async def process_certain_activation(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_certain_activation(domain.id)
 
@@ -138,7 +139,7 @@ async def process_certain_urls(
     suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_certain_urls(
         suppression_request.data, domain.id
@@ -149,7 +150,7 @@ async def process_certain_urls(
 async def process_delete_contacts(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_delete_contacts(domain.id)
 
@@ -158,7 +159,7 @@ async def process_delete_contacts(
 async def process_based_activation(
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_based_activation(domain.id)
 
@@ -168,7 +169,7 @@ async def process_based_urls(
     suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_based_urls(
         suppression_request.data, domain.id
@@ -180,7 +181,7 @@ async def save_suppress_contact_days(
     suppression_request: SuppressionRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.save_suppress_contact_days(
         suppression_request.data, domain.id
@@ -192,7 +193,7 @@ async def process_page_views_limit(
     collection_rule: CollectionRuleRequest,
     suppression_service: SuppressionService = Depends(get_suppression_service),
     domain=Depends(check_domain),
-    user: User = Depends(check_user_authorization),
+    user: User = Depends(check_user_authorization_without_pixel),
 ):
     return suppression_service.process_page_views_limit(
         collection_rule.page_views, collection_rule.seconds, domain.id

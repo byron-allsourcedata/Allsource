@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from datetime import datetime, timezone
 from dependencies import get_dashboard_service
 from typing import Union
-from dependencies import check_user_authorization
+from dependencies import check_user_authorization_without_pixel
 from schemas.dashboard import RevenueResponse
 from services.dashboard import DashboardService
 
@@ -30,7 +30,7 @@ def get_contact(
         description="End date in integer format",
     ),
     dashboard_service: DashboardService = Depends(get_dashboard_service),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_contact(
         from_date=from_date,
@@ -44,7 +44,7 @@ def get_revenue(
     from_date: int = Query(None, description="Start date in integer format"),
     to_date: int = Query(None, description="End date in integer format"),
     dashboard_service: DashboardService = Depends(get_dashboard_service),
-    user=Depends(check_user_authorization),
+    user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_revenue(
         from_date=from_date, to_date=to_date, user=user

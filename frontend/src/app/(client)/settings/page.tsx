@@ -18,6 +18,7 @@ const Settings: React.FC = () => {
 	const [activeSection, setActiveSection] = useState<string>("accountDetails");
 	const [accountDetails, setAccountDetails] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [userHasSubscription, setUserHasSubscription] = useState(false);
 
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -30,6 +31,7 @@ const Settings: React.FC = () => {
 			);
 			const data = response.data;
 			setAccountDetails(data);
+			setUserHasSubscription(data.has_subscription);
 		} catch (error) {
 			console.error("Error fetching account details:", error);
 		} finally {
@@ -39,7 +41,7 @@ const Settings: React.FC = () => {
 
 	useEffect(() => {
 		const sectionFromUrl = searchParams.get("section");
-		if (sectionFromUrl) {
+		if (sectionFromUrl && userHasSubscription) {
 			setActiveSection(sectionFromUrl);
 		}
 		fetchAccountDetails();
@@ -138,6 +140,7 @@ const Settings: React.FC = () => {
 						</Button>
 						<Button
 							className="tab-heading"
+							disabled={!userHasSubscription}
 							sx={planStyles.buttonHeading}
 							variant={activeSection === "teams" ? "contained" : "outlined"}
 							onClick={() => handleTabChange("teams")}
@@ -146,6 +149,7 @@ const Settings: React.FC = () => {
 						</Button>
 						<Button
 							className="tab-heading"
+							disabled={!userHasSubscription}
 							sx={planStyles.buttonHeading}
 							variant={activeSection === "billing" ? "contained" : "outlined"}
 							onClick={() => handleTabChange("billing")}
@@ -154,6 +158,7 @@ const Settings: React.FC = () => {
 						</Button>
 						<Button
 							className="tab-heading"
+							disabled={!userHasSubscription}
 							sx={planStyles.buttonHeading}
 							variant={
 								activeSection === "subscription" ? "contained" : "outlined"

@@ -103,7 +103,13 @@ const InstallPixel: React.FC = () => {
 				</Box>
 			</Box>
 
-			<Box sx={{ width: "100%", padding: "0px 152px" }}>
+			<Box
+				sx={{
+					width: "100%",
+					padding: "0px 152px",
+					"@media(max-width: 600px)": { padding: "0px 12px" },
+				}}
+			>
 				<InstallPixelSection />
 			</Box>
 		</Box>

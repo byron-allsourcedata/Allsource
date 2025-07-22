@@ -390,6 +390,9 @@ class UsersAuth:
             self.admin_persistence.update_admin_user(
                 user_id=user_object.id, admin_token=admin_token
             )
+            self.subscription_service.create_subscription_from_free_trial(
+                user_id=user_object.id
+            )
 
         if teams_token:
             notification_id = self.save_account_notification(
@@ -445,10 +448,10 @@ class UsersAuth:
             teams_token is None,
             referral_token is None,
         ]
-        if all(conditions):
-            self.subscription_service.create_subscription_from_free_trial(
-                user_id=user_object.id
-            )
+        # if all(conditions):
+        #     self.subscription_service.create_subscription_from_free_trial(
+        #         user_id=user_object.id
+        #     )
 
         self.__on_create_account(
             email=user_object.email, full_name=user_object.full_name
@@ -772,6 +775,9 @@ class UsersAuth:
             self.admin_persistence.update_admin_user(
                 user_id=user_object.id, admin_token=admin_token
             )
+            self.subscription_service.create_subscription_from_free_trial(
+                user_id=user_object.id
+            )
 
         if teams_token:
             notification_id = self.save_account_notification(
@@ -827,10 +833,10 @@ class UsersAuth:
             referral_token is None,
             shopify_data is None,
         ]
-        if all(conditions):
-            self.subscription_service.create_subscription_from_free_trial(
-                user_id=user_object.id
-            )
+        # if all(conditions):
+        #     self.subscription_service.create_subscription_from_free_trial(
+        #         user_id=user_object.id
+        #     )
 
         conditions = [
             is_with_card is False,

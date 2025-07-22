@@ -7,6 +7,7 @@ from resolver import injectable
 from services.stripe_service import StripeService
 from services.subscriptions.exceptions import PlanNotFoundException
 from services.user_subscriptions import UserSubscriptionsService
+from config.stripe import StripeConfig
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class BasicPlanService:
             price_id=price_id,
             mode="payment",
             metadata={"type": "upgrade_basic"},
+            success_url=StripeConfig.one_dollar_success_url,
         )
 
         return session_url

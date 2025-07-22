@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from typing import Tuple, Optional, List, Any, Dict
 from uuid import UUID
+
+from sqlalchemy.orm.query import RowReturningQuery
 
 from models import AudienceSmart
 from persistence.audience_smarts.dto import SyncedPersonRecord, PersonRecord
@@ -24,11 +27,11 @@ class AudienceSmartsPersistenceInterface(ABC):
     @abstractmethod
     def get_include_exclude_query(
         self,
-        lookalike_include,
-        lookalike_exclude,
-        source_include,
-        source_exclude,
-    ):
+        lookalike_include: Sequence[UUID],
+        lookalike_exclude: Sequence[UUID],
+        source_include: Sequence[UUID],
+        source_exclude: Sequence[UUID],
+    ) -> RowReturningQuery[tuple[UUID]]:
         pass
 
     @abstractmethod
@@ -109,8 +112,8 @@ class AudienceSmartsPersistenceInterface(ABC):
 
     @abstractmethod
     def sorted_enrichment_users_for_validation(
-        self, ids: List[UUID], order_by_clause: str
-    ):
+        self, ids: list[UUID], order_by_clause: str
+    ) -> list[UUID]:
         pass
 
     @abstractmethod

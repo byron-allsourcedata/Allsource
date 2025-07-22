@@ -97,9 +97,10 @@ class StripeService:
         mode: str,
         metadata: dict = {},
         payment_intent_data: Optional[dict] = None,
+        success_url: str = StripeConfig.success_url,
     ):
         session = stripe.checkout.Session.create(
-            success_url=StripeConfig.success_url,
+            success_url=success_url,
             cancel_url=StripeConfig.cancel_url,
             customer=customer_id,
             payment_method_types=["card"],

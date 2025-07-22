@@ -1,11 +1,11 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
 
 
-class DomainsListResponse(BaseModel):
-    domains: List[str]
+class DataProvidersResponse(BaseModel):
+    data_providers_ids: list[str]
+
 
 class PixelInstallationRequest(BaseModel):
-    pixelClientId: Optional[str] = Field(None)
+    pixelClientId: str | None = Field(None)
     url: str = Field(...)
-    need_reload_page: Optional[bool] = Field(False)
+    need_reload_page: bool | None = Field(False)
