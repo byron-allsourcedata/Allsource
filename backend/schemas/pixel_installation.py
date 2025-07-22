@@ -1,3 +1,4 @@
+from typing_extensions import deprecated
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
 
@@ -21,5 +22,10 @@ class PixelInstallationResponse(BaseModel):
     pixel_installation: bool
 
 
+@deprecated("used in deprecated /verify_domains endpoint")
 class DomainsListResponse(BaseModel):
     domains: List[str]
+
+
+class DataProvidersResponse(BaseModel):
+    data_providers_ids: list[str]
