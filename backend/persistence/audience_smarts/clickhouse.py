@@ -1,5 +1,6 @@
 from collections.abc import Sequence
-from typing import Optional, List, Tuple, Callable, override
+from typing import Optional, List, Tuple, Callable
+from typing_extensions import override
 from uuid import UUID
 import json
 from datetime import datetime

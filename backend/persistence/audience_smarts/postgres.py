@@ -39,7 +39,8 @@ from persistence.audience_smarts.interface import (
     AudienceSmartsPersistenceInterface,
 )
 from schemas.audience import DataSourcesFormat
-from typing import Optional, Tuple, List, override
+from typing import Optional, Tuple, List
+from typing_extensions import override
 from sqlalchemy.engine.row import Row
 from uuid import UUID
 from resolver import injectable
