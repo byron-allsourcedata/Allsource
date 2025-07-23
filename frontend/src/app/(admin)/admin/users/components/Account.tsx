@@ -197,7 +197,7 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 	const onPlanClick = (plan: string) => {
 		const planMap: Record<string, string> = {
 			Basic: "basic",
-			Pro: "pro_monthly",
+			Pro: "pro",
 			"Smart Audience": "smart_audience_monthly",
 		};
 
