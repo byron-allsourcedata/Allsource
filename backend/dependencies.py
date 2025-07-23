@@ -553,16 +553,28 @@ TeamAdmin = Annotated[dict, Depends(check_team_admin)]
 def check_user_setting_access(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,
+    privacy_policy_service: PrivacyPolicyService,
     users_auth_service: UsersAuth = Depends(get_users_auth_service),
 ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
+
+    is_admin = is_user_admin(Authorization, user_persistence_service)
+    exist_privacy_policy = privacy_policy_service.exist_user_privacy_policy(
+        user_id=user.get("id")
+    )
+
+    if not exist_privacy_policy and not is_admin:
+        raise_forbidden(
+            {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
+        )
+
     if (
         auth_status != UserAuthorizationStatus.SUCCESS
         and auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
         and auth_status != UserAuthorizationStatus.PAYMENT_FAILED
-        and auth_status != UserAuthorizationStatus.NEED_PAY_BASIC
         and auth_status != UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED
+        and not is_admin
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

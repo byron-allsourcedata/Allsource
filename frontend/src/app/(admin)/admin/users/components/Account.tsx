@@ -14,6 +14,11 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	ListItemIcon,
+	ListItemText,
+	Menu,
+	MenuItem,
+	PopoverProps,
 } from "@mui/material";
 import { useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
@@ -37,6 +42,8 @@ import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import CustomSwitch from "@/components/ui/CustomSwitch";
 import { UserData } from "../page";
+import { ArrowRightIcon } from "@mui/x-date-pickers";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 
 interface tableHeaders {
 	key: string;
@@ -137,6 +144,135 @@ const TableHeader: React.FC<{
 				))}
 			</TableRow>
 		</TableHead>
+	);
+};
+
+interface ActionsMenuProps {
+	anchorEl: PopoverProps["anchorEl"];
+	handleClose: () => void;
+	userId: number;
+	currentPlanAlias: string;
+}
+
+const ActionsMenu: React.FC<ActionsMenuProps> = ({
+	anchorEl,
+	handleClose,
+	userId,
+	currentPlanAlias,
+}) => {
+	const [submenuAnchorEl, setSubmenuAnchorEl] = useState<null | HTMLElement>(
+		null,
+	);
+
+	const handleOpenSubmenu = (event: React.MouseEvent<HTMLElement>) => {
+		setSubmenuAnchorEl(event.currentTarget);
+	};
+
+	const handleCloseSubmenu = () => {
+		setSubmenuAnchorEl(null);
+	};
+
+	const changeUserPlan = async (planAlias: string) => {
+		try {
+			const response = await axiosInstance.post(
+				"/admin/change_plan",
+				{
+					user_id: userId,
+					plan_alias: planAlias,
+				},
+				{
+					headers: {
+						"Content-Type": "application/json",
+					},
+				},
+			);
+			showToast("Success update plan");
+			return response.data;
+		} catch (error) {
+			showErrorToast("Error when try to update plan");
+			console.error("Error", error);
+		}
+	};
+
+	const onPlanClick = (plan: string) => {
+		const planMap: Record<string, string> = {
+			Basic: "basic",
+			Pro: "pro",
+			"Smart Audience": "smart_audience_monthly",
+		};
+
+		const planAlias = planMap[plan];
+		if (planAlias !== currentPlanAlias) {
+			changeUserPlan(planAlias);
+		}
+	};
+
+	return (
+		<>
+			<Menu
+				open={Boolean(anchorEl)}
+				anchorEl={anchorEl}
+				onClose={handleClose}
+				anchorOrigin={{
+					vertical: "bottom",
+					horizontal: "left",
+				}}
+				transformOrigin={{
+					vertical: "top",
+					horizontal: "right",
+				}}
+				MenuListProps={{ dense: true }}
+			>
+				<MenuItem onClick={() => console.log("Make a Partner")}>
+					Make a Partner
+				</MenuItem>
+				<MenuItem onClick={() => console.log("Make a Master Partner")}>
+					Make a Master Partner
+				</MenuItem>
+
+				<MenuItem onMouseEnter={handleOpenSubmenu}>
+					<ListItemText>Change Plan</ListItemText>
+					<ListItemIcon>
+						<ArrowRightIcon
+							fontSize="small"
+							sx={{ color: "rgba(32, 33, 36, 1)" }}
+						/>
+					</ListItemIcon>
+				</MenuItem>
+			</Menu>
+
+			<Menu
+				anchorEl={submenuAnchorEl}
+				open={Boolean(submenuAnchorEl)}
+				onClose={handleCloseSubmenu}
+				anchorOrigin={{ vertical: "top", horizontal: "left" }}
+				transformOrigin={{ vertical: "top", horizontal: "right" }}
+				MenuListProps={{
+					dense: true,
+					onMouseEnter: () => {},
+					onMouseLeave: handleCloseSubmenu,
+				}}
+			>
+				<MenuItem
+					disabled={currentPlanAlias === "Basic"}
+					onClick={() => onPlanClick("Basic")}
+				>
+					Move to Basic plan
+				</MenuItem>
+				<MenuItem
+					disabled={currentPlanAlias === "Smart Audience"}
+					onClick={() => onPlanClick("Smart Audience")}
+				>
+					Move to Smart Audience plan
+				</MenuItem>
+				<MenuItem
+					disabled={currentPlanAlias === "Pro"}
+					onClick={() => onPlanClick("Pro")}
+				>
+					Move to Pro plan
+				</MenuItem>
+			</Menu>
+		</>
 	);
 };
 
@@ -491,118 +627,26 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 					</Box>
 				);
 
-				// case "actions":
-				// 	if (currentPage === 0) {
-				// 		return (
-				// 			<>
-				// 				<MenuIconButton
-				// 					buttonProps={{
-				// 						onClick: (event) => handleOpenMenu(event, row.id),
-				// 					}}
-				// 					iconProps={{
-				// 						icon: <MoreVert />,
-				// 					}}
-				// 				/>
-				// 				<Popover
-				// 					open={Boolean(menuAnchor) && activeRow === row.id}
-				// 					anchorEl={menuAnchor}
-				// 					onClose={handleCloseMenu}
-				// 					anchorOrigin={{
-				// 						vertical: "bottom",
-				// 						horizontal: "center",
-				// 					}}
-				// 				>
-				// 					<Box
-				// 						sx={{
-				// 							p: 1,
-				// 							display: "flex",
-				// 							flexDirection: "column",
-				// 							alignItems: "flex-start",
-				// 							width: "100%",
-				// 							maxWidth: "160px",
-				// 						}}
-				// 					>
-				// 						<Button
-				// 							sx={{
-				// 								justifyContent: "flex-start",
-				// 								width: "100%",
-				// 								textTransform: "none",
-				// 								fontFamily: "var(--font-nunito)",
-				// 								fontSize: "14px",
-				// 								color: "rgba(32, 33, 36, 1)",
-				// 								fontWeight: 600,
-				// 								":hover": {
-				// 									color: "rgba(56, 152, 252, 1)",
-				// 									backgroundColor: "rgba(80, 82, 178, 0.1)",
-				// 								},
-				// 							}}
-				// 							onClick={() => {
-				// 								console.log("Customer: View Orders clicked");
-				// 							}}
-				// 						>
-				// 							View Orders
-				// 						</Button>
-				// 					</Box>
-				// 				</Popover>
-				// 			</>
-				// 		);
-				// 	}
-				if (currentPage === 1) {
-					return (
-						<>
-							<MenuIconButton
-								buttonProps={{
-									onClick: (event) => handleOpenMenu(event, row.id),
-								}}
-								iconProps={{
-									icon: <MoreVert />,
-								}}
-							/>
-							<Popover
-								open={Boolean(menuAnchor) && activeRow === row.id}
-								anchorEl={menuAnchor}
-								onClose={handleCloseMenu}
-								anchorOrigin={{
-									vertical: "bottom",
-									horizontal: "center",
-								}}
-							>
-								<Box
-									sx={{
-										p: 1,
-										display: "flex",
-										flexDirection: "column",
-										alignItems: "flex-start",
-										width: "100%",
-										maxWidth: "160px",
-									}}
-								>
-									<Button
-										sx={{
-											justifyContent: "flex-start",
-											width: "100%",
-											textTransform: "none",
-											fontFamily: "var(--font-nunito)",
-											fontSize: "14px",
-											color: "rgba(32, 33, 36, 1)",
-											fontWeight: 600,
-											":hover": {
-												color: "rgba(56, 152, 252, 1)",
-												backgroundColor: "rgba(80, 82, 178, 0.1)",
-											},
-										}}
-										onClick={() => {
-											console.log("Customer: View Orders clicked");
-										}}
-									>
-										View Orders
-									</Button>
-								</Box>
-							</Popover>
-						</>
-					);
-				}
-				return null;
+			case "actions":
+				return (
+					<Box
+						sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+					>
+						<MenuIconButton
+							buttonProps={{
+								onClick: (event) => handleOpenMenu(event, row.id),
+							}}
+							iconProps={{ icon: <MoreVert /> }}
+						/>
+
+						<ActionsMenu
+							anchorEl={activeRow === row.id ? menuAnchor : null}
+							handleClose={handleCloseMenu}
+							userId={row.id}
+							currentPlanAlias={row.subscription_plan ?? ""}
+						/>
+					</Box>
+				);
 		}
 	};
 
@@ -729,7 +773,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					label: "Email Validation",
 					sortable: false,
 				},
-				// { key: "actions", label: "Actions", sortable: false },
+				{ key: "actions", label: "Actions", sortable: false },
 			];
 
 	const handlePageChange = (
@@ -779,9 +823,9 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					container
 					direction="column"
 					justifyContent="flex-start"
-					spacing={2}
+					sx={{ width: "100%" }}
 				>
-					<Grid item xs={12} sx={{ pl: 1, mt: 0 }}>
+					<Grid item xs={12} sx={{ mt: 0, width: "100%" }}>
 						<TableContainer
 							component={Paper}
 							ref={tableContainerRef}
