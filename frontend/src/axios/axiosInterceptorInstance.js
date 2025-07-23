@@ -67,6 +67,7 @@ axiosInterceptorInstance.interceptors.response.use(
 					navigateTo("/signin");
 					break;
 				case 403:
+					console.log(error.response.data.status)
 					switch (error.response.data.status) {
 						case "DOMAIN_NOT_FOUND":
 							navigateTo("dashboard");
@@ -98,7 +99,11 @@ axiosInterceptorInstance.interceptors.response.use(
 							navigateTo(`${error.response.data.stripe_payment_url}`);
 							break;
 						case "PAYMENT_FAILED":
-							navigateTo("/settings?section=billing&payment_failed=true");
+							const currentUrl = window.location.pathname + window.location.search;
+							const expectedUrl = "/settings?section=billing&payment_failed=true";
+							if (currentUrl !== expectedUrl) {
+								navigateTo(expectedUrl);
+							}
 							break;
 						case "FORBIDDEN":
 							break;

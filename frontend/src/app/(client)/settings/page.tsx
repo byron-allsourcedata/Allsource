@@ -41,7 +41,8 @@ const Settings: React.FC = () => {
 
 	useEffect(() => {
 		const sectionFromUrl = searchParams.get("section");
-		if (sectionFromUrl && userHasSubscription) {
+		const paymentFailed = searchParams.get("payment_failed");
+		if (sectionFromUrl && (userHasSubscription || paymentFailed)) {
 			setActiveSection(sectionFromUrl);
 		}
 		fetchAccountDetails();

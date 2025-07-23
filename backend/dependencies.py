@@ -523,9 +523,7 @@ def check_user_authorization_without_pixel(
 
     allowed_statuses = {
         UserAuthorizationStatus.SUCCESS,
-        UserAuthorizationStatus.PAYMENT_FAILED,
         UserAuthorizationStatus.NEED_CHOOSE_PLAN,
-        UserAuthorizationStatus.NEED_PAY_BASIC,
         UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED,
     }
 
