@@ -37,3 +37,17 @@ def privacy_policy(
     )
 
     return {"status": "ok"}
+
+
+@router.get("/has-accept-privacy-policy")
+def has_accept_privacy_policy(
+    service: PrivacyPolicyService,
+    user=Depends(check_user_authentication),
+):
+    exist_user_privacy_policy = service.exist_user_privacy_policy(
+        user_id=user.get("id")
+    )
+
+    if exist_user_privacy_policy:
+        return {"status": "ok"}
+    return {"status": "error"}

@@ -19,6 +19,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { fetchUserData } from "@/services/meService";
 import PageWithLoader from "@/components/FirstLevelLoader";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
+import { flagStore } from "@/services/oneDollar";
 
 const Signin: React.FC = () => {
 	const router = useRouter();
@@ -97,6 +98,48 @@ const Signin: React.FC = () => {
 		validateField(name, value);
 	};
 
+	const checkPrivacyPolicy = async (): Promise<void> => {
+		return new Promise((resolve) => {
+			axiosInterceptorInstance
+				.get("/privacy-policy/has-accept-privacy-policy")
+				.then((response) => {
+					if (response.status === 200 && response.data === "ok") {
+						resolve();
+					} else {
+						return new Promise<void>((resolveAcept) => {
+							setPrivacyPolicyPromiseResolver(() => {
+								resolveAcept();
+								resolve();
+							});
+							router.push("/privacy-policy");
+						});
+					}
+				})
+				.catch(() => {
+					flagStore.set(true);
+				});
+		});
+	};
+
+	const checkOneDollarSubscription = (): Promise<void> => {
+		return new Promise((resolve) => {
+			axiosInterceptorInstance
+				.get("/has-current-subscription")
+				.then((response) => {
+					if (response.status === 200 && response.data === "ok") {
+						resolve();
+						flagStore.set(false);
+					} else {
+						flagStore.set(true);
+						resolve();
+					}
+				})
+				.catch(() => {
+					flagStore.set(true);
+				});
+		});
+	};
+
 	const handleSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
 		const newErrors: { [key: string]: string } = {};
@@ -149,6 +192,8 @@ const Signin: React.FC = () => {
 					switch (responseData.status) {
 						case "SUCCESS":
 							await fetchUserData();
+							await checkPrivacyPolicy();
+							await checkOneDollarSubscription();
 							router.push("/dashboard");
 							break;
 
@@ -196,6 +241,8 @@ const Signin: React.FC = () => {
 
 						case "FILL_COMPANY_DETAILS":
 							let data = await fetchUserData();
+							await checkPrivacyPolicy();
+							await checkOneDollarSubscription();
 							const { is_pixel_installed, is_source_imported } =
 								data?.get_started;
 							if (is_pixel_installed && is_source_imported) {
@@ -280,6 +327,8 @@ const Signin: React.FC = () => {
 								}
 								switch (response.data.status) {
 									case "SUCCESS":
+										await checkPrivacyPolicy();
+										await checkOneDollarSubscription();
 										router.push("/dashboard");
 										break;
 									case "SUCCESS_ADMIN":
@@ -308,6 +357,8 @@ const Signin: React.FC = () => {
 										break;
 									case "FILL_COMPANY_DETAILS":
 										let data = await fetchUserData();
+										await checkPrivacyPolicy();
+										await checkOneDollarSubscription();
 										const { is_pixel_installed, is_source_imported } =
 											data?.get_started;
 										if (is_pixel_installed && is_source_imported) {
