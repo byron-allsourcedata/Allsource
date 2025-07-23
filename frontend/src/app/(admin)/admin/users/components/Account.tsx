@@ -19,6 +19,10 @@ import {
 	Menu,
 	MenuItem,
 	PopoverProps,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 } from "@mui/material";
 import { useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
@@ -147,11 +151,130 @@ const TableHeader: React.FC<{
 	);
 };
 
+interface ConfirmPlanChangeDialogProps {
+	open: boolean;
+	onClose: () => void;
+	onConfirm: () => void;
+	user: {
+		name: string;
+		email: string;
+		joinDate: string;
+		currentPlan: string;
+	};
+	newPlan: string;
+}
+
+const ConfirmPlanChangeDialog: React.FC<ConfirmPlanChangeDialogProps> = ({
+	open,
+	onClose,
+	onConfirm,
+	user,
+	newPlan,
+}) => {
+	return (
+		<Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+			<DialogTitle className="modal-heading">Confirm your action</DialogTitle>
+			<DialogContent>
+				<Typography className="modal-text" sx={{ mb: 2 }}>
+					Are you sure you want to move this user to <strong>{newPlan}</strong>{" "}
+					plan?
+				</Typography>
+
+				<Typography className="modal-text" sx={{ mb: 1 }}>
+					USER DETAILS
+				</Typography>
+
+				<Grid container spacing={1}>
+					{[
+						{ label: "Name", value: user.name },
+						{ label: "Email", value: user.email },
+						{
+							label: "Join Date",
+							value: new Date(user.joinDate).toLocaleDateString("en-US", {
+								year: "numeric",
+								month: "short",
+								day: "2-digit",
+							}),
+						},
+						{ label: "Current Plan", value: user.currentPlan },
+					].map(({ label, value }) => (
+						<Grid
+							item
+							xs={12}
+							key={label}
+							sx={{
+								display: "flex",
+								justifyContent: "space-between",
+								alignItems: "center",
+								py: 0.5,
+							}}
+						>
+							<Typography className="modal-text">{label}</Typography>
+							<Typography
+								className="modal-text-semibold"
+								sx={{ textAlign: "right" }}
+							>
+								{value}
+							</Typography>
+						</Grid>
+					))}
+				</Grid>
+			</DialogContent>
+
+			<DialogActions sx={{ px: 3, pb: 2, justifyContent: "flex-end", gap: 2 }}>
+				<Button
+					variant="outlined"
+					onClick={onClose}
+					sx={{
+						fontFamily: "var(--font-nunito)",
+						height: 36,
+						fontSize: "0.8rem",
+						textTransform: "none",
+						border: "1px solid rgba(56, 152, 252, 1)",
+						color: "rgba(56, 152, 252, 1)",
+						"&:hover": {
+							borderColor: "rgba(56, 152, 252, 1)",
+						},
+					}}
+				>
+					Cancel
+				</Button>
+				<Button
+					variant="contained"
+					onClick={onConfirm}
+					sx={{
+						fontFamily: "var(--font-nunito)",
+						height: 36,
+						fontSize: "0.8rem",
+						textTransform: "none",
+						backgroundColor: "rgba(56, 152, 252, 1)",
+						color: "#fff",
+						"&:hover": {
+							backgroundColor: "rgba(56, 152, 252, 1)",
+						},
+						"&.Mui-disabled": {
+							backgroundColor: "rgba(80, 82, 178, 0.6)",
+							color: "#fff",
+						},
+					}}
+				>
+					Confirm
+				</Button>
+			</DialogActions>
+		</Dialog>
+	);
+};
+
 interface ActionsMenuProps {
 	anchorEl: PopoverProps["anchorEl"];
 	handleClose: () => void;
 	userId: number;
 	currentPlanAlias: string;
+	user: {
+		name: string;
+		email: string;
+		joinDate: string;
+	};
 }
 
 const ActionsMenu: React.FC<ActionsMenuProps> = ({
@@ -159,7 +282,10 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 	handleClose,
 	userId,
 	currentPlanAlias,
+	user,
 }) => {
+	const [dialogOpen, setDialogOpen] = useState(false);
+	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 	const [submenuAnchorEl, setSubmenuAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
@@ -203,8 +329,25 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 
 		const planAlias = planMap[plan];
 		if (planAlias !== currentPlanAlias) {
-			changeUserPlan(planAlias);
+			setSelectedPlan(plan);
+			setDialogOpen(true);
 		}
+	};
+
+	const handleConfirmPlanChange = async () => {
+		if (!selectedPlan) return;
+
+		const planMap: Record<string, string> = {
+			Basic: "basic",
+			Pro: "pro",
+			"Smart Audience": "smart_audience_monthly",
+		};
+		const alias = planMap[selectedPlan];
+
+		await changeUserPlan(alias);
+		setDialogOpen(false);
+		setSelectedPlan(null);
+		handleClose();
 	};
 
 	return (
@@ -272,6 +415,18 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 					Move to Pro plan
 				</MenuItem>
 			</Menu>
+			<ConfirmPlanChangeDialog
+				open={dialogOpen}
+				onClose={() => setDialogOpen(false)}
+				onConfirm={handleConfirmPlanChange}
+				newPlan={selectedPlan ?? ""}
+				user={{
+					name: user.name,
+					email: user.email,
+					joinDate: user.joinDate,
+					currentPlan: currentPlanAlias,
+				}}
+			/>
 		</>
 	);
 };
@@ -644,6 +799,11 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							handleClose={handleCloseMenu}
 							userId={row.id}
 							currentPlanAlias={row.subscription_plan ?? ""}
+							user={{
+								name: row.full_name,
+								email: row.email,
+								joinDate: row.created_at,
+							}}
 						/>
 					</Box>
 				);
