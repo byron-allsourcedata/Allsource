@@ -26,6 +26,7 @@ from persistence.audience_dashboard import DashboardAudiencePersistence
 from services.jwt_service import create_access_token
 from services.sendgrid import SendgridHandler
 from services.subscriptions import SubscriptionService
+from services.user_subscriptions import UserSubscriptionsService
 from services.users_auth import UsersAuth
 from utils import get_md5_hash
 from utils import get_utc_aware_date
