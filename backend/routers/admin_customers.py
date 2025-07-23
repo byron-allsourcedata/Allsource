@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query, HTTPException
+from pydantic import BaseModel
 
+from db_dependencies import Db
 from schemas.admin import InviteDetailsRequest
 from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
@@ -10,6 +12,7 @@ from config.rmq_connection import (
     RabbitMQConnection,
 )
 from schemas.users import UpdateUserRequest, UpdateUserResponse
+from services.user_subscriptions import UserSubscriptionsService
 
 router = APIRouter()
 
@@ -140,6 +143,28 @@ def change_email_validation(
     return admin_customers_service.change_email_validation(
         user_id=user_id,
     )
+
+
+class ChangeRequestBody(BaseModel):
+    user_id: int
+    plan_alias: str
+
+
+@router.post("/change_plan")
+def change_email_validation(
+    user_subscription_service: UserSubscriptionsService,
+    req: ChangeRequestBody,
+    db: Db,
+    user: dict = Depends(check_user_admin),
+    admin_customers_service: AdminCustomersService = Depends(
+        get_admin_customers_service
+    ),
+):
+    user_subscription_service.move_to_plan(
+        user_id=req.user_id, plan_alias=req.plan_alias
+    )
+
+    db.commit()
 
 
 @router.put("/user")
