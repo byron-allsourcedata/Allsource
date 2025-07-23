@@ -126,6 +126,21 @@ class SmartsResponse(BaseModel):
     processed_active_segment_records: int
     status: str
     integrations: Optional[List[str]]
+    n_a: bool
+
+
+class SmartsCreateResponse(BaseModel):
+    id: UUID
+    name: str
+    use_case_alias: str
+    created_by: str
+    created_at: datetime
+    total_records: int
+    validated_records: int
+    active_segment_records: int
+    processed_active_segment_records: int
+    status: str
+    integrations: Optional[List[str]]
 
     model_config = {"from_attributes": True}
 

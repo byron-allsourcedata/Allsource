@@ -49,6 +49,7 @@ import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import { InfoIcon } from "@/icon";
 import UserTip from "@/components/UserTip";
 import { width } from "@mui/system";
+import CustomButton from "@/components/ui/CustomButton";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -2380,44 +2381,29 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 									p: 2,
 								}}
 							>
-								<Button
-									variant="contained"
+								<CustomButton
+									variant="outlined"
 									onClick={handleClosePopup}
-									className="second-sub-title"
 									sx={{
-										color: "rgba(56, 152, 252, 1) !important",
-										backgroundColor: "#fff",
-										border: " 1px solid rgba(56, 152, 252, 1)",
-										textTransform: "none",
 										padding: "0.75em 2.5em",
-										"&:hover": {
-											backgroundColor: "rgba(80, 82, 178, 0.1)",
-										},
 									}}
 								>
 									Cancel
-								</Button>
-								<Button
+								</CustomButton>
+								<CustomButton
 									variant="contained"
 									onClick={handleNextTab}
-									className="second-sub-title"
 									disabled={hasAnyDuplicates()}
 									sx={{
-										backgroundColor: "rgba(56, 152, 252, 1)",
-										color: "rgba(255, 255, 255, 1) !important",
-										textTransform: "none",
 										padding: "0.75em 2.5em",
-										"&:hover": {
-											backgroundColor: "rgba(56, 152, 252, 1)",
-										},
 									}}
 								>
 									{(value === "3" && !contactSyncTab) || value === "4"
-										? isDownloadAction
+										? activeService === "CSV"
 											? "Download"
 											: "Sync"
 										: "Next"}
-								</Button>
+								</CustomButton>
 							</Box>
 						</Box>
 					</Box>

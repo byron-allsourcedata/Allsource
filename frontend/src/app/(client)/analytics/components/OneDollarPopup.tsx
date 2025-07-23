@@ -225,7 +225,7 @@ const OneDollarPopup = () => {
 										/>
 									}
 									label="Free Contact Downloads:"
-									value="1,000 / per month*"
+									value="500 / per month*"
 								/>
 								<GiftRow
 									icon={
@@ -268,7 +268,7 @@ const OneDollarPopup = () => {
 							className="sixth-sub-title"
 							style={{ fontWeight: "500" }}
 						>
-							*After 1,000 resolutions $0,08 per contact, charge on last day of
+							*After 500 resolutions $0,08 per contact, charge on last day of
 							month
 						</Typography>
 					</Card>

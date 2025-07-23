@@ -13,6 +13,7 @@ from sqlalchemy import (
     DECIMAL,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR, ARRAY, JSON
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
@@ -20,7 +21,7 @@ from .base import Base
 class Users(Base):
     __tablename__ = "users"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         BigInteger,
         Sequence("users_id_seq", metadata=Base.metadata),
         primary_key=True,

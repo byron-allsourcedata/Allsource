@@ -41,14 +41,14 @@ const GoHighLevelLanding = () => {
 				);
 
 				if (response.data.status == "SUCCESS") {
-					showToast("Connect to BingAds success!");
+					showToast("Connect to GoHighLevel success!");
 					router.push(`/integrations`);
 				} else if (response.data.status == "ERROR_BINGADS_TOKEN") {
-					showErrorToast("Error connect to BingAds");
+					showErrorToast("Error connect to GoHighLevel");
 					router.push(`/integrations`);
 				}
 			} catch (error) {
-				console.error("BingAds Landing:", error);
+				console.error("GoHighLevel Landing:", error);
 			}
 		};
 

@@ -1,7 +1,11 @@
+from collections.abc import Sequence
 from typing import Optional, List, Tuple, Callable
+from typing_extensions import override
 from uuid import UUID
 import json
 from datetime import datetime
+
+from sqlalchemy.orm.query import RowReturningQuery
 
 from db_dependencies import Clickhouse, Db
 from persistence.audience_smarts import AudienceSmartsPostgresPersistence
@@ -219,9 +223,10 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         # q = self.client.query(sql)
         # return int(q.result_rows[0][0]) if q.result_rows else 0
 
+    @override
     def sorted_enrichment_users_for_validation(
-        self, ids: List[UUID], order_by_clause: str
-    ):
+        self, ids: list[UUID], order_by_clause: str
+    ) -> list[UUID]:
         self.client.command("SET max_query_size = 104857600")
         ids_sql_list = ", ".join(f"'{i}'" for i in ids)
 
@@ -232,7 +237,7 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         ORDER BY {order_by_clause}
         """
         result = self.client.query(sql)
-        sorted_found = [row[0] for row in result.result_rows]
+        sorted_found: list[UUID] = [row[0] for row in result.result_rows]
 
         sorted_set = set(sorted_found)
         missing = [id_ for id_ in ids if id_ not in sorted_set]
@@ -438,13 +443,14 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
     def check_access_for_user(self, user: dict) -> bool:
         return self.postgres.check_access_for_user(user)
 
+    @override
     def get_include_exclude_query(
         self,
-        lookalike_include,
-        lookalike_exclude,
-        source_include,
-        source_exclude,
-    ):
+        lookalike_include: Sequence[UUID],
+        lookalike_exclude: Sequence[UUID],
+        source_include: Sequence[UUID],
+        source_exclude: Sequence[UUID],
+    ) -> RowReturningQuery[tuple[UUID]]:
         return self.postgres.get_include_exclude_query(
             lookalike_include, lookalike_exclude, source_include, source_exclude
         )

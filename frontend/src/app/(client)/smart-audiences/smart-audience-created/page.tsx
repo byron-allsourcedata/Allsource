@@ -32,6 +32,12 @@ import { getStatusStyle } from "../components/utils/getStatusStyle";
 import HintCard from "../../components/HintCard";
 import { useSmartsHints } from "../context/SmartsHintsContext";
 import { createdHintCards } from "../context/hintsCardsContent";
+import ValidationsHistoryPopup from "../components/SmartAudienceValidationHistory";
+import {
+	renderActiveSegmentProgress,
+	renderValidatedCountOrLink,
+	renderValidatedStatusIcon,
+} from "../components/RenderProgress";
 
 interface SmartAudienceSource {
 	id: string;
@@ -45,6 +51,7 @@ interface SmartAudienceSource {
 	processed_active_segment_records: number;
 	status: string;
 	integrations: string[] | null;
+	n_a: boolean;
 }
 
 const SourcesList: React.FC = () => {
@@ -62,6 +69,8 @@ const SourcesList: React.FC = () => {
 		createdSmartAudienceSource,
 	);
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+	const [validationHistoryPopupOpen, setValidationsHistoryPopupOpen] =
+		useState(false);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [anchorElFullName, setAnchorElFullName] =
 		React.useState<null | HTMLElement>(null);
@@ -72,6 +81,7 @@ const SourcesList: React.FC = () => {
 	const { smartAudienceProgress, validationProgress } = useSSE();
 	const progress = smartAudienceProgress[createdData?.id];
 	const progressValidation = validationProgress[createdData?.id];
+	const [selectedRowData, setSelectedRowData] = useState<SmartAudienceSource>();
 
 	const handleClosePopoverFullName = () => {
 		setAnchorElFullName(null);
@@ -168,6 +178,14 @@ const SourcesList: React.FC = () => {
 			sessionStorage.setItem("filtersBySmarts", JSON.stringify({}));
 		}
 		router.push("/smart-audiences");
+	};
+
+	const handleValidationsHistoryPopupOpen = () => {
+		setValidationsHistoryPopupOpen(true);
+	};
+
+	const handleValidationsHistoryPopupClose = () => {
+		setValidationsHistoryPopupOpen(false);
 	};
 
 	const preRenderStatus = (status: string) => {
@@ -342,27 +360,22 @@ const SourcesList: React.FC = () => {
 											Validations
 										</Typography>
 										<Typography variant="subtitle1" className="table-data">
-											{createdData.status === "unvalidated" ? (
-												<Image
-													src="/danger_yellow.svg"
-													alt="danger"
-													width={20}
-													height={20}
-												/>
-											) : createdData.status === "n_a" ? (
-												"N/A"
-											) : createdData.validated_records === 0 &&
-												createdData.status === "validating" &&
-												!progressValidation?.total ? (
-												<Box sx={{ display: "flex", justifyContent: "center" }}>
-													<ThreeDotsLoader />
-												</Box>
-											) : progressValidation?.total >
-												createdData.validated_records ? (
-												progressValidation?.total.toLocaleString("en-US")
-											) : (
-												createdData.validated_records.toLocaleString("en-US")
-											)}
+											{renderValidatedStatusIcon(
+												createdData.status,
+												createdData.n_a,
+												createdData.validated_records,
+												progressValidation?.total,
+											) ??
+												renderValidatedCountOrLink(
+													createdData.status,
+													createdData.n_a,
+													createdData.validated_records,
+													progressValidation?.total,
+													() => {
+														setSelectedRowData(createdData);
+														handleValidationsHistoryPopupOpen();
+													},
+												)}
 										</Typography>
 									</Box>
 
@@ -407,31 +420,10 @@ const SourcesList: React.FC = () => {
 										</Typography>
 
 										<Typography variant="subtitle1" className="table-data">
-											{(progress?.processed &&
-												progress?.processed ===
-													createdData?.active_segment_records) ||
-											(createdData?.processed_active_segment_records ===
-												createdData?.active_segment_records &&
-												createdData?.processed_active_segment_records !== 0) ? (
-												createdData.active_segment_records.toLocaleString(
-													"en-US",
-												)
-											) : createdData?.processed_active_segment_records >
-												progress?.processed ? (
-												<ProgressBar
-													progress={{
-														total: createdData?.active_segment_records,
-														processed:
-															createdData?.processed_active_segment_records,
-													}}
-												/>
-											) : (
-												<ProgressBar
-													progress={{
-														...progress,
-														total: createdData.active_segment_records,
-													}}
-												/>
+											{renderActiveSegmentProgress(
+												createdData.active_segment_records,
+												createdData.processed_active_segment_records,
+												progress?.processed,
 											)}
 										</Typography>
 									</Box>
@@ -776,6 +768,25 @@ const SourcesList: React.FC = () => {
 					</Box>
 				</Box>
 			</Box>
+			<ValidationsHistoryPopup
+				open={validationHistoryPopupOpen}
+				onClose={handleValidationsHistoryPopupClose}
+				id={selectedRowData?.id}
+				smartAudience={[
+					{
+						title: selectedRowData?.name,
+						value: selectedRowData?.created_at,
+					},
+					{
+						title: "Total Universe",
+						value: selectedRowData?.total_records,
+					},
+					{
+						title: "Active Segment",
+						value: selectedRowData?.active_segment_records,
+					},
+				]}
+			/>
 		</>
 	);
 };

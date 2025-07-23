@@ -13,6 +13,7 @@ from sqlalchemy import (
     Sequence,
     Integer,
 )
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
@@ -29,8 +30,10 @@ class UserDomains(Base):
     user_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    domain = Column(VARCHAR, nullable=False)
-    data_provider_id = Column(VARCHAR(64), nullable=True)
+    domain: Mapped[str] = mapped_column(VARCHAR, nullable=False)
+    data_provider_id: Mapped[str | None] = mapped_column(
+        VARCHAR(64), nullable=True
+    )
     is_pixel_installed = Column(
         Boolean, nullable=True, server_default=text("false")
     )

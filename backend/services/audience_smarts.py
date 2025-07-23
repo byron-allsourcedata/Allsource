@@ -1,4 +1,6 @@
+from collections.abc import Sequence
 import logging
+from sqlalchemy.orm.query import RowReturningQuery
 from typing import Optional, List, Dict
 import json
 import io
@@ -10,6 +12,7 @@ from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from schemas.audience import (
     SmartsAudienceObjectResponse,
+    SmartsCreateResponse,
     DataSourcesFormat,
     DataSourcesResponse,
     SmartsResponse,
@@ -92,6 +95,7 @@ class AudienceSmartsService:
                     "status": item[8],
                     "integrations": integrations,
                     "processed_active_segment_records": item[10],
+                    "n_a": item[11] == "{}",
                 }
             )
 
@@ -330,6 +334,7 @@ class AudienceSmartsService:
             processed_active_segment_records=created_data.processed_active_segment_records,
             status=created_data.status,
             integrations=None,
+            n_a=created_data.n_a,
         )
 
     def calculate_smart_audience(self, raw_data_sources: dict) -> int:
@@ -340,11 +345,11 @@ class AudienceSmartsService:
 
     def get_include_exclude_query(
         self,
-        lookalike_include,
-        lookalike_exclude,
-        source_include,
-        source_exclude,
-    ):
+        lookalike_include: Sequence[UUID],
+        lookalike_exclude: Sequence[UUID],
+        source_include: Sequence[UUID],
+        source_exclude: Sequence[UUID],
+    ) -> RowReturningQuery[tuple[UUID]]:
         return self.audience_smarts_persistence.get_include_exclude_query(
             lookalike_include, lookalike_exclude, source_include, source_exclude
         )
@@ -533,6 +538,7 @@ class AudienceSmartsService:
             active_segment_records,
             processed_active_segment_records,
             status,
+            validations,
         ) = smart_source
 
         return SmartsResponse(
@@ -547,6 +553,7 @@ class AudienceSmartsService:
             processed_active_segment_records=processed_active_segment_records,
             status=status,
             integrations=None,
+            n_a=validations == "{}",
         )
 
     def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID):

@@ -1,25 +1,25 @@
 import logging
+from typing_extensions import deprecated
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query
 import os
 
 from dependencies import (
+    SecretPixelKey,
     check_user_authorization_without_pixel,
     check_user_authentication,
     check_domain,
     UserDomainsService,
 )
-from enums import PixelStatus, BaseEnum
-from typing import Optional, List
+from enums import BaseEnum
 from models.users import User
 from schemas.pixel_installation import (
-    PixelInstallationRequest,
+    DataProvidersResponse,
     EmailFormRequest,
     ManualFormResponse,
     PixelInstallationResponse,
     DomainsListResponse,
 )
-from schemas.users import PixelFormResponse
 from schemas.domains import UpdateDomain
 from services.pixel_installation import PixelInstallationService
 
@@ -88,7 +88,7 @@ async def cms(
 
 @router.get(
     "/check-pixel-installation-status",
-    response_model=Optional[PixelInstallationResponse],
+    response_model=PixelInstallationResponse | None,
 )
 async def check_pixel_installation_status(
     pixel_installation_service: PixelInstallationService,
@@ -102,12 +102,18 @@ async def check_pixel_installation_status(
     )
 
 
+@deprecated("use /verified-data-providers instead")
 @router.get("/verified_domains", response_model=DomainsListResponse)
 def get_verify_domains(
-    domain_service: UserDomainsService,
-    secret_key: str = Query(..., description="The secret key to verify access"),
+    _secret_key: SecretPixelKey, domain_service: UserDomainsService
 ):
-    if secret_key != SECRET_PIXEL_KEY:
-        raise HTTPException(status_code=401, detail="Unauthorized")
     domain_list_name = domain_service.get_verify_domains()
     return DomainsListResponse(domains=domain_list_name)
+
+
+@router.get("/verified-data-providers", response_model=DataProvidersResponse)
+def get_verified_data_providers(
+    _secret_key: SecretPixelKey, domain_service: UserDomainsService
+):
+    data_providers_ids = domain_service.get_verified_data_providers()
+    return DataProvidersResponse(data_providers_ids=data_providers_ids)

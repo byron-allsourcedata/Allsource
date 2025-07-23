@@ -12,6 +12,7 @@ from sqlalchemy import (
     DECIMAL,
 )
 from sqlalchemy.dialects.postgresql import VARCHAR, JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
@@ -40,7 +41,7 @@ class SubscriptionPlan(Base):
     )
     domains_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
-    leads_credits = Column(BigInteger, nullable=True)
+    leads_credits: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     validation_funds = Column(DECIMAL(10, 2), nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)

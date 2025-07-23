@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from typing import Optional
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Query, status
 from jose import jwt, JWTError
 from slack_sdk.signature import SignatureVerifier
 from sqlalchemy.orm import Session
@@ -87,6 +87,24 @@ from services.webhook import WebhookService
 from db_dependencies import get_db
 
 logger = logging.getLogger(__name__)
+
+
+def check_service_secret_key(
+    secret_key: str = Query(..., description="The secret key to verify access"),
+) -> str:
+    secret_pixel_key = os.getenv("SECRET_PIXEL_KEY")
+    if secret_pixel_key is None or secret_key != secret_pixel_key:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    return secret_key
+
+
+SecretPixelKey = Annotated[str, Depends(check_service_secret_key)]
+"""
+    Used for authentication of pixel_checker service
+
+    Must be provided as a query parameter
+"""
 
 
 async def verify_signature(request: Request):

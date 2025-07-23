@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 import json
 import logging
 from datetime import datetime
@@ -5,6 +6,7 @@ from datetime import datetime
 import pytz
 from sqlalchemy import desc, asc, or_, union
 from sqlalchemy.orm import Session, aliased, load_only
+from sqlalchemy.orm.query import RowReturningQuery
 from sqlalchemy.sql import func
 from collections import defaultdict
 
@@ -38,6 +40,7 @@ from persistence.audience_smarts.interface import (
 )
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
+from typing_extensions import override
 from sqlalchemy.engine.row import Row
 from uuid import UUID
 from resolver import injectable
@@ -58,13 +61,14 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         )
         return use_case[0] if use_case else None
 
+    @override
     def get_include_exclude_query(
         self,
-        lookalike_include=(),
-        lookalike_exclude=(),
-        source_include=(),
-        source_exclude=(),
-    ):
+        lookalike_include: Sequence[UUID] = (),
+        lookalike_exclude: Sequence[UUID] = (),
+        source_include: Sequence[UUID] = (),
+        source_exclude: Sequence[UUID] = (),
+    ) -> RowReturningQuery[tuple[UUID]]:
         include_conditions = [
             (
                 AudienceLookalikesPerson,
@@ -213,7 +217,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
     #     return combined_ids
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
-        query = self.get_final_query(
+        query = self.get_include_exclude_query(
             lookalike_include=data["lookalike_ids"]["include"],
             lookalike_exclude=data["lookalike_ids"]["exclude"],
             source_include=data["source_ids"]["include"],
@@ -335,6 +339,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             use_case_id=new_audience.use_case_id,
             validations=json.loads(new_audience.validations),
             target_schema=new_audience.target_schema,
+            n_a=new_audience.validations == {},
         )
 
     def get_audience_smarts(
@@ -363,6 +368,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                 AudienceSmart.status,
                 AudienceSmartsUseCase.integrations,
                 AudienceSmart.processed_active_segment_records,
+                AudienceSmart.validations,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
@@ -603,6 +609,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                 AudienceSmart.active_segment_records,
                 AudienceSmart.processed_active_segment_records,
                 AudienceSmart.status,
+                AudienceSmart.validations,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
