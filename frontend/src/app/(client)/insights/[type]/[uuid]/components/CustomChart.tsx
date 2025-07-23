@@ -116,10 +116,9 @@ export const IconFillIndicator = ({
 
 				<Box
 					display="flex"
-					gap={3}
-					padding={2}
-					mb={1}
+					gap={1.5}
 					alignItems="center"
+					justifyContent="center"
 					sx={{ width: "100%" }}
 				>
 					{[...Array(totalIcons)].map((_, index) => {

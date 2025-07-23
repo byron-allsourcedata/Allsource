@@ -141,7 +141,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 						<IconFillIndicator
 							imageSrc="/pets.svg"
 							title="Pets"
-							totalIcons={3}
+							totalIcons={4}
 							iconSize={100}
 							percentage={percentage}
 							labels={["Yes", "No"]}
