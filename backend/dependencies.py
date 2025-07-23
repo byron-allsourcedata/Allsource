@@ -245,6 +245,12 @@ def check_user_authentication(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"status": "NOT_FOUND"},
         )
+
+    team_owner_id = user.get("team_owner_id")
+
+    if team_owner_id is not None:
+        user["id"] = team_owner_id
+
     if hasattr(user_data, "team_member_id") and user_data.team_member_id:
         team_memer = user_persistence_service.get_user_team_member_by_id(
             user_data.team_member_id
