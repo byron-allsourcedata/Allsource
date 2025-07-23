@@ -1,5 +1,7 @@
 import logging
 
+import config
+
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from contextlib import asynccontextmanager
@@ -70,7 +72,12 @@ async def read_item(
                 f"Domain name is not provided in 'Referer' or 'Origin' headers for data provider id '{pixel_client_id}'"
             )
 
-        js_content = """
+        popup_call = (
+            f"({{ success: true, message: '', domain_url: '{config.APP_BASE_URL}' }})"
+        )
+
+        js_content = (
+            """
         (function createPopup({ success, message, domain_url }) {
         const popup = document.createElement("div");
         popup.className = "popup";
@@ -121,10 +128,14 @@ async def read_item(
             cursor: "pointer"
         });
 
-        document.body.appendChild(popup);
+        document.addEventListener("DOMContentLoaded", () => {
+            document.body.appendChild(popup);
+        });
+        
     }
-    )({ success: true, message: "" })
-    """
+    )"""
+            + popup_call
+        )
 
         if found_in_cache:
             js_content = "let _ = 0;"
