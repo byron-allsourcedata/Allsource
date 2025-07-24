@@ -8,7 +8,9 @@ from typing import Optional, List
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from db_dependencies import Db
 from persistence.admin import AdminPersistence
+from resolver import injectable
 from schemas.users import UpdateUserRequest
 from enums import (
     UserAuthorizationStatus,
@@ -35,10 +37,12 @@ from persistence.partners_persistence import PartnersPersistence
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class AdminCustomersService:
     def __init__(
         self,
-        db: Session,
+        db: Db,
+        user_subscription_service: UserSubscriptionsService,
         subscription_service: SubscriptionService,
         user_persistence: UserPersistence,
         plans_persistence: PlansPersistence,
@@ -49,6 +53,7 @@ class AdminCustomersService:
         admin_persistence: AdminPersistence,
     ):
         self.db = db
+        self.user_subscription_service = user_subscription_service
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
         self.plans_persistence = plans_persistence

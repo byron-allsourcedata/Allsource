@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 import pytz
 
+from db_dependencies import Db
 from enums import SignUpStatus
 from models import AdminInvitation
 from models.five_x_five_users import FiveXFiveUser
@@ -15,9 +16,12 @@ from sqlalchemy import func, case, and_, or_, distinct, asc, desc
 from fastapi import HTTPException
 import re
 
+from resolver import injectable
 
+
+@injectable
 class AdminPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_domains_by_user(self, user_id: int, domain_substr: str = None):

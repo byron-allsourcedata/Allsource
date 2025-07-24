@@ -4,6 +4,7 @@ import hashlib
 import json
 from typing import Optional
 from models.partner import Partner
+from resolver import injectable
 from services.jwt_service import create_access_token
 from persistence.user_persistence import UserPersistence
 from services.referral import ReferralService
@@ -22,6 +23,7 @@ from types import SimpleNamespace
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class PartnersService:
     def __init__(
         self,
