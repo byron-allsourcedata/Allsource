@@ -413,3 +413,12 @@ class AdminCustomersService:
     def change_email_validation(self, user_id: int) -> bool:
         updated_row = self.user_persistence.change_email_validation(user_id)
         return updated_row > 0
+
+    def change_plan(self, user_id: int, plan_alias: str) -> bool:
+        change_plan = self.user_subscription_service.move_to_plan(
+            user_id=user_id, plan_alias=plan_alias
+        )
+        if change_plan:
+            self.db.commit()
+            return True
+        return False

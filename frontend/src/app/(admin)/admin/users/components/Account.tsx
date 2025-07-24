@@ -301,22 +301,20 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 
 	const changeUserPlan = async (planAlias: string) => {
 		try {
-			const response = await axiosInstance.post(
-				"/admin/change_plan",
-				{
-					user_id: userId,
-					plan_alias: planAlias,
-				},
-				{
-					headers: {
-						"Content-Type": "application/json",
-					},
-				},
-			);
-			showToast("Success update plan");
+			const response = await axiosInstance.post("/admin/change_plan", {
+				user_id: userId,
+				plan_alias: planAlias,
+			});
+
+			if (response.data?.success) {
+				showToast(response.data.message || "Successfully updated plan");
+			} else {
+				showErrorToast(response.data.message || "Failed to update plan");
+			}
+
 			return response.data;
 		} catch (error) {
-			showErrorToast("Error when try to update plan");
+			showErrorToast("Error while updating plan");
 			console.error("Error", error);
 		}
 	};

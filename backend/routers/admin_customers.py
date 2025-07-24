@@ -1,18 +1,16 @@
-from datetime import datetime, timezone
-
 from fastapi import APIRouter, Depends, Query, HTTPException
-from pydantic import BaseModel
-
-from db_dependencies import Db
-from schemas.admin import InviteDetailsRequest
+from schemas.admin import (
+    InviteDetailsRequest,
+    ChangePlanResponse,
+    ChangeRequestBody,
+)
 from services.admin_customers import AdminCustomersService
 from dependencies import check_user_admin
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from schemas.users import UpdateUserRequest, UpdateUserResponse
-from services.user_subscriptions import UserSubscriptionsService
+from schemas.users import UpdateUserRequest
 
 router = APIRouter()
 
@@ -137,24 +135,21 @@ def change_email_validation(
     )
 
 
-class ChangeRequestBody(BaseModel):
-    user_id: int
-    plan_alias: str
-
-
-@router.post("/change_plan")
+@router.post("/change_plan", response_model=ChangePlanResponse)
 def change_email_validation(
-    user_subscription_service: UserSubscriptionsService,
-    req: ChangeRequestBody,
-    db: Db,
+    request: ChangeRequestBody,
     admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
 ):
-    user_subscription_service.move_to_plan(
-        user_id=req.user_id, plan_alias=req.plan_alias
+    success = admin_customers_service.change_plan(
+        user_id=request.user_id, plan_alias=request.plan_alias
     )
 
-    db.commit()
+    if success:
+        return ChangePlanResponse(
+            success=True, message="Plan updated successfully"
+        )
+    return ChangePlanResponse(success=False, message="Plan update failed")
 
 
 @router.put("/user")
