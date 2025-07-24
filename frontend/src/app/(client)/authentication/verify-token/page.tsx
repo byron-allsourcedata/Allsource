@@ -37,7 +37,7 @@ const VerifyToken = () => {
 			axiosInstance
 				.get("/has-current-subscription")
 				.then((response) => {
-					if (response.status === 200 && response.data === "ok") {
+					if (response.status === 200 && response.data.status === "ok") {
 						resolve();
 						flagStore.set(false);
 					} else {

@@ -245,6 +245,6 @@ async def get_started_info(
 def has_current_subsciption(
     user=Depends(check_user_authentication),
 ):
-    if user.get("current_subscription_id"):
+    if user.get("current_subscription_id") is not None:
         return {"status": "ok"}
     return {"status": "error"}

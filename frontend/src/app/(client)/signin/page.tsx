@@ -115,9 +115,7 @@ const Signin: React.FC = () => {
 						});
 					}
 				})
-				.catch(() => {
-					flagStore.set(true);
-				});
+				.catch(() => {});
 		});
 	};
 
@@ -126,7 +124,7 @@ const Signin: React.FC = () => {
 			axiosInterceptorInstance
 				.get("/has-current-subscription")
 				.then((response) => {
-					if (response.status === 200 && response.data === "ok") {
+					if (response.status === 200 && response.data.status === "ok") {
 						resolve();
 						flagStore.set(false);
 					} else {
