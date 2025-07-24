@@ -3,10 +3,12 @@ from collections import defaultdict
 from typing import Optional
 from collections import OrderedDict
 from persistence.audience_dashboard import DashboardAudiencePersistence
+from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class DashboardAudienceService:
     def __init__(
         self, dashboard_audience_persistence: DashboardAudiencePersistence

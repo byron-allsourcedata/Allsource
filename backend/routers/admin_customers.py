@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from db_dependencies import Db
 from schemas.admin import InviteDetailsRequest
 from services.admin_customers import AdminCustomersService
-from dependencies import get_admin_customers_service, check_user_admin
+from dependencies import check_user_admin
 from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
@@ -19,9 +19,7 @@ router = APIRouter()
 
 @router.get("/confirm_customer")
 async def verify_token(
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
+    admin_customers_service: AdminCustomersService,
     mail: str = Query(...),
     free_trial: bool = Query(...),
     user: dict = Depends(check_user_admin),
@@ -46,6 +44,7 @@ async def verify_token(
 
 @router.get("/users")
 async def get_users(
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
     sort_by: str = Query(None, description="Field"),
     sort_order: str = Query(
@@ -70,9 +69,6 @@ async def get_users(
     ),
     exclude_test_users: bool = Query(False),
     statuses: str = Query(None),
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
 ):
     users = admin_customers_service.get_customer_users(
         search_query=search_query,
@@ -92,6 +88,7 @@ async def get_users(
 
 @router.get("/admins")
 async def get_admins(
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
     sort_by: str = Query(None, description="Field"),
     sort_order: str = Query(
@@ -114,9 +111,6 @@ async def get_admins(
         None, description="Start date in integer format"
     ),
     join_date_end: int = Query(None, description="End date in integer format"),
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
 ):
     users = admin_customers_service.get_admin_users(
         search_query=search_query,
@@ -134,11 +128,9 @@ async def get_admins(
 
 @router.put("/change-email-validation", response_model=bool)
 def change_email_validation(
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
     user_id: int = Query(None),
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
 ):
     return admin_customers_service.change_email_validation(
         user_id=user_id,
@@ -155,10 +147,8 @@ def change_email_validation(
     user_subscription_service: UserSubscriptionsService,
     req: ChangeRequestBody,
     db: Db,
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
 ):
     user_subscription_service.move_to_plan(
         user_id=req.user_id, plan_alias=req.plan_alias
@@ -170,9 +160,7 @@ def change_email_validation(
 @router.put("/user")
 def update_user(
     update_data: UpdateUserRequest,
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
 ):
     return admin_customers_service.update_user(update_data)
@@ -180,6 +168,7 @@ def update_user(
 
 @router.get("/audience-metrics")
 async def get_audience_metrics(
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
     last_login_date_start: int = Query(
         None, description="Start date in integer format"
@@ -196,9 +185,6 @@ async def get_audience_metrics(
     exclude_test_users: bool = Query(False),
     statuses: str = Query(None),
     join_date_end: int = Query(None, description="End date in integer format"),
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
 ):
     users = admin_customers_service.get_audience_metrics(
         last_login_date_start=last_login_date_start,
@@ -215,9 +201,7 @@ async def get_audience_metrics(
 @router.get("/generate-token")
 async def generate_token(
     user_account_id: int,
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
 ):
     token = admin_customers_service.generate_access_token(
@@ -231,9 +215,7 @@ async def generate_token(
 @router.post("/invite-user")
 async def invite_user(
     invite_details: InviteDetailsRequest,
-    admin_customers_service: AdminCustomersService = Depends(
-        get_admin_customers_service
-    ),
+    admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
 ):
     return admin_customers_service.invite_user(

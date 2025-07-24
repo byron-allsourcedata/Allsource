@@ -8,6 +8,8 @@ import random
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
+
+from db_dependencies import Db
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
 from persistence.admin import AdminPersistence
@@ -28,6 +30,7 @@ from enums import (
 )
 from models.account_notification import AccountNotification
 from models.users import Users
+from resolver import injectable
 from schemas.integrations.integrations import IntegrationCredentials
 from models.users_account_notification import UserAccountNotification
 from persistence.plans_persistence import PlansPersistence
@@ -71,10 +74,11 @@ EMAIL_NOTIFICATIONS = "email_notifications"
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class UsersAuth:
     def __init__(
         self,
-        db: Session,
+        db: Db,
         payments_service: PaymentsPlans,
         user_persistence_service: UserPersistence,
         send_grid_persistence_service: SendgridPersistence,

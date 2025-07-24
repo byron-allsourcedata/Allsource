@@ -12,6 +12,8 @@ from sqlalchemy.sql import (
     literal,
 )
 from sqlalchemy.orm import aliased
+
+from db_dependencies import Db
 from enums import AudienceSmartStatuses, UserStatusInAdmin, DataSyncType
 from models import Users
 from models.audience_lookalikes import AudienceLookalikes
@@ -28,10 +30,13 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.leads_users import LeadUser
 from typing import Optional, List, Dict
 
+from resolver import injectable
 
+
+@injectable
 class DashboardAudiencePersistence:
-    def __init__(self, db_session):
-        self.db = db_session
+    def __init__(self, db: Db):
+        self.db = db
 
     def get_sources_overview(
         self, user_id
