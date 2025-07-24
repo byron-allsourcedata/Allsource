@@ -442,8 +442,6 @@ def check_user_authorization(
         user_id=user.get("id")
     )
 
-    print(auth_status)
-
     if auth_status == UserAuthorizationStatus.NEED_CONFIRM_EMAIL:
         raise_forbidden(
             {

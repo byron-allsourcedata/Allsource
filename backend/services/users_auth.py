@@ -123,7 +123,7 @@ class UsersAuth:
                 return UserAuthorizationStatus.PAYMENT_NEEDED
             if subscription_plan_is_inactive_on_basic:
                 return UserAuthorizationStatus.PAYMENT_FAILED
-            if user.get("current_subscription_id") in None:
+            if user.get("current_subscription_id") is None:
                 return UserAuthorizationStatus.NEED_PAY_BASIC
             return UserAuthorizationStatus.SUCCESS
         if user.get("is_email_confirmed"):
@@ -145,7 +145,7 @@ class UsersAuth:
                 )
                 if subscription_plan_is_inactive_on_basic:
                     return UserAuthorizationStatus.PAYMENT_FAILED
-                if user.get("current_subscription_id") in None:
+                if user.get("current_subscription_id") is None:
                     return UserAuthorizationStatus.NEED_PAY_BASIC
                 return UserAuthorizationStatus.SUCCESS
             return UserAuthorizationStatus.NEED_BOOK_CALL
