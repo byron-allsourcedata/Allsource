@@ -43,7 +43,6 @@ import {
 } from "@/icon";
 import { Paginator } from "@/components/PaginationComponent";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
-import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import CustomSwitch from "@/components/ui/CustomSwitch";
 import { UserData } from "../page";
 import { ArrowRightIcon } from "@mui/x-date-pickers";
@@ -93,8 +92,9 @@ const TableHeader: React.FC<{
 								width: "100px",
 								maxWidth: "200px",
 								minWidth: "100px",
+								position: "sticky",
 								left: 0,
-								zIndex: 1,
+								zIndex: 2,
 							}),
 							...(key === "status" && {
 								width: "180px",
@@ -107,6 +107,7 @@ const TableHeader: React.FC<{
 								width: "200px",
 								maxWidth: "200px",
 								minWidth: "150px",
+								zIndex: 1,
 							}),
 							// ...(key === "actions" && {
 							// 	width: "100px",
@@ -592,7 +593,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							position: "sticky",
 							justifyContent: "left",
 							left: 0,
-							zIndex: 1,
+							zIndex: 20,
 							cursor:
 								isCurrentUser || row.type !== "user" ? "default" : "pointer",
 							"& .icon-button": {
@@ -957,7 +958,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	};
 
 	const tableContainerRef = useRef<HTMLDivElement>(null);
-	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 131);
 	const paginationProps = {
 		countRows: totalCount ?? 0,
 		page,
@@ -993,6 +993,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 								border: "1px solid rgba(235, 235, 235, 1)",
 								borderBottom: "none",
 								overflowX: "auto",
+								maxHeight: "50vh",
 							}}
 						>
 							<Table stickyHeader>
@@ -1011,10 +1012,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 								/>
 							</Table>
 						</TableContainer>
-						<Box
-							ref={paginatorRef}
-							sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
-						>
+						<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
 							<Paginator tableMode {...paginationProps} />
 						</Box>
 					</Grid>

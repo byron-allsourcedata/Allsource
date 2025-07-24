@@ -980,9 +980,9 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 						>
 							<Typography className="second-sub-title">How it works</Typography>
 							<Image
-								src={"/how-works.svg"}
-								width={659}
-								height={140}
+								src={"/partner-how-it-work.svg"}
+								width={641}
+								height={150}
 								alt="stripe-icon"
 							/>
 						</Box>
