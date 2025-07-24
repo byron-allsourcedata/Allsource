@@ -9,7 +9,6 @@ from schemas.partners import (
     OpportunityStatus,
 )
 from dependencies import (
-    get_partners_service,
     get_payouts_service,
     check_user_admin,
     PartnersService,
@@ -21,13 +20,14 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 @router.get("")
 @router.get("/")
 def get_partners(
+    get_partners_service: PartnersService,
     isMaster: Optional[bool] = Query(False),
     search: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
     rows_per_page: int = Query(10),
-    get_partners_service: PartnersService = Depends(get_partners_service),
+    exclude_test_users: bool = Query(False),
 ):
     result = get_partners_service.get_partners(
         isMaster, search, start_date, end_date, page, rows_per_page
@@ -39,13 +39,13 @@ def get_partners(
 @router.get("{id}")
 @router.get("/{id}/")
 def get_partners_by_partner_id(
+    get_partners_service: PartnersService,
     id: int,
     search: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
     rows_per_page: int = Query(10),
-    get_partners_service: PartnersService = Depends(get_partners_service),
 ):
     partner = get_partners_service.partners_by_partner_id(
         id, search, start_date, end_date, page, rows_per_page
@@ -58,7 +58,7 @@ def get_partners_by_partner_id(
 @router.post("/")
 async def create_partner(
     new_partner: PartnerCreateRequest,
-    get_partners_service: PartnersService = Depends(get_partners_service),
+    get_partners_service: PartnersService,
 ):
     result = await get_partners_service.create_partner(new_partner)
 
@@ -68,9 +68,9 @@ async def create_partner(
 @router.delete("/{id}")
 @router.delete("/{id}/")
 async def delete_partner(
+    get_partners_service: PartnersService,
     id: int,
     message: str = Query(...),
-    get_partners_service: PartnersService = Depends(get_partners_service),
 ):
     result = get_partners_service.delete_partner(id, message)
 
@@ -82,7 +82,7 @@ async def delete_partner(
 async def update_opportunity_partner(
     partner_id: int,
     payload: OpportunityStatus,
-    get_partners_service: PartnersService = Depends(get_partners_service),
+    get_partners_service: PartnersService,
 ):
     result = await get_partners_service.update_opportunity_partner(
         partner_id, payload
@@ -96,7 +96,7 @@ async def update_opportunity_partner(
 async def update_partner(
     partner_id: int,
     partnerNewData: PartnerUpdateRequest,
-    get_partners_service: PartnersService = Depends(get_partners_service),
+    get_partners_service: PartnersService,
 ):
     result = await get_partners_service.update_partner(
         partner_id, partnerNewData

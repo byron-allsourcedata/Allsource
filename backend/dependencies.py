@@ -136,10 +136,6 @@ def get_partners_asset_persistence(
     return PartnersAssetPersistence(db)
 
 
-def get_admin_persistence(db: Session = Depends(get_db)):
-    return AdminPersistence(db=db)
-
-
 def get_million_verifier_persistence(db: Session = Depends(get_db)):
     return MillionVerifierPersistence(db=db)
 
@@ -166,10 +162,6 @@ def get_suppression_persistence(
 
 def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
-
-
-def get_dashboard_audience_persistence(db: Session = Depends(get_db)):
-    return DashboardAudiencePersistence(db)
 
 
 def get_audience_insights_persistence(db: Session = Depends(get_db)):
@@ -344,64 +336,6 @@ def get_partners_service(
     )
 
 
-def get_users_auth_service(
-    crm: CrmService,
-    user_persistence_service: UserPersistence,
-    user_names: UserNamesService,
-    plans_persistence: PlansPersistence,
-    integration_service: IntegrationService,
-    subscription_service: SubscriptionService,
-    domain_persistence: UserDomainsPersistence,
-    payments_plans: PaymentsPlans,
-    send_grid_persistence_service: SendgridPersistence,
-    referral_persistence_service: ReferralDiscountCodesPersistence,
-    db: Session = Depends(get_db),
-    partners_service: PartnersService = Depends(get_partners_service),
-    admin_persistence: AdminPersistence = Depends(get_admin_persistence),
-):
-    return UsersAuth(
-        db=db,
-        payments_service=payments_plans,
-        user_persistence_service=user_persistence_service,
-        send_grid_persistence_service=send_grid_persistence_service,
-        subscription_service=subscription_service,
-        plans_persistence=plans_persistence,
-        integration_service=integration_service,
-        partners_service=partners_service,
-        admin_persistence=admin_persistence,
-        domain_persistence=domain_persistence,
-        referral_persistence_service=referral_persistence_service,
-        crm=crm,
-        user_names=user_names,
-    )
-
-
-def get_admin_customers_service(
-    user_persistence: UserPersistence,
-    plans_presistence: PlansPersistence,
-    subscription_service: SubscriptionService,
-    partners_persistence: PartnersPersistence,
-    send_grid_persistence: SendgridPersistence,
-    db: Session = Depends(get_db),
-    users_auth_service: UsersAuth = Depends(get_users_auth_service),
-    dashboard_audience_persistence: DashboardAudiencePersistence = Depends(
-        get_dashboard_audience_persistence
-    ),
-    admin_persistence: AdminPersistence = Depends(get_admin_persistence),
-):
-    return AdminCustomersService(
-        db=db,
-        subscription_service=subscription_service,
-        user_persistence=user_persistence,
-        plans_persistence=plans_presistence,
-        send_grid_persistence=send_grid_persistence,
-        users_auth_service=users_auth_service,
-        partners_persistence=partners_persistence,
-        dashboard_audience_persistence=dashboard_audience_persistence,
-        admin_persistence=admin_persistence,
-    )
-
-
 def get_user_authorization_status(user, users_auth_service: UsersAuth):
     status = users_auth_service.get_user_authorization_status_without_pixel(
         user
@@ -433,7 +367,7 @@ def check_user_authorization(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,
     privacy_policy_service: PrivacyPolicyService,
-    users_auth_service: UsersAuth = Depends(get_users_auth_service),
+    users_auth_service: UsersAuth,
 ) -> Token:
     is_admin = is_user_admin(Authorization, user_persistence_service)
     user = check_user_authentication(Authorization, user_persistence_service)
@@ -483,7 +417,7 @@ def check_user_authorization_without_pixel(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,
     privacy_policy_service: PrivacyPolicyService,
-    users_auth_service: UsersAuth = Depends(get_users_auth_service),
+    users_auth_service: UsersAuth,
 ) -> Token:
     is_admin = is_user_admin(Authorization, user_persistence_service)
     user = check_user_authentication(Authorization, user_persistence_service)
@@ -560,7 +494,7 @@ def check_user_setting_access(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,
     privacy_policy_service: PrivacyPolicyService,
-    users_auth_service: UsersAuth = Depends(get_users_auth_service),
+    users_auth_service: UsersAuth,
 ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
@@ -714,16 +648,6 @@ def get_dashboard_service(
         domain=domain,
         user_persistence=user_persistence,
         leads_persistence_service=leads_persistence_service,
-    )
-
-
-def get_audience_dashboard_service(
-    dashboard_audience_persistence: DashboardAudiencePersistence = Depends(
-        get_dashboard_audience_persistence
-    ),
-):
-    return DashboardAudienceService(
-        dashboard_audience_persistence=dashboard_audience_persistence
     )
 
 
@@ -888,7 +812,7 @@ def is_user_admin(
     if not user:
         return False
 
-    return "admin" in user["role"]
+    return "admin" in (user.get("role") or "")
 
 
 def check_api_key(
