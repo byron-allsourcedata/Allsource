@@ -169,14 +169,14 @@ class AudienceColumnSelectorBase:
             "outdoor_enthusiast": EnrichmentLifestyle.outdoor_enthusiast.label(
                 "outdoor_enthusiast"
             ),
-            "tech_enthusiast": EnrichmentLifestyle.tech_enthusiast.label(
-                "tech_enthusiast"
-            ),
+            # "tech_enthusiast": EnrichmentLifestyle.tech_enthusiast.label(
+            #     "tech_enthusiast"
+            # ),
             "diy": EnrichmentLifestyle.diy.label("diy"),
             "gardening": EnrichmentLifestyle.gardening.label("gardening"),
-            "automotive_buff": EnrichmentLifestyle.automotive_buff.label(
-                "automotive_buff"
-            ),
+            # "automotive_buff": EnrichmentLifestyle.automotive_buff.label(
+            #     "automotive_buff"
+            # ),
             "golf_enthusiast": EnrichmentLifestyle.golf_enthusiasts.label(
                 "golf_enthusiasts"
             ),

@@ -44,6 +44,7 @@ class UserDict(TypedDict):
 
     id: int
     random_seed: int
+    team_owner_id: int | None
 
 
 @injectable
