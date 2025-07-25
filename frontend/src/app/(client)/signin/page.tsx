@@ -103,12 +103,12 @@ const Signin: React.FC = () => {
 			axiosInterceptorInstance
 				.get("/privacy-policy/has-accept-privacy-policy")
 				.then((response) => {
-					if (response.status === 200 && response.data === "ok") {
+					if (response.status === 200 && response.data.status === "ok") {
 						resolve();
 					} else {
-						return new Promise<void>((resolveAcept) => {
+						return new Promise<void>((resolveAccept) => {
 							setPrivacyPolicyPromiseResolver(() => {
-								resolveAcept();
+								resolveAccept();
 								resolve();
 							});
 							router.push("/privacy-policy");
