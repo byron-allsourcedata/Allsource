@@ -8,6 +8,8 @@ import random
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
+
+from db_dependencies import Db
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
 from persistence.admin import AdminPersistence
@@ -28,6 +30,7 @@ from enums import (
 )
 from models.account_notification import AccountNotification
 from models.users import Users
+from resolver import injectable
 from schemas.integrations.integrations import IntegrationCredentials
 from models.users_account_notification import UserAccountNotification
 from persistence.plans_persistence import PlansPersistence
@@ -71,10 +74,11 @@ EMAIL_NOTIFICATIONS = "email_notifications"
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class UsersAuth:
     def __init__(
         self,
-        db: Session,
+        db: Db,
         payments_service: PaymentsPlans,
         user_persistence_service: UserPersistence,
         send_grid_persistence_service: SendgridPersistence,
@@ -123,7 +127,10 @@ class UsersAuth:
                 return UserAuthorizationStatus.PAYMENT_NEEDED
             if subscription_plan_is_inactive_on_basic:
                 return UserAuthorizationStatus.PAYMENT_FAILED
-            return UserAuthorizationStatus.NEED_PAY_BASIC
+            if user.get("current_subscription_id") is None:
+                return UserAuthorizationStatus.NEED_PAY_BASIC
+            return UserAuthorizationStatus.SUCCESS
+
         if user.get("is_email_confirmed"):
             if user.get("is_book_call_passed"):
                 if user.get("stripe_payment_url"):
@@ -143,7 +150,10 @@ class UsersAuth:
                 )
                 if subscription_plan_is_inactive_on_basic:
                     return UserAuthorizationStatus.PAYMENT_FAILED
-                return UserAuthorizationStatus.NEED_PAY_BASIC
+                if user.get("current_subscription_id") is None:
+                    return UserAuthorizationStatus.NEED_PAY_BASIC
+                return UserAuthorizationStatus.SUCCESS
+
             return UserAuthorizationStatus.NEED_BOOK_CALL
         return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
 

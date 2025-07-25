@@ -145,16 +145,15 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             fields = ["asid"] + fields
 
         cols = ", ".join(fields)
-        in_list = ", ".join(f"'{i}'" for i in ids)
 
         sql = f"""
             SELECT {cols}
             FROM enrichment_users
-            WHERE asid IN ({in_list})
+            WHERE asid IN %(asids)s
             LIMIT {sent_contacts}
         """
 
-        q = self.client.query(sql)
+        q = self.client.query(sql, parameters={"asids": ids})
         norm_rows = [self.squash_sequences(row) for row in q.result_rows]
         col_names = q.column_names
 
@@ -189,14 +188,13 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
             return []
 
         cols = ", ".join(enrichment_field_names)
-        in_list = ", ".join(f"'{i}'" for i in ids)
+
         sql = f"""
-            SELECT
-              {cols}
+            SELECT {cols}
             FROM enrichment_users
-            WHERE asid IN ({in_list})
+            WHERE asid IN %(asids)s
         """
-        q = self.client.query(sql)
+        q = self.client.query(sql, parameters={"asids": ids})
         norm_rows = [self.squash_sequences(row) for row in q.result_rows]
         col_names = q.column_names
 
@@ -228,15 +226,19 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         self, ids: list[UUID], order_by_clause: str
     ) -> list[UUID]:
         self.client.command("SET max_query_size = 104857600")
-        ids_sql_list = ", ".join(f"'{i}'" for i in ids)
 
         sql = f"""
         SELECT asid
         FROM enrichment_users
-        WHERE asid IN ({ids_sql_list})
+        WHERE asid IN %(ids)s
         ORDER BY {order_by_clause}
         """
-        result = self.client.query(sql)
+
+        result = self.client.query(
+            sql,
+            parameters={"ids": ids},
+        )
+
         sorted_found: list[UUID] = [row[0] for row in result.result_rows]
 
         sorted_set = set(sorted_found)
@@ -260,16 +262,14 @@ class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
         ids.sort(key=lambda e: e["id"])
         asid_to_id_map = {entry["asid"]: entry["id"] for entry in ids}
         asids = list(asid_to_id_map.keys())
-        in_list = ", ".join(f"'{asid}'" for asid in asids)
 
         sql = f"""
-        SELECT 
-            {", ".join(select_columns)}
+        SELECT {", ".join(select_columns)}
         FROM enrichment_users
-        WHERE asid IN ({in_list})
+        WHERE asid IN %(asids)s
         """
 
-        rows = self.client.query(sql)
+        rows = self.client.query(sql, parameters={"asids": asids})
         result_rows = [dict(zip(column_names, row)) for row in rows.result_rows]
         found_by_asid = {row["asid"]: row for row in result_rows}
 

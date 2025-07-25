@@ -12,7 +12,6 @@ from dependencies import (
     check_user_partner,
     get_payouts_service,
     get_accounts_service,
-    get_partners_service,
     PartnersAssetService,
     AccountsService,
     PartnersService,
@@ -114,8 +113,8 @@ def get_partner_accounts(
 @router.get("/")
 @router.get("")
 def get_masterpartner_data(
+    get_partners_service: PartnersService,
     user: dict = Depends(check_user_partner),
-    get_partners_service: PartnersService = Depends(get_partners_service),
 ):
     response = get_partners_service.get_partner(user.get("email"))
 
@@ -126,7 +125,7 @@ def get_masterpartner_data(
 @router.post("")
 async def create_partner(
     new_partner: PartnerCreateRequest,
-    get_partners_service: PartnersService = Depends(get_partners_service),
+    get_partners_service: PartnersService,
 ):
     result = await get_partners_service.create_partner(new_partner)
 
@@ -138,7 +137,7 @@ async def create_partner(
 async def update_opportunity_partner(
     partner_id: int,
     payload: OpportunityStatus,
-    get_partners_service: PartnersService = Depends(get_partners_service),
+    get_partners_service: PartnersService,
 ):
     result = await get_partners_service.update_opportunity_partner(
         partner_id, payload
@@ -152,7 +151,7 @@ async def update_opportunity_partner(
 async def update_partner(
     partner_id: int,
     partnerNewData: PartnerUpdateRequest,
-    get_partners_service: PartnersService = Depends(get_partners_service),
+    get_partners_service: PartnersService,
 ):
     result = await get_partners_service.update_partner(
         partner_id, partnerNewData
@@ -164,12 +163,12 @@ async def update_partner(
 @router.get("/partners")
 @router.get("/partners/")
 def get_masterpartner_partners(
+    get_partners_service: PartnersService,
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
     page: int = Query(0),
     rows_per_page: int = Query(10),
     user: dict = Depends(check_user_partner),
-    get_partners_service: PartnersService = Depends(get_partners_service),
 ):
     response = get_partners_service.get_partner_partners(
         user.get("email"), start_date, end_date, page, rows_per_page
@@ -181,7 +180,7 @@ def get_masterpartner_partners(
 @router.get("/generate-token")
 async def generate_token(
     user_account_id: int,
-    partners_service: PartnersService = Depends(get_partners_service),
+    partners_service: PartnersService,
     user: dict = Depends(check_user_partner),
 ):
     token = partners_service.generate_access_token(

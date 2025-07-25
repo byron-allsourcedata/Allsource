@@ -351,6 +351,33 @@ body {
 	color: rgba(140, 139, 139, 1);
 }
 
+.modal-heading {
+	font-family: var(--font-nunito);
+	font-size: 16px;
+	font-weight: 500;
+	line-height: 140%;
+	letter-spacing: 0%;
+	color: rgba(32, 33, 36, 1);
+}
+
+.modal-text {
+	font-family: var(--font-nunito);
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 140%;
+	letter-spacing: 0%;
+	color: rgba(32, 33, 36, 1);
+}
+
+.modal-text-semibold {
+	font-family: var(--font-nunito);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 140%;
+	letter-spacing: 0%;
+	color: rgba(32, 33, 36, 1);
+}
+
 .management-table-header {
 	font-family: var(--font-roboto);
 	font-size: 14px;

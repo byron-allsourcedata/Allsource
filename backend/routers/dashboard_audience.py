@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Path
 from datetime import datetime, timezone
 from dependencies import (
-    get_audience_dashboard_service,
     check_user_authorization_without_pixel,
 )
 from services.audience_dashboard import DashboardAudienceService
@@ -11,16 +10,15 @@ router = APIRouter()
 
 @router.get("/get-sources")
 async def get_all_sources(
+    dashboard_service: DashboardAudienceService,
     user: dict = Depends(check_user_authorization_without_pixel),
-    dashboard_service: DashboardAudienceService = Depends(
-        get_audience_dashboard_service
-    ),
 ):
     return dashboard_service.get_sources_overview(user=user)
 
 
 @router.get("")
 def get_contact(
+    dashboard_service: DashboardAudienceService,
     from_date: int = Query(
         int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()),
         description="Start date in integer format",
@@ -39,9 +37,6 @@ def get_contact(
         ),
         description="End date in integer format",
     ),
-    dashboard_service: DashboardAudienceService = Depends(
-        get_audience_dashboard_service
-    ),
     user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_audience_dashboard_data(
@@ -51,12 +46,10 @@ def get_contact(
 
 @router.get("/pixel-contacts/{domain_id}")
 def get_contacts_for_pixel_contacts_by_domain_id(
+    dashboard_service: DashboardAudienceService,
     domain_id: int = Path(..., description="Domain_id in integer format"),
     from_date: int = Query(None, description="Start date in integer format"),
     to_date: int = Query(None, description="End date in integer format"),
-    dashboard_service: DashboardAudienceService = Depends(
-        get_audience_dashboard_service
-    ),
     user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_contacts_for_pixel_contacts_by_domain_id(
@@ -66,9 +59,7 @@ def get_contacts_for_pixel_contacts_by_domain_id(
 
 @router.get("/events")
 def get_events(
-    dashboard_service: DashboardAudienceService = Depends(
-        get_audience_dashboard_service
-    ),
+    dashboard_service: DashboardAudienceService,
     user=Depends(check_user_authorization_without_pixel),
 ):
     return dashboard_service.get_events(user=user)

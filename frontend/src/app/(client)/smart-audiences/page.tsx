@@ -132,6 +132,11 @@ const getStatusStyle = (status: string) => {
 				background: "rgba(234, 248, 221, 1)",
 				color: "rgba(43, 91, 0, 1)",
 			};
+		case "Failed":
+			return {
+				background: "rgba(253, 221, 218, 1)",
+				color: "rgba(200, 62, 46, 1)",
+			};
 		case "Unvalidated":
 			return {
 				background: "rgba(236, 236, 236, 1)",

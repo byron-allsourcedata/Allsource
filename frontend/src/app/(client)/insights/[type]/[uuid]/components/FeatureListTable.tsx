@@ -31,6 +31,14 @@ const formatKey = (k: string) =>
 		.trim()
 		.replace(/^./, (c) => c.toUpperCase());
 
+function filterFeatures<T extends FeatureObject>(features: T) {
+	const hiddenFeatures = ["automotive_buff", "tech_enthusiast"];
+	const tuples = Object.entries(features).filter(
+		([name, value]) => value > 0 && !hiddenFeatures.includes(name),
+	);
+	return Object.fromEntries(tuples);
+}
+
 function FeatureListTable<T extends FeatureObject>({
 	features,
 	title,
@@ -42,12 +50,17 @@ function FeatureListTable<T extends FeatureObject>({
 	const [openModalBadSource, setOpenModalBadSource] = useState(true);
 	const { handleTabChange } = useNavigateContext();
 
+	const filteredFeatures = useMemo(
+		() => filterFeatures(features ?? {}),
+		[features],
+	);
+
 	const allPairs = useMemo(() => {
-		const safeFeatures = features ?? {};
+		const safeFeatures = filteredFeatures ?? {};
 		return Object.entries(safeFeatures)
 			.map(([k, v]) => [k as keyof T, v] as [keyof T, number])
 			.sort((a, b) => b[1] - a[1]);
-	}, [features]);
+	}, [filteredFeatures]);
 
 	const visiblePairs = showAll ? allPairs : allPairs.slice(0, 5);
 

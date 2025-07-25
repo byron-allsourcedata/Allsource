@@ -98,6 +98,17 @@ class Resolver:
         self.deps_cache[dependency_func] = result
         return result
 
+    def inject(
+        self, dependency_annotation: Type[T] | Annotated[T, Any], value: T
+    ):
+        try:
+            fastapi_dep = dependency_annotation.__metadata__[0]
+        except Exception as e:
+            logger.error(e)
+            raise NotAnnotated(dependency_annotation)
+
+        self.deps_cache[fastapi_dep.dependency] = value
+
     async def cleanup(self) -> None:
         for gen, is_async in reversed(self._cleanup_stack):
             if is_async:

@@ -11,6 +11,7 @@ from sqlalchemy import or_
 from bs4 import BeautifulSoup
 import requests
 
+from config.domains import Domains
 from enums import BaseEnum, SendgridTemplate, PixelStatus, DomainStatus
 from models.users import Users
 from models.users_domains import UserDomains
@@ -64,8 +65,9 @@ class PixelInstallationService:
     def get_manual(self, user: dict, domain: UserDomains):
         client_id = self._get_or_create_client_id(user, domain)
 
+        pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
         script = (
-            f'<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>'
+            f'<script src="https://{pixel_script_domain}/pixel.js?dpid={client_id}"></script>'
             "\n"
             '<script type="text/javascript">'
             "\n"

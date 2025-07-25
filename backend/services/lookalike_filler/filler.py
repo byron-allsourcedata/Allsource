@@ -32,7 +32,6 @@ from services.similar_audiences.column_selector import AudienceColumnSelector
 from services.similar_audiences.similar_audience_scores import (
     PersonScore,
     SimilarAudiencesScoresService,
-    measure,
 )
 from config.util import get_int_env, try_get_int_env
 

@@ -49,9 +49,8 @@ const Insights = () => {
 	const { handleTabChange, tabIndex } = useNavigateContext();
 	const [name, setName] = useState<string>("");
 	const [audience_type, setType] = useState("");
-	const [predictableFields, setPredictableFields] = useState<SignificantFields>(
-		{},
-	);
+	const [unfilteredPredictableFields, setPredictableFields] =
+		useState<SignificantFields>({});
 	const [fieldRanks, setFieldRanks] = useState<FieldRankMap>({});
 	const [hasSignificantFields, setHasSignificantFields] = useState(false);
 
@@ -398,7 +397,7 @@ const Insights = () => {
 					/>
 				</TabPanel>
 				<TabPanel value={tabIndex} index={1}>
-					<PredictableFields data={predictableFields} />
+					<PredictableFields data={unfilteredPredictableFields} />
 				</TabPanel>
 			</Box>
 		</Box>
