@@ -124,6 +124,55 @@ async def get_admins(
     return users
 
 
+@router.get("/partners")
+async def get_partners(
+    admin_customers_service: AdminCustomersService,
+    user: dict = Depends(check_user_admin),
+    is_master: bool = Query(
+        False, description="Flag to switch partners/master-partner"
+    ),
+    exclude_test_users: bool = Query(
+        False, description="Whether to hide users with #test…"
+    ),
+    sort_by: str = Query(None, description="Field"),
+    sort_order: str = Query(
+        None, description="Field to sort by: 'asc' or 'desc'"
+    ),
+    page: int = Query(1, alias="page", ge=1, description="Page number"),
+    search_query: str = Query(
+        None, description="Search for email, account name"
+    ),
+    per_page: int = Query(
+        9, alias="per_page", ge=1, le=500, description="Items per page"
+    ),
+    last_login_date_start: int = Query(
+        None, description="Start date in integer format"
+    ),
+    last_login_date_end: int = Query(
+        None, description="End date in integer format"
+    ),
+    join_date_start: int = Query(
+        None, description="Start date in integer format"
+    ),
+    join_date_end: int = Query(None, description="End date in integer format"),
+    statuses: str = Query(None),
+):
+    return admin_customers_service.get_partners_users(
+        is_master=is_master,
+        search_query=search_query,
+        page=page,
+        per_page=per_page,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        exclude_test_users=exclude_test_users,
+        last_login_date_start=last_login_date_start,
+        last_login_date_end=last_login_date_end,
+        join_date_start=join_date_start,
+        join_date_end=join_date_end,
+        statuses=statuses,
+    )
+
+
 @router.put("/change-email-validation", response_model=bool)
 def change_email_validation(
     admin_customers_service: AdminCustomersService,

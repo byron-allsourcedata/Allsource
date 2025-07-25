@@ -272,6 +272,82 @@ class AdminCustomersService:
 
         return {"users": result, "count": total_count}
 
+    def get_partners_users(
+        self,
+        *,
+        is_master: bool,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        exclude_test_users: bool,
+        last_login_date_start: Optional[int] = None,
+        last_login_date_end: Optional[int] = None,
+        join_date_start: Optional[int] = None,
+        join_date_end: Optional[int] = None,
+        statuses: Optional[str] = None,
+    ):
+        filters = {}
+        if last_login_date_start is not None:
+            filters["last_login_date_start"] = last_login_date_start
+        if last_login_date_end is not None:
+            filters["last_login_date_end"] = last_login_date_end
+        if join_date_start is not None:
+            filters["join_date_start"] = join_date_start
+        if join_date_end is not None:
+            filters["join_date_end"] = join_date_end
+        if statuses is not None:
+            filters["statuses"] = statuses
+
+        users, total_count = self.user_persistence.get_base_partners_users(
+            search_query=search_query,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            exclude_test_users=exclude_test_users,
+            filters=filters,
+            is_master=is_master,
+        )
+
+        user_ids = [user.id for user in users]
+
+        aggregates = self.user_persistence.get_customer_aggregates(user_ids)
+
+        result = []
+
+        for user in users:
+            user_id = user.id
+            agg = aggregates.get(user_id, {})
+
+            pixel_installed_count = agg.get("pixel_installed_count", 0)
+            sources_count = agg.get("sources_count", 0)
+            lookalikes_count = agg.get("lookalikes_count", 0)
+
+            result.append(
+                {
+                    "id": user_id,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "created_at": user.created_at,
+                    "status": user.user_status,
+                    "last_login": user.last_login,
+                    "role": user.role,
+                    "is_email_validation_enabled": user.is_email_validation_enabled,
+                    "pixel_installed_count": pixel_installed_count,
+                    "sources_count": sources_count,
+                    "contacts_count": user.total_leads,
+                    "subscription_plan": user.subscription_plan,
+                    "lookalikes_count": lookalikes_count,
+                    "type": "user",
+                    "credits_count": user.credits_count,
+                    "is_another_domain_resolved": user.is_another_domain_resolved,
+                }
+            )
+
+        return {"users": result, "count": total_count}
+
     def get_audience_metrics(
         self,
         last_login_date_start: int,

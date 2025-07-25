@@ -1006,6 +1006,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 									sx={{
 										border: "1px solid #EBEBEB",
 										borderRadius: "4px 4px 0px 0px",
+										maxHeight: "68vh",
 									}}
 								>
 									<Table>
@@ -1291,6 +1292,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Payment history"
 																	/>
@@ -1315,6 +1317,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Reward history"
 																	/>
@@ -1339,6 +1342,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																		<ListItemText
 																			primaryTypographyProps={{
 																				fontSize: "14px",
+																				fontFamily: "var(--font-nunito)",
 																			}}
 																			primary="Disable"
 																		/>
@@ -1363,6 +1367,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																		<ListItemText
 																			primaryTypographyProps={{
 																				fontSize: "14px",
+																				fontFamily: "var(--font-nunito)",
 																			}}
 																			primary="Enable"
 																		/>
@@ -1387,6 +1392,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Terminate"
 																	/>
@@ -1413,24 +1419,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Edit"
-																	/>
-																</ListItemButton>
-																<ListItemButton
-																	sx={{
-																		padding: "4px 16px",
-																		":hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.1)",
-																		},
-																	}}
-																	onClick={() => {}}
-																>
-																	<ListItemText
-																		primaryTypographyProps={{
-																			fontSize: "14px",
-																		}}
-																		primary="Log info"
 																	/>
 																</ListItemButton>
 															</List>
