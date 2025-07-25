@@ -492,7 +492,7 @@ def check_user_setting_access(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,
     privacy_policy_service: PrivacyPolicyService,
-    users_auth_service: UsersAuth,
+    users_auth_service: UsersAuth
 ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
