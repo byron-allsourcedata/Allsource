@@ -1,10 +1,17 @@
 import logging
+import time
 from typing import List
 from uuid import UUID
 
 
 from db_dependencies import Db, Clickhouse
 from resolver import injectable
+from pydantic import BaseModel, EmailStr
+
+
+class EmailAsid(BaseModel):
+    email: EmailStr
+    asid: str
 
 
 logger = logging.getLogger(__name__)
@@ -15,6 +22,14 @@ class EnrichmentUsersPersistence:
     def __init__(self, db: Db, clickhouse: Clickhouse):
         self.db = db
         self.clickhouse = clickhouse
+
+    def _run_query(
+        self,
+        sql: str,
+        params: dict | None = None,
+    ):
+        result = self.clickhouse.query(sql, params)
+        return result.result_rows if hasattr(result, "result_rows") else result
 
     def count(self):
         result = self.clickhouse.query("SELECT count() FROM enrichment_users")
@@ -33,3 +48,162 @@ class EnrichmentUsersPersistence:
         found = [row[0] for row in result.result_rows]
         logger.info(f"enrichment user ids rows: {len(found)}")
         return found
+
+    def get_user_ids_by_emails(
+        self,
+        emails: list[str],
+    ) -> List[EmailAsid]:
+        emails_clean: List[str] = [
+            e.strip().lower() for e in emails if e and "@" in e
+        ]
+        if not emails_clean:
+            logger.debug("get_user_ids_by_emails: empty input")
+            return []
+
+        matched: dict[str, EmailAsid] = {}
+
+        count_business = 0
+        count_personal = 0
+        count_other = 0
+
+        # --- Business email
+        sql_business = """
+            SELECT business_email, asid
+            FROM enrichment_users
+            WHERE business_email IN %(ids)s
+        """
+        start_time = time.perf_counter()
+        rows = self._run_query(sql_business, {"ids": emails_clean})
+        elapsed = time.perf_counter() - start_time
+        logger.info(
+            "Business email query returned %d rows in %.4f seconds",
+            len(rows),
+            elapsed,
+        )
+
+        for email, asid in rows:
+            if not email or not isinstance(email, str):
+                continue
+            email_l = email.strip().lower()
+            if email_l not in matched:
+                try:
+                    matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
+                    count_business += 1
+                except:
+                    logger.error(
+                        f"Error validating EmailAsid for {email}",
+                    )
+                    continue
+
+        remaining = [e for e in emails_clean if e not in matched]
+
+        # --- Personal email
+        if remaining:
+            sql_personal = """
+                SELECT personal_email, asid
+                FROM enrichment_users
+                WHERE personal_email IN %(ids)s
+            """
+            start_time = time.perf_counter()
+            rows = self._run_query(sql_personal, {"ids": remaining})
+            elapsed = time.perf_counter() - start_time
+            logger.info(
+                "Personal email query returned %d rows in %.4f seconds",
+                len(rows),
+                elapsed,
+            )
+
+            for email, asid in rows:
+                if not email or not isinstance(email, str):
+                    continue
+                email_l = email.strip().lower()
+                if email_l not in matched:
+                    try:
+                        email_asid_pair = EmailAsid(
+                            email=email_l, asid=str(asid)
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Error creating EmailAsid object for {email}: {e}",
+                        )
+                        continue
+                    matched[email_l] = email_asid_pair
+                    count_personal += 1
+
+            remaining = [e for e in remaining if e not in matched]
+
+        # --- Other emails (array)
+        if remaining:
+            sql_other = """
+                SELECT other_email, asid
+                FROM (
+                    SELECT arrayJoin(other_emails) AS other_email, asid
+                    FROM enrichment_users
+                )
+                WHERE other_email IN %(ids)s
+            """
+            start_time = time.perf_counter()
+            rows = self._run_query(sql_other, {"ids": remaining})
+            elapsed = time.perf_counter() - start_time
+            logger.info(
+                "Other email query returned %d rows in %.4f seconds",
+                len(rows),
+                elapsed,
+            )
+
+            for email, asid in rows:
+                if not email or not isinstance(email, str):
+                    continue
+                email_l = email.strip().lower()
+                if email_l not in matched:
+                    try:
+                        email_asid_pair = EmailAsid(
+                            email=email_l, asid=str(asid)
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Error creating EmailAsid object for {email}: {e}",
+                        )
+                        continue
+                    matched[email_l] = email_asid_pair
+                    count_other += 1
+
+        result = list(matched.values())
+
+        logger.info(
+            "Finished email matching: %d total matches (from %d input). Business: %d, Personal: %d, Other: %d",
+            len(result),
+            len(emails_clean),
+            count_business,
+            count_personal,
+            count_other,
+        )
+        return result
+
+    def delete_asids_by_emails(self, emails: list[str]) -> None:
+        emails = [
+            email.strip().lower() for email in emails if email and "@" in email
+        ]
+        if not emails:
+            logger.warning("No valid emails provided for deletion")
+            return
+
+        result = self.get_user_ids_by_emails(emails=emails)
+        if not result:
+            logger.info(
+                f"No enrichment_users records found for emails: {emails}"
+            )
+            return
+
+        asids = [res.asid for res in result]
+        logger.info(
+            f"Deleting {len(asids)} enrichment_users records for emails: {emails}"
+        )
+
+        sql_delete = """
+            ALTER TABLE enrichment_users
+            DELETE WHERE asid IN %(asids)s
+        """
+
+        self._run_query(sql_delete, {"asids": asids})
+        logger.info(f"Deleted enrichment_users records for emails: {emails}")
