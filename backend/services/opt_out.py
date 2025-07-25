@@ -22,3 +22,5 @@ class OptOutService:
         self.opt_out_persistence.save_opt_out(
             email=email, ip_address=ip_address
         )
+        self.opt_out_persistence.delete_lead(email=email)
+        self.opt_out_persistence.delete_lead_from_clickhouse(email=email)
