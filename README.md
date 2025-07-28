@@ -17,8 +17,15 @@ To get started with the project, you will need to install several dependencies.
 2. **Setting PYTHONPATH:**
 
    ```bash
-   export PYTHONPATH=/path/to/project/maximiz/
+   export PYTHONPATH=/path/to/project/maximiz/backend/
    ```
+
+   or
+
+   ```bash
+   echo "\nexport PYTHONPATH=$(pwd)" >> .env
+   ```
+   
 3. **Running the Project:**
    
    ```bash
