@@ -58,6 +58,8 @@ export interface UserData {
 	type?: string;
 	is_email_validation_enabled: boolean;
 	is_another_domain_resolved: boolean;
+	has_credit_card: boolean;
+	cost_leads_overage: number;
 }
 
 const Users: React.FC = () => {
