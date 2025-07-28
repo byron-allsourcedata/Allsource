@@ -130,6 +130,9 @@ class Users(Base):
     is_email_validation_enabled = Column(
         Boolean, nullable=False, server_default=text("true")
     )
+    has_credit_card = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )
 
     random_seed: Column[int] = Column(
         Integer, nullable=False, server_default=text("42")
