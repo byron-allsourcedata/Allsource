@@ -58,3 +58,9 @@ class PartnerUserData(BaseModel):
     subscription: Optional[str] = None
     payment_date: Optional[datetime] = None
     sources: Optional[str] = None
+
+
+class PromoteUserRequest(BaseModel):
+    user_id: int
+    commission: int
+    is_master: Optional[bool] = False

@@ -736,6 +736,9 @@ const Users: React.FC = () => {
 						setOrderBy={setOrderBy}
 						setLoading={setLoading}
 						changeUserIsEmailValidation={changeUserIsEmailValidation}
+						onPlanChanged={fetchUserData}
+						isPartnerTab={tabIndex === 2 || tabIndex === 3}
+						isMaster={tabIndex === 2}
 					/>
 				</Box>
 			</Box>

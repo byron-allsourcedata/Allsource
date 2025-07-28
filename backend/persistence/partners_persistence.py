@@ -325,3 +325,20 @@ class PartnersPersistence:
         self.db.commit()
         self.db.refresh(partner)
         return partner
+
+    def create_partner_by_admin(self, creating_data: dict) -> Optional[Partner]:
+        partner = Partner(
+            commission=creating_data["commission"],
+            email=creating_data["email"],
+            name=creating_data["name"],
+            is_master=creating_data["is_master"],
+            status=creating_data.get("status"),
+            user_id=creating_data.get("user_id"),
+            join_date=creating_data.get("join_date"),
+            is_active=creating_data.get("is_active", True),
+        )
+
+        self.db.add(partner)
+        self.db.commit()
+        self.db.refresh(partner)
+        return partner

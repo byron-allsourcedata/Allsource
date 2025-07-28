@@ -1,12 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import date
+from fastapi.responses import JSONResponse
+
 from services.payouts import PayoutsService
 from schemas.partners import (
     PartnerCreateRequest,
     PartnerUpdateRequest,
     PartnersResponse,
     OpportunityStatus,
+    PromoteUserRequest,
 )
 from dependencies import (
     get_payouts_service,
@@ -159,3 +162,16 @@ def get_payouts_partners(
         sort_by=sort_by,
         sort_order=sort_order,
     )
+
+
+@router.post("/promote-user")
+async def promote_user_to_partner(
+    payload: PromoteUserRequest,
+    get_partners_service: PartnersService,
+):
+    await get_partners_service.promote_user_to_partner(
+        user_id=payload.user_id,
+        commission=payload.commission,
+        is_master=payload.is_master,
+    )
+    return JSONResponse(status_code=200, content={"message": "SUCCESS"})

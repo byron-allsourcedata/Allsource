@@ -35,6 +35,7 @@ import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
 import { MenuIconButton } from "@/components/table";
 import { usePagination } from "@/hooks/usePagination";
+import MakePartnerPopup from "./MakePartnerPopup";
 import {
 	MoreVert,
 	SwapVertIcon,
@@ -60,6 +61,9 @@ interface TableBodyUserProps {
 	tableHeaders: tableHeaders[];
 	setLoading: (state: boolean) => void;
 	changeUserIsEmailValidation: (userId: number) => void;
+	onPlanChanged: () => void;
+	isPartnerTab: boolean;
+	isMaster: boolean;
 }
 
 const TableHeader: React.FC<{
@@ -276,6 +280,9 @@ interface ActionsMenuProps {
 		email: string;
 		joinDate: string;
 	};
+	onPlanChanged: () => void;
+	isPartnerTab: boolean;
+	isMaster: boolean;
 }
 
 const ActionsMenu: React.FC<ActionsMenuProps> = ({
@@ -284,12 +291,18 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 	userId,
 	currentPlanAlias,
 	user,
+	onPlanChanged,
+	isPartnerTab,
+	isMaster,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 	const [submenuAnchorEl, setSubmenuAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
+	const [partnerPopupOpen, setPartnerPopupOpen] = useState(false);
+	const [partnerPopupIsMaster, setPartnerPopupIsMaster] =
+		useState<boolean>(false);
 
 	const handleOpenSubmenu = (event: React.MouseEvent<HTMLElement>) => {
 		setSubmenuAnchorEl(event.currentTarget);
@@ -297,6 +310,17 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 
 	const handleCloseSubmenu = () => {
 		setSubmenuAnchorEl(null);
+	};
+
+	const handleOpenPartnerPopup = (isMaster: boolean) => {
+		handleCloseSubmenu();
+		handleClose();
+		setPartnerPopupIsMaster(isMaster);
+		setPartnerPopupOpen(true);
+	};
+
+	const handleClosePartnerPopup = () => {
+		setPartnerPopupOpen(false);
 	};
 
 	const changeUserPlan = async (planAlias: string) => {
@@ -344,6 +368,7 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 		const alias = planMap[selectedPlan];
 
 		await changeUserPlan(alias);
+		onPlanChanged();
 		setDialogOpen(false);
 		setSelectedPlan(null);
 		handleClose();
@@ -365,10 +390,17 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 				}}
 				MenuListProps={{ dense: true }}
 			>
-				<MenuItem onClick={() => console.log("Make a Partner")}>
+				<MenuItem
+					disabled={!isMaster && isPartnerTab}
+					onClick={() => handleOpenPartnerPopup(false)}
+				>
 					Make a Partner
 				</MenuItem>
-				<MenuItem onClick={() => console.log("Make a Master Partner")}>
+
+				<MenuItem
+					disabled={isMaster && isPartnerTab}
+					onClick={() => handleOpenPartnerPopup(true)}
+				>
 					Make a Master Partner
 				</MenuItem>
 
@@ -426,6 +458,15 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 					currentPlan: currentPlanAlias,
 				}}
 			/>
+			<MakePartnerPopup
+				open={partnerPopupOpen}
+				onClose={handleClosePartnerPopup}
+				isMaster={partnerPopupIsMaster}
+				userID={userId}
+				updateOrAddPartner={() => {
+					onPlanChanged();
+				}}
+			/>
 		</>
 	);
 };
@@ -436,6 +477,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	setLoading,
 	currentPage,
 	changeUserIsEmailValidation,
+	onPlanChanged,
+	isPartnerTab,
+	isMaster,
 }) => {
 	const router = useRouter();
 	const { setBackButton, triggerBackButton } = useUser();
@@ -803,6 +847,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 								email: row.email,
 								joinDate: row.created_at,
 							}}
+							onPlanChanged={onPlanChanged}
+							isPartnerTab={isPartnerTab}
+							isMaster={isMaster}
 						/>
 					</Box>
 				);
@@ -864,6 +911,9 @@ interface PartnersAccountsProps {
 	setOrder?: any;
 	setOrderBy?: any;
 	changeUserIsEmailValidation: (userId: number) => void;
+	onPlanChanged: () => void;
+	isPartnerTab: boolean;
+	isMaster: boolean;
 }
 
 interface AccountData {
@@ -900,6 +950,9 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setOrder,
 	setOrderBy,
 	changeUserIsEmailValidation,
+	onPlanChanged,
+	isPartnerTab,
+	isMaster,
 }) => {
 	const tableHeaders = is_admin
 		? [
@@ -1007,6 +1060,9 @@ const Account: React.FC<PartnersAccountsProps> = ({
 									setLoading={setLoading}
 									currentPage={page}
 									changeUserIsEmailValidation={changeUserIsEmailValidation}
+									onPlanChanged={onPlanChanged}
+									isPartnerTab={isPartnerTab}
+									isMaster={isMaster}
 								/>
 							</Table>
 						</TableContainer>

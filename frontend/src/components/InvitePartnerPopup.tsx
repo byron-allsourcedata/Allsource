@@ -13,7 +13,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { styled } from "@mui/material/styles";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import { fontFamily } from "@mui/system";
 
 interface PartnerData {
 	id: number;
