@@ -124,8 +124,6 @@ async def process_rmq_message(
         )
         validation_type = message_body.get("validation_type")
         validation_cost = message_body.get("validation_cost")
-        # logging.info(f"aud_smart_id: {aud_smart_id}")
-        # logging.info(f"validation_type: {validation_type}")
         logging.info(
             f"[START] Validation for aud_smart_id={aud_smart_id}, type={validation_type}"
         )
@@ -150,8 +148,6 @@ async def process_rmq_message(
                 f"[RECORD] {person_id}: {zipcode} {state} {city} {street}"
             )
 
-            # logging.info(f"{zipcode} {state} {city} {street}")
-
             if not (street and city and state and zipcode):
                 failed_ids.append(person_id)
                 logging.warning(
@@ -167,7 +163,6 @@ async def process_rmq_message(
                 .first()
             )
             if existing:
-                # logging.info("There is such a Postal in our database")
                 logging.info(
                     f"[CACHE HIT] Postal {zipcode} already in DB (verified={existing.is_verified})"
                 )
@@ -187,31 +182,6 @@ async def process_rmq_message(
             smarty_lookups.append(lookup)
             lookup_by_person_id[person_id] = lookup
 
-        # if smarty_lookups:
-        #     try:
-        #         for lookup in smarty_lookups:
-        #             batc.add(lookup)
-
-        #         SMARTY_CLIENT.send_batch(batc)
-        #     except smarty_exc.SmartyException as err:
-        #         logging.error("Smarty error: %s", err)
-        #         failed_ids.extend(list(lookup_by_person_id.keys()))
-        #     else:
-        #         for pid, lookup in lookup_by_person_id.items():
-        #             candidates = lookup.result
-        #             logging.info(f"Finded {len(candidates)} candidates")
-        #             is_ok = verify_address(
-        #                 candidates,
-        #                 lookup.street,
-        #                 lookup.city,
-        #                 lookup.state,
-        #             )
-        #             logging.info(f"is ok {is_ok}")
-        #             verifications.append(
-        #                 {"postal_code": lookup.zipcode, "is_verified": is_ok}
-        #             )
-        #             if not is_ok:
-        #                 failed_ids.append(pid)
         for chunk_idx, chunk in enumerate(
             chunked_iterable(smarty_lookups, BATCH_LIMIT), start=1
         ):
@@ -252,8 +222,6 @@ async def process_rmq_message(
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
-
-        # logging.info(f"success_ids len: {len(success_ids)}")
         logging.info(
             f"[STATS] Success={len(success_ids)}, Failed={len(failed_ids)}"
         )
