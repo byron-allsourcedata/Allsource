@@ -121,21 +121,21 @@ class PartnersAssetService:
 
             # file size
             file_size_bytes = os.path.getsize(temp_path)
-            size_mb = file_size_bytes / (1024**2)
-            files_data["file_size"] = f"{size_mb:.2f} MB"
+            files_data["file_size"] = file_size_bytes
             logger.debug(f"[upload] File size: {files_data['file_size']}")
 
             # video duration
             if type == "video":
                 try:
+                    logger.debug("[upload] Probing video with ffmpeg")
                     probe = ffmpeg.probe(temp_path)
                     duration = float(probe["format"]["duration"])
-                    files_data["video_duration"] = f"{duration:.2f}"
+                    files_data["video_duration"] = int(duration)
                 except Exception as e:
                     logger.debug(
                         "ffmpeg error during video duration", exc_info=e
                     )
-                    files_data["video_duration"] = "0"
+                    files_data["video_duration"] = 0
 
             if not self.AWS.file_exists(file_key):
                 self.AWS.upload_string(file_contents, file_key)

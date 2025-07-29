@@ -5,7 +5,7 @@ from sqlalchemy.sql import case
 import os
 from sqlalchemy import or_, func, asc, desc, nulls_last, nulls_first
 from typing import Optional, Tuple
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
 from models.plans import SubscriptionPlan
@@ -51,15 +51,15 @@ class PartnersPersistence:
 
     def get_partners(
         self,
-        is_master,
-        search_term=None,
-        start_date=None,
-        end_date=None,
-        offset=None,
-        limit=None,
-        exclude_test_users=None,
-        sort_by=None,
-        sort_order=None,
+        is_master: bool,
+        search_term: Optional[str] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+        exclude_test_users: Optional[bool] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
     ):
         MasterPartner = aliased(Partner)
         query = (

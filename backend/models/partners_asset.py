@@ -26,8 +26,8 @@ class PartnersAsset(Base):
     type = Column(VARCHAR(16), nullable=False)
     file_url = Column(TEXT, nullable=False)
     preview_url = Column(TEXT, nullable=True)
-    file_size = Column(VARCHAR(32), nullable=True)
-    video_duration = Column(VARCHAR(16), nullable=True)
+    file_size = Column(Integer, nullable=True)
+    video_duration = Column(Integer, nullable=True)
     created_at = Column(
         TIMESTAMP,
         nullable=False,

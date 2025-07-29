@@ -9,5 +9,5 @@ class PartnersAssetResponse(BaseModel):
     preview_url: Optional[str] = None
     file_url: str
     file_extension: str
-    file_size: Optional[str] = None
-    video_duration: Optional[str] = None
+    file_size: Optional[int] = None
+    video_duration: Optional[int] = None

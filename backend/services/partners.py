@@ -3,7 +3,7 @@ import os
 import hashlib
 import json
 from typing import Optional
-
+from datetime import date
 from fastapi import HTTPException
 
 from models.partner import Partner
@@ -48,18 +48,18 @@ class PartnersService:
 
     def get_partners(
         self,
-        is_master,
-        search,
-        start_date,
-        end_date,
-        page,
-        rowsPerPage,
-        exclude_test_users,
-        sort_by,
-        sort_order,
+        is_master: bool,
+        search: str,
+        start_date: Optional[date],
+        end_date: Optional[date],
+        page: int,
+        rows_per_page: int,
+        exclude_test_users: bool,
+        sort_by: Optional[str],
+        sort_order: Optional[str],
     ) -> PartnersObjectResponse:
-        offset = page * rowsPerPage
-        limit = rowsPerPage
+        offset = page * rows_per_page
+        limit = rows_per_page
 
         search_term = f"%{search}%" if search else None
 
