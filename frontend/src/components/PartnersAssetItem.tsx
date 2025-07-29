@@ -182,7 +182,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 					""
 				)}
 
-				{!isAdmin && (
+				{/* {!isAdmin && (
 					<Box
 						sx={{
 							position: "absolute",
@@ -211,7 +211,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 							)}
 						</IconButton>
 					</Box>
-				)}
+				)} */}
 			</Box>
 
 			<Box

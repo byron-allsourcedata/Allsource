@@ -50,58 +50,62 @@ const PartnersAssets: React.FC = () => {
 		"Documents",
 		"Favorites",
 	];
-	const [favorites, setFavorites] = useState<PartnersAssetsData[]>([
-		{ type: "Favorites", asset: [] },
-	]);
+	// const [favorites, setFavorites] = useState<PartnersAssetsData[]>([
+	// 	{ type: "Favorites", asset: [] },
+	// ]);
+	// const filteredAssets =
+	// 	asset === "All"
+	// 		? assets
+	// 		: asset === "Favorites"
+	// 			? favorites
+	// 			: assets.filter((assetData) => assetData.type === asset);
+
 	const filteredAssets =
 		asset === "All"
 			? assets
-			: asset === "Favorites"
-				? favorites
-				: assets.filter((assetData) => assetData.type === asset);
+			: assets.filter((assetData) => assetData.type === asset);
 
 	const handleAssetChange = (event: SelectChangeEvent) => {
 		setAsset(event.target.value);
 	};
-	const currentUserId = 110;
 
 	const arraysAreEqual = (
 		arr1: PartnersAssetsData[],
 		arr2: PartnersAssetsData[],
 	) => JSON.stringify(arr1) === JSON.stringify(arr2);
 
-	const toggleFavorite = (id: number) => {
-		setAssets((prevAssets) =>
-			prevAssets.map((group) => ({
-				...group,
-				asset: group.asset.map((item) =>
-					item.id === id ? { ...item, isFavorite: !item.isFavorite } : item,
-				),
-			})),
-		);
-		const allAssets = assets.flatMap((group) => group.asset);
-		const updatedFavorites = favorites[0].asset.some(
-			(fav: AssetsData) => fav.id === id,
-		)
-			? favorites[0].asset.filter((fav: AssetsData) => fav.id !== id)
-			: [
-					...favorites[0].asset,
-					{ ...allAssets.find((item) => item.id === id)!, isFavorite: true },
-				];
+	// const toggleFavorite = (id: number) => {
+	// 	setAssets((prevAssets) =>
+	// 		prevAssets.map((group) => ({
+	// 			...group,
+	// 			asset: group.asset.map((item) =>
+	// 				item.id === id ? { ...item, isFavorite: !item.isFavorite } : item,
+	// 			),
+	// 		})),
+	// 	);
+	// 	const allAssets = assets.flatMap((group) => group.asset);
+	// 	const updatedFavorites = favorites[0].asset.some(
+	// 		(fav: AssetsData) => fav.id === id,
+	// 	)
+	// 		? favorites[0].asset.filter((fav: AssetsData) => fav.id !== id)
+	// 		: [
+	// 				...favorites[0].asset,
+	// 				{ ...allAssets.find((item) => item.id === id)!, isFavorite: true },
+	// 			];
 
-		localStorage.setItem(
-			`favorites_${currentUserId}`,
-			JSON.stringify(updatedFavorites),
-		);
-		setFavorites([{ type: "Favorites", asset: updatedFavorites }]);
-	};
+	// 	localStorage.setItem(
+	// 		`favorites_${currentUserId}`,
+	// 		JSON.stringify(updatedFavorites),
+	// 	);
+	// 	setFavorites([{ type: "Favorites", asset: updatedFavorites }]);
+	// };
 
 	const fetchRewards = async () => {
 		setLoading(true);
 		try {
-			const userFavorites = JSON.parse(
-				localStorage.getItem(`favorites_${currentUserId}`) || "[]",
-			);
+			// const userFavorites = JSON.parse(
+			// 	localStorage.getItem(`favorites_${currentUserId}`) || "[]",
+			// );
 
 			const response = await axiosInstance.get("/partners/assets");
 			if (response.status === 200) {
@@ -110,10 +114,11 @@ const PartnersAssets: React.FC = () => {
 						if (!acc[item.type]) {
 							acc[item.type] = [];
 						}
-						const isFavorite = userFavorites.some(
-							(fav: any) => fav.id === item.id,
-						);
-						acc[item.type].push({ ...item, isFavorite });
+						// const isFavorite = userFavorites.some(
+						// 	(fav: any) => fav.id === item.id,
+						// );
+						// acc[item.type].push({ ...item, isFavorite });
+						acc[item.type].push({ ...item });
 						return acc;
 					},
 					{},
@@ -126,7 +131,7 @@ const PartnersAssets: React.FC = () => {
 					{ type: "Documents", asset: assetsByType["document"] || [] },
 				]);
 
-				setFavorites([{ type: "Favorites", asset: userFavorites }]);
+				// setFavorites([{ type: "Favorites", asset: userFavorites }]);
 			}
 		} catch {
 		} finally {
@@ -244,7 +249,7 @@ const PartnersAssets: React.FC = () => {
 						<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
 							{filteredAssets.map((data, index) => (
 								<PartnersAsset
-									toggleFavorite={toggleFavorite}
+									//toggleFavorite={toggleFavorite}
 									key={index}
 									data={data}
 								/>
