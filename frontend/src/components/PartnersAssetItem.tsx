@@ -148,17 +148,17 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 								bottom: 0,
 								right: 0,
 								height: "13.48px",
-								width: "28.31px",
+								minWidth: "28.31px",
 								fontFamily: "var(--font-roboto)",
 								fontSize: "7.74px",
 								fontWeight: "600",
 								lineHeight: "7.9px",
 								color: "#fff",
 								backgroundColor: "#232730",
-								padding: "2.74px 5.15px",
+								padding: "2.74px",
 							}}
 						>
-							{asset.video_duration}
+							{asset.video_duration ? asset.video_duration : "00:00"}
 						</Box>
 					</>
 				) : (

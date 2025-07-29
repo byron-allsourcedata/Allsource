@@ -94,6 +94,7 @@ const Header: React.FC<HeaderProps> = ({
 		useState<boolean>(false);
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const [visibleButton, setVisibleButton] = useState(false);
+	const [parentAccountType, setParentAccountType] = useState<string | null>("");
 	const returnToAdmin = useReturnToAdmin();
 	const { showHints, toggleHints } = useHints();
 	const handleSignOut = () => {
@@ -112,6 +113,8 @@ const Header: React.FC<HeaderProps> = ({
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
+		const parent_account_type = localStorage.getItem("parent_account_type");
+		setParentAccountType(parent_account_type);
 		let token = localStorage.getItem("parent_token");
 		const isPaymentFailed = urlParams.get("payment_failed") === "true";
 		if ((backButton || token) && !isPaymentFailed) {
@@ -230,7 +233,7 @@ const Header: React.FC<HeaderProps> = ({
 									},
 								}}
 							>
-								Return to Admin
+								Return to {parentAccountType === "partner" ? "Main" : "Admin"}
 							</Button>
 						)}
 						{/* <Box sx={{ display: "flex", ml: 1 }}>

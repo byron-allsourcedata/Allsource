@@ -191,7 +191,7 @@ class PartnersAssetService:
             )
 
             if not created_data:
-                logger.debug("Database error during creation", e)
+                logger.debug("Database error during creation")
                 raise HTTPException(status_code=500, detail="Asset not created")
 
             return {

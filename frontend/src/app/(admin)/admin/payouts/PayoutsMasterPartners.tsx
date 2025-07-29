@@ -23,7 +23,7 @@ interface RewardData {
 	total_rewards: number;
 	rewards_approved: number;
 	rewards_paid: number;
-	count_accounts: number;
+	count_invites: number;
 	payout_date: Date;
 }
 
@@ -99,7 +99,8 @@ const ReferralRewards: React.FC = () => {
 					backgroundColor: "#fff",
 					width: "100%",
 					padding: 0,
-					margin: "3rem auto 0rem",
+					pt: 2,
+					pr: 2,
 					display: "flex",
 					flexDirection: "column",
 					minHeight: "77vh",
@@ -354,7 +355,7 @@ const ReferralRewards: React.FC = () => {
 													No. of accounts
 												</Typography>
 												<Typography variant="subtitle1" className="table-data">
-													{data.count_accounts}
+													{data.count_invites}
 												</Typography>
 											</Box>
 											<Box>

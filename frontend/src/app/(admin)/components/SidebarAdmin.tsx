@@ -12,9 +12,8 @@ import { usePathname } from "next/navigation";
 import LeadsIcon from "@mui/icons-material/People";
 import CategoryIcon from "@mui/icons-material/Category";
 import FeaturedPlayListIcon from "@mui/icons-material/FeaturedPlayList";
-import ReduceCapacityIcon from '@mui/icons-material/ReduceCapacity';
+import ReduceCapacityIcon from "@mui/icons-material/ReduceCapacity";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-
 
 const sidebarStyles = {
 	container: {
@@ -154,8 +153,12 @@ const SidebarAdmin: React.FC = () => {
 					<ListItemText primary="Admin" sx={{ pr: 5 }} />
 				</ListItemButton>
 				<ListItemButton
-					onClick={() => handleNavigation('/admin/partners')}
-					sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
+					onClick={() => handleNavigation("/admin/partners")}
+					sx={
+						isActive("/admin/partners")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
 				>
 					<ListItemIcon sx={sidebarStyles.listItemIcon}>
 						<ReduceCapacityIcon />
@@ -170,25 +173,33 @@ const SidebarAdmin: React.FC = () => {
                         <AccountCircleIcon />
                     </ListItemIcon>
                     <ListItemText primary="Accounts" />
-                </ListItemButton>
-                <ListItemButton
-                    onClick={() => handleNavigation('/admin/assets')}
-                    sx={isActive('/admin/assets') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
-                >
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <CategoryIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Assets" />
-                </ListItemButton>
-                <ListItemButton
-                    onClick={() => handleNavigation('/admin/payouts')}
-                    sx={isActive('/admin/payouts') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
-                >
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <FeaturedPlayListIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Payouts" />
                 </ListItemButton> */}
+				<ListItemButton
+					onClick={() => handleNavigation("/admin/assets")}
+					sx={
+						isActive("/admin/assets")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
+				>
+					<ListItemIcon sx={sidebarStyles.listItemIcon}>
+						<CategoryIcon />
+					</ListItemIcon>
+					<ListItemText primary="Assets" />
+				</ListItemButton>
+				<ListItemButton
+					onClick={() => handleNavigation("/admin/payouts")}
+					sx={
+						isActive("/admin/payouts")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
+				>
+					<ListItemIcon sx={sidebarStyles.listItemIcon}>
+						<FeaturedPlayListIcon />
+					</ListItemIcon>
+					<ListItemText primary="Payouts" />
+				</ListItemButton>
 			</List>
 		</Box>
 	);

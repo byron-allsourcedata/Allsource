@@ -93,7 +93,7 @@ const tableHeaders = [
 	{ key: "account_name", label: "Master Partner name", sortable: false },
 	{ key: "email", label: "Email", sortable: false },
 	{ key: "join_date", label: "Join date", sortable: true },
-	{ key: "comission", label: "Comission", sortable: false },
+	{ key: "commission", label: "Commission", sortable: false },
 	{ key: "reward_amount", label: "Reward amount", sortable: false },
 	{ key: "reward_approved", label: "Reward approved", sortable: false },
 	{ key: "reward_payout_date", label: "Reward Payout date", sortable: true },
@@ -248,6 +248,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 					company_name: reward.company_name,
 					email: reward.email,
 					sources: reward.sources,
+					commission: reward.commission,
 					number_of_accounts: reward.number_of_accounts,
 					reward_amount: reward.reward_amount,
 					reward_approved: reward.reward_approved,
@@ -574,7 +575,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 													className="table-data"
 													sx={payoutsStyle.tableBodyColumn}
 												>
-													{item.commission}
+													{item.commission}%
 												</TableCell>
 
 												<TableCell

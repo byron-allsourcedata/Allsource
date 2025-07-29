@@ -14,14 +14,18 @@ export const useReturnToAdmin = () => {
 		async (options?: ReturnToAdminOptions) => {
 			const parent_token = localStorage.getItem("parent_token");
 			const parent_domain = sessionStorage.getItem("parent_domain");
+			const parent_account_type = localStorage.getItem("parent_account_type");
 
 			if (parent_token) {
 				await new Promise<void>(async (resolve) => {
 					sessionStorage.clear();
-					sessionStorage.setItem("admin", "true");
+					if (parent_account_type !== "partner") {
+						sessionStorage.setItem("admin", "true");
+					}
 
 					localStorage.removeItem("parent_token");
 					sessionStorage.removeItem("parent_domain");
+					localStorage.removeItem("parent_account_type");
 
 					localStorage.setItem("token", parent_token);
 					sessionStorage.setItem("current_domain", parent_domain || "");
@@ -36,7 +40,11 @@ export const useReturnToAdmin = () => {
 
 			options?.onBeforeRedirect?.();
 
-			router.push("/admin");
+			if (parent_account_type === "partner") {
+				router.push("/partners");
+			} else {
+				router.push("/admin");
+			}
 			router.refresh();
 		},
 		[router],

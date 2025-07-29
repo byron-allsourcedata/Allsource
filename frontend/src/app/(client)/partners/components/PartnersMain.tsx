@@ -370,6 +370,7 @@ const PartnersMain: React.FC<PartnersProps> = ({
 					if (current_token) {
 						localStorage.setItem("parent_token", current_token);
 						localStorage.setItem("token", response.data.token);
+						localStorage.setItem("parent_account_type", "partner");
 						sessionStorage.removeItem("current_domain");
 						sessionStorage.removeItem("me");
 						await fetchUserData();
@@ -647,7 +648,7 @@ const PartnersMain: React.FC<PartnersProps> = ({
 																}}
 															>
 																<TruncatedText
-																	text={data.company_name || "--"}
+																	text={data.partner_name || "--"}
 																	limit={15}
 																	status={data.status}
 																/>

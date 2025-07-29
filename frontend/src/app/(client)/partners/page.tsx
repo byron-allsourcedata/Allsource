@@ -329,185 +329,6 @@ const Partners: React.FC = () => {
 									)}
 								</Box>
 
-								<Box
-									sx={{
-										flexGrow: 1,
-										display: "flex",
-										justifyContent: "center",
-										width: "51%",
-										pr: tabIndex !== 0 ? "20%" : 0,
-										alignItems: "center",
-										"@media (max-width: 900px)": { pr: 0, width: "51%" },
-										"@media (max-width: 600px)": {
-											width: "100%",
-											pr: "0",
-											pt: 0,
-										},
-									}}
-								>
-									<Tabs
-										value={tabIndex}
-										onChange={handleTabChange}
-										sx={{
-											textTransform: "none",
-											minHeight: 0,
-											"& .MuiTabs-indicator": {
-												backgroundColor: "rgba(56, 152, 252, 1)",
-												height: "1.4px",
-											},
-											"@media (max-width: 600px)": {
-												border: "1px solid rgba(228, 228, 228, 1)",
-												borderRadius: "4px",
-												width: "100%",
-												"& .MuiTabs-indicator": {
-													height: "0",
-												},
-											},
-										}}
-										aria-label="suppression tabs"
-									>
-										<Tab
-											className="main-text"
-											sx={{
-												textTransform: "none",
-												padding: "4px 1px",
-												pb: "10px",
-												flexGrow: 1,
-												marginRight: "3em",
-												minHeight: "auto",
-												minWidth: "auto",
-												fontSize: "14px",
-												fontWeight: 700,
-												lineHeight: "19.1px",
-												textAlign: "left",
-												mr: 2,
-												"&.Mui-selected": {
-													color: "rgba(56, 152, 252, 1)",
-												},
-												"@media (max-width: 600px)": {
-													mr: 0,
-													borderRadius: "4px",
-													"&.Mui-selected": {
-														backgroundColor: "rgba(249, 249, 253, 1)",
-														border: "1px solid rgba(220, 220, 239, 1)",
-													},
-												},
-											}}
-											label="Overview"
-										/>
-										<Tab
-											className="main-text"
-											sx={{
-												textTransform: "none",
-												padding: "4px 10px",
-												minHeight: "auto",
-												flexGrow: 1,
-												pb: "10px",
-												textAlign: "center",
-												fontSize: "14px",
-												fontWeight: 700,
-												lineHeight: "19.1px",
-												minWidth: "auto",
-												"&.Mui-selected": {
-													color: "rgba(56, 152, 252, 1)",
-												},
-												"@media (max-width: 600px)": {
-													mr: 0,
-													borderRadius: "4px",
-													"&.Mui-selected": {
-														backgroundColor: "rgba(249, 249, 253, 1)",
-														border: "1px solid rgba(220, 220, 239, 1)",
-													},
-												},
-											}}
-											label="Accounts"
-										/>
-										{isMaster && (
-											<Tab
-												className="main-text"
-												sx={{
-													textTransform: "none",
-													padding: "4px 10px",
-													minHeight: "auto",
-													flexGrow: 1,
-													pb: "10px",
-													textAlign: "center",
-													fontSize: "14px",
-													fontWeight: 700,
-													lineHeight: "19.1px",
-													minWidth: "auto",
-													"&.Mui-selected": {
-														color: "rgba(56, 152, 252, 1)",
-													},
-													"@media (max-width: 600px)": {
-														mr: 0,
-														borderRadius: "4px",
-														"&.Mui-selected": {
-															backgroundColor: "rgba(249, 249, 253, 1)",
-															border: "1px solid rgba(220, 220, 239, 1)",
-														},
-													},
-												}}
-												label="Partners"
-											/>
-										)}
-										<Tab
-											className="main-text"
-											sx={{
-												textTransform: "none",
-												padding: "4px 10px",
-												minHeight: "auto",
-												flexGrow: 1,
-												pb: "10px",
-												textAlign: "center",
-												fontSize: "14px",
-												fontWeight: 700,
-												lineHeight: "19.1px",
-												minWidth: "auto",
-												"&.Mui-selected": {
-													color: "rgba(56, 152, 252, 1)",
-												},
-												"@media (max-width: 600px)": {
-													mr: 0,
-													borderRadius: "4px",
-													"&.Mui-selected": {
-														backgroundColor: "rgba(249, 249, 253, 1)",
-														border: "1px solid rgba(220, 220, 239, 1)",
-													},
-												},
-											}}
-											label="Payouts"
-										/>
-										<Tab
-											className="main-text"
-											sx={{
-												textTransform: "none",
-												padding: "4px 10px",
-												minHeight: "auto",
-												flexGrow: 1,
-												pb: "10px",
-												textAlign: "center",
-												fontSize: "14px",
-												fontWeight: 700,
-												lineHeight: "19.1px",
-												minWidth: "auto",
-												"&.Mui-selected": {
-													color: "rgba(56, 152, 252, 1)",
-												},
-												"@media (max-width: 600px)": {
-													mr: 0,
-													borderRadius: "4px",
-													"&.Mui-selected": {
-														backgroundColor: "rgba(249, 249, 253, 1)",
-														border: "1px solid rgba(220, 220, 239, 1)",
-													},
-												},
-											}}
-											label="Assets"
-										/>
-									</Tabs>
-								</Box>
-
 								{tabIndex === 0 && (
 									<Box
 										sx={{
@@ -684,6 +505,182 @@ const Partners: React.FC = () => {
 							updateOrAddPartner={updateOrAddPartner}
 							onClose={handleFormClosePopup}
 						/>
+					</Box>
+					<Box
+						sx={{
+							flexGrow: 1,
+							display: "flex",
+							justifyContent: "center",
+							alignItems: "center",
+							"@media (max-width: 900px)": { pr: 0, width: "51%" },
+							"@media (max-width: 600px)": {
+								width: "100%",
+								pr: "0",
+								pt: 0,
+							},
+						}}
+					>
+						<Tabs
+							value={tabIndex}
+							onChange={handleTabChange}
+							sx={{
+								textTransform: "none",
+								minHeight: 0,
+								"& .MuiTabs-indicator": {
+									backgroundColor: "rgba(56, 152, 252, 1)",
+									height: "1.4px",
+								},
+								"@media (max-width: 600px)": {
+									border: "1px solid rgba(228, 228, 228, 1)",
+									borderRadius: "4px",
+									width: "100%",
+									"& .MuiTabs-indicator": {
+										height: "0",
+									},
+								},
+							}}
+							aria-label="suppression tabs"
+						>
+							<Tab
+								className="main-text"
+								sx={{
+									textTransform: "none",
+									padding: "4px 1px",
+									pb: "10px",
+									flexGrow: 1,
+									marginRight: "3em",
+									minHeight: "auto",
+									minWidth: "auto",
+									fontSize: "14px",
+									fontWeight: 700,
+									lineHeight: "19.1px",
+									textAlign: "left",
+									mr: 2,
+									"&.Mui-selected": {
+										color: "rgba(56, 152, 252, 1)",
+									},
+									"@media (max-width: 600px)": {
+										mr: 0,
+										borderRadius: "4px",
+										"&.Mui-selected": {
+											backgroundColor: "rgba(249, 249, 253, 1)",
+											border: "1px solid rgba(220, 220, 239, 1)",
+										},
+									},
+								}}
+								label="Overview"
+							/>
+							<Tab
+								className="main-text"
+								sx={{
+									textTransform: "none",
+									padding: "4px 10px",
+									minHeight: "auto",
+									flexGrow: 1,
+									pb: "10px",
+									textAlign: "center",
+									fontSize: "14px",
+									fontWeight: 700,
+									lineHeight: "19.1px",
+									minWidth: "auto",
+									"&.Mui-selected": {
+										color: "rgba(56, 152, 252, 1)",
+									},
+									"@media (max-width: 600px)": {
+										mr: 0,
+										borderRadius: "4px",
+										"&.Mui-selected": {
+											backgroundColor: "rgba(249, 249, 253, 1)",
+											border: "1px solid rgba(220, 220, 239, 1)",
+										},
+									},
+								}}
+								label="Accounts"
+							/>
+							{isMaster && (
+								<Tab
+									className="main-text"
+									sx={{
+										textTransform: "none",
+										padding: "4px 10px",
+										minHeight: "auto",
+										flexGrow: 1,
+										pb: "10px",
+										textAlign: "center",
+										fontSize: "14px",
+										fontWeight: 700,
+										lineHeight: "19.1px",
+										minWidth: "auto",
+										"&.Mui-selected": {
+											color: "rgba(56, 152, 252, 1)",
+										},
+										"@media (max-width: 600px)": {
+											mr: 0,
+											borderRadius: "4px",
+											"&.Mui-selected": {
+												backgroundColor: "rgba(249, 249, 253, 1)",
+												border: "1px solid rgba(220, 220, 239, 1)",
+											},
+										},
+									}}
+									label="Partners"
+								/>
+							)}
+							<Tab
+								className="main-text"
+								sx={{
+									textTransform: "none",
+									padding: "4px 10px",
+									minHeight: "auto",
+									flexGrow: 1,
+									pb: "10px",
+									textAlign: "center",
+									fontSize: "14px",
+									fontWeight: 700,
+									lineHeight: "19.1px",
+									minWidth: "auto",
+									"&.Mui-selected": {
+										color: "rgba(56, 152, 252, 1)",
+									},
+									"@media (max-width: 600px)": {
+										mr: 0,
+										borderRadius: "4px",
+										"&.Mui-selected": {
+											backgroundColor: "rgba(249, 249, 253, 1)",
+											border: "1px solid rgba(220, 220, 239, 1)",
+										},
+									},
+								}}
+								label="Payouts"
+							/>
+							<Tab
+								className="main-text"
+								sx={{
+									textTransform: "none",
+									padding: "4px 10px",
+									minHeight: "auto",
+									flexGrow: 1,
+									pb: "10px",
+									textAlign: "center",
+									fontSize: "14px",
+									fontWeight: 700,
+									lineHeight: "19.1px",
+									minWidth: "auto",
+									"&.Mui-selected": {
+										color: "rgba(56, 152, 252, 1)",
+									},
+									"@media (max-width: 600px)": {
+										mr: 0,
+										borderRadius: "4px",
+										"&.Mui-selected": {
+											backgroundColor: "rgba(249, 249, 253, 1)",
+											border: "1px solid rgba(220, 220, 239, 1)",
+										},
+									},
+								}}
+								label="Assets"
+							/>
+						</Tabs>
 					</Box>
 				</Box>
 				<Box sx={{ flexGrow: 1, overflowY: "auto", pb: 0 }}>
