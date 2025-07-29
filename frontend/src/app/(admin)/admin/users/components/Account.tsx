@@ -778,7 +778,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			case "contacts_count":
 				return row.contacts_count || "0";
 			case "cost_leads_overage":
-				return row.cost_leads_overage || "N/A";
+				return row.cost_leads_overage ? `$${row.cost_leads_overage}` : "N/A";
 			case "has_credit_card":
 				return row.has_credit_card ? "Yes" : "No";
 			case "credits_count":
