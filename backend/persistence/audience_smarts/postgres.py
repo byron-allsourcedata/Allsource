@@ -24,7 +24,7 @@ from models.users import Users
 from persistence.audience_smarts.dto import (
     AudienceSmartDTO,
 )
-from schemas.audience import DataSourcesFormat
+from schemas.audience import DataSourcesFormat, RegeneretedAudienceSmart
 from typing import Optional, Tuple, List
 from typing_extensions import override
 from sqlalchemy.engine.row import Row
@@ -115,6 +115,68 @@ class AudienceSmartsPostgresPersistence:
                 ).filter(exclude_subq.c.enrichment_user_asid.is_(None))
 
         return final_query
+
+    @override
+    def _get_test_include_exclude_query(
+        self,
+        lookalike_include: Sequence[UUID] = (),
+        lookalike_exclude: Sequence[UUID] = (),
+        source_include: Sequence[UUID] = (),
+        source_exclude: Sequence[UUID] = (),
+    ) -> RowReturningQuery[tuple[UUID]]:
+        result_ids = set()
+
+        if lookalike_include:
+            result_ids |= {
+                row[0]
+                for row in self.db.query(
+                    AudienceLookalikesPerson.enrichment_user_asid
+                )
+                .filter(
+                    AudienceLookalikesPerson.lookalike_id.in_(lookalike_include)
+                )
+                .all()
+            }
+
+        if source_include:
+            result_ids |= {
+                row[0]
+                for row in self.db.query(
+                    AudienceSourcesMatchedPerson.enrichment_user_asid
+                )
+                .filter(
+                    AudienceSourcesMatchedPerson.source_id.in_(source_include)
+                )
+                .all()
+            }
+
+        if lookalike_exclude:
+            exclude_ids = {
+                row[0]
+                for row in self.db.query(
+                    AudienceLookalikesPerson.enrichment_user_asid
+                )
+                .filter(
+                    AudienceLookalikesPerson.lookalike_id.in_(lookalike_exclude)
+                )
+                .all()
+            }
+            result_ids -= exclude_ids
+
+        if source_exclude:
+            exclude_ids = {
+                row[0]
+                for row in self.db.query(
+                    AudienceSourcesMatchedPerson.enrichment_user_asid
+                )
+                .filter(
+                    AudienceSourcesMatchedPerson.source_id.in_(source_exclude)
+                )
+                .all()
+            }
+            result_ids -= exclude_ids
+
+        return result_ids
 
     # =================================================================================
 
@@ -417,6 +479,76 @@ class AudienceSmartsPostgresPersistence:
             )
         ]
 
+    def get_smart_for_regenerate(self, smart_id: UUID):
+        rows = (
+            self.db.query(
+                AudienceSmart.id,
+                AudienceSmart.name,
+                AudienceSmart.total_records,
+                AudienceSmart.active_segment_records,
+                AudienceSmart.validated_records,
+                AudienceSmart.validations,
+                AudienceSmartsUseCase.alias.label("use_case_alias"),
+                AudienceSmartsDataSources.data_type,
+                AudienceSmartsDataSources.source_id,
+                AudienceSmartsDataSources.lookalike_id,
+                Users.id.label("user_id"),
+                Users.full_name.label("full_name"),
+                AudienceSmart.created_by_user_id,
+                AudienceSmart.created_at,
+                AudienceSmart.status,
+                AudienceSmart.target_schema,
+            )
+            .join(Users, Users.id == AudienceSmart.created_by_user_id)
+            .join(
+                AudienceSmartsUseCase,
+                AudienceSmartsUseCase.id == AudienceSmart.use_case_id,
+            )
+            .outerjoin(
+                AudienceSmartsDataSources,
+                AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id,
+            )
+            .filter(AudienceSmart.id == str(smart_id))
+            .all()
+        )
+
+        if not rows:
+            return None
+
+        first = rows[0]
+        data_sources = []
+        for r in rows:
+            if r.data_type and (r.source_id or r.lookalike_id):
+                data_sources.append(
+                    {
+                        "includeExclude": r.data_type,
+                        "selectedSourceId": r.source_id or r.lookalike_id,
+                        "sourceLookalike": "Source"
+                        if r.source_id
+                        else "Lookalike",
+                        "useCase": first.use_case_alias,
+                    }
+                )
+
+        return {
+            "id": first.id,
+            "name": first.name,
+            "total_records": first.total_records,
+            "active_segment_records": first.active_segment_records,
+            "validated_records": first.validated_records,
+            "validations": json.loads(first.validations)
+            if first.validations
+            else [],
+            "use_case_alias": first.use_case_alias,
+            "user_id": first.user_id,
+            "full_name": first.full_name,
+            "created_by_user_id": first.created_by_user_id,
+            "created_at": first.created_at,
+            "status": first.status,
+            "target_schema": first.target_schema,
+            "data_sources": data_sources,
+        }
+
     def get_person_id_asids_by_smart_aud_id(
         self, smart_audience_id: UUID
     ) -> List[dict]:
@@ -463,3 +595,10 @@ class AudienceSmartsPostgresPersistence:
         )
 
         return subscription.alias not in restricted_plans
+
+    def get_matching_info(self, smart_audience_id: UUID):
+        return (
+            self.db.query(AudienceSmart.status, AudienceSmart.validated_records)
+            .filter_by(id=str(smart_audience_id))
+            .one_or_none()
+        )._asdict()

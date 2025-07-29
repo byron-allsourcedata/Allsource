@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Query
 from dependencies import (
-    get_audience_sources_service,
     get_domain_service,
     check_user_authorization_without_pixel,
 )
@@ -29,6 +28,7 @@ router = APIRouter(
 
 @router.get("", response_model=SourcesObjectResponse)
 def get_sources(
+    sources_service: AudienceSourceService,
     user=Depends(check_user_authorization_without_pixel),
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
@@ -45,9 +45,6 @@ def get_sources(
     ),
     created_date_end: Optional[datetime] = Query(
         None, description="End date of creation interval"
-    ),
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
     ),
 ):
     source_list, count = sources_service.get_sources(
@@ -70,9 +67,7 @@ def get_sources(
 @router.get("/download/{source_id}")
 def download_value_calculation(
     source_id: UUID,
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
-    ),
+    sources_service: AudienceSourceService,
 ):
     result = sources_service.download_value_calculation(source_id)
     if result:
@@ -95,9 +90,7 @@ def get_domains_with_leads(
 @router.post("/heading-substitution", response_model=Optional[List[str]])
 def substitution_headings(
     payload: HeadingSubstitutionRequest,
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
-    ),
+    sources_service: AudienceSourceService,
 ):
     return sources_service.substitution_headings(
         payload.source_type, payload.headings
@@ -107,30 +100,27 @@ def substitution_headings(
 @router.post("/create", response_model=CreateSource)
 async def create_source(
     payload: NewSource,
+    sources_service: AudienceSourceService,
     user=Depends(check_user_authorization_without_pixel),
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
-    ),
 ):
-    return await sources_service.create_source(user=user, payload=payload)
+    return await sources_service.create_source(
+        user_full_name=user.get("full_name"),
+        user_id=user.get("id"),
+        payload=payload,
+    )
 
 
 @router.delete("/{id}", response_model=bool)
 def delete_source(
     id: UUID,
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
-    ),
+    sources_service: AudienceSourceService,
 ):
     return sources_service.delete_source(id=id)
 
 
 @router.get("/sample-customers-list")
 def get_sample_customers_list(
-    source_type: str = Query(...),
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
-    ),
+    sources_service: AudienceSourceService, source_type: str = Query(...)
 ):
     file_path = sources_service.get_sample_customers_list(source_type)
 
@@ -145,23 +135,19 @@ def get_sample_customers_list(
 
 @router.get("/get-processing-source", response_model=Optional[CreateSource])
 def get_processing_source(
+    sources_service: AudienceSourceService,
     id: UUID = Query(...),
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
-    ),
 ):
     return sources_service.get_processing_source(id)
 
 
 @router.get("/domains", response_model=DomainsSourceResponse)
 def get_domains(
+    sources_service: AudienceSourceService,
     user=Depends(check_user_authorization_without_pixel),
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
         10, alias="per_page", ge=1, le=500, description="Items per page"
-    ),
-    sources_service: AudienceSourceService = Depends(
-        get_audience_sources_service
     ),
 ):
     return sources_service.get_domains(

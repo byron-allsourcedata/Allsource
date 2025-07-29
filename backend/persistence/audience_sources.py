@@ -212,9 +212,44 @@ class AudienceSourcesPersistence:
             .one_or_none()
         )
 
+    def get_source_for_regenerate(self, source_id: UUID):
+        return (
+            self.db.query(
+                AudienceSource.id,
+                AudienceSource.name,
+                AudienceSource.target_schema,
+                AudienceSource.source_type,
+                AudienceSource.source_origin,
+                AudienceSource.file_url,
+                AudienceSource.mapped_fields.label("rows"),
+                Users.id.label("user_id"),
+                Users.full_name.label("full_name"),
+                AudienceSource.created_at,
+                UserDomains.domain,
+                AudienceSource.total_records,
+                AudienceSource.matched_records,
+                AudienceSource.matched_records_status,
+                AudienceSource.processed_records,
+            )
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .filter(AudienceSource.id == str(source_id))
+            .one_or_none()
+        )
+
     def get_significant_fields(self, source_id: UUID):
         return (
             self.db.query(AudienceSource.significant_fields)
             .filter_by(id=str(source_id))
             .first()
         )
+
+    def get_matching_info(self, source_id: UUID):
+        return (
+            self.db.query(
+                AudienceSource.matched_records_status,
+                AudienceSource.matched_records,
+            )
+            .filter_by(id=str(source_id))
+            .one_or_none()
+        )._asdict()
