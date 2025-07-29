@@ -368,6 +368,9 @@ class AdminCustomersService:
             count = query.scalar()
             audience_metrics[key] = count or 0
 
+        audience_metrics["total_revenue"] = audience_metrics["overage_sum"] * 0.08 
+        audience_metrics.pop("overage_sum", None)
+        
         return {"audience_metrics": audience_metrics}
 
     def get_user_by_email(self, email):

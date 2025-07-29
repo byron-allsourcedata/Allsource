@@ -31,6 +31,7 @@ interface CustomCardsProps {
 	lookalikes: number;
 	smart_audience: number;
 	data_sync: number;
+	total_revenue: number;
 }
 
 interface FilterParams {
@@ -87,6 +88,7 @@ const Users: React.FC = () => {
 		lookalikes: 0,
 		smart_audience: 0,
 		data_sync: 0,
+		total_revenue: 0,
 	});
 
 	useEffect(() => {
@@ -175,6 +177,7 @@ const Users: React.FC = () => {
 					lookalikes: response.data.audience_metrics.lookalike_count ?? 0,
 					smart_audience: response.data.audience_metrics.smart_count ?? 0,
 					data_sync: response.data.audience_metrics.sync_count ?? 0,
+					total_revenue: response.data.audience_metrics.total_revenue ?? 0,
 				});
 			}
 		} catch (error) {
