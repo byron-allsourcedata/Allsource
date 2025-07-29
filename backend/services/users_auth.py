@@ -127,9 +127,10 @@ class UsersAuth:
                 return UserAuthorizationStatus.PAYMENT_NEEDED
             if subscription_plan_is_inactive_on_basic:
                 return UserAuthorizationStatus.PAYMENT_FAILED
-            if user.get("current_subscription_id") in None:
+            if user.get("current_subscription_id") is None:
                 return UserAuthorizationStatus.NEED_PAY_BASIC
             return UserAuthorizationStatus.SUCCESS
+
         if user.get("is_email_confirmed"):
             if user.get("is_book_call_passed"):
                 if user.get("stripe_payment_url"):
@@ -149,9 +150,10 @@ class UsersAuth:
                 )
                 if subscription_plan_is_inactive_on_basic:
                     return UserAuthorizationStatus.PAYMENT_FAILED
-                if user.get("current_subscription_id") in None:
+                if user.get("current_subscription_id") is None:
                     return UserAuthorizationStatus.NEED_PAY_BASIC
                 return UserAuthorizationStatus.SUCCESS
+
             return UserAuthorizationStatus.NEED_BOOK_CALL
         return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
 

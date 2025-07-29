@@ -101,10 +101,8 @@ class SlackService:
         integration_data = {
             "access_token": access_token,
             "full_name": user.get("full_name"),
-            "sent_contacts": -1,
-            "sync_type": DataSyncType.CONTACT.value,
-            "service_name": SourcePlatformEnum.SLACK.value,
             "slack_team_id": team_id,
+            "service_name": SourcePlatformEnum.SLACK.value,
         }
 
         if common_integration:
@@ -408,5 +406,7 @@ class SlackService:
                 "domain_id": domain_id,
                 "leads_type": leads_type,
                 "created_by": created_by,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
             }
         )

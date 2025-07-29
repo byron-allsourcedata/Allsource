@@ -288,12 +288,15 @@ async def process_rmq_message(
 
             aud_smart.validations = json.dumps(validations)
 
+        db_session.commit()
+
         if validation_count == total_count:
             audience_smarts_service.update_stats_validations(
                 validation_type=f"phone-{validation_type}",
                 count_persons_before_validation=count_persons_before_validation,
                 count_valid_persons=total_validated,
             )
+            db_session.commit()
             await publish_rabbitmq_message_with_channel(
                 channel=channel,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -303,8 +306,6 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-
-        db_session.commit()
 
         await send_sse(
             channel=channel,

@@ -104,6 +104,12 @@ class UserPersistence:
         )
         return users
 
+    def set_has_credit_card(self, user_id: int):
+        self.db.query(Users).filter(Users.id == user_id).update(
+            {Users.has_credit_card: True}, synchronize_session=False
+        )
+        self.db.commit()
+
     def get_combined_team_info(self, user_id: int):
         users = (
             self.db.query(Users).filter(Users.team_owner_id == user_id).all()
@@ -523,6 +529,8 @@ class UserPersistence:
                 Users.is_email_validation_enabled.label(
                     "is_email_validation_enabled"
                 ),
+                Users.overage_leads_count,
+                Users.has_credit_card,
                 subscription_plan_case,
                 # SubscriptionPlan.title.label("subscription_plan"),
                 status_case.label("user_status"),

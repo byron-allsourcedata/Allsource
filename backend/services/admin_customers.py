@@ -240,6 +240,7 @@ class AdminCustomersService:
 
         for user in users:
             user_id = user.id
+            cost_leads_overage = user.overage_leads_count * 0.08
             agg = aggregates.get(user_id, {})
 
             pixel_installed_count = agg.get("pixel_installed_count", 0)
@@ -267,6 +268,8 @@ class AdminCustomersService:
                     "type": "user",
                     "credits_count": user.credits_count,
                     "is_another_domain_resolved": user.is_another_domain_resolved,
+                    "has_credit_card": user.has_credit_card,
+                    "cost_leads_overage": cost_leads_overage,
                 }
             )
 

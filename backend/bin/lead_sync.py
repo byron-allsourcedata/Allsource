@@ -19,6 +19,8 @@ from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, aliased
 
+from services.lead_sync.service import LeadSyncService
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -148,6 +150,7 @@ async def process_table(
     subscription_service: SubscriptionService,
     leads_persistence: LeadsPersistence,
     notification_persistence: NotificationPersistence,
+    leads_service: LeadSyncService,
     root_user=None,
 ):
     results = []
@@ -190,7 +193,8 @@ async def process_table(
                         subscription_service,
                         leads_persistence,
                         notification_persistence,
-                        None,
+                        leads_service=leads_service,
+                        root_user=None,
                     )
                     if result:
                         results.append(result)
@@ -204,7 +208,8 @@ async def process_table(
                             subscription_service,
                             leads_persistence,
                             notification_persistence,
-                            root_user,
+                            leads_service=leads_service,
+                            root_user=root_user,
                         )
                     break
                 else:
@@ -648,15 +653,20 @@ async def process_user_data(
     subscription_service: SubscriptionService,
     leads_persistence: LeadsPersistence,
     notification_persistence: NotificationPersistence,
+    leads_service: LeadSyncService,
     root_user=None,
 ):
     global count
     domain_count_hash = {}
     ip = possible_lead["IP"]
-    partner_uid_decoded = urllib.parse.unquote(
-        str(possible_lead["PARTNER_UID"]).lower()
-    )
-    partner_uid_dict = json.loads(partner_uid_decoded)
+
+    partner_uid: str | None = possible_lead["PARTNER_UID"]
+    partner_uid_dict = leads_service.decode_partner_uid(str(partner_uid))
+
+    if partner_uid_dict is None:
+        logging.error("Malformed partner_uid: {partner_uid}")
+        return None
+
     partner_uid_client_id = partner_uid_dict.get("client_id")
     page = partner_uid_dict.get("current_page")
     puci = str(partner_uid_client_id)
@@ -1208,6 +1218,7 @@ async def process_files(
     db_session: Session,
     rabbitmq_connection: RabbitMQConnection,
     root_user: Users,
+    leads_service: LeadSyncService,
 ):
     states = get_all_states(db_session)
     domain_count_list = []
@@ -1273,7 +1284,8 @@ async def process_files(
             subscription_service,
             leads_persistence,
             notification_persistence,
-            None,
+            leads_service=leads_service,
+            root_user=None,
         )
         if result:
             domain_count_list.extend(result)
@@ -1287,7 +1299,8 @@ async def process_files(
                 subscription_service,
                 leads_persistence,
                 notification_persistence,
-                root_user,
+                leads_service=leads_service,
+                root_user=root_user,
             )
         logging.debug(
             f"Last processed event time {str(last_processed_file_name)}"
@@ -1453,6 +1466,7 @@ async def main():
     notification_persistence = await resolver.resolve(NotificationPersistence)
     leads_persistence = await resolver.resolve(LeadsPersistence)
     ch_session = await resolver.resolve(Clickhouse)
+    lead_service = await resolver.resolve(LeadSyncService)
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()
@@ -1483,6 +1497,7 @@ async def main():
                 leads_persistence=leads_persistence,
                 db_session=db_session,
                 rabbitmq_connection=connection,
+                leads_service=lead_service,
                 root_user=result,
             )
             await connection.close()

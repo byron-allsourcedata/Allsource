@@ -21,12 +21,14 @@ class BasicPlanService:
         plans: PlansPersistence,
         users: UserPersistence,
         user_subscriptions: UserSubscriptionsService,
+        user_persistence: UserPersistence,
     ):
         self.db = db
         self.plans = plans
         self.stripe = stripe
         self.users = users
         self.user_subscriptions = user_subscriptions
+        self.user_persistence = user_persistence
 
     def get_basic_plan_payment_url(self, customer_id: str) -> str:
         alias = "basic"
@@ -57,6 +59,7 @@ class BasicPlanService:
             return
         user_id = user.id
 
+        self.user_persistence.set_has_credit_card(user_id)
         self.user_subscriptions.move_to_plan(user_id, "basic")
         basic_records = self.plans.get_plan_by_alias("basic_records")
         if not basic_records:

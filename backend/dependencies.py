@@ -428,7 +428,10 @@ def check_user_authorization_without_pixel(
         user_id=user.get("id")
     )
 
-    if auth_status == UserAuthorizationStatus.NEED_CONFIRM_EMAIL:
+    if (
+        auth_status == UserAuthorizationStatus.NEED_CONFIRM_EMAIL
+        and not is_admin
+    ):
         raise_forbidden(
             {
                 "status": UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value,
@@ -463,7 +466,7 @@ def check_user_authorization_without_pixel(
         UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED,
     }
 
-    if auth_status not in allowed_statuses:
+    if auth_status not in allowed_statuses and not is_admin:
         raise_forbidden({"status": auth_status.value})
 
     return user

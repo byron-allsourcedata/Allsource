@@ -2,18 +2,14 @@ import logging
 from typing import Iterable, List, Dict
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from db_dependencies import Db, Clickhouse
+from persistence.enrichment_users import EnrichmentUsersPersistence, EmailAsid
 from resolver import injectable
 import time
 import json
 
 logger = logging.getLogger(__name__)
-
-
-class EmailAsid(BaseModel):
-    email: EmailStr
-    asid: str
 
 
 class ProfContact(BaseModel):
@@ -37,9 +33,15 @@ class EmploymentEntry(BaseModel):
 
 @injectable
 class SourceAgentService:
-    def __init__(self, db: Db, clickhouse: Clickhouse):
+    def __init__(
+        self,
+        db: Db,
+        clickhouse: Clickhouse,
+        enrichment_users: EnrichmentUsersPersistence,
+    ):
         self.db = db
         self.clickhouse = clickhouse
+        self.enrichment_users = enrichment_users
 
     def _run_query(
         self,
@@ -53,132 +55,7 @@ class SourceAgentService:
         self,
         emails: Iterable[str],
     ) -> List[EmailAsid]:
-        emails_clean: List[str] = [
-            e.strip().lower() for e in emails if e and "@" in e
-        ]
-        if not emails_clean:
-            logger.debug("get_user_ids_by_emails: empty input")
-            return []
-
-        matched: dict[str, EmailAsid] = {}
-
-        count_business = 0
-        count_personal = 0
-        count_other = 0
-
-        # --- Business email
-        sql_business = """
-            SELECT business_email, asid
-            FROM enrichment_users
-            WHERE business_email IN %(ids)s
-        """
-        start_time = time.perf_counter()
-        rows = self._run_query(sql_business, {"ids": emails_clean})
-        elapsed = time.perf_counter() - start_time
-        logger.info(
-            "Business email query returned %d rows in %.4f seconds",
-            len(rows),
-            elapsed,
-        )
-
-        for email, asid in rows:
-            if not email or not isinstance(email, str):
-                continue
-            email_l = email.strip().lower()
-            if email_l not in matched:
-                try:
-                    matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
-                    count_business += 1
-                except:
-                    logger.error(
-                        f"Error validating EmailAsid for {email}",
-                    )
-                    continue
-
-        remaining = [e for e in emails_clean if e not in matched]
-
-        # --- Personal email
-        if remaining:
-            sql_personal = """
-                SELECT personal_email, asid
-                FROM enrichment_users
-                WHERE personal_email IN %(ids)s
-            """
-            start_time = time.perf_counter()
-            rows = self._run_query(sql_personal, {"ids": remaining})
-            elapsed = time.perf_counter() - start_time
-            logger.info(
-                "Personal email query returned %d rows in %.4f seconds",
-                len(rows),
-                elapsed,
-            )
-
-            for email, asid in rows:
-                if not email or not isinstance(email, str):
-                    continue
-                email_l = email.strip().lower()
-                if email_l not in matched:
-                    try:
-                        email_asid_pair = EmailAsid(
-                            email=email_l, asid=str(asid)
-                        )
-                    except Exception as e:
-                        logger.error(
-                            f"Error creating EmailAsid object for {email}: {e}",
-                        )
-                        continue
-                    matched[email_l] = email_asid_pair
-                    count_personal += 1
-
-            remaining = [e for e in remaining if e not in matched]
-
-        # --- Other emails (array)
-        if remaining:
-            sql_other = """
-                SELECT other_email, asid
-                FROM (
-                    SELECT arrayJoin(other_emails) AS other_email, asid
-                    FROM enrichment_users
-                )
-                WHERE other_email IN %(ids)s
-            """
-            start_time = time.perf_counter()
-            rows = self._run_query(sql_other, {"ids": remaining})
-            elapsed = time.perf_counter() - start_time
-            logger.info(
-                "Other email query returned %d rows in %.4f seconds",
-                len(rows),
-                elapsed,
-            )
-
-            for email, asid in rows:
-                if not email or not isinstance(email, str):
-                    continue
-                email_l = email.strip().lower()
-                if email_l not in matched:
-                    try:
-                        email_asid_pair = EmailAsid(
-                            email=email_l, asid=str(asid)
-                        )
-                    except Exception as e:
-                        logger.error(
-                            f"Error creating EmailAsid object for {email}: {e}",
-                        )
-                        continue
-                    matched[email_l] = email_asid_pair
-                    count_other += 1
-
-        result = list(matched.values())
-
-        logger.info(
-            "Finished email matching: %d total matches (from %d input). Business: %d, Personal: %d, Other: %d",
-            len(result),
-            len(emails_clean),
-            count_business,
-            count_personal,
-            count_other,
-        )
-        return result
+        return self.enrichment_users.get_user_ids_by_emails(emails)
 
     def get_details_by_asids(
         self,

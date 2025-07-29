@@ -368,8 +368,8 @@ async def process_rmq_message(
 
             queue_name = QUEUE_MAPPING[column_name]
 
-            for i in range(0, len(enrichment_users), 100):
-                batch = enrichment_users[i : i + 100]
+            for i in range(0, len(enrichment_users), 1000):
+                batch = enrichment_users[i : i + 1000]
                 await publish_rabbitmq_message_with_channel(
                     channel=channel,
                     queue_name=queue_name,
