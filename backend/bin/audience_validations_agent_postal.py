@@ -8,6 +8,7 @@ import sys
 import time
 from decimal import Decimal
 from typing import List
+from itertools import islice
 
 from smartystreets_python_sdk import (
     StaticCredentials,
@@ -64,6 +65,8 @@ SMARTY_CLIENT: USStreetClient = builder.build_us_street_api_client()
 
 batc = Batch()
 
+BATCH_LIMIT = 100
+
 
 def setup_logging(level):
     logging.basicConfig(
@@ -98,6 +101,12 @@ def verify_address(
     return False
 
 
+def chunked_iterable(iterable, size):
+    it = iter(iterable)
+    for first in it:
+        yield [first] + list(islice(it, size - 1))
+
+
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
@@ -115,8 +124,11 @@ async def process_rmq_message(
         )
         validation_type = message_body.get("validation_type")
         validation_cost = message_body.get("validation_cost")
-        logging.info(f"aud_smart_id: {aud_smart_id}")
-        logging.info(f"validation_type: {validation_type}")
+        # logging.info(f"aud_smart_id: {aud_smart_id}")
+        # logging.info(f"validation_type: {validation_type}")
+        logging.info(
+            f"[START] Validation for aud_smart_id={aud_smart_id}, type={validation_type}"
+        )
         failed_ids = []
         verifications = []
         write_off_funds = Decimal(0)
@@ -127,15 +139,24 @@ async def process_rmq_message(
 
         for record in batch:
             person_id = record["audience_smart_person_id"]
-            street = record.get("address", "")
-            city = record.get("city", "")
-            state = record.get("state_name", "")
-            zipcode = record.get("postal_code", "")
+            street, city, state, zipcode = (
+                record.get("address", ""),
+                record.get("city", ""),
+                record.get("state_name", ""),
+                record.get("postal_code", ""),
+            )
 
-            logging.info(f"{zipcode} {state} {city} {street}")
+            logging.debug(
+                f"[RECORD] {person_id}: {zipcode} {state} {city} {street}"
+            )
+
+            # logging.info(f"{zipcode} {state} {city} {street}")
 
             if not (street and city and state and zipcode):
                 failed_ids.append(person_id)
+                logging.warning(
+                    f"[SKIP] Missing fields for person_id={person_id}"
+                )
                 continue
 
             write_off_funds += Decimal(validation_cost)
@@ -146,7 +167,10 @@ async def process_rmq_message(
                 .first()
             )
             if existing:
-                logging.info("There is such a Postal in our database")
+                # logging.info("There is such a Postal in our database")
+                logging.info(
+                    f"[CACHE HIT] Postal {zipcode} already in DB (verified={existing.is_verified})"
+                )
                 if not existing.is_verified:
                     failed_ids.append(person_id)
                 continue
@@ -163,31 +187,65 @@ async def process_rmq_message(
             smarty_lookups.append(lookup)
             lookup_by_person_id[person_id] = lookup
 
-        if smarty_lookups:
-            try:
-                for lookup in smarty_lookups:
-                    batc.add(lookup)
+        # if smarty_lookups:
+        #     try:
+        #         for lookup in smarty_lookups:
+        #             batc.add(lookup)
 
-                SMARTY_CLIENT.send_batch(batc)
+        #         SMARTY_CLIENT.send_batch(batc)
+        #     except smarty_exc.SmartyException as err:
+        #         logging.error("Smarty error: %s", err)
+        #         failed_ids.extend(list(lookup_by_person_id.keys()))
+        #     else:
+        #         for pid, lookup in lookup_by_person_id.items():
+        #             candidates = lookup.result
+        #             logging.info(f"Finded {len(candidates)} candidates")
+        #             is_ok = verify_address(
+        #                 candidates,
+        #                 lookup.street,
+        #                 lookup.city,
+        #                 lookup.state,
+        #             )
+        #             logging.info(f"is ok {is_ok}")
+        #             verifications.append(
+        #                 {"postal_code": lookup.zipcode, "is_verified": is_ok}
+        #             )
+        #             if not is_ok:
+        #                 failed_ids.append(pid)
+        for chunk_idx, chunk in enumerate(
+            chunked_iterable(smarty_lookups, BATCH_LIMIT), start=1
+        ):
+            logging.info(
+                f"[BATCH] Sending chunk {chunk_idx} with {len(chunk)} lookups"
+            )
+
+            batch_obj = Batch()
+            for lookup in chunk:
+                batch_obj.add(lookup)
+
+            try:
+                SMARTY_CLIENT.send_batch(batch_obj)
             except smarty_exc.SmartyException as err:
-                logging.error("Smarty error: %s", err)
-                failed_ids.extend(list(lookup_by_person_id.keys()))
-            else:
-                for pid, lookup in lookup_by_person_id.items():
-                    candidates = lookup.result
-                    logging.info(f"Finded {len(candidates)} candidates")
-                    is_ok = verify_address(
-                        candidates,
-                        lookup.street,
-                        lookup.city,
-                        lookup.state,
-                    )
-                    logging.info(f"is ok {is_ok}")
-                    verifications.append(
-                        {"postal_code": lookup.zipcode, "is_verified": is_ok}
-                    )
-                    if not is_ok:
-                        failed_ids.append(pid)
+                logging.error(f"[SMARTY ERROR] Chunk {chunk_idx}: {err}")
+                failed_ids.extend([l.input_id for l in chunk])
+                continue
+
+            for lookup in chunk:
+                candidates = lookup.result
+                logging.info(
+                    f"[RESULT] {lookup.zipcode}: {len(candidates)} candidates"
+                )
+
+                is_ok = verify_address(
+                    candidates, lookup.street, lookup.city, lookup.state
+                )
+                logging.debug(f"[VERIFY] {lookup.input_id} -> {is_ok}")
+
+                verifications.append(
+                    {"postal_code": lookup.zipcode, "is_verified": is_ok}
+                )
+                if not is_ok:
+                    failed_ids.append(lookup.input_id)
 
         success_ids = [
             rec["audience_smart_person_id"]
@@ -195,7 +253,10 @@ async def process_rmq_message(
             if rec["audience_smart_person_id"] not in failed_ids
         ]
 
-        logging.info(f"success_ids len: {len(success_ids)}")
+        # logging.info(f"success_ids len: {len(success_ids)}")
+        logging.info(
+            f"[STATS] Success={len(success_ids)}, Failed={len(failed_ids)}"
+        )
 
         if write_off_funds:
             count_subtracted = user_persistence.deduct_validation_funds(
@@ -246,6 +307,9 @@ async def process_rmq_message(
                 AudienceSmartPerson.is_valid.is_(True),
             )
         )
+        logging.info(
+            f"[FINAL] Total validated for audience {aud_smart_id}: {total_validated}"
+        )
         validation_count = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -287,12 +351,15 @@ async def process_rmq_message(
 
             aud_smart.validations = json.dumps(validations)
 
+        db_session.commit()
+
         if validation_count == total_count:
             audience_smarts_service.update_stats_validations(
                 validation_type=f"postal_cas_verification-{validation_type}",
                 count_persons_before_validation=count_persons_before_validation,
                 count_valid_persons=total_validated,
             )
+            db_session.commit()
             await publish_rabbitmq_message_with_channel(
                 channel=channel,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -302,8 +369,6 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-
-        db_session.commit()
 
         await send_sse(
             channel=channel,
