@@ -221,6 +221,8 @@ async def aud_validation_agent(
 
             aud_smart.validations = json.dumps(validations)
 
+        db_session.commit()
+
         if validation_count == total_count:
             target_category = CATEGORY_BY_COLUMN.get(validation_type)
             key = COLUMN_MAPPING.get(validation_type)
@@ -230,6 +232,7 @@ async def aud_validation_agent(
                 count_persons_before_validation=count_persons_before_validation,
                 count_valid_persons=total_validated,
             )
+            db_session.commit()
             await publish_rabbitmq_message_with_channel(
                 channel=channel,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -239,8 +242,6 @@ async def aud_validation_agent(
                     "validation_params": validations,
                 },
             )
-
-        db_session.commit()
 
         await send_sse(
             channel=channel,

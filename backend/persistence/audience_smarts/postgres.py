@@ -4,11 +4,8 @@ import logging
 from datetime import datetime
 
 import pytz
-from sqlalchemy import desc, asc, or_, union
-from sqlalchemy.orm import Session, aliased, load_only
+from sqlalchemy import desc, asc, or_
 from sqlalchemy.orm.query import RowReturningQuery
-from sqlalchemy.sql import func
-from collections import defaultdict
 
 from db_dependencies import Db
 from models import SubscriptionPlan, UserSubscriptions
@@ -24,19 +21,8 @@ from models.audience_data_sync_imported_persons import (
     AudienceDataSyncImportedPersons,
 )
 from models.users import Users
-from models.state import States
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment.enrichment_personal_profiles import (
-    EnrichmentPersonalProfiles,
-)
 from persistence.audience_smarts.dto import (
     AudienceSmartDTO,
-    PersonRecord,
-    SyncedPersonRecord,
-)
-from persistence.audience_smarts.interface import (
-    AudienceSmartsPersistenceInterface,
 )
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
@@ -49,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 @injectable
-class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
+class AudienceSmartsPostgresPersistence:
     def __init__(self, db: Db):
         self.db = db
 
@@ -130,6 +116,8 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
 
         return final_query
 
+    # =================================================================================
+
     def get_audience_smart_validations_by_id(self, aud_smart_id: UUID):
         audience_smart = (
             self.db.query(AudienceSmart.validations)
@@ -138,83 +126,13 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         )
         return audience_smart.validations
 
-    # def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
-    #     Lalp = aliased(AudienceLookalikesPerson)
-    #     Smp = aliased(AudienceSourcesMatchedPerson)
+    def get_validations_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]:
+        query = self.db.query(AudienceSmart.validations).filter(
+            AudienceSmart.id == id
+        )
+        return query.first()
 
-    #     lalp_q = (
-    #         self.db.query(Lalp.enrichment_user_asid.label("uid"))
-    #         .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
-    #         .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
-    #     )
-    #     smp_q = (
-    #         self.db.query(Smp.enrichment_user_asid.label("uid"))
-    #         .filter(Smp.source_id.in_(data["source_ids"]["include"]))
-    #         .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
-    #     )
-    #     combined_subq = lalp_q.union(smp_q).subquery()
-    #     count_q = (
-    #         self.db.query(func.count(EnrichmentUser.id))
-    #         .select_from(EnrichmentUser)
-    #         .join(combined_subq, combined_subq.c.uid == EnrichmentUser.id)
-    #         .join(
-    #             EnrichmentUserContact,
-    #             EnrichmentUserContact.asid == EnrichmentUser.asid,
-    #         )
-    #     )
-
-    #     if data.get("use_case") == "linkedin":
-    #         count_q = count_q.filter(
-    #             EnrichmentUserContact.linkedin_url.isnot(None)
-    #         )
-
-    #     return count_q.scalar()
-
-    # def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
-    #     Lalp = aliased(AudienceLookalikesPerson)
-    #     Smp = aliased(AudienceSourcesMatchedPerson)
-
-    #     lalp_ids = (
-    #         self.db.query(Lalp.enrichment_user_asid, Lalp.lookalike_id)
-    #         .filter(
-    #             or_(
-    #                 Lalp.lookalike_id.in_(data["lookalike_ids"]["include"] + data["lookalike_ids"]["exclude"]),
-    #                 True
-    #             )
-    #         )
-    #         .all()
-    #     )
-
-    #     smp_ids = (
-    #         self.db.query(Smp.enrichment_user_asid, Smp.source_id)
-    #         .filter(
-    #             or_(
-    #                 Smp.source_id.in_(data["source_ids"]["include"] + data["source_ids"]["exclude"]),
-    #                 True
-    #             )
-    #         )
-    #         .all()
-    #     )
-
-    #     lalp_filtered = {
-    #         row.enrichment_user_asid
-    #         for row in lalp_ids
-    #         if row.lookalike_id in data["lookalike_ids"]["include"]
-    #         and row.lookalike_id not in data["lookalike_ids"]["exclude"]
-    #     }
-
-    #     smp_filtered = {
-    #         row.enrichment_user_asid
-    #         for row in smp_ids
-    #         if row.source_id in data["source_ids"]["include"]
-    #         and row.source_id not in data["source_ids"]["exclude"]
-    #     }
-
-    #     combined_ids = lalp_filtered.union(smp_filtered)
-
-    #     if not combined_ids:
-    #         return 0
-    #     return combined_ids
+    # =================================================================================
 
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         query = self.get_include_exclude_query(
@@ -225,40 +143,6 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         )
 
         return query.count()
-
-        # Lalp = aliased(AudienceLookalikesPerson)
-        # Smp = aliased(AudienceSourcesMatchedPerson)
-
-        # lalp_rows = self.db.query(
-        #     Lalp.enrichment_user_asid, Lalp.lookalike_id
-        # ).all()
-        # smp_rows = self.db.query(Smp.enrichment_user_asid, Smp.source_id).all()
-
-        # lalp_dict = defaultdict(set)
-        # for row in lalp_rows:
-        #     lalp_dict[row.enrichment_user_asid].add(row.lookalike_id)
-
-        # smp_dict = defaultdict(set)
-        # for row in smp_rows:
-        #     smp_dict[row.enrichment_user_asid].add(row.source_id)
-
-        # lalp_filtered = {
-        #     asid
-        #     for asid, ids in lalp_dict.items()
-        #     if ids & set(data["lookalike_ids"]["include"])
-        #     and not ids & set(data["lookalike_ids"]["exclude"])
-        # }
-
-        # smp_filtered = {
-        #     asid
-        #     for asid, ids in smp_dict.items()
-        #     if ids & set(data["source_ids"]["include"])
-        #     and not ids & set(data["source_ids"]["exclude"])
-        # }
-
-        # combined_ids = lalp_filtered.union(smp_filtered)
-
-        # return len(combined_ids)
 
     def create_audience_smarts_data_sources(
         self,
@@ -448,12 +332,6 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         )
         return query.all()
 
-    def get_validations_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]:
-        query = self.db.query(AudienceSmart.validations).filter(
-            AudienceSmart.id == id
-        )
-        return query.first()
-
     def search_audience_smart(self, start_letter: str, user_id: int):
         query = (
             self.db.query(AudienceSmart.name, Users.full_name)
@@ -497,106 +375,9 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         self.db.commit()
         return updated_count
 
-    def get_persons_by_smart_aud_id(
-        self, smart_audience_id, sent_contacts, fields
-    ) -> List[PersonRecord]:
-        contact_fields = [
-            getattr(EnrichmentUserContact, field)
-            for field in fields
-            if hasattr(EnrichmentUserContact, field)
-        ]
-
-        profile_fields = [
-            getattr(EnrichmentPersonalProfiles, field)
-            for field in fields
-            if hasattr(EnrichmentPersonalProfiles, field)
-        ]
-
-        query = (
-            self.db.query(*contact_fields, *profile_fields)
-            .select_from(AudienceSmartPerson)
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
-            )
-            .join(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
-            .join(
-                EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
-            )
-            .filter(
-                AudienceSmartPerson.smart_audience_id == smart_audience_id,
-                AudienceSmartPerson.is_valid == True,
-            )
-        )
-
-        rows = query.limit(sent_contacts).all()
-        col_names = [col.key for col in contact_fields] + [
-            col.key for col in profile_fields
-        ]
-        result: List[PersonRecord] = []
-        for row in rows:
-            data = dict(zip(col_names, row))
-            record = PersonRecord(**data)
-            result.append(record)
-        return result
-
-    def get_synced_persons_by_smart_aud_id(
-        self, data_sync_id, enrichment_field_names
-    ) -> List[SyncedPersonRecord]:
-        enrichment_fields = [
-            getattr(EnrichmentUserContact, field)
-            for field in enrichment_field_names
-        ]
-
-        fields = [
-            *enrichment_fields,
-            States.state_name.label("state"),
-            EnrichmentPersonalProfiles.gender,
-        ]
-
-        col_names = [c.key for c in enrichment_fields] + ["state", "gender"]
-
-        query = (
-            self.db.query(*fields)
-            .select_from(AudienceDataSyncImportedPersons)
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.id
-                == AudienceDataSyncImportedPersons.enrichment_user_id,
-            )
-            .outerjoin(
-                EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
-            )
-            .outerjoin(
-                EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
-            )
-            .outerjoin(
-                States,
-                func.lower(States.state_code)
-                == func.lower(EnrichmentPersonalProfiles.state_abbr),
-            )
-            .filter(
-                AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
-            )
-        )
-
-        rows = query.all()
-
-        result: List[SyncedPersonRecord] = []
-        for row in rows:
-            data = dict(zip(col_names, row))
-            record = SyncedPersonRecord(**data)
-            result.append(record)
-
-        return result
-
-    def get_processing_sources(self, id):
+    def get_processing_sources(
+        self, id
+    ):  #############################################################
         query = (
             self.db.query(
                 AudienceSmart.id,
@@ -620,7 +401,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         ).first()
         return query
 
-    def get_person_ids_by_smart_aud_id(
+    def get_person_asids_by_smart_aud_id(
         self, smart_audience_id: UUID, limit: int
     ) -> List[UUID]:
         return [
@@ -636,7 +417,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             )
         ]
 
-    def get_person_asids_by_smart_aud_id(
+    def get_person_id_asids_by_smart_aud_id(
         self, smart_audience_id: UUID
     ) -> List[dict]:
         return [
@@ -655,37 +436,7 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             )
         ]
 
-    def get_enrichment_users_for_job_validation(
-        self, smart_audience_id: UUID
-    ) -> List[dict]:
-        raise NotImplementedError("Implemented for clickhouse persistence")
-
-    def get_enrichment_users_for_delivery_validation(
-        self, smart_audience_id: UUID
-    ) -> List[dict]:
-        raise NotImplementedError("Implemented for clickhouse persistence")
-
-    def get_enrichment_users_for_postal_validation(
-        self, smart_audience_id: UUID, validation_type: str
-    ) -> List[dict]:
-        raise NotImplementedError("Implemented for clickhouse persistence")
-
-    def get_enrichment_users_for_confirmation_validation(
-        self, smart_audience_id: UUID
-    ) -> List[dict]:
-        raise NotImplementedError("Implemented for clickhouse persistence")
-
-    def get_enrichment_users_for_free_validations(
-        self, smart_audience_id: UUID, column_name: str
-    ) -> List[dict]:
-        raise NotImplementedError("Implemented for clickhouse persistence")
-
-    def sorted_enrichment_users_for_validation(
-        self, ids: List[UUID], order_by_clause: str
-    ) -> List[dict]:
-        raise NotImplementedError("Implemented for clickhouse persistence")
-
-    def get_synced_person_ids(self, data_sync_id: int) -> List[UUID]:
+    def get_synced_person_asids(self, data_sync_id: int) -> List[UUID]:
         return [
             row[0]
             for row in (
@@ -698,26 +449,6 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                 .all()
             )
         ]
-
-    def collect_user_ids_for_smart_audience(
-        self, data: DataSourcesFormat
-    ) -> List[UUID]:
-        Lalp = aliased(AudienceLookalikesPerson)
-        Smp = aliased(AudienceSourcesMatchedPerson)
-
-        lalp_q = (
-            self.db.query(Lalp.enrichment_user_asid)
-            .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
-            .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
-        )
-        smp_q = (
-            self.db.query(Smp.enrichment_user_asid)
-            .filter(Smp.source_id.in_(data["source_ids"]["include"]))
-            .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
-        )
-
-        unioned = lalp_q.union(smp_q).distinct().all()
-        return [row[0] for row in unioned]
 
     def check_access_for_user(self, user: dict) -> bool:
         restricted_plans = ["free_trial_monthly", "basic"]

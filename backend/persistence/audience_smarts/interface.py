@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Tuple, Optional, List, Any, Dict
+from typing import Tuple, Optional, List, Dict
 from uuid import UUID
 
 from sqlalchemy.orm.query import RowReturningQuery
@@ -148,4 +148,8 @@ class AudienceSmartsPersistenceInterface(ABC):
     def get_enrichment_users_for_free_validations(
         self, smart_audience_id: UUID, column_name: str
     ) -> List[dict]:
+        pass
+
+    @abstractmethod
+    def check_access_for_user(self, user: dict) -> List[dict]:
         pass
