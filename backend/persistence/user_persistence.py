@@ -489,7 +489,7 @@ class UserPersistence:
         search_query,
         page,
         per_page,
-        sort_by,
+        sort_by: str,
         sort_order,
         exclude_test_users,
         filters,
@@ -609,6 +609,8 @@ class UserPersistence:
             "join_date": Users.created_at,
             "last_login_date": Users.last_login,
             "contacts_count": Users.total_leads,
+            "has_credit_card": Users.has_credit_card,
+            "cost_leads_overage": Users.overage_leads_count,
         }
         sort_column = sort_options.get(sort_by, Users.created_at)
         query = query.order_by(
