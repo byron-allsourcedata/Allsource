@@ -153,7 +153,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 	setLoading,
 	loading,
 }) => {
-	const [isMaster, setIsMaster] = useState(master);
+	const [is_master, setIsMaster] = useState(master);
 	const [partners, setPartners] = useState<PartnerData[]>([]);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -217,7 +217,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 				params: {
 					year: selectedYear,
 					partner_id: partnerId ?? id,
-					is_master: isMaster,
+					is_master: is_master,
 				},
 			});
 			setRewards(response.data);
@@ -230,7 +230,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 	const tableHeaders = [
 		{
 			key: "partner_name",
-			label: `Partner  ${isMaster ? "master" : ""} name`,
+			label: `Partner  ${is_master ? "master" : ""} name`,
 			sortable: false,
 		},
 		{ key: "email", label: "Email", sortable: false },
@@ -409,7 +409,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 		try {
 			const response = await axiosInstance.get("/admin-partners", {
 				params: {
-					isMaster,
+					is_master: is_master,
 					search,
 					start_date: appliedDates.start
 						? appliedDates.start.toLocaleDateString("en-CA")
@@ -531,7 +531,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 								cursor: "pointer",
 							}}
 						>
-							{isMaster || masterData ? "Master" : ""} Partner{" "}
+							{is_master || masterData ? "Master" : ""} Partner{" "}
 							{partnerName ? `- ${partnerName}` : ""}
 						</Typography>
 						{accountName && (
@@ -601,7 +601,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 							}}
 						>
 							<Box sx={{ display: "flex", alignItems: "center" }}>
-								{isMaster && (
+								{is_master && (
 									<Typography
 										variant="h4"
 										component="h1"
@@ -676,7 +676,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 
 					{rewardsPageMonthFilter && (
 						<Box sx={{ display: "flex", alignItems: "center" }}>
-							{isMaster && (
+							{is_master && (
 								<Typography
 									variant="h4"
 									component="h1"
@@ -711,7 +711,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 			)}
 			{rewardsPage && (
 				<RewardsHistory
-					isMaster={isMaster}
+					isMaster={is_master}
 					id={id ?? 0}
 					selectedMonth={selectedMonth}
 					setSelectedMonth={setSelectedMonth}
@@ -932,7 +932,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 											handleFormOpenPopup();
 										}}
 									>
-										Add {isMaster ? "Master" : ""} Partner
+										Add {is_master ? "Master" : ""} Partner
 									</Button>
 									<Button
 										aria-controls={
@@ -1084,7 +1084,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 															"&:hover .icon-button": { display: "contents" },
 														}}
 														onClick={() => {
-															if (isMaster) {
+															if (is_master) {
 																setPartnerName(data.partner_name);
 																setIsMaster(false);
 																setMasterData(data);
@@ -1465,13 +1465,13 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 												lineHeight: "20px",
 											}}
 										>
-											No {isMaster ? "master" : ""} partners found.
+											No {is_master ? "master" : ""} partners found.
 										</Typography>
 									</Box>
 								)}
 							</Box>
 							<InvitePartnerPopup
-								isMaster={isMaster}
+								isMaster={is_master}
 								updateOrAddPartner={updateOrAddPartner}
 								fileData={fileData}
 								open={formPopupOpen}

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from db_dependencies import Db
 from persistence.admin import AdminPersistence
 from resolver import injectable
+from schemas.admin import PartnersQueryParams
 from schemas.users import UpdateUserRequest
 from enums import (
     UserAuthorizationStatus,
@@ -275,43 +276,30 @@ class AdminCustomersService:
 
         return {"users": result, "count": total_count}
 
-    def get_partners_users(
-        self,
-        *,
-        is_master: bool,
-        search_query: str,
-        page: int,
-        per_page: int,
-        sort_by: str,
-        sort_order: str,
-        exclude_test_users: bool,
-        last_login_date_start: Optional[int] = None,
-        last_login_date_end: Optional[int] = None,
-        join_date_start: Optional[int] = None,
-        join_date_end: Optional[int] = None,
-        statuses: Optional[str] = None,
-    ):
+    def get_partners_users(self, query_params: PartnersQueryParams):
         filters = {}
-        if last_login_date_start is not None:
-            filters["last_login_date_start"] = last_login_date_start
-        if last_login_date_end is not None:
-            filters["last_login_date_end"] = last_login_date_end
-        if join_date_start is not None:
-            filters["join_date_start"] = join_date_start
-        if join_date_end is not None:
-            filters["join_date_end"] = join_date_end
-        if statuses is not None:
-            filters["statuses"] = statuses
+        if query_params.last_login_date_start is not None:
+            filters["last_login_date_start"] = (
+                query_params.last_login_date_start
+            )
+        if query_params.last_login_date_end is not None:
+            filters["last_login_date_end"] = query_params.last_login_date_end
+        if query_params.join_date_start is not None:
+            filters["join_date_start"] = query_params.join_date_start
+        if query_params.join_date_end is not None:
+            filters["join_date_end"] = query_params.join_date_end
+        if query_params.statuses is not None:
+            filters["statuses"] = query_params.statuses
 
         users, total_count = self.user_persistence.get_base_partners_users(
-            search_query=search_query,
-            page=page,
-            per_page=per_page,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            exclude_test_users=exclude_test_users,
+            search_query=query_params.search_query,
+            page=query_params.page,
+            per_page=query_params.per_page,
+            sort_by=query_params.sort_by,
+            sort_order=query_params.sort_order,
+            exclude_test_users=query_params.exclude_test_users,
             filters=filters,
-            is_master=is_master,
+            is_master=query_params.is_master,
         )
 
         user_ids = [user.id for user in users]
@@ -493,7 +481,7 @@ class AdminCustomersService:
         updated_row = self.user_persistence.change_email_validation(user_id)
         return updated_row > 0
 
-    def change_plan(self, user_id: int, plan_alias: str) -> bool:
+    def did_change_plan(self, user_id: int, plan_alias: str) -> bool:
         change_plan = self.user_subscription_service.move_to_plan(
             user_id=user_id, plan_alias=plan_alias
         )

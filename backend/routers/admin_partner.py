@@ -24,7 +24,7 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 @router.get("/")
 def get_partners(
     get_partners_service: PartnersService,
-    isMaster: Optional[bool] = Query(False),
+    is_master: Optional[bool] = Query(False),
     sort_by: str = Query(None),
     sort_order: str = Query(None),
     search: Optional[str] = Query(None),
@@ -35,7 +35,7 @@ def get_partners(
     exclude_test_users: bool = Query(False),
 ):
     result = get_partners_service.get_partners(
-        isMaster,
+        is_master,
         search,
         start_date,
         end_date,

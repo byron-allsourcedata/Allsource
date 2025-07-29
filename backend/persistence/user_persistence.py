@@ -942,13 +942,13 @@ class UserPersistence:
 
     def get_base_partners_users(
         self,
-        search_query,
-        page,
-        per_page,
-        sort_by,
-        sort_order,
-        exclude_test_users,
-        filters,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        exclude_test_users: bool,
+        filters: dict,
         is_master: bool,
     ):
         status_case = self.calculate_user_status()

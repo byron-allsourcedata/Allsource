@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
 import os
 from sqlalchemy import or_, func, asc, desc, nulls_last, nulls_first
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 from datetime import datetime, timezone, date
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
@@ -326,7 +326,9 @@ class PartnersPersistence:
         self.db.refresh(partner)
         return partner
 
-    def create_partner_by_admin(self, creating_data: dict) -> Optional[Partner]:
+    def create_partner_by_admin(
+        self, creating_data: dict[str, Any]
+    ) -> Partner | None:
         partner = Partner(
             commission=creating_data["commission"],
             email=creating_data["email"],

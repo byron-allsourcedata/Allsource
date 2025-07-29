@@ -14,7 +14,7 @@ from io import BytesIO
 from urllib.parse import urlparse
 import requests
 
-from config.util import getenv
+from config.aws import AWSConfig
 from enums import PartnersAssetsInfoEnum
 from models.partners_asset import PartnersAsset
 from services.aws import AWSService
@@ -22,7 +22,6 @@ from persistence.partners_asset_persistence import PartnersAssetPersistence
 from schemas.partners_asset import PartnersAssetResponse
 
 logger = logging.getLogger(__name__)
-aws_cloud = getenv("S3_URL")
 
 
 class PartnersAssetService:
@@ -33,7 +32,7 @@ class PartnersAssetService:
     ):
         self.partners_asset_persistence = partners_asset_persistence
         self.AWS = aws_service
-        self.aws_cloud = aws_cloud
+        self.aws_cloud = AWSConfig.aws_cloud_url
 
     def get_assets(self):
         try:
