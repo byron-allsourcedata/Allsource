@@ -22,6 +22,7 @@ import { resellerStyle } from "../reseller/resellerStyle";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { styled } from "@mui/material/styles";
 import { width } from "@mui/system";
+import PageWithLoader from "../../components/AdminProgressBar";
 
 interface AssetsData {
 	id: number;
@@ -213,19 +214,7 @@ const Assets: React.FC = () => {
 							xs={12}
 							sx={{ display: "flex", flexDirection: "column", gap: "24px" }}
 						>
-							{loading && (
-								<Box
-									sx={{
-										width: "100%",
-										position: "fixed",
-										top: "4.2rem",
-										left: "7.6rem",
-										zIndex: 1200,
-									}}
-								>
-									<BorderLinearProgress variant="indeterminate" />
-								</Box>
-							)}
+							{loading && <PageWithLoader />}
 							<Box
 								sx={{
 									display: "flex",

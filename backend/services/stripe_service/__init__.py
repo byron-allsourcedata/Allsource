@@ -22,15 +22,6 @@ logging.getLogger("stripe").setLevel(logging.WARNING)
 TRIAL_PERIOD_WITH_COUPON = 7
 
 
-def create_stripe_transfer(amount: int, destination_account: str):
-    transfer = stripe.Transfer.create(
-        amount=int(amount * 100),
-        currency="usd",
-        destination=destination_account,
-    )
-    return transfer
-
-
 @injectable
 class StripeService:
     def __init__(self):
@@ -89,6 +80,15 @@ class StripeService:
             },
         )
         return resp
+
+    @staticmethod
+    def create_stripe_transfer(amount: int, destination_account: str):
+        transfer = stripe.Transfer.create(
+            amount=int(amount * 100),
+            currency="usd",
+            destination=destination_account,
+        )
+        return transfer
 
     def create_checkout_session(
         self,

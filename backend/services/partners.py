@@ -86,6 +86,9 @@ class PartnersService:
     def get_partner(self, email) -> PartnersObjectResponse:
         partner = self.partners_persistence.get_partner_by_email(email)
 
+        if not partner:
+            raise HTTPException(status_code=404, detail="Partner not found")
+
         return {"data": partner.to_dict()}
 
     def get_partner_partners(
@@ -316,7 +319,6 @@ class PartnersService:
         return PartnersResponse(
             id=partner.id,
             partner_name=partner.name,
-            company_name=partner.company_name,
             email=partner.email,
             is_master=partner.is_master,
             join_date=partner.join_date,

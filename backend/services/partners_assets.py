@@ -13,6 +13,8 @@ from fastapi import HTTPException, UploadFile
 from io import BytesIO
 from urllib.parse import urlparse
 import requests
+
+from config.util import getenv
 from enums import PartnersAssetsInfoEnum
 from models.partners_asset import PartnersAsset
 from services.aws import AWSService
@@ -20,6 +22,7 @@ from persistence.partners_asset_persistence import PartnersAssetPersistence
 from schemas.partners_asset import PartnersAssetResponse
 
 logger = logging.getLogger(__name__)
+aws_cloud = getenv("S3_URL")
 
 
 class PartnersAssetService:
@@ -30,7 +33,7 @@ class PartnersAssetService:
     ):
         self.partners_asset_persistence = partners_asset_persistence
         self.AWS = aws_service
-        self.aws_cloud = os.getenv("S3_URL")
+        self.aws_cloud = aws_cloud
 
     def get_assets(self):
         try:
@@ -110,12 +113,39 @@ class PartnersAssetService:
             file_key = f"partners-assets/{file_hash}{file_extension}"
             file_url = f"{self.aws_cloud}/{file_key}"
 
-            if self.AWS.file_exists(file_key):
-                files_data["file_url"] = file_url
-            else:
-                self.AWS.upload_string(file_contents, file_key)
-                files_data["file_url"] = file_url
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=file_extension
+            ) as temp_file:
+                temp_file.write(file_contents)
+                temp_path = temp_file.name
 
+            # file size
+            file_size_bytes = os.path.getsize(temp_path)
+            size_mb = file_size_bytes / (1024**2)
+            files_data["file_size"] = f"{size_mb:.2f} MB"
+            logger.debug(f"[upload] File size: {files_data['file_size']}")
+
+            # video duration
+            if type == "video":
+                try:
+                    probe = ffmpeg.probe(temp_path)
+                    duration = float(probe["format"]["duration"])
+                    files_data["video_duration"] = f"{duration:.2f}"
+                except Exception as e:
+                    logger.debug(
+                        "ffmpeg error during video duration", exc_info=e
+                    )
+                    files_data["video_duration"] = "0"
+
+            if not self.AWS.file_exists(file_key):
+                self.AWS.upload_string(file_contents, file_key)
+            else:
+                logger.debug(f"[upload] File already exists in S3: {file_key}")
+
+            files_data["file_url"] = file_url
+            logger.debug(f"[upload] File URL: {file_url}")
+
+            # preview generation
             preview = await self.generate_preview(
                 file_contents, file_extension, type
             )
@@ -125,19 +155,26 @@ class PartnersAssetService:
                 preview_url = f"{self.aws_cloud}/{preview_key}"
                 self.AWS.upload_string(file_preview_contents, preview_key)
                 files_data["preview_url"] = preview_url
-                if self.AWS.file_exists(preview_key):
-                    files_data["preview_url"] = preview_url
-                else:
-                    self.AWS.upload_string(file_preview_contents, preview_key)
-                    files_data["preview_url"] = preview_url
             else:
+                logger.debug(
+                    "[upload] Preview generation failed or returned None"
+                )
                 files_data["preview_url"] = None
+
+            logger.debug(
+                f"[upload] Finished uploading and processing: {file.filename}"
+            )
             return files_data
+
         except Exception as e:
-            logger.debug("Error uploading assets file", e)
+            logger.debug("Error uploading assets file", exc_info=e)
             raise HTTPException(
                 status_code=500, detail=f"Error during file upload: {str(e)}"
             )
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+                logger.debug(f"[upload] Temp file removed: {temp_path}")
 
     async def create_asset(
         self, description: str, type: str, file: UploadFile = None
@@ -287,34 +324,6 @@ class PartnersAssetService:
             return "Unknown"
         return extension
 
-    def get_video_duration(self, type: str, file_url: str) -> str:
-        if not file_url or type != "video":
-            return "00:00"
-
-        temp_dir = "temp_video_dir"
-        os.makedirs(temp_dir, exist_ok=True)
-        temp_file_path = os.path.join(temp_dir, "temp_video_file")
-
-        try:
-            response = requests.get(file_url, stream=True, timeout=10)
-            if response.status_code == 200:
-                with open(temp_file_path, "wb") as f:
-                    for chunk in response.iter_content(chunk_size=8192):
-                        f.write(chunk)
-
-                probe = ffmpeg.probe(temp_file_path)
-                duration = float(probe["format"]["duration"])
-
-                minutes, seconds = divmod(int(duration), 60)
-                return f"{minutes:02}:{seconds:02}"
-            else:
-                return "00:00"
-        except Exception:
-            return "00:00"
-        finally:
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir)
-
     def domain_mapped(self, asset: PartnersAsset):
         return PartnersAssetResponse(
             id=asset.id,
@@ -323,6 +332,6 @@ class PartnersAssetService:
             preview_url=asset.preview_url,
             file_url=asset.file_url,
             file_extension=self.get_file_extension(asset.file_url),
-            file_size=self.get_file_size(asset.file_url),
-            video_duration=self.get_video_duration(asset.type, asset.file_url),
+            file_size=asset.file_size,
+            video_duration=asset.video_duration,
         ).model_dump()

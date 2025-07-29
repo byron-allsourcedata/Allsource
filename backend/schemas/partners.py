@@ -12,7 +12,6 @@ class PartnersResponse(BaseModel):
     id: int
     partner_name: str
     email: str
-    company_name: str
     isMaster: Optional[bool] = False
     join_date: Optional[datetime] = None
     commission: int

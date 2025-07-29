@@ -47,6 +47,8 @@ class PartnersAssetPersistence:
             type=creating_data["type"],
             file_url=creating_data["file_url"],
             preview_url=creating_data["preview_url"],
+            file_size=creating_data.get("file_size"),
+            video_duration=creating_data.get("video_duration"),
         )
 
         self.db.add(asset)

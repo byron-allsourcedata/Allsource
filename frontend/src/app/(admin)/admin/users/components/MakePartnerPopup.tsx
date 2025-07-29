@@ -186,7 +186,7 @@ const MakePartnerPopup: React.FC<FormUploadPopupProps> = ({
 								marginTop: "24px",
 							}}
 						>
-							Set the earnings percentage for this user's referrals.
+							Set the earnings percentage for this user&apos;s referrals.
 						</Typography>
 
 						<TextField

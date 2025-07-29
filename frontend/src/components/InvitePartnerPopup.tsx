@@ -85,9 +85,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 
 	const handleCommissionChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
-		const comissionUpLine = maxCommission ? maxCommission - 1 : 70;
+		const commissionUpLine = maxCommission ? maxCommission - 1 : 70;
 		const numericValue = Number(value);
-		const isValid = numericValue >= 1 && numericValue <= comissionUpLine;
+		const isValid = numericValue >= 1 && numericValue <= commissionUpLine;
 		setCommissionError(!isValid && value !== "");
 		if (isValid || value === "") {
 			setCommission(value);
