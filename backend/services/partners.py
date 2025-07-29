@@ -3,6 +3,9 @@ import os
 import hashlib
 import json
 from typing import Optional
+from datetime import date
+from fastapi import HTTPException
+
 from models.partner import Partner
 from resolver import injectable
 from services.jwt_service import create_access_token
@@ -44,15 +47,32 @@ class PartnersService:
                 return subsciption.title
 
     def get_partners(
-        self, is_master, search, start_date, end_date, page, rowsPerPage
+        self,
+        is_master: bool,
+        search: str,
+        start_date: Optional[date],
+        end_date: Optional[date],
+        page: int,
+        rows_per_page: int,
+        exclude_test_users: bool,
+        sort_by: Optional[str],
+        sort_order: Optional[str],
     ) -> PartnersObjectResponse:
-        offset = page * rowsPerPage
-        limit = rowsPerPage
+        offset = page * rows_per_page
+        limit = rows_per_page
 
         search_term = f"%{search}%" if search else None
 
         partners, total_count = self.partners_persistence.get_partners(
-            is_master, search_term, start_date, end_date, offset, limit
+            is_master,
+            search_term,
+            start_date,
+            end_date,
+            offset,
+            limit,
+            exclude_test_users,
+            sort_by,
+            sort_order,
         )
 
         result = [
@@ -65,6 +85,9 @@ class PartnersService:
 
     def get_partner(self, email) -> PartnersObjectResponse:
         partner = self.partners_persistence.get_partner_by_email(email)
+
+        if not partner:
+            raise HTTPException(status_code=404, detail="Partner not found")
 
         return {"data": partner.to_dict()}
 
@@ -296,7 +319,6 @@ class PartnersService:
         return PartnersResponse(
             id=partner.id,
             partner_name=partner.name,
-            company_name=partner.company_name,
             email=partner.email,
             is_master=partner.is_master,
             join_date=partner.join_date,
@@ -311,6 +333,34 @@ class PartnersService:
             status=partner.status.capitalize(),
             isActive=partner.is_active,
         ).model_dump()
+
+    async def promote_user_to_partner(
+        self, user_id: int, commission: int, is_master: bool = False
+    ) -> None:
+        user = self.user_persistence.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        partner_by_email = self.partners_persistence.get_partner_by_email(
+            user.get("email")
+        )
+        if partner_by_email:
+            raise HTTPException(
+                status_code=400, detail="User is already a partner"
+            )
+
+        partner_data = {
+            "user_id": user.get("id"),
+            "email": user.get("email"),
+            "name": user.get("full_name"),
+            "commission": commission,
+            "is_master": is_master,
+            "join_date": user.get("created_at"),
+            "status": "active",
+            "is_active": True,
+        }
+
+        self.partners_persistence.create_partner_by_admin(partner_data)
 
     def generate_access_token(self, user: dict, partner_id: int):
         partner = self.partners_persistence.get_partner_by_master(

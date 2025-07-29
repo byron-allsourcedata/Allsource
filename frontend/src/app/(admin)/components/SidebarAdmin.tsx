@@ -12,7 +12,7 @@ import { usePathname } from "next/navigation";
 import LeadsIcon from "@mui/icons-material/People";
 import CategoryIcon from "@mui/icons-material/Category";
 import FeaturedPlayListIcon from "@mui/icons-material/FeaturedPlayList";
-import AccountBoxIcon from "@mui/icons-material/AccountBox";
+import ReduceCapacityIcon from "@mui/icons-material/ReduceCapacity";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 const sidebarStyles = {
@@ -25,7 +25,7 @@ const sidebarStyles = {
 		backgroundColor: "rgba(255, 255, 255, 1)",
 		borderRight: ".0625rem solid rgba(228, 228, 228, 1)",
 		height: "calc(100vh - 68px)",
-		maxWidth: "144px",
+		maxWidth: "160px",
 		display: "flex",
 		overflow: "hidden",
 		flexDirection: "column",
@@ -152,16 +152,20 @@ const SidebarAdmin: React.FC = () => {
 					</ListItemIcon>
 					<ListItemText primary="Admin" sx={{ pr: 5 }} />
 				</ListItemButton>
+				<ListItemButton
+					onClick={() => handleNavigation("/admin/partners")}
+					sx={
+						isActive("/admin/partners")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
+				>
+					<ListItemIcon sx={sidebarStyles.listItemIcon}>
+						<ReduceCapacityIcon />
+					</ListItemIcon>
+					<ListItemText primary="Partners" />
+				</ListItemButton>
 				{/* <ListItemButton
-                    onClick={() => handleNavigation('/admin/partners')}
-                    sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
-                >
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <AccountBoxIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Partners" />
-                </ListItemButton>
-                <ListItemButton
                     onClick={() => handleNavigation('/admin/accounts')}
                     sx={isActive('/admin/accounts') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
@@ -169,25 +173,33 @@ const SidebarAdmin: React.FC = () => {
                         <AccountCircleIcon />
                     </ListItemIcon>
                     <ListItemText primary="Accounts" />
-                </ListItemButton>
-                <ListItemButton
-                    onClick={() => handleNavigation('/admin/assets')}
-                    sx={isActive('/admin/assets') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
-                >
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <CategoryIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Assets" />
-                </ListItemButton>
-                <ListItemButton
-                    onClick={() => handleNavigation('/admin/payouts')}
-                    sx={isActive('/admin/payouts') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
-                >
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <FeaturedPlayListIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Payouts" />
                 </ListItemButton> */}
+				<ListItemButton
+					onClick={() => handleNavigation("/admin/assets")}
+					sx={
+						isActive("/admin/assets")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
+				>
+					<ListItemIcon sx={sidebarStyles.listItemIcon}>
+						<CategoryIcon />
+					</ListItemIcon>
+					<ListItemText primary="Assets" />
+				</ListItemButton>
+				<ListItemButton
+					onClick={() => handleNavigation("/admin/payouts")}
+					sx={
+						isActive("/admin/payouts")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
+				>
+					<ListItemIcon sx={sidebarStyles.listItemIcon}>
+						<FeaturedPlayListIcon />
+					</ListItemIcon>
+					<ListItemText primary="Payouts" />
+				</ListItemButton>
 			</List>
 		</Box>
 	);

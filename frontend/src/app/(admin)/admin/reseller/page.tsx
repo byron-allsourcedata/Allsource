@@ -26,7 +26,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Checkbox from "@mui/material/Checkbox";
 import { width } from "@mui/system";
 
-const SidebarAdmin = dynamic(() => import("../../SidebarAdmin"), {
+const SidebarAdmin = dynamic(() => import("../../components/SidebarAdmin"), {
 	suspense: true,
 });
 

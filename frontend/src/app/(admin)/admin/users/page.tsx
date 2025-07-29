@@ -19,7 +19,7 @@ import Account from "./components/Account";
 import InviteAdmin from "./components/InviteAdmin";
 import CustomCards from "./components/CustomCards";
 import FilterPopup from "./components/FilterPopup";
-import CustomizedProgressBar from "@/components/ProgressBar";
+import CustomizedProgressBar from "@/app/(admin)/components/AdminProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
 import CustomSwitch from "@/components/ui/CustomSwitch";
@@ -194,31 +194,50 @@ const Users: React.FC = () => {
 
 	const fetchUserData = async () => {
 		try {
-			let url = "/admin";
+			const basePath = "/admin";
+			let endpoint = "/users";
 
-			if (tabIndex === 1) {
-				url +=
-					`/admins?page=${page + 1}&per_page=${rowsPerPage}` +
-					`&sort_by=${orderBy}&sort_order=${order}`;
-			} else {
-				url +=
-					`/users?page=${page + 1}&per_page=${rowsPerPage}` +
-					`&sort_by=${orderBy}&sort_order=${order}`;
+			switch (tabIndex) {
+				case 0:
+					endpoint = "/users";
+					break;
+				case 1:
+					endpoint = "/admins";
+					break;
+				case 2:
+					endpoint = "/partners?is_master=true";
+					break;
+				case 3:
+					endpoint = "/partners";
+					break;
+				default:
+					endpoint = "/users";
 			}
+
+			let queryParams = [
+				`page=${page + 1}`,
+				`per_page=${rowsPerPage}`,
+				`sort_by=${orderBy}`,
+				`sort_order=${order}`,
+			];
 
 			if (selectedFilters.length > 0) {
 				for (const filter of selectedFilters) {
-					url += `&${filter.label}=${filter.value}`;
+					queryParams.push(`${filter.label}=${filter.value}`);
 				}
 			}
 
 			if (excludeTestUsers) {
-				url += `&exclude_test_users=true`;
+				queryParams.push("exclude_test_users=true");
 			}
 
 			if (search.trim() !== "") {
-				url += `&search_query=${encodeURIComponent(search.trim())}`;
+				queryParams.push(`search_query=${encodeURIComponent(search.trim())}`);
 			}
+
+			let url = basePath + endpoint;
+			url += endpoint.includes("?") ? "&" : "?";
+			url += queryParams.join("&");
 
 			const response = await axiosInstance.get(url);
 			if (response.status === 200) {
@@ -240,7 +259,8 @@ const Users: React.FC = () => {
 					: 15;
 				setRowsPerPage(selectedValue);
 			}
-		} catch {
+		} catch (error) {
+			console.error("Failed to fetch user data:", error);
 		} finally {
 			setLoading(false);
 		}
@@ -249,6 +269,8 @@ const Users: React.FC = () => {
 	const tabs = [
 		{ label: "Accounts", visible: true },
 		{ label: "Admins", visible: true },
+		{ label: "Master Partners", visible: true },
+		{ label: "Partners", visible: true },
 	];
 
 	const handleFilterPopupOpen = () => {
@@ -455,7 +477,6 @@ const Users: React.FC = () => {
 									},
 								}}
 								sx={{
-									maxWidth: 200,
 									minHeight: 0,
 									justifyContent: "flex-start",
 									alignItems: "left",
@@ -703,7 +724,7 @@ const Users: React.FC = () => {
 						</Box>
 					</Box>
 					<Account
-						is_admin={tabIndex !== 0}
+						is_admin={tabIndex === 1}
 						rowsPerPageOptions={rowsPerPageOptions}
 						totalCount={totalCount}
 						userData={userData}
@@ -717,6 +738,9 @@ const Users: React.FC = () => {
 						setOrderBy={setOrderBy}
 						setLoading={setLoading}
 						changeUserIsEmailValidation={changeUserIsEmailValidation}
+						onPlanChanged={fetchUserData}
+						isPartnerTab={tabIndex === 2 || tabIndex === 3}
+						isMaster={tabIndex === 2}
 					/>
 				</Box>
 			</Box>

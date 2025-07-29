@@ -35,6 +35,7 @@ import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
 import { MenuIconButton } from "@/components/table";
 import { usePagination } from "@/hooks/usePagination";
+import MakePartnerPopup from "./MakePartnerPopup";
 import {
 	MoreVert,
 	SwapVertIcon,
@@ -43,7 +44,6 @@ import {
 } from "@/icon";
 import { Paginator } from "@/components/PaginationComponent";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
-import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import CustomSwitch from "@/components/ui/CustomSwitch";
 import { UserData } from "../page";
 import { ArrowRightIcon } from "@mui/x-date-pickers";
@@ -61,6 +61,9 @@ interface TableBodyUserProps {
 	tableHeaders: tableHeaders[];
 	setLoading: (state: boolean) => void;
 	changeUserIsEmailValidation: (userId: number) => void;
+	onPlanChanged: () => void;
+	isPartnerTab: boolean;
+	isMaster: boolean;
 }
 
 const TableHeader: React.FC<{
@@ -93,8 +96,9 @@ const TableHeader: React.FC<{
 								width: "100px",
 								maxWidth: "200px",
 								minWidth: "100px",
+								position: "sticky",
 								left: 0,
-								zIndex: 1,
+								zIndex: 2,
 							}),
 							...(key === "status" && {
 								width: "180px",
@@ -107,6 +111,7 @@ const TableHeader: React.FC<{
 								width: "200px",
 								maxWidth: "200px",
 								minWidth: "150px",
+								zIndex: 1,
 							}),
 							// ...(key === "actions" && {
 							// 	width: "100px",
@@ -275,6 +280,9 @@ interface ActionsMenuProps {
 		email: string;
 		joinDate: string;
 	};
+	onPlanChanged: () => void;
+	isPartnerTab: boolean;
+	isMaster: boolean;
 }
 
 const ActionsMenu: React.FC<ActionsMenuProps> = ({
@@ -283,12 +291,18 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 	userId,
 	currentPlanAlias,
 	user,
+	onPlanChanged,
+	isPartnerTab,
+	isMaster,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 	const [submenuAnchorEl, setSubmenuAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
+	const [partnerPopupOpen, setPartnerPopupOpen] = useState(false);
+	const [partnerPopupIsMaster, setPartnerPopupIsMaster] =
+		useState<boolean>(false);
 
 	const handleOpenSubmenu = (event: React.MouseEvent<HTMLElement>) => {
 		setSubmenuAnchorEl(event.currentTarget);
@@ -298,24 +312,33 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 		setSubmenuAnchorEl(null);
 	};
 
+	const handleOpenPartnerPopup = (isMaster: boolean) => {
+		handleCloseSubmenu();
+		handleClose();
+		setPartnerPopupIsMaster(isMaster);
+		setPartnerPopupOpen(true);
+	};
+
+	const handleClosePartnerPopup = () => {
+		setPartnerPopupOpen(false);
+	};
+
 	const changeUserPlan = async (planAlias: string) => {
 		try {
-			const response = await axiosInstance.post(
-				"/admin/change_plan",
-				{
-					user_id: userId,
-					plan_alias: planAlias,
-				},
-				{
-					headers: {
-						"Content-Type": "application/json",
-					},
-				},
-			);
-			showToast("Success update plan");
+			const response = await axiosInstance.post("/admin/change_plan", {
+				user_id: userId,
+				plan_alias: planAlias,
+			});
+
+			if (response.data?.success) {
+				showToast(response.data.message || "Successfully updated plan");
+			} else {
+				showErrorToast(response.data.message || "Failed to update plan");
+			}
+
 			return response.data;
 		} catch (error) {
-			showErrorToast("Error when try to update plan");
+			showErrorToast("Error while updating plan");
 			console.error("Error", error);
 		}
 	};
@@ -345,6 +368,7 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 		const alias = planMap[selectedPlan];
 
 		await changeUserPlan(alias);
+		onPlanChanged();
 		setDialogOpen(false);
 		setSelectedPlan(null);
 		handleClose();
@@ -366,10 +390,17 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 				}}
 				MenuListProps={{ dense: true }}
 			>
-				<MenuItem onClick={() => console.log("Make a Partner")}>
+				<MenuItem
+					disabled={!isMaster && isPartnerTab}
+					onClick={() => handleOpenPartnerPopup(false)}
+				>
 					Make a Partner
 				</MenuItem>
-				<MenuItem onClick={() => console.log("Make a Master Partner")}>
+
+				<MenuItem
+					disabled={isMaster && isPartnerTab}
+					onClick={() => handleOpenPartnerPopup(true)}
+				>
 					Make a Master Partner
 				</MenuItem>
 
@@ -427,6 +458,15 @@ const ActionsMenu: React.FC<ActionsMenuProps> = ({
 					currentPlan: currentPlanAlias,
 				}}
 			/>
+			<MakePartnerPopup
+				open={partnerPopupOpen}
+				onClose={handleClosePartnerPopup}
+				isMaster={partnerPopupIsMaster}
+				userID={userId}
+				updateOrAddPartner={() => {
+					onPlanChanged();
+				}}
+			/>
 		</>
 	);
 };
@@ -437,6 +477,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	setLoading,
 	currentPage,
 	changeUserIsEmailValidation,
+	onPlanChanged,
+	isPartnerTab,
+	isMaster,
 }) => {
 	const router = useRouter();
 	const { setBackButton, triggerBackButton } = useUser();
@@ -592,7 +635,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							position: "sticky",
 							justifyContent: "left",
 							left: 0,
-							zIndex: 1,
+							zIndex: 20,
 							cursor:
 								isCurrentUser || row.type !== "user" ? "default" : "pointer",
 							"& .icon-button": {
@@ -808,6 +851,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 								email: row.email,
 								joinDate: row.created_at,
 							}}
+							onPlanChanged={onPlanChanged}
+							isPartnerTab={isPartnerTab}
+							isMaster={isMaster}
 						/>
 					</Box>
 				);
@@ -869,6 +915,9 @@ interface PartnersAccountsProps {
 	setOrder?: any;
 	setOrderBy?: any;
 	changeUserIsEmailValidation: (userId: number) => void;
+	onPlanChanged: () => void;
+	isPartnerTab: boolean;
+	isMaster: boolean;
 }
 
 interface AccountData {
@@ -907,6 +956,9 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setOrder,
 	setOrderBy,
 	changeUserIsEmailValidation,
+	onPlanChanged,
+	isPartnerTab,
+	isMaster,
 }) => {
 	const tableHeaders = is_admin
 		? [
@@ -965,7 +1017,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	};
 
 	const tableContainerRef = useRef<HTMLDivElement>(null);
-	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 131);
 	const paginationProps = {
 		countRows: totalCount ?? 0,
 		page,
@@ -1001,6 +1052,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 								border: "1px solid rgba(235, 235, 235, 1)",
 								borderBottom: "none",
 								overflowX: "auto",
+								maxHeight: "50vh",
 							}}
 						>
 							<Table stickyHeader>
@@ -1016,13 +1068,13 @@ const Account: React.FC<PartnersAccountsProps> = ({
 									setLoading={setLoading}
 									currentPage={page}
 									changeUserIsEmailValidation={changeUserIsEmailValidation}
+									onPlanChanged={onPlanChanged}
+									isPartnerTab={isPartnerTab}
+									isMaster={isMaster}
 								/>
 							</Table>
 						</TableContainer>
-						<Box
-							ref={paginatorRef}
-							sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}
-						>
+						<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
 							<Paginator tableMode {...paginationProps} />
 						</Box>
 					</Grid>

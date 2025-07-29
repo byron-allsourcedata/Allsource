@@ -49,6 +49,7 @@ import PaymentHistory from "@/components/PaymentHistory";
 import RewardsHistory from "./RewardsHistory";
 import Slider from "./MakePartner";
 import MakePartner from "./MakePartner";
+import PageWithLoader from "../../components/AdminProgressBar";
 
 const getStatusStyle = (status: string) => {
 	switch (status) {
@@ -469,19 +470,7 @@ const Accounts: React.FC = () => {
 						sx={{ display: "flex", flexDirection: "column", gap: "24px" }}
 					>
 						<Box sx={{ display: "flex", flexDirection: "column" }}>
-							{loading && (
-								<Box
-									sx={{
-										width: "100%",
-										position: "fixed",
-										top: "4.2rem",
-										left: "7.6rem",
-										zIndex: 1200,
-									}}
-								>
-									<BorderLinearProgress variant="indeterminate" />
-								</Box>
-							)}
+							{loading && <PageWithLoader />}
 							<Box
 								sx={{
 									display: "flex",

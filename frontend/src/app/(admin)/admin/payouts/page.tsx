@@ -54,7 +54,6 @@ const TabPanel: React.FC<TabPanelProps> = ({
 			{value === index && (
 				<Box
 					sx={{
-						pt: 3,
 						margin: 0,
 						"@media (max-width: 900px)": { pl: 3, pr: 3 },
 						"@media (max-width: 700px)": { pl: 1, pr: 1, pt: 5 },
@@ -67,7 +66,7 @@ const TabPanel: React.FC<TabPanelProps> = ({
 	);
 };
 
-const Suppressions: React.FC = () => {
+const Payouts: React.FC = () => {
 	const router = useRouter();
 	const [tabIndex, setTabIndex] = useState(0);
 	const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -87,11 +86,10 @@ const Suppressions: React.FC = () => {
 					display: "flex",
 					flexDirection: "row",
 					alignItems: "center",
-					position: "fixed",
-					top: "4.25rem",
+					position: "sticky",
+					top: 0,
 					pt: "12px",
 					pb: "16px",
-					left: "9.1rem",
 					pl: "1.5rem",
 					zIndex: 1200,
 					backgroundColor: "#fff",
@@ -288,12 +286,12 @@ const Suppressions: React.FC = () => {
 	);
 };
 
-const SuppressionsPage: React.FC = () => {
+const PayoutsPage: React.FC = () => {
 	return (
 		<Suspense fallback={<ProgressBar />}>
-			<Suppressions />
+			<Payouts />
 		</Suspense>
 	);
 };
 
-export default SuppressionsPage;
+export default PayoutsPage;

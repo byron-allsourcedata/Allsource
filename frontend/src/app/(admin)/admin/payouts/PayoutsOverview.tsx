@@ -198,7 +198,7 @@ const ReferralOverview: React.FC = () => {
 					backgroundColor: "#fff",
 					width: "100%",
 					padding: 0,
-					margin: "3rem auto 0rem",
+					pt: 2,
 					pr: "1rem",
 					"@media (max-width: 600px)": { margin: "0rem auto 0rem", pr: "0rem" },
 				}}
