@@ -21,7 +21,7 @@ class PrivacyPolicyUser(Base):
         server_default=text("gen_random_uuid()"),
     )
     email = Column(VARCHAR(64), nullable=False)
-    ip = Column(VARCHAR(32), nullable=False)
+    ip = Column(VARCHAR(64), nullable=False)
     version_privacy_policy = Column(VARCHAR(128), nullable=False)
     user_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
