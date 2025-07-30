@@ -124,7 +124,7 @@
                         } catch (error) { }
                     }
                 }
-                if (clonedResponse.ok && clonedResponse.url && clonedResponse.url.contains('graphql?operationName=PollForReceipt')) {
+                if (clonedResponse.ok && clonedResponse.url && clonedResponse.url.indexOf('graphql?operationName=PollForReceipt') !== -1) {
                     let id = null;
                     let amount = null;
                     let currencyCode = null;
