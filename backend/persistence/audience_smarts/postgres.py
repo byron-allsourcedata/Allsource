@@ -116,6 +116,7 @@ class AudienceSmartsPostgresPersistence:
 
         return final_query
 
+
     @override
     def _get_test_include_exclude_query(
         self,
@@ -177,6 +178,7 @@ class AudienceSmartsPostgresPersistence:
             result_ids -= exclude_ids
 
         return result_ids
+
 
 
     # =================================================================================
@@ -479,6 +481,7 @@ class AudienceSmartsPostgresPersistence:
                 .all()
             )
         ]
+
 
     def get_smart_for_regenerate(self, smart_id: UUID):
         rows = (

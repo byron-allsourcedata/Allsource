@@ -982,6 +982,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
 				{ key: "credits_count", label: "Credits", sortable: false },
 				{ key: "cost_leads_overage", label: "Revenue", sortable: true },
+
 				{ key: "status", label: "Status", sortable: false },
 				{
 					key: "subscription_plan",

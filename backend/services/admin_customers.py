@@ -271,6 +271,7 @@ class AdminCustomersService:
                     "is_another_domain_resolved": user.is_another_domain_resolved,
                     "has_credit_card": user.has_credit_card,
                     "cost_leads_overage": cost_leads_overage,
+
                 }
             )
 
