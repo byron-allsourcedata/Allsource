@@ -19,7 +19,6 @@ from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, aliased
 
-from services.lead_sync.service import LeadSyncService
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -32,6 +31,7 @@ from enums import NotificationTitles
 from db_dependencies import Db, Clickhouse
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
+from services.lead_sync.service import LeadSyncService
 
 from utils import create_company_alias
 from urllib.parse import urlparse, parse_qs
