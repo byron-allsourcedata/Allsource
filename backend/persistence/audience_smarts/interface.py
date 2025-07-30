@@ -35,6 +35,16 @@ class AudienceSmartsPersistenceInterface(ABC):
         pass
 
     @abstractmethod
+    def _get_test_include_exclude_query(
+        self,
+        lookalike_include: Sequence[UUID],
+        lookalike_exclude: Sequence[UUID],
+        source_include: Sequence[UUID],
+        source_exclude: Sequence[UUID],
+    ) -> RowReturningQuery[tuple[UUID]]:
+        pass
+
+    @abstractmethod
     def create_audience_smarts_data_sources(
         self, smart_audience_id: UUID, data_sources: List[Dict]
     ) -> None:
@@ -96,6 +106,14 @@ class AudienceSmartsPersistenceInterface(ABC):
 
     @abstractmethod
     def set_data_syncing_status(self, id: int, status: str) -> int:
+        pass
+
+    @abstractmethod
+    def get_smart_for_regenerate(self, id: int) -> int:
+        pass
+
+    @abstractmethod
+    def get_matching_info(self, id: int):
         pass
 
     @abstractmethod

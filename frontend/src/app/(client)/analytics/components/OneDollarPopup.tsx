@@ -225,7 +225,7 @@ const OneDollarPopup = () => {
 										/>
 									}
 									label="Free Contact Downloads:"
-									value="500 / per month*"
+									value="500*"
 								/>
 								<GiftRow
 									icon={

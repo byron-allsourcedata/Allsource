@@ -30,10 +30,31 @@ class NewSource(BaseModel):
     source_type: str
     source_origin: str
     source_name: str
-    domain_id: int
     file_url: Optional[str] = None
     rows: Optional[List[Row]] = None
     domain_id: Optional[int] = None
+
+
+class SourceMatchingInfo(BaseModel):
+    matched_records_status: str
+    matched_records: int
+
+
+class RegeneretedAudienceSmart(BaseModel):
+    id: UUID
+    name: str
+    total_records: int
+    active_segment_records: int
+    validated_records: int
+    validations: dict
+    use_case_alias: str
+    user_id: int
+    full_name: str
+    created_by_user_id: int
+    created_at: datetime
+    status: str
+    target_schema: str
+    data_sources: list[dict]
 
 
 class AudienceResponse(BaseModel):
@@ -112,6 +133,24 @@ class CreateSource(BaseModel):
     processed_records: int
 
     model_config = {"from_attributes": True}
+
+
+class SourceForRegenerate(BaseModel):
+    id: UUID
+    name: str
+    target_schema: str
+    source_origin: str
+    source_type: str
+    created_at: datetime
+    file_url: str
+    user_id: int
+    full_name: int
+    rows: List[Row]
+    domain: Optional[str] = None
+    total_records: Optional[int] = None
+    matched_records: int
+    matched_records_status: str
+    processed_records: int
 
 
 class SmartsResponse(BaseModel):

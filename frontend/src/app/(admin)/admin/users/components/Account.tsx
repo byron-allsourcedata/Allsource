@@ -778,7 +778,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			case "contacts_count":
 				return row.contacts_count || "0";
 			case "cost_leads_overage":
-				return row.cost_leads_overage || "N/A";
+				return row.cost_leads_overage ? `$${row.cost_leads_overage}` : "N/A";
 			case "has_credit_card":
 				return row.has_credit_card ? "Yes" : "No";
 			case "credits_count":
@@ -975,13 +975,14 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "email", label: "Email", sortable: false },
 				{ key: "join_date", label: "Join date", sortable: true },
 				{ key: "last_login_date", label: "Last Login", sortable: true },
-				{ key: "has_credit_card", label: "Has CC", sortable: false },
+				{ key: "has_credit_card", label: "Has CC", sortable: true },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
 				{ key: "contacts_count", label: "Contacts", sortable: true },
 				{ key: "sources_count", label: "Sources", sortable: false },
 				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
 				{ key: "credits_count", label: "Credits", sortable: false },
-				{ key: "cost_leads_overage", label: "Revenue", sortable: false },
+				{ key: "cost_leads_overage", label: "Revenue", sortable: true },
+
 				{ key: "status", label: "Status", sortable: false },
 				{
 					key: "subscription_plan",

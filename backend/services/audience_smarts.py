@@ -28,7 +28,7 @@ from models.users import User
 from enums import AudienceSmartDataSource, QueueName
 from uuid import UUID
 from enums import AudienceSmartStatuses
-from schemas.audience_smart import AccessCheckResponse
+from schemas.audience_smart import AccessCheckResponse, SmartMatchingInfo
 from resolver import injectable
 
 logger = logging.getLogger(__name__)
@@ -270,7 +270,8 @@ class AudienceSmartsService:
     async def create_audience_smart(
         self,
         name: str,
-        user: dict,
+        user_id: int,
+        user_full_name: str,
         created_by_user_id: int,
         use_case_alias: str,
         data_sources: List[dict],
@@ -302,7 +303,7 @@ class AudienceSmartsService:
 
         created_data = self.audience_smarts_persistence.create_audience_smart(
             name=name,
-            user_id=user.get("id"),
+            user_id=user_id,
             created_by_user_id=created_by_user_id,
             use_case_alias=use_case_alias,
             validation_params=json.dumps(validation_params),
@@ -315,7 +316,7 @@ class AudienceSmartsService:
         )
         await self.start_scripts_for_matching(
             created_data.id,
-            user.get("id"),
+            user_id,
             need_validate,
             data_sources,
             active_segment_records,
@@ -326,7 +327,7 @@ class AudienceSmartsService:
             id=created_data.id,
             name=created_data.name,
             use_case_alias=use_case_alias,
-            created_by=user.get("full_name"),
+            created_by=user_full_name,
             created_at=created_data.created_at,
             total_records=created_data.total_records,
             validated_records=created_data.validated_records,
@@ -351,6 +352,17 @@ class AudienceSmartsService:
         source_exclude: Sequence[UUID],
     ) -> RowReturningQuery[tuple[UUID]]:
         return self.audience_smarts_persistence.get_include_exclude_query(
+            lookalike_include, lookalike_exclude, source_include, source_exclude
+        )
+
+    def _get_test_include_exclude_query(
+        self,
+        lookalike_include: Sequence[UUID],
+        lookalike_exclude: Sequence[UUID],
+        source_include: Sequence[UUID],
+        source_exclude: Sequence[UUID],
+    ) -> RowReturningQuery[tuple[UUID]]:
+        return self.audience_smarts_persistence._get_test_include_exclude_query(
             lookalike_include, lookalike_exclude, source_include, source_exclude
         )
 
@@ -602,6 +614,19 @@ class AudienceSmartsService:
     ):
         return self.audience_smarts_persistence.get_audience_smart_validations_by_id(
             smart_audience_id
+        )
+
+    def get_smart_for_regenerate(
+        self,
+        smart_audience_id: UUID,
+    ):
+        return self.audience_smarts_persistence.get_smart_for_regenerate(
+            smart_audience_id
+        )
+
+    def get_matching_info(self, id: UUID):
+        return SmartMatchingInfo(
+            **self.audience_smarts_persistence.get_matching_info(id)
         )
 
     def update_stats_validations(

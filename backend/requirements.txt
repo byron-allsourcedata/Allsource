@@ -128,6 +128,7 @@ Pygments==2.18.0
 PyJWT==2.10.1
 pyparsing==3.1.2
 pytest==8.3.4
+pytest-asyncio==1.1.0
 pytest-mock==3.14.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
