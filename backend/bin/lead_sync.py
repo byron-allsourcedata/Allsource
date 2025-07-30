@@ -333,31 +333,6 @@ async def send_inactive_leads_notification(
     )
 
 
-async def notify_missing_plan(notification_persistence, user):
-    account_notification = (
-        notification_persistence.get_account_notification_by_title(
-            NotificationTitles.CHOOSE_PLAN.value
-        )
-    )
-    queue_name = f"sse_events_{str(user.id)}"
-    rabbitmq_connection = RabbitMQConnection()
-    connection = await rabbitmq_connection.connect()
-    save_account_notification = (
-        notification_persistence.save_account_notification(
-            user.id, account_notification.id
-        )
-    )
-    channel = await connection.channel()
-    await publish_rabbitmq_message_with_channel(
-        channel=channel,
-        queue_name=queue_name,
-        message_body={
-            "notification_text": account_notification.text,
-            "notification_id": save_account_notification.id,
-        },
-    )
-
-
 async def process_payment_unlocked_five_x_five_user(
     session: Session,
     five_x_five_user_up_id: str,
@@ -715,7 +690,6 @@ async def process_user_data(
         return
     user_domain_id = user_domain.id
     if not subscription_service.is_allow_add_lead(user.id):
-        await notify_missing_plan(notification_persistence, user)
         logging.info(
             f"User not active: partner_uid_client_id {partner_uid_client_id}"
         )
