@@ -217,52 +217,52 @@ async def process_table(
     return results
 
 
-async def handle_payment_notification(
-    user,
-    notification_persistence,
-    plan_leads_credits,
-    leads_credits,
-    contact_credit_price,
-):
-    credit_usage_percentage = round(
-        ((plan_leads_credits - leads_credits) / plan_leads_credits) * 100, 2
-    )
-    if 80 == credit_usage_percentage or credit_usage_percentage == 90:
-        account_notification = (
-            notification_persistence.get_account_notification_by_title(
-                NotificationTitles.CONTACT_LIMIT_APPROACHING.value
-            )
-        )
-        find_notification = notification_persistence.find_account_notifications(
-            user_id=user.id, account_notification_id=account_notification.id
-        )
-        if find_notification:
-            logging.debug("Notification already sent")
-            return
-        notification_text = account_notification.text.format(
-            int(credit_usage_percentage), contact_credit_price
-        )
-        queue_name = f"sse_events_{str(user.id)}"
-        rabbitmq_connection = RabbitMQConnection()
-        connection = await rabbitmq_connection.connect()
-        channel = await connection.channel()
-
-        save_account_notification = (
-            notification_persistence.save_account_notification(
-                user.id,
-                account_notification.id,
-                f"{credit_usage_percentage}, {contact_credit_price}",
-            )
-        )
-
-        await publish_rabbitmq_message_with_channel(
-            channel=channel,
-            queue_name=queue_name,
-            message_body={
-                "notification_text": notification_text,
-                "notification_id": save_account_notification.id,
-            },
-        )
+# async def handle_payment_notification(
+#     user,
+#     notification_persistence,
+#     plan_leads_credits,
+#     leads_credits,
+#     contact_credit_price,
+# ):
+#     credit_usage_percentage = round(
+#         ((plan_leads_credits - leads_credits) / plan_leads_credits) * 100, 2
+#     )
+#     if 80 == credit_usage_percentage or credit_usage_percentage == 90:
+#         account_notification = (
+#             notification_persistence.get_account_notification_by_title(
+#                 NotificationTitles.CONTACT_LIMIT_APPROACHING.value
+#             )
+#         )
+#         find_notification = notification_persistence.find_account_notifications(
+#             user_id=user.id, account_notification_id=account_notification.id
+#         )
+#         if find_notification:
+#             logging.debug("Notification already sent")
+#             return
+#         notification_text = account_notification.text.format(
+#             int(credit_usage_percentage), contact_credit_price
+#         )
+#         queue_name = f"sse_events_{str(user.id)}"
+#         rabbitmq_connection = RabbitMQConnection()
+#         connection = await rabbitmq_connection.connect()
+#         channel = await connection.channel()
+#
+#         save_account_notification = (
+#             notification_persistence.save_account_notification(
+#                 user.id,
+#                 account_notification.id,
+#                 f"{credit_usage_percentage}, {contact_credit_price}",
+#             )
+#         )
+#
+#         await publish_rabbitmq_message_with_channel(
+#             channel=channel,
+#             queue_name=queue_name,
+#             message_body={
+#                 "notification_text": notification_text,
+#                 "notification_id": save_account_notification.id,
+#             },
+#         )
 
 
 async def send_overage_leads_notification(
@@ -389,15 +389,8 @@ async def process_payment_unlocked_five_x_five_user(
     )
 
     session.add(users_unlocked_five_x_five_user)
-    # if user.leads_credits > UNLIMITED:
-    #     user.leads_credits -= AMOUNT_CREDITS
-    #     await handle_payment_notification(
-    #         user,
-    #         notification_persistence,
-    #         plan_leads_credits,
-    #         user.leads_credits,
-    #         contact_credit_price,
-    #     )
+    if user.leads_credits > UNLIMITED:
+        user.leads_credits -= AMOUNT_CREDITS
     session.flush()
     return
 
