@@ -25,7 +25,7 @@ const CardsSection: React.FC<CardsSectionProps> = ({
 	const {
 		xs = 12,
 		sm = undefined,
-		md = 5.8,
+		md = 6,
 		lg = undefined,
 		sx: itemSx = {},
 	} = itemProps;

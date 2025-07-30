@@ -20,6 +20,10 @@ import {
 	IconButton,
 	ToggleButton,
 	Skeleton,
+	CardContent,
+	Card,
+	CardMedia,
+	CardActionArea,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -40,7 +44,7 @@ import { builderHintCards } from "../context/hintsCardsContent";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
 import { BuilderKey } from "../context/hintsCardsContent";
-import BadSourceErrorModal from "./components/BadSourceErrorModal";
+import HintBanner from "./components/HintBanner";
 
 interface Row {
 	id: number;
@@ -106,6 +110,7 @@ const SourcesImport: React.FC = () => {
 		useState(false);
 	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [isContinuePressed, setIsContinuePressed] = useState(false);
 	const [sourceType, setSourceType] = useState<string>("");
 	const [selectedDomain, setSelectedDomain] = useState<string>("");
 	const [sourceName, setSourceName] = useState<string>("");
@@ -120,7 +125,6 @@ const SourcesImport: React.FC = () => {
 	const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
 	const { hasNotification } = useNotification();
 	const [targetAudience, setTargetAudience] = useState<string>("");
-	const [openSourceTypeSelect, setOpenSourceTypeSelect] = useState(false);
 
 	const [eventType, setEventType] = useState<number[]>([]);
 	const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -338,10 +342,6 @@ const SourcesImport: React.FC = () => {
 		}
 	};
 
-	const handleOpenSourceTypeSelect = () => {
-		setOpenSourceTypeSelect(true);
-	};
-
 	useEffect(() => {
 		resetSourcesBuilderHints();
 	}, []);
@@ -351,7 +351,6 @@ const SourcesImport: React.FC = () => {
 		if (typeFromSearchParams) {
 			closeDotHintClick("sourceType");
 			let newType = "";
-			if (typeFromSearchParams === "csv") handleOpenSourceTypeSelect();
 			if (typeFromSearchParams === "pixel") {
 				newType = "Website - Pixel";
 				setTimeout(() => {
@@ -406,13 +405,12 @@ const SourcesImport: React.FC = () => {
 
 	// Switching
 
-	const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
-		const newSourceType = event.target.value;
-
+	const handleChangeSourceType = (newSourceType: string) => {
 		handleDeleteFile();
 		setTargetAudience("");
 		setSelectedDomainId(0);
 		setShowTargetStep(false);
+		setIsContinuePressed(false);
 
 		closeDotHintClick("sourceType");
 		if (newSourceType === "Website - Pixel") {
@@ -973,76 +971,87 @@ const SourcesImport: React.FC = () => {
 										},
 									}}
 								>
-									<FormControl variant="outlined">
-										<Select
-											open={openSourceTypeSelect}
-											onOpen={() => setOpenSourceTypeSelect(true)}
-											onClose={() => setOpenSourceTypeSelect(false)}
-											value={sourceType}
-											onChange={handleChangeSourceType}
-											displayEmpty
-											MenuProps={{
-												MenuListProps: {
-													sx: {
-														pb: 0,
-														pt: pixelNotInstalled ? 0 : "inherit",
-													},
-												},
-											}}
-											sx={{
-												...sourcesStyles.text,
-												position: "relative",
-												width: "316px",
-												borderRadius: "4px",
-												fontSize: "14px",
-												fontFamily: "var(--font-roboto)",
-												color:
-													sourceType === ""
-														? "rgba(112, 112, 113, 1)"
-														: "rgba(32, 33, 36, 1)",
-												"@media (max-width: 390px)": {
-													width: "calc(100vw - 74px)",
-												},
-											}}
-										>
-											<MenuItem value="" disabled sx={{ display: "none" }}>
-												Choose Source Type
-											</MenuItem>
-											<MenuItem
+									<Box display="flex" gap="16px" sx={{ position: "relative" }}>
+										{[
+											{
+												title: "Website - Pixel",
+												src: "/website_pixel-icon.svg",
+												description: "Use your resolved Pixel contacts",
+											},
+											{
+												title: "Customer Conversions",
+												src: "/customer_conversions-icon.svg",
+												description: "Use information about completed deals",
+											},
+											{
+												title: "Failed Leads",
+												src: "/failed_leads-icon.svg",
+												description:
+													"Use CSV file with engaged but non-converting users",
+											},
+											{
+												title: "Interest",
+												src: "/interests-icon.svg",
+												description:
+													"Use information about users interested in specific topic",
+											},
+										].map((el, index) => (
+											<CardActionArea
+												key={index}
+												onClick={() => handleChangeSourceType(el.title)}
 												sx={{
-													fontSize: "14px",
-													borderBottom: "1px solid rgba(228, 228, 228, 1)",
+													...sourcesStyles.cardSourceType,
+													backgroundColor:
+														sourceType === el.title
+															? "rgba(240, 242, 245, 1)"
+															: "rgba(255, 255, 255, 1)",
+													borderColor:
+														sourceType === el.title
+															? "rgba(56, 152, 252, 1)"
+															: "rgba(228, 228, 228, 1)",
 												}}
-												value={"Website - Pixel"}
 											>
-												Website - Pixel
-											</MenuItem>
-											<MenuItem
-												sx={{
-													fontSize: "14px",
-													borderBottom: "1px solid rgba(228, 228, 228, 1)",
-												}}
-												value={"Customer Conversions"}
-											>
-												Customer Conversions (CSV)
-											</MenuItem>
-											<MenuItem
-												sx={{
-													fontSize: "14px",
-													borderBottom: "1px solid rgba(228, 228, 228, 1)",
-												}}
-												value={"Failed Leads"}
-											>
-												Failed Leads (CSV)
-											</MenuItem>
-											<MenuItem sx={{ fontSize: "14px" }} value={"Interest"}>
-												Interest (CSV)
-											</MenuItem>
-										</Select>
+												<CardMedia>
+													<Image
+														src={el.src}
+														alt="website_pixel-icon"
+														width={32}
+														height={32}
+													/>
+												</CardMedia>
+												<CardContent
+													sx={{
+														display: "flex",
+														flexDirection: "column",
+														gap: 0.5,
+														p: 0,
+														"&:last-child": { pb: "0" },
+													}}
+												>
+													<Typography
+														className="seventh-sub-title"
+														style={{ color: "#4A4A4A" }}
+													>
+														{el.title}
+													</Typography>
+													<Typography
+														className="third-sub-title"
+														style={{
+															color: "#4A4A4A",
+															whiteSpace: "normal",
+															wordBreak: "break-word",
+														}}
+													>
+														{el.description}
+													</Typography>
+												</CardContent>
+											</CardActionArea>
+										))}
 										{sourcesBuilderHints["sourceType"].show && (
 											<HintCard
 												card={builderHintCards["sourceType"]}
-												positionLeft={340}
+												positionLeft={220}
+												positionTop={-50}
 												isOpenBody={sourcesBuilderHints["sourceType"].showBody}
 												toggleClick={() =>
 													changeSourcesBuilderHint(
@@ -1060,7 +1069,7 @@ const SourcesImport: React.FC = () => {
 												}
 											/>
 										)}
-									</FormControl>
+									</Box>
 								</Box>
 							</Box>
 
@@ -1379,6 +1388,9 @@ const SourcesImport: React.FC = () => {
 											Map your Field from your Source to the destination data
 											base.
 										</Typography>
+										{!isContinuePressed && (
+											<HintBanner sourceType={sourceType} />
+										)}
 									</Box>
 
 									<Box
@@ -1651,6 +1663,7 @@ const SourcesImport: React.FC = () => {
 													closeDotHintClick("sourceFile");
 													openDotHintClick("targetType");
 													closeSkeleton("targetType");
+													setIsContinuePressed(true);
 												}}
 												sx={{
 													backgroundColor: "rgba(56, 152, 252, 1)",
