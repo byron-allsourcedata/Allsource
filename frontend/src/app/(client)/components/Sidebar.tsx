@@ -735,7 +735,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 					</ListItemIcon>
 					<ListItemText primary="Integrations" />
 				</ListItem>
-				<ListItem
+				{/* <ListItem
 					button
 					onClick={() => handleNavigation("/partners")}
 					sx={
@@ -748,7 +748,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 						<ReduceCapacityIcon />
 					</ListItemIcon>
 					<ListItemText primary="Partners" />
-				</ListItem>
+				</ListItem> */}
 			</List>
 			<Box
 				sx={{
