@@ -373,7 +373,7 @@ const Partners: React.FC = () => {
 													color: "rgba(74, 74, 74, 1)",
 												}}
 											>
-												Commission earned
+												Commission
 											</Typography>
 										</Box>
 

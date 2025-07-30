@@ -36,7 +36,6 @@ class PartnersObjectResponse(BaseModel):
 class PartnerCreateRequest(BaseModel):
     name: str
     email: str
-    company_name: str
     commission: int
     is_master: Optional[bool] = False
     master_id: Optional[int] = None

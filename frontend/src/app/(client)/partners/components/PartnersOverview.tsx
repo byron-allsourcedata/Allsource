@@ -778,24 +778,9 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 										width: "100%",
 									}}
 								>
-									<InputLabel
-										sx={{
-											color: "rgba(17, 17, 19, 0.6)",
-											fontFamily: "Nunito Sans",
-											fontWeight: 400,
-											fontSize: "14px",
-											padding: 0,
-											"&.Mui-focused": {
-												color: "rgba(17, 17, 19, 0.6)",
-											},
-										}}
-									>
-										Without Discount Code
-									</InputLabel>
 									<Select
 										value={discountCode?.name}
 										onChange={handleDiscountCodeChange}
-										label="Discount Code"
 										sx={{
 											backgroundColor: "#fff",
 											borderRadius: "4px",
@@ -968,13 +953,13 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 								flexDirection: "column",
 								width: "100%",
 								border: "1px solid rgba(235, 235, 235, 1)",
-								height: "200px",
+								height: "225px",
 								justifyContent: "center",
 								alignItems: "start",
 								borderRadius: "4px",
-								padding: "1rem 1.5rem",
+								padding: "0.5rem 1.5rem 1rem 1.5rem",
 								gap: 2,
-								maxHeight: "200px",
+								maxHeight: "225px",
 								"@media (max-width: 900px)": { display: "none" },
 							}}
 						>
