@@ -10,13 +10,13 @@ import {
 import Image from "next/image";
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "../../context/UserContext";
+import { useUser } from "../../../context/UserContext";
 import NavigationMenu from "./NavigationMenuAdmin";
-import { SliderProvider } from "../../context/SliderContext";
-import { useTrial } from "../../context/TrialProvider";
-import NotificationPopup from "../../components/NotificationPopup";
+import { SliderProvider } from "../../../context/SliderContext";
+import { useTrial } from "../../../context/TrialProvider";
+import NotificationPopup from "../../../components/NotificationPopup";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
-import { useSSE } from "../../context/SSEContext";
+import { useSSE } from "../../../context/SSEContext";
 import QuestionMarkOutlinedIcon from "@mui/icons-material/QuestionMarkOutlined";
 import PersonIcon from "@mui/icons-material/Person";
 
@@ -123,7 +123,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 		setHasNotification(false);
 	};
 	return (
-		<>
+		<Box sx={{ display: "flex", width: "100%", flexDirection: "column" }}>
 			<Box sx={{ display: { md: "none" } }}>
 				<SliderProvider>
 					<NavigationMenu
@@ -298,7 +298,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 				onClose={handleNotificationIconPopupClose}
 				anchorEl={anchorElNotificate}
 			/>
-		</>
+		</Box>
 	);
 };
 

@@ -13,7 +13,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { styled } from "@mui/material/styles";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import { fontFamily } from "@mui/system";
 
 interface PartnerData {
 	id: number;
@@ -86,9 +85,9 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 
 	const handleCommissionChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
-		const comissionUpLine = maxCommission ? maxCommission - 1 : 70;
+		const commissionUpLine = maxCommission ? maxCommission - 1 : 70;
 		const numericValue = Number(value);
-		const isValid = numericValue >= 1 && numericValue <= comissionUpLine;
+		const isValid = numericValue >= 1 && numericValue <= commissionUpLine;
 		setCommissionError(!isValid && value !== "");
 		if (isValid || value === "") {
 			setCommission(value);

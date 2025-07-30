@@ -46,6 +46,7 @@ import InsightsIcon from "@mui/icons-material/Insights";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import FastForward from "@mui/icons-material/FastForward";
+import ReduceCapacityIcon from "@mui/icons-material/ReduceCapacity";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import { useSidebar } from "@/context/SidebarContext";
 import CustomTooltip from "@/components/customToolTip";
@@ -734,19 +735,20 @@ const Sidebar: React.FC<SidebarProps> = ({
 					</ListItemIcon>
 					<ListItemText primary="Integrations" />
 				</ListItem>
-
-				{/* <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <AnalyticsIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Analytics" />
-                </ListItem> */}
-				{/* <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <RuleFolderIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Rules" />
-                </ListItem> */}
+				<ListItem
+					button
+					onClick={() => handleNavigation("/partners")}
+					sx={
+						isActive("/partners")
+							? sidebarStyles.activeItem
+							: sidebarStyles.ListItem
+					}
+				>
+					<ListItemIcon sx={sidebarStyles.listItemIcon}>
+						<ReduceCapacityIcon />
+					</ListItemIcon>
+					<ListItemText primary="Partners" />
+				</ListItem>
 			</List>
 			<Box
 				sx={{

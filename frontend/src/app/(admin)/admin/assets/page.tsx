@@ -1,27 +1,11 @@
 "use client";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import {
-	Box,
-	Grid,
-	Typography,
-	Menu,
-	MenuItem,
-	Link,
-	Button,
-	LinearProgress,
-} from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import PartnersAsset from "@/components/PartnersAsset";
-import dynamic from "next/dynamic";
 import { assetsStyle } from "./assetsStyle";
-import { useTrial } from "@/context/TrialProvider";
-import { useUser } from "@/context/UserContext";
-import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { resellerStyle } from "../reseller/resellerStyle";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import { styled } from "@mui/material/styles";
-import { width } from "@mui/system";
+import PageWithLoader from "../../components/AdminProgressBar";
 
 interface AssetsData {
 	id: number;
@@ -30,8 +14,8 @@ interface AssetsData {
 	type: string;
 	title: string;
 	file_extension: string;
-	file_size: string;
-	video_duration: string;
+	file_size: number;
+	video_duration: number;
 	isFavorite: boolean;
 }
 
@@ -40,55 +24,14 @@ interface PartnersAssetsData {
 	asset: AssetsData[] | [];
 }
 
-const SidebarAdmin = dynamic(() => import("../../SidebarAdmin"), {
-	suspense: true,
-});
-
 const Assets: React.FC = () => {
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [loading, setLoading] = useState(false);
-	const open = Boolean(anchorEl);
-	const router = useRouter();
-	const {
-		full_name: userFullName,
-		email: userEmail,
-		resetUserData,
-	} = useUser();
-	const meItem =
-		typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
-	const meData = meItem ? JSON.parse(meItem) : { full_name: "", email: "" };
-	const full_name = userFullName || meData.full_name;
-	const email = userEmail || meData.email;
-	const { resetTrialData } = useTrial();
 	const [assets, setAssets] = useState<PartnersAssetsData[]>([
 		{ type: "Videos", asset: [] },
 		{ type: "Pitch decks", asset: [] },
 		{ type: "Images", asset: [] },
 		{ type: "Documents", asset: [] },
 	]);
-
-	const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-		height: 4,
-		borderRadius: 0,
-		backgroundColor: "#c6dafc",
-		"& .MuiLinearProgress-bar": {
-			borderRadius: 5,
-			backgroundColor: "#4285f4",
-		},
-	}));
-
-	const handleSettingsClick = () => {
-		handleProfileMenuClose();
-		router.push("/settings");
-	};
-
-	const handleSignOut = () => {
-		localStorage.clear();
-		sessionStorage.clear();
-		resetUserData();
-		resetTrialData();
-		window.location.href = "/signin";
-	};
 
 	const fetchRewards = async () => {
 		setLoading(true);
@@ -176,16 +119,6 @@ const Assets: React.FC = () => {
 		);
 	};
 
-	const handleProfileMenuClick = (
-		event: React.MouseEvent<HTMLButtonElement>,
-	) => {
-		setAnchorEl(event.currentTarget);
-	};
-
-	const handleProfileMenuClose = () => {
-		setAnchorEl(null);
-	};
-
 	return (
 		<>
 			<Box
@@ -213,19 +146,7 @@ const Assets: React.FC = () => {
 							xs={12}
 							sx={{ display: "flex", flexDirection: "column", gap: "24px" }}
 						>
-							{loading && (
-								<Box
-									sx={{
-										width: "100%",
-										position: "fixed",
-										top: "4.2rem",
-										left: "7.6rem",
-										zIndex: 1200,
-									}}
-								>
-									<BorderLinearProgress variant="indeterminate" />
-								</Box>
-							)}
+							{loading && <PageWithLoader />}
 							<Box
 								sx={{
 									display: "flex",

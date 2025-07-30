@@ -19,8 +19,8 @@ interface AssetsData {
 	type: string;
 	title: string;
 	file_extension: string;
-	file_size: string;
-	video_duration: string;
+	file_size: number;
+	video_duration: number;
 	isFavorite: boolean;
 }
 
@@ -56,6 +56,23 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 	const handleCloseMenu = () => {
 		setMenuAnchor(null);
 	};
+
+	const formatFileSize = (size: number | null): string => {
+		if (size === null || size === 0) return "0 B";
+		if (size < 1024) return `${size} B`;
+		const sizeInKb = size / 1024;
+		if (sizeInKb < 1024) return `${sizeInKb.toFixed(2)} KB`;
+		const sizeInMb = sizeInKb / 1024;
+		return `${sizeInMb.toFixed(2)} MB`;
+	};
+
+	const formatVideoDuration = (duration: number | null): string => {
+		if (duration === null || duration === 0) return "0:00";
+		const minutes = Math.floor(duration / 60);
+		const seconds = duration % 60;
+		return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+	};
+
 	const open = Boolean(menuAnchor);
 	return (
 		<Box
@@ -148,24 +165,24 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 								bottom: 0,
 								right: 0,
 								height: "13.48px",
-								width: "28.31px",
+								minWidth: "28.31px",
 								fontFamily: "var(--font-roboto)",
 								fontSize: "7.74px",
 								fontWeight: "600",
 								lineHeight: "7.9px",
 								color: "#fff",
 								backgroundColor: "#232730",
-								padding: "2.74px 5.15px",
+								padding: "2.74px",
 							}}
 						>
-							{asset.video_duration}
+							{formatVideoDuration(asset.video_duration)}
 						</Box>
 					</>
 				) : (
 					""
 				)}
 
-				{!isAdmin && (
+				{/* {!isAdmin && (
 					<Box
 						sx={{
 							position: "absolute",
@@ -194,7 +211,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 							)}
 						</IconButton>
 					</Box>
-				)}
+				)} */}
 			</Box>
 
 			<Box
@@ -247,7 +264,7 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
 						>
 							{asset.type === "document"
 								? asset.file_extension
-								: asset.file_size}
+								: formatFileSize(asset.file_size)}
 						</Typography>
 					</Box>
 				)}

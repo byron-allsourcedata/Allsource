@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from db_dependencies import Db
 from persistence.admin import AdminPersistence
 from resolver import injectable
+from schemas.admin import PartnersQueryParams
 from schemas.users import UpdateUserRequest
 from enums import (
     UserAuthorizationStatus,
@@ -270,6 +271,70 @@ class AdminCustomersService:
                     "is_another_domain_resolved": user.is_another_domain_resolved,
                     "has_credit_card": user.has_credit_card,
                     "cost_leads_overage": cost_leads_overage,
+
+                }
+            )
+
+        return {"users": result, "count": total_count}
+
+    def get_partners_users(self, query_params: PartnersQueryParams):
+        filters = {}
+        if query_params.last_login_date_start is not None:
+            filters["last_login_date_start"] = (
+                query_params.last_login_date_start
+            )
+        if query_params.last_login_date_end is not None:
+            filters["last_login_date_end"] = query_params.last_login_date_end
+        if query_params.join_date_start is not None:
+            filters["join_date_start"] = query_params.join_date_start
+        if query_params.join_date_end is not None:
+            filters["join_date_end"] = query_params.join_date_end
+        if query_params.statuses is not None:
+            filters["statuses"] = query_params.statuses
+
+        users, total_count = self.user_persistence.get_base_partners_users(
+            search_query=query_params.search_query,
+            page=query_params.page,
+            per_page=query_params.per_page,
+            sort_by=query_params.sort_by,
+            sort_order=query_params.sort_order,
+            exclude_test_users=query_params.exclude_test_users,
+            filters=filters,
+            is_master=query_params.is_master,
+        )
+
+        user_ids = [user.id for user in users]
+
+        aggregates = self.user_persistence.get_customer_aggregates(user_ids)
+
+        result = []
+
+        for user in users:
+            user_id = user.id
+            agg = aggregates.get(user_id, {})
+
+            pixel_installed_count = agg.get("pixel_installed_count", 0)
+            sources_count = agg.get("sources_count", 0)
+            lookalikes_count = agg.get("lookalikes_count", 0)
+
+            result.append(
+                {
+                    "id": user_id,
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "created_at": user.created_at,
+                    "status": user.user_status,
+                    "last_login": user.last_login,
+                    "role": user.role,
+                    "is_email_validation_enabled": user.is_email_validation_enabled,
+                    "pixel_installed_count": pixel_installed_count,
+                    "sources_count": sources_count,
+                    "contacts_count": user.total_leads,
+                    "subscription_plan": user.subscription_plan,
+                    "lookalikes_count": lookalikes_count,
+                    "type": "user",
+                    "credits_count": user.credits_count,
+                    "is_another_domain_resolved": user.is_another_domain_resolved,
                 }
             )
 
@@ -304,6 +369,9 @@ class AdminCustomersService:
             count = query.scalar()
             audience_metrics[key] = count or 0
 
+        audience_metrics["total_revenue"] = audience_metrics["overage_sum"] * 0.08 
+        audience_metrics.pop("overage_sum", None)
+        
         return {"audience_metrics": audience_metrics}
 
     def get_user_by_email(self, email):
@@ -416,3 +484,12 @@ class AdminCustomersService:
     def change_email_validation(self, user_id: int) -> bool:
         updated_row = self.user_persistence.change_email_validation(user_id)
         return updated_row > 0
+
+    def did_change_plan(self, user_id: int, plan_alias: str) -> bool:
+        change_plan = self.user_subscription_service.move_to_plan(
+            user_id=user_id, plan_alias=plan_alias
+        )
+        if change_plan:
+            self.db.commit()
+            return True
+        return False

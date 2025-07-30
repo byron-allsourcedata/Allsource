@@ -1,4 +1,4 @@
-import React from "react";
+import React, { type FC } from "react";
 import { Grid, Typography, Box } from "@mui/material";
 import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import GroupIcon from "@mui/icons-material/Group";
@@ -7,6 +7,7 @@ import ContactsIcon from "@mui/icons-material/Contacts";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import CategoryIcon from "@mui/icons-material/Category";
 import Image from "next/image";
+import { Money } from "@mui/icons-material";
 
 interface StatCardProps {
 	value: number;
@@ -184,6 +185,22 @@ const DataSyncCard: React.FC<CardProps> = ({ value, onClick, isActive }) => (
 	/>
 );
 
+const TotalRevenueCard: React.FC<CardProps> = ({
+	value,
+	onClick,
+	isActive,
+}) => (
+	<StatCard
+		value={value}
+		title="Total Revenue"
+		icon={<Money sx={{ color: "#0569E2", fontSize: "36px" }} />}
+		textColor="rgba(32,33,36,1)"
+		borderColor="#DEEDFF"
+		onClick={onClick}
+		isActive={isActive}
+	/>
+);
+
 interface CustomCardsProps {
 	values: {
 		users: number;
@@ -192,10 +209,24 @@ interface CustomCardsProps {
 		lookalikes: number;
 		smart_audience: number;
 		data_sync: number;
+		total_revenue: number;
 	};
 }
 
 const CustomCards: React.FC<CustomCardsProps> = ({ values }) => {
+	const cards = [
+		<UsersCard key="users" value={values.users} />,
+		<PixelContactsCard key="pixel_contacts" value={values.pixel_contacts} />,
+		<SourcesCard key="sources" value={values.sources} />,
+		<LookalikesCard key="lookalikes" value={values.lookalikes} />,
+		<SmartAudienceCard key="smart_audience" value={values.smart_audience} />,
+		<DataSyncCard key="data_sync" value={values.data_sync} />,
+		<TotalRevenueCard key="total_revenue" value={values.total_revenue} />,
+	];
+
+	const gridCards = cards.map((card) => (
+		<GridCard key={card.key} card={card} />
+	));
 	return (
 		<Grid
 			container
@@ -203,78 +234,28 @@ const CustomCards: React.FC<CustomCardsProps> = ({ values }) => {
 			sx={{ flexWrap: "nowrap" }}
 			spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}
 		>
-			<Grid
-				item
-				sx={{
-					"@media (max-width: 600px)": { minWidth: 320 },
-					pointerEvents: "auto",
-					opacity: 1,
-				}}
-				xs={12}
-				md={2.4}
-			>
-				<UsersCard value={values.users} />
-			</Grid>
-			<Grid
-				item
-				sx={{
-					"@media (max-width: 600px)": { minWidth: 320 },
-					pointerEvents: "auto",
-					opacity: 1,
-				}}
-				xs={12}
-				md={2.4}
-			>
-				<PixelContactsCard value={values.pixel_contacts} />
-			</Grid>
-			<Grid
-				item
-				sx={{
-					"@media (max-width: 600px)": { minWidth: 320 },
-					pointerEvents: "auto",
-					opacity: 1,
-				}}
-				xs={12}
-				md={2.4}
-			>
-				<SourcesCard value={values.sources} />
-			</Grid>
-			<Grid
-				item
-				sx={{
-					"@media (max-width: 600px)": { minWidth: 320 },
-					pointerEvents: "auto",
-					opacity: 1,
-				}}
-				xs={12}
-				md={2.4}
-			>
-				<LookalikesCard value={values.lookalikes} />
-			</Grid>
-			<Grid
-				item
-				sx={{
-					"@media (max-width: 600px)": { minWidth: 320 },
-					pointerEvents: "auto",
-					opacity: 1,
-				}}
-				xs={12}
-				md={2.4}
-			>
-				<SmartAudienceCard value={values.smart_audience} />
-			</Grid>
-			<Grid
-				item
-				sx={{
-					"@media (max-width: 600px)": { minWidth: 320 },
-					pointerEvents: "auto",
-					opacity: 1,
-				}}
-				xs={12}
-				md={2.4}
-			>
-				<DataSyncCard value={values.data_sync} />
-			</Grid>
+			{gridCards}
+		</Grid>
+	);
+};
+
+type GridCardProps = {
+	card: React.ReactNode;
+};
+
+const GridCard: FC<GridCardProps> = ({ card }) => {
+	return (
+		<Grid
+			item
+			sx={{
+				"@media (max-width: 600px)": { minWidth: 50 },
+				pointerEvents: "auto",
+				opacity: 1,
+			}}
+			xs={12}
+			md={2.4}
+		>
+			{card}
 		</Grid>
 	);
 };

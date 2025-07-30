@@ -43,6 +43,9 @@ class UserDict(TypedDict):
     """
 
     id: int
+    email: str
+    full_name: str
+    created_at: datetime
     random_seed: int
     team_owner_id: int | None
 
@@ -486,7 +489,7 @@ class UserPersistence:
         search_query,
         page,
         per_page,
-        sort_by,
+        sort_by: str,
         sort_order,
         exclude_test_users,
         filters,
@@ -606,6 +609,8 @@ class UserPersistence:
             "join_date": Users.created_at,
             "last_login_date": Users.last_login,
             "contacts_count": Users.total_leads,
+            "has_credit_card": Users.has_credit_card,
+            "cost_leads_overage": Users.overage_leads_count,
         }
         sort_column = sort_options.get(sort_by, Users.created_at)
         query = query.order_by(
@@ -936,3 +941,141 @@ class UserPersistence:
         )
         self.db.commit()
         return updated_count
+
+    def get_base_partners_users(
+        self,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        exclude_test_users: bool,
+        filters: dict,
+        is_master: bool,
+    ):
+        status_case = self.calculate_user_status()
+
+        subq_domain_resolved = (
+            self.db.query(UserDomains.user_id)
+            .filter(
+                UserDomains.user_id == Users.id,
+                UserDomains.is_another_domain_resolved.is_(True),
+            )
+            .exists()
+        )
+
+        subscription_plan_case = case(
+            (
+                and_(
+                    Users.current_subscription_id == None,
+                    Users.total_leads == 0,
+                ),
+                literal_column("'N/A'"),
+            ),
+            else_=SubscriptionPlan.title,
+        ).label("subscription_plan")
+
+        query = (
+            self.db.query(
+                Users.id,
+                Users.email,
+                Users.full_name,
+                Users.created_at,
+                Users.last_login,
+                Users.role,
+                Users.leads_credits.label("credits_count"),
+                Users.total_leads,
+                Users.is_email_validation_enabled.label(
+                    "is_email_validation_enabled"
+                ),
+                subscription_plan_case,
+                status_case.label("user_status"),
+                case((subq_domain_resolved, True), else_=False).label(
+                    "is_another_domain_resolved"
+                ),
+            )
+            .join(Partner, Partner.user_id == Users.id)
+            .filter(Partner.is_master.is_(is_master))
+            .outerjoin(
+                UserSubscriptions,
+                UserSubscriptions.id == Users.current_subscription_id,
+            )
+            .outerjoin(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+        )
+
+        if exclude_test_users:
+            query = query.filter(~Users.full_name.like("#test%"))
+
+        if filters.get("statuses"):
+            statuses = [
+                status.strip().lower()
+                for status in filters["statuses"].split(",")
+            ]
+
+            filter_conditions = []
+
+            if "multiple_domains" in statuses:
+                filter_conditions.append(
+                    case((subq_domain_resolved, True), else_=False).is_(True)
+                )
+                statuses.remove("multiple_domains")
+
+            if statuses:
+                filter_conditions.append(func.lower(status_case).in_(statuses))
+
+            if filter_conditions:
+                query = query.filter(or_(*filter_conditions))
+
+        if filters.get("last_login_date_start"):
+            last_login_date_start = datetime.fromtimestamp(
+                filters["last_login_date_start"], tz=pytz.UTC
+            ).date()
+            query = query.filter(
+                func.DATE(Users.last_login) >= last_login_date_start
+            )
+
+        if filters.get("last_login_date_end"):
+            last_login_date_end = datetime.fromtimestamp(
+                filters["last_login_date_end"], tz=pytz.UTC
+            ).date()
+            query = query.filter(
+                func.DATE(Users.last_login) <= last_login_date_end
+            )
+
+        if filters.get("join_date_start"):
+            join_date_start = datetime.fromtimestamp(
+                filters["join_date_start"], tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.created_at) >= join_date_start)
+
+        if filters.get("join_date_end"):
+            join_date_end = datetime.fromtimestamp(
+                filters["join_date_end"], tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.created_at) <= join_date_end)
+
+        if search_query:
+            query = query.filter(
+                or_(
+                    Users.email.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%"),
+                )
+            )
+
+        sort_options = {
+            "id": Users.id,
+            "join_date": Users.created_at,
+            "last_login_date": Users.last_login,
+            "contacts_count": Users.total_leads,
+        }
+        sort_column = sort_options.get(sort_by, Users.created_at)
+        query = query.order_by(
+            asc(sort_column) if sort_order == "asc" else desc(sort_column)
+        )
+
+        total_count = query.count()
+        users = query.offset((page - 1) * per_page).limit(per_page).all()
+        return users, total_count

@@ -274,6 +274,12 @@ class DashboardAudiencePersistence:
                 .filter(*user_filters),
                 "key": "sync_count",
             },
+            {
+                "query": self.db.query(
+                    func.sum(Users.overage_leads_count).label("count")
+                ).filter(*user_filters),
+                "key": "overage_sum"
+            }
         ]
 
         return queries

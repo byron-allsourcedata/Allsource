@@ -210,18 +210,6 @@ def get_accounts_service(
     )
 
 
-def get_audience_sources_service(
-    domain_persistence: UserDomainsPersistence,
-    audience_sources_persistence: AudienceSourcesPersistence,
-    audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence,
-):
-    return AudienceSourceService(
-        audience_sources_persistence=audience_sources_persistence,
-        domain_persistence=domain_persistence,
-        audience_sources_matched_persons_persistence=audience_sources_matched_persons_persistence,
-    )
-
-
 def get_stripe_service():
     return StripeService()
 

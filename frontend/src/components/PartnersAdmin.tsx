@@ -41,6 +41,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import RewardsHistory from "@/components/Rewardshistory";
 import PartnersAccounts from "./PartnersAccounts";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import CustomSwitch from "./ui/CustomSwitch";
 
 interface PartnerData {
 	id: number;
@@ -152,7 +153,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 	setLoading,
 	loading,
 }) => {
-	const [isMaster, setIsMaster] = useState(master);
+	const [is_master, setIsMaster] = useState(master);
 	const [partners, setPartners] = useState<PartnerData[]>([]);
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -162,6 +163,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 	const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
+	const [excludeTestUsers, setExcludeTestUsers] = useState<boolean>(true);
 	const isCalendarOpen = Boolean(calendarAnchorEl);
 	const [formattedDates, setFormattedDates] = useState<string>("");
 	const [appliedDates, setAppliedDates] = useState<{
@@ -215,7 +217,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 				params: {
 					year: selectedYear,
 					partner_id: partnerId ?? id,
-					is_master: isMaster,
+					is_master: is_master,
 				},
 			});
 			setRewards(response.data);
@@ -228,7 +230,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 	const tableHeaders = [
 		{
 			key: "partner_name",
-			label: `Partner  ${isMaster ? "master" : ""} name`,
+			label: `Partner  ${is_master ? "master" : ""} name`,
 			sortable: false,
 		},
 		{ key: "email", label: "Email", sortable: false },
@@ -319,31 +321,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 		const newOrder = isAsc ? "desc" : "asc";
 		setOrder(newOrder);
 		setOrderBy(key);
-
-		const sortedAccounts = [...partners].sort((a, b) => {
-			const aValue = a[key as keyof typeof a];
-			const bValue = b[key as keyof typeof b];
-
-			const isANullOrDash = aValue === null || aValue === "--";
-			const isBNullOrDash = bValue === null || bValue === "--";
-
-			if (isANullOrDash && !isBNullOrDash) return newOrder === "asc" ? 1 : -1;
-			if (isBNullOrDash && !isANullOrDash) return newOrder === "asc" ? -1 : 1;
-
-			if (typeof aValue === "string" && typeof bValue === "string") {
-				return newOrder === "asc"
-					? aValue.localeCompare(bValue)
-					: bValue.localeCompare(aValue);
-			}
-
-			if (typeof aValue === "number" && typeof bValue === "number") {
-				return newOrder === "asc" ? aValue - bValue : bValue - aValue;
-			}
-
-			return 0;
-		});
-
-		setPartners(sortedAccounts);
+		setPage(0);
 	};
 
 	const handleNoticeOpenPopup = () => {
@@ -431,7 +409,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 		try {
 			const response = await axiosInstance.get("/admin-partners", {
 				params: {
-					isMaster,
+					is_master: is_master,
 					search,
 					start_date: appliedDates.start
 						? appliedDates.start.toLocaleDateString("en-CA")
@@ -441,6 +419,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 						: null,
 					page,
 					rows_per_page: rowsPerPage,
+					exclude_test_users: excludeTestUsers,
+					sort_by: orderBy,
+					sort_order: order,
 				},
 			});
 			if (response.status === 200 && response.data.totalCount > 0) {
@@ -456,7 +437,15 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 		} finally {
 			setLoading(false);
 		}
-	}, [page, rowsPerPage, search, appliedDates]);
+	}, [
+		page,
+		rowsPerPage,
+		search,
+		appliedDates,
+		excludeTestUsers,
+		order,
+		orderBy,
+	]);
 
 	const updateOrAddPartner = (updatedPartner: any) => {
 		setPartners((prevAccounts) => {
@@ -502,7 +491,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 		} else {
 			fetchRules();
 		}
-	}, [page, rowsPerPage, appliedDates]);
+	}, [page, rowsPerPage, appliedDates, excludeTestUsers, order, orderBy]);
 
 	return (
 		<Box
@@ -542,7 +531,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 								cursor: "pointer",
 							}}
 						>
-							{isMaster || masterData ? "Master" : ""} Partner{" "}
+							{is_master || masterData ? "Master" : ""} Partner{" "}
 							{partnerName ? `- ${partnerName}` : ""}
 						</Typography>
 						{accountName && (
@@ -612,7 +601,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 							}}
 						>
 							<Box sx={{ display: "flex", alignItems: "center" }}>
-								{isMaster && (
+								{is_master && (
 									<Typography
 										variant="h4"
 										component="h1"
@@ -687,7 +676,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 
 					{rewardsPageMonthFilter && (
 						<Box sx={{ display: "flex", alignItems: "center" }}>
-							{isMaster && (
+							{is_master && (
 								<Typography
 									variant="h4"
 									component="h1"
@@ -722,7 +711,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 			)}
 			{rewardsPage && (
 				<RewardsHistory
-					isMaster={isMaster}
+					isMaster={is_master}
 					id={id ?? 0}
 					selectedMonth={selectedMonth}
 					setSelectedMonth={setSelectedMonth}
@@ -871,6 +860,15 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 									/>
 								</Tabs>
 								<Box sx={{ display: "flex", gap: "16px" }}>
+									<Box sx={{ display: "flex", alignItems: "center" }}>
+										<Typography className="black-table-header">
+											Exclude test users
+										</Typography>
+										<CustomSwitch
+											stateSwitch={excludeTestUsers}
+											changeState={(e) => setExcludeTestUsers(e.target.checked)}
+										/>
+									</Box>
 									<TextField
 										id="input-with-icon-textfield"
 										placeholder="Search by account name, emails"
@@ -934,7 +932,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 											handleFormOpenPopup();
 										}}
 									>
-										Add {isMaster ? "Master" : ""} Partner
+										Add {is_master ? "Master" : ""} Partner
 									</Button>
 									<Button
 										aria-controls={
@@ -1008,6 +1006,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 									sx={{
 										border: "1px solid #EBEBEB",
 										borderRadius: "4px 4px 0px 0px",
+										maxHeight: "68vh",
 									}}
 								>
 									<Table>
@@ -1085,7 +1084,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 															"&:hover .icon-button": { display: "contents" },
 														}}
 														onClick={() => {
-															if (isMaster) {
+															if (is_master) {
 																setPartnerName(data.partner_name);
 																setIsMaster(false);
 																setMasterData(data);
@@ -1258,14 +1257,27 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 															anchorEl={menuAnchor}
 															onClose={handleCloseMenu}
 															anchorOrigin={{
-																vertical: "bottom",
-																horizontal: "left",
+																vertical: "center",
+																horizontal: "center",
+															}}
+															transformOrigin={{
+																vertical: "top",
+																horizontal: "right",
+															}}
+															slotProps={{
+																paper: {
+																	sx: {
+																		boxShadow: "none",
+																		border: "1px solid #E0E0E0",
+																	},
+																},
 															}}
 														>
 															<List
 																sx={{
 																	width: "100%",
 																	maxWidth: 360,
+																	boxShadow: 0,
 																}}
 															>
 																<ListItemButton
@@ -1280,6 +1292,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Payment history"
 																	/>
@@ -1304,6 +1317,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Reward history"
 																	/>
@@ -1328,6 +1342,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																		<ListItemText
 																			primaryTypographyProps={{
 																				fontSize: "14px",
+																				fontFamily: "var(--font-nunito)",
 																			}}
 																			primary="Disable"
 																		/>
@@ -1352,6 +1367,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																		<ListItemText
 																			primaryTypographyProps={{
 																				fontSize: "14px",
+																				fontFamily: "var(--font-nunito)",
 																			}}
 																			primary="Enable"
 																		/>
@@ -1376,6 +1392,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Terminate"
 																	/>
@@ -1402,24 +1419,9 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																	<ListItemText
 																		primaryTypographyProps={{
 																			fontSize: "14px",
+																			fontFamily: "var(--font-nunito)",
 																		}}
 																		primary="Edit"
-																	/>
-																</ListItemButton>
-																<ListItemButton
-																	sx={{
-																		padding: "4px 16px",
-																		":hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.1)",
-																		},
-																	}}
-																	onClick={() => {}}
-																>
-																	<ListItemText
-																		primaryTypographyProps={{
-																			fontSize: "14px",
-																		}}
-																		primary="Log info"
 																	/>
 																</ListItemButton>
 															</List>
@@ -1463,13 +1465,13 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 												lineHeight: "20px",
 											}}
 										>
-											No {isMaster ? "master" : ""} partners found.
+											No {is_master ? "master" : ""} partners found.
 										</Typography>
 									</Box>
 								)}
 							</Box>
 							<InvitePartnerPopup
-								isMaster={isMaster}
+								isMaster={is_master}
 								updateOrAddPartner={updateOrAddPartner}
 								fileData={fileData}
 								open={formPopupOpen}

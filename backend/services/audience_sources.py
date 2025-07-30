@@ -12,8 +12,10 @@ from typing import List, Optional, Dict
 from uuid import UUID
 from schemas.audience import (
     Row,
+    SourceForRegenerate,
     SourcesObjectResponse,
     SourceResponse,
+    SourceMatchingInfo,
     CreateSource,
     NewSource,
     DomainsSourceResponse,
@@ -37,6 +39,7 @@ logger = logging.getLogger(__name__)
 from decimal import Decimal
 import logging
 from functools import singledispatchmethod
+from resolver import injectable
 
 
 class AudienceSourceMath:
@@ -88,6 +91,7 @@ class AudienceSourceMath:
         return w1 * first_data + w2 * second_data - w3 * third_data + correction
 
 
+@injectable
 class AudienceSourceService:
     def __init__(
         self,
@@ -659,10 +663,10 @@ class AudienceSourceService:
             await rabbitmq_connection.close()
 
     async def create_source(
-        self, user: User, payload: NewSource
+        self, user_id: int, user_full_name: str, payload: NewSource
     ) -> CreateSource:
         creating_data = {
-            "user_id": user.get("id"),
+            "user_id": user_id,
             "target_schema": payload.target_schema,
             "source_type": payload.source_type,
             "source_origin": payload.source_origin,
@@ -684,7 +688,7 @@ class AudienceSourceService:
 
         await self.send_matching_status(
             created_data.id,
-            user.get("id"),
+            user_id,
             payload.source_origin,
             payload.source_type,
             payload.domain_id,
@@ -698,7 +702,7 @@ class AudienceSourceService:
             created_data.domain_id
         )
 
-        setattr(created_data, "created_by", user.get("full_name"))
+        setattr(created_data, "created_by", user_full_name)
         if domain_name:
             setattr(created_data, "domain", domain_name)
 
@@ -726,3 +730,13 @@ class AudienceSourceService:
         if not row:
             return None
         return CreateSource.model_validate(row)
+
+    def get_source_for_regenerate(
+        self, id: UUID
+    ) -> Optional[SourceForRegenerate]:
+        return self.audience_sources_persistence.get_source_for_regenerate(id)
+
+    def get_matching_info(self, id: UUID):
+        return SourceMatchingInfo(
+            **self.audience_sources_persistence.get_matching_info(id)
+        )

@@ -3,9 +3,9 @@ from models.partner import Partner
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
 import os
-from sqlalchemy import or_, func
-from typing import Optional, Tuple
-from datetime import datetime, timezone
+from sqlalchemy import or_, func, asc, desc, nulls_last, nulls_first
+from typing import Optional, Tuple, Any
+from datetime import datetime, timezone, date
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
 from models.plans import SubscriptionPlan
@@ -51,12 +51,15 @@ class PartnersPersistence:
 
     def get_partners(
         self,
-        is_master,
-        search_term=None,
-        start_date=None,
-        end_date=None,
-        offset=None,
-        limit=None,
+        is_master: bool,
+        search_term: Optional[str] = None,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+        offset: Optional[int] = None,
+        limit: Optional[int] = None,
+        exclude_test_users: Optional[bool] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
     ):
         MasterPartner = aliased(Partner)
         query = (
@@ -74,7 +77,7 @@ class PartnersPersistence:
                 ReferralPayouts.plan_amount.label("reward_amount"),
                 ReferralPayouts.paid_at.label("reward_payout_date"),
                 ReferralPayouts.status.label("reward_status"),
-                ReferralPayouts.created_at.label("last_payment_date"),
+                func.max(ReferralPayouts.created_at).label("last_payment_date"),
                 func.count(ReferralUser.parent_user_id).label("count_accounts"),
                 case(
                     (Partner.master_id > 0, MasterPartner.company_name),
@@ -103,7 +106,6 @@ class PartnersPersistence:
                 ReferralPayouts.plan_amount,
                 ReferralPayouts.paid_at,
                 ReferralPayouts.status,
-                ReferralPayouts.created_at,
                 MasterPartner.company_name,
                 Partner.master_id,
             )
@@ -115,12 +117,26 @@ class PartnersPersistence:
                 | (Partner.email.ilike(search_term))
             )
 
+        if exclude_test_users:
+            query = query.filter(~Partner.name.like("#test%"))
+
         if start_date:
             query = query.filter(Partner.join_date >= start_date)
 
         if end_date:
             end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
+
+        sort_options = {
+            "join_date": Partner.join_date,
+            "last_payment_date": func.max(ReferralPayouts.created_at),
+        }
+        sort_column = sort_options.get(sort_by, Partner.join_date)
+
+        if sort_order == "asc":
+            query = query.order_by(nulls_last(asc(sort_column)))
+        else:
+            query = query.order_by(nulls_last(desc(sort_column)))
 
         results = [
             row._asdict() for row in query.offset(offset).limit(limit).all()
@@ -304,6 +320,25 @@ class PartnersPersistence:
             and creating_data["master_id"] is not None
         ):
             partner.master_id = creating_data["master_id"]
+
+        self.db.add(partner)
+        self.db.commit()
+        self.db.refresh(partner)
+        return partner
+
+    def create_partner_by_admin(
+        self, creating_data: dict[str, Any]
+    ) -> Partner | None:
+        partner = Partner(
+            commission=creating_data["commission"],
+            email=creating_data["email"],
+            name=creating_data["name"],
+            is_master=creating_data["is_master"],
+            status=creating_data.get("status"),
+            user_id=creating_data.get("user_id"),
+            join_date=creating_data.get("join_date"),
+            is_active=creating_data.get("is_active", True),
+        )
 
         self.db.add(partner)
         self.db.commit()

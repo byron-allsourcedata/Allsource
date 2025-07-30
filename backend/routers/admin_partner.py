@@ -1,12 +1,15 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional, List
 from datetime import date
+from fastapi.responses import JSONResponse
+
 from services.payouts import PayoutsService
 from schemas.partners import (
     PartnerCreateRequest,
     PartnerUpdateRequest,
     PartnersResponse,
     OpportunityStatus,
+    PromoteUserRequest,
 )
 from dependencies import (
     get_payouts_service,
@@ -21,7 +24,9 @@ router = APIRouter(dependencies=[Depends(check_user_admin)])
 @router.get("/")
 def get_partners(
     get_partners_service: PartnersService,
-    isMaster: Optional[bool] = Query(False),
+    is_master: Optional[bool] = Query(False),
+    sort_by: str = Query(None),
+    sort_order: str = Query(None),
     search: Optional[str] = Query(None),
     start_date: Optional[date] = Query(None),
     end_date: Optional[date] = Query(None),
@@ -30,7 +35,15 @@ def get_partners(
     exclude_test_users: bool = Query(False),
 ):
     result = get_partners_service.get_partners(
-        isMaster, search, start_date, end_date, page, rows_per_page
+        is_master,
+        search,
+        start_date,
+        end_date,
+        page,
+        rows_per_page,
+        exclude_test_users,
+        sort_by,
+        sort_order,
     )
 
     return result.get("data")
@@ -149,3 +162,16 @@ def get_payouts_partners(
         sort_by=sort_by,
         sort_order=sort_order,
     )
+
+
+@router.post("/promote-user")
+async def promote_user_to_partner(
+    payload: PromoteUserRequest,
+    get_partners_service: PartnersService,
+):
+    await get_partners_service.promote_user_to_partner(
+        user_id=payload.user_id,
+        commission=payload.commission,
+        is_master=payload.is_master,
+    )
+    return JSONResponse(status_code=200, content={"message": "SUCCESS"})

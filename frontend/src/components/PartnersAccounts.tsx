@@ -376,11 +376,9 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 					backgroundColor: "#fff",
 					width: "100%",
 					padding: 0,
-					margin: "0 auto",
 					display: "flex",
 					flexDirection: "column",
 					justifyContent: "space-between",
-					minHeight: "77vh",
 					"@media (max-width: 600px)": { margin: "0rem auto 0rem" },
 				}}
 			>
@@ -931,8 +929,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 								<Image
 									src="/no-data.svg"
 									alt="No Data"
-									height={250}
-									width={300}
+									height={300}
+									width={400}
 								/>
 								<Typography
 									variant="body1"

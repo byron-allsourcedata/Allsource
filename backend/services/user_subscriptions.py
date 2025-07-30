@@ -20,11 +20,14 @@ class UserSubscriptionsService:
         self.plans = plans
         self.db = db
 
-    def move_to_plan(self, user_id: int, plan_alias: str):
+    def move_to_plan(self, user_id: int, plan_alias: str) -> bool:
+        """Return False -> Failed(plan is not defined)
+        Return True -> Success
+        """
         plan = self.plans.get_plan_by_alias(plan_alias)
         if not plan:
             logger.warning(f"{plan_alias} not found!")
-            return
+            return False
         user_subscription = self.user_subscriptions.add(
             user_id=user_id, plan=plan
         )
@@ -33,3 +36,4 @@ class UserSubscriptionsService:
             user_id=user_id, subscription_id=user_subscription.id, plan=plan
         )
         self.db.flush()
+        return True

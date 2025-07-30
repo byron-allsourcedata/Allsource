@@ -112,7 +112,8 @@ async def create_smart_audience(
 
     return await audience_smarts_service.create_audience_smart(
         name=request.smart_audience_name,
-        user=user,
+        user_id=user.get("id"),
+        user_full_name=user.get("full_name"),
         created_by_user_id=user_id,
         use_case_alias=request.use_case,
         validation_params=request.validation_params,

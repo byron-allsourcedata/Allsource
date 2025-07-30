@@ -1,8 +1,8 @@
 "use client";
 import React, { ReactNode } from "react";
-import { Grid } from "@mui/material";
-import HeaderAdmin from "./HeaderAdmin";
-import AdminSidebar from "./SidebarAdmin";
+import { Grid, Box } from "@mui/material";
+import HeaderAdmin from "./components/HeaderAdmin";
+import AdminSidebar from "./components/SidebarAdmin";
 
 interface AdminLayoutProps {
 	children: ReactNode;
@@ -11,48 +11,61 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 	return (
 		<>
-			<HeaderAdmin NewRequestNotification={false} />
-			<Grid
-				container
+			<Box
 				sx={{
+					height: "100vh",
 					display: "flex",
-					flexWrap: "nowrap",
+					flexDirection: "column",
 				}}
 			>
+				<HeaderAdmin NewRequestNotification={false} />
 				<Grid
-					item
-					xs={12}
-					md="auto"
-					lg="auto"
+					container
 					sx={{
-						position: "sticky",
-						overflowX: "hidden",
-						flexShrink: 0,
-						display: { xs: "none", md: "block" },
+						display: "flex",
+						flexWrap: "nowrap",
+						flex: "1 1 auto",
+						minHeight: 0,
 					}}
 				>
-					<AdminSidebar />
+					<Grid
+						item
+						xs={12}
+						md="auto"
+						lg="auto"
+						sx={{
+							padding: "0px",
+							display: { xs: "none", md: "block" },
+							flexBasis: "170px",
+							minWidth: "170px",
+							maxWidth: "170px",
+							position: "sticky",
+							top: 0,
+							alignSelf: "flex-start",
+							height: "calc(100vh - 68px)",
+							overflowY: "auto",
+						}}
+					>
+						<AdminSidebar />
+					</Grid>
+					<Grid
+						item
+						xs={12}
+						md
+						lg
+						sx={{
+							position: "relative",
+							flexGrow: 1,
+							padding: "0px 0px 12px 12px",
+							minWidth: 0,
+							overflowY: "auto",
+							height: "100%",
+						}}
+					>
+						{children}
+					</Grid>
 				</Grid>
-				<Grid
-					item
-					xs={12}
-					md
-					lg
-					sx={{
-						overflow: "auto",
-						"@media (max-width: 899px)": {
-							padding: "0 16px 32px",
-							marginLeft: 0,
-						},
-						"@media (max-width: 599px)": {
-							padding: "0 16px 16px",
-							marginLeft: 0,
-						},
-					}}
-				>
-					{children}
-				</Grid>
-			</Grid>
+			</Box>
 		</>
 	);
 };
