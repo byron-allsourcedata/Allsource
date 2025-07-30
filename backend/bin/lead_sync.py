@@ -366,8 +366,6 @@ async def process_payment_unlocked_five_x_five_user(
     lead_user: LeadUser,
     notification_persistence: NotificationPersistence,
     overage_enabled: bool,
-    plan_leads_credits: int,
-    contact_credit_price: int,
 ):
     users_unlocked_five_x_five_user = (
         session.query(UsersUnlockedFiveXFiveUser)
@@ -416,15 +414,15 @@ async def process_payment_unlocked_five_x_five_user(
     )
 
     session.add(users_unlocked_five_x_five_user)
-    if user.leads_credits > UNLIMITED:
-        user.leads_credits -= AMOUNT_CREDITS
-        await handle_payment_notification(
-            user,
-            notification_persistence,
-            plan_leads_credits,
-            user.leads_credits,
-            contact_credit_price,
-        )
+    # if user.leads_credits > UNLIMITED:
+    #     user.leads_credits -= AMOUNT_CREDITS
+    #     await handle_payment_notification(
+    #         user,
+    #         notification_persistence,
+    #         plan_leads_credits,
+    #         user.leads_credits,
+    #         contact_credit_price,
+    #     )
     session.flush()
     return
 
@@ -891,25 +889,23 @@ async def process_user_data(
             lead_user.company_id = company.id
 
         user_subscription = subscription_service.get_user_subscription(user.id)
+
         if user_subscription:
-            overage_enabled, plan_leads_credits, contact_credit_price = (
-                get_subscription_plan_info(session, user_subscription.plan_id)
+            overage_enabled = get_subscription_plan_info(
+                session, user_subscription.plan_id
             )
-
-            await process_payment_unlocked_five_x_five_user(
-                session=session,
-                five_x_five_user_up_id=five_x_five_user.up_id,
-                user_domain_id=user_domain_id,
-                user=user,
-                lead_user=lead_user,
-                notification_persistence=notification_persistence,
-                overage_enabled=overage_enabled,
-                plan_leads_credits=plan_leads_credits,
-                contact_credit_price=contact_credit_price,
-            )
-
         else:
-            lead_user.is_active = False
+            overage_enabled = True
+
+        await process_payment_unlocked_five_x_five_user(
+            session=session,
+            five_x_five_user_up_id=five_x_five_user.up_id,
+            user_domain_id=user_domain_id,
+            user=user,
+            lead_user=lead_user,
+            notification_persistence=notification_persistence,
+            overage_enabled=overage_enabled,
+        )
 
         if lead_user.is_active:
             domain_count_hash = {

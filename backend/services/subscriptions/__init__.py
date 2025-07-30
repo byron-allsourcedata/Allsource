@@ -257,8 +257,8 @@ class SubscriptionService:
         result = self.get_user_subscription_with_trial_status(user_id=user_id)
         is_active = self.is_subscription_active(result)
         user_subscription = result["subscription"]
-        if not user_subscription:
-            return False
+        # if not user_subscription:
+        #     return False
         if not is_active or user_subscription.status == "inactive":
             billing_date = user_subscription.plan_end.astimezone(timezone.utc)
             if billing_date + relativedelta(months=1) <= datetime.now(
