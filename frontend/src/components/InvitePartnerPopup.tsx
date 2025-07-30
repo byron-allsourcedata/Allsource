@@ -52,7 +52,6 @@ interface RequestData {
 	commission: number;
 	email?: string;
 	name: string;
-	company_name: string;
 	is_master?: boolean;
 	master_id?: number;
 }
@@ -70,7 +69,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 	const [buttonContain, setButtonContain] = useState(false);
 	const [fullName, setFullName] = useState("");
 	const [email, setEmail] = useState("");
-	const [companyName, setCompanyName] = useState("");
 	const [commission, setCommission] = useState("");
 	const [processing, setProcessing] = useState(false);
 	const [emailError, setEmailError] = useState(false);
@@ -109,7 +107,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 		setAction("Add");
 		setFullName("");
 		setEmail("");
-		setCompanyName("");
 		setCommission("");
 	};
 
@@ -120,7 +117,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 		const requestData: RequestData = {
 			commission: parseInt(commission),
 			name: fullName.trim(),
-			company_name: companyName.trim(),
 		};
 
 		try {
@@ -172,7 +168,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 			handleClose();
 			setFullName("");
 			setEmail("");
-			setCompanyName("");
 			setCommission("");
 			setProcessing(false);
 		}
@@ -182,7 +177,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 		if (fileData && fileData.email) {
 			setEmail(fileData.email);
 			setCommission(fileData.commission.toString());
-			setCompanyName(fileData.companyName);
 			setFullName(fileData.fullName);
 			setButtonContain(true);
 			setAction("Edit");
@@ -191,11 +185,11 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 
 	useEffect(() => {
 		setButtonContain(
-			[email, fullName, companyName, commission].every(
+			[email, fullName, commission].every(
 				(field) => typeof field === "string" && field.trim().length > 0,
 			),
 		);
-	}, [email, fullName, companyName, commission]);
+	}, [email, fullName, commission]);
 
 	return (
 		<>
@@ -360,40 +354,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 							helperText={
 								emailError ? "Please enter a valid email address" : ""
 							}
-						/>
-
-						<TextField
-							disabled={action === "Edit"}
-							id="outlined-required"
-							label="Company name"
-							placeholder="Company name"
-							InputLabelProps={{
-								sx: {
-									color: "rgba(17, 17, 19, 0.6)",
-									fontFamily: "var(--font-nunito)",
-									fontWeight: 400,
-									fontSize: "15px",
-									padding: 0,
-									top: "-1px",
-									margin: 0,
-								},
-							}}
-							sx={{
-								"& .MuiInputLabel-root.Mui-focused": {
-									color: "rgba(17, 17, 19, 0.6)",
-								},
-								"& .MuiInputLabel-root[data-shrink='false']": {
-									transform: "translate(16px, 50%) scale(1)",
-								},
-								"& .MuiOutlinedInput-root": {
-									maxHeight: "40px",
-								},
-							}}
-							InputProps={{
-								className: "form-input",
-							}}
-							value={companyName}
-							onChange={(e) => setCompanyName(e.target.value)}
 						/>
 
 						<TextField

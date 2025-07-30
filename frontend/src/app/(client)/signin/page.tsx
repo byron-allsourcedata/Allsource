@@ -20,10 +20,12 @@ import { fetchUserData } from "@/services/meService";
 import PageWithLoader from "@/components/FirstLevelLoader";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import { flagStore } from "@/services/oneDollar";
+import { useUser } from "@/context/UserContext";
 
 const Signin: React.FC = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const { partner } = useUser();
 	const { setPrivacyPolicyPromiseResolver } = usePrivacyPolicyContext();
 	useEffect(() => {
 		document.body.style.overflow = "hidden";
@@ -36,10 +38,10 @@ const Signin: React.FC = () => {
 		if (typeof window !== "undefined") {
 			const token = localStorage.getItem("token");
 			if (token) {
-				router.push("/dashboard");
+				router.push(partner ? "/partners" : "/dashboard");
 			}
 		}
-	}, [router]);
+	}, [router, partner]);
 
 	const [showPassword, setShowPassword] = useState(false);
 	const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -157,6 +159,7 @@ const Signin: React.FC = () => {
 		}
 
 		try {
+			let user = null;
 			const response = await axiosInterceptorInstance.post(
 				"/login",
 				formValues,
@@ -189,10 +192,10 @@ const Signin: React.FC = () => {
 					}
 					switch (responseData.status) {
 						case "SUCCESS":
-							await fetchUserData();
+							user = await fetchUserData();
 							await checkPrivacyPolicy();
 							await checkOneDollarSubscription();
-							router.push("/dashboard");
+							router.push(user?.partner ? "/partners" : "/dashboard");
 							break;
 
 						case "SUCCESS_ADMIN":
@@ -218,13 +221,15 @@ const Signin: React.FC = () => {
 							break;
 
 						case "NEED_CHOOSE_PLAN":
-							await fetchUserData();
-							router.push("/settings?section=subscription");
+							user = await fetchUserData();
+							router.push(
+								user?.partner ? "/partners" : "/settings?section=subscription",
+							);
 							break;
 
 						case "NEED_BOOK_CALL":
-							await fetchUserData();
-							router.push("/dashboard");
+							user = await fetchUserData();
+							router.push(user?.partner ? "/partners" : "/dashboard");
 							break;
 
 						case "PAYMENT_NEEDED":
@@ -233,8 +238,8 @@ const Signin: React.FC = () => {
 							break;
 
 						case "PIXEL_INSTALLATION_NEEDED":
-							await fetchUserData();
-							router.push("/get-started");
+							user = await fetchUserData();
+							router.push(user?.partner ? "/partners" : "/get-started");
 							break;
 
 						case "FILL_COMPANY_DETAILS":
@@ -244,15 +249,15 @@ const Signin: React.FC = () => {
 							const { is_pixel_installed, is_source_imported } =
 								data?.get_started;
 							if (is_pixel_installed && is_source_imported) {
-								router.push("/dashboard");
+								router.push(data?.partner ? "/partners" : "/dashboard");
 							} else {
-								router.push("/get-started");
+								router.push(data?.partner ? "/partners" : "/get-started");
 							}
 							break;
 
 						default:
-							await fetchUserData();
-							router.push("/dashboard");
+							user = await fetchUserData();
+							router.push(user?.partner ? "/partners" : "/dashboard");
 							break;
 					}
 				} else {
@@ -290,6 +295,7 @@ const Signin: React.FC = () => {
 					<GoogleLogin
 						onSuccess={async (credentialResponse) => {
 							try {
+								let user = null;
 								const response = await axiosInterceptorInstance.post(
 									"/login-google",
 									{
@@ -325,9 +331,10 @@ const Signin: React.FC = () => {
 								}
 								switch (response.data.status) {
 									case "SUCCESS":
+										user = await fetchUserData();
 										await checkPrivacyPolicy();
 										await checkOneDollarSubscription();
-										router.push("/dashboard");
+										router.push(user?.partner ? "/partners" : "/dashboard");
 										break;
 									case "SUCCESS_ADMIN":
 										await fetchUserData();
@@ -351,7 +358,8 @@ const Signin: React.FC = () => {
 										showErrorToast("User with this email does not exist");
 										break;
 									case "PIXEL_INSTALLATION_NEEDED":
-										router.push("/dashboard");
+										user = await fetchUserData();
+										router.push(user?.partner ? "/partners" : "/dashboard");
 										break;
 									case "FILL_COMPANY_DETAILS":
 										let data = await fetchUserData();
@@ -360,9 +368,9 @@ const Signin: React.FC = () => {
 										const { is_pixel_installed, is_source_imported } =
 											data?.get_started;
 										if (is_pixel_installed && is_source_imported) {
-											router.push("/dashboard");
+											router.push(data?.partner ? "/partners" : "/dashboard");
 										} else {
-											router.push("/get-started");
+											router.push(data?.partner ? "/partners" : "/get-started");
 										}
 										break;
 									default:
