@@ -101,6 +101,12 @@
         }
     };
 
+    const checkoutCompletedHandler = function (detail) {
+        if (typeof checkoutCompleted === 'function') {
+            checkoutCompleted(detail);
+        }
+    };
+
     setTimeout(viewedProductHandler, 6000);
 
     (function (ns, fetch) {
@@ -117,6 +123,45 @@
                             }
                         } catch (error) { }
                     }
+                }
+                if (clonedResponse.ok && clonedResponse.url && clonedResponse.url.contains('graphql?operationName=PollForReceipt')) {
+                    let id = null;
+                    let amount = null;
+                    let currencyCode = null;
+
+                    if (
+                        clonedResponse &&
+                        clonedResponse.data &&
+                        clonedResponse.data.receipt
+                    ) {
+
+                        let receipt = clonedResponse.data.receipt;
+
+                        if (receipt.id) {
+                            id = receipt.id;
+                        }
+
+                        if (receipt.paymentDetails && receipt.paymentDetails.paymentAmount) {
+                            const paymentAmount = receipt.paymentDetails.paymentAmount;
+                            if (paymentAmount.amount) {
+                                amount = paymentAmount.amount;
+                            }
+
+                            if (paymentAmount.currencyCode) {
+                                currencyCode = paymentAmount.currencyCode;
+                            }
+                        }
+                    }
+
+
+                    const data = {
+                        "platform_order_id": id,
+                        "total_price": amount,
+                        "currency": currencyCode,
+                        "platform_created_at": Date.now(),
+                    }
+
+                    checkoutCompletedHandler(data);
                 }
             });
 
