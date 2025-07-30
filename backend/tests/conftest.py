@@ -30,7 +30,6 @@ SessionLocal = scoped_session(sessionmaker(bind=engine))
 @pytest.fixture(scope="session")
 def db_session():
     connection = engine.connect()
-    transaction = connection.begin()
     Session = sessionmaker(bind=connection)
     session = Session()
 
@@ -38,7 +37,6 @@ def db_session():
         yield session
     finally:
         session.close()
-        transaction.rollback()
         connection.close()
 
 

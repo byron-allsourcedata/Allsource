@@ -178,6 +178,7 @@ class AudienceSmartsPostgresPersistence:
 
         return result_ids
 
+
     # =================================================================================
 
     def get_audience_smart_validations_by_id(self, aud_smart_id: UUID):

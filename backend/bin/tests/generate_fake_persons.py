@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import uuid
 import logging
 import os
-from sqlalchemy import create_engine, func, TIMESTAMP
+from sqlalchemy import create_engine, func, TIMESTAMP, VARCHAR
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import Column, text
 from sqlalchemy.dialects.postgresql import UUID
@@ -35,6 +35,7 @@ class AudienceSourcesMatchedPerson(Base):
     )
     source_id = Column(UUID(as_uuid=True), nullable=False)
     enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
+    name = Column(VARCHAR(128), nullable=True)
     created_at = Column(
         TIMESTAMP,
         nullable=True,
@@ -52,6 +53,7 @@ class AudienceLookalikesPerson(Base):
     )
     lookalike_id = Column(UUID(as_uuid=True), nullable=False)
     enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
+    name = Column(VARCHAR(128), nullable=True)
     created_at = Column(
         TIMESTAMP,
         nullable=True,
@@ -75,8 +77,12 @@ def insert_test_data(db_session, *, lookalike_rows=None, source_rows=None):
         db_session.bulk_insert_mappings(
             AudienceLookalikesPerson,
             [
-                {"enrichment_user_asid": asid, "lookalike_id": lid}
-                for asid, lid in lookalike_rows
+                {
+                    "enrichment_user_asid": asid,
+                    "lookalike_id": lid,
+                    "name": name,
+                }
+                for asid, lid, name in lookalike_rows
             ],
         )
 
@@ -84,8 +90,8 @@ def insert_test_data(db_session, *, lookalike_rows=None, source_rows=None):
         db_session.bulk_insert_mappings(
             AudienceSourcesMatchedPerson,
             [
-                {"enrichment_user_asid": asid, "source_id": sid}
-                for asid, sid in source_rows
+                {"enrichment_user_asid": asid, "source_id": sid, "name": name}
+                for asid, sid, name in source_rows
             ],
         )
 
@@ -98,24 +104,27 @@ def create_multiple_sources_and_lookalikes_with_overlap(
     lookalike_ids: list[uuid.UUID],
     total: int,
     shared_count: int,
+    name: str,
 ):
     """
-    Создает тестовые данные с несколькими source_id и lookalike_id,
-    с определенным количеством общих enrichment_user_asid.
+    Creates test data with multiple source_id and lookalike_id,
+    with a certain number of shared enrichment_user_asid.
 
     :param session: DB session
-    :param source_ids: список UUID для audience_sources_matched_persons
-    :param lookalike_ids: список UUID для audience_lookalikes_persons
-    :param total: общее количество ASID, доступных для выборки
-    :param shared_count: количество ASID, которые будут общими для всех
+    :param source_ids: list of UUIDs for audience_sources_matched_persons
+    :param lookalike_ids: list of UUIDs for audience_lookalikes_persons
+    :param total: total number of ASIDs available for fetching
+    :param shared_count: number of ASIDs that will be shared by all
     """
 
-    assert shared_count * 2 <= total, (
+    common_count = len(source_ids) + len(lookalike_ids)
+
+    assert shared_count * common_count <= total, (
         "shared_count too high — must leave room for unique entries: "
         "total must be >= 2 * shared_count"
     )
 
-    total_unique_needed = total - shared_count * 2
+    total_unique_needed = total - shared_count * common_count
     half = total_unique_needed // 2
     extra = total_unique_needed % 2
 
@@ -143,20 +152,23 @@ def create_multiple_sources_and_lookalikes_with_overlap(
 
     for sid in source_ids:
         for asid in shared_asids:
-            source_rows.append((asid, sid))
+            source_rows.append((asid, sid, name))
 
     for lid in lookalike_ids:
         for asid in shared_asids:
-            lookalike_rows.append((asid, lid))
+            lookalike_rows.append((asid, lid, name))
 
     # Unique
-    for i, asid in enumerate(source_unique):
-        sid = source_ids[i % len(source_ids)]
-        source_rows.append((asid, sid))
+    if source_ids:
+        for i, asid in enumerate(source_unique):
+            sid = source_ids[i % len(source_ids)]
+            source_rows.append((asid, sid, name))
 
-    for i, asid in enumerate(lookalike_unique):
-        lid = lookalike_ids[i % len(lookalike_ids)]
-        lookalike_rows.append((asid, lid))
+    if lookalike_ids:
+        for i, asid in enumerate(lookalike_unique):
+            lid = lookalike_ids[i % len(lookalike_ids)]
+            lookalike_rows.append((asid, lid, name))
+
 
     insert_test_data(
         session, source_rows=source_rows, lookalike_rows=lookalike_rows
@@ -172,26 +184,7 @@ def main():
 
     Base.metadata.create_all(engine)
 
-    source_ids = [uuid.uuid4(), uuid.uuid4()]
-    lookalike_ids = [uuid.uuid4(), uuid.uuid4()]
-
     # populate_enrichment_asids(session, count=100)
-
-    create_multiple_sources_and_lookalikes_with_overlap(
-        session=session,
-        source_ids=source_ids,
-        lookalike_ids=lookalike_ids,
-        total=8,
-        shared_count=1,
-    )
-
-    # create_multiple_sources_and_lookalikes_with_overlap(
-    #     session=session,
-    #     source_ids=source_ids,
-    #     lookalike_ids=lookalike_ids,
-    #     total=8,
-    #     shared_count=0,
-    # )
 
 
 if __name__ == "__main__":
