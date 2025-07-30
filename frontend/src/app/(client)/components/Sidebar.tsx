@@ -308,6 +308,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
 	useEffect(() => {
 		checkAdmin();
+		checkPartner();
 	}, [backButton]);
 
 	const handleNavigation = async (route: string) => {
@@ -735,20 +736,22 @@ const Sidebar: React.FC<SidebarProps> = ({
 					</ListItemIcon>
 					<ListItemText primary="Integrations" />
 				</ListItem>
-				{/* <ListItem
-					button
-					onClick={() => handleNavigation("/partners")}
-					sx={
-						isActive("/partners")
-							? sidebarStyles.activeItem
-							: sidebarStyles.ListItem
-					}
-				>
-					<ListItemIcon sx={sidebarStyles.listItemIcon}>
-						<ReduceCapacityIcon />
-					</ListItemIcon>
-					<ListItemText primary="Partners" />
-				</ListItem> */}
+				{isPartnerAvailable && (
+					<ListItem
+						button
+						onClick={() => handleNavigation("/partners")}
+						sx={
+							isActive("/partners")
+								? sidebarStyles.activeItem
+								: sidebarStyles.ListItem
+						}
+					>
+						<ListItemIcon sx={sidebarStyles.listItemIcon}>
+							<ReduceCapacityIcon />
+						</ListItemIcon>
+						<ListItemText primary="Partners" />
+					</ListItem>
+				)}
 			</List>
 			<Box
 				sx={{
