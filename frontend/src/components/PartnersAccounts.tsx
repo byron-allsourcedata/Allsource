@@ -354,6 +354,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 				if (current_token) {
 					localStorage.setItem("parent_token", current_token);
 					localStorage.setItem("token", response.data.token);
+					localStorage.setItem("parent_account_type", "partner");
 					sessionStorage.removeItem("current_domain");
 					sessionStorage.removeItem("me");
 					await fetchUserData();

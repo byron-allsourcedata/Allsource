@@ -308,7 +308,6 @@ class PartnersPersistence:
             token=creating_data["token"],
             email=creating_data["email"],
             name=creating_data["name"],
-            company_name=creating_data["company_name"],
             is_master=creating_data["is_master"],
             status=creating_data.get("status"),
             user_id=creating_data.get("user_id"),

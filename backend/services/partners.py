@@ -18,6 +18,7 @@ from schemas.partners import (
     PartnersResponse,
     PartnerUserData,
     PartnersObjectResponse,
+    PartnerCreateRequest,
 )
 from services.sendgrid import SendgridHandler
 from enums import SendgridTemplate
@@ -201,7 +202,9 @@ class PartnersService:
         )
         return md5_hash
 
-    async def create_partner(self, new_data: dict) -> PartnersObjectResponse:
+    async def create_partner(
+        self, new_data: PartnerCreateRequest
+    ) -> PartnersObjectResponse:
         status = True
         token = None
 
@@ -211,7 +214,9 @@ class PartnersService:
         )
 
         if user_by_email or partner_by_email:
-            return {"message": "User with this email already exists!"}
+            return PartnersObjectResponse(
+                status=False, message="User with this email already exists!"
+            )
 
         try:
             token = self.send_referral_in_email(

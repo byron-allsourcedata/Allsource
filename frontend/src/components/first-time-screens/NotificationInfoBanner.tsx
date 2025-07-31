@@ -23,7 +23,6 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({
 				width: "100%",
 				position: "relative",
 				display: "flex",
-				alignItems: "center",
 				bgcolor: bgColor,
 				border: border,
 				borderRadius: 1,
@@ -49,6 +48,10 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({
 				onClick={onClose}
 				size="small"
 				sx={{
+					alignItems: "start",
+					height: "20px",
+					width: "20px",
+					padding: 0,
 					"@media (max-width:600px)": {
 						position: "absolute",
 						top: 8,

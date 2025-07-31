@@ -270,6 +270,7 @@ const Signup: React.FC = () => {
 					"/sign-up",
 					updatedFormValues,
 				);
+				let userData = null;
 				if (response.status === 200) {
 					localStorage.removeItem(UTM_STORAGE_KEY);
 					const responseData = response.data;
@@ -335,18 +336,18 @@ const Signup: React.FC = () => {
 							break;
 						case "FILL_COMPANY_DETAILS":
 							// await needConfirmPrivacyPolicy();
-							get_me();
-							router.push("/dashboard");
+							userData = await fetchUserData();
+							router.push(userData?.partner ? "/partners" : "/dashboard");
 							break;
 						case "PIXEL_INSTALLATION_NEEDED":
 							// await needConfirmPrivacyPolicy();
-							get_me();
-							router.push("/dashboard");
+							userData = await fetchUserData();
+							router.push(userData?.partner ? "/partners" : "/dashboard");
 							break;
 						default:
 							// await needConfirmPrivacyPolicy();
-							get_me();
-							router.push("/dashboard");
+							userData = await fetchUserData();
+							router.push(userData?.partner ? "/partners" : "/dashboard");
 							break;
 					}
 				}
