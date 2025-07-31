@@ -235,9 +235,9 @@ class UserPersistence:
             return user
         return result_user
 
-    def set_last_signed_in(self, user_id):
+    def set_last_login(self, user_id):
         user = self.db.query(Users).filter(Users.id == user_id).first()
-        user.last_signed_in = datetime.now()
+        user.last_login = datetime.now()
         self.db.commit()
 
     def get_user_team_member_by_id(self, user_id):
