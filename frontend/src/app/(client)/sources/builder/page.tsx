@@ -497,7 +497,7 @@ const SourcesImport: React.FC = () => {
 		if (fileSize > maxSizeMB) {
 			handleDeleteFile();
 			showErrorToast(
-				"The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again.",
+				"The uploaded CSV file exceeds the 500MB limit. Please reduce the file size and try again.",
 			);
 			return false;
 		}
@@ -737,7 +737,7 @@ const SourcesImport: React.FC = () => {
 		try {
 			if (!file) return;
 
-			if (!validateFileSize(file, 100)) return;
+			if (!validateFileSize(file, 500)) return;
 
 			const url = await getFileUploadUrl(file.type);
 
@@ -1212,7 +1212,7 @@ const SourcesImport: React.FC = () => {
 															color: "rgba(32, 33, 36, 1)",
 														}}
 													>
-														CSV.Max 100MB
+														CSV.Max 500MB
 													</Typography>
 												</Box>
 												<input
