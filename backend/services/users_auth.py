@@ -261,7 +261,6 @@ class UsersAuth:
             created_at=self.get_utc_aware_date_for_mssql(),
             last_login=self.get_utc_aware_date_for_mssql(),
             customer_id=customer_id,
-            last_signed_in=datetime.now(),
             added_on=datetime.now(),
             stripe_payment_url=stripe_payment_url,
             awin_awc=awin_awc,
@@ -567,9 +566,7 @@ class UsersAuth:
         if not user_object.is_email_confirmed:
             self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
-            self.user_persistence_service.set_last_signed_in(
-                user_id=user_object.id
-            )
+            self.user_persistence_service.set_last_login(user_id=user_object.id)
             if user_object.team_owner_id:
                 token_info = {
                     "id": user_object.team_owner_id,
@@ -1013,7 +1010,7 @@ class UsersAuth:
                 shopify_status = OauthShopify.ERROR_SHOPIFY_TOKEN
 
         logger.debug("Password verification passed")
-        self.user_persistence_service.set_last_signed_in(user_id=user_object.id)
+        self.user_persistence_service.set_last_login(user_id=user_object.id)
         if user_object.team_owner_id:
             token_info = {
                 "id": user_object.team_owner_id,

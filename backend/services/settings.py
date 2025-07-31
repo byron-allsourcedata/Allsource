@@ -231,8 +231,8 @@ class SettingsService:
             invited, inviter_mail = team_data
             team_info = {
                 "email": invited.email,
-                "last_sign_in": invited.last_signed_in.strftime("%b %d, %Y")
-                if invited.last_signed_in
+                "last_sign_in": invited.last_login.strftime("%b %d, %Y")
+                if invited.last_login
                 else None,
                 "access_level": invited.team_access_level,
                 "invited_by": inviter_mail,
