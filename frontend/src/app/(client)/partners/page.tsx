@@ -95,7 +95,6 @@ const TabPanel: React.FC<TabPanelProps> = ({
 const Partners: React.FC = () => {
 	const { hasNotification } = useNotification();
 	const [email, setEmail] = useState("");
-	const { backButton } = useUser();
 	const [commission, setCommission] = useState(0);
 	const [id, setId] = useState(0);
 	const [formPopupOpen, setFormPopupOpen] = useState(false);
@@ -714,7 +713,7 @@ const Partners: React.FC = () => {
 								/>
 							</TabPanel>
 						</Box>
-						{!backButton && isMaster && (
+						{isMaster && (
 							<Box sx={{ width: "100%", padding: 0, margin: 0 }}>
 								<TabPanel value={tabIndex} index={isMaster ? 2 : 1}>
 									<PartnersMain

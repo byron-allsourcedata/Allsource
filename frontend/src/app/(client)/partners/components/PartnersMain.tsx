@@ -520,7 +520,6 @@ const PartnersMain: React.FC<PartnersProps> = ({
 									display: "flex",
 									width: "100%",
 									justifyContent: "space-between",
-									mb: 6,
 									alignItems: "center",
 									gap: 2,
 								}}
