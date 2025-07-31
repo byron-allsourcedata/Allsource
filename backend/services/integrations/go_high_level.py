@@ -7,6 +7,7 @@ import httpx
 from fastapi import HTTPException, Depends
 
 from config.util import getenv
+from db_dependencies import Db
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -38,7 +39,7 @@ from utils import (
     get_valid_phone,
     get_valid_location,
     get_http_client,
-    get_valid_email_without_million,
+    get_valid_email_without_million, to_snake_case,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,12 +48,12 @@ logger = logging.getLogger(__name__)
 @injectable
 class GoHighLevelIntegrationsService:
     def __init__(
-        self,
-        domain_persistence: UserDomainsPersistence,
-        integrations_persistence: IntegrationsPresistence,
-        sync_persistence: IntegrationsUserSyncPersistence,
-        client: Annotated[httpx.Client, Depends(get_http_client)],
-        million_verifier_integrations: MillionVerifierIntegrationsService,
+            self,
+            domain_persistence: UserDomainsPersistence,
+            integrations_persistence: IntegrationsPresistence,
+            sync_persistence: IntegrationsUserSyncPersistence,
+            client: Annotated[httpx.Client, Depends(get_http_client)],
+            million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persistence = integrations_persistence
@@ -63,13 +64,13 @@ class GoHighLevelIntegrationsService:
         self.VERSION = "2021-07-28"
 
     def __handle_request(
-        self,
-        method: str,
-        url: str,
-        headers: dict = None,
-        json: dict = None,
-        data: dict = None,
-        params: dict = None,
+            self,
+            method: str,
+            url: str,
+            headers: dict = None,
+            json: dict = None,
+            data: dict = None,
+            params: dict = None,
     ):
         if not headers:
             headers = {
@@ -82,7 +83,7 @@ class GoHighLevelIntegrationsService:
         return response
 
     def refresh_ghl_token(
-        self, integration_id: int, refresh_token: str
+            self, integration_id: int, refresh_token: str
     ) -> str:
         headers = {
             "Accept": "application/json",
@@ -103,7 +104,7 @@ class GoHighLevelIntegrationsService:
         if not tokens.get("refresh_token"):
             raise HTTPException(
                 status_code=409,
-                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value, "response": tokens},
             )
         self.integrations_persistence.update_refresh_token(
             integration_id=integration_id, refresh_token=tokens["refresh_token"]
@@ -128,7 +129,7 @@ class GoHighLevelIntegrationsService:
         return credential
 
     def __save_integrations(
-        self, refresh_token: str, domain_id: int, user: dict, location_id: str
+            self, refresh_token: str, domain_id: int, user: dict, location_id: str
     ):
         credential = self.get_credentials(domain_id, user.get("id"))
         if credential:
@@ -166,13 +167,13 @@ class GoHighLevelIntegrationsService:
         return integartion
 
     def edit_sync(
-        self,
-        leads_type: str,
-        integrations_users_sync_id: int,
-        domain_id: int,
-        created_by: str,
-        user_id: int,
-        data_map: List[DataMap] = [],
+            self,
+            leads_type: str,
+            integrations_users_sync_id: int,
+            domain_id: int,
+            created_by: str,
+            user_id: int,
+            data_map: list[DataMap] = [],
     ):
         credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync(
@@ -187,10 +188,10 @@ class GoHighLevelIntegrationsService:
         return sync
 
     def add_integration(
-        self,
-        credentials: IntegrationCredentials,
-        domain: UserDomains,
-        user: dict,
+            self,
+            credentials: IntegrationCredentials,
+            domain: UserDomains,
+            user: dict,
     ):
         domain_id = domain.id if domain else None
         code = credentials.go_high_level.code
@@ -209,7 +210,8 @@ class GoHighLevelIntegrationsService:
             method="POST", url=self.TOKEN_URL, data=data, headers=headers
         )
         result = response.json()
-        refresh_token = result["refresh_token"]
+
+        refresh_token = result.get("refresh_token")
         location_id = result["locationId"]
         if not refresh_token:
             raise HTTPException(
@@ -228,12 +230,12 @@ class GoHighLevelIntegrationsService:
         }
 
     async def create_sync(
-        self,
-        domain_id: int,
-        leads_type: str,
-        created_by: str,
-        user: dict,
-        data_map: List[DataMap] = [],
+            self,
+            domain_id: int,
+            leads_type: str,
+            created_by: str,
+            user: dict,
+            data_map: list[DataMap] = [],
     ):
         credentials = self.get_credentials(
             user_id=user.get("id"), domain_id=domain_id
@@ -252,12 +254,12 @@ class GoHighLevelIntegrationsService:
         return sync
 
     def create_smart_audience_sync(
-        self,
-        smart_audience_id: UUID,
-        sent_contacts: int,
-        created_by: str,
-        user: dict,
-        data_map: List[DataMap] = [],
+            self,
+            smart_audience_id: UUID,
+            sent_contacts: int,
+            created_by: str,
+            user: dict,
+            data_map: list[DataMap] = [],
     ):
         credentials = self.get_smart_credentials(user_id=user.get("id"))
 
@@ -297,20 +299,23 @@ class GoHighLevelIntegrationsService:
             "Version": self.VERSION,
         }
         response = self.__handle_request(method="GET", url=url, headers=headers)
-        if response.status_code == 401:
+        if response.status_code != 200:
             raise HTTPException(
                 status_code=409,
                 detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
             )
         result = response.json()
-        return result
+
+        existing_fields = {f["name"]: f for f in result["customFields"]}
+
+        return existing_fields
 
     def create_custom_field(
-        self,
-        access_token: str,
-        location_id: str,
-        key: str,
-        field_type: str = "TEXT",
+            self,
+            access_token: str,
+            location_id: str,
+            key: str,
+            field_type: str = "TEXT",
     ) -> dict:
         url = f"https://services.leadconnectorhq.com/locations/{location_id}/customFields"
         headers = {
@@ -330,20 +335,17 @@ class GoHighLevelIntegrationsService:
                 detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
             )
 
-        # TODO: Get Related Domains field
-        # self.__handle_request()
-
         result = response.json()
-        # print(result)
+
         return result
 
     async def process_data_sync(
-        self,
-        user_integration: UserIntegration,
-        integration_data_sync: IntegrationUserSync,
-        enrichment_users: List[EnrichmentUser],
-        target_schema: str,
-        validations: dict = {},
+            self,
+            user_integration: UserIntegration,
+            integration_data_sync: IntegrationUserSync,
+            enrichment_users: list[EnrichmentUser],
+            target_schema: str,
+            validations: dict = {},
     ):
         results = []
         access_token = self.refresh_ghl_token(
@@ -370,19 +372,19 @@ class GoHighLevelIntegrationsService:
                 }
             )
             if result in (
-                ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+                    ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                    ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
                 continue
 
         return result
 
     async def process_data_sync_lead(
-        self,
-        user_integration: UserIntegration,
-        integration_data_sync: IntegrationUserSync,
-        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
-        is_email_validation_enabled: bool,
+            self,
+            user_integration: UserIntegration,
+            integration_data_sync: IntegrationUserSync,
+            user_data: list[Tuple[LeadUser, FiveXFiveUser]],
+            is_email_validation_enabled: bool,
     ):
         results = []
         access_token = self.refresh_ghl_token(
@@ -398,8 +400,8 @@ class GoHighLevelIntegrationsService:
                 is_email_validation_enabled=is_email_validation_enabled,
             )
             if contact_data in (
-                ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+                    ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                    ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
                 results.append(
                     {"lead_id": lead_user.id, "status": contact_data}
@@ -427,12 +429,12 @@ class GoHighLevelIntegrationsService:
         return results
 
     async def __mapped_profile_lead(
-        self,
-        five_x_five_user: FiveXFiveUser,
-        data_map: list,
-        location_id: str,
-        access_token: str,
-        is_email_validation_enabled: bool,
+            self,
+            five_x_five_user: FiveXFiveUser,
+            data_map: list,
+            location_id: str,
+            access_token: str,
+            is_email_validation_enabled: bool,
     ) -> dict | str:
         if is_email_validation_enabled:
             first_email = await get_valid_email(
@@ -447,8 +449,8 @@ class GoHighLevelIntegrationsService:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         if first_email in (
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
             return first_email
 
@@ -472,36 +474,61 @@ class GoHighLevelIntegrationsService:
             "locationId": location_id,
         }
         custom_fields = []
-        fields = self.list_custom_fields(access_token, location_id)
-        existing_fields = {f["name"]: f for f in fields["customFields"]}
-        # print(first_email)
-        # print(existing_fields)
+        existing_fields = self.list_custom_fields(access_token, location_id)
 
         for field in data_map:
             t = field["type"]
             key = field["value"]
-            val = getattr(five_x_five_user, t, None)
-            if val is None:
-                continue
+            is_constant = field["is_constant"]
 
-            if isinstance(val, datetime):
-                val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
+            # Add constant fields
+            if is_constant is True:
+                field_name = to_snake_case(t)
+                val = key
 
-            if key not in existing_fields:
                 try:
-                    new_field = self.create_custom_field(
-                        access_token=access_token,
-                        location_id=location_id,
-                        key=key,
-                    )
+                    if field_name not in existing_fields:
+                        resp = self.create_custom_field(
+                            access_token=access_token,
+                            location_id=location_id,
+                            key=field_name,
+                        )
 
-                    item = new_field.get("customField")
-                    if item:
-                        existing_fields[key] = item
-                    else:
-                        logging.error(f"Failed to create custom field: '{key}' (empty result)")
+                        item = resp.get("customField")
+
+                        if item:
+                            existing_fields[field_name] = item
+                        else:
+                            logging.error(f"Failed to create custom field: '{field_name}', Response: {resp}")
                 except Exception as e:
-                    logging.error(f"Failed to create custom field '{key}', Exception: {e}")
+                    logging.error(f"Failed to create custom field '{field_name}', Exception: {e}")
+
+            else:
+                val = getattr(five_x_five_user, t, None)
+                if val is None:
+                    continue
+
+                if isinstance(val, datetime):
+                    val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+                if key not in existing_fields:
+                    try:
+                        resp = self.create_custom_field(
+                            access_token=access_token,
+                            location_id=location_id,
+                            key=key,
+                        )
+
+                        item = resp.get("customField")
+                        if item:
+                            existing_fields[key] = item
+                        else:
+                            logging.error(f"Failed to create custom field: '{key}', Response: {resp}")
+                    except Exception as e:
+                        logging.error(f"Failed to create custom field '{key}', Exception: {e}")
+
+            if is_constant:
+                key = t
 
             field_info = existing_fields.get(key)
             if not field_info:
@@ -518,12 +545,12 @@ class GoHighLevelIntegrationsService:
         return cleaned
 
     def __mapped_member_into_list(
-        self,
-        enrichment_user: EnrichmentUser,
-        target_schema: str,
-        validations: dict,
-        data_map: list,
-        location_id: str,
+            self,
+            enrichment_user: EnrichmentUser,
+            target_schema: str,
+            validations: dict,
+            data_map: list,
+            location_id: str,
     ):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
@@ -592,7 +619,7 @@ class GoHighLevelIntegrationsService:
                 profile["companyName"] = value
 
         if any(
-            k in address_data for k in ["addr1", "city", "state", "zip_code"]
+                k in address_data for k in ["addr1", "city", "state", "zip_code"]
         ):
             profile["address1"] = address_data.get("addr1")
             profile["city"] = address_data.get("city")
@@ -601,3 +628,44 @@ class GoHighLevelIntegrationsService:
         cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
 
         return cleaned
+
+
+def get_current_refresh_token(integration_id: int, db: Db) -> str | None:
+    integration = db.query(UserIntegration).filter(UserIntegration.id == integration_id).first()
+    if integration:
+        return integration.access_token
+    return None
+
+
+async def main():
+    from resolver import Resolver
+
+    resolver = Resolver()
+
+    service: GoHighLevelIntegrationsService = await resolver.resolve(GoHighLevelIntegrationsService)
+    db = await resolver.resolve(Db)
+
+    domain_integration_id = 845
+    location_id = "MvrMrwrGB9OXtuC4zotC"
+
+    # Need to use not constant, but method to get current refresh_token
+    refresh_token = get_current_refresh_token(domain_integration_id, db)
+    # print(f"{refresh_token=}")
+    access_token = service.refresh_ghl_token(domain_integration_id, refresh_token)
+    # print(f"{access_token=}")
+    refresh_token = get_current_refresh_token(domain_integration_id, db)
+    # print(f"{refresh_token=}")
+
+    response = service.create_custom_field(
+        access_token=access_token,
+        location_id=location_id,
+        key="Another field yo"
+    )
+
+    print(response)
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    asyncio.run(main())
