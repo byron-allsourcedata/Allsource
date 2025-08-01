@@ -308,28 +308,39 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 		try {
 			setLoading(true);
 			const response = await axiosInstance.get("/referral/generate-token", {
-				params: {
-					user_account_id: user_account_id,
-				},
+				params: { user_account_id },
 			});
+
 			if (response.status === 200) {
 				const current_token = localStorage.getItem("token");
 				const current_domain = sessionStorage.getItem("current_domain");
-				sessionStorage.setItem("parent_domain", current_domain || "");
+
+				// Сохраняем текущую сессию в стек
 				if (current_token) {
-					localStorage.setItem("parent_token", current_token);
-					localStorage.setItem("token", response.data.token);
-					localStorage.setItem("parent_account_type", "partner");
-					sessionStorage.removeItem("current_domain");
-					sessionStorage.removeItem("me");
-					await fetchUserData();
-					router.push("/dashboard");
-					router.refresh();
-					setBackButton(true);
-					triggerBackButton();
+					const stack = JSON.parse(
+						localStorage.getItem("impersonationStack") || "[]",
+					);
+					stack.push({
+						type: "partner",
+						token: current_token,
+						domain: current_domain || undefined,
+					});
+					localStorage.setItem("impersonationStack", JSON.stringify(stack));
 				}
+
+				// Устанавливаем новый токен
+				localStorage.setItem("token", response.data.token);
+				sessionStorage.removeItem("current_domain");
+				sessionStorage.removeItem("me");
+
+				await fetchUserData();
+				router.push("/dashboard");
+				router.refresh();
+				setBackButton(true);
+				triggerBackButton();
 			}
-		} catch {
+		} catch (error) {
+			console.error("Partner login error:", error);
 		} finally {
 			setLoading(false);
 		}

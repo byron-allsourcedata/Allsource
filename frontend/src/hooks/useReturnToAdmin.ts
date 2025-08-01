@@ -5,6 +5,7 @@ import { fetchUserData } from "@/services/meService";
 type ReturnToAdminOptions = {
 	onBeforeRedirect?: () => void;
 	onAfterUserData?: () => void;
+	updateHeader?: (hasMoreLevels: boolean, nextLevelType: string | null) => void;
 };
 
 export const useReturnToAdmin = () => {
@@ -12,39 +13,50 @@ export const useReturnToAdmin = () => {
 
 	const returnToAdmin = useCallback(
 		async (options?: ReturnToAdminOptions) => {
-			const parent_token = localStorage.getItem("parent_token");
-			const parent_domain = sessionStorage.getItem("parent_domain");
-			const parent_account_type = localStorage.getItem("parent_account_type");
-
-			if (parent_token) {
-				await new Promise<void>(async (resolve) => {
-					sessionStorage.clear();
-					if (parent_account_type !== "partner") {
-						sessionStorage.setItem("admin", "true");
-					}
-
-					localStorage.removeItem("parent_token");
-					sessionStorage.removeItem("parent_domain");
-					localStorage.removeItem("parent_account_type");
-
-					localStorage.setItem("token", parent_token);
-					sessionStorage.setItem("current_domain", parent_domain || "");
-
-					await fetchUserData();
-
-					options?.onAfterUserData?.();
-
-					setTimeout(() => resolve(), 0);
-				});
+			const stack = JSON.parse(
+				localStorage.getItem("impersonationStack") || "[]",
+			);
+			if (stack.length === 0) {
+				router.push("/login");
+				return;
 			}
+
+			const previousLevel = stack.pop();
+			localStorage.setItem("impersonationStack", JSON.stringify(stack));
+
+			const hasMoreLevels = stack.length > 0;
+			const nextLevelType = hasMoreLevels ? stack[stack.length - 1].type : null;
+
+			await new Promise<void>(async (resolve) => {
+				sessionStorage.clear();
+				localStorage.setItem("token", previousLevel.token);
+				if (previousLevel.domain) {
+					sessionStorage.setItem("current_domain", previousLevel.domain);
+				}
+
+				await fetchUserData();
+				options?.onAfterUserData?.();
+				setTimeout(() => resolve(), 0);
+			});
 
 			options?.onBeforeRedirect?.();
 
-			if (parent_account_type === "partner") {
-				router.push("/partners");
-			} else {
-				router.push("/admin");
+			options?.updateHeader?.(hasMoreLevels, nextLevelType);
+
+			switch (previousLevel.type) {
+				case "admin":
+					sessionStorage.setItem("admin", "true");
+					router.push("/admin");
+					break;
+				case "masterPartner":
+					router.push("/partners");
+				case "partner":
+					router.push("/partners");
+					break;
+				default:
+					router.push("/dashboard");
 			}
+
 			router.refresh();
 		},
 		[router],

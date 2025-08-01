@@ -9,7 +9,7 @@ import {
 	Switch,
 } from "@mui/material";
 import Image from "next/image";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../../context/UserContext";
 import { useHints } from "../../../context/HintsContext";
@@ -23,11 +23,11 @@ import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined
 import { useSSE } from "../../../context/SSEContext";
 import QuestionMarkOutlinedIcon from "@mui/icons-material/QuestionMarkOutlined";
 import PersonIcon from "@mui/icons-material/Person";
-import { fetchUserData } from "@/services/meService";
 import CustomNotification from "@/components/CustomNotification";
 import { usePathname } from "next/navigation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
+import { getCurrentImpersonationLevel } from "@/utils/impersonation";
 
 const headerStyles = {
 	headers: {
@@ -78,15 +78,13 @@ const Header: React.FC<HeaderProps> = ({
 		backButton,
 		setBackButton,
 	} = useUser();
-	const meItem =
-		typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
-	const meData = meItem ? JSON.parse(meItem) : { full_name: "", email: "" };
+	const [meData, setMeData] = useState({ full_name: "", email: "" });
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [anchorElNotificate, setAnchorElNotificate] =
 		useState<null | HTMLElement>(null);
 	const open = Boolean(anchorEl);
-	const full_name = userFullName || meData.full_name;
-	const email = userEmail || meData.email;
+	const full_name = meData.full_name || userFullName;
+	const email = meData.email || userEmail;
 	const { resetTrialData } = useTrial();
 	const [notificationIconPopupOpen, setNotificationIconPopupOpen] =
 		useState(false);
@@ -94,9 +92,32 @@ const Header: React.FC<HeaderProps> = ({
 		useState<boolean>(false);
 	const buttonRef = useRef<HTMLButtonElement>(null);
 	const [visibleButton, setVisibleButton] = useState(false);
-	const [parentAccountType, setParentAccountType] = useState<string | null>("");
 	const returnToAdmin = useReturnToAdmin();
+	const [returnButtonText, setReturnButtonText] = useState("Return");
 	const { showHints, toggleHints } = useHints();
+
+	const getMeData = () => {
+		if (typeof window === "undefined") return { full_name: "", email: "" };
+		const meItem = sessionStorage.getItem("me");
+		return meItem ? JSON.parse(meItem) : { full_name: "", email: "" };
+	};
+
+	const updateHeaderState = useCallback(() => {
+		const stack = JSON.parse(
+			localStorage.getItem("impersonationStack") || "[]",
+		);
+		const urlParams = new URLSearchParams(window.location.search);
+		const isPaymentFailed = urlParams.get("payment_failed") === "true";
+
+		if (stack.length > 0 && !isPaymentFailed) {
+			const currentLevel = stack[stack.length - 1];
+			setReturnButtonText(getReturnButtonText(currentLevel.type));
+			setVisibleButton(true);
+		} else {
+			setVisibleButton(false);
+		}
+	}, []);
+
 	const handleSignOut = () => {
 		localStorage.clear();
 		sessionStorage.clear();
@@ -113,11 +134,14 @@ const Header: React.FC<HeaderProps> = ({
 
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
-		const parent_account_type = localStorage.getItem("parent_account_type");
-		setParentAccountType(parent_account_type);
-		let token = localStorage.getItem("parent_token");
+		const currentLevel = getCurrentImpersonationLevel();
 		const isPaymentFailed = urlParams.get("payment_failed") === "true";
-		if ((backButton || token) && !isPaymentFailed) {
+
+		if (currentLevel) {
+			setReturnButtonText(getReturnButtonText(currentLevel.type));
+		}
+
+		if ((backButton || currentLevel) && !isPaymentFailed) {
 			setVisibleButton(true);
 		} else {
 			setVisibleButton(false);
@@ -126,11 +150,31 @@ const Header: React.FC<HeaderProps> = ({
 
 	const handleReturnToMain = async () => {
 		await returnToAdmin({
-			onAfterUserData: () => {
-				setBackButton(false);
-				setVisibleButton(false);
+			updateHeader: (hasMoreLevels, nextLevelType) => {
+				if (hasMoreLevels && nextLevelType) {
+					setReturnButtonText(getReturnButtonText(nextLevelType));
+				} else {
+					setVisibleButton(false);
+				}
 			},
 		});
+	};
+
+	useEffect(() => {
+		updateHeaderState();
+	}, [pathname, updateHeaderState]);
+
+	const getReturnButtonText = (levelType: string) => {
+		switch (levelType) {
+			case "partner":
+				return "Return to Partner";
+			case "masterPartner":
+				return "Return to Master Partner";
+			case "admin":
+				return "Return to Admin";
+			default:
+				return "Return";
+		}
 	};
 
 	const handleSupportButton = () => {
@@ -152,6 +196,7 @@ const Header: React.FC<HeaderProps> = ({
 	const handleProfileMenuClick = (
 		event: React.MouseEvent<HTMLButtonElement>,
 	) => {
+		setMeData(getMeData());
 		setAnchorEl(event.currentTarget);
 	};
 	const handleProfileMenuClose = () => {
@@ -233,7 +278,7 @@ const Header: React.FC<HeaderProps> = ({
 									},
 								}}
 							>
-								Return to {parentAccountType === "partner" ? "Main" : "Admin"}
+								{returnButtonText}
 							</Button>
 						)}
 					</Box>
