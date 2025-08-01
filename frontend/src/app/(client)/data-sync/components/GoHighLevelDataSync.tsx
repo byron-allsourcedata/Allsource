@@ -401,8 +401,8 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 		onClose();
 	};
 
-	const isSnakeCase = (str: string): boolean => {
-		return /^[a-z][a-z0-9_]*$/.test(str);
+	const isSafeFieldName = (str: string): boolean => {
+		return /^[a-zA-Z][a-zA-Z0-9_ ]*$/.test(str);
 	};
 
 	const isDuplicate = (value: string, currentIndex: number) => {
@@ -414,7 +414,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 
 	const hasErrors = (): boolean => {
 		return customFields.some((field, index) => {
-			if (field.is_constant && field.type && !isSnakeCase(field.type)) {
+			if (field.is_constant && field.type && !isSafeFieldName(field.type)) {
 				return true;
 			}
 			if (isDuplicate(field.type, index)) {
@@ -1195,7 +1195,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 															error={
 																field.is_constant &&
 																!!field.type &&
-																!isSnakeCase(field.type)
+																!isSafeFieldName(field.type)
 															}
 															InputLabelProps={{
 																sx: {

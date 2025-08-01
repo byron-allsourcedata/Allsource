@@ -39,7 +39,7 @@ from utils import (
     get_valid_phone,
     get_valid_location,
     get_http_client,
-    get_valid_email_without_million, to_snake_case,
+    get_valid_email_without_million,
 )
 
 logger = logging.getLogger(__name__)
@@ -470,7 +470,6 @@ class GoHighLevelIntegrationsService:
             "state": address_parts[2],
             "gender": getattr(five_x_five_user, "gender", None),
             "tags": ["Customer"],
-            "source": "Allsource api",
             "locationId": location_id,
         }
         custom_fields = []
@@ -481,58 +480,38 @@ class GoHighLevelIntegrationsService:
             key = field["value"]
             is_constant = field["is_constant"]
 
-            # Add constant fields
             if is_constant is True:
-                field_name = to_snake_case(t)
+                field_name = t
                 val = key
-
-                try:
-                    if field_name not in existing_fields:
-                        resp = self.create_custom_field(
-                            access_token=access_token,
-                            location_id=location_id,
-                            key=field_name,
-                        )
-
-                        item = resp.get("customField")
-
-                        if item:
-                            existing_fields[field_name] = item
-                        else:
-                            logging.error(f"Failed to create custom field: '{field_name}', Response: {resp}")
-                except Exception as e:
-                    logging.error(f"Failed to create custom field '{field_name}', Exception: {e}")
-
             else:
+                field_name = key
                 val = getattr(five_x_five_user, t, None)
-                if val is None:
-                    continue
 
                 if isinstance(val, datetime):
                     val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-                if key not in existing_fields:
-                    try:
-                        resp = self.create_custom_field(
-                            access_token=access_token,
-                            location_id=location_id,
-                            key=key,
-                        )
+            if val is None:
+                continue
 
-                        item = resp.get("customField")
-                        if item:
-                            existing_fields[key] = item
-                        else:
-                            logging.error(f"Failed to create custom field: '{key}', Response: {resp}")
-                    except Exception as e:
-                        logging.error(f"Failed to create custom field '{key}', Exception: {e}")
+            if field_name not in existing_fields:
+                try:
+                    resp = self.create_custom_field(
+                        access_token=access_token,
+                        location_id=location_id,
+                        key=field_name,
+                    )
 
-            if is_constant:
-                key = t
+                    item = resp.get("customField")
+                    if item:
+                        existing_fields[field_name] = item
+                    else:
+                        logging.error(f"Failed to create custom field: '{field_name}', Response: {resp}")
+                except Exception as e:
+                    logging.error(f"Failed to create custom field '{field_name}', Exception: {e}")
 
-            field_info = existing_fields.get(key)
+            field_info = existing_fields.get(field_name)
             if not field_info:
-                logging.error(f"Skipping unknown custom field: {key}")
+                logging.error(f"Skipping unknown custom field: {field_name}")
                 continue
 
             field_key = field_info["id"]
