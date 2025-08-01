@@ -61,6 +61,8 @@ export interface UserData {
 	is_another_domain_resolved: boolean;
 	has_credit_card: boolean;
 	cost_leads_overage: number;
+	is_partner: boolean;
+	is_master: boolean;
 }
 
 const Users: React.FC = () => {

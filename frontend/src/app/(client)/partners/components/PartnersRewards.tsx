@@ -107,7 +107,6 @@ const PartnersRewards: React.FC<RewardProps> = ({
 				padding: 0,
 				display: "flex",
 				flexDirection: "column",
-				minHeight: "77vh",
 				"@media (max-width: 600px)": { margin: "0rem auto 0rem" },
 			}}
 		>

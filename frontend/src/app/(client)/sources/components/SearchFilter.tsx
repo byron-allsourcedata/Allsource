@@ -304,8 +304,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 				[name]: newValue,
 			};
 
-			console.log(newValue);
-
 			setCheckedFilters({
 				today: false,
 				last7Days: false,

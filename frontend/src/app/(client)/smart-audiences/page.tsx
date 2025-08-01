@@ -450,15 +450,11 @@ const SmartAudiences: React.FC = () => {
 		if (intervalRef.current) {
 			clearInterval(intervalRef.current);
 			intervalRef.current = null;
-			console.log("interval cleared");
 		}
 	};
 
 	useEffect(() => {
-		console.log("pooling");
-
 		if (!intervalRef.current) {
-			console.log("pooling started");
 			intervalRef.current = setInterval(() => {
 				const hasPending = data.some(
 					(item) =>
@@ -468,10 +464,8 @@ const SmartAudiences: React.FC = () => {
 				);
 
 				if (hasPending) {
-					console.log("Fetching due to pending records");
 					fetchSmartsMemoized();
 				} else {
-					console.log("No pending records, stopping interval");
 					clearPollingInterval();
 				}
 			}, 2000);

@@ -537,6 +537,8 @@ class UserPersistence:
                 case((subq_domain_resolved, True), else_=False).label(
                     "is_another_domain_resolved"
                 ),
+                Users.is_partner,
+                Partner.is_master.label("is_master"),
             )
             .outerjoin(
                 UserSubscriptions,
@@ -546,6 +548,7 @@ class UserPersistence:
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
+            .outerjoin(Partner, Partner.user_id == Users.id)
             .filter(Users.role.any("customer"))
         )
 

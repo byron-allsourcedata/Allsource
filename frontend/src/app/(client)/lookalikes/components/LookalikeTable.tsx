@@ -215,7 +215,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 		if (intervalRef.current) {
 			clearInterval(intervalRef.current);
 			intervalRef.current = null;
-			console.log("interval cleared");
 		}
 	};
 
@@ -224,10 +223,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	}, []);
 
 	useEffect(() => {
-		console.log("pooling");
-
 		if (!intervalRef.current) {
-			console.log("pooling started");
 			intervalRef.current = setInterval(() => {
 				const hasPending = tableData.some(
 					(item) =>
@@ -237,10 +233,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 				);
 
 				if (hasPending) {
-					console.log("Fetching due to pending records");
 					refreshData();
 				} else {
-					console.log("No pending records, stopping interval");
 					clearPollingInterval();
 				}
 			}, 10000);
