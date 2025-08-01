@@ -24,6 +24,8 @@ from services.sendgrid import SendgridHandler
 from enums import SendgridTemplate
 from types import SimpleNamespace
 
+from services.subscriptions import SubscriptionService
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,11 +37,13 @@ class PartnersService:
         user_persistence: UserPersistence,
         send_grid_persistence: SendgridPersistence,
         plans_persistence: PlansPersistence,
+        subscription_service: SubscriptionService,
     ):
         self.partners_persistence = partners_persistence
         self.user_persistence = user_persistence
         self.send_grid_persistence = send_grid_persistence
         self.plans_persistence = plans_persistence
+        self.subscription_service = subscription_service
 
     def get_subsciption_name(self, user_id):
         if user_id is not None:
@@ -349,23 +353,37 @@ class PartnersService:
         partner_by_email = self.partners_persistence.get_partner_by_email(
             user.get("email")
         )
+
         if partner_by_email:
-            raise HTTPException(
-                status_code=400, detail="User is already a partner"
+            partner_data = {"is_master": is_master, "commission": commission}
+
+            self.partners_persistence.update_partner(
+                partner_by_email.id, **partner_data
+            )
+        else:
+            partner_data = {
+                "user_id": user.get("id"),
+                "email": user.get("email"),
+                "name": user.get("full_name"),
+                "commission": commission,
+                "is_master": is_master,
+                "join_date": user.get("created_at"),
+                "status": "active",
+                "is_active": True,
+            }
+
+            partner = self.partners_persistence.create_partner_by_admin(
+                partner_data
             )
 
-        partner_data = {
-            "user_id": user.get("id"),
-            "email": user.get("email"),
-            "name": user.get("full_name"),
-            "commission": commission,
-            "is_master": is_master,
-            "join_date": user.get("created_at"),
-            "status": "active",
-            "is_active": True,
-        }
-
-        self.partners_persistence.create_partner_by_admin(partner_data)
+            if partner:
+                self.subscription_service.create_subscription_from_partners(
+                    user_id
+                )
+            else:
+                raise HTTPException(
+                    status_code=500, detail="Failed to promote user to partner"
+                )
 
     def generate_access_token(self, user: dict, partner_id: int):
         partner = self.partners_persistence.get_partner_by_master(

@@ -195,7 +195,7 @@ const PartnersMain: React.FC<PartnersProps> = ({
 	const [accountPage, setAccountPage] = useState(false);
 	const [accountName, setAccountName] = useState<string>();
 	const [id, setId] = useState<number | null>(null);
-	const [errorResponse, setErrosResponse] = useState(false);
+	const [noData, setNoData] = useState(false);
 
 	const tableHeaders = [
 		{ key: "partner_name", label: `Account name`, sortable: false },
@@ -235,6 +235,7 @@ const PartnersMain: React.FC<PartnersProps> = ({
 
 	const fetchRules = useCallback(async () => {
 		setLoading(true);
+		setNoData(false);
 
 		try {
 			const response = await axiosInstance.get(`/partners/partners`, {
@@ -249,17 +250,23 @@ const PartnersMain: React.FC<PartnersProps> = ({
 					rows_per_page: rowsPerPage,
 				},
 			});
-			if (response.status === 200 && response.data.totalCount > 0) {
-				setPartners([...response.data.items]);
+
+			if (response.status === 200) {
+				const items = response.data.items ?? [];
+				setPartners(items);
 				setTotalCount(response.data.totalCount);
+				setNoData(items.length === 0);
+
 				setPartnerStates(
-					response.data.items.map((partner: any) => ({
+					items.map((partner: any) => ({
 						id: partner.id,
 						isActive: partner.isActive,
 					})),
 				);
 			}
-		} catch {
+		} catch (error) {
+			console.error("Failed to fetch partners:", error);
+			setNoData(true);
 		} finally {
 			setLoading(false);
 		}
@@ -510,7 +517,6 @@ const PartnersMain: React.FC<PartnersProps> = ({
 							display: "flex",
 							flexDirection: "column",
 							justifyContent: "space-between",
-							minHeight: "77vh",
 							"@media (max-width: 600px)": { margin: "0rem auto 0rem" },
 						}}
 					>
@@ -542,13 +548,12 @@ const PartnersMain: React.FC<PartnersProps> = ({
 															...suppressionsStyles.tableColumn,
 															paddingLeft: "16px",
 															cursor: sortable ? "pointer" : "default",
-															// ...(key === 'partner_name' && {
-															//     position: 'sticky',
-															//     left: 0,
-															//     zIndex: 99,
-															//     backgroundColor: '#fff',
-
-															// })
+															...(key === "partner_name" && {
+																position: "sticky",
+																left: 0,
+																zIndex: 1,
+																backgroundColor: "#fff",
+															}),
 														}}
 														onClick={
 															sortable
@@ -845,7 +850,7 @@ const PartnersMain: React.FC<PartnersProps> = ({
 										</TableBody>
 									</Table>
 								</TableContainer>
-								{errorResponse && (
+								{noData && !loading && (
 									<Box sx={suppressionsStyles.centerContainerStyles}>
 										<Typography
 											variant="h5"
@@ -890,18 +895,18 @@ const PartnersMain: React.FC<PartnersProps> = ({
 								open={formPopupOpen}
 								onClose={handleFormClosePopup}
 							/>
-						</Box>
-						<Box sx={{ display: "flex", justifyContent: "end" }}>
-							<CustomTablePagination
-								count={totalCount}
-								page={page}
-								rowsPerPage={
-									allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10
-								}
-								onPageChange={handlePageChange}
-								onRowsPerPageChange={handleRowsPerPageChange}
-								rowsPerPageOptions={[10, 25, 50, 100]}
-							/>
+							<Box sx={{ display: "flex", justifyContent: "end" }}>
+								<CustomTablePagination
+									count={totalCount}
+									page={page}
+									rowsPerPage={
+										allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10
+									}
+									onPageChange={handlePageChange}
+									onRowsPerPageChange={handleRowsPerPageChange}
+									rowsPerPageOptions={[10, 25, 50, 100]}
+								/>
+							</Box>
 						</Box>
 					</Box>
 				</Box>

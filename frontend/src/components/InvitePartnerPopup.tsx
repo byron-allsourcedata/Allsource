@@ -117,50 +117,33 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 		const requestData: RequestData = {
 			commission: parseInt(commission),
 			name: fullName.trim(),
+			email: action === "Add" ? email.trim() : undefined,
+			is_master: isMaster,
+			master_id: masterId,
 		};
 
-		try {
-			let response;
+		const isEdit = action === "Edit" && fileData?.id;
+		const url = isEdit
+			? masterId
+				? `partners/${fileData.id}`
+				: `admin-partners/${fileData.id}/`
+			: masterId
+				? `partners/`
+				: `admin-partners/`;
+		const method = isEdit ? "put" : "post";
 
-			if (action === "Edit" && fileData && fileData.id) {
-				if (masterId) {
-					response = await axiosInstance.put(
-						`partners/${fileData.id}`,
-						requestData,
-						{
-							headers: { "Content-Type": "application/json" },
-						},
-					);
-				}
-				response = await axiosInstance.put(
-					`admin-partners/${fileData.id}/`,
-					requestData,
-					{
-						headers: { "Content-Type": "application/json" },
-					},
-				);
-			} else {
-				requestData.email = email.trim();
-				requestData.is_master = isMaster;
-				if (masterId) {
-					requestData.master_id = masterId;
-					response = await axiosInstance.post(`partners/`, requestData, {
-						headers: { "Content-Type": "application/json" },
-					});
-				} else {
-					response = await axiosInstance.post(`admin-partners/`, requestData, {
-						headers: { "Content-Type": "application/json" },
-					});
-				}
-			}
-			if (response.status === 200) {
-				if (response.data.data) {
-					updateOrAddPartner(response.data.data);
-					showToast("Partner successfully submitted!");
-				}
-				if (response.data.message) {
-					showErrorToast(response.data.message);
-				}
+		try {
+			const response = await axiosInstance[method](url, requestData, {
+				headers: { "Content-Type": "application/json" },
+			});
+			if (response.status === 200 && response.data.data) {
+				updateOrAddPartner(response.data.data);
+				const toastMsg = isEdit
+					? "Partner details updated successfully!"
+					: "Partner invitation sent successfully!";
+				showToast(toastMsg);
+			} else if (response.data.message) {
+				showErrorToast(response.data.message);
 			}
 		} catch {
 			showErrorToast("Failed to submit the invite. Please try again.");
@@ -232,7 +215,6 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({
 						borderBottom: "1px solid #e4e4e4",
 						position: "sticky",
 						top: 0,
-						zIndex: 9900,
 						backgroundColor: "#fff",
 					}}
 				>

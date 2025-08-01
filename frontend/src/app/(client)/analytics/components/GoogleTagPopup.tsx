@@ -96,9 +96,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			setUserInfo(response.data);
 		} catch (e) {
 			if (axios.isAxiosError(e)) {
-				console.log(e.message);
 			} else if (e instanceof Error) {
-				console.log(e.message);
 			} else {
 				showErrorToast("An unknown error occurred.");
 			}
@@ -126,9 +124,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 						fetchAccounts(accessToken);
 						fetchUserInfo(accessToken);
 					}
-				} catch (error) {
-					console.log(error);
-				}
+				} catch (error) {}
 			}
 		};
 
@@ -182,7 +178,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 				`https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/triggers`,
 				{ headers: { Authorization: `Bearer ${accessToken}` } },
 			);
-			console.log(response);
 			return response.data.trigger || [];
 		} catch (error) {
 			throw error;
@@ -236,7 +231,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 						`https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers`,
 						{ headers: { Authorization: `Bearer ${session.token}` } },
 					);
-					console.log(response);
 					setContainers(response.data.container || []);
 				} catch (e) {
 					if (axios.isAxiosError(e)) {

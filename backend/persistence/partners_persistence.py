@@ -338,7 +338,14 @@ class PartnersPersistence:
             join_date=creating_data.get("join_date"),
             is_active=creating_data.get("is_active", True),
         )
-
+        user = (
+            self.db.query(Users).filter_by(id=creating_data["user_id"]).first()
+        )
+        if user:
+            user.is_partner = True
+        else:
+            return None
+        self.db.add(user)
         self.db.add(partner)
         self.db.commit()
         self.db.refresh(partner)

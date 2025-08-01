@@ -236,16 +236,6 @@ const Header: React.FC<HeaderProps> = ({
 								Return to {parentAccountType === "partner" ? "Main" : "Admin"}
 							</Button>
 						)}
-						{/* <Box sx={{ display: "flex", ml: 1 }}>
-              {!pathname.includes("dashboard") &&
-                (pathname.includes("analytics") ||
-                  pathname.includes("leads") ||
-                  pathname.includes("company") ||
-                  pathname.includes("suppressions"))}
-            </Box> */}
-					</Box>
-					<Box sx={{ padding: 1, width: "100%", px: 3.5 }}>
-						<FreeTrialLabel />
 					</Box>
 
 					<Box sx={{ display: "flex", alignItems: "center" }}>

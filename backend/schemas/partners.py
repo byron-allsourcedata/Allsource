@@ -49,7 +49,6 @@ class OpportunityStatus(BaseModel):
 class PartnerUpdateRequest(BaseModel):
     commission: int
     name: str
-    company_name: str
 
 
 class PartnerUserData(BaseModel):

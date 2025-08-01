@@ -2,11 +2,10 @@ from sqlalchemy.orm import Session
 
 from db_dependencies import Db
 from models.referral_payouts import ReferralPayouts
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, case, or_, desc, asc
 from models.users import Users
 from models.partner import Partner
 from models.subscriptions import UserSubscriptions
-from sqlalchemy import and_, or_, desc, asc, Integer
 from models.referral_users import ReferralUser
 from datetime import datetime
 import pytz
@@ -41,13 +40,20 @@ class ReferralUserPersistence:
                 Users.full_name,
                 Users.email,
                 ReferralUser.created_at.label("join_date"),
-                ReferralPayouts.created_at.label("last_payment_date"),
-                ReferralPayouts.paid_at.label("reward_payout_date"),
-                ReferralPayouts.status.label("reward_status"),
-                ReferralPayouts.plan_amount,
-                UserSubscriptions.status.label("subscription_status"),
+                func.max(ReferralPayouts.paid_at).label("last_payment_date"),
+                func.max(ReferralPayouts.created_at).label(
+                    "reward_payout_date"
+                ),
+                func.max(
+                    case(
+                        (ReferralPayouts.status == "pending", "pending"),
+                        else_="paid",
+                    )
+                ).label("reward_status"),
+                func.max(ReferralPayouts.plan_amount).label("plan_amount"),
+                func.max(UserSubscriptions.status).label("subscription_status"),
             )
-            .outerjoin(Users, ReferralUser.user_id == Users.id)
+            .outerjoin(ReferralUser, ReferralUser.user_id == Users.id)
             .outerjoin(Partner, Partner.user_id == Users.id)
             .outerjoin(ReferralPayouts, ReferralPayouts.user_id == Users.id)
             .outerjoin(
@@ -55,6 +61,13 @@ class ReferralUserPersistence:
                 UserSubscriptions.id == Users.current_subscription_id,
             )
             .filter(ReferralUser.parent_user_id == user_id)
+            .group_by(
+                Users.id,
+                Users.full_name,
+                Users.email,
+                ReferralUser.created_at,
+                UserSubscriptions.status,
+            )
         )
 
         if search_term:

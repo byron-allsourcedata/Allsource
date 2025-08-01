@@ -523,7 +523,6 @@ const CreateLookalike: React.FC = () => {
 	const [popupOpen, setPopupOpen] = useState(false);
 
 	const handleOpenPopup = () => {
-		console.log(popupOpen && sourceCount === 0);
 		setPopupOpen(true);
 	};
 
