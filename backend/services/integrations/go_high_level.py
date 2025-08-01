@@ -505,6 +505,9 @@ class GoHighLevelIntegrationsService:
                     if item:
                         existing_fields[field_name] = item
                     else:
+                        # If the item cannot be retrieved, it may be because this key already exists.
+                        # This is why existing_fields should be refreshed.
+                        existing_fields = self.list_custom_fields(access_token, location_id)
                         logging.error(f"Failed to create custom field: '{field_name}', Response: {resp}")
                 except Exception as e:
                     logging.error(f"Failed to create custom field '{field_name}', Exception: {e}")
