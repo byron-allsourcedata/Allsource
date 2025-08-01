@@ -360,6 +360,10 @@ class PartnersService:
             self.partners_persistence.update_partner(
                 partner_by_email.id, **partner_data
             )
+            if not user.get("current_subscription_id"):
+                self.subscription_service.create_subscription_from_partners(
+                    user_id
+                )
         else:
             partner_data = {
                 "user_id": user.get("id"),
@@ -377,9 +381,10 @@ class PartnersService:
             )
 
             if partner:
-                self.subscription_service.create_subscription_from_partners(
-                    user_id
-                )
+                if not user.get("current_subscription_id"):
+                    self.subscription_service.create_subscription_from_partners(
+                        user_id
+                    )
             else:
                 raise HTTPException(
                     status_code=500, detail="Failed to promote user to partner"
