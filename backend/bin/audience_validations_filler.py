@@ -36,6 +36,7 @@ from config.rmq_connection import (
 
 load_dotenv()
 
+SELECTED_ROW_COUNT = 1000
 AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
 AUDIENCE_VALIDATION_AGENT_NOAPI = "aud_validation_agent_no-api"
 AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = "aud_validation_agent_linkedin-api"
@@ -267,7 +268,7 @@ async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
     channel,
-    settingPersistence: AudienceSettingPersistence,
+    setting_persistence: AudienceSettingPersistence,
     audience_smarts_service: AudienceSmartsService,
 ):
     try:
@@ -278,130 +279,121 @@ async def process_rmq_message(
         recency_personal_days = 0
         recency_business_days = 0
 
-        try:
-            validations = (
-                audience_smarts_service.get_audience_smart_validations_by_id(
-                    aud_smart_id
-                )
+        validations = (
+            audience_smarts_service.get_audience_smart_validations_by_id(
+                aud_smart_id
             )
+        )
 
-            priority_record = (
-                db_session.query(AudienceSetting.value)
-                .filter(
-                    AudienceSetting.alias
-                    == AudienceSettingAlias.VALIDATION_PRIORITY.value
-                )
-                .first()
-            )
+        priority_record = setting_persistence.get_validation_priority()
 
-            validation_params = json.loads(validations)
+        validation_params = json.loads(validations)
 
-            priority_values = priority_record.value.split(",")
+        priority_values = priority_record.split(",")
 
-            target: dict | None = None
+        target: dict | None = None
 
-            for pr in priority_values:
-                src_key, v_type = pr.split("-")
-                src_section = validation_params.get(src_key, [])
+        for pr in priority_values:
+            src_key, v_type = pr.split("-")
+            src_section = validation_params.get(src_key, [])
 
-                for param in src_section:
-                    if v_type not in param:
-                        continue
+            for param in src_section:
+                if v_type not in param:
+                    continue
 
-                    details = param[v_type]
-                    if details.get("processed"):
-                        continue
+                details = param[v_type]
+                if details.get("processed"):
+                    continue
 
-                    column_name = DATABASE_COLUMN_MAPPING.get(pr)
-                    logging.info("Processing column %s", column_name)
-                    if not column_name:
-                        logging.warning("No column mapping for priority %s", pr)
-                        break
-
-                    if v_type == "recency":
-                        if src_key == "personal_email":
-                            recency_personal_days = details.get("days", 0)
-                        elif src_key == "business_email":
-                            recency_business_days = details.get("days", 0)
-
-                    target = {
-                        "column_name": column_name,
-                        "priority_key": pr,
-                        "validation_type": v_type,
-                    }
-                    break
-                if target:
+                column_name = DATABASE_COLUMN_MAPPING.get(pr)
+                logging.info("Processing column %s", column_name)
+                if not column_name:
+                    logging.warning("No column mapping for priority %s", pr)
                     break
 
-            if not target:
-                await complete_validation(
-                    db_session, aud_smart_id, channel, user_id
-                )
-                await message.ack()
-                return
+                if v_type == "recency":
+                    if src_key == "personal_email":
+                        recency_personal_days = details.get("days", 0)
+                    elif src_key == "business_email":
+                        recency_business_days = details.get("days", 0)
 
-            column_name = target["column_name"]
-            validation_cost = get_validation_cost(
-                settingPersistence, target["priority_key"]
+                target = {
+                    "column_name": column_name,
+                    "priority_key": pr,
+                    "validation_type": v_type,
+                }
+                break
+            if target:
+                break
+
+        if not target:
+            await complete_validation(
+                db_session, aud_smart_id, channel, user_id
             )
-            enrichment_users = get_enrichment_users(
-                target["validation_type"],
-                aud_smart_id,
-                audience_smarts_service,
-                column_name,
-            )
-
-            if not enrichment_users:
-                logging.info(
-                    "No enrichment users for %s (%s)", aud_smart_id, column_name
-                )
-                await complete_validation(
-                    db_session, aud_smart_id, channel, user_id
-                )
-                await message.ack()
-                return
-
-            validation_processed(
-                db_session,
-                [user["audience_smart_person_id"] for user in enrichment_users],
-            )
-
-            queue_name = QUEUE_MAPPING[column_name]
-
-            for i in range(0, len(enrichment_users), 1000):
-                batch = enrichment_users[i : i + 1000]
-                await publish_rabbitmq_message_with_channel(
-                    channel=channel,
-                    queue_name=queue_name,
-                    message_body={
-                        "aud_smart_id": str(aud_smart_id),
-                        "user_id": user_id,
-                        "batch": [
-                            {
-                                **user,
-                                "audience_smart_person_id": str(
-                                    user["audience_smart_person_id"]
-                                ),
-                            }
-                            for user in batch
-                        ],
-                        "validation_type": column_name,
-                        "validation_cost": validation_cost,
-                        "count_persons_before_validation": len(
-                            enrichment_users
-                        ),
-                        "recency_business_days": recency_business_days,
-                        "recency_personal_days": recency_personal_days,
-                    },
-                )
-
             await message.ack()
-        except IntegrityError as e:
-            logging.warning(
-                f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
+            return
+
+        column_name = target["column_name"]
+        validation_cost = get_validation_cost(
+            setting_persistence, target["priority_key"]
+        )
+        enrichment_users = get_enrichment_users(
+            target["validation_type"],
+            aud_smart_id,
+            audience_smarts_service,
+            column_name,
+        )
+
+        if not enrichment_users:
+            logging.info(
+                "No enrichment users for %s (%s)", aud_smart_id, column_name
             )
-            db_session.rollback()
+            await complete_validation(
+                db_session, aud_smart_id, channel, user_id
+            )
             await message.ack()
+            return
+
+        validation_processed(
+            db_session,
+            [user["audience_smart_person_id"] for user in enrichment_users],
+        )
+
+        queue_name = QUEUE_MAPPING[column_name]
+
+        for i in range(0, len(enrichment_users), SELECTED_ROW_COUNT):
+            batch = enrichment_users[i : i + SELECTED_ROW_COUNT]
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
+                queue_name=queue_name,
+                message_body={
+                    "aud_smart_id": str(aud_smart_id),
+                    "user_id": user_id,
+                    "batch": [
+                        {
+                            **user,
+                            "audience_smart_person_id": str(
+                                user["audience_smart_person_id"]
+                            ),
+                        }
+                        for user in batch
+                    ],
+                    "validation_type": column_name,
+                    "validation_cost": validation_cost,
+                    "count_persons_before_validation": len(enrichment_users),
+                    "recency_business_days": recency_business_days,
+                    "recency_personal_days": recency_personal_days,
+                },
+            )
+
+        await message.ack()
+
+    except IntegrityError as e:
+        logging.warning(
+            f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
+        )
+        db_session.rollback()
+        await message.ack()
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
@@ -434,7 +426,7 @@ async def main():
                 AudienceSmartsService
             )
 
-            settingPersistence = AudienceSettingPersistence(db_session)
+            setting_persistence = AudienceSettingPersistence(db_session)
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_VALIDATION_FILLER,
@@ -445,7 +437,7 @@ async def main():
                     process_rmq_message,
                     channel=channel,
                     db_session=db_session,
-                    settingPersistence=settingPersistence,
+                    setting_persistence=setting_persistence,
                     audience_smarts_service=audience_smarts_service,
                 )
             )

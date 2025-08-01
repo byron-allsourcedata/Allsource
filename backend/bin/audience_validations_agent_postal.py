@@ -24,6 +24,7 @@ from aio_pika import IncomingMessage, Channel
 from dotenv import load_dotenv
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -348,6 +349,11 @@ async def process_rmq_message(
         )
         logging.info("sent sse with total count")
 
+        await message.ack()
+
+    except StaleDataError:
+        logging.warning(f"AudienceSmart {aud_smart_id} not found; skipping.")
+        db_session.rollback()
         await message.ack()
 
     except Exception as e:

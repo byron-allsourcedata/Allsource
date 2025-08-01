@@ -24,8 +24,6 @@ from config.rmq_connection import (
 )
 from services.audience_smarts import AudienceSmartsService
 from persistence.audience_settings import AudienceSettingPersistence
-from models.audience_lookalikes_persons import AudienceLookalikesPerson
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 
 load_dotenv()
 
@@ -181,7 +179,7 @@ async def aud_smarts_reader(
                 logging.warning(
                     f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping."
                 )
-                await message.nack()
+                await message.ack()
 
         await message.ack()
     except BaseException as e:
