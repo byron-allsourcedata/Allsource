@@ -315,7 +315,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 				const current_token = localStorage.getItem("token");
 				const current_domain = sessionStorage.getItem("current_domain");
 
-				// Сохраняем текущую сессию в стек
 				if (current_token) {
 					const stack = JSON.parse(
 						localStorage.getItem("impersonationStack") || "[]",
@@ -328,7 +327,6 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 					localStorage.setItem("impersonationStack", JSON.stringify(stack));
 				}
 
-				// Устанавливаем новый токен
 				localStorage.setItem("token", response.data.token);
 				sessionStorage.removeItem("current_domain");
 				sessionStorage.removeItem("me");
