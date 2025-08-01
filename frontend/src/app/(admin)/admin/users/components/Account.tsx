@@ -492,27 +492,39 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 		try {
 			setLoading(true);
 			const response = await axiosInstance.get("/admin/generate-token", {
-				params: {
-					user_account_id: user_account_id,
-				},
+				params: { user_account_id },
 			});
+
 			if (response.status === 200) {
 				const current_token = localStorage.getItem("token");
 				const current_domain = sessionStorage.getItem("current_domain");
-				sessionStorage.setItem("parent_domain", current_domain || "");
+
+				// Сохраняем текущую сессию в стек перед переключением
 				if (current_token) {
-					localStorage.setItem("parent_token", current_token);
-					localStorage.setItem("token", response.data.token);
-					sessionStorage.removeItem("current_domain");
-					sessionStorage.removeItem("me");
-					await fetchUserData();
-					router.push("/dashboard");
-					router.refresh();
-					setBackButton(true);
-					triggerBackButton();
+					const stack = JSON.parse(
+						localStorage.getItem("impersonationStack") || "[]",
+					);
+					stack.push({
+						type: "admin",
+						token: current_token,
+						domain: current_domain || undefined,
+					});
+					localStorage.setItem("impersonationStack", JSON.stringify(stack));
 				}
+
+				// Устанавливаем новый токен
+				localStorage.setItem("token", response.data.token);
+				sessionStorage.removeItem("current_domain");
+				sessionStorage.removeItem("me");
+
+				await fetchUserData();
+				router.push("/dashboard");
+				router.refresh();
+				setBackButton(true);
+				triggerBackButton();
 			}
-		} catch {
+		} catch (error) {
+			console.error("Admin login error:", error);
 		} finally {
 			setLoading(false);
 		}
