@@ -25,6 +25,18 @@ class AudienceSmartsPersistenceInterface(ABC):
         pass
 
     @abstractmethod
+    def set_smart_audience_validations(self, validations, aud_smart_id) -> int:
+        pass
+
+    @abstractmethod
+    def update_success_persons(self, success_ids: List[UUID]):
+        pass
+
+    @abstractmethod
+    def update_failed_persons(self, failed_ids: List[UUID]):
+        pass
+
+    @abstractmethod
     def get_include_exclude_query(
         self,
         lookalike_include: Sequence[UUID],
@@ -170,4 +182,8 @@ class AudienceSmartsPersistenceInterface(ABC):
 
     @abstractmethod
     def check_access_for_user(self, user: dict) -> List[dict]:
+        pass
+
+    @abstractmethod
+    def get_validation_temp_counts(self, smart_audience_id: UUID):
         pass

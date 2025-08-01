@@ -186,7 +186,6 @@ class AudienceSmartsUnifiedPersistence(AudienceSmartsPersistenceInterface):
     def check_access_for_user(self, user: dict) -> list[dict]:
         return self.postgres.check_access_for_user(user)
 
-
     def _get_test_include_exclude_query(
         self,
         lookalike_include: Sequence[UUID],
@@ -204,3 +203,16 @@ class AudienceSmartsUnifiedPersistence(AudienceSmartsPersistenceInterface):
     def get_smart_for_regenerate(self, smart_id: UUID):
         return self.postgres.get_smart_for_regenerate(smart_id)
 
+    def get_validation_temp_counts(self, smart_audience_id: UUID):
+        return self.postgres.get_validation_temp_counts(smart_audience_id)
+
+    def set_smart_audience_validations(self, validations, aud_smart_id):
+        return self.postgres.set_smart_audience_validations(
+            validations, aud_smart_id
+        )
+
+    def update_failed_persons(self, failed_ids):
+        return self.postgres.update_failed_persons(failed_ids)
+
+    def update_success_persons(self, failed_ids):
+        return self.postgres.update_success_persons(failed_ids)

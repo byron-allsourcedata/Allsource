@@ -1,7 +1,5 @@
 import logging
 
-from h11._abnf import status_code
-
 from config.base import Base
 from config.hubspot import HubspotConfig
 from config.sentry import SentryConfig
@@ -32,7 +30,6 @@ if SentryConfig.SENTRY_DSN is not None:
 else:
     logger.warning("Error alerts are disabled")
 
-
 try:
     HubspotConfig.init()
     logger.warning("Hubspot CRM integration is enabled")
@@ -48,7 +45,7 @@ external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 @external_api.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     if exc.status_code is not None and not (
-        exc.status_code == 403 or exc.status_code == 401
+            exc.status_code == 403 or exc.status_code == 401
     ):
         logger.error(f"HTTP Exception: {exc.detail}\n{traceback.format_exc()}")
     return JSONResponse(status_code=exc.status_code, content=exc.detail)
@@ -68,7 +65,7 @@ async def http_exception_handler(request: Request, exc: Exception):
 
 @external_api.exception_handler(RequestValidationError)
 async def validation_exception_handler(
-    request: Request, exc: RequestValidationError
+        request: Request, exc: RequestValidationError
 ):
     logger.error(
         f"Validation Exception: {exc.errors()}\n{traceback.format_exc()}"
@@ -76,7 +73,7 @@ async def validation_exception_handler(
     return JSONResponse(
         status_code=400,
         content={
-            "status": status_code,
+            "status": 400,
             "detail": {"error": traceback.format_exc()},
         },
     )

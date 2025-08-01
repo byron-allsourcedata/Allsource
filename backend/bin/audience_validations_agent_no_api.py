@@ -8,22 +8,21 @@ import time
 from datetime import datetime, timezone
 from decimal import Decimal
 from aio_pika import IncomingMessage, Channel
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import func, select
+from sqlalchemy.orm.exc import StaleDataError
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from models.audience_smarts_persons import AudienceSmartPerson
 from config.sentry import SentryConfig
 from db_dependencies import Db
 from resolver import Resolver
-from models.audience_smarts import AudienceSmart
 from utils import send_sse
-from models.audience_smarts_persons import AudienceSmartPerson
 from persistence.user_persistence import UserPersistence
 from services.audience_smarts import AudienceSmartsService
+from services.smart_validation_agent import SmartValidationAgent
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -78,6 +77,7 @@ async def aud_validation_agent(
     channel: Channel,
     user_persistence: UserPersistence,
     audience_smarts_service: AudienceSmartsService,
+    smart_validation_agent_service: SmartValidationAgent,
 ):
     try:
         body = json.loads(message.body)
@@ -93,8 +93,11 @@ async def aud_validation_agent(
         validation_cost = body.get("validation_cost")
         write_off_funds = Decimal(0)
         count_subtracted = Decimal(0)
-        logging.info(f"aud_smart_id: {aud_smart_id}")
-        logging.info(f"validation_type: {validation_type}")
+
+        logging.info(
+            f"[PROCESS] aud_smart_id={aud_smart_id} | validation_type={validation_type}"
+        )
+
         validation_rules = {
             "personal_email_validation_status": lambda v: bool(
                 v and v.startswith("Valid")
@@ -122,23 +125,21 @@ async def aud_validation_agent(
         }
 
         failed_ids = []
+        success_ids = []
+        rule = validation_rules.get(validation_type, lambda _: False)
 
         for rec in batch:
-            if not validation_rules.get(validation_type, lambda _: False)(
-                rec.get(validation_type)
-            ):
+            value = rec.get(validation_type)
+            if not rule(value):
                 failed_ids.append(rec["audience_smart_person_id"])
+            else:
+                success_ids.append(rec["audience_smart_person_id"])
 
-            if rec.get(validation_type) is not None:
+            if value is not None:
                 write_off_funds += Decimal(validation_cost)
 
-        logging.info(f"Failed ids len: {len(failed_ids)}")
-        success_ids = [
-            rec["audience_smart_person_id"]
-            for rec in batch
-            if rec["audience_smart_person_id"] not in failed_ids
-        ]
-        logging.info(f"Success ids len: {len(success_ids)}")
+        logging.info(f"[PROCESS] Failed IDs count: {len(failed_ids)}")
+        logging.info(f"[PROCESS] Success IDs count: {len(success_ids)}")
 
         if write_off_funds:
             count_subtracted = user_persistence.deduct_validation_funds(
@@ -147,79 +148,43 @@ async def aud_validation_agent(
             db_session.flush()
 
         if failed_ids:
-            db_session.bulk_update_mappings(
-                AudienceSmartPerson,
-                [
-                    {
-                        "id": pid,
-                        "is_validation_processed": False,
-                        "is_valid": False,
-                    }
-                    for pid in failed_ids
-                ],
+            db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.id.in_(failed_ids)
+            ).update(
+                {"is_validation_processed": False, "is_valid": False},
+                synchronize_session=False,
             )
-            db_session.flush()
+            # smart_validation_agent_service.update_failed_persons(failed_ids)
 
         if success_ids:
-            db_session.bulk_update_mappings(
-                AudienceSmartPerson,
-                [
-                    {"id": pid, "is_validation_processed": False}
-                    for pid in success_ids
-                ],
+            db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.id.in_(success_ids)
+            ).update(
+                {"is_validation_processed": False}, synchronize_session=False
             )
-            db_session.flush()
 
+            # smart_validation_agent_service.update_success_persons(failed_ids)
+
+        db_session.flush()
         db_session.commit()
-        total_validated = db_session.execute(
-            select(func.count(AudienceSmartPerson.id)).where(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                AudienceSmartPerson.is_valid.is_(True),
-            )
-        ).scalar_one()
 
-        validation_count = db_session.execute(
-            select(func.count(AudienceSmartPerson.id)).where(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                AudienceSmartPerson.is_validation_processed.is_(False),
-            )
-        ).scalar_one()
-
-        total_count = (
-            db_session.query(AudienceSmartPerson)
-            .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
-            .count()
+        counts = smart_validation_agent_service.get_validation_temp_counts(
+            smart_audience_id=aud_smart_id
         )
 
-        aud_smart = db_session.get(AudienceSmart, aud_smart_id)
-        if aud_smart and aud_smart.validations:
-            validations = json.loads(aud_smart.validations)
+        total_count = counts.total_count
+        total_validated = counts.total_validated
+        validation_count = counts.validation_count
 
-            target_category = CATEGORY_BY_COLUMN.get(validation_type)
-            key = COLUMN_MAPPING.get(validation_type)
-
-            if target_category and key:
-                for rule in validations.get(target_category, []):
-                    if key in rule:
-                        rule[key].setdefault("count_cost", "0.00")
-
-                        rule[key]["count_validated"] = total_validated
-                        rule[key]["count_submited"] = (
-                            count_persons_before_validation
-                        )
-
-                        previous_cost = Decimal(rule[key]["count_cost"])
-                        rule[key]["count_cost"] = str(
-                            (previous_cost + count_subtracted).quantize(
-                                Decimal("0.01")
-                            )
-                        )
-
-                        if validation_count == total_count:
-                            rule[key]["processed"] = True
-                        break
-
-            aud_smart.validations = json.dumps(validations)
+        smart_validation_agent_service.update_validations_json(
+            aud_smart_id=aud_smart_id,
+            validation_type=validation_type,
+            total_validated=total_validated,
+            total_count=total_count,
+            validation_count=validation_count,
+            count_persons_before_validation=count_persons_before_validation,
+            count_subtracted=count_subtracted,
+        )
 
         db_session.commit()
 
@@ -239,26 +204,26 @@ async def aud_validation_agent(
                 message_body={
                     "aud_smart_id": str(aud_smart_id),
                     "user_id": user_id,
-                    "validation_params": validations,
                 },
             )
 
-        await send_sse(
-            channel=channel,
-            user_id=user_id,
-            data={
-                "smart_audience_id": aud_smart_id,
-                "total_validated": total_validated,
-            },
-        )
-        logging.info("Sent SSE with total count")
+        # await send_sse(
+        #     channel=channel,
+        #     user_id=user_id,
+        #     data={
+        #         "smart_audience_id": aud_smart_id,
+        #         "total_validated": total_validated,
+        #     },
+        # )
+        # logging.info("Sent SSE with total count")
 
         await message.ack()
 
-    except IntegrityError:
+    except StaleDataError:
         logging.warning(f"AudienceSmart {aud_smart_id} not found; skipping.")
         db_session.rollback()
-        await message.reject(requeue=True)
+        await message.ack()
+
     except Exception as e:
         logging.error(f"Error in aud_validation_agent: {e}", exc_info=True)
         db_session.rollback()
@@ -291,6 +256,9 @@ async def main():
             audience_smarts_service = await resolver.resolve(
                 AudienceSmartsService
             )
+            smart_validation_agent_service = await resolver.resolve(
+                SmartValidationAgent
+            )
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_VALIDATION_AGENT_NOAPI,
@@ -303,6 +271,7 @@ async def main():
                     db_session=db_session,
                     user_persistence=user_persistence,
                     audience_smarts_service=audience_smarts_service,
+                    smart_validation_agent_service=smart_validation_agent_service,
                 )
             )
 

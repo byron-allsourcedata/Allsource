@@ -577,7 +577,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({
 														}}
 													>
 														{item.reward_status === "paid"
-															? "Credited"
+															? "Paid"
 															: item.reward_status.charAt(0).toUpperCase() +
 																item.reward_status.slice(1)}
 													</Typography>

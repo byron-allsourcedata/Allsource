@@ -301,25 +301,19 @@ const Sources: React.FC = () => {
 		if (intervalRef.current) {
 			clearInterval(intervalRef.current);
 			intervalRef.current = null;
-			console.log("interval cleared");
 		}
 	};
 
 	useEffect(() => {
-		console.log("longpol");
-
 		if (!intervalRef.current) {
-			console.log("longpol started");
 			intervalRef.current = setInterval(() => {
 				const hasPending = data.some(
 					(item) => item.matched_records_status === "pending",
 				);
 
 				if (hasPending) {
-					console.log("Fetching due to pending records");
 					fetchSourcesMemoized();
 				} else {
-					console.log("No pending records, stopping interval");
 					clearPollingInterval();
 				}
 			}, 2000);

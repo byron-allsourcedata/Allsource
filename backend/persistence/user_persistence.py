@@ -46,6 +46,7 @@ class UserDict(TypedDict):
     email: str
     full_name: str
     created_at: datetime
+    current_subscription_id: int
     random_seed: int
     team_owner_id: int | None
 
@@ -537,6 +538,8 @@ class UserPersistence:
                 case((subq_domain_resolved, True), else_=False).label(
                     "is_another_domain_resolved"
                 ),
+                Users.is_partner,
+                Partner.is_master.label("is_master"),
             )
             .outerjoin(
                 UserSubscriptions,
@@ -546,6 +549,7 @@ class UserPersistence:
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
+            .outerjoin(Partner, Partner.user_id == Users.id)
             .filter(Users.role.any("customer"))
         )
 

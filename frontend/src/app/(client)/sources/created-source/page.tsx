@@ -94,19 +94,13 @@ const SourcesList: React.FC = () => {
 	};
 
 	useEffect(() => {
-		console.log("longpol");
-
 		if (!intervalRef.current) {
-			console.log("longpol started");
 			intervalRef.current = setInterval(() => {
 				const hasPending = createdData?.matched_records_status === "pending";
 
 				if (hasPending) {
-					console.log("Fetching due to pending records");
-
 					fetchData();
 				} else {
-					console.log("No pending records, stopping interval");
 					if (intervalRef.current) {
 						clearInterval(intervalRef.current);
 						intervalRef.current = null;
@@ -123,7 +117,6 @@ const SourcesList: React.FC = () => {
 			if (intervalRef.current) {
 				clearInterval(intervalRef.current);
 				intervalRef.current = null;
-				console.log("interval cleared");
 			}
 		};
 	}, [createdData]);

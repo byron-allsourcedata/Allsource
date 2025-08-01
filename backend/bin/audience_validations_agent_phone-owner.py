@@ -11,6 +11,7 @@ from decimal import Decimal
 from aio_pika import IncomingMessage, Channel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 from sqlalchemy.dialects.postgresql import insert
 from dotenv import load_dotenv
 
@@ -319,6 +320,10 @@ async def process_rmq_message(
 
         await message.ack()
 
+    except StaleDataError:
+        logging.warning(f"AudienceSmart {aud_smart_id} not found; skipping.")
+        db_session.rollback()
+        await message.ack()
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
         db_session.rollback()

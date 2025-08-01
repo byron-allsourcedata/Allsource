@@ -9,6 +9,7 @@ from decimal import Decimal
 from aio_pika import IncomingMessage, Channel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 from dotenv import load_dotenv
 
 
@@ -228,6 +229,11 @@ async def process_rmq_message(
         )
         logging.info("sent sse with total count")
 
+        await message.ack()
+
+    except StaleDataError:
+        logging.warning(f"AudienceSmart {aud_smart_id} not found; skipping.")
+        db_session.rollback()
         await message.ack()
 
     except MillionVerifierError as e:

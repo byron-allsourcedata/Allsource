@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 
 import pytz
-from sqlalchemy import desc, asc, or_
+from sqlalchemy import desc, asc, or_, func, select, case
 from sqlalchemy.orm.query import RowReturningQuery
 
 from db_dependencies import Db
@@ -116,7 +116,6 @@ class AudienceSmartsPostgresPersistence:
 
         return final_query
 
-
     @override
     def _get_test_include_exclude_query(
         self,
@@ -179,7 +178,26 @@ class AudienceSmartsPostgresPersistence:
 
         return result_ids
 
+    def set_smart_audience_validations(self, validations, aud_smart_id):
+        self.db.query(AudienceSmart).filter(
+            AudienceSmart.id == aud_smart_id
+        ).update(
+            {AudienceSmart.validations: json.dumps(validations)},
+            synchronize_session=False,
+        )
 
+    def update_failed_persons(self, failed_ids: List[UUID]):
+        self.db.query(AudienceSmartPerson).filter(
+            AudienceSmartPerson.id.in_(failed_ids)
+        ).update(
+            {"is_validation_processed": False, "is_valid": False},
+            synchronize_session=False,
+        )
+
+    def update_success_persons(self, success_ids: List[UUID]):
+        self.db.query(AudienceSmartPerson).filter(
+            AudienceSmartPerson.id.in_(success_ids)
+        ).update({"is_validation_processed": False}, synchronize_session=False)
 
     # =================================================================================
 
@@ -482,7 +500,6 @@ class AudienceSmartsPostgresPersistence:
             )
         ]
 
-
     def get_smart_for_regenerate(self, smart_id: UUID):
         rows = (
             self.db.query(
@@ -606,3 +623,23 @@ class AudienceSmartsPostgresPersistence:
             .filter_by(id=str(smart_audience_id))
             .one_or_none()
         )._asdict()
+
+    def get_validation_temp_counts(self, smart_audience_id: UUID):
+        return self.db.execute(
+            select(
+                func.count(AudienceSmartPerson.id).label("total_count"),
+                func.count(
+                    case((AudienceSmartPerson.is_valid.is_(True), 1))
+                ).label("total_validated"),
+                func.count(
+                    case(
+                        (
+                            AudienceSmartPerson.is_validation_processed.is_(
+                                False
+                            ),
+                            1,
+                        )
+                    )
+                ).label("validation_count"),
+            ).where(AudienceSmartPerson.smart_audience_id == smart_audience_id)
+        ).one()

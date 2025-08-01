@@ -266,162 +266,156 @@ const Partners: React.FC = () => {
 					>
 						{loading && <CustomizedProgressBar />}
 
-						{!rewardsOpen && (
-							<>
+						<Box
+							sx={{
+								flexShrink: 0,
+								display: "flex",
+								justifyContent: "space-between",
+								flexDirection: "row",
+								alignItems: "center",
+								width: "15%",
+								gap: 1,
+								"@media (max-width: 900px)": { width: "20%" },
+								"@media (max-width: 600px)": { mb: 2, width: "97%" },
+								"@media (max-width: 440px)": { mb: 1 },
+							}}
+						>
+							<Box
+								sx={{
+									display: "flex",
+									justifyContent: "space-between",
+									alignItems: "center",
+									gap: 1,
+								}}
+							>
+								<Typography className="first-sub-title">
+									{isMaster ? "Master Partner" : "Partner"}
+								</Typography>
+								<Box sx={{ "@media (max-width: 600px)": { display: "none" } }}>
+									<CustomTooltip
+										title={
+											"Collaborate with trusted partners to access exclusive resources and services that drive success."
+										}
+										linkText="Learn more"
+										linkUrl={
+											isMaster
+												? "https://allsourceio.zohodesk.com/portal/en/kb/articles/partner"
+												: "https://allsourceio.zohodesk.com/portal/en/kb/articles/partner"
+										}
+									/>
+								</Box>
+							</Box>
+							{tabIndex === 0 && (
+								<IconButton
+									sx={{
+										display: "none",
+										cursor: "pointer",
+										"@media (max-width: 600px)": { display: "block" },
+									}}
+									onClick={handleFormOpenPopup}
+								>
+									<Image
+										src="/add.svg"
+										alt="add partner"
+										width={24}
+										height={24}
+									/>
+								</IconButton>
+							)}
+						</Box>
+
+						{tabIndex === 0 && (
+							<Box
+								sx={{
+									flexGrow: 1,
+									display: "flex",
+									justifyContent: "flex-end",
+									width: "24%",
+									mr: 3,
+									gap: "16px",
+									"@media (max-width: 900px)": { display: "none" },
+								}}
+							>
 								<Box
 									sx={{
-										flexShrink: 0,
 										display: "flex",
-										justifyContent: "space-between",
-										flexDirection: "row",
 										alignItems: "center",
-										width: "15%",
-										gap: 1,
-										"@media (max-width: 900px)": { width: "20%" },
-										"@media (max-width: 600px)": { mb: 2, width: "97%" },
-										"@media (max-width: 440px)": { mb: 1 },
+										background: "rgba(250, 250, 246, 1)",
+										border: "0.2px solid rgba(189, 189, 189, 1)",
+										padding: "12px 16px",
+										borderRadius: "4px",
+										height: "40px",
 									}}
 								>
-									<Box
+									<Typography
 										sx={{
-											display: "flex",
-											justifyContent: "space-between",
-											alignItems: "center",
-											gap: 1,
+											fontFamily: "Nunito Sans",
+											fontSize: "16px",
+											fontWeight: 700,
+											lineHeight: "21.82px",
+											marginRight: "8px",
+											color: "rgba(32, 33, 36, 1)",
 										}}
 									>
-										<Typography className="first-sub-title">
-											{isMaster ? "Master Partner" : "Partner"}
-										</Typography>
-										<Box
-											sx={{ "@media (max-width: 600px)": { display: "none" } }}
-										>
-											<CustomTooltip
-												title={
-													"Collaborate with trusted partners to access exclusive resources and services that drive success."
-												}
-												linkText="Learn more"
-												linkUrl={
-													isMaster
-														? "https://allsourceio.zohodesk.com/portal/en/kb/articles/partner"
-														: "https://allsourceio.zohodesk.com/portal/en/kb/articles/partner"
-												}
-											/>
-										</Box>
-									</Box>
-									{tabIndex === 0 && (
-										<IconButton
-											sx={{
-												display: "none",
-												cursor: "pointer",
-												"@media (max-width: 600px)": { display: "block" },
-											}}
-											onClick={handleFormOpenPopup}
-										>
-											<Image
-												src="/add.svg"
-												alt="add partner"
-												width={24}
-												height={24}
-											/>
-										</IconButton>
-									)}
+										{commission}%
+									</Typography>
+									<Typography
+										sx={{
+											fontFamily: "Nunito Sans",
+											fontSize: "12px",
+											fontWeight: 600,
+											lineHeight: "16.8px",
+											color: "rgba(74, 74, 74, 1)",
+										}}
+									>
+										Commission
+									</Typography>
 								</Box>
 
-								{tabIndex === 0 && (
-									<Box
+								{isMaster && (
+									<Button
+										variant="outlined"
 										sx={{
-											flexGrow: 1,
-											display: "flex",
-											justifyContent: "flex-end",
-											width: "24%",
-											mr: 3,
-											gap: "16px",
-											"@media (max-width: 900px)": { display: "none" },
+											height: "40px",
+											borderRadius: "4px",
+											textTransform: "none",
+											fontSize: "14px",
+											lineHeight: "19.6px",
+											fontWeight: "500",
+											color: "rgba(56, 152, 252, 1)",
+											borderColor: "rgba(56, 152, 252, 1)",
+											"&:hover": {
+												backgroundColor: "rgba(80, 82, 178, 0.1)",
+												borderColor: "rgba(56, 152, 252, 1)",
+											},
+										}}
+										onClick={() => {
+											handleFormOpenPopup();
 										}}
 									>
-										<Box
-											sx={{
-												display: "flex",
-												alignItems: "center",
-												background: "rgba(250, 250, 246, 1)",
-												border: "0.2px solid rgba(189, 189, 189, 1)",
-												padding: "12px 16px",
-												borderRadius: "4px",
-												height: "40px",
-											}}
-										>
-											<Typography
-												sx={{
-													fontFamily: "Nunito Sans",
-													fontSize: "16px",
-													fontWeight: 700,
-													lineHeight: "21.82px",
-													marginRight: "8px",
-													color: "rgba(32, 33, 36, 1)",
-												}}
-											>
-												{commission}%
-											</Typography>
-											<Typography
-												sx={{
-													fontFamily: "Nunito Sans",
-													fontSize: "12px",
-													fontWeight: 600,
-													lineHeight: "16.8px",
-													color: "rgba(74, 74, 74, 1)",
-												}}
-											>
-												Commission
-											</Typography>
-										</Box>
-
-										{isMaster && (
-											<Button
-												variant="outlined"
-												sx={{
-													height: "40px",
-													borderRadius: "4px",
-													textTransform: "none",
-													fontSize: "14px",
-													lineHeight: "19.6px",
-													fontWeight: "500",
-													color: "rgba(56, 152, 252, 1)",
-													borderColor: "rgba(56, 152, 252, 1)",
-													"&:hover": {
-														backgroundColor: "rgba(80, 82, 178, 0.1)",
-														borderColor: "rgba(56, 152, 252, 1)",
-													},
-												}}
-												onClick={() => {
-													handleFormOpenPopup();
-												}}
-											>
-												Add Partner
-											</Button>
-										)}
-									</Box>
+										Add Partner
+									</Button>
 								)}
+							</Box>
+						)}
 
-								{tabIndex === 0 && (
-									<IconButton
-										sx={{
-											display: "none",
-											cursor: "pointer",
-											"@media (max-width: 900px)": { display: "block" },
-											"@media (max-width: 600px)": { display: "none" },
-										}}
-										onClick={handleFormOpenPopup}
-									>
-										<Image
-											src="/add.svg"
-											alt="add partner"
-											width={24}
-											height={24}
-										/>
-									</IconButton>
-								)}
-							</>
+						{tabIndex === 0 && (
+							<IconButton
+								sx={{
+									display: "none",
+									cursor: "pointer",
+									"@media (max-width: 900px)": { display: "block" },
+									"@media (max-width: 600px)": { display: "none" },
+								}}
+								onClick={handleFormOpenPopup}
+							>
+								<Image
+									src="/add.svg"
+									alt="add partner"
+									width={24}
+									height={24}
+								/>
+							</IconButton>
 						)}
 
 						{(tabIndex === 1 ||
@@ -487,23 +481,6 @@ const Partners: React.FC = () => {
 								)}
 							</Button>
 						)}
-
-						<CalendarPopup
-							anchorEl={calendarAnchorEl}
-							open={isCalendarOpen}
-							onClose={handleCalendarClose}
-							onDateChange={handleDateChange}
-							onDateLabelChange={handleDateLabelChange}
-							onApply={handleApply}
-						/>
-						<InvitePartnerPopup
-							maxCommission={commission}
-							masterId={id}
-							isMaster={false}
-							open={formPopupOpen}
-							updateOrAddPartner={updateOrAddPartner}
-							onClose={handleFormClosePopup}
-						/>
 					</Box>
 					<Box
 						sx={{
@@ -745,6 +722,22 @@ const Partners: React.FC = () => {
 					</Box>
 				</Box>
 			</Box>
+			<CalendarPopup
+				anchorEl={calendarAnchorEl}
+				open={isCalendarOpen}
+				onClose={handleCalendarClose}
+				onDateChange={handleDateChange}
+				onDateLabelChange={handleDateLabelChange}
+				onApply={handleApply}
+			/>
+			<InvitePartnerPopup
+				maxCommission={commission}
+				masterId={id}
+				isMaster={false}
+				open={formPopupOpen}
+				updateOrAddPartner={updateOrAddPartner}
+				onClose={handleFormClosePopup}
+			/>
 		</>
 	);
 };

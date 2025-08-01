@@ -65,7 +65,6 @@ export const LookalikeHintsProvider: React.FC<HintsProviderProps> = ({
 				cardsLookalikeBuilder: builderHintCards,
 
 				changeLookalikesTableHint: (key, hintKey, action) => {
-					console.log("close");
 					changeHintState(key, hintKey, action, setLookalikesTableHints);
 				},
 				resetLookalikesTableHints: () =>

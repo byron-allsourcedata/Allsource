@@ -42,6 +42,12 @@ interface GoHighLevelProps {
 	isEdit?: boolean;
 }
 
+interface CustomRow {
+	type: string;
+	value: string;
+	is_constant?: boolean;
+}
+
 const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 	open,
 	onClose,
@@ -89,7 +95,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 	]);
 
 	const [customFields, setCustomFields] = useState<
-		{ type: string; value: string }[]
+		{ type: string; value: string; is_constant?: boolean }[]
 	>(
 		data?.data_map ||
 			customFieldsList.map((field) => ({
@@ -97,6 +103,10 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 				value: field.type,
 			})),
 	);
+	const extendedCustomFieldsList = [
+		{ value: "__constant__", type: "Constant field" },
+		...customFieldsList,
+	];
 
 	const handleAddField = () => {
 		setCustomFields([...customFields, { type: "", value: "" }]);
@@ -106,12 +116,19 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 		setCustomFields(customFields.filter((_, i) => i !== index));
 	};
 
-	const handleChangeField = (index: number, field: string, value: string) => {
-		setCustomFields(
-			customFields.map((item, i) =>
-				i === index ? { ...item, [field]: value } : item,
-			),
-		);
+	const handleChangeField = (
+		index: number,
+		key: keyof CustomRow,
+		value: string | boolean | undefined,
+	) => {
+		setCustomFields((prev) => {
+			const updated = [...prev];
+			updated[index] = {
+				...updated[index],
+				[key]: value,
+			};
+			return updated;
+		});
 	};
 
 	const resetToDefaultValues = () => {
@@ -261,6 +278,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 					<Button
 						variant="contained"
 						onClick={handleSaveSync}
+						disabled={!selectedRadioValue || hasErrors()}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -381,6 +399,29 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 
 	const handlePopupClose = () => {
 		onClose();
+	};
+
+	const isSafeFieldName = (str: string): boolean => {
+		return /^[a-zA-Z][a-zA-Z0-9_ ]*$/.test(str);
+	};
+
+	const isDuplicate = (value: string, currentIndex: number) => {
+		return (
+			customFields.filter((f, idx) => f.type === value && idx !== currentIndex)
+				.length > 0
+		);
+	};
+
+	const hasErrors = (): boolean => {
+		return customFields.some((field, index) => {
+			if (field.is_constant && field.type && !isSafeFieldName(field.type)) {
+				return true;
+			}
+			if (isDuplicate(field.type, index)) {
+				return true;
+			}
+			return false;
+		});
 	};
 
 	return (
@@ -1141,72 +1182,163 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 												key={index}
 											>
 												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														select
-														fullWidth
-														variant="outlined"
-														label="Custom Field"
-														value={field.type}
-														onChange={(e) =>
-															handleChangeField(index, "type", e.target.value)
-														}
-														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
+													{field.is_constant ? (
+														<TextField
+															fullWidth
+															variant="outlined"
+															label="Constant Field Name"
+															value={field.type}
+															onChange={(e) =>
+																handleChangeField(index, "type", e.target.value)
+															}
+															placeholder="Enter field name"
+															error={
+																field.is_constant &&
+																!!field.type &&
+																!isSafeFieldName(field.type)
+															}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "13px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
 																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
-														}}
-														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "14px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "var(--font-roboto)",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
 																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
 																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
+															}}
+														/>
+													) : (
+														<TextField
+															select
+															fullWidth
+															variant="outlined"
+															label="Custom Field"
+															value={field.type}
+															onChange={(e) => {
+																const selected = e.target.value;
+																if (selected === "__constant__") {
+																	setCustomFields((prev) => {
+																		const updated = [...prev];
+																		updated[index] = {
+																			...updated[index],
+																			type: "",
+																			is_constant: true,
+																		};
+																		return updated;
+																	});
+																} else {
+																	handleChangeField(index, "type", selected);
+																	handleChangeField(
+																		index,
+																		"is_constant",
+																		undefined,
+																	);
+																}
+															}}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "13px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
 																},
-															},
-														}}
-													>
-														{customFieldsList.map((item) => (
-															<MenuItem
-																key={item.value}
-																value={item.value}
-																disabled={customFields.some(
-																	(f) => f.type === item.value,
-																)} // Дизейблим выбранные
-															>
-																{item.type}
-															</MenuItem>
-														))}
-													</TextField>
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "var(--font-roboto)",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+															error={isDuplicate(field.type, index)}
+															helperText={
+																isDuplicate(field.type, index)
+																	? "This field name already exists"
+																	: ""
+															}
+														>
+															{extendedCustomFieldsList.map((item) => (
+																<MenuItem
+																	key={item.value}
+																	value={item.value}
+																	disabled={
+																		item.value !== "__constant__" &&
+																		customFields.some(
+																			(f) => f.type === item.value,
+																		)
+																	}
+																>
+																	{item.type}
+																</MenuItem>
+															))}
+														</TextField>
+													)}
 												</Grid>
 												<Grid
 													item

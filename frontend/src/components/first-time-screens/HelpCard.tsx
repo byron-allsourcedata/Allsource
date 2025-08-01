@@ -76,7 +76,6 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 		purchaseLikelihood: string;
 		aiStrategy: string;
 	}) => {
-		console.log("Submitted answers", answers);
 		setShowDemoFeedback(true);
 	};
 
