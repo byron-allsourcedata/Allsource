@@ -337,8 +337,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 			(targetAudience === "B2C" || targetAudience === "Both") &&
 			useCaseType === "Email"
 		) {
-			setNestedSelections((prev) => ({ ...prev, Recency: "90 days" }));
-			setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
+			// setNestedSelections((prev) => ({ ...prev, Recency: "90 days" }));
+			setSelectedOptionsPersonalEmail(["MX", "Delivery"]);
 			setValidate(false);
 		}
 
@@ -346,8 +346,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 			(targetAudience === "B2B" || targetAudience === "Both") &&
 			useCaseType === "Email"
 		) {
-			setNestedSelections((prev) => ({ ...prev, RecencyBusiness: "90 days" }));
-			setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
+			// setNestedSelections((prev) => ({ ...prev, RecencyBusiness: "90 days" }));
+			setSelectedOptionsBusinessEmail(["MX", "Delivery"]);
 			setValidate(false);
 		}
 
