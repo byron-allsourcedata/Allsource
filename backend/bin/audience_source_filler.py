@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 from itertools import islice
 from typing import List, Dict, Union
 
+from aio_pika.abc import AbstractChannel, AbstractConnection
 import dateparser
 
 import aioboto3
@@ -87,6 +88,36 @@ def extract_amount(amount_raw: str) -> float:
         return float(match.group(0).replace(",", ""))
     else:
         return 0.0
+
+
+global_connection: AbstractConnection | None = None
+globel_channel: AbstractChannel | None = None
+
+
+async def close_connection(
+    connection: AbstractConnection | None, channel: AbstractChannel | None
+):
+    try:
+        if connection is not None:
+            await connection.close()
+        if channel is not None:
+            await channel.close()
+    except BaseException as e:
+        logging.error(f"Close conn: {e}", exc_info=True)
+
+
+async def get_connection() -> AbstractChannel:
+    global globel_channel, global_connection
+    await close_connection(global_connection, globel_channel)
+
+    rmq_connection = RabbitMQConnection()
+    connection = await rmq_connection.connect()
+    channel = await connection.channel()
+
+    await channel.set_qos(prefetch_count=1)
+    global_connection = connection
+    globel_channel = channel
+    return channel
 
 
 def parse_date(date_str: str) -> str | None:
@@ -189,6 +220,9 @@ async def parse_csv_file(
 
     db_session.add(source)
     db_session.commit()
+
+    channel = await get_connection()
+
     await send_sse(
         channel,
         user_id,
@@ -253,6 +287,8 @@ async def parse_csv_file(
                 ),
                 status=status,
             )
+
+            channel = await get_connection()
 
             await publish_rabbitmq_message_with_channel(
                 channel=channel,
@@ -360,6 +396,7 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
     db_session.add(source)
     db_session.commit()
 
+    channel = await get_connection()
     await send_sse(
         channel,
         user_id,
@@ -452,6 +489,8 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
             ),
         )
 
+        channel = await get_connection()
+
         await publish_rabbitmq_message_with_channel(
             channel=channel,
             queue_name=AUDIENCE_SOURCES_MATCHING,
@@ -469,6 +508,7 @@ async def aud_sources_reader(
     channel: Channel,
 ):
     try:
+        await message.ack()
         message_body = json.loads(message.body)
         type = message_body.get("type")
         data = message_body.get("data")
@@ -497,12 +537,16 @@ async def aud_sources_reader(
                 user_id=user_id,
             )
 
-        await message.ack()
-
     except BaseException as e:
         db_session.rollback()
+        channel = await get_connection()
+        await asyncio.sleep(5)
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
+            queue_name=AUDIENCE_SOURCES_READER,
+            message_body=message.body,
+        )
         logging.error(f"Error processing message: {e}", exc_info=True)
-        await message.ack()
 
 
 def extract_key_from_url(s3_url: str):
@@ -539,10 +583,9 @@ async def main():
     resolver = Resolver()
     while True:
         try:
-            rmq_connection = RabbitMQConnection()
-            connection = await rmq_connection.connect()
-            channel = await connection.channel()
-            await channel.set_qos(prefetch_count=1)
+            global global_connection
+            channel = await get_connection()
+            connection = global_connection
 
             db_session = await resolver.resolve(Db)
             s3_session = aioboto3.Session()
