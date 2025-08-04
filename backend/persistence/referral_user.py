@@ -47,6 +47,7 @@ class ReferralUserPersistence:
                 func.max(
                     case(
                         (ReferralPayouts.status == "pending", "pending"),
+                        (ReferralPayouts.status == None, "pending"),
                         else_="paid",
                     )
                 ).label("reward_status"),
