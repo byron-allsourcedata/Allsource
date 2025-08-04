@@ -580,10 +580,11 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
+    global global_connection
+
     resolver = Resolver()
     while True:
         try:
-            global global_connection
             channel = await get_connection()
             connection = global_connection
 
