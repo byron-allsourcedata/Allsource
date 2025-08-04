@@ -86,6 +86,7 @@ class SlackService:
         return sync
 
     def update_credential(self, domain_id, access_token):
+        logger.info("Updating credentials", domain_id, access_token)
         return self.integrations_persistence.update_credential_for_service(
             domain_id, SourcePlatformEnum.SLACK.value, access_token
         )
@@ -105,10 +106,8 @@ class SlackService:
             "service_name": SourcePlatformEnum.SLACK.value,
         }
 
-        if common_integration:
-            integration_data["user_id"] = user.get("id")
-        else:
-            integration_data["domain_id"] = domain_id
+        integration_data["user_id"] = user.get("id")
+        integration_data["domain_id"] = domain_id
 
         integartion = self.integrations_persistence.create_integration(
             integration_data
