@@ -614,9 +614,9 @@ async def main():
             if db_session:
                 logging.info("Closing the database session...")
                 db_session.close()
-            if rmq_connection:
+            if global_connection:
                 logging.info("Closing RabbitMQ connection...")
-                await rmq_connection.close()
+                await global_connection.close()
             logging.info("Shutting down...")
             time.sleep(10)
 
