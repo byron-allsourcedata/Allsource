@@ -29,14 +29,13 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-import { Solitreo } from "next/font/google";
 import { fetchUserData } from "@/services/meService";
 
 const tableHeaders = [
 	{ key: "account_name", label: "Account name", sortable: false },
 	{ key: "email", label: "Email", sortable: false },
 	{ key: "join_date", label: "Join date", sortable: true },
-	{ key: "plan_amount", label: "Plan amount", sortable: false },
+	{ key: "monthly_spends", label: "Monthly Spends", sortable: false },
 	{ key: "reward_status", label: "Reward status", sortable: false },
 	{ key: "reward_payout_date", label: "Reward Payout date", sortable: true },
 	{ key: "last_payment_date", label: "Last payment date", sortable: true },
@@ -83,6 +82,17 @@ const getStatusStyle = (status: string) => {
 	}
 };
 
+export function formatMoney(value: number | string): string {
+	if (typeof value === "string") {
+		return value;
+	}
+
+	return value.toLocaleString("en-US", {
+		style: "currency",
+		currency: "USD",
+	});
+}
+
 interface PartnersAccountsProps {
 	appliedDates?: { start: Date | null; end: Date | null };
 	id?: number | null;
@@ -106,7 +116,7 @@ interface AccountData {
 	account_name: string;
 	email: string;
 	join_date: Date | string;
-	plan_amount: string;
+	monthly_spends: string;
 	reward_status: string;
 	reward_amount: string;
 	reward_payout_date: string;
@@ -793,7 +803,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 													paddingLeft: "16px",
 												}}
 											>
-												{data.plan_amount}
+												{formatMoney(data.monthly_spends)}
 											</TableCell>
 
 											<TableCell
