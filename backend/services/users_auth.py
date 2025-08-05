@@ -35,7 +35,7 @@ from schemas.integrations.integrations import IntegrationCredentials
 from models.users_account_notification import UserAccountNotification
 from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
-from persistence.user_persistence import UserPersistence
+from persistence.user_persistence import UserDict, UserPersistence
 from persistence.referral_discount_code_persistence import (
     ReferralDiscountCodesPersistence,
 )
@@ -46,6 +46,7 @@ from schemas.users import (
     ResetPasswordForm,
     UtmParams,
 )
+from services.auth.jwt import JwtService
 from services.integrations.base import IntegrationService
 from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
@@ -91,6 +92,7 @@ class UsersAuth:
         admin_persistence: AdminPersistence,
         crm: CrmService,
         user_names: UserNamesService,
+        jwt: JwtService,
     ):
         self.db = db
         self.payments_service = payments_service
@@ -105,6 +107,7 @@ class UsersAuth:
         self.referral_persistence_service = referral_persistence_service
         self.crm = crm
         self.user_names = user_names
+        self.jwt = jwt
         self.UNLIMITED = -1
         self.FREE_TRIAL_DAYS = 14
 
@@ -567,19 +570,15 @@ class UsersAuth:
             self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
             self.user_persistence_service.set_last_login(user_id=user_object.id)
-            if user_object.team_owner_id:
-                token_info = {
-                    "id": user_object.team_owner_id,
-                    "team_member_id": user_object.id,
-                }
+
+            claim = self.jwt.prepare_claim(user_object)
+            token = self.jwt.encode_claim(claim)
+
+            if claim.is_team_member():
                 user_object = self.user_persistence_service.get_user_by_id(
                     user_object.team_owner_id, True
                 )
-            else:
-                token_info = {
-                    "id": user_object.id,
-                }
-            token = create_access_token(token_info)
+
             if shopify_data and shopify_status is None:
                 if (
                     user_object.source_platform
@@ -1011,19 +1010,14 @@ class UsersAuth:
 
         logger.debug("Password verification passed")
         self.user_persistence_service.set_last_login(user_id=user_object.id)
-        if user_object.team_owner_id:
-            token_info = {
-                "id": user_object.team_owner_id,
-                "team_member_id": user_object.id,
-            }
+
+        claim = self.jwt.prepare_claim(user_object)
+        token = self.jwt.encode_claim(claim)
+
+        if claim.is_team_member():
             user_object = self.user_persistence_service.get_user_by_id(
                 user_object.team_owner_id, True
             )
-        else:
-            token_info = {
-                "id": user_object.id,
-            }
-        token = create_access_token(token_info)
 
         if shopify_data and shopify_status is None:
             if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
