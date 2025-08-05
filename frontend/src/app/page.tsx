@@ -1,5 +1,5 @@
 "use client";
-import { useUser } from "@/context/UserContext";
+
 import { jwtDecode } from "jwt-decode";
 
 type Claim = {
@@ -14,9 +14,6 @@ function RedirectPage() {
 		try {
 			if (token) {
 				const obj = jwtDecode<Claim>(token);
-
-				console.dir(obj);
-
 				if (obj.role && obj.role === "admin") {
 					window.location.href = "/admin";
 					return;
