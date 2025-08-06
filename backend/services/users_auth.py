@@ -47,6 +47,7 @@ from schemas.users import (
     UtmParams,
 )
 from services.auth.jwt import JwtService
+from services.auth.services.login import LoginService
 from services.integrations.base import IntegrationService
 from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
@@ -92,6 +93,7 @@ class UsersAuth:
         admin_persistence: AdminPersistence,
         crm: CrmService,
         user_names: UserNamesService,
+        login: LoginService,
         jwt: JwtService,
     ):
         self.db = db
@@ -108,6 +110,7 @@ class UsersAuth:
         self.crm = crm
         self.user_names = user_names
         self.jwt = jwt
+        self.login = login
         self.UNLIMITED = -1
         self.FREE_TRIAL_DAYS = 14
 
@@ -575,8 +578,10 @@ class UsersAuth:
             token = self.jwt.encode_claim(claim)
 
             if claim.is_team_member():
-                user_object = self.user_persistence_service.get_user_by_id(
-                    user_object.team_owner_id, True
+                user_object: Users = (
+                    self.user_persistence_service.get_user_by_id(
+                        user_object.team_owner_id, True
+                    )
                 )
 
             if shopify_data and shopify_status is None:
@@ -624,7 +629,7 @@ class UsersAuth:
                     result["shopify_status"] = shopify_status
                 return result
 
-            if authorization_data["status"] != UserAuthorizationStatus.SUCCESS:
+            if authorization_data["status"] != LoginStatus.SUCCESS:
                 result = {
                     "status": authorization_data["status"].value,
                     "token": token,
@@ -634,9 +639,12 @@ class UsersAuth:
 
                 return result
 
-            result = {"status": LoginStatus.SUCCESS, "token": token}
-            if shopify_status:
-                result["shopify_status"] = shopify_status
+            result = self.login.get_successful_result(
+                roles=user_object.role,
+                token=token,
+                is_partner=user_object.is_partner,
+                shopify_status=shopify_status,
+            ).__dict__
 
             return result
         else:
@@ -1015,7 +1023,7 @@ class UsersAuth:
         token = self.jwt.encode_claim(claim)
 
         if claim.is_team_member():
-            user_object = self.user_persistence_service.get_user_by_id(
+            user_object: Users = self.user_persistence_service.get_user_by_id(
                 user_object.team_owner_id, True
             )
 
@@ -1068,15 +1076,12 @@ class UsersAuth:
                 result["shopify_status"] = shopify_status
             return result
 
-        result = {
-            "status": LoginStatus.SUCCESS_ADMIN
-            if "admin" in user_object.role
-            else LoginStatus.SUCCESS,
-            "token": token,
-            "is_partner": user_object.is_partner,
-        }
-        if shopify_status:
-            result["shopify_status"] = shopify_status
+        result = self.login.get_successful_result(
+            roles=user_object.role,
+            token=token,
+            is_partner=user_object.is_partner,
+            shopify_status=shopify_status,
+        ).__dict__
 
         return result
 

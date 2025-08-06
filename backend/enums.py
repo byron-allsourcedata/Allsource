@@ -271,7 +271,7 @@ class TeamAccessLevel(Enum):
     OWNER = "owner"
 
 
-class LoginStatus(Enum):
+class LoginStatus(str, Enum):
     INCORRECT_PASSWORD_OR_EMAIL = "INCORRECT_PASSWORD_OR_EMAIL"
     SUCCESS = "SUCCESS"
     NEED_CHOOSE_PLAN = "NEED_CHOOSE_PLAN"
