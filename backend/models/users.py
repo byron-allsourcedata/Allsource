@@ -71,7 +71,7 @@ class Users(Base):
     )
     stripe_payment_url = Column(JSON, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
-    role = Column(
+    role: Mapped[list[str] | None] = mapped_column(
         ARRAY(VARCHAR(32)),
         nullable=True,
         server_default=text("ARRAY['customer']"),
@@ -117,7 +117,9 @@ class Users(Base):
     shop_id = Column(VARCHAR(64), nullable=True)
     shopify_token = Column(VARCHAR(64), nullable=True)
     shop_domain = Column(VARCHAR(64), nullable=True)
-    is_partner = Column(Boolean, nullable=True, server_default=text("false"))
+    is_partner: Mapped[bool | None] = mapped_column(
+        Boolean, nullable=True, server_default=text("false")
+    )
     charge_id = Column(VARCHAR(64), nullable=True)
     utm_params = Column(JSON, nullable=True)
     is_stripe_connected = Column(
