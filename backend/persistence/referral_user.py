@@ -51,6 +51,7 @@ class ReferralUserPersistence:
                         else_="paid",
                     )
                 ).label("reward_status"),
+                Users.overage_leads_count.label("overage_leads_count"),
                 func.max(ReferralPayouts.plan_amount).label("plan_amount"),
                 func.max(UserSubscriptions.status).label("subscription_status"),
             )
@@ -100,8 +101,10 @@ class ReferralUserPersistence:
                 "reward_status": account[6].capitalize()
                 if account[6]
                 else "Inactive",
-                "plan_amount": account[7] if account[7] else "--",
-                "status": account[8].capitalize() if account[8] else "Inactive",
+                "monthly_spends": account[7] * 0.08 if account[7] else "--",
+                "status": str(account[8]).capitalize()
+                if account[8]
+                else "Inactive",
             }
             for account in accounts
         ], query.count()

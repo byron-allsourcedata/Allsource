@@ -44,6 +44,7 @@ class UserDict(TypedDict):
 
     id: int
     email: str
+    role: list[str]
     full_name: str
     created_at: datetime
     current_subscription_id: int
