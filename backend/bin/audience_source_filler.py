@@ -11,7 +11,8 @@ import sys
 import time
 from datetime import datetime, timezone
 from itertools import islice
-from typing import List, Dict, Union
+from typing import Callable, List, Dict, Tuple, Union
+from typing_extensions import Coroutine
 
 from aio_pika.abc import AbstractChannel, AbstractConnection
 import dateparser
@@ -106,18 +107,37 @@ async def close_connection(
         logging.error(f"Close conn: {e}", exc_info=True)
 
 
-async def get_connection() -> AbstractChannel:
-    global globel_channel, global_connection
-    await close_connection(global_connection, globel_channel)
-
+async def init_connection() -> tuple[AbstractConnection, AbstractChannel]:
     rmq_connection = RabbitMQConnection()
     connection = await rmq_connection.connect()
     channel = await connection.channel()
 
     await channel.set_qos(prefetch_count=1)
+
+    return connection, channel
+
+
+async def get_connection() -> AbstractChannel:
+    global globel_channel, global_connection
+    await close_connection(global_connection, globel_channel)
+
+    connection, channel = await init_connection()
+
     global_connection = connection
     globel_channel = channel
     return channel
+
+
+async def maybe_retry_rmq(
+    rmq_func: Callable[[AbstractChannel], Coroutine[None, None, None]],
+    channel: AbstractChannel,
+):
+    try:
+        await rmq_func(channel)
+    except Exception as e:
+        conn, channel = await init_connection()
+        await rmq_func(channel)
+        await close_connection(conn, channel)
 
 
 def parse_date(date_str: str) -> str | None:
@@ -221,16 +241,17 @@ async def parse_csv_file(
     db_session.add(source)
     db_session.commit()
 
-    channel = await get_connection()
-
-    await send_sse(
-        channel,
-        user_id,
-        {
-            "source_id": source_id,
-            "total": total_rows,
-            "processed": processed_rows,
-        },
+    await maybe_retry_rmq(
+        lambda channel: send_sse(
+            channel,
+            user_id,
+            {
+                "source_id": source_id,
+                "total": total_rows,
+                "processed": processed_rows,
+            },
+        ),
+        channel=channel,
     )
 
     send_rows = 0
@@ -288,12 +309,13 @@ async def parse_csv_file(
                 status=status,
             )
 
-            channel = await get_connection()
-
-            await publish_rabbitmq_message_with_channel(
+            await maybe_retry_rmq(
+                lambda channel: publish_rabbitmq_message_with_channel(
+                    channel=channel,
+                    queue_name=AUDIENCE_SOURCES_MATCHING,
+                    message_body=message_body,
+                ),
                 channel=channel,
-                queue_name=AUDIENCE_SOURCES_MATCHING,
-                message_body=message_body,
             )
         send_rows += SELECTED_ROW_COUNT
 
@@ -396,16 +418,19 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
     db_session.add(source)
     db_session.commit()
 
-    channel = await get_connection()
-    await send_sse(
-        channel,
-        user_id,
-        {
-            "source_id": source_id,
-            "total": total_rows,
-            "processed": processed_rows,
-        },
+    await maybe_retry_rmq(
+        lambda channel: send_sse(
+            channel,
+            user_id,
+            {
+                "source_id": source_id,
+                "total": total_rows,
+                "processed": processed_rows,
+            },
+        ),
+        channel=channel,
     )
+
     if not max_id:
         return False
     current_id = -1
@@ -489,12 +514,13 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
             ),
         )
 
-        channel = await get_connection()
-
-        await publish_rabbitmq_message_with_channel(
+        await maybe_retry_rmq(
+            lambda channel: publish_rabbitmq_message_with_channel(
+                channel=channel,
+                queue_name=AUDIENCE_SOURCES_MATCHING,
+                message_body=message_body,
+            ),
             channel=channel,
-            queue_name=AUDIENCE_SOURCES_MATCHING,
-            message_body=message_body,
         )
 
     return True
@@ -539,12 +565,15 @@ async def aud_sources_reader(
 
     except BaseException as e:
         db_session.rollback()
-        channel = await get_connection()
         await asyncio.sleep(5)
-        await publish_rabbitmq_message_with_channel(
+
+        await maybe_retry_rmq(
+            lambda channel: publish_rabbitmq_message_with_channel(
+                channel=channel,
+                queue_name=AUDIENCE_SOURCES_READER,
+                message_body=message.body,
+            ),
             channel=channel,
-            queue_name=AUDIENCE_SOURCES_READER,
-            message_body=message.body,
         )
         logging.error(f"Error processing message: {e}", exc_info=True)
 
