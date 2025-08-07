@@ -2,6 +2,7 @@
 import axios from "axios";
 import { showErrorToast } from "@/components/ToastNotification";
 import { flagStore } from "@/services/oneDollar";
+import { makeUseAxios } from "axios-hooks";
 
 const axiosInterceptorInstance = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -121,8 +122,7 @@ axiosInterceptorInstance.interceptors.response.use(
 				// Handle other statuses if needed
 				default:
 					showErrorToast(
-						`An error occurred: ${
-							error.response.data.status || "Unknown error"
+						`An error occurred: ${error.response.data.status || "Unknown error"
 						}`,
 					);
 			}
@@ -133,5 +133,11 @@ axiosInterceptorInstance.interceptors.response.use(
 		return Promise.reject(error);
 	},
 );
+
+export const useAxios = makeUseAxios(
+	{
+		axios: axiosInterceptorInstance,
+	},
+)
 
 export default axiosInterceptorInstance;
