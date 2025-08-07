@@ -1,9 +1,11 @@
+from typing_extensions import deprecated
 import boto3
 import os
 from resolver import injectable
 
 
 @injectable
+@deprecated("please use `AwsService` from `domains/aws/service.py`")
 class AWSService:
     def __init__(self) -> None:
         self.s3_client = boto3.client(
