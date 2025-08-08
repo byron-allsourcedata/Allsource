@@ -28,7 +28,7 @@ from schemas.integrations.integrations import (
 from persistence.domains import UserDomainsPersistence
 from utils import extract_first_email
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -39,7 +39,7 @@ class SendlaneIntegrationService:
     def __init__(
         self,
         domain_persistence: UserDomainsPersistence,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
@@ -164,7 +164,7 @@ class SendlaneIntegrationService:
             credential.is_failed = True
             credential.error_message = "Invalid API Key"
             self.integrations_persisntece.db.commit()
-            return {"status": IntegrationsStatus.CREDENTAILS_INVALID.value}
+            return {"status": IntegrationsStatus.CREDENTIALS_INVALID.value}
         return [self.__mapped_list(list) for list in lists.json().get("data")]
 
     def add_integration(
@@ -175,7 +175,7 @@ class SendlaneIntegrationService:
         if lists.status_code == 401:
             raise HTTPException(
                 status_code=400,
-                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+                detail={"status": IntegrationsStatus.CREDENTIALS_INVALID.value},
             )
         return self.__save_integrations(
             credentials.sendlane.api_key,

@@ -14,7 +14,7 @@ from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.suppression import (
     IntegrationsSuppressionPersistence,
@@ -23,7 +23,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.user_persistence import UserPersistence
-from resolver import injectable, Resolver
+from resolver import injectable
 from utils import (
     format_phone_number,
     get_valid_email_without_million,
@@ -32,6 +32,7 @@ from utils import (
 from .attentive import AttentiveIntegrationsService
 from .bigcommerce import BigcommerceIntegrationsService
 from .bing_ads import BingAdsIntegrationsService
+from .customer_io import CustomerIoIntegrationsService
 from .go_high_level import GoHighLevelIntegrationsService
 from .google_ads import GoogleAdsIntegrationsService
 from .hubspot import HubspotIntegrationsService
@@ -55,7 +56,7 @@ class IntegrationService:
     def __init__(
         self,
         db: Db,
-        integration_persistence: IntegrationsPresistence,
+        integration_persistence: IntegrationsPersistence,
         lead_persistence: LeadsPersistence,
         audience_persistence: AudiencePersistence,
         lead_orders_persistence: LeadOrdersPersistence,
@@ -65,6 +66,25 @@ class IntegrationService:
         domain_persistence: UserDomainsPersistence,
         suppression_persistence: IntegrationsSuppressionPersistence,
         epi_persistence: ExternalAppsInstallationsPersistence,
+        shopify: ShopifyIntegrationService,
+        bigcommerce: BigcommerceIntegrationsService,
+        klaviyo: KlaviyoIntegrationsService,
+        google_ads: GoogleAdsIntegrationsService,
+        sales_force: SalesForceIntegrationsService,
+        meta: MetaIntegrationsService,
+        omnisend: OmnisendIntegrationService,
+        mailchimp: MailchimpIntegrationsService,
+        sendlane: SendlaneIntegrationService,
+        s3: S3IntegrationService,
+        attentive: AttentiveIntegrationsService,
+        slack: SlackService,
+        zapier: ZapierIntegrationService,
+        webhook: WebhookIntegrationService,
+        hubspot: HubspotIntegrationsService,
+        bing_ads: BingAdsIntegrationsService,
+        go_high_level: GoHighLevelIntegrationsService,
+        linked_in: LinkedinIntegrationsService,
+        customer_io: CustomerIoIntegrationsService,
     ):
         self.db = db
         self.client = httpx.Client(
@@ -83,42 +103,32 @@ class IntegrationService:
         self.suppression_persistence = suppression_persistence
         self.eai_persistence = epi_persistence
         self.UNLIMITED = -1
-        self.resolver = Resolver()
 
-    async def __aenter__(self):
-        self.shopify = await self.resolver.resolve(ShopifyIntegrationService)
-        self.bigcommerce = await self.resolver.resolve(
-            BigcommerceIntegrationsService
-        )
-        self.klaviyo = await self.resolver.resolve(KlaviyoIntegrationsService)
-        self.google_ads = await self.resolver.resolve(
-            GoogleAdsIntegrationsService
-        )
-        self.sales_force = await self.resolver.resolve(
-            SalesForceIntegrationsService
-        )
-        self.meta = await self.resolver.resolve(MetaIntegrationsService)
-        self.omnisend = await self.resolver.resolve(OmnisendIntegrationService)
-        self.mailchimp = await self.resolver.resolve(
-            MailchimpIntegrationsService
-        )
-        self.sendlane = await self.resolver.resolve(SendlaneIntegrationService)
-        self.s3 = await self.resolver.resolve(S3IntegrationService)
-        self.attentive = await self.resolver.resolve(
-            AttentiveIntegrationsService
-        )
-        self.slack = await self.resolver.resolve(SlackService)
-        self.zapier = await self.resolver.resolve(ZapierIntegrationService)
-        self.webhook = await self.resolver.resolve(WebhookIntegrationService)
-        self.hubspot = await self.resolver.resolve(HubspotIntegrationsService)
-        self.bing_ads = await self.resolver.resolve(BingAdsIntegrationsService)
-        self.go_high_level = await self.resolver.resolve(
-            GoHighLevelIntegrationsService
-        )
-        self.linked_in = await self.resolver.resolve(
-            LinkedinIntegrationsService
-        )
+        self.shopify = shopify
+        self.bigcommerce = bigcommerce
+        self.klaviyo = klaviyo
+        self.google_ads = google_ads
+        self.sales_force = sales_force
+        self.meta = meta
+        self.omnisend = omnisend
+        self.mailchimp = mailchimp
+        self.sendlane = sendlane
+        self.s3 = s3
+        self.attentive = attentive
+        self.slack = slack
+        self.zapier = zapier
+        self.webhook = webhook
+        self.hubspot = hubspot
+        self.bing_ads = bing_ads
+        self.go_high_level = go_high_level
+        self.linked_in = linked_in
+        self.customer_io = customer_io
+
+    def __enter__(self):
         return self
+
+    def __exit__(self):
+        pass
 
     def get_user_service_credentials(self, domain, user):
         filters = []
@@ -328,6 +338,9 @@ class IntegrationService:
             {"service_name": service_name, "image_url": image_url}
             for service_name, image_url in results
         ]
+
+    async def __aenter__(self):
+        return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.client.close()

@@ -5,17 +5,10 @@ import {
 	Typography,
 	IconButton,
 	List,
-	ListItem,
-	ListItemIcon,
-	ListItemButton,
 	Backdrop,
-	ListItemText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "./ToastNotification";
-import Image from "next/image";
-import SearchIcon from "@mui/icons-material/Search";
 import ConnectKlaviyo from "@/app/(client)/data-sync/components/ConnectKlaviyo";
 import ConnectSalesForce from "@/app/(client)/data-sync/components/ConnectSalesForce";
 import ConnectMeta from "@/app/(client)/data-sync/components/ConnectMeta";
@@ -27,7 +20,6 @@ import SlackConnectPopup from "./SlackConnectPopup";
 import GoogleADSConnectPopup from "./GoogleADSConnectPopup";
 import WebhookConnectPopup from "./WebhookConnectPopup";
 import MetaConnectButton from "./MetaConnectButton";
-import AlivbleIntagrationsSlider from "./AvalibleIntegrationsSlider";
 import OmnisendConnect from "./OmnisendConnect";
 import OnmisendDataSync from "../app/(client)/data-sync/components/OmnisendDataSync";
 import BingAdsDataSync from "../app/(client)/data-sync/components/BingAdsDataSync";
@@ -43,13 +35,14 @@ import SendlaneDatasync from "../app/(client)/data-sync/components/SendlaneDatas
 import S3Datasync from "../app/(client)/data-sync/components/S3Datasync";
 import WebhookDatasync from "../app/(client)/data-sync/components/WebhookDatasync";
 import ZapierDataSync from "../app/(client)/data-sync/components/ZapierDataSync";
-import ConnectHubspot from "../app/(client)/data-sync/components/HubspotDataSync";
 import HubspotDataSync from "../app/(client)/data-sync/components/HubspotDataSync";
 import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
 import IntegrationBox from "../app/(client)/smart-audiences/components/IntegrationBox";
 import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
 import GoHighLevelConnectPopup from "./GoHighLevelConnectPopup";
 import GoHighLevelDataSync from "@/app/(client)/data-sync/components/GoHighLevelDataSync";
+import CustomerIoConnect from "./CustomerIoIntegrationPopup";
+import CustomerIoDataSync from "@/app/(client)/data-sync/components/CustomerIoDataSync";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -96,6 +89,7 @@ type ServiceHandlers = {
 	meta: () => void;
 	bing_ads: () => void;
 	go_high_level: () => void;
+	customer_io: () => void;
 };
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({
@@ -107,6 +101,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
 	const [bingAdsIconPopupOpen, setBingAdsIconPopupOpen] = useState(false);
 	const [goHightLevelIconPopupOpen, setgoHightLevelPopupOpen] = useState(false);
+	const [customerIoIconPopupOpen, setCustomerIoPopupOpen] = useState(false);
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [selectedIntegration, setSelectedIntegration] = useState<string | null>(
@@ -139,6 +134,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [openWebhookIconPopupOpen, setOpenWebhookIconPopupOpen] =
 		useState(false);
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
+	const [openCustomerIoConnect, setOpenCustomerIoConnect] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
 	const [openZapierDataSync, setOpenZapierDataSync] = useState(false);
 	const [openZapierConnect, setOpenZapierConnect] = useState(false);
@@ -215,6 +211,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleGoHightLevelIconPopupClose = () => {
 		setgoHightLevelPopupOpen(false);
+	};
+
+	const handleCustomerIoIconPopupOpen = () => {
+		setCustomerIoPopupOpen(true);
+	};
+
+	const handleCustomerIoIconPopupClose = () => {
+		setCustomerIoPopupOpen(false);
 	};
 
 	const handleSalesForceIconPopupOpen = () => {
@@ -406,6 +410,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		setOpenSendlaneConnect(false);
 	};
 
+	const handleCustomerIoConnectOpen = () => {
+		setOpenCustomerIoConnect(true);
+	};
+
+	const handleCustomerIoConnectClose = () => {
+		setOpenCustomerIoConnect(false);
+	};
+
 	const handleS3ConnectOpen = () => {
 		setOpenS3Connect(true);
 	};
@@ -513,6 +525,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		{ image: "hubspot.svg", service_name: "hubspot" },
 		{ image: "google-ads.svg", service_name: "google_ads" },
 		{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
+		{ image: "customer-io-icon.svg", service_name: "customer_io" },
 		{ image: "bing.svg", service_name: "bing_ads" },
 		{ image: "salesforce-icon.svg", service_name: "sales_force" },
 		{ image: "webhook-icon.svg", service_name: "webhook" },
@@ -557,6 +570,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		sales_force: handleCreateSalesForceOpen,
 		google_ads: handleCreateGoogleAdsOpen,
 		go_high_level: handleGoHightLevelOpen,
+		customer_io: handleCustomerIoConnectOpen,
 		s3: handleS3ConnectOpen,
 		slack: handleCreateSlackOpen,
 		klaviyo: handleCreateKlaviyoOpen,
@@ -585,6 +599,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		meta: handleMetaIconPopupOpen,
 		bing_ads: handleBingAdsIconPopupOpen,
 		go_high_level: handleGoHightLevelIconPopupOpen,
+		customer_io: handleCustomerIoIconPopupOpen,
 	};
 
 	return (
@@ -688,7 +703,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 										const integrationCred = integrationsCredentials.find(
 											(cred) => cred.service_name === integration.service_name,
 										);
-										let isIntegrated = integratedServices.includes(
+										const isIntegrated = integratedServices.includes(
 											integration.service_name,
 										);
 
@@ -705,8 +720,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 															? integrationsHandlers[
 																	integration.service_name as keyof ServiceHandlers
 																]()
-															: // handleSaveSettings(integration.service_name)
-																syncHandlers[
+															: syncHandlers[
 																	integration.service_name as keyof ServiceHandlers
 																]()
 												}
@@ -728,911 +742,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											</Box>
 										);
 									})}
-
-								{/* <IntegrationBox
-									image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
-									serviceName={toCamelCase(
-										integration.service_name,
-									)}
-									active={
-										activeService === integration.service_name
-									}
-									isAvalible={
-										isIntegrated || integrationCred?.is_failed
-									}
-									isFailed={integrationCred?.is_failed}
-									isIntegrated={isIntegrated}
-								/> */}
-
-								{/* Meta */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "meta",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) => integration.service_name === "meta",
-												)?.is_failed
-													? handleMetaIconPopupOpen
-													: handleCreateMetaOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "hubspot"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/meta-icon.svg"
-													alt="meta"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Meta"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* HubSpot */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "hubspot",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "hubspot"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "hubspot",
-												)?.is_failed
-													? handleHubspotIconPopupOpen
-													: handleCreateHubspotOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "hubspot"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/hubspot.svg"
-													alt="hubspot"
-													height={28}
-													width={27}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Hubspot"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* Klaviyo */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "klaviyo",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "klaviyo"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "klaviyo",
-												)?.is_failed
-													? handleKlaviyoIconPopupOpen
-													: handleCreateKlaviyoOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "klaviyo"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/klaviyo.svg"
-													alt="klaviyo"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Klaviyo"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* BingAds */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "bing_ads",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "klaviyo"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "bing_ads",
-												)?.is_failed
-													? handleBingAdsIconPopupOpen
-													: handleCreateBingAdsOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "bing_ads"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/bing-ads.svg"
-													alt="bingads"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="BingAds"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* SalesForce */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "sales_force",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "sales_force"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "sales_force",
-												)?.is_failed
-													? handleSalesForceIconPopupOpen
-													: handleCreateSalesForceOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "sales_force"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/salesforce-icon.svg"
-													alt="salesforse"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="SalesForce"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* Webhook */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "webhook",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "webhook"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "webhook",
-												)?.is_failed
-													? handleWebhookIconPopupOpen
-													: handleCreateWebhookOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "omnisend"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/webhook-icon.svg"
-													alt="webhook"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Webhook"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* Omnisend */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "omnisend",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "omnisend"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "omnisend",
-												)?.is_failed
-													? handleOmnisendIconPopupOpen
-													: handleOmnisendConnectOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "omnisend"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/omnisend_icon_black.svg"
-													alt="omnisend"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Omnisend"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* Slack */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "slack",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "omnisend"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) => integration.service_name === "slack",
-												)?.is_failed
-													? handleSlackIconPopupIconOpen
-													: handleCreateSlackOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "omnisend"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/slack-icon.svg"
-													alt="Slack"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Slack"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* GoogleAds */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "google_ads",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "google_ads"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "google_ads",
-												)?.is_failed
-													? handleGoogleAdsIconPopupIconOpen
-													: handleCreateGoogleAdsOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "google_ads"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/google-ads.svg"
-													alt="GoogleAds"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="GoogleAds"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* Linkedin */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "linkedin",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "linkedin"
-													? "1px solid #5052B2"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "linkedin",
-												)?.is_failed
-													? handleLinkedinIconPopupIconOpen
-													: handleCreateLinkedinOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "linkedin"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/linkedin-icon.svg"
-													alt="Slack"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Linkedin"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* Mailchimp */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "mailchimp",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "mailchimp"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "mailchimp",
-												)?.is_failed
-													? handleMailchimpIconPopupIconOpen
-													: handleOpenMailchimpConnect
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "mailchimp"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/mailchimp-icon.svg"
-													alt="mailchimp"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Mailchimp"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* Sendlane */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "sendlane",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "sendlane"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "sendlane",
-												)?.is_failed
-													? handleSendlaneIconPopupOpen
-													: handleSendlaneConnectOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "sendlane"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/sendlane-icon.svg"
-													alt="sendlane"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Sendlane"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* S3 */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "s3",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "s3"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) => integration.service_name === "s3",
-												)?.is_failed
-													? handleS3IconPopupOpen
-													: handleS3ConnectOpen
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "s3"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/s3-icon.svg"
-													alt="s3"
-													height={26}
-													width={32}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="S3"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
-								{/* {integrationsCredentials.some(
-									(integration) => integration.service_name === "zapier",
-								) && (
-									<ListItem
-										sx={{
-											p: 0,
-											borderRadius: "4px",
-											border:
-												selectedIntegration === "sendlane"
-													? "1px solid rgba(56, 152, 252, 1)"
-													: "1px solid #e4e4e4",
-											width: "auto",
-											"@media (max-width:600px)": {
-												flexBasis: "calc(50% - 8px)",
-											},
-										}}
-									>
-										<ListItemButton
-											onClick={
-												!integrationsCredentials.find(
-													(integration) =>
-														integration.service_name === "zapier",
-												)?.is_failed
-													? handleOpenZapierDataSync
-													: handleOpenZapierConnect
-											}
-											sx={{
-												p: 0,
-												flexDirection: "column",
-												px: 3,
-												py: 1.5,
-												width: "102px",
-												height: "72px",
-												justifyContent: "center",
-												backgroundColor:
-													selectedIntegration === "zapier"
-														? "rgba(80, 82, 178, 0.10)"
-														: "transparent",
-											}}
-										>
-											<ListItemIcon sx={{ minWidth: "auto" }}>
-												<Image
-													src="/zapier-icon.svg"
-													alt="zapier"
-													height={26}
-													width={26}
-												/>
-											</ListItemIcon>
-											<ListItemText
-												primary="Zapier"
-												primaryTypographyProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "14px",
-														color: "#4a4a4a",
-														fontWeight: "500",
-														lineHeight: "20px",
-													},
-												}}
-											/>
-										</ListItemButton>
-									</ListItem>
-								)} */}
 							</List>
 						</Box>
 					</Box>
@@ -1652,14 +761,18 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				isEdit={false}
 				data={null}
 			/>
-
 			<GoHighLevelDataSync
 				open={goHightLevelIconPopupOpen}
 				onClose={handleGoHightLevelIconPopupClose}
 				onCloseCreateSync={onClose}
 				isEdit={false}
 			/>
-
+			<CustomerIoDataSync
+				open={customerIoIconPopupOpen}
+				onClose={handleCustomerIoIconPopupClose}
+				onCloseCreateSync={onClose}
+				isEdit={false}
+			/>
 			<ConnectSalesForce
 				data={null}
 				open={salesForceIconPopupOpen}
@@ -1866,6 +979,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				initApiKey={
 					integrationsCredentials.find(
 						(integartion) => integartion.service_name === "sendlane",
+					)?.access_token
+				}
+			/>
+			<CustomerIoConnect
+				open={openCustomerIoConnect}
+				handleClose={handleCustomerIoConnectClose}
+				onSave={handleSaveSettings}
+				invalid_api_key={isInvalidApiKey}
+				initApiKey={
+					integrationsCredentials.find(
+						(integartion) => integartion.service_name === "customer_io",
 					)?.access_token
 				}
 			/>

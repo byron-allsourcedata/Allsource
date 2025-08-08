@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect, Suspense, useRef } from "react";
-import { integrationsStyle } from "./integrationsStyle";
 import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import {
@@ -12,14 +11,6 @@ import {
 	TextField,
 	InputAdornment,
 	Popover,
-	IconButton,
-	TableContainer,
-	Table,
-	Paper,
-	TableHead,
-	TableRow,
-	TableCell,
-	TableBody,
 	Tooltip,
 	Drawer,
 	Backdrop,
@@ -39,14 +30,9 @@ import { SliderProvider } from "@/context/SliderContext";
 import MetaConnectButton from "@/components/MetaConnectButton";
 import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
 import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import AlivbleIntagrationsSlider from "@/components/AvalibleIntegrationsSlider";
 import ShopifySettings from "@/components/ShopifySettings";
-import PixelInstallation from "@/app/(client)/analytics/components/PixelInstallation";
-import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
 import DataSyncList from "@/app/(client)/data-sync/components/DataSyncList";
 import BCommerceConnect from "@/components/Bcommerce";
 import OmnisendConnect from "@/components/OmnisendConnect";
@@ -67,14 +53,13 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
-import FirstTimeScreen from "./FirstTimeScreen";
-import { hasIn } from "lodash";
 import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import HintCard from "../components/HintCard";
 import { useIntegrationHints } from "./context/IntegrationsHintsContext";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
+import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
 
 interface IntegrationBoxProps {
 	image: string;
@@ -203,6 +188,9 @@ const IntegrationBox = ({
 		}
 		if (name === "bing_ads") {
 			return "BingAds";
+		}
+		if (name === "customer_io") {
+			return "Customer IO";
 		}
 		return name
 			.split("_")
@@ -1102,6 +1090,25 @@ const UserIntegrationsList = ({
 				/>
 			)}
 
+			{openModal === "customer_io" && (
+				<CustomerIoConnect
+					open={true}
+					handleClose={handleClose}
+					onSave={handleSaveSettings}
+					initApiKey={
+						integrationsCredentials.find(
+							(integration) => integration.service_name === "customer_io",
+						)?.access_token
+					}
+					invalid_api_key={
+						integrationsCredentials.find(
+							(integration) => integration.service_name === "customer_io",
+						)?.is_failed === true
+					}
+					boxShadow="rgba(0, 0, 0, 0.1)"
+				/>
+			)}
+
 			{openModal === "s3" && (
 				<S3Connect
 					open={true}
@@ -1468,82 +1475,75 @@ const Integrations = () => {
 			{!isLoading && (
 				<>
 					{showFirstTime && (
-						<>
-							<FirstTimeScreenCommonVariant1
-								Header={{
-									TextTitle: "Integrations",
-									TextSubtitle:
-										"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place",
-									link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-integration",
-								}}
-								InfoNotification={{
-									Text: "This page manages all your connected platforms and data pipelines in one centralized hub. View status, configure settings, and troubleshoot connections for seamless data flow across your marketing stack.",
-								}}
-								Content={
-									<>
-										<AudienceSynergyPreview
-											tableSrc="/integrations-first-time-screen.svg"
-											headerTitle="Connect Your Marketing Platforms"
-											caption="Sync your audience data seamlessly with ad platforms and CRM tools to activate campaigns across channels."
-											onOpenPopup={handleBegin}
-											onBegin={handleBegin}
-											beginDisabled={false}
-											buttonLabel="Create Integration"
-										/>
-									</>
-								}
-								HelpCard={{
-									headline: "Struggling with Integrations?",
-									description:
-										"Get expert help connecting your platforms in a free 30-minute troubleshooting session.",
-									helpPoints: [
-										{
-											title: "Connection Setup",
-											description: "Step-by-step integration guidance",
-										},
-										{
-											title: "Error Resolution",
-											description: " Fix API/auth issues",
-										},
-										{
-											title: "Data Flow Optimization",
-											description: " Ensure seamless sync",
-										},
-									],
-								}}
-								LeftMenu={{
-									header: "Fix & Optimize Your Data Flows",
-									subtitle: "Free 30-Min Sync Strategy Session",
-									items: [
-										{
-											Icon: SettingsIcon,
-											title: "Connection Setup",
-											subtitle: `We’ll verify your data sources are properly linked to deliver accurate insights.`,
-										},
-										{
-											Icon: SpeedIcon,
-											title: "Error Resolution",
-											subtitle: `Diagnose and fix sync failures that skew your analytics.`,
-										},
-										{
-											Icon: MovingIcon,
-											title: "Data Flow Optimization",
-											subtitle:
-												"Streamline how insights reach your dashboards.",
-										},
-									],
-								}}
-								ContentStyleSX={{
-									display: "flex",
-									flexDirection: "column",
-									justifyContent: "center",
-									alignItems: "center",
-									maxWidth: "840px",
-									margin: "0 auto",
-									mt: 2,
-								}}
+						<FirstTimeScreenCommonVariant1
+							Header={{
+								TextTitle: "Integrations",
+								TextSubtitle:
+									"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place",
+								link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-integration",
+							}}
+							InfoNotification={{
+								Text: "This page manages all your connected platforms and data pipelines in one centralized hub. View status, configure settings, and troubleshoot connections for seamless data flow across your marketing stack.",
+							}}
+							Content=<AudienceSynergyPreview
+								tableSrc="/integrations-first-time-screen.svg"
+								headerTitle="Connect Your Marketing Platforms"
+								caption="Sync your audience data seamlessly with ad platforms and CRM tools to activate campaigns across channels."
+								onOpenPopup={handleBegin}
+								onBegin={handleBegin}
+								beginDisabled={false}
+								buttonLabel="Create Integration"
 							/>
-						</>
+							HelpCard={{
+								headline: "Struggling with Integrations?",
+								description:
+									"Get expert help connecting your platforms in a free 30-minute troubleshooting session.",
+								helpPoints: [
+									{
+										title: "Connection Setup",
+										description: "Step-by-step integration guidance",
+									},
+									{
+										title: "Error Resolution",
+										description: " Fix API/auth issues",
+									},
+									{
+										title: "Data Flow Optimization",
+										description: " Ensure seamless sync",
+									},
+								],
+							}}
+							LeftMenu={{
+								header: "Fix & Optimize Your Data Flows",
+								subtitle: "Free 30-Min Sync Strategy Session",
+								items: [
+									{
+										Icon: SettingsIcon,
+										title: "Connection Setup",
+										subtitle: `We’ll verify your data sources are properly linked to deliver accurate insights.`,
+									},
+									{
+										Icon: SpeedIcon,
+										title: "Error Resolution",
+										subtitle: `Diagnose and fix sync failures that skew your analytics.`,
+									},
+									{
+										Icon: MovingIcon,
+										title: "Data Flow Optimization",
+										subtitle: "Streamline how insights reach your dashboards.",
+									},
+								],
+							}}
+							ContentStyleSX={{
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "center",
+								alignItems: "center",
+								maxWidth: "840px",
+								margin: "0 auto",
+								mt: 2,
+							}}
+						/>
 					)}
 					{!showFirstTime && (
 						<TabContext value={value}>
@@ -1684,32 +1684,7 @@ const Integrations = () => {
 													},
 												}}
 												onChange={handleTabChange}
-											>
-												{/* <Tab label="Pixel Management" value="2" className="main-text"
-                      sx={{
-                        textTransform: 'none',
-                        padding: '4px 10px',
-                        pb: '10px',
-                        flexGrow: 1,
-                        marginRight: '3em',
-                        minHeight: 'auto',
-                        minWidth: 'auto',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        lineHeight: '19.1px',
-                        textAlign: 'left',
-                        mr: 2,
-                        '&.Mui-selected': {
-                          color: 'rgba(56, 152, 252, 1)'
-                        },
-                        "@media (max-width: 600px)": {
-                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                            border: '1px solid rgba(220, 220, 239, 1)'
-                          },
-                        }
-                      }} /> */}
-											</TabList>
+											/>
 										)}
 									</Box>
 								</Box>

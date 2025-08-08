@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 
 class BaseEnum(Enum):
@@ -73,6 +74,7 @@ class IntegrationLimit(Enum):
     KLAVIYO = 150
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
+    CUSTOMER_IO = 50
 
 
 class BusinessType(Enum):
@@ -142,6 +144,7 @@ class SourcePlatformEnum(Enum):
     S3 = "s3"
     LINKEDIN = "linkedin"
     GO_HIGH_LEVEL = "go_high_level"
+    CUSTOMER_IO = "customer_io"
 
 
 class UserStatusInAdmin(Enum):
@@ -395,7 +398,7 @@ class CreditsStatus(Enum):
 
 
 class IntegrationsStatus(Enum):
-    CREDENTAILS_INVALID = "CREDENTIALS_INVALID"
+    CREDENTIALS_INVALID = "CREDENTIALS_INVALID"
     CREATE_IS_FAILED = "CREATED_IS_FAILED"
     CREDENTIALS_NOT_FOUND = "CREDENTIALS_NOT_FOUND"
     SUCCESS = "SUCCESS"
@@ -434,6 +437,24 @@ class ProccessDataSyncResult(Enum):
     VERIFY_EMAIL_FAILED = "verify_email_failed"
     PAYMENT_REQUIRED = "payment_required"
     QUOTA_EXHAUSTED = "quota_exhausted"
+
+ProccessDataSyncStatusLiteral = Literal[
+    # Copied from ProccessDataSyncResult
+
+    "incorrect_format",
+    "failed",
+    "success",
+    "platform_validation_failed",
+    "unexpected_error",
+    "forbidden",
+    "lead_profile_error",
+    "list_not_exists",
+    "authentication_failed",
+    "too_many_requests",
+    "verify_email_failed",
+    "payment_required",
+    "quota_exhausted"
+]
 
 
 class PlanAlias(Enum):

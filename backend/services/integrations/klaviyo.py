@@ -19,7 +19,7 @@ from enums import (
 from models import UserIntegration, IntegrationUserSync, LeadUser
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
@@ -57,7 +57,7 @@ class KlaviyoIntegrationsService:
     def __init__(
         self,
         domain_persistence: UserDomainsPersistence,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
@@ -327,12 +327,12 @@ class KlaviyoIntegrationsService:
             if not self.test_api_key(credentials.klaviyo.api_key):
                 raise HTTPException(
                     status_code=400,
-                    detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
+                    detail=IntegrationsStatus.CREDENTIALS_INVALID.value,
                 )
         except:
             raise HTTPException(
                 status_code=400,
-                detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
+                detail=IntegrationsStatus.CREDENTIALS_INVALID.value,
             )
         integartions = self.__save_integrations(
             credentials.klaviyo.api_key,

@@ -5,7 +5,7 @@ import httpx
 import os
 from enums import IntegrationsStatus, SourcePlatformEnum
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from resolver import injectable
@@ -17,7 +17,7 @@ from utils import get_http_client
 class AttentiveIntegrationsService:
     def __init__(
         self,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
     ):
@@ -79,13 +79,13 @@ class AttentiveIntegrationsService:
                 raise HTTPException(
                     status_code=400,
                     detail={
-                        "status": IntegrationsStatus.CREDENTAILS_INVALID.value
+                        "status": IntegrationsStatus.CREDENTIALS_INVALID.value
                     },
                 )
         except:
             raise HTTPException(
                 status_code=400,
-                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+                detail={"status": IntegrationsStatus.CREDENTIALS_INVALID.value},
             )
         integration = self.save_integration(
             domain_id=domain.id if domain else None, api_key=api_key, user=user

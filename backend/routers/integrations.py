@@ -34,7 +34,7 @@ from dependencies import (
 from enums import CreateDataSync, TeamAccessLevel
 from persistence.domains import UserDomains
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.team_invitation_persistence import TeamInvitationPersistence
 from schemas.integrations.integrations import *
@@ -49,7 +49,7 @@ router = APIRouter()
 @router.get("")
 @router.get("/")
 async def get_integrations_service(
-    integration_persistence: IntegrationsPresistence,
+    integration_persistence: IntegrationsPersistence,
     type: str | None = Query(None),
     data_sync: bool | None = Query(None),
     user=Depends(check_user_authentication),
@@ -74,7 +74,7 @@ async def get_active_integrations(
 @router.get("/smart-audience-sync")
 @router.get("/smart-audience-sync/")
 async def get_integrations_smart_audinece_sync(
-    integration_persistence: IntegrationsPresistence,
+    integration_persistence: IntegrationsPersistence,
     type: str | None = Query(None),
     data_sync: bool | None = Query(None),
     integration_list: str | None = Query(None),
@@ -568,7 +568,7 @@ async def oauth_shopify_install_redirect(
         async with integrations_service as service:
             url = service.shopify.get_shopify_install_url(shop, r)
             return RedirectResponse(url=url)
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Something went wrong")
 
 
@@ -651,7 +651,7 @@ async def get_campaigns(
 
 @router.post("/kajabi")
 async def kajabi_webhook(
-    integration_persistence: IntegrationsPresistence,
+    integration_persistence: IntegrationsPersistence,
     request: Request,
     domain: str,
 ):
@@ -664,3 +664,14 @@ async def kajabi_webhook(
     integration_persistence.create_kajabi(body)
 
     return {"status": "success", "domain": domain, "event": event_type}
+
+@router.get("/customer-io")
+async def customer_io_test_api_connection(integration_service: IntegrationService, api_token: str):
+    service = integration_service.customer_io
+    # Customer.io always send "success" (even if token is incorrect),
+    # but function needs to return some value anyway
+    is_success = service.test_api_token(api_token)
+
+    return {
+        "status": is_success
+    }

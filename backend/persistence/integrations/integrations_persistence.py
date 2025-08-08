@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import or_
 
 from db_dependencies import Db
-from enums import DataSyncType
+from enums import DataSyncType, SourcePlatformEnum
 from models import IntegrationUserSync
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.integrations.users_domains_integrations import (
@@ -16,7 +16,7 @@ from resolver import injectable
 
 
 @injectable
-class IntegrationsPresistence:
+class IntegrationsPersistence:
     def __init__(self, db: Db) -> None:
         self.db = db
 
@@ -137,13 +137,29 @@ class IntegrationsPresistence:
         return query.all()
 
     def update_credential_for_service(
-        self, domain_id: int, service_name: str, access_token
+        self, user_id: int, service_name: str, new_access_token: str
+    ):
+        user_integration = (
+            self.db.query(UserIntegration)
+            .filter(
+                UserIntegration.user_id == user_id,
+                UserIntegration.service_name == service_name,
+            )
+            .first()
+        )
+        user_integration.access_token = new_access_token
+        self.db.commit()
+
+        return user_integration
+
+    def update_credential_for_slack(
+        self, domain_id: int, access_token: str
     ):
         user_integration = (
             self.db.query(UserIntegration)
             .filter(
                 UserIntegration.domain_id == domain_id,
-                UserIntegration.service_name == service_name,
+                UserIntegration.service_name == SourcePlatformEnum.SLACK.value,
             )
             .first()
         )
@@ -152,7 +168,7 @@ class IntegrationsPresistence:
 
         return user_integration
 
-    def get_credential(self, **filter_by):
+    def get_user_integration(self, **filter_by) -> UserIntegration:
         return self.db.query(UserIntegration).filter_by(**filter_by).first()
 
     def update_app_home_opened(self, slack_team_id):
@@ -165,8 +181,8 @@ class IntegrationsPresistence:
         self.db.commit()
 
     def get_credentials_for_service(
-        self, domain_id: int, user_id, service_name: str, **filter_by
-    ):
+        self, domain_id: int, user_id: int, service_name: str, **filter_by
+    ) -> UserIntegration | None:
         query = self.db.query(UserIntegration).filter(
             UserIntegration.service_name == service_name
         )

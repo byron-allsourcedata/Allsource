@@ -14,7 +14,7 @@ from enums import (
 )
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -33,7 +33,7 @@ class LinkedinIntegrationsService:
     def __init__(
         self,
         domain_persistence: UserDomainsPersistence,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],

@@ -69,7 +69,9 @@ import { Paginator } from "@/components/PaginationComponent";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import GoHighLevelDataSync from "./GoHighLevelDataSync";
+import CustomerIoDataSync from "@/app/(client)/data-sync/components/CustomerIoDataSync";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
+import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -97,6 +99,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
 	const [goHighLevelIconPopupOpen, setGoHighLevelIconPopupOpen] =
 		useState(false);
+	const [customerIoIconPopupOpen, setCustomerIoIconPopupOpen] = useState(false);
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false);
@@ -104,6 +107,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [totalRows, setTotalRows] = useState(0);
 	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
+	const [openCustomerIoConnect, setOpenCustomerIoConnect] = useState(false);
 	const [s3IconPopupOpen, setOpenS3IconPopup] = useState(false);
 	const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
 	const [hubspotIconPopupOpen, setOpenHubspotIconPopup] = useState(false);
@@ -336,6 +340,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						height={20}
 					/>
 				);
+			case "customer_io":
+				return (
+					<Image
+						src="./customer-io-icon.svg"
+						alt="customer_io icon"
+						width={20}
+						height={20}
+					/>
+				);
 			case "google_ads":
 				return (
 					<Image
@@ -501,6 +514,23 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		} catch (error) {}
 	};
 
+	const handleCustomerIoIconPopupClose = async () => {
+		setCustomerIoIconPopupOpen(false);
+		setSelectedId(null);
+		try {
+			const response = await axiosInstance.get(
+				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
+			);
+			if (response) {
+				setData((prevData) =>
+					prevData.map((item) =>
+						item.id === selectedId ? { ...item, ...response.data } : item,
+					),
+				);
+			}
+		} catch (error) {}
+	};
+
 	const handleMailchimpIconPopupClose = async () => {
 		setMailchimpIconPopupOpen(false);
 		setSelectedId(null);
@@ -546,6 +576,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setMetaIconPopupOpen(true);
 			} else if (dataSyncPlatform === "go_high_level") {
 				setGoHighLevelIconPopupOpen(true);
+			} else if (dataSyncPlatform === "customer_io") {
+				setCustomerIoIconPopupOpen(true);
 			} else if (dataSyncPlatform === "mailchimp") {
 				setMailchimpIconPopupOpen(true);
 			} else if (dataSyncPlatform === "omnisend") {
@@ -679,6 +711,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenGoogleADSConnect(true);
 					} else if (dataSyncPlatform === "go_high_level") {
 						setOpenGoHighLevelConnect(true);
+					} else if (dataSyncPlatform === "customer_io") {
+						setOpenCustomerIoConnect(true);
 					} else if (dataSyncPlatform === "linkedin") {
 						setOpenLinkedinConnect(true);
 					} else if (dataSyncPlatform === "webhook") {
@@ -714,6 +748,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setSalesForceIconPopupOpen(true);
 					} else if (dataSyncPlatform === "go_high_level") {
 						setOpenGoHighLevelConnect(true);
+					} else if (dataSyncPlatform === "customer_io") {
+						setOpenCustomerIoConnect(true);
 					}
 
 					setIsLoading(false);
@@ -1378,126 +1414,110 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					</Popover>
 				</Box>
 				{klaviyoIconPopupOpen && isEdit === true && (
-					<>
-						<ConnectKlaviyo
-							open={klaviyoIconPopupOpen}
-							onClose={handleKlaviyoIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-							isEdit={isEdit}
-						/>
-					</>
+					<ConnectKlaviyo
+						open={klaviyoIconPopupOpen}
+						onClose={handleKlaviyoIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
 				)}
 				{goHighLevelIconPopupOpen && isEdit === true && (
-					<>
-						<GoHighLevelDataSync
-							open={goHighLevelIconPopupOpen}
-							onClose={handleGoHighLevelIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-							isEdit={isEdit}
-						/>
-					</>
+					<GoHighLevelDataSync
+						open={goHighLevelIconPopupOpen}
+						onClose={handleGoHighLevelIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
+				)}
+				{customerIoIconPopupOpen && isEdit === true && (
+					<CustomerIoDataSync
+						open={customerIoIconPopupOpen}
+						onClose={handleCustomerIoIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
 				)}
 				{salesForceIconPopupOpen && isEdit === true && (
-					<>
-						<ConnectSalesForce
-							open={salesForceIconPopupOpen}
-							onClose={handleSalesForceIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-							isEdit={isEdit}
-						/>
-					</>
+					<ConnectSalesForce
+						open={salesForceIconPopupOpen}
+						onClose={handleSalesForceIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
 				)}
 				{metaIconPopupOpen && isEdit === true && (
-					<>
-						<ConnectMeta
-							open={metaIconPopupOpen}
-							onClose={handleMetaIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-							isEdit={isEdit}
-						/>
-					</>
+					<ConnectMeta
+						open={metaIconPopupOpen}
+						onClose={handleMetaIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
 				)}
 
 				{mailchimpIconPopupOpen && isEdit === true && (
-					<>
-						<MailchimpDatasync
-							open={mailchimpIconPopupOpen}
-							onClose={handleMailchimpIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-							isEdit={isEdit}
-						/>
-					</>
+					<MailchimpDatasync
+						open={mailchimpIconPopupOpen}
+						onClose={handleMailchimpIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
 				)}
 				{omnisendIconPopupOpen && isEdit === true && (
-					<>
-						<OmnisendDataSync
-							open={omnisendIconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleOmnisendIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-							boxShadow="rgba(0, 0, 0, 0.01)"
-						/>
-					</>
+					<OmnisendDataSync
+						open={omnisendIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleOmnisendIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						boxShadow="rgba(0, 0, 0, 0.01)"
+					/>
 				)}
 				{sendlaneIconPopupOpen && isEdit && (
-					<>
-						<SendlaneDatasync
-							open={sendlaneIconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleSendlaneIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-						/>
-					</>
+					<SendlaneDatasync
+						open={sendlaneIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleSendlaneIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
 				)}
 				{s3IconPopupOpen && isEdit && (
-					<>
-						<S3Datasync
-							open={s3IconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleS3IconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-						/>
-					</>
+					<S3Datasync
+						open={s3IconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleS3IconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
 				)}
 				{webhookIconPopupOpen && isEdit && (
-					<>
-						<WebhookDatasync
-							open={webhookIconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleWebhookIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-						/>
-					</>
+					<WebhookDatasync
+						open={webhookIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleWebhookIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
 				)}
 				{hubspotIconPopupOpen && isEdit && (
-					<>
-						<HubspotDataSync
-							open={hubspotIconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleHubspotIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-						/>
-					</>
+					<HubspotDataSync
+						open={hubspotIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleHubspotIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
 				)}
 				{slackIconPopupOpen && isEdit && (
-					<>
-						<SlackDatasync
-							open={slackIconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleSlackIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-						/>
-					</>
+					<SlackDatasync
+						open={slackIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleSlackIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
 				)}
 				{googleADSIconPopupOpen && isEdit && (
-					<>
-						<GoogleADSDatasync
-							open={googleADSIconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleGoogleADSIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-						/>
-					</>
+					<GoogleADSDatasync
+						open={googleADSIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleGoogleADSIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
 				)}
 				<MailchimpConnect
 					open={openMailchimpConnect}
@@ -1552,14 +1572,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
 				{linkedinIconPopupOpen && isEdit && (
-					<>
-						<LinkedinDataSync
-							open={linkedinIconPopupOpen}
-							isEdit={isEdit}
-							onClose={handleLinkedinIconPopupClose}
-							data={data.find((item) => item.id === selectedId)}
-						/>
-					</>
+					<LinkedinDataSync
+						open={linkedinIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleLinkedinIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
 				)}
 				<MailchimpConnect
 					open={openMailchimpConnect}
@@ -1625,6 +1643,19 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					}
 					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
+				/>
+				<CustomerIoConnect
+					open={openCustomerIoConnect}
+					handleClose={() => {
+						setOpenCustomerIoConnect(false), setIsInvalidApiKey(false);
+					}}
+					initApiKey={
+						integrationsCredentials.find(
+							(integration) => integration.service_name === "customer_io",
+						)?.access_token
+					}
+					invalid_api_key={isInvalidApiKey}
+					boxShadow="rgba(0, 0, 0, 0.1)"
 				/>
 				<S3Connect
 					open={openS3Connect}

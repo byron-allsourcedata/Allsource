@@ -22,7 +22,7 @@ from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
@@ -45,7 +45,7 @@ class MailchimpIntegrationsService:
     def __init__(
         self,
         domain_persistence: UserDomainsPersistence,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
@@ -186,7 +186,7 @@ class MailchimpIntegrationsService:
                 credential.error_message = "Invalid API Key"
                 credential.is_failed = True
                 self.integrations_persisntece.db.commit()
-                return {"status": IntegrationsStatus.CREDENTAILS_INVALID.value}
+                return {"status": IntegrationsStatus.CREDENTIALS_INVALID.value}
 
         return self.__mapped_list(response) if response else None
 
@@ -275,13 +275,13 @@ class MailchimpIntegrationsService:
                 raise HTTPException(
                     status_code=200,
                     detail={
-                        "status": IntegrationsStatus.CREDENTAILS_INVALID.value
+                        "status": IntegrationsStatus.CREDENTIALS_INVALID.value
                     },
                 )
         except:
             raise HTTPException(
                 status_code=200,
-                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+                detail={"status": IntegrationsStatus.CREDENTIALS_INVALID.value},
             )
         integration = self.__save_integation(
             domain_id=domain_id,

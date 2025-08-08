@@ -29,7 +29,7 @@ from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from resolver import injectable
@@ -57,7 +57,7 @@ class GoogleAdsIntegrationsService:
     def __init__(
         self,
         domain_persistence: UserDomainsPersistence,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
@@ -620,7 +620,7 @@ class GoogleAdsIntegrationsService:
                 f"'{ex.error.code().name}' and includes the following errors:"
             )
             return {
-                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
+                "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
                 "message": str(ex.error.code().name),
             }
 
@@ -807,14 +807,14 @@ class GoogleAdsIntegrationsService:
             details = googleads_error.failure.errors[0].message
             logger.error(f"Google Ads API error occurred: {googleads_error}")
             return {
-                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
+                "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
                 "message": str(details),
             }
 
         except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
             return {
-                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
+                "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
                 "message": str(e),
             }
 
@@ -878,7 +878,7 @@ class GoogleAdsIntegrationsService:
                 return {"status": IntegrationsStatus.NOT_ADS_USER.value}
 
             return {
-                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
+                "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
                 "message": str(details),
             }
 
@@ -889,11 +889,11 @@ class GoogleAdsIntegrationsService:
                     f"Error code: {error.error_code}, Message: {error.message}"
                 )
             return {
-                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
-                "message": str(IntegrationsStatus.CREDENTAILS_INVALID.value),
+                "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
+                "message": str(IntegrationsStatus.CREDENTIALS_INVALID.value),
             }
         except Exception as e:
             return {
-                "status": IntegrationsStatus.CREDENTAILS_INVALID.value,
-                "message": str(IntegrationsStatus.CREDENTAILS_INVALID.value),
+                "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
+                "message": str(IntegrationsStatus.CREDENTIALS_INVALID.value),
             }
