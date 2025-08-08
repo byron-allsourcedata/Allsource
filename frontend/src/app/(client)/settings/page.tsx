@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect, Suspense, useCallback } from "react";
+import type React from "react";
+import { useState, useEffect, Suspense, type FC } from "react";
 import { Box, Typography, Button, AppBar } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import { planStyles } from "./settingsStyles";
@@ -51,6 +52,11 @@ const Settings: React.FC = () => {
 	const handleTabChange = (section: string) => {
 		setActiveSection(section);
 		router.push(`/settings?section=${section}`);
+	};
+
+	const tabProps = {
+		handleTabChange,
+		activeTab: activeSection,
 	};
 
 	return (
@@ -129,52 +135,29 @@ const Settings: React.FC = () => {
 							},
 						}}
 					>
-						<Button
-							className="tab-heading"
-							sx={planStyles.buttonHeading}
-							variant={
-								activeSection === "accountDetails" ? "contained" : "outlined"
-							}
-							onClick={() => handleTabChange("accountDetails")}
-						>
-							Account Details
-						</Button>
-						<Button
-							className="tab-heading"
+						<SettingTab
+							tabName="accountDetails"
+							label="Account Details"
+							{...tabProps}
+						/>
+						<SettingTab
+							tabName="teams"
+							label="Teams"
 							disabled={!userHasSubscription}
-							sx={planStyles.buttonHeading}
-							variant={activeSection === "teams" ? "contained" : "outlined"}
-							onClick={() => handleTabChange("teams")}
-						>
-							Teams
-						</Button>
-						<Button
-							className="tab-heading"
+							{...tabProps}
+						/>
+						<SettingTab
+							tabName="billing"
+							label="Billing"
 							disabled={!userHasSubscription}
-							sx={planStyles.buttonHeading}
-							variant={activeSection === "billing" ? "contained" : "outlined"}
-							onClick={() => handleTabChange("billing")}
-						>
-							Billing
-						</Button>
-						<Button
-							className="tab-heading"
+							{...tabProps}
+						/>
+						<SettingTab
+							tabName="subscription"
+							label="Subscription"
 							disabled={!userHasSubscription}
-							sx={planStyles.buttonHeading}
-							variant={
-								activeSection === "subscription" ? "contained" : "outlined"
-							}
-							onClick={() => handleTabChange("subscription")}
-						>
-							Subscription
-						</Button>
-						{/* <Button
-                    sx={planStyles.buttonHeading}
-                    variant={activeSection === 'apiDetails' ? 'contained' : 'outlined'}
-                    onClick={() => handleTabChange('apiDetails')}
-                >
-                    API Details
-                </Button> */}
+							{...tabProps}
+						/>
 					</Box>
 				</Box>
 			</AppBar>
@@ -210,6 +193,34 @@ const SettingsPage: React.FC = () => {
 		<Suspense fallback={<CustomizedProgressBar />}>
 			<Settings />
 		</Suspense>
+	);
+};
+
+type Props = {
+	label: string;
+	tabName: string;
+	activeTab: string;
+	disabled?: boolean;
+	handleTabChange: (tab: string) => void;
+};
+
+const SettingTab: FC<Props> = ({
+	tabName,
+	activeTab,
+	disabled,
+	handleTabChange,
+	label,
+}) => {
+	return (
+		<Button
+			className="tab-heading"
+			disabled={disabled}
+			sx={planStyles.buttonHeading}
+			variant={activeTab === tabName ? "contained" : "outlined"}
+			onClick={() => handleTabChange(tabName)}
+		>
+			{label}
+		</Button>
 	);
 };
 
