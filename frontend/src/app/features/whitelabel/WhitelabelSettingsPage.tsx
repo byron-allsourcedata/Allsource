@@ -18,7 +18,15 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	const [field] = useFieldValue("");
 	return (
 		<ThemeProvider theme={whitelabelTheme}>
-			<Row gap="1.5rem">
+			<Row
+				gap="1.5rem"
+				sx={{
+					background: "black",
+					flex: 1,
+					height: "80vh",
+					padding: 2,
+				}}
+			>
 				<Paper>
 					<Column height="inherit" maxWidth="400px" gap="1rem">
 						<T variant="h2">Whitelabel</T>
@@ -52,10 +60,12 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							maxHeight: "80vh",
 							gap: "1rem",
 							display: "flex",
+							flex: 1,
+							background: "orange",
 							flexDirection: "column",
 						}}
 					>
-						<ComponentTitle>Example</ComponentTitle>
+						<ComponentTitle>Preview</ComponentTitle>
 						<WhitelabelExample />
 					</Paper>
 				</Column>

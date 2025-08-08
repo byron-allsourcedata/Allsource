@@ -15,6 +15,9 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 			sx={{
 				border: "1px solid #E4E4E4",
 				borderRadius: "4px",
+				display: "flex",
+				background: "green",
+				overflow: "hidden",
 			}}
 		>
 			<HeaderView
@@ -24,7 +27,61 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 				showActions={false}
 			/>
 
-			<SidebarView
+			<Column
+				height="20vh"
+				// flex={100}
+				sx={{
+					background: "purple",
+					justifyContent: "space-between",
+					flexDirection: "column",
+				}}
+			>
+				<Column
+					sx={{
+						display: "flex",
+						flex: 1,
+						minHeight: 0,
+						flexDirection: "column",
+						background: "purple",
+					}}
+				>
+					<Column
+						sx={{
+							flex: 1,
+							overflow: "auto",
+							padding: 1,
+							background: "white",
+						}}
+					>
+						<Column
+							sx={{ background: "green", height: "250px", flexShrink: 0 }}
+						>
+							Color box
+						</Column>
+						<Column sx={{ background: "yellow", height: "250px" }}>
+							Color box
+						</Column>
+						<Column sx={{ background: "cyan", height: "250px" }}>
+							Color box
+						</Column>
+						{/* Add more boxes to overflow */}
+					</Column>
+
+					<Column
+						sx={{
+							background: "blue",
+							height: "50px",
+							flexShrink: 0,
+							justifyContent: "center",
+							alignItems: "center",
+						}}
+					>
+						Value (Button)
+					</Column>
+				</Column>
+			</Column>
+
+			{/* <SidebarView
 				showPartner={false}
 				setShowSlider={() => {}}
 				isGetStartedPage={true}
@@ -34,7 +91,7 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 				hasSubheader={false}
 				showAdmin={false}
 				navigate={() => {}}
-			/>
+			/> */}
 		</Column>
 	);
 };

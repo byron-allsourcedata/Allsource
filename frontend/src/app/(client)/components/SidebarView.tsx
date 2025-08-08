@@ -290,10 +290,13 @@ export const SidebarView: React.FC<SidebarProps> = ({
 		<Box
 			sx={{
 				...containerStyles(hasNotification, hasSubheader).container,
+				padding: "2px",
 				display: "flex",
 				// maxHeight: "100%",
 				flexDirection: "column",
-				overflow: "hidden",
+				overflow: "scroll",
+				flexGrow: 1,
+				background: "blue",
 				justifyContent: "space-between",
 			}}
 		>
