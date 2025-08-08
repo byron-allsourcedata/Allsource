@@ -249,9 +249,13 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
 
         # Additional fields
         for data_map_item in data_map:
-            customer_io_traits[data_map_item.type] = fxf_user.__dict__[
-                data_map_item.type
-            ]
+            # Add constant fields to profile
+            if data_map_item.is_constant:
+                customer_io_traits[data_map_item.type] = data_map_item.value
+            else:
+                customer_io_traits[data_map_item.type] = fxf_user.__dict__[
+                    data_map_item.type
+                ]
 
         return customer_io_traits
 
