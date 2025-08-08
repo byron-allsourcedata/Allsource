@@ -1,6 +1,6 @@
 "use client";
 import type React from "react";
-import { useState, useEffect, Suspense, type FC } from "react";
+import { useState, useEffect, Suspense, type FC, type ReactNode } from "react";
 import { Box, Typography, Button, AppBar } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import { planStyles } from "./settingsStyles";
@@ -13,16 +13,19 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
+import { WhitelabelSettingsPage } from "@/app/features/whitelabel/WhitelabelSettingsPage";
 
 const Settings: React.FC = () => {
+	const router = useRouter();
+	const searchParams = useSearchParams();
+
+	const section = searchParams.get("section") ?? "accountDetails";
+
 	const { hasNotification } = useNotification();
-	const [activeSection, setActiveSection] = useState<string>("accountDetails");
+	const [activeSection, setActiveSection] = useState<string>(section);
 	const [accountDetails, setAccountDetails] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [userHasSubscription, setUserHasSubscription] = useState(false);
-
-	const router = useRouter();
-	const searchParams = useSearchParams();
 
 	const fetchAccountDetails = async () => {
 		try {
@@ -58,6 +61,13 @@ const Settings: React.FC = () => {
 		handleTabChange,
 		activeTab: activeSection,
 	};
+
+	const tabs = {
+		whitelabel: <WhitelabelSettingsPage />,
+	};
+
+	const selectedTab: ReactNode | undefined =
+		tabs[activeSection as keyof typeof tabs];
 
 	return (
 		<Box sx={{ position: "relative", width: "100%" }}>
@@ -158,6 +168,12 @@ const Settings: React.FC = () => {
 							disabled={!userHasSubscription}
 							{...tabProps}
 						/>
+						<SettingTab
+							tabName="whitelabel"
+							label="Whitelabel"
+							disabled={!userHasSubscription}
+							{...tabProps}
+						/>
 					</Box>
 				</Box>
 			</AppBar>
@@ -183,6 +199,15 @@ const Settings: React.FC = () => {
 				{activeSection === "subscription" && <SettingsSubscription />}
 
 				{activeSection === "apiDetails" && <SettingsApiDetails />}
+			</Box>
+			{/* didn't want to break something with overflows, so copied the container here for new tabs*/}
+			<Box
+				sx={{
+					flexGrow: 1,
+					pl: 1,
+				}}
+			>
+				{selectedTab}
 			</Box>
 		</Box>
 	);
