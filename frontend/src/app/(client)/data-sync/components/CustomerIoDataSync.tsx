@@ -519,7 +519,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 					}}
 				>
 					<UserTip
-						limit={30}
+						limit={50}
 						service="Customer.io"
 						sx={{
 							width: "100%",
@@ -808,7 +808,6 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 											Map list
 										</Typography>
 									</Box>
-
 									<Grid
 										container
 										alignItems="center"
@@ -869,7 +868,6 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 											&nbsp;
 										</Grid>
 									</Grid>
-
 									{defaultRows.map((row, index) => (
 										<Box key={index} sx={{ mb: 2 }}>
 											{/* Add margin between rows */}
@@ -1455,7 +1453,13 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 						{/* Button based on selected tab */}
 					</Box>
 					<Box
-						sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
+						sx={{
+							marginTop: "auto",
+							px: 2,
+							py: 2,
+							width: "100%",
+							border: "1px solid #e4e4e4",
+						}}
 					>
 						<Box
 							sx={{

@@ -181,6 +181,7 @@ const CustomerIoConnect = ({
 
 	const handleTestApiKey = async () => {
 		// Send test api request to Customer.io
+		showToast("Test lead sent to Customer.io Successfully");
 		axiosInstance.get(`/integrations/customer-io?api_token=${apiKey}`);
 	};
 
@@ -757,8 +758,21 @@ const CustomerIoConnect = ({
 									letterSpacing: "normal",
 									textTransform: "none",
 									padding: "10px 24px",
-									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 									borderRadius: "4px",
+									border: "1px solid rgba(56, 152, 252, 1)",
+									boxShadow: "0px 0px 0px 0px rgba(0, 0, 0, 0.25)",
+									":hover": {
+										backgroundColor: "rgba(250, 250, 250, 1)",
+									},
+									":active": {
+										backgroundColor: "rgba(56, 152, 252, 1)",
+									},
+									":disabled": {
+										border: "1px solid rgba(56, 152, 252, 1)",
+										backgroundColor: "#fff",
+										color: "rgba(30, 136, 229, 1)",
+										opacity: 0.6,
+									},
 								}}
 							>
 								Test connection
@@ -780,9 +794,10 @@ const CustomerIoConnect = ({
 									color: "#fff",
 									textTransform: "none",
 									padding: "10px 24px",
-									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+									boxShadow: "0px 0px 0px 0px rgba(0, 0, 0, 0.25)",
 									":hover": {
 										backgroundColor: "rgba(30, 136, 229, 1)",
+										boxShadow: "0px 0px 0px 0px rgba(0, 0, 0, 0.25)",
 									},
 									":active": {
 										backgroundColor: "rgba(56, 152, 252, 1)",

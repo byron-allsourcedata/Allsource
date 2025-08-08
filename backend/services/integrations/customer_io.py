@@ -56,7 +56,7 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
             write_key=api_token,
             debug=False,
             send=True,
-            upload_size=100,
+            upload_size=IntegrationLimit.CUSTOMER_IO.value,
             max_queue_size=10000,
             upload_interval=0.5,
             gzip=False,

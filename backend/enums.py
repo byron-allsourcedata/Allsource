@@ -74,7 +74,7 @@ class IntegrationLimit(Enum):
     KLAVIYO = 150
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
-    CUSTOMER_IO = 50
+    CUSTOMER_IO = 200
 
 
 class BusinessType(Enum):
