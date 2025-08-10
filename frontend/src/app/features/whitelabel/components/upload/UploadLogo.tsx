@@ -1,4 +1,5 @@
 import { Column } from "@/components/Column";
+import { FileDnd } from "@/components/premium-sources/hooks/useFileDragAndDrop";
 import { Row } from "@/components/Row";
 import { T } from "@/components/ui/T";
 import { FileUploadOutlined, UploadFileOutlined } from "@mui/icons-material";
@@ -7,11 +8,12 @@ import type { FC } from "react";
 
 type Props = {
 	containerRef: React.RefObject<HTMLDivElement>;
+	dragProps: FileDnd;
 };
 
-export const UploadLogo: FC<Props> = ({ containerRef }) => {
+export const UploadLogo: FC<Props> = ({ containerRef, dragProps }) => {
 	return (
-		<UploadLogoContainer ref={containerRef}>
+		<UploadLogoContainer ref={containerRef} {...dragProps}>
 			<UploadIcon />
 			<Column gap="0.5rem">
 				<Title>Upload a file</Title>

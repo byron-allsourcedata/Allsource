@@ -36,6 +36,8 @@ export const useFileDragAndDrop: (allowedTypes: string[]) => FileDnd = (
 				}
 			}
 
+			console.dir(savedFiles)
+
 			setDraggingFiles(
 				savedFiles.filter((f) => allowedTypes.find((ff) => ff === f.type)),
 			);

@@ -6,7 +6,7 @@ import { Box, styled, type SxProps } from "@mui/material";
 import type { FC, RefObject } from "react";
 
 type Props = {
-	containerRef: RefObject<HTMLDivElement>;
+	containerRef?: RefObject<HTMLDivElement>;
 	sx?: SxProps;
 };
 

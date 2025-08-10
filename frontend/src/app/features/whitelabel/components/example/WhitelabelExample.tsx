@@ -1,16 +1,16 @@
-import Header from "@/app/(client)/components/Header";
 import { HeaderView } from "@/app/(client)/components/HeaderView";
-import Sidebar from "@/app/(client)/components/Sidebar";
 import { SidebarView } from "@/app/(client)/components/SidebarView";
 import { ImportSourcePageView } from "@/app/features/sources/builder/pages/ImportSourcePage";
 import { Column } from "@/components/Column";
 import { Row } from "@/components/Row";
-import { Paper } from "@mui/material";
 import { useRef, type FC } from "react";
 
-type Props = {};
+type Props = {
+	logoSrc?: string;
+	smallLogoSrc?: string;
+};
 
-export const WhitelabelExample: FC<Props> = ({}) => {
+export const WhitelabelExample: FC<Props> = ({ logoSrc, smallLogoSrc }) => {
 	const headerRef = useRef<HTMLDivElement | null>(null);
 
 	const headerHeight = headerRef.current?.clientHeight ?? 0;
@@ -26,6 +26,7 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 			}}
 		>
 			<HeaderView
+				logoSrc={logoSrc}
 				headerRef={headerRef}
 				NewRequestNotification={false}
 				NotificationData={null}
@@ -48,7 +49,7 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 				/>
 				<Column width="min(80vw, 1200px)" overflow="clip">
 					<ImportSourcePageView
-						smallIconSrc={"/logo-icon.svg"}
+						smallIconSrc={smallLogoSrc}
 						loading={false}
 						showGetStarted={false}
 						hasNotification={false}

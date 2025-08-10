@@ -60,14 +60,16 @@ type Props = {
 	onDismissNotification: () => void;
 	showActions: boolean;
 	headerRef?: React.RefObject<HTMLDivElement>;
+	logoSrc?: string;
 };
 
 export const HeaderView: React.FC<Props> = ({
+	logoSrc,
 	NewRequestNotification,
 	NotificationData,
 	onDismissNotification,
 	showActions,
-	headerRef
+	headerRef,
 }) => {
 	const pathname = usePathname();
 	const [hasNotification, setHasNotification] = useState(
@@ -184,7 +186,10 @@ export const HeaderView: React.FC<Props> = ({
 		setHasNotification(false);
 	};
 	return (
-		<Box sx={{ display: "flex", width: "100%", flexDirection: "column" }} ref={headerRef}>
+		<Box
+			sx={{ display: "flex", width: "100%", flexDirection: "column" }}
+			ref={headerRef}
+		>
 			<Box sx={{ display: "block" }}>
 				<Box sx={{ display: { md: "none" } }}>
 					<SliderProvider>
@@ -209,7 +214,7 @@ export const HeaderView: React.FC<Props> = ({
 						>
 							<Image
 								priority
-								src="/logo.svg"
+								src={logoSrc ?? "/logo.svg"}
 								alt="logo"
 								height={30}
 								width={130}

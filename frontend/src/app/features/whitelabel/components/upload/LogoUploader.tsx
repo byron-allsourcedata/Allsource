@@ -1,9 +1,12 @@
-import type { FC } from "react";
+import type { FC, ReactNode } from "react";
 import { DraggingFileUpload } from "./UploadedLogo";
 import { UploadLogo } from "./UploadLogo";
 import { useInitialHeight } from "../../hooks/useInitialHeight";
 import { FileCard } from "./BadUpload";
 import { formatBytes } from "@/utils/format";
+import { useBlobUrl } from "../../hooks/useBlobUrl";
+import { useFileDragAndDrop } from "@/components/premium-sources/hooks/useFileDragAndDrop";
+import { Column } from "@/components/Column";
 
 type Props = {
 	selectedFile: File | null;
@@ -23,27 +26,58 @@ export const LogoUploader: FC<Props> = ({
 	onRemoveFile,
 }) => {
 	const [initialHeight, elementRef] = useInitialHeight();
+	const logoUrl = useBlobUrl(selectedFile);
 
-	console.log(initialHeight);
-	if (isDragging) {
+	const dragProps = useFileDragAndDrop(["image/png"]);
+
+	const { dragging, droppedFiles, ...handlers } = dragProps;
+
+	const onFilesDrop = (event: React.DragEvent<Element>) => {
+		const files = event.dataTransfer.files;
+
+		console.log("on files drop");
+		if (files.length > 0) {
+			console.dir(files[0]);
+			onFileSelect(files[0]);
+		}
+
+		dragProps.onDrop(event);
+	};
+
+	const dragHandlers = {
+		...dragProps,
+		onDrop: onFilesDrop,
+	};
+
+	const wrap = (content: ReactNode) => {
 		return (
+			<Column ref={elementRef} {...dragHandlers}>
+				{content}
+			</Column>
+		);
+	};
+
+	if (isDragging) {
+		return wrap(
 			<DraggingFileUpload
-				containerRef={elementRef}
 				sx={{
 					height: initialHeight > 0 ? initialHeight : undefined,
 				}}
-			/>
+			/>,
 		);
 	}
 
 	if (selectedFile) {
-		return (
+		return wrap(
 			<FileCard
 				filename={selectedFile.name}
+				logoSrc={logoUrl}
 				size={formatBytes(selectedFile.size)}
-			/>
+			/>,
 		);
 	}
 
-	return <UploadLogo containerRef={elementRef} />;
+	return wrap(
+		<UploadLogo containerRef={elementRef} dragProps={dragHandlers} />,
+	);
 };

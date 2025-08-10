@@ -13,6 +13,11 @@ import { WhitelabelExample } from "./components/example/WhitelabelExample";
 import { Row } from "@/components/Row";
 import { useElementViewportPosition } from "./hooks/useViewportPosition";
 import { LogoUploader } from "./components/upload/LogoUploader";
+import { useBlobUrl } from "./hooks/useBlobUrl";
+import {
+	useFileDragAndDrop,
+	usePageDragging,
+} from "@/components/premium-sources/hooks/useFileDragAndDrop";
 
 type Props = {};
 
@@ -23,6 +28,13 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		});
 	const [field] = useFieldValue("");
 
+	const [logoFile, setLogoFile] = useState<File | null>(null);
+	const logoUrl = useBlobUrl(logoFile);
+
+	const [smallLogoFile, setSmallLogoFile] = useState<File | null>(null);
+	const smallLogoUrl = useBlobUrl(smallLogoFile);
+
+	const isWindowDragging = usePageDragging();
 	// 	return <Row ref={ref} sx={{
 	// 		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
 
@@ -62,26 +74,28 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							title="Upload Your Full Logo"
 							description="Add your agency's logo to replace the Allsource one"
 						>
-							<UploadLogo />
+							<LogoUploader
+								selectedFile={logoFile}
+								isDragging={isWindowDragging}
+								onFileSelect={setLogoFile}
+								onRemoveFile={() => {
+									setLogoFile(null);
+								}}
+							/>
 						</SettingCard>
-
-						<LogoUploader
-							selectedFile={
-								new File(["very long file"], "my file name", {
-									type: "text/csv",
-								})
-							}
-							isDragging={false}
-							onFileSelect={() => {}}
-							onRemoveFile={() => {}}
-						/>
-
-						<LogoUploader
-							selectedFile={null}
-							isDragging={true}
-							onFileSelect={() => {}}
-							onRemoveFile={() => {}}
-						/>
+						<SettingCard
+							title="Upload Your Full Logo"
+							description="Add your agency's logo to replace the Allsource one"
+						>
+							<LogoUploader
+								selectedFile={smallLogoFile}
+								isDragging={isWindowDragging}
+								onFileSelect={setSmallLogoFile}
+								onRemoveFile={() => {
+									setSmallLogoFile(null);
+								}}
+							/>
+						</SettingCard>
 					</Column>
 				</Paper>
 				<Column flex={1} height="calc(100% - 2rem)">
@@ -94,7 +108,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 						}}
 					>
 						<ComponentTitle>Preview</ComponentTitle>
-						<WhitelabelExample />
+						<WhitelabelExample logoSrc={logoUrl} smallLogoSrc={smallLogoUrl} />
 					</Paper>
 				</Column>
 			</Row>
