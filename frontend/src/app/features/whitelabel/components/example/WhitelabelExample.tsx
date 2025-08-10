@@ -21,6 +21,7 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 				border: "1px solid #E4E4E4",
 				borderRadius: "4px",
 				display: "flex",
+				pointerEvents: "none",
 				overflow: "hidden",
 			}}
 		>
@@ -45,8 +46,9 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 					showAdmin={false}
 					navigate={() => {}}
 				/>
-				<Column width="80vw" overflow="clip">
+				<Column width="min(80vw, 1200px)" overflow="clip">
 					<ImportSourcePageView
+						smallIconSrc={"/logo-icon.svg"}
 						loading={false}
 						showGetStarted={false}
 						hasNotification={false}

@@ -4,11 +4,13 @@ import { Box, Typography } from "@mui/material";
 import type { FC } from "react";
 import { sourceTypes } from "../schemas";
 import { SourceTypeCard } from "../SourceTypeCard";
+import { CsvFieldMapperBlock } from "../components/CsvFieldMapperBlock";
 
 export type Props = {
 	loading: boolean;
 	showGetStarted: boolean;
 	hasNotification: boolean;
+	smallIconSrc?: string;
 	changeSourceBuilderHint: (hint: string) => void;
 	sourceType: string;
 	handleChangeSourceType: (sourceType: string) => void;
@@ -23,7 +25,8 @@ export const ImportSourcePageView: FC<Props> = ({
 	loading,
 	showGetStarted: isGetStartedPage,
 	hasNotification,
-	changeSourceBuilderHint: changeSourcesBuilderHint,
+	changeSourceBuilderHint,
+	smallIconSrc: smallLogoSrc,
 	sourceType,
 	handleChangeSourceType,
 	blockRefs,
@@ -169,8 +172,59 @@ export const ImportSourcePageView: FC<Props> = ({
 								</Box>
 							</Box>
 						</Box>
+						<CsvFieldMapperBlock
+							block3Ref={{ current: null }}
+							smallLogoSrc={smallLogoSrc ?? ""}
+							file={new File([], "")}
+							isChatGPTProcessing={false}
+							hintsProps={{
+								changeHint: () => {},
+								hints: {
+									dataMaping: {},
+								},
+								resetHints: () => {},
+							}}
+							isContinuePressed={false}
+							sourceType={"Customer Conversions"}
+							csvHeaders={["csv header"]}
+							headingsNotSubstitution={{
+								abc: true,
+							}}
+							mappingRows={[
+								{
+									id: 0,
+									type: " ",
+									value: "",
+									canDelete: false,
+									isHidden: false,
+								},
+							]}
+							handleDelete={() => {}}
+							handleAdd={() => {}}
+							handleMapListChange={() => {}}
+						/>
 					</Box>
 				</Box>
+				{/* <PixelDomainSelector
+					block4Ref={{
+						current: null,
+					}}
+					pixelInstalled={false}
+					isDomainSearchProcessing={false}
+					selectedDomain={""}
+					skeletons={{}}
+					domains={[]}
+					renderSkeleton={() => null}
+					handleChangeDomain={() => {}}
+					handlePixelInstall={() => {}}
+					hintProps={{
+						changeHint: () => {},
+						hints: {
+							pixelDomain: {},
+						},
+						resetHints: () => {},
+					}}
+				/> */}
 			</Box>
 		</>
 	);
