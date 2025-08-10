@@ -59,6 +59,7 @@ type Props = {
 	NotificationData: { text: string; id: number } | null;
 	onDismissNotification: () => void;
 	showActions: boolean;
+	headerRef?: React.RefObject<HTMLDivElement>;
 };
 
 export const HeaderView: React.FC<Props> = ({
@@ -66,6 +67,7 @@ export const HeaderView: React.FC<Props> = ({
 	NotificationData,
 	onDismissNotification,
 	showActions,
+	headerRef
 }) => {
 	const pathname = usePathname();
 	const [hasNotification, setHasNotification] = useState(
@@ -182,7 +184,7 @@ export const HeaderView: React.FC<Props> = ({
 		setHasNotification(false);
 	};
 	return (
-		<Box sx={{ display: "flex", width: "100%", flexDirection: "column" }}>
+		<Box sx={{ display: "flex", width: "100%", flexDirection: "column" }} ref={headerRef}>
 			<Box sx={{ display: "block" }}>
 				<Box sx={{ display: { md: "none" } }}>
 					<SliderProvider>

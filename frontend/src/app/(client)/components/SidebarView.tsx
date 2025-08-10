@@ -249,6 +249,7 @@ type SidebarProps = {
 	showAdmin: boolean;
 	showPartner: boolean;
 	navigate: (route: string) => void;
+	height?: string;
 };
 
 export const SidebarView: React.FC<SidebarProps> = ({
@@ -259,6 +260,7 @@ export const SidebarView: React.FC<SidebarProps> = ({
 	navigate,
 	showAdmin,
 	showPartner,
+	height
 }) => {
 	const { backButton } = useUser();
 	const { installedResources } = useSidebar();
@@ -290,20 +292,18 @@ export const SidebarView: React.FC<SidebarProps> = ({
 		<Box
 			sx={{
 				...containerStyles(hasNotification, hasSubheader).container,
-				padding: "2px",
 				display: "flex",
+				height: height ?? null,
 				// maxHeight: "100%",
 				flexDirection: "column",
 				overflow: "scroll",
 				flexGrow: 1,
-				background: "blue",
 				justifyContent: "space-between",
 			}}
 		>
 			<List
 				sx={{
 					...sidebarStyles.menu,
-					background: "red",
 					flexGrow: 1,
 					overflowY: "auto",
 					overflowX: "hidden",

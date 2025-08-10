@@ -16,17 +16,20 @@ import { useElementViewportPosition } from "./hooks/useViewportPosition";
 type Props = {};
 
 export const WhitelabelSettingsPage: FC<Props> = ({}) => {
-	const [ref, yFromTop, pxToBottom] = useElementViewportPosition<HTMLDivElement>()
+	const [ref, yFromTop, pxToBottom] = useElementViewportPosition<HTMLDivElement>({
+		paddingBottom: 12
+	})
 	const [field] = useFieldValue("");
 
 
-	return <Row ref={ref} sx={{
-		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
+// 	return <Row ref={ref} sx={{
+// 		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
 
 
-<T>top: {yFromTop}px</T>
-				<T>bottom: {pxToBottom}px</T>				
-	</Row>
+// <T>top: {yFromTop}px</T>
+// 				<T>bottom: {pxToBottom}px</T>				
+// 	</Row>
+console.log("rerender")
 
 	return (
 		<ThemeProvider theme={whitelabelTheme}>
@@ -34,8 +37,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 				ref={ref}
 				gap="1.5rem"
 				sx={{
-					background: "rgba(0, 0, 0, 0.1)",
-					
+					background: "rgba(0, 0, 0, 0.1)",		
 					height: pxToBottom,
 					padding: 2,
 				}}
@@ -68,14 +70,12 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 						<ErrorBox message="This file is too big" />
 					</Column>
 				</Paper>
-				<Column flex={1}>
+				<Column flex={1} height="calc(100% - 2rem)">
 					<Paper
 						sx={{
-							maxHeight: "80vh",
 							gap: "1rem",
 							display: "flex",
-							flex: 1,
-							background: "orange",
+							height: "100%",
 							flexDirection: "column",
 						}}
 					>
