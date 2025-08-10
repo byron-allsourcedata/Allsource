@@ -11,22 +11,36 @@ import { UploadedLogo } from "./components/upload/UploadedLogo";
 import { ErrorBox, FileCard } from "./components/upload/BadUpload";
 import { WhitelabelExample } from "./components/example/WhitelabelExample";
 import { Row } from "@/components/Row";
+import { useElementViewportPosition } from "./hooks/useViewportPosition";
 
 type Props = {};
 
 export const WhitelabelSettingsPage: FC<Props> = ({}) => {
+	const [ref, yFromTop, pxToBottom] = useElementViewportPosition<HTMLDivElement>()
 	const [field] = useFieldValue("");
+
+
+	return <Row ref={ref} sx={{
+		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
+
+
+<T>top: {yFromTop}px</T>
+				<T>bottom: {pxToBottom}px</T>				
+	</Row>
+
 	return (
 		<ThemeProvider theme={whitelabelTheme}>
 			<Row
+				ref={ref}
 				gap="1.5rem"
 				sx={{
-					background: "black",
-					flex: 1,
-					height: "80vh",
+					background: "rgba(0, 0, 0, 0.1)",
+					
+					height: pxToBottom,
 					padding: 2,
 				}}
 			>
+				
 				<Paper>
 					<Column height="inherit" maxWidth="400px" gap="1rem">
 						<T variant="h2">Whitelabel</T>
