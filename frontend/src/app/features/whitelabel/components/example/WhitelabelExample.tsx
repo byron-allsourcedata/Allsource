@@ -2,14 +2,16 @@ import Header from "@/app/(client)/components/Header";
 import { HeaderView } from "@/app/(client)/components/HeaderView";
 import Sidebar from "@/app/(client)/components/Sidebar";
 import { SidebarView } from "@/app/(client)/components/SidebarView";
+import { ImportSourcePageView } from "@/app/features/sources/builder/pages/ImportSourcePage";
 import { Column } from "@/components/Column";
+import { Row } from "@/components/Row";
 import { Paper } from "@mui/material";
 import { useRef, type FC } from "react";
 
 type Props = {};
 
 export const WhitelabelExample: FC<Props> = ({}) => {
-	const headerRef = useRef<HTMLDivElement | null>(null)
+	const headerRef = useRef<HTMLDivElement | null>(null);
 
 	const headerHeight = headerRef.current?.clientHeight ?? 0;
 	return (
@@ -30,18 +32,33 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 				showActions={false}
 			/>
 
-			<SidebarView
-				height={`calc(100% - ${headerHeight}px)`}
-				showPartner={false}
-				setShowSlider={() => {}}
-				isGetStartedPage={true}
-				loading={false}
-				setLoading={() => {}}
-				hasNotification={false}
-				hasSubheader={false}
-				showAdmin={false}
-				navigate={() => {}}
-			/>
+			<Row>
+				<SidebarView
+					height={`calc(100% - ${headerHeight}px)`}
+					showPartner={false}
+					setShowSlider={() => {}}
+					isGetStartedPage={true}
+					loading={false}
+					setLoading={() => {}}
+					hasNotification={false}
+					hasSubheader={false}
+					showAdmin={false}
+					navigate={() => {}}
+				/>
+				<Column width="80vw" overflow="clip">
+					<ImportSourcePageView
+						loading={false}
+						showGetStarted={false}
+						hasNotification={false}
+						changeSourceBuilderHint={() => {}}
+						sourceType={"Customer Conversions"}
+						handleChangeSourceType={() => {}}
+						blockRefs={{
+							block1: { current: null },
+						}}
+					/>
+				</Column>
+			</Row>
 		</Column>
 	);
 };
