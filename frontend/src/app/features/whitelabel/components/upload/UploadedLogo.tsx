@@ -2,14 +2,17 @@ import { Column } from "@/components/Column";
 import { Row } from "@/components/Row";
 import { T } from "@/components/ui/T";
 import { FileUploadOutlined, UploadFileOutlined } from "@mui/icons-material";
-import { Box, styled } from "@mui/material";
-import type { FC } from "react";
+import { Box, styled, type SxProps } from "@mui/material";
+import type { FC, RefObject } from "react";
 
-type Props = {};
+type Props = {
+	containerRef: RefObject<HTMLDivElement>;
+	sx?: SxProps;
+};
 
-export const UploadedLogo: FC<Props> = () => {
+export const DraggingFileUpload: FC<Props> = ({ containerRef, sx }) => {
 	return (
-		<UploadedLogoContainer>
+		<UploadedLogoContainer sx={sx} ref={containerRef}>
 			<FileUploadOutlined
 				sx={{
 					color: "#3898FC",

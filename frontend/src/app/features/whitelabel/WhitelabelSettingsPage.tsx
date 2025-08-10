@@ -7,29 +7,29 @@ import { Paper, styled, TextField, ThemeProvider } from "@mui/material";
 import { whitelabelTheme } from "./theme";
 import { useFieldValue } from "@/components/premium-sources/hooks/useFieldValue";
 import { UploadLogo } from "./components/upload/UploadLogo";
-import { UploadedLogo } from "./components/upload/UploadedLogo";
+import { DraggingFileUpload } from "./components/upload/UploadedLogo";
 import { ErrorBox, FileCard } from "./components/upload/BadUpload";
 import { WhitelabelExample } from "./components/example/WhitelabelExample";
 import { Row } from "@/components/Row";
 import { useElementViewportPosition } from "./hooks/useViewportPosition";
+import { LogoUploader } from "./components/upload/LogoUploader";
 
 type Props = {};
 
 export const WhitelabelSettingsPage: FC<Props> = ({}) => {
-	const [ref, yFromTop, pxToBottom] = useElementViewportPosition<HTMLDivElement>({
-		paddingBottom: 12
-	})
+	const [ref, yFromTop, pxToBottom] =
+		useElementViewportPosition<HTMLDivElement>({
+			paddingBottom: 12,
+		});
 	const [field] = useFieldValue("");
 
+	// 	return <Row ref={ref} sx={{
+	// 		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
 
-// 	return <Row ref={ref} sx={{
-// 		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
-
-
-// <T>top: {yFromTop}px</T>
-// 				<T>bottom: {pxToBottom}px</T>				
-// 	</Row>
-console.log("rerender")
+	// <T>top: {yFromTop}px</T>
+	// 				<T>bottom: {pxToBottom}px</T>
+	// 	</Row>
+	console.log("rerender");
 
 	return (
 		<ThemeProvider theme={whitelabelTheme}>
@@ -37,15 +37,20 @@ console.log("rerender")
 				ref={ref}
 				gap="1.5rem"
 				sx={{
-					background: "rgba(0, 0, 0, 0.1)",		
+					background: "rgba(0, 0, 0, 0.1)",
 					height: pxToBottom,
 					padding: 2,
 				}}
 			>
-				
 				<Paper>
-					<Column height="inherit" maxWidth="400px" gap="1rem">
+					<Column
+						height="inherit"
+						sx={{ minWidth: "370px" }}
+						maxWidth="400px"
+						gap="1rem"
+					>
 						<T variant="h2">Whitelabel</T>
+
 						<SettingCard
 							title="Enter Your Brand Name"
 							description="This name will appear across the platform as your brand identity"
@@ -60,14 +65,23 @@ console.log("rerender")
 							<UploadLogo />
 						</SettingCard>
 
-						<UploadedLogo />
-
-						<FileCard
-							logoSrc="/logo.svg"
-							filename={"AllsourceLogo.svg"}
-							size={"14 mb"}
+						<LogoUploader
+							selectedFile={
+								new File(["very long file"], "my file name", {
+									type: "text/csv",
+								})
+							}
+							isDragging={false}
+							onFileSelect={() => {}}
+							onRemoveFile={() => {}}
 						/>
-						<ErrorBox message="This file is too big" />
+
+						<LogoUploader
+							selectedFile={null}
+							isDragging={true}
+							onFileSelect={() => {}}
+							onRemoveFile={() => {}}
+						/>
 					</Column>
 				</Paper>
 				<Column flex={1} height="calc(100% - 2rem)">

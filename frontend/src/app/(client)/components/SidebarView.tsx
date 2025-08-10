@@ -260,7 +260,7 @@ export const SidebarView: React.FC<SidebarProps> = ({
 	navigate,
 	showAdmin,
 	showPartner,
-	height
+	height,
 }) => {
 	const { backButton } = useUser();
 	const { installedResources } = useSidebar();

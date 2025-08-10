@@ -5,11 +5,13 @@ import { FileUploadOutlined, UploadFileOutlined } from "@mui/icons-material";
 import { Box, styled } from "@mui/material";
 import type { FC } from "react";
 
-type Props = {};
+type Props = {
+	containerRef: React.RefObject<HTMLDivElement>;
+};
 
-export const UploadLogo: FC<Props> = () => {
+export const UploadLogo: FC<Props> = ({ containerRef }) => {
 	return (
-		<UploadLogoContainer>
+		<UploadLogoContainer ref={containerRef}>
 			<UploadIcon />
 			<Column gap="0.5rem">
 				<Title>Upload a file</Title>

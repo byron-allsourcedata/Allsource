@@ -33,9 +33,9 @@ export const WhitelabelExample: FC<Props> = ({}) => {
 				showActions={false}
 			/>
 
-			<Row>
+			<Row height={`calc(100% - ${headerHeight}px)`} gap="1rem">
 				<SidebarView
-					height={`calc(100% - ${headerHeight}px)`}
+					height={"100%"}
 					showPartner={false}
 					setShowSlider={() => {}}
 					isGetStartedPage={true}
