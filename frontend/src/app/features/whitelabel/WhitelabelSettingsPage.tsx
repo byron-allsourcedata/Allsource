@@ -19,6 +19,7 @@ import { useAxios } from "@/axios/axiosInterceptorInstance";
 import type { UseAxiosResult } from "axios-hooks";
 import useDefaultAxios from "axios-hooks";
 import Image from "next/image";
+import { useFilePicker } from "./hooks/useFilePicker";
 
 export type WhitelabelSettingsSchema = {
 	brand_name: string;
@@ -109,6 +110,27 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 
 	const isWindowDragging = usePageDragging();
 
+	const { openFileDialog: openFileDialog, FileInput: hiddenLogoFileInput } =
+		useFilePicker({
+			accept: "image/svg+xml,image/png",
+			onFileUpload: (files) => {
+				const file = files[0];
+				setLogoFile(file);
+			},
+			multiple: false,
+		});
+
+	const {
+		openFileDialog: openSmallFileDialog,
+		FileInput: hiddenSmallLogoFileInput,
+	} = useFilePicker({
+		accept: "image/svg+xml,image/png",
+		onFileUpload: (files) => {
+			const file = files[0];
+			setSmallLogoFile(file);
+		},
+		multiple: false,
+	});
 	const [{ loading: settingsUpdateLoading }, updateSettings] =
 		usePostWhitelabelSettings();
 
@@ -124,7 +146,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		uploadedSmallLogo,
 		uploadedSmallLogoLoading,
 		uploadedSmallLogoContentType,
-	] = useUploadedLogo(initialSettings?.brand_logo_url);
+	] = useUploadedLogo(initialSettings?.brand_icon_url);
 
 	useEffect(() => {
 		if (uploadedLogo) {
@@ -189,6 +211,8 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 					overflowX: "clip",
 				}}
 			>
+				{hiddenLogoFileInput}
+				{hiddenSmallLogoFileInput}
 				<Paper>
 					<Column
 						height="inherit"
@@ -213,6 +237,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 								logoUrl={logoUrl}
 								selectedFile={logoFile}
 								isDragging={isWindowDragging}
+								onOpenFilePicker={openFileDialog}
 								onFileSelect={setLogoFile}
 								onRemoveFile={() => {
 									setLogoUrl("/logo.svg");
@@ -232,6 +257,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 								logoUrl={smallLogoUrl}
 								selectedFile={smallLogoFile}
 								isDragging={isWindowDragging}
+								onOpenFilePicker={openSmallFileDialog}
 								onFileSelect={setSmallLogoFile}
 								onRemoveFile={() => {
 									setSmallLogoUrl("/logo-icon.svg");
@@ -240,7 +266,10 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							/>
 						</SettingCard>
 						<Row width="inherit" justifyContent="flex-end">
-							<CustomButton disabled={settingsUpdateLoading} onClick={onSave}>
+							<CustomButton
+								disabled={settingsUpdateLoading || !brandNameField.value}
+								onClick={onSave}
+							>
 								Save
 							</CustomButton>
 						</Row>

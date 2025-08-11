@@ -14,6 +14,7 @@ type Props = {
 	allowedTypes?: string[];
 	logoUrl?: string;
 	maxSize?: number;
+	onOpenFilePicker: () => void;
 	onFileSelect: (newFile: File) => void;
 	onRemoveFile: () => void;
 	image?: {
@@ -28,6 +29,7 @@ export const LogoUploader: FC<Props> = ({
 	logoUrl,
 	allowedTypes,
 	maxSize,
+	onOpenFilePicker,
 	onFileSelect,
 	onRemoveFile,
 	image,
@@ -87,6 +89,10 @@ export const LogoUploader: FC<Props> = ({
 	}
 
 	return wrap(
-		<UploadLogo containerRef={elementRef} dragProps={dragHandlers} />,
+		<UploadLogo
+			containerRef={elementRef}
+			dragProps={dragHandlers}
+			onClick={onOpenFilePicker}
+		/>,
 	);
 };

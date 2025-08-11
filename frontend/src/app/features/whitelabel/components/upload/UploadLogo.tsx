@@ -9,11 +9,12 @@ import type { FC } from "react";
 type Props = {
 	containerRef: React.RefObject<HTMLDivElement>;
 	dragProps: FileDnd;
+	onClick: () => void;
 };
 
-export const UploadLogo: FC<Props> = ({ containerRef, dragProps }) => {
+export const UploadLogo: FC<Props> = ({ containerRef, dragProps, onClick }) => {
 	return (
-		<UploadLogoContainer ref={containerRef} {...dragProps}>
+		<UploadLogoContainer ref={containerRef} {...dragProps} onClick={onClick}>
 			<UploadIcon />
 			<Column gap="0.5rem">
 				<Title>Upload a file</Title>
