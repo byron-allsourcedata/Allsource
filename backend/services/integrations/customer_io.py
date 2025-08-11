@@ -324,4 +324,3 @@ def get_datasync_imported_ids(db_session: Db, data_sync_id: int):
         DataSyncImportedLead.data_sync_id == data_sync_id
     )
     return db_session.execute(stmt).scalars().all()
-

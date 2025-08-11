@@ -665,13 +665,14 @@ async def kajabi_webhook(
 
     return {"status": "success", "domain": domain, "event": event_type}
 
+
 @router.get("/customer-io")
-async def customer_io_test_api_connection(integration_service: IntegrationService, api_token: str):
+async def customer_io_test_api_connection(
+    integration_service: IntegrationService, api_token: str
+):
     service = integration_service.customer_io
     # Customer.io always send "success" (even if token is incorrect),
     # but function needs to return some value anyway
     is_success = service.test_api_token(api_token)
 
-    return {
-        "status": is_success
-    }
+    return {"status": is_success}

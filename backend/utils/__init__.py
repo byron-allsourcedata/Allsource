@@ -185,17 +185,20 @@ def validate_and_format_phone(phone_numbers: str) -> str | None:
     else:
         return None
 
+
 class AddressInfo(NamedTuple):
     address: str | None
     city: str | None
     state: str | None
     zip: str | None
 
+
 def get_valid_location(
     user: FiveXFiveUser,
 ) -> AddressInfo:
     return AddressInfo(
-        getattr(user, "personal_address") or getattr(user, "company_address", None),
+        getattr(user, "personal_address")
+        or getattr(user, "company_address", None),
         getattr(user, "personal_city") or getattr(user, "company_city", None),
         getattr(user, "personal_state") or getattr(user, "company_state", None),
         getattr(user, "personal_zip") or getattr(user, "company_zip", None),
