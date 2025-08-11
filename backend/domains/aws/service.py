@@ -13,6 +13,7 @@ class AwsService:
     def __init__(self, aws_service: OldAwsService) -> None:
         self.old_aws_service = aws_service
 
+        self.BUCKET_NAME = "allsource-data"
         self.s3_client = boto3.client(
             "s3",
             aws_access_key_id=os.getenv("S3_KEY_ID"),
@@ -20,6 +21,16 @@ class AwsService:
             region_name="us-east-2",
             config=Config(signature_version="s3v4"),
         )
+
+    def upload_file(self, object_name: str, file_bytes: bytes) -> str:
+        _ = self.s3_client.put_object(
+            Bucket="allsource-data", Key=object_name, Body=file_bytes
+        )
+
+        return self.get_file_url(object_name)
+
+    def get_file_url(self, object_key: str) -> str:
+        return f"https://{self.BUCKET_NAME}.s3.amazonaws.com/{object_key}"
 
     def presign_upload_url(
         self, bucket_name: str, object_name: str, max_bytes: int

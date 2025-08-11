@@ -2,6 +2,7 @@ import logging
 from fastapi import APIRouter, File, Form, UploadFile, status
 
 from auth_dependencies import AuthUser
+from domains.whitelabel.services.aws import WhitelabelAwsService
 
 from .schemas import WhitelabelSettingsSchema
 from .service import WhitelabelService
@@ -27,6 +28,7 @@ async def is_whitelabel_enabled(user: AuthUser) -> bool:
 @router.post("/settings")
 async def update_whitelabel_settings(
     user: AuthUser,
+    service: WhitelabelService,
     brand_name: str = Form(...),
     logo: UploadFile = File(...),
     small_logo: UploadFile = File(...),
@@ -37,9 +39,17 @@ async def update_whitelabel_settings(
         )
         return status.HTTP_404_NOT_FOUND
 
-    # check that user has whitelabel settings enabled
+    service.update_whitelabel_settings(
+        user_id=user["id"],
+        brand_name=brand_name,
+        brand_logo=logo,
+        brand_icon=small_logo,
+    )
+
     # check that files have small enough size
+
     # upload files to s3
+
     # save links to db
     logger.info(logo.filename)
     logger.info(small_logo.filename)

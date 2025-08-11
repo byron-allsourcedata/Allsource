@@ -21,8 +21,8 @@ class WhitelabelSettingsPersistence:
         self,
         user_id: int,
         brand_name: str,
-        brand_logo_url: str,
-        brand_icon_url: str,
+        brand_logo_url: str | None,
+        brand_icon_url: str | None,
     ):
         return (
             self.db.query(WhitelabelSettings)
