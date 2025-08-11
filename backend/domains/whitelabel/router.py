@@ -30,6 +30,14 @@ async def is_whitelabel_enabled(user: AuthUser) -> bool:
     return user.get("whitelabel_settings_enabled")
 
 
+@router.get("/icons")
+async def get_whitelabel_icons(
+    user: AuthUser, whitelabel_service: WhitelabelService
+) -> WhitelabelSettingsSchema:
+    user_id = user.get("id")
+    return whitelabel_service.get_whitelabel_settings(user_id)
+
+
 @router.post("/settings")
 async def update_whitelabel_settings(
     user: AuthUser,

@@ -36,7 +36,7 @@ export const LogoUploader: FC<Props> = ({
 }) => {
 	const [initialHeight, elementRef] = useInitialHeight();
 
-	const dragProps = useFileDragAndDrop(["image/png"]);
+	const dragProps = useFileDragAndDrop(["image/png", "image/svg+xml"]);
 
 	const { dragging, droppedFiles, ...handlers } = dragProps;
 
