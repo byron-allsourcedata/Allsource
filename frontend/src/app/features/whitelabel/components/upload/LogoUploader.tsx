@@ -43,10 +43,13 @@ export const LogoUploader: FC<Props> = ({
 	const onFilesDrop = (event: React.DragEvent<Element>) => {
 		const files = event.dataTransfer.files;
 
-		console.log("on files drop");
 		if (files.length > 0) {
-			console.dir(files[0]);
-			onFileSelect(files[0]);
+			const file = files[0];
+			const contentType = file.type;
+
+			if (["image/png", "image/svg+xml"].find((ff) => ff === contentType)) {
+				onFileSelect(files[0]);
+			}
 		}
 
 		dragProps.onDrop(event);

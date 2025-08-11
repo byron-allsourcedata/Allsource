@@ -23,6 +23,10 @@ async def get_whitelabel_settings(
 
 @router.get("/is-enabled")
 async def is_whitelabel_enabled(user: AuthUser) -> bool:
+    logger.info(
+        "user whitelabel enabled: "
+        + str(user.get("whitelabel_settings_enabled"))
+    )
     return user.get("whitelabel_settings_enabled")
 
 
