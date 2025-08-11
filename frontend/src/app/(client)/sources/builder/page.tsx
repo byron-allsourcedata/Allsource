@@ -5,6 +5,9 @@ import React, {
 	useEffect,
 	useRef,
 	Suspense,
+	FC,
+	RefObject,
+	ReactNode,
 } from "react";
 import {
 	Box,
@@ -45,6 +48,18 @@ import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
 import { BuilderKey } from "../context/hintsCardsContent";
 import HintBanner from "./components/HintBanner";
+import { SourceTypeCard } from "@/app/features/sources/builder/SourceTypeCard";
+import { sourceTypes } from "@/app/features/sources/builder/schemas";
+import {
+	HintAction,
+	HintCardInterface,
+	HintStateMap,
+} from "@/utils/hintsUtils";
+import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinearProgress";
+import {
+	PixelDomainSelector,
+	type SkeletonState,
+} from "@/app/features/sources/builder/components/PixelDomainSelector";
 
 interface Row {
 	id: number;
@@ -76,7 +91,7 @@ interface NewSource {
 	domain_id?: number;
 }
 
-interface DomainsLeads {
+export interface DomainsLeads {
 	id: number;
 	name: string;
 	pixel_installed: boolean;
@@ -86,16 +101,6 @@ interface DomainsLeads {
 	abandoned_cart_count: number;
 	total_count: number;
 }
-
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-	height: 4,
-	borderRadius: 0,
-	backgroundColor: "#c6dafc",
-	"& .MuiLinearProgress-bar": {
-		borderRadius: 5,
-		backgroundColor: "#4285f4",
-	},
-}));
 
 const SourcesImport: React.FC = () => {
 	const {
@@ -134,8 +139,6 @@ const SourcesImport: React.FC = () => {
 	const [showTargetStep, setShowTargetStep] = useState(false);
 
 	const [showModal, setShowModal] = useState(false);
-
-	type SkeletonState = Record<BuilderKey, boolean>;
 
 	const defautlHeadingSubstitution = {
 		Email: false,
@@ -972,80 +975,13 @@ const SourcesImport: React.FC = () => {
 									}}
 								>
 									<Box display="flex" gap="16px" sx={{ position: "relative" }}>
-										{[
-											{
-												title: "Website - Pixel",
-												src: "/website_pixel-icon.svg",
-												description: "Use your resolved Pixel contacts",
-											},
-											{
-												title: "Customer Conversions",
-												src: "/customer_conversions-icon.svg",
-												description: "Use information about completed deals",
-											},
-											{
-												title: "Failed Leads",
-												src: "/failed_leads-icon.svg",
-												description:
-													"Use CSV file with engaged but non-converting users",
-											},
-											{
-												title: "Interest",
-												src: "/interests-icon.svg",
-												description:
-													"Use information about users interested in specific topic",
-											},
-										].map((el, index) => (
-											<CardActionArea
+										{sourceTypes.map((el, index) => (
+											<SourceTypeCard
 												key={index}
-												onClick={() => handleChangeSourceType(el.title)}
-												sx={{
-													...sourcesStyles.cardSourceType,
-													backgroundColor:
-														sourceType === el.title
-															? "rgba(240, 242, 245, 1)"
-															: "rgba(255, 255, 255, 1)",
-													borderColor:
-														sourceType === el.title
-															? "rgba(56, 152, 252, 1)"
-															: "rgba(228, 228, 228, 1)",
-												}}
-											>
-												<CardMedia>
-													<Image
-														src={el.src}
-														alt="website_pixel-icon"
-														width={32}
-														height={32}
-													/>
-												</CardMedia>
-												<CardContent
-													sx={{
-														display: "flex",
-														flexDirection: "column",
-														gap: 0.5,
-														p: 0,
-														"&:last-child": { pb: "0" },
-													}}
-												>
-													<Typography
-														className="seventh-sub-title"
-														style={{ color: "#4A4A4A" }}
-													>
-														{el.title}
-													</Typography>
-													<Typography
-														className="third-sub-title"
-														style={{
-															color: "#4A4A4A",
-															whiteSpace: "normal",
-															wordBreak: "break-word",
-														}}
-													>
-														{el.description}
-													</Typography>
-												</CardContent>
-											</CardActionArea>
+												onSelect={handleChangeSourceType}
+												selectedSourceType={sourceType}
+												sourceTypeSchema={el}
+											/>
 										))}
 										{sourcesBuilderHints["sourceType"].show && (
 											<HintCard
@@ -1701,222 +1637,22 @@ const SourcesImport: React.FC = () => {
 							)}
 
 							{sourceMethod === 2 && (
-								<Box
-									ref={block4Ref}
-									sx={{
-										display: "flex",
-										flexDirection: "column",
+								<PixelDomainSelector
+									block4Ref={block4Ref}
+									pixelInstalled={!pixelNotInstalled}
+									isDomainSearchProcessing={isDomainSearchProcessing}
+									selectedDomain={selectedDomain}
+									skeletons={skeletons}
+									domains={domains}
+									renderSkeleton={renderSkeleton}
+									handleChangeDomain={handleChangeDomain}
+									handlePixelInstall={handlePixelInstall}
+									hintProps={{
+										changeHint: changeSourcesBuilderHint,
+										hints: sourcesBuilderHints,
+										resetHints: resetSourcesBuilderHints,
 									}}
-								>
-									{!skeletons["pixelDomain"] && (
-										<Box
-											sx={{
-												display: "flex",
-												flexDirection: "column",
-												gap: 2,
-												position: "relative",
-												flexWrap: "wrap",
-												border: "1px solid rgba(228, 228, 228, 1)",
-												borderRadius: "6px",
-												padding: "20px",
-											}}
-										>
-											{isDomainSearchProcessing && (
-												<Box
-													sx={{
-														width: "100%",
-														position: "absolute",
-														top: 0,
-														left: 0,
-														zIndex: 1200,
-													}}
-												>
-													<BorderLinearProgress
-														variant="indeterminate"
-														sx={{ borderRadius: "6px" }}
-													/>
-												</Box>
-											)}
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "column",
-													gap: 1,
-												}}
-											>
-												<Typography
-													sx={{
-														fontFamily: "var(--font-nunito)",
-														fontSize: "16px",
-														fontWeight: 500,
-													}}
-												>
-													Select your domain
-												</Typography>
-												<Typography
-													sx={{
-														fontFamily: "var(--font-roboto)",
-														fontSize: "12px",
-														color: "rgba(95, 99, 104, 1)",
-													}}
-												>
-													Please select your domain.
-												</Typography>
-											</Box>
-											<FormControl variant="outlined">
-												<Select
-													value={selectedDomain}
-													onChange={handleChangeDomain}
-													displayEmpty
-													MenuProps={{
-														MenuListProps: {
-															sx: {
-																pb: 0,
-																pt: pixelNotInstalled ? 0 : "inherit",
-															},
-														},
-													}}
-													sx={{
-														...sourcesStyles.text,
-														width: "316px",
-														borderRadius: "4px",
-														fontFamily: "var(--font-roboto)",
-														fontSize: "14px",
-														color:
-															selectedDomain === ""
-																? "rgba(112, 112, 113, 1)"
-																: "rgba(32, 33, 36, 1)",
-														"@media (max-width: 390px)": {
-															width: "calc(100vw - 74px)",
-														},
-													}}
-												>
-													<MenuItem
-														value=""
-														disabled
-														sx={{
-															display: "none",
-														}}
-													>
-														Select domain
-													</MenuItem>
-													{pixelNotInstalled && (
-														<MenuItem
-															sx={{
-																p: 0,
-																display: "flex",
-																justifyContent: "center",
-																width: "100%",
-																backgroundColor: "#ffffff !important",
-																"&:hover": {
-																	backgroundColor: "#ffffff !important",
-																},
-															}}
-														>
-															<Box
-																sx={{
-																	width: "100%",
-																	display: "flex",
-																	justifyContent: "center",
-																	padding: "6px 16px",
-																	borderBottom:
-																		"1px solid rgba(228, 228, 228, 1)",
-																	cursor: "pointer",
-																}}
-																onClick={(e) => {
-																	e.stopPropagation();
-																	handlePixelInstall();
-																}}
-															>
-																<Typography
-																	sx={{
-																		fontFamily: "var(--font-nunito)",
-																		lineHeight: "22.4px",
-																		textDecoration: "underline",
-																		fontSize: "14px",
-																		fontWeight: "600",
-																		color: "rgba(56, 152, 252, 1)",
-																	}}
-																>
-																	+ Add a new pixel to domain
-																</Typography>
-															</Box>
-														</MenuItem>
-													)}
-													{domains.map((item: DomainsLeads, index) => (
-														<MenuItem
-															sx={{
-																fontFamily: "var(--font-roboto)",
-																fontWeight: 400,
-																fontSize: "14px",
-																borderBottom:
-																	"1px solid rgba(228, 228, 228, 1)",
-															}}
-															key={index}
-															value={item.name}
-														>
-															{item.name}
-														</MenuItem>
-													))}
-												</Select>
-												{sourcesBuilderHints["pixelDomain"].show && (
-													<HintCard
-														card={builderHintCards["pixelDomain"]}
-														positionLeft={340}
-														isOpenBody={
-															sourcesBuilderHints["pixelDomain"].showBody
-														}
-														toggleClick={() =>
-															changeSourcesBuilderHint(
-																"pixelDomain",
-																"showBody",
-																"toggle",
-															)
-														}
-														closeClick={() =>
-															changeSourcesBuilderHint(
-																"pixelDomain",
-																"showBody",
-																"close",
-															)
-														}
-													/>
-												)}
-											</FormControl>
-											{selectedDomain && (
-												<Box
-													sx={{
-														display: "flex",
-														flexDirection: "column",
-														gap: 1,
-													}}
-												>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-roboto)",
-															fontSize: "14px",
-															color: "rgba(32, 33, 36, 1)",
-														}}
-													>
-														Total Leads
-													</Typography>
-													<Typography
-														className="second-sub-title"
-														sx={{
-															fontFamily: "Nunino Sans",
-															fontWeight: 600,
-															fontSize: "16px",
-															color: "rgba(33, 33, 33, 1))",
-														}}
-													>
-														{totalLeads}
-													</Typography>
-												</Box>
-											)}
-										</Box>
-									)}
-									{renderSkeleton("pixelDomain")}
-								</Box>
+								/>
 							)}
 
 							{sourceMethod === 2 && selectedDomainId ? (

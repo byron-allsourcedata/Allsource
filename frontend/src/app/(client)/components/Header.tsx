@@ -28,6 +28,8 @@ import { usePathname } from "next/navigation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
 import { getCurrentImpersonationLevel } from "@/utils/impersonation";
+import { useAxios } from "@/axios/axiosInterceptorInstance";
+import { WhitelabelSettingsSchema } from "@/app/features/whitelabel/WhitelabelSettingsPage";
 
 const headerStyles = {
 	headers: {
@@ -58,6 +60,13 @@ interface HeaderProps {
 	NewRequestNotification: boolean;
 	NotificationData: { text: string; id: number } | null;
 	onDismissNotification: () => void;
+}
+
+function useWhitelabelIcons() {
+	return useAxios<WhitelabelSettingsSchema>({
+		url: "/whitelabel/icons",
+		method: "GET",
+	});
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -95,6 +104,8 @@ const Header: React.FC<HeaderProps> = ({
 	const returnToAdmin = useReturnToAdmin();
 	const [returnButtonText, setReturnButtonText] = useState("Return");
 	const { showHints, toggleHints } = useHints();
+
+	const [{ data: whitelabelData }] = useWhitelabelIcons();
 
 	const getMeData = () => {
 		if (typeof window === "undefined") return { full_name: "", email: "" };
@@ -248,13 +259,15 @@ const Header: React.FC<HeaderProps> = ({
 								padding: "2px",
 							}}
 						>
-							<Image
-								priority
-								src="/logo.svg"
-								alt="logo"
-								height={30}
-								width={130}
-							/>
+							{whitelabelData && (
+								<Image
+									priority
+									src={whitelabelData.brand_logo_url ?? "/logo.svg"}
+									alt="logo"
+									height={30}
+									width={130}
+								/>
+							)}
 						</IconButton>
 						{visibleButton && (
 							<Button

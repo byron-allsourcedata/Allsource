@@ -5,7 +5,7 @@ from typing import Optional, TypedDict
 from decimal import Decimal
 
 import pytz
-from sqlalchemy import func, desc, asc, or_, and_, select, update, case, exists
+from sqlalchemy import func, desc, asc, or_, and_, select, update, case
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import case as caseSQl, literal_column
 
@@ -50,6 +50,7 @@ class UserDict(TypedDict):
     current_subscription_id: int
     random_seed: int
     team_owner_id: int | None
+    whitelabel_settings_enabled: bool
 
 
 @injectable
@@ -230,6 +231,7 @@ class UserPersistence:
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
                 "is_email_validation_enabled": user.is_email_validation_enabled,
+                "whitelabel_settings_enabled": user.whitelabel_settings_enabled,
                 "random_seed": user.random_seed,
             }
         self.db.rollback()

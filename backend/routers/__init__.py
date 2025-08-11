@@ -33,6 +33,8 @@ from routers import (
     privacy_policy,
 )
 
+from domains import whitelabel
+
 main_router = APIRouter()
 
 main_router.include_router(subscriptions.router, prefix="/subscriptions")
@@ -76,3 +78,4 @@ main_router.include_router(
 main_router.include_router(insights.router, prefix="/audience-insights")
 main_router.include_router(opt_out.router, prefix="/opt-out")
 main_router.include_router(privacy_policy.router, prefix="/privacy-policy")
+main_router.include_router(whitelabel.router, prefix="/whitelabel")

@@ -10,6 +10,7 @@ from sqlalchemy import (
     ForeignKey,
     Sequence,
 )
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
@@ -33,7 +34,7 @@ class ReferralUser(Base):
     user_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    parent_user_id = Column(
+    parent_user_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     discount_code_id = Column(

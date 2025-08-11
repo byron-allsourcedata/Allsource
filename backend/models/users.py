@@ -135,6 +135,13 @@ class Users(Base):
         Boolean, nullable=False, server_default=text("false")
     )
 
+    whitelabel_settings_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    """
+    are whitelabel settings enabled and showing for that account
+    """
+
     random_seed: Column[int] = Column(
         Integer, nullable=False, server_default=text("42")
     )

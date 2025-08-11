@@ -46,7 +46,7 @@ from persistence.referral_user import ReferralUserPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
-from persistence.user_persistence import UserPersistence
+from persistence.user_persistence import UserDict, UserPersistence
 from schemas.auth_token import Token
 from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
@@ -248,7 +248,7 @@ def check_user_authentication(
     return user
 
 
-AuthUser = Annotated[dict, Depends(check_user_authentication)]
+AuthUser = Annotated[UserDict, Depends(check_user_authentication)]
 
 
 def check_domain(
