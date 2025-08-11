@@ -78,7 +78,7 @@ class IntegrationCredentials(BaseModel):
     woocommerce: Optional[WoocommerceCredentials] = None
     bigcommerce: Optional[
         ShopifyOrBigcommerceCredentials | ExternalAppInstalled
-        ] = None
+    ] = None
     klaviyo: Optional[ApiKeyCredentials] = None
     mailchimp: Optional[ApiKeyCredentials] = None
     attentive: Optional[ApiKeyCredentials] = None

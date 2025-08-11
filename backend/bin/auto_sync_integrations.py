@@ -11,7 +11,9 @@ from dependencies import (
 
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.engine import create_engine
-from persistence.integrations.integrations_persistence import IntegrationsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPersistence,
+)
 import dotenv
 
 

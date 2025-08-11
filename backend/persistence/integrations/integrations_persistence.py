@@ -152,9 +152,7 @@ class IntegrationsPersistence:
 
         return user_integration
 
-    def update_credential_for_slack(
-        self, domain_id: int, access_token: str
-    ):
+    def update_credential_for_slack(self, domain_id: int, access_token: str):
         user_integration = (
             self.db.query(UserIntegration)
             .filter(

@@ -438,9 +438,9 @@ class ProccessDataSyncResult(Enum):
     PAYMENT_REQUIRED = "payment_required"
     QUOTA_EXHAUSTED = "quota_exhausted"
 
+
 ProccessDataSyncStatusLiteral = Literal[
     # Copied from ProccessDataSyncResult
-
     "incorrect_format",
     "failed",
     "success",
@@ -453,7 +453,7 @@ ProccessDataSyncStatusLiteral = Literal[
     "too_many_requests",
     "verify_email_failed",
     "payment_required",
-    "quota_exhausted"
+    "quota_exhausted",
 ]
 
 
