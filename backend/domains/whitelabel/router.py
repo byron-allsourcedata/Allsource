@@ -1,4 +1,5 @@
-from fastapi import APIRouter, File, UploadFile
+import logging
+from fastapi import APIRouter, File, Form, UploadFile, status
 
 from auth_dependencies import AuthUser
 
@@ -6,6 +7,8 @@ from .schemas import WhitelabelSettingsSchema
 from .service import WhitelabelService
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("/settings")
@@ -24,13 +27,22 @@ async def is_whitelabel_enabled(user: AuthUser) -> bool:
 @router.post("/settings")
 async def update_whitelabel_settings(
     user: AuthUser,
-    whitelabel_settings: WhitelabelSettingsSchema,
-    brand_name: str,
+    brand_name: str = Form(...),
     logo: UploadFile = File(...),
     small_logo: UploadFile = File(...),
 ):
-    print(logo.filename)
-    print(small_logo.filename)
-    print(brand_name)
+    if not user["whitelabel_settings_enabled"]:
+        logger.info(
+            f"user {user['email']} tried to update whitelabel settings, even though it is disabled"
+        )
+        return status.HTTP_404_NOT_FOUND
+
+    # check that user has whitelabel settings enabled
+    # check that files have small enough size
+    # upload files to s3
+    # save links to db
+    logger.info(logo.filename)
+    logger.info(small_logo.filename)
+    logger.info(brand_name)
 
     return

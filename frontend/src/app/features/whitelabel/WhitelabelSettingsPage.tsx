@@ -14,6 +14,9 @@ import { useBlobUrl } from "./hooks/useBlobUrl";
 import { usePageDragging } from "@/components/premium-sources/hooks/useFileDragAndDrop";
 import { CustomButton } from "@/components/ui";
 
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import { useAxios } from "@/axios/axiosInterceptorInstance";
+
 type Props = {};
 
 export const WhitelabelSettingsPage: FC<Props> = ({}) => {
@@ -31,7 +34,27 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 
 	const isWindowDragging = usePageDragging();
 
-	const onSave = () => {};
+	const [{ data, loading: settingsUpdateLoading }, updateSettings] = useAxios({
+		url: "/whitelabel/settings",
+		method: "POST",
+	});
+
+	const onSave = () => {
+		if (!settingsUpdateLoading) {
+			const formData = new FormData();
+			formData.append("brand_name", brandNameField.value);
+			formData.append("logo", logoFile || "");
+			formData.append("small_logo", smallLogoFile || "");
+			updateSettings({ data: formData })
+				.then(() => {
+					showToast("Whitelabel settings updated");
+				})
+				.catch((error) => {
+					console.error(error);
+					showErrorToast("Error while updating whitelabel settings");
+				});
+		}
+	};
 	// 	return <Row ref={ref} sx={{
 	// 		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
 
@@ -97,7 +120,9 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							/>
 						</SettingCard>
 						<Row width="inherit" justifyContent="flex-end">
-							<CustomButton onClick={onSave}>Save</CustomButton>
+							<CustomButton disabled={settingsUpdateLoading} onClick={onSave}>
+								Save
+							</CustomButton>
 						</Row>
 					</Column>
 				</Paper>
