@@ -15,6 +15,7 @@ export type Props = {
 	sourceType: string;
 	handleChangeSourceType: (sourceType: string) => void;
 	blockRefs: ImportSourceBlockRefs;
+	brandName?: string;
 };
 
 type ImportSourceBlockRefs = {
@@ -25,6 +26,7 @@ export const ImportSourcePageView: FC<Props> = ({
 	loading,
 	showGetStarted: isGetStartedPage,
 	hasNotification,
+	brandName = "Allsource",
 	changeSourceBuilderHint,
 	smallIconSrc: smallLogoSrc,
 	sourceType,
@@ -122,7 +124,7 @@ export const ImportSourcePageView: FC<Props> = ({
 											color: "rgba(95, 99, 104, 1)",
 										}}
 									>
-										Choose your data source, and let Allsource AI Audience
+										Choose your data source, and let {brandName} AI Audience
 										Algorithm identify high-intent leads and create lookalike
 										audiences to slash your acquisition costs.
 									</Typography>

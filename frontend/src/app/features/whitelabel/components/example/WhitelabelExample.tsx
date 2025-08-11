@@ -6,11 +6,16 @@ import { Row } from "@/components/Row";
 import { useRef, type FC } from "react";
 
 type Props = {
+	brandName?: string;
 	logoSrc?: string;
 	smallLogoSrc?: string;
 };
 
-export const WhitelabelExample: FC<Props> = ({ logoSrc, smallLogoSrc }) => {
+export const WhitelabelExample: FC<Props> = ({
+	brandName,
+	logoSrc,
+	smallLogoSrc,
+}) => {
 	const headerRef = useRef<HTMLDivElement | null>(null);
 
 	const headerHeight = headerRef.current?.clientHeight ?? 0;
@@ -49,6 +54,7 @@ export const WhitelabelExample: FC<Props> = ({ logoSrc, smallLogoSrc }) => {
 				/>
 				<Column width="min(80vw, 1200px)" overflow="clip">
 					<ImportSourcePageView
+						brandName={brandName}
 						smallIconSrc={smallLogoSrc}
 						loading={false}
 						showGetStarted={false}

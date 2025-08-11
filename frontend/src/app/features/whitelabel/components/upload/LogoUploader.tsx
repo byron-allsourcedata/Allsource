@@ -15,6 +15,10 @@ type Props = {
 	maxSize?: number;
 	onFileSelect: (newFile: File) => void;
 	onRemoveFile: () => void;
+	image?: {
+		width?: number;
+		height?: number;
+	};
 };
 
 export const LogoUploader: FC<Props> = ({
@@ -24,6 +28,7 @@ export const LogoUploader: FC<Props> = ({
 	maxSize,
 	onFileSelect,
 	onRemoveFile,
+	image,
 }) => {
 	const [initialHeight, elementRef] = useInitialHeight();
 	const logoUrl = useBlobUrl(selectedFile);
@@ -73,6 +78,8 @@ export const LogoUploader: FC<Props> = ({
 				filename={selectedFile.name}
 				logoSrc={logoUrl}
 				size={formatBytes(selectedFile.size)}
+				width={image?.width}
+				height={image?.height}
 			/>,
 		);
 	}

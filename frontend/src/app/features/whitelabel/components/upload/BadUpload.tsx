@@ -41,6 +41,8 @@ type FileCardProps = {
 	size: string;
 	logoSrc?: string;
 	onDelete?: () => void;
+	width?: number;
+	height?: number;
 };
 
 export const FileCard: FC<FileCardProps> = ({
@@ -48,20 +50,50 @@ export const FileCard: FC<FileCardProps> = ({
 	size,
 	logoSrc,
 	onDelete,
+	width,
+	height,
 }) => (
-	<StyledFileCard elevation={0} variant="outlined">
+	<StyledFileCard
+		elevation={0}
+		variant="outlined"
+		sx={{ display: "flex", alignItems: "center", gap: 1 }}
+	>
 		{logoSrc ? (
-			<Image src={logoSrc} alt={filename} width={40} height={40} />
+			<Image
+				src={logoSrc}
+				alt={filename}
+				width={width ?? 40}
+				height={height ?? 40}
+			/>
 		) : (
-			<Box width={40} height={40} />
+			<Box width={width ?? 40} height={height ?? 40} />
 		)}
-		<Box>
-			<Typography>{filename}</Typography>
-			<Typography variant="body2" color="text.secondary">
+
+		<Box sx={{ minWidth: 0, flexGrow: 1 }}>
+			<Typography
+				noWrap
+				sx={{
+					textOverflow: "ellipsis",
+					overflow: "hidden",
+					whiteSpace: "nowrap",
+				}}
+			>
+				{filename}
+			</Typography>
+			<Typography
+				variant="body2"
+				color="text.secondary"
+				noWrap
+				sx={{
+					textOverflow: "ellipsis",
+					overflow: "hidden",
+					whiteSpace: "nowrap",
+				}}
+			>
 				{size}
 			</Typography>
 		</Box>
-		<Box flexGrow={1} />
+
 		<IconButton aria-label="delete" onClick={onDelete}>
 			<DeleteOutlineIcon />
 		</IconButton>

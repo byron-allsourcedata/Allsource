@@ -10,17 +10,22 @@ type Props = {
 	children: ReactNode;
 };
 
-export const SettingCard: FC<Props> = ({ sx, children }) => {
+export const SettingCard: FC<Props> = ({
+	sx,
+	title,
+	description,
+	children,
+}) => {
 	return (
-		<Column sx={sx}>
-			<Column gap="0.5rem">
-				<T>Enter Your Brand Name</T>
-				<T variant="subtitle1">
-					This name will appear across the platform as your brand identity
-				</T>
+		<Paper>
+			<Column sx={sx} gap="1rem">
+				<Column gap="0.5rem">
+					<T>{title}</T>
+					<T variant="subtitle1">{description}</T>
+				</Column>
+				{children}
 			</Column>
-			{children}
-		</Column>
+		</Paper>
 	);
 };
 
