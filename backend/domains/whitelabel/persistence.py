@@ -1,4 +1,6 @@
 from sqlalchemy.dialects.postgresql import insert
+from models.referral_users import ReferralUser
+from models.users import Users
 from models.whitelabel_settings import WhitelabelSettings
 from resolver import injectable
 from db_dependencies import Db
@@ -12,9 +14,23 @@ class WhitelabelSettingsPersistence:
     def get_whitelabel_settings(
         self, user_id: int
     ) -> WhitelabelSettings | None:
+        user = self.db.query(Users).where(Users.id == user_id).first()
+        if user is None:
+            return None
+        referal_user = (
+            self.db.query(ReferralUser)
+            .where(ReferralUser.user_id == user_id)
+            .first()
+        )
+
+        if referal_user is not None:
+            check_setttings_for_user_id = referal_user.parent_user_id
+        else:
+            check_setttings_for_user_id = user_id
+
         return (
             self.db.query(WhitelabelSettings)
-            .where(WhitelabelSettings.user_id == user_id)
+            .where(WhitelabelSettings.user_id == check_setttings_for_user_id)
             .first()
         )
 
