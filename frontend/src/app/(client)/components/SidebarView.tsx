@@ -634,12 +634,7 @@ export const SidebarView: React.FC<SidebarProps> = ({
 					/>
 				)}
 			</List>
-			<Column
-				sx={{
-					background: "blue",
-				}}
-				flex={1000}
-			/>
+			<Column flex={1000} />
 			<Box
 				sx={{
 					// position: "sticky",

@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import type { FC } from "react";
 import Image from "next/image";
-import { SmartHintCard } from "@/app/(client)/sources/builder/page";
+import { SmartHintCard } from "./SmartHintCard";
 import type { HintsProps } from "./PixelDomainSelector";
 import type { MappingRow } from "../schemas";
 import {

@@ -5,6 +5,8 @@ import type { FC } from "react";
 import { sourceTypes } from "../schemas";
 import { SourceTypeCard } from "../SourceTypeCard";
 import { CsvFieldMapperBlock } from "../components/CsvFieldMapperBlock";
+import type { HintStateMap } from "@/utils/hintsUtils";
+import type { BuilderKey } from "@/app/(client)/sources/context/hintsCardsContent";
 
 export type Props = {
 	loading: boolean;
@@ -182,8 +184,11 @@ export const ImportSourcePageView: FC<Props> = ({
 							hintsProps={{
 								changeHint: () => {},
 								hints: {
-									dataMaping: {},
-								},
+									dataMaping: {
+										show: false,
+										showBody: false,
+									},
+								} as HintStateMap<BuilderKey>,
 								resetHints: () => {},
 							}}
 							isContinuePressed={false}

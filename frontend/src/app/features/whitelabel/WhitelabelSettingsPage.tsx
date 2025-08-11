@@ -205,7 +205,6 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 				ref={ref}
 				gap="1.5rem"
 				sx={{
-					background: "rgba(0, 0, 0, 0.1)",
 					height: pxToBottom,
 					padding: 2,
 					overflowX: "clip",

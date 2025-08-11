@@ -1,7 +1,6 @@
-import {
-	type DomainsLeads,
-	SmartHintCard,
-} from "@/app/(client)/sources/builder/page";
+import type { DomainsLeads } from "@/app/(client)/sources/builder/page";
+
+import { SmartHintCard } from "./SmartHintCard";
 import {
 	builderHintCards,
 	type BuilderKey,
@@ -19,7 +18,7 @@ import {
 } from "@mui/material";
 import type { FC, ReactNode, RefObject } from "react";
 
-type SkeletonState = Record<BuilderKey, boolean>;
+export type SkeletonState = Record<BuilderKey, boolean>;
 
 type PixelDomainSelectBlockProps = {
 	block4Ref: RefObject<HTMLDivElement | null>;
