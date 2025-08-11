@@ -21,7 +21,7 @@ from models.subscriptions import UserSubscriptions
 from models.users import User
 from models.users_domains import UserDomains
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 class ShopifyIntegrationService:
     def __init__(
         self,
-        integration_persistence: IntegrationsPresistence,
+        integration_persistence: IntegrationsPersistence,
         lead_persistence: LeadsPersistence,
         lead_orders_persistence: LeadOrdersPersistence,
         aws_service: AWSService,
@@ -379,7 +379,7 @@ class ShopifyIntegrationService:
         if not scrips_list or scrips_list.status_code == 401:
             raise HTTPException(
                 status_code=403,
-                detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+                detail={"status": IntegrationsStatus.CREDENTIALS_INVALID.value},
             )
         for script in scrips_list.json().get("script_tags"):
             if "shopify-pixel-code" in script.get("src"):

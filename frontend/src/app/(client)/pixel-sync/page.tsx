@@ -35,16 +35,10 @@ import FilterDatasync from "@/components/FilterDatasync";
 import AudiencePopup from "@/components/AudienceSlider";
 import { useNotification } from "@/context/NotificationContext";
 // import FirstTimeScree from "./components/FirstTimeScree";
-import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
-import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-
-interface DataSyncProps {
-	service_name?: string;
-}
 
 const DataSync = () => {
 	const router = useRouter();
@@ -57,7 +51,6 @@ const DataSync = () => {
 	const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false);
 	const [hasContacts, setHasContacts] = useState(false);
 	const [hasDataSync, setHasDataSync] = useState(false);
-	const [needReload, setNeedReload] = useState(false);
 
 	const handleFilterPopupOpen = () => {
 		setFilterPopup(true);
@@ -346,17 +339,15 @@ const DataSync = () => {
 												Text: "This page shows real-time synchronization status across all your integrated platforms. Monitor data flows, troubleshoot delays, and ensure all systems are updating properly.",
 											}}
 											Content={
-												<>
-													<AudienceSynergyPreview
-														tableSrc="/pixel_sync_FTS.svg"
-														headerTitle="Sync Audience to Any Platform"
-														caption="Send your pixel contacts segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
-														onOpenPopup={handleOpenPopup}
-														onBegin={() => handleAudiencePopupOpen()}
-														// beginDisabled={!hasIntegrations}
-														buttonLabel="Create Pixel Sync"
-													/>
-												</>
+												<AudienceSynergyPreview
+													tableSrc="/pixel_sync_FTS.svg"
+													headerTitle="Sync Audience to Any Platform"
+													caption="Send your pixel contacts segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
+													onOpenPopup={handleOpenPopup}
+													onBegin={() => handleAudiencePopupOpen()}
+													// beginDisabled={!hasIntegrations}
+													buttonLabel="Create Pixel Sync"
+												/>
 											}
 											HelpCard={{
 												headline: "Need Help with Data Synchronization?",

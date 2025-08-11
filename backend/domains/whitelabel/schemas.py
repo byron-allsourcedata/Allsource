@@ -1,0 +1,7 @@
+from pydantic import BaseModel
+
+
+class WhitelabelSettingsSchema(BaseModel):
+    brand_name: str | None = None
+    brand_logo_url: str | None = None
+    brand_icon_url: str | None = None

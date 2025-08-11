@@ -42,6 +42,8 @@ import BingAdsDataSync from "@/app/(client)/data-sync/components/BingAdsDataSync
 import ZapierDataSync from "@/app/(client)/data-sync/components/ZapierDataSync";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import GoHighLevelDataSync from "../data-sync/components/GoHighLevelDataSync";
+import CustomerIoDataSync from "../data-sync/components/CustomerIoDataSync";
+import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -101,6 +103,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false);
 	const [openGoHighLevelConnect, setOpenGoHighLevelConnect] = useState(false);
 	const [goHighLevelIconPopupOpen, setOpenGoHighLevelIconPopupOpen] =
+		useState(false);
+	const [openCustomerIoConnect, setOpenCustomerIoConnect] = useState(false);
+	const [customerIoIconPopupOpen, setOpenCustomerIoIconPopupOpen] =
 		useState(false);
 	const [bingAdsIconPopupOpen, setOpenBingAdsIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false);
@@ -165,6 +170,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const handleGoHighLevelIconPopupOpenClose = () => {
 		setOpenGoHighLevelConnect(false);
 		setOpenGoHighLevelIconPopupOpen(false);
+	};
+
+	const handleCustomerIoIconPopupOpenClose = () => {
+		setOpenCustomerIoConnect(false);
+		setOpenCustomerIoIconPopupOpen(false);
 	};
 
 	const handleBingAdsIconPopupOpenClose = () => {
@@ -334,6 +344,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleSendlaneConnectClose = () => {
 		setOpenSendlaneConnect(false);
+	};
+
+	const handleCustomerIoConnectClose = () => {
+		setOpenCustomerIoConnect(false);
 	};
 
 	const handleS3ConnectClose = () => {
@@ -576,6 +590,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				onClose={handleGoHighLevelIconPopupOpenClose}
 				isEdit={false}
 			/>
+			<CustomerIoDataSync
+				open={customerIoIconPopupOpen}
+				onClose={handleCustomerIoIconPopupOpenClose}
+				isEdit={false}
+			/>
 			<BingAdsDataSync
 				open={bingAdsIconPopupOpen}
 				onClose={handleBingAdsIconPopupOpenClose}
@@ -739,6 +758,16 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				initApiKey={
 					integrationsCredentials.find(
 						(integartion) => integartion.service_name === "sendlane",
+					)?.access_token
+				}
+			/>
+			<CustomerIoConnect
+				open={openCustomerIoConnect}
+				handleClose={handleCustomerIoConnectClose}
+				onSave={handleSaveSettings}
+				initApiKey={
+					integrationsCredentials.find(
+						(integration) => integration.service_name === "customer_io",
 					)?.access_token
 				}
 			/>

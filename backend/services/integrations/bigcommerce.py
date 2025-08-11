@@ -19,7 +19,7 @@ from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 class BigcommerceIntegrationsService:
     def __init__(
         self,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
         leads_order_persistence: LeadOrdersPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],

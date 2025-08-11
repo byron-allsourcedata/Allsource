@@ -11,6 +11,8 @@ from typing import Any
 
 from sqlalchemy import Row, update
 
+# from pprint import pprint
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -42,7 +44,6 @@ from db_dependencies import Db
 from dependencies import (
     NotificationPersistence,
 )
-
 
 load_dotenv()
 
@@ -267,6 +268,7 @@ async def ensure_integration(
             "sales_force": integration_service.sales_force,
             "s3": integration_service.s3,
             "go_high_level": integration_service.go_high_level,
+            "customer_io": integration_service.customer_io,
         }
         lead_user_ids = [t.lead_users_id for t in lead_user_data]
         service = service_map.get(service_name)
@@ -281,6 +283,7 @@ async def ensure_integration(
                     leads,
                     is_email_validation_enabled,
                 )
+
                 status_counts = Counter(r.get("status") for r in results)
                 logging.info(f"Status summary: {dict(status_counts)}")
 
@@ -456,7 +459,7 @@ async def main():
                 NotificationPersistence
             )
             user_persistence = await resolver.resolve(UserPersistence)
-            async with integration_service as int_service:
+            with integration_service as int_service:
                 await queue.consume(
                     functools.partial(
                         ensure_integration,

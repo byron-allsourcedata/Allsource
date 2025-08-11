@@ -1,23 +1,20 @@
 import time
 import logging
-import sys
 import os
-import dotenv
-
-
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
 
 from config.sentry import SentryConfig
 from dependencies import (
     LeadsPersistence,
     AudiencePersistence,
-    IntegrationsPresistence,
     IntegrationService,
 )
+
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.engine import create_engine
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPersistence,
+)
+import dotenv
 
 
 if __name__ == "__main__":
@@ -31,7 +28,7 @@ if __name__ == "__main__":
     session = Session()
     audience_persistence = AudiencePersistence(db=session)
     leads_persistence = LeadsPersistence(db=session)
-    integrations_persistence = IntegrationsPresistence(db=session)
+    integrations_persistence = IntegrationsPersistence(db=session)
     integration_serivce = IntegrationService(
         session,
         integrations_persistence,

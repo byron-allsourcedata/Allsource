@@ -15,7 +15,7 @@ from models.five_x_five_users import FiveXFiveUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -38,7 +38,7 @@ class ZapierIntegrationService:
         lead_persistence: LeadsPersistence,
         domain_persistence: UserDomainsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        integration_persistence: IntegrationsPresistence,
+        integration_persistence: IntegrationsPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):

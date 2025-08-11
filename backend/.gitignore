@@ -9,6 +9,7 @@ __pycache__
 .coverage
 .python-version
 pyproject.toml
+uv.lock
 
 # Vim
 tags

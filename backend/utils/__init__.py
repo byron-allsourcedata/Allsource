@@ -5,7 +5,7 @@ import logging
 import os
 import re
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Any
+from typing import Optional, NamedTuple
 from urllib.parse import urlparse, parse_qs
 
 import httpx
@@ -186,10 +186,17 @@ def validate_and_format_phone(phone_numbers: str) -> str | None:
         return None
 
 
+class AddressInfo(NamedTuple):
+    address: str | None
+    city: str | None
+    state: str | None
+    zip: str | None
+
+
 def get_valid_location(
     user: FiveXFiveUser,
-) -> tuple[Any | None, Any | None, Any | None, Any | None]:
-    return (
+) -> AddressInfo:
+    return AddressInfo(
         getattr(user, "personal_address")
         or getattr(user, "company_address", None),
         getattr(user, "personal_city") or getattr(user, "company_city", None),

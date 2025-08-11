@@ -21,7 +21,7 @@ from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -48,7 +48,7 @@ class HubspotIntegrationsService:
     def __init__(
         self,
         domain_persistence: UserDomainsPersistence,
-        integrations_persistence: IntegrationsPresistence,
+        integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
@@ -293,9 +293,9 @@ class HubspotIntegrationsService:
         domain_id = domain.id if domain else None
         try:
             if self.test_API_key(credentials.hubspot.access_token) == False:
-                return {"status": IntegrationsStatus.CREDENTAILS_INVALID.value}
+                return {"status": IntegrationsStatus.CREDENTIALS_INVALID.value}
         except:
-            return {"status": IntegrationsStatus.CREDENTAILS_INVALID.value}
+            return {"status": IntegrationsStatus.CREDENTIALS_INVALID.value}
         integartions = self.__save_integrations(
             credentials.hubspot.access_token,
             domain_id,

@@ -8,7 +8,6 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from sqlalchemy.sql import exists
 from db_dependencies import Db
 from resolver import Resolver
 from services.data_sync_imported_lead import DataSyncImportedService
@@ -19,7 +18,7 @@ from config.rmq_connection import (
     publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, or_
 from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
 from sqlalchemy.orm import Session
@@ -34,7 +33,6 @@ from utils import get_utc_aware_date
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.users_domains import UserDomains
-from sqlalchemy.dialects.postgresql import insert
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.data_sync_imported_leads import DataSyncImportedLead
@@ -268,55 +266,6 @@ def is_email_validation_enabled(session: Session, users_id: int) -> bool:
         .scalar()
     )
     return result
-
-
-async def send_leads_to_rmq(
-    session,
-    channel,
-    lead_users,
-    data_sync,
-    user_integrations_service_name,
-):
-    lead_ids = [lead_user.id for lead_user in lead_users]
-    users_id = lead_users[-1].user_id
-    records = [
-        {
-            "status": DataSyncImportedStatus.SENT.value,
-            "lead_users_id": lead_id,
-            "is_validation": is_email_validation_enabled(
-                session=session, users_id=users_id
-            ),
-            "service_name": user_integrations_service_name,
-            "data_sync_id": data_sync.id,
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc),
-        }
-        for lead_id in lead_ids
-    ]
-    stmt = (
-        insert(DataSyncImportedLead)
-        .values(records)
-        .on_conflict_do_nothing(
-            index_elements=["lead_users_id", "data_sync_id"]
-        )
-    )
-
-    session.execute(stmt)
-    session.commit()
-    result = session.execute(
-        select(DataSyncImportedLead.id)
-        .where(DataSyncImportedLead.lead_users_id.in_(lead_ids))
-        .where(DataSyncImportedLead.data_sync_id == data_sync.id)
-    )
-    data_sync_imported_ids = [row.id for row in result]
-
-    processed_lead = {
-        "data_sync_id": data_sync.id,
-        "data_sync_imported_ids": data_sync_imported_ids,
-        "users_id": users_id,
-        "service_name": user_integrations_service_name,
-    }
-    await send_leads_to_queue(channel, processed_lead)
 
 
 async def process_user_integrations(

@@ -134,7 +134,7 @@ async def create_smart_audience_sync(
                 detail="Access denied. Admins and standard only.",
             )
     data = {k: v for k, v in data.model_dump().items() if v}
-    async with integration_service as service:
+    with integration_service as service:
         count_updated = audience_smarts_service.set_data_syncing_status(
             data["smart_audience_id"]
         )
@@ -207,7 +207,7 @@ async def edit_sync(
                 detail="Access denied. Admins and standard only.",
             )
     data = {k: v for k, v in data.model_dump().items() if v}
-    async with integration_service as service:
+    with integration_service as service:
         service = getattr(service, service_name.lower())
         service.edit_sync(
             **data,

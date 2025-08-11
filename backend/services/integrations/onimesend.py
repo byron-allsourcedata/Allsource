@@ -17,7 +17,7 @@ from models import UserIntegration, IntegrationUserSync, LeadUser
 from models.five_x_five_users import FiveXFiveUser
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -36,7 +36,7 @@ class OmnisendIntegrationService:
         self,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        integration_persistence: IntegrationsPresistence,
+        integration_persistence: IntegrationsPersistence,
         domain_persistence: UserDomainsPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
@@ -131,7 +131,7 @@ class OmnisendIntegrationService:
             self.get_list_contact(credentials.omnisend.api_key).status_code
             != 200
         ):
-            return IntegrationsStatus.CREDENTAILS_INVALID
+            return IntegrationsStatus.CREDENTIALS_INVALID
         return self.__save_integrations(
             api_key=credentials.omnisend.api_key,
             domain_id=domain_id,

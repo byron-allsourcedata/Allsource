@@ -24,7 +24,7 @@ interface ClientLayoutProps {
 	children: ReactNode;
 }
 
-export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
+const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 	const pathname = usePathname(); // Get the current path
 	const isUnauthorized = useGlobalFlag();
 	const { isGetStartedPage, setIsGetStartedPage, setInstalledResources } =

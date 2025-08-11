@@ -19,7 +19,7 @@ from enums import (
 from models import UserIntegration, IntegrationUserSync, LeadUser
 from models.five_x_five_users import FiveXFiveUser
 from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
+    IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -46,7 +46,7 @@ class SlackService:
     def __init__(
         self,
         user_persistence: UserPersistence,
-        user_integrations_persistence: IntegrationsPresistence,
+        user_integrations_persistence: IntegrationsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
         lead_persistence: LeadsPersistence,
@@ -87,7 +87,7 @@ class SlackService:
 
     def update_credential(self, domain_id, access_token):
         logger.info("Updating credentials", domain_id, access_token)
-        return self.integrations_persistence.update_credential_for_service(
+        return self.integrations_persistence.update_credential_for_slack(
             domain_id, SourcePlatformEnum.SLACK.value, access_token
         )
 
@@ -179,7 +179,7 @@ class SlackService:
         return True
 
     def handle_app_home_opened(self, user_id, team_id):
-        user_integration = self.integrations_persistence.get_credential(
+        user_integration = self.integrations_persistence.get_user_integration(
             slack_team_id=team_id
         )
         if user_integration.is_slack_first_message_sent:

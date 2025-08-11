@@ -69,6 +69,10 @@ class S3Credentials(BaseModel):
     secret_id: str
 
 
+class CustomerIoCredentials(BaseModel):
+    api_key: str
+
+
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
@@ -88,6 +92,8 @@ class IntegrationCredentials(BaseModel):
     go_high_level: Optional[GoHighLevelCredentials] = None
     s3: Optional[S3Credentials] = None
     sales_force: Optional[SalesForceCredentials] = None
+    customer_io: Optional[CustomerIoCredentials] = None
+
     pixel_install: bool = False
     supperssion: bool = False
 

@@ -21,6 +21,7 @@ from .audience_smarts_persons import AudienceSmartPerson
 from .audience_smarts_use_cases import AudienceSmartsUseCase
 from .audience_sources import AudienceSource
 from .audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from .five_x_five_anonymous_cookie_sync import FiveXFiveAnonymousCookieSync
 from .base import Base
 from .data_sync_imported_leads import DataSyncImportedLead
 from .enrichment import (
@@ -93,6 +94,12 @@ from .charging_credits_history import ChargingCreditsHistory
 from .opt_out import OptOutBlackList
 from .privacy_policy_user import PrivacyPolicyUser
 
+from .whitelabel_settings import WhitelabelSettings
+
+from .anonymous_requests import AnonymousRequests
+from .anonymous_visits import AnonymousVisits
+
+
 __all__ = [
     "BigCommerceUser",
     "ExternalAppsInstall",
@@ -104,6 +111,8 @@ __all__ = [
     "StripeInvoiceLogs",
     "UserIntegration",
     "Integration",
+    "AnonymousRequests",
+    "AnonymousVisits",
     "AccountNotification",
     "ApiKeys",
     "Audience",
@@ -143,6 +152,7 @@ __all__ = [
     "FiveXFiveUserInterest",
     "FiveXFiveUsersLocations",
     "FiveXFiveUsersPhones",
+    "FiveXFiveAnonymousCookieSync",
     "Kajabi",
     "LeadCompany",
     "Lead",
@@ -180,4 +190,5 @@ __all__ = [
     "AdminInvitation",
     "OptOutBlackList",
     "PrivacyPolicyUser",
+    "WhitelabelSettings",
 ]
