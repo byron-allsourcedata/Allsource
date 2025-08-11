@@ -12,6 +12,7 @@ type Props = {
 	selectedFile: File | null;
 	isDragging: boolean;
 	allowedTypes?: string[];
+	logoUrl?: string;
 	maxSize?: number;
 	onFileSelect: (newFile: File) => void;
 	onRemoveFile: () => void;
@@ -24,6 +25,7 @@ type Props = {
 export const LogoUploader: FC<Props> = ({
 	selectedFile,
 	isDragging,
+	logoUrl,
 	allowedTypes,
 	maxSize,
 	onFileSelect,
@@ -31,7 +33,6 @@ export const LogoUploader: FC<Props> = ({
 	image,
 }) => {
 	const [initialHeight, elementRef] = useInitialHeight();
-	const logoUrl = useBlobUrl(selectedFile);
 
 	const dragProps = useFileDragAndDrop(["image/png"]);
 

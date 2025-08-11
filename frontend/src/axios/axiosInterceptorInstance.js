@@ -2,7 +2,7 @@
 import axios from "axios";
 import { showErrorToast } from "@/components/ToastNotification";
 import { flagStore } from "@/services/oneDollar";
-import { makeUseAxios } from "axios-hooks";
+import { makeUseAxios, UseAxios } from "axios-hooks";
 
 const axiosInterceptorInstance = axios.create({
 	baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,

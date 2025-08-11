@@ -52,7 +52,9 @@ class WhitelabelService:
     def upload_image(self, content: bytes, content_type: str) -> str:
         image_name = self.get_image_s3_name(content_type)
 
-        s3_url = self.aws.upload_image(image_name, content)
+        s3_url = self.aws.upload_image(
+            image_name, content, content_type=content_type
+        )
         return s3_url
 
     def get_image_s3_name(self, content_type: str):
@@ -68,4 +70,6 @@ class WhitelabelService:
             return "jpg"
         elif content_type == "image/png":
             return "png"
+        elif content_type == "image/svg+xml":
+            return "svg"
         return None

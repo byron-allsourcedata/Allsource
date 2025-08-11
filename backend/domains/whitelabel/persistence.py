@@ -1,3 +1,4 @@
+from sqlalchemy.dialects.postgresql import insert
 from models.whitelabel_settings import WhitelabelSettings
 from resolver import injectable
 from db_dependencies import Db
@@ -24,14 +25,22 @@ class WhitelabelSettingsPersistence:
         brand_logo_url: str | None,
         brand_icon_url: str | None,
     ):
-        return (
-            self.db.query(WhitelabelSettings)
-            .where(WhitelabelSettings.user_id == user_id)
-            .update(
-                {
+        query = (
+            insert(WhitelabelSettings)
+            .values(
+                user_id=user_id,
+                brand_name=brand_name,
+                brand_logo_url=brand_logo_url,
+                brand_icon_url=brand_icon_url,
+            )
+            .on_conflict_do_update(
+                index_elements=["user_id"],
+                set_={
                     "brand_name": brand_name,
                     "brand_logo_url": brand_logo_url,
                     "brand_icon_url": brand_icon_url,
-                }
+                },
             )
         )
+
+        return self.db.execute(query)

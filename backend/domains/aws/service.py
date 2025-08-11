@@ -22,9 +22,17 @@ class AwsService:
             config=Config(signature_version="s3v4"),
         )
 
-    def upload_file(self, object_name: str, file_bytes: bytes) -> str:
+    def upload_file(
+        self,
+        object_name: str,
+        file_bytes: bytes,
+        content_type: str = "application/octet-stream",
+    ) -> str:
         _ = self.s3_client.put_object(
-            Bucket="allsource-data", Key=object_name, Body=file_bytes
+            Bucket="allsource-data",
+            Key=object_name,
+            Body=file_bytes,
+            ContentType=content_type,
         )
 
         return self.get_file_url(object_name)

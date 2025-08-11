@@ -1,7 +1,7 @@
 import { Column } from "@/components/Column";
 import { T } from "@/components/ui/T";
 
-import { useState, type FC } from "react";
+import { useEffect, useState, type FC } from "react";
 import { SettingCard } from "./components/SettingCard";
 import { Paper, styled, TextField, ThemeProvider } from "@mui/material";
 import { whitelabelTheme } from "./theme";
@@ -16,28 +16,143 @@ import { CustomButton } from "@/components/ui";
 
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
+import type { UseAxiosResult } from "axios-hooks";
+import useDefaultAxios from "axios-hooks";
+import Image from "next/image";
+
+export type WhitelabelSettingsSchema = {
+	brand_name: string;
+	brand_logo_url: string;
+	brand_icon_url: string;
+};
+
+function useGetWhitelabelSettings(): UseAxiosResult<WhitelabelSettingsSchema> {
+	return useAxios({
+		url: "/whitelabel/settings",
+		method: "GET",
+	});
+}
+
+function usePostWhitelabelSettings(): UseAxiosResult<unknown> {
+	return useAxios(
+		{
+			url: "/whitelabel/settings",
+			method: "POST",
+		},
+		{ manual: true },
+	);
+}
 
 type Props = {};
+
+function useLogoUrl(file: File | null) {
+	const [logoUrl, setLogoUrl] = useState("/-.svg");
+	const fileBlobUrl = useBlobUrl(file);
+
+	useEffect(() => {
+		if (fileBlobUrl) {
+			setLogoUrl(fileBlobUrl);
+		}
+	}, [fileBlobUrl]);
+
+	return [logoUrl, setLogoUrl] as const;
+}
+
+function useUploadedLogoRequest(url: string) {
+	const [{ data, loading, response }, refetch] = useDefaultAxios(
+		{
+			url,
+		},
+		{
+			manual: true,
+		},
+	);
+
+	return {
+		data,
+		loading,
+		refetch,
+		contentType: response?.headers["content-type"],
+	};
+}
+
+function useUploadedLogo(url: string | undefined) {
+	const { data, loading, refetch, contentType } = useUploadedLogoRequest(
+		url ?? "",
+	);
+
+	useEffect(() => {
+		if (url) {
+			refetch({
+				headers: {
+					Authorization: undefined,
+				},
+			});
+		}
+	}, [url, refetch]);
+
+	return [data, loading, contentType] as const;
+}
 
 export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	const [ref, yFromTop, pxToBottom] =
 		useElementViewportPosition<HTMLDivElement>({
-			paddingBottom: 12,
+			paddingBottom: 20,
 		});
-	const [brandNameField] = useFieldValue("Allsource");
+	const [brandNameField, setBrandName] = useFieldValue("-");
 
 	const [logoFile, setLogoFile] = useState<File | null>(null);
-	const logoUrl = useBlobUrl(logoFile);
+	const [logoUrl, setLogoUrl] = useLogoUrl(logoFile);
 
 	const [smallLogoFile, setSmallLogoFile] = useState<File | null>(null);
-	const smallLogoUrl = useBlobUrl(smallLogoFile);
+	const [smallLogoUrl, setSmallLogoUrl] = useLogoUrl(smallLogoFile);
 
 	const isWindowDragging = usePageDragging();
 
-	const [{ data, loading: settingsUpdateLoading }, updateSettings] = useAxios({
-		url: "/whitelabel/settings",
-		method: "POST",
-	});
+	const [{ loading: settingsUpdateLoading }, updateSettings] =
+		usePostWhitelabelSettings();
+
+	const [
+		{ data: initialSettings, loading: settingsLoading },
+		fetchWhitelabelSettigns,
+	] = useGetWhitelabelSettings();
+
+	const [uploadedLogo, uploadedLogoLoading, uploadedLogoContentType] =
+		useUploadedLogo(initialSettings?.brand_logo_url);
+
+	const [
+		uploadedSmallLogo,
+		uploadedSmallLogoLoading,
+		uploadedSmallLogoContentType,
+	] = useUploadedLogo(initialSettings?.brand_logo_url);
+
+	useEffect(() => {
+		if (uploadedLogo) {
+			setLogoFile(
+				new File([uploadedLogo], "logo.svg", {
+					type: String(uploadedLogoContentType),
+				}),
+			);
+		}
+	}, [uploadedLogo]);
+
+	useEffect(() => {
+		if (uploadedSmallLogo) {
+			setSmallLogoFile(
+				new File([uploadedSmallLogo], "logo-icon.svg", {
+					type: String(uploadedSmallLogoContentType),
+				}),
+			);
+		}
+	}, [uploadedSmallLogo]);
+
+	useEffect(() => {
+		if (initialSettings) {
+			setBrandName(initialSettings.brand_name || "Allsource");
+			setLogoUrl(initialSettings.brand_logo_url || "/default.svg");
+			setSmallLogoUrl(initialSettings.brand_icon_url || "/logo-icon.svg");
+		}
+	}, [initialSettings]);
 
 	const onSave = () => {
 		if (!settingsUpdateLoading) {
@@ -55,12 +170,6 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 				});
 		}
 	};
-	// 	return <Row ref={ref} sx={{
-	// 		background: "rgba(0, 0, 0, 0.1)",height: pxToBottom	}}>
-
-	// <T>top: {yFromTop}px</T>
-	// 				<T>bottom: {pxToBottom}px</T>
-	// 	</Row>
 
 	return (
 		<ThemeProvider theme={whitelabelTheme}>
@@ -94,6 +203,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your agency's logo to replace the Allsource one"
 						>
 							<LogoUploader
+								logoUrl={logoUrl}
 								selectedFile={logoFile}
 								isDragging={isWindowDragging}
 								onFileSelect={setLogoFile}
@@ -111,6 +221,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your smaller version of logo"
 						>
 							<LogoUploader
+								logoUrl={smallLogoUrl}
 								selectedFile={smallLogoFile}
 								isDragging={isWindowDragging}
 								onFileSelect={setSmallLogoFile}

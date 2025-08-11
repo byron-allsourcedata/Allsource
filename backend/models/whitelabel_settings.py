@@ -15,7 +15,10 @@ class WhitelabelSettings(Base):
         server_default=sqlalchemy.text("gen_random_uuid()"),
     )
     user_id: Mapped[int] = mapped_column(
-        sqlalchemy.Integer, sqlalchemy.ForeignKey(Users.id), nullable=False
+        sqlalchemy.Integer,
+        sqlalchemy.ForeignKey(Users.id),
+        nullable=False,
+        unique=True,
     )
     brand_name: Mapped[str | None] = mapped_column(
         sqlalchemy.VARCHAR, nullable=True

@@ -59,11 +59,11 @@ export const FileCard: FC<FileCardProps> = ({
 		sx={{ display: "flex", alignItems: "center", gap: 1 }}
 	>
 		{logoSrc ? (
-			<Image
+			<img
 				src={logoSrc}
 				alt={filename}
-				width={width ?? 40}
-				height={height ?? 40}
+				width={width ?? "40px"}
+				height={height ?? "40px"}
 			/>
 		) : (
 			<Box width={width ?? 40} height={height ?? 40} />
