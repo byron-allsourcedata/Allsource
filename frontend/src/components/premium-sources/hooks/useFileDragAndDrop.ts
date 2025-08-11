@@ -63,8 +63,6 @@ export const useFileDragAndDrop: (allowedTypes: string[]) => FileDnd = (
 			e.preventDefault();
 			const files = e.dataTransfer.files;
 
-			console.log(`Dropped files ${files}`);
-
 			updateFiles(files);
 			setDragging(false);
 		},
