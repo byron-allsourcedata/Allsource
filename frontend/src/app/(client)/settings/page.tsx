@@ -9,7 +9,9 @@ import { SettingsTeams } from "./components/SettingsTeams";
 import { SettingsBilling } from "./components/SettingsBilling";
 import { SettingsSubscription } from "./components/SettingsSubscription";
 import { SettingsApiDetails } from "./components/SettingsApiDetails";
-import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import axiosInterceptorInstance, {
+	useAxios,
+} from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
@@ -26,6 +28,10 @@ const Settings: React.FC = () => {
 	const [accountDetails, setAccountDetails] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [userHasSubscription, setUserHasSubscription] = useState(false);
+
+	const [{ data: whitelabelEnabled }] = useAxios({
+		url: "/whitelabel/is-enabled",
+	});
 
 	const fetchAccountDetails = async () => {
 		try {
@@ -62,9 +68,11 @@ const Settings: React.FC = () => {
 		activeTab: activeSection,
 	};
 
-	const tabs = {
-		whitelabel: <WhitelabelSettingsPage />,
-	};
+	const tabs = {} as Record<string, ReactNode>;
+
+	if (whitelabelEnabled) {
+		tabs.whitelabel = <WhitelabelSettingsPage />;
+	}
 
 	const selectedTab: ReactNode | undefined =
 		tabs[activeSection as keyof typeof tabs];
@@ -168,12 +176,14 @@ const Settings: React.FC = () => {
 							disabled={!userHasSubscription}
 							{...tabProps}
 						/>
-						<SettingTab
-							tabName="whitelabel"
-							label="Whitelabel"
-							disabled={!userHasSubscription}
-							{...tabProps}
-						/>
+						{whitelabelEnabled && (
+							<SettingTab
+								tabName="whitelabel"
+								label="Whitelabel"
+								disabled={!userHasSubscription}
+								{...tabProps}
+							/>
+						)}
 					</Box>
 				</Box>
 			</AppBar>

@@ -1,7 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile
 
 from auth_dependencies import AuthUser
-
 
 from .schemas import WhitelabelSettingsSchema
 from .service import WhitelabelService
@@ -18,10 +17,20 @@ async def get_whitelabel_settings(
 
 
 @router.get("/is-enabled")
-async def is_whitelabel_enabled(user: "AuthUser") -> bool:
+async def is_whitelabel_enabled(user: AuthUser) -> bool:
     return user.get("whitelabel_settings_enabled")
 
 
 @router.post("/settings")
-async def update_whitelabel_settings():
+async def update_whitelabel_settings(
+    user: AuthUser,
+    whitelabel_settings: WhitelabelSettingsSchema,
+    brand_name: str,
+    logo: UploadFile = File(...),
+    small_logo: UploadFile = File(...),
+):
+    print(logo.filename)
+    print(small_logo.filename)
+    print(brand_name)
+
     return
