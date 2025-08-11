@@ -81,6 +81,7 @@ export const LogoUploader: FC<Props> = ({
 				size={formatBytes(selectedFile.size)}
 				width={image?.width}
 				height={image?.height}
+				onDelete={onRemoveFile}
 			/>,
 		);
 	}

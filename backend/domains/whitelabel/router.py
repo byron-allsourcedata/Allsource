@@ -32,8 +32,8 @@ async def update_whitelabel_settings(
     db: Db,
     service: WhitelabelService,
     brand_name: str = Form(...),
-    logo: UploadFile = File(...),
-    small_logo: UploadFile = File(...),
+    logo: UploadFile | None = File(None),
+    small_logo: UploadFile | None = File(None),
 ):
     if not user["whitelabel_settings_enabled"]:
         logger.info(

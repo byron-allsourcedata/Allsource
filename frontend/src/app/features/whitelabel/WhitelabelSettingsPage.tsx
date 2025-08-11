@@ -149,7 +149,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	useEffect(() => {
 		if (initialSettings) {
 			setBrandName(initialSettings.brand_name || "Allsource");
-			setLogoUrl(initialSettings.brand_logo_url || "/default.svg");
+			setLogoUrl(initialSettings.brand_logo_url || "/logo.svg");
 			setSmallLogoUrl(initialSettings.brand_icon_url || "/logo-icon.svg");
 		}
 	}, [initialSettings]);
@@ -158,8 +158,14 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		if (!settingsUpdateLoading) {
 			const formData = new FormData();
 			formData.append("brand_name", brandNameField.value);
-			formData.append("logo", logoFile || "");
-			formData.append("small_logo", smallLogoFile || "");
+
+			if (logoFile) {
+				formData.append("logo", logoFile || "");
+			}
+
+			if (smallLogoFile) {
+				formData.append("small_logo", smallLogoFile || "");
+			}
 			updateSettings({ data: formData })
 				.then(() => {
 					showToast("Whitelabel settings updated");
@@ -180,6 +186,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 					background: "rgba(0, 0, 0, 0.1)",
 					height: pxToBottom,
 					padding: 2,
+					overflowX: "clip",
 				}}
 			>
 				<Paper>
@@ -208,6 +215,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 								isDragging={isWindowDragging}
 								onFileSelect={setLogoFile}
 								onRemoveFile={() => {
+									setLogoUrl("/logo.svg");
 									setLogoFile(null);
 								}}
 								image={{
@@ -226,6 +234,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 								isDragging={isWindowDragging}
 								onFileSelect={setSmallLogoFile}
 								onRemoveFile={() => {
+									setSmallLogoUrl("/logo-icon.svg");
 									setSmallLogoFile(null);
 								}}
 							/>
