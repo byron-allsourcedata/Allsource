@@ -1,14 +1,24 @@
+"use client";
+
 import type { UseAxiosResult } from "axios-hooks";
 import type { WhitelabelSettingsSchema } from "./schemas";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
 
 export function useGetWhitelabelSettings(
+	referral?: string,
 	autofetch?: boolean,
 ): UseAxiosResult<WhitelabelSettingsSchema> {
+	const params: Record<string, string> = {};
+
+	if (referral) {
+		params.referral = referral;
+	}
+
 	return useAxios(
 		{
 			url: "/whitelabel/settings",
 			method: "GET",
+			params,
 		},
 		{
 			manual: !autofetch,

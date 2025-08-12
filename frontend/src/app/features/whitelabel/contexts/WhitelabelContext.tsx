@@ -20,7 +20,12 @@ export function WhitelabelProvider({
 	setWhitelabel: (whitelabel: WhitelabelSettingsSchema) => void;
 	autofetch: boolean;
 }) {
-	const [{ data: whitelabelSettings }] = useGetWhitelabelSettings(autofetch);
+	const referral = new URLSearchParams(window.location.search).get("referral");
+
+	const [{ data: whitelabelSettings }, refetch] = useGetWhitelabelSettings(
+		String(referral),
+		autofetch,
+	);
 
 	useEffect(() => {
 		if (whitelabelSettings) {
