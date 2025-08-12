@@ -1,7 +1,8 @@
 "use client";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { UserProvider } from "../context/UserContext";
 import { PrivacyPolicyProvider } from "../context/PrivacyPolicyContext";
 import ToastNotificationContainer from "../components/ToastNotification";
@@ -101,6 +102,7 @@ export default function RootLayout({
 						</SidebarProvider>
 					</SSEProvider>
 				</GoogleOAuthProvider>
+
 				<ToastNotificationContainer />
 				<script
 					defer={true}
