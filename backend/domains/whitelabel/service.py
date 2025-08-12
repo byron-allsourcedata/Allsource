@@ -28,7 +28,11 @@ class WhitelabelService:
         )
 
     def default_whitelabel_settings(self) -> WhitelabelSettingsSchema:
-        return WhitelabelSettingsSchema()
+        return WhitelabelSettingsSchema(
+            brand_name="Allsource",
+            brand_logo_url="/logo.svg",
+            brand_icon_url="/logo-icon.svg",
+        )
 
     def update_whitelabel_settings(
         self,

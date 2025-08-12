@@ -56,6 +56,11 @@ axiosInterceptorInstance.interceptors.response.use(
 		return response;
 	},
 	(error) => {
+		const url = error.config?.url;
+		if (url?.endsWith("/whitelabel/settings")) {
+			return Promise.reject(error);
+		}
+
 		if (error.response) {
 			switch (error.response.status) {
 				case 307:

@@ -13,12 +13,12 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/settings")
-async def get_whitelabel_settings(
-    user: AuthUser, whitelabel_service: WhitelabelService
-) -> WhitelabelSettingsSchema:
-    settings_schema = whitelabel_service.get_whitelabel_settings(user.get("id"))
-    return settings_schema
+# @router.get("/settings")
+# async def get_whitelabel_settings(
+#     user: AuthUser, whitelabel_service: WhitelabelService
+# ) -> WhitelabelSettingsSchema:
+#     settings_schema = whitelabel_service.get_whitelabel_settings(user.get("id"))
+#     return settings_schema
 
 
 @router.get("/is-enabled")
@@ -30,12 +30,19 @@ async def is_whitelabel_enabled(user: AuthUser) -> bool:
     return user.get("whitelabel_settings_enabled")
 
 
-@router.get("/icons")
+@router.get("/settings")
 async def get_whitelabel_icons(
-    user: AuthUser, whitelabel_service: WhitelabelService
+    whitelabel_service: WhitelabelService,
+    referral: str | None = None,
+    user: AuthUser | None = None,
 ) -> WhitelabelSettingsSchema:
-    user_id = user.get("id")
-    return whitelabel_service.get_whitelabel_settings(user_id)
+    if user is not None:
+        user_id = user.get("id")
+        return whitelabel_service.get_whitelabel_settings(user_id)
+    elif referral is not None:
+        return whitelabel_service.default_whitelabel_settings()
+    else:
+        return whitelabel_service.default_whitelabel_settings()
 
 
 @router.post("/settings")
