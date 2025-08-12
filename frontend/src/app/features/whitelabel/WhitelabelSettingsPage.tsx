@@ -15,34 +15,12 @@ import { usePageDragging } from "@/components/premium-sources/hooks/useFileDragA
 import { CustomButton } from "@/components/ui";
 
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import { useAxios } from "@/axios/axiosInterceptorInstance";
-import type { UseAxiosResult } from "axios-hooks";
 import useDefaultAxios from "axios-hooks";
-import Image from "next/image";
 import { useFilePicker } from "./hooks/useFilePicker";
-
-export type WhitelabelSettingsSchema = {
-	brand_name: string;
-	brand_logo_url: string;
-	brand_icon_url: string;
-};
-
-function useGetWhitelabelSettings(): UseAxiosResult<WhitelabelSettingsSchema> {
-	return useAxios({
-		url: "/whitelabel/settings",
-		method: "GET",
-	});
-}
-
-function usePostWhitelabelSettings(): UseAxiosResult<unknown> {
-	return useAxios(
-		{
-			url: "/whitelabel/settings",
-			method: "POST",
-		},
-		{ manual: true },
-	);
-}
+import {
+	useGetWhitelabelSettings,
+	usePostWhitelabelSettings,
+} from "./requests";
 
 type Props = {};
 

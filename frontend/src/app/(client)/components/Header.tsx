@@ -29,7 +29,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
 import { getCurrentImpersonationLevel } from "@/utils/impersonation";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
-import { WhitelabelSettingsSchema } from "@/app/features/whitelabel/WhitelabelSettingsPage";
+import type { WhitelabelSettingsSchema } from "@/app/features/whitelabel/schemas";
 
 const headerStyles = {
 	headers: {
