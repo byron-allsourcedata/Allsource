@@ -50,6 +50,7 @@ import { fetchUserData } from "@/services/meService";
 import BookADemoPopup from "./components/BookADemoPopup";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { Logo } from "@/components/ui/Logo";
 
 interface GTMAccount {
 	accountId: string;
@@ -1231,13 +1232,7 @@ const AccountSetup = () => {
 					}}
 				>
 					<Box sx={styles.logo}>
-						<Image
-							src="/logo.svg"
-							priority
-							alt="logo"
-							height={30}
-							width={130}
-						/>
+						<Logo />
 					</Box>
 					<Button
 						aria-controls={open ? "profile-menu" : undefined}

@@ -24,6 +24,7 @@ import Image from "next/image";
 import { useUser } from "@/context/UserContext";
 import NotificationPopup from "@/components/NotificationPopup";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+import { Logo } from "@/components/ui/Logo";
 
 const navigationmenuStyles = {
 	mobileMenuHeader: {
@@ -180,8 +181,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						{open ? <CloseIcon /> : <MenuIcon />}
 					</IconButton>
 
-					{/* Centered Logo (Adjust src to your logo) */}
-					<Image src="/logo.svg" priority alt="logo" height={30} width={130} />
+					<Logo />
 				</Box>
 
 				{/* Placeholder for Right Icon */}

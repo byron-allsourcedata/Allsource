@@ -12,6 +12,7 @@ import {
 	InputAdornment,
 } from "@mui/material";
 import { confirmStyles } from "./confirmStyles";
+import { Logo } from "@/components/ui/Logo";
 
 const ConfirmSend: React.FC = () => {
 	const router = useRouter();
@@ -39,7 +40,7 @@ const ConfirmSend: React.FC = () => {
 	return (
 		<>
 			<Box sx={confirmStyles.logoContainer}>
-				<Image src="/logo.svg" alt="logo" height={30} width={130} />
+				<Logo />
 			</Box>
 			<Box sx={confirmStyles.mainContent}>
 				<Box sx={confirmStyles.container}>

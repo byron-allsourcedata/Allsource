@@ -101,6 +101,7 @@ const Signup: React.FC = () => {
 	}, []);
 
 	const navigateTo = (path: string) => {
+		console.log("navigate in signup");
 		window.location.href = path;
 	};
 

@@ -8,6 +8,7 @@ import { planStyles } from "./planStyles";
 import { useUser } from "../../../context/UserContext"; // Assuming you have a UserContext to provide user information
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 const PlanCard = ({
 	plan,
@@ -47,6 +48,7 @@ const PlanPage: React.FC = () => {
 	const router = useRouter();
 	const { full_name, email } = useUser();
 	const [plans, setPlans] = useState<any[]>([]);
+	const { whitelabel } = useWhitelabel();
 
 	useEffect(() => {
 		document.body.style.overflow = "hidden";
@@ -111,7 +113,12 @@ const PlanPage: React.FC = () => {
 		<>
 			<Box sx={planStyles.headers}>
 				<Box sx={planStyles.logoContainer}>
-					<Image src="/logo.svg" alt="logo" height={30} width={130} />
+					<Image
+						src={whitelabel.brand_logo_url}
+						alt="logo"
+						height={30}
+						width={130}
+					/>
 				</Box>
 				<Button
 					aria-controls={open ? "profile-menu" : undefined}

@@ -13,6 +13,7 @@ import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import PersonIcon from "@mui/icons-material/Person";
 import useAxios from "axios-hooks";
 import { flagStore } from "@/services/oneDollar";
+import { Logo } from "@/components/ui/Logo";
 
 const EmailVerificate: React.FC = () => {
 	const [canResend, setCanResend] = useState(true);
@@ -186,7 +187,7 @@ const EmailVerificate: React.FC = () => {
 			/>
 			<Box sx={emailStyles.headers}>
 				<Box sx={emailStyles.logoContainer}>
-					<Image src="/logo.svg" alt="logo" height={31} width={130} />
+					<Logo />
 				</Box>
 				<Button
 					aria-controls={open ? "profile-menu" : undefined}

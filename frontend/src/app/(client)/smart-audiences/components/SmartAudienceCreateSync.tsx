@@ -50,6 +50,7 @@ import { InfoIcon } from "@/icon";
 import UserTip from "@/components/UserTip";
 import { width } from "@mui/system";
 import CustomButton from "@/components/ui/CustomButton";
+import { Logo } from "@/components/ui/Logo";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -1753,12 +1754,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo.svg"
-												alt="logo"
-												height={31}
-												width={130}
-											/>
+											<Logo />
 										</Grid>
 										<Grid
 											item
