@@ -1,3 +1,5 @@
+"use client";
+
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	Box,
@@ -48,6 +50,7 @@ import CustomSwitch from "@/components/ui/CustomSwitch";
 import { UserData } from "../page";
 import { ArrowRightIcon } from "@mui/x-date-pickers";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface tableHeaders {
 	key: string;
@@ -487,6 +490,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	const meItem =
 		typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
 	const meData = meItem ? JSON.parse(meItem) : { full_name: "", email: "" };
+	const whitelabel = useWhitelabel();
 
 	const handleLogin = async (user_account_id: number) => {
 		try {
@@ -516,10 +520,13 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				sessionStorage.removeItem("me");
 
 				await fetchUserData();
+
 				router.push("/dashboard");
 				router.refresh();
+
 				setBackButton(true);
 				triggerBackButton();
+				whitelabel.refetch();
 			}
 		} catch (error) {
 			console.error("Admin login error:", error);

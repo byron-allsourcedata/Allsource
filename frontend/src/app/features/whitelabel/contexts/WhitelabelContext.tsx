@@ -1,3 +1,5 @@
+"use client";
+
 import { createContext, useContext, useEffect, type ReactNode } from "react";
 import type { WhitelabelSettingsSchema } from "../schemas";
 import { useGetWhitelabelSettings } from "../requests";
@@ -5,6 +7,7 @@ import { useGetWhitelabelSettings } from "../requests";
 export type WhitelabelContextValue = {
 	whitelabel: WhitelabelSettingsSchema;
 	setWhitelabel: (whitelabel: WhitelabelSettingsSchema) => void;
+	refetch: () => void;
 };
 
 const WhitelabelContext = createContext<WhitelabelContextValue | null>(null);
@@ -33,19 +36,25 @@ export function WhitelabelProvider({
 }) {
 	const referral = getUrlSearchParam();
 
-	const [{ data: whitelabelSettings }, refetch] = useGetWhitelabelSettings(
-		String(referral),
-		autofetch,
-	);
+	const [{ data: whitelabelSettings, response }, refetch] =
+		useGetWhitelabelSettings(String(referral), autofetch);
 
 	useEffect(() => {
-		if (whitelabelSettings) {
-			setWhitelabel(whitelabelSettings);
+		const request = response?.request;
+		if (request) {
+			if (
+				response?.status === 200 &&
+				whitelabelSettings &&
+				String(response.config?.headers?.Authorization)?.length > 10
+			) {
+				localStorage.setItem("whitelabel", JSON.stringify(whitelabelSettings));
+				setWhitelabel(whitelabelSettings);
+			}
 		}
-	}, [whitelabelSettings, setWhitelabel]);
+	}, [whitelabelSettings, setWhitelabel, response]);
 
 	return (
-		<WhitelabelContext.Provider value={{ whitelabel, setWhitelabel }}>
+		<WhitelabelContext.Provider value={{ whitelabel, setWhitelabel, refetch }}>
 			{children}
 		</WhitelabelContext.Provider>
 	);

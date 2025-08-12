@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 import { Nunito_Sans, Roboto } from "next/font/google";
 import { WhitelabelProvider } from "./features/whitelabel/contexts/WhitelabelContext";
 import type { WhitelabelSettingsSchema } from "./features/whitelabel/schemas";
+import { getStoredWhitelabel } from "@/components/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 const nunito = Nunito_Sans({
@@ -55,11 +56,15 @@ export default function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const [whitelabel, setWhitelabel] = useState<WhitelabelSettingsSchema>({
-		brand_name: "",
-		brand_logo_url: "/logo.svg",
-		brand_icon_url: "/logo-icon.svg",
-	});
+	const [whitelabel, setWhitelabel] = useState<WhitelabelSettingsSchema>(
+		getStoredWhitelabel()
+			? JSON.parse(getStoredWhitelabel() as string)
+			: {
+					brand_name: "",
+					brand_logo_url: "/logo.svg",
+					brand_icon_url: "/logo-icon.svg",
+				},
+	);
 
 	const pathname = usePathname();
 	const pageTitle = formatPageTitle(pathname || "");

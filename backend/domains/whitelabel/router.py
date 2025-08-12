@@ -1,7 +1,7 @@
 import logging
 from fastapi import APIRouter, File, Form, UploadFile, status
 
-from auth_dependencies import AuthUser
+from auth_dependencies import AuthUser, MaybeAuthUser
 from db_dependencies import Db
 from domains.referrals.exceptions import InvalidReferralCode
 from domains.whitelabel.services.aws import WhitelabelAwsService
@@ -25,8 +25,7 @@ logger = logging.getLogger(__name__)
 @router.get("/is-enabled")
 async def is_whitelabel_enabled(user: AuthUser) -> bool:
     logger.info(
-        "user whitelabel enabled: "
-        + str(user.get("whitelabel_settings_enabled"))
+        "user whitelabel enabled: " + str(user.get("whitelabel_settings_enabled"))
     )
     return user.get("whitelabel_settings_enabled")
 
@@ -35,8 +34,8 @@ async def is_whitelabel_enabled(user: AuthUser) -> bool:
 @router.get("/icons")
 async def get_whitelabel_icons(
     whitelabel_service: WhitelabelService,
+    user: MaybeAuthUser,
     referral: str | None = None,
-    user: AuthUser | None = None,
 ) -> WhitelabelSettingsSchema:
     logger.info(f"Provided referral code: {referral}")
     if user is not None:
@@ -45,9 +44,7 @@ async def get_whitelabel_icons(
 
     if referral is not None:
         try:
-            return whitelabel_service.get_whitelabel_settings_by_referral_code(
-                referral
-            )
+            return whitelabel_service.get_whitelabel_settings_by_referral_code(referral)
         except InvalidReferralCode:
             logger.info("Invalid Referral Code")
             return whitelabel_service.default_whitelabel_settings()

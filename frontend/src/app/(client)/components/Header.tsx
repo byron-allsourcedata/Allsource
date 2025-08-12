@@ -30,6 +30,7 @@ import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
 import { getCurrentImpersonationLevel } from "@/utils/impersonation";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
 import type { WhitelabelSettingsSchema } from "@/app/features/whitelabel/schemas";
+import { resetLocalStorage } from "@/components/utils";
 
 const headerStyles = {
 	headers: {
@@ -130,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({
 	}, []);
 
 	const handleSignOut = () => {
-		localStorage.clear();
+		resetLocalStorage();
 		sessionStorage.clear();
 		resetUserData();
 		resetTrialData();

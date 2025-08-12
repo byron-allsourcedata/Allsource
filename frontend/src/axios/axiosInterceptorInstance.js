@@ -10,6 +10,9 @@ const axiosInterceptorInstance = axios.create({
 
 axiosInterceptorInstance.interceptors.request.use(
 	async (config) => {
+		if (typeof window === "undefined") {
+			return;
+		}
 		const accessToken = localStorage.getItem("token");
 		let currentDomain = sessionStorage.getItem("current_domain");
 

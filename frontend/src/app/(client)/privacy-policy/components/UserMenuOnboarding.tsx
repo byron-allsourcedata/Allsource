@@ -7,6 +7,7 @@ import { signupStyles } from "../privacyPolicyStyles";
 import { useUser } from "../../../../context/UserContext";
 import PersonIcon from "@mui/icons-material/Person";
 import { Logo } from "@/components/ui/Logo";
+import { resetLocalStorage } from "@/components/utils";
 
 const UserMenuOnboarding: React.FC = () => {
 	const { full_name: userFullName, email: userEmail } = useUser();
@@ -36,7 +37,7 @@ const UserMenuOnboarding: React.FC = () => {
 	};
 
 	const handleSignOut = () => {
-		localStorage.clear();
+		resetLocalStorage();
 		sessionStorage.clear();
 		router.push("/signin");
 	};

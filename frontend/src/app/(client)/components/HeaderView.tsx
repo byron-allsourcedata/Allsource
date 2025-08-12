@@ -28,6 +28,7 @@ import CustomNotification from "@/components/CustomNotification";
 import { usePathname } from "next/navigation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
+import { resetLocalStorage } from "@/components/utils";
 
 const headerStyles = {
 	headers: {
@@ -104,7 +105,7 @@ export const HeaderView: React.FC<Props> = ({
 	const returnToAdmin = useReturnToAdmin();
 	const { showHints, toggleHints } = useHints();
 	const handleSignOut = () => {
-		localStorage.clear();
+		resetLocalStorage();
 		sessionStorage.clear();
 		resetUserData();
 		resetTrialData();

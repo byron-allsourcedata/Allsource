@@ -20,6 +20,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from "@mui/icons-material/Person";
 import { fetchUserData } from "@/services/meService";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { resetLocalStorage } from "@/components/utils";
 
 const AccountSetup = () => {
 	const [websiteLink, setWebsiteLink] = useState("");
@@ -119,7 +120,7 @@ const AccountSetup = () => {
 	};
 
 	const handleSignOut = () => {
-		localStorage.clear();
+		resetLocalStorage();
 		sessionStorage.clear();
 		router.push("/signin");
 	};

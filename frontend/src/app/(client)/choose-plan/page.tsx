@@ -9,6 +9,7 @@ import { useUser } from "../../../context/UserContext"; // Assuming you have a U
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { resetLocalStorage } from "@/components/utils";
 
 const PlanCard = ({
 	plan,
@@ -104,7 +105,7 @@ const PlanPage: React.FC = () => {
 	};
 
 	const handleSignOut = () => {
-		localStorage.clear();
+		resetLocalStorage();
 		sessionStorage.clear();
 		router.push("/signin");
 	};
