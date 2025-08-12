@@ -40,6 +40,8 @@ logger = logging.getLogger(__name__)
 
 @injectable
 class CustomerIoIntegrationsService(AbstractIntegrationService):
+    CONSTANT_FIELD_MAX_LENGTH = 20
+
     def __init__(
         self,
         integrations_persistence: IntegrationsPersistence,
@@ -251,7 +253,8 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
         for data_map_item in data_map:
             # Add constant fields to profile
             if data_map_item.is_constant:
-                customer_io_traits[data_map_item.type] = data_map_item.value
+                truncated_value = data_map_item.value[:self.CONSTANT_FIELD_MAX_LENGTH]
+                customer_io_traits[data_map_item.type] = truncated_value
             else:
                 customer_io_traits[data_map_item.type] = fxf_user.__dict__[
                     data_map_item.type
