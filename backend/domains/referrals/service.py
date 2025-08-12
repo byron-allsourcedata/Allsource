@@ -1,7 +1,10 @@
+import logging
 from db_dependencies import Db
 from domains.referrals.exceptions import InvalidReferralCode
 from encryption_utils import decrypt_data
 from resolver import injectable
+
+logger = logging.getLogger(__name__)
 
 
 @injectable
