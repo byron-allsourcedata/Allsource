@@ -1,7 +1,7 @@
 "use client";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import React from "react";
+import React, { useState } from "react";
 import { UserProvider } from "../context/UserContext";
 import { PrivacyPolicyProvider } from "../context/PrivacyPolicyContext";
 import ToastNotificationContainer from "../components/ToastNotification";
@@ -15,6 +15,8 @@ import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
 import { Nunito_Sans, Roboto } from "next/font/google";
+import { WhitelabelProvider } from "./features/whitelabel/contexts/WhitelabelContext";
+import type { WhitelabelSettingsSchema } from "./features/whitelabel/schemas";
 
 const inter = Inter({ subsets: ["latin"] });
 const nunito = Nunito_Sans({
@@ -52,12 +54,23 @@ export default function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
+	const [whitelabel, setWhitelabel] = useState<WhitelabelSettingsSchema>({
+		brand_name: "",
+		brand_logo_url: "/logo.svg",
+		brand_icon_url: "/logo-icon.svg",
+	});
+
 	const pathname = usePathname();
 	const pageTitle = formatPageTitle(pathname || "");
+
+	const formattedPageTitle = pageTitle
+		? `${whitelabel.brand_name} | ${pageTitle} `
+		: `${whitelabel.brand_name}`;
+
 	return (
 		<html lang="en" className={`${nunito.variable} ${roboto.variable}`}>
 			<head>
-				<title>{pageTitle ? `Allsource | ${pageTitle} ` : "Allsource"}</title>
+				<title>{formattedPageTitle}</title>
 				<meta name="description" content={`Page: ${pageTitle}`} />
 				<meta
 					httpEquiv="Content-Security-Policy"
@@ -73,7 +86,13 @@ export default function RootLayout({
 									<BillingProvider>
 										<PrivacyPolicyProvider>
 											<UserProvider>
-												<IntegrationProvider>{children}</IntegrationProvider>
+												<WhitelabelProvider
+													whitelabel={whitelabel}
+													setWhitelabel={setWhitelabel}
+													autofetch={true}
+												>
+													<IntegrationProvider>{children}</IntegrationProvider>
+												</WhitelabelProvider>
 											</UserProvider>
 										</PrivacyPolicyProvider>
 									</BillingProvider>

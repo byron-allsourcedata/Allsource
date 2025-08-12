@@ -3,7 +3,7 @@ import type { WhitelabelSettingsSchema } from "./schemas";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
 
 export function useGetWhitelabelSettings(
-	manual?: boolean,
+	autofetch?: boolean,
 ): UseAxiosResult<WhitelabelSettingsSchema> {
 	return useAxios(
 		{
@@ -11,7 +11,7 @@ export function useGetWhitelabelSettings(
 			method: "GET",
 		},
 		{
-			manual,
+			manual: !autofetch,
 		},
 	);
 }
