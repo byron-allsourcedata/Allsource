@@ -20,6 +20,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { PixelManagementItem } from "../page";
 import ScriptsPopup from "../components/ScriptsPopup";
 import { useSearchParams } from "next/navigation";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 type Domain = {
 	id: number;
@@ -61,8 +62,7 @@ const scriptCardConfigs: ScriptCardConfig[] = [
 			default:
 				"Insert this script just before the closing </body> tag on all product pages.",
 		},
-		thirdStepText:
-			'Once the "View Product" pixel is added to your product pages, it will be automatically marked as "Installed" after a visitor lands on a product page and their activity is registered by Allsource.',
+		thirdStepText: `Once the "View Product" pixel is added to your product pages, it will be automatically marked as "Installed" after a visitor lands on a product page and their activity is registered by Allsource.`,
 	},
 	{
 		key: "add_to_cart",
@@ -218,6 +218,8 @@ const AddAdditionalScript: React.FC = () => {
 		}
 	}, [parsedDomainId]);
 
+	const { whitelabel } = useWhitelabel();
+
 	if (loading) {
 		return <CustomizedProgressBar />;
 	}
@@ -226,12 +228,25 @@ const AddAdditionalScript: React.FC = () => {
 		router.push("/management");
 	};
 
-	const configsWithStatus: ScriptCardConfig[] = scriptCardConfigs.map(
-		(config) => ({
+	const replaceBrandname = (text: string) =>
+		text.replaceAll("Allsource", whitelabel.brand_name);
+
+	const configsWithStatus: ScriptCardConfig[] = scriptCardConfigs
+		.map((config) => ({
+			...config,
+			title: replaceBrandname(config.title),
+			subtitle: replaceBrandname(config.subtitle),
+			popupTitle: replaceBrandname(config.popupTitle),
+			secondStepText: {
+				button: replaceBrandname(config.secondStepText.button),
+				default: replaceBrandname(config.secondStepText.default),
+			},
+			thirdStepText: replaceBrandname(config.thirdStepText),
+		}))
+		.map((config) => ({
 			...config,
 			showInstalled: installedStatus[config.key],
-		}),
-	);
+		}));
 
 	return (
 		<Box sx={{ ...managementStyle.mainContent }}>

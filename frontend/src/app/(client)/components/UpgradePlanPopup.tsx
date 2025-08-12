@@ -4,6 +4,7 @@ import { Box, Button, Typography, Drawer, Backdrop } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 type Props = {
 	open: boolean;
@@ -16,6 +17,7 @@ export const UpgradePlanPopup: React.FC<Props> = ({
 	handleClose,
 	limitName,
 }) => {
+	const { whitelabel } = useWhitelabel();
 	const router = useRouter();
 	if (!open) return null;
 	return (
@@ -112,9 +114,9 @@ export const UpgradePlanPopup: React.FC<Props> = ({
 									color: "rgba(95, 99, 104, 1) !important",
 								}}
 							>
-								Allsource provides cutting-edge tools and features tailored to
-								elevate your business performance, delivering superior results
-								and unlocking your full potential.
+								{whitelabel.brand_name} provides cutting-edge tools and features
+								tailored to elevate your business performance, delivering
+								superior results and unlocking your full potential.
 							</Typography>
 						</Box>
 					</Box>

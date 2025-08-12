@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 
 import AudiencePopup from "./AudienceSyncSlider";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 const dataSources = [
 	{ id: "bigcommerce", label: "Bigcommerce", icon: "bigcommerce-icon.svg" },
@@ -88,6 +89,8 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 	const [activeAudience, setActiveAudience] = useState<boolean>(false);
 	const [audience, setAudience] = useState<AudienceData[]>([]);
 	const [selectedAudience, setSelectedAudience] = useState<number[]>([]);
+
+	const { whitelabel } = useWhitelabel();
 
 	const handleSelectSource = (id: string) => {
 		setSelectedSource(id);
@@ -621,9 +624,9 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 										Choose your data source{" "}
 									</Typography>
 									<Typography className="paragraph">
-										Choose your data source, and let Allsource AI Audience
-										Algorithm identify high-intent leads and create lookalike
-										audiences to <br /> slash your acquisition costs.
+										Choose your data source, and let {whitelabel.brand_name} AI
+										Audience Algorithm identify high-intent leads and create
+										lookalike audiences to <br /> slash your acquisition costs.
 									</Typography>
 
 									<Box

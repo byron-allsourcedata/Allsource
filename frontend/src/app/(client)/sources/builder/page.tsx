@@ -60,6 +60,7 @@ import {
 	PixelDomainSelector,
 	type SkeletonState,
 } from "@/app/features/sources/builder/components/PixelDomainSelector";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface Row {
 	id: number;
@@ -138,7 +139,7 @@ const SourcesImport: React.FC = () => {
 	>([]);
 	const [showTargetStep, setShowTargetStep] = useState(false);
 
-	const [showModal, setShowModal] = useState(false);
+	const { whitelabel } = useWhitelabel();
 
 	const defautlHeadingSubstitution = {
 		Email: false,
@@ -959,9 +960,9 @@ const SourcesImport: React.FC = () => {
 											color: "rgba(95, 99, 104, 1)",
 										}}
 									>
-										Choose your data source, and let Allsource AI Audience
-										Algorithm identify high-intent leads and create lookalike
-										audiences to slash your acquisition costs.
+										Choose your data source, and let {whitelabel.brand_name} AI
+										Audience Algorithm identify high-intent leads and create
+										lookalike audiences to slash your acquisition costs.
 									</Typography>
 								</Box>
 								<Box

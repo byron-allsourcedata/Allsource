@@ -49,6 +49,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { fetchUserData } from "@/services/meService";
 import BookADemoPopup from "./components/BookADemoPopup";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface GTMAccount {
 	accountId: string;
@@ -133,6 +134,8 @@ const AccountSetup = () => {
 	const [openConfirm, setOpenConfirm] = useState(false);
 	const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
 	const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
+
+	const { whitelabel } = useWhitelabel();
 
 	interface CmsData {
 		manual?: string;
@@ -693,7 +696,7 @@ const AccountSetup = () => {
 		workspaceId: string,
 	) => {
 		const triggerData = {
-			name: "All Pages Trigger for Allsource pixel script",
+			name: `All Pages Trigger for ${whitelabel.brand_name} pixel script`,
 			type: "pageview",
 			filter: [],
 		};
@@ -798,7 +801,7 @@ const AccountSetup = () => {
 			);
 			let triggerId = findTriggerIdByName(
 				triggers,
-				"All Pages Trigger for Allsource pixel script",
+				`All Pages Trigger for ${whitelabel.brand_name} pixel script`,
 			);
 			if (!triggerId) {
 				triggerId = await createAllPagesTrigger(
@@ -813,7 +816,7 @@ const AccountSetup = () => {
 			);
 			let pixelCode = manualResponse.data.manual;
 			const tagData = {
-				name: "Allsource pixel script",
+				name: `${whitelabel.brand_name} pixel script`,
 				type: "html",
 				parameter: [
 					{
