@@ -32,6 +32,7 @@ async def is_whitelabel_enabled(user: AuthUser) -> bool:
 
 
 @router.get("/settings")
+@router.get("/icons")
 async def get_whitelabel_icons(
     whitelabel_service: WhitelabelService,
     referral: str | None = None,
@@ -51,6 +52,7 @@ async def get_whitelabel_icons(
             logger.info("Invalid Referral Code")
             return whitelabel_service.default_whitelabel_settings()
 
+    logger.info("No authorization or referral code provided")
     return whitelabel_service.default_whitelabel_settings()
 
 
