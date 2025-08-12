@@ -3,6 +3,7 @@ from fastapi import APIRouter, File, Form, UploadFile, status
 
 from auth_dependencies import AuthUser
 from db_dependencies import Db
+from domains.referrals.exceptions import InvalidReferralCode
 from domains.whitelabel.services.aws import WhitelabelAwsService
 
 from .schemas import WhitelabelSettingsSchema
@@ -36,13 +37,21 @@ async def get_whitelabel_icons(
     referral: str | None = None,
     user: AuthUser | None = None,
 ) -> WhitelabelSettingsSchema:
+    logger.info(f"Provided referral code: {referral}")
     if user is not None:
         user_id = user.get("id")
         return whitelabel_service.get_whitelabel_settings(user_id)
-    elif referral is not None:
-        return whitelabel_service.default_whitelabel_settings()
-    else:
-        return whitelabel_service.default_whitelabel_settings()
+
+    if referral is not None:
+        try:
+            return whitelabel_service.get_whitelabel_settings_by_referral_code(
+                referral
+            )
+        except InvalidReferralCode:
+            logger.info("Invalid Referral Code")
+            return whitelabel_service.default_whitelabel_settings()
+
+    return whitelabel_service.default_whitelabel_settings()
 
 
 @router.post("/settings")

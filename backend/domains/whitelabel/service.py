@@ -1,19 +1,27 @@
+import logging
 import uuid
 from fastapi import UploadFile
 
+from domains.referrals.service import ReferralService
 from domains.whitelabel.services.aws import WhitelabelAwsService
 from .persistence import WhitelabelSettingsPersistence
 from .schemas import WhitelabelSettingsSchema
 from resolver import injectable
 
+logger = logging.getLogger(__name__)
+
 
 @injectable
 class WhitelabelService:
     def __init__(
-        self, repo: WhitelabelSettingsPersistence, aws: WhitelabelAwsService
+        self,
+        repo: WhitelabelSettingsPersistence,
+        aws: WhitelabelAwsService,
+        referral: ReferralService,
     ):
         self.repo = repo
         self.aws = aws
+        self.referral = referral
 
     def get_whitelabel_settings(self, user_id: int) -> WhitelabelSettingsSchema:
         settings = self.repo.get_whitelabel_settings(user_id)
@@ -26,6 +34,18 @@ class WhitelabelService:
             brand_logo_url=settings.brand_logo_url,
             brand_icon_url=settings.brand_icon_url,
         )
+
+    def get_whitelabel_settings_by_referral_code(
+        self, referral_code: str
+    ) -> WhitelabelSettingsSchema:
+        """
+        Raises IncorrectReferralCode
+        """
+        parent_user_id, _discount_code = self.referral.validate_code(
+            referral_code
+        )
+
+        return self.get_whitelabel_settings(parent_user_id)
 
     def default_whitelabel_settings(self) -> WhitelabelSettingsSchema:
         return WhitelabelSettingsSchema(

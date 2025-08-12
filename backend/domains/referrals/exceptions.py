@@ -1,0 +1,2 @@
+class InvalidReferralCode(Exception):
+    pass
