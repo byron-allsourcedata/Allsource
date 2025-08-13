@@ -937,28 +937,7 @@ interface PartnersAccountsProps {
 	isMaster: boolean;
 }
 
-interface AccountData {
-	id: number;
-	full_name: string;
-	email: string;
-	created_at: string;
-	payment_status?: string;
-	is_trial?: boolean;
-	last_login: string;
-	invited_by_email?: string;
-	role: string[];
-	pixel_installed_count?: number;
-	sources_count?: number;
-	lookalikes_count?: number;
-	credits_count?: number;
-	type?: string;
-	is_email_validation_enabled: boolean;
-	is_another_domain_resolved: boolean;
-	has_credit_card: boolean;
-	cost_leads_overage: number;
-	is_partner: boolean;
-	is_master: boolean;
-}
+type AccountData = UserData;
 
 const Account: React.FC<PartnersAccountsProps> = ({
 	is_admin,

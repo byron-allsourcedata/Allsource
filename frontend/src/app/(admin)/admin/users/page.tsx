@@ -63,6 +63,7 @@ export interface UserData {
 	cost_leads_overage: number;
 	is_partner: boolean;
 	is_master: boolean;
+	whitelabel_settings_enabled?: boolean;
 }
 
 const Users: React.FC = () => {
