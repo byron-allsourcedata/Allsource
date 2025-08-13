@@ -32,6 +32,7 @@ import { useRef } from "react";
 import CustomButton from "@/components/ui/CustomButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface HintCardInterface {
 	description: string;
@@ -161,6 +162,7 @@ const Popup: React.FC<PopupProps> = ({
 	const [loading, setLoading] = useState(false);
 	const [shopifyInstalled, setShopifyInstall] = useState(false);
 	const [bigcommerceInstalled, setBigcommerceInstalled] = useState(false);
+	const { whitelabel } = useWhitelabel();
 	const sourcePlatform = useMemo(() => {
 		if (typeof window !== "undefined") {
 			const savedMe = sessionStorage.getItem("me");
@@ -867,8 +869,8 @@ const Popup: React.FC<PopupProps> = ({
 													"@media (max-width: 600px)": { textAlign: "left" },
 												}}
 											>
-												Add our offical Allsource pixel plugin to your Wordpress
-												site.
+												Add our offical {whitelabel.brand_name} pixel plugin to
+												your Wordpress site.
 											</Typography>
 										</Box>
 										<Box position="relative">

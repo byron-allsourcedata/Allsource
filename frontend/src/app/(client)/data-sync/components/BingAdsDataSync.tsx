@@ -39,6 +39,8 @@ import {
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { Logo } from "@/components/ui/Logo";
 
 interface BingAdsDataSyncProps {
 	open: boolean;
@@ -137,6 +139,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 		type: "",
 		dailyBudget: 1,
 	});
+	const { whitelabel } = useWhitelabel();
 
 	const [customersInfo, setCustomersInfo] = useState<Customers[]>(
 		[
@@ -2000,7 +2003,8 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																			color="textSecondary"
 																			paragraph
 																		>
-																			We will not run your campaign. Allsource
+																			We will not run your campaign.{" "}
+																			{whitelabel.brand_name}
 																			will create a campaign template in your ad
 																			account. We won&apos;t run anything
 																			without your confirmation.

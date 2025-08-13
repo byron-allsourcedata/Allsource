@@ -267,7 +267,7 @@ const ZapierConnectPopup = ({
 								}}
 							>
 								<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-									<LogoSmall alt="Allsource" height={26} width={32} />
+									<LogoSmall height={26} width={32} />
 									<Typography
 										variant="h6"
 										sx={{

@@ -21,6 +21,7 @@ import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import { styled } from "@mui/system";
 import { ArrowDropDown } from "@mui/icons-material";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface InviteUsersPopupProps {
 	open: boolean;
@@ -41,6 +42,8 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 	const [roleError, setRoleError] = useState<string | null>(null);
 	const [inputValue, setInputValue] = useState("");
 	const [lastAddedEmail, setLastAddedEmail] = useState("");
+
+	const { whitelabel } = useWhitelabel();
 
 	const availableEmails = ["Julie@gmail.com"];
 
@@ -153,7 +156,8 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 				}}
 			>
 				<Typography variant="h6" className="first-sub-title">
-					Invite your team to review or collaborate on this Allsource project.
+					Invite your team to review or collaborate on this{" "}
+					{whitelabel.brand_name} project.
 				</Typography>
 
 				{/* <Autocomplete

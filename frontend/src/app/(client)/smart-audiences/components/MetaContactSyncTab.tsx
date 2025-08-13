@@ -19,6 +19,7 @@ import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CloseIcon from "@mui/icons-material/Close";
 import { showErrorToast } from "@/components/ToastNotification";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface MetaAuidece {
 	id: string;
@@ -147,6 +148,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
 	const [listNameError, setListNameError] = useState(false);
+	const { whitelabel } = useWhitelabel();
 
 	useEffect(() => {
 		const allFieldsFilled = Object.values(formValues).every(
@@ -1068,9 +1070,9 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 												color="textSecondary"
 												paragraph
 											>
-												We will not run your campaign. Allsource will create a
-												campaign template in your ad account. We won&apos;t run
-												anything without your confirmation.
+												We will not run your campaign. {whitelabel.brand_name}
+												will create a campaign template in your ad account. We
+												won&apos;t run anything without your confirmation.
 											</Typography>
 											<Button
 												variant="contained"

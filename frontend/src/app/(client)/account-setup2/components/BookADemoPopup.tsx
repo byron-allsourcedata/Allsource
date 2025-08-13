@@ -17,6 +17,7 @@ import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import { showToast } from "@/components/ToastNotification";
 import { useBookingUrl, usePrefillData } from "@/services/booking";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface PopupProps {
 	endSetup: () => void;
@@ -25,6 +26,7 @@ interface PopupProps {
 const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
 	const [open, setOpen] = useState(true);
 	const [utmParams, setUtmParams] = useState<string | null>(null);
+	const { whitelabel } = useWhitelabel();
 
 	const handleClose = () => {
 		setOpen(false);
@@ -97,7 +99,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
 					</Typography>
 					<List>
 						{[
-							"Get a personalised demo of Allsource.",
+							`Get a personalised demo of ${whitelabel.brand_name}.`,
 							"Experience the AI powered Influencer search tool.",
 							"Let Our Expert Walk You Through Every Functionality of Our Platform.",
 							"Get the answers you have been waiting for..!",
