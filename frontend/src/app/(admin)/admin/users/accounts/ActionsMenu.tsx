@@ -26,6 +26,10 @@ type Props = {
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
+	actionsLoading?: boolean;
+	enableWhitelabel?: () => void;
+	disableWhitelabel?: () => void;
+	whitelabelEnabled?: boolean;
 };
 
 export const ActionsMenu: React.FC<Props> = ({
@@ -37,6 +41,10 @@ export const ActionsMenu: React.FC<Props> = ({
 	onPlanChanged,
 	isPartnerTab,
 	isMaster,
+	actionsLoading,
+	whitelabelEnabled,
+	enableWhitelabel,
+	disableWhitelabel,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -117,6 +125,14 @@ export const ActionsMenu: React.FC<Props> = ({
 		handleClose();
 	};
 
+	const toggleWhitelabel = () => {
+		if (whitelabelEnabled) {
+			disableWhitelabel?.();
+		} else {
+			enableWhitelabel?.();
+		}
+	};
+
 	return (
 		<>
 			<Menu
@@ -134,17 +150,25 @@ export const ActionsMenu: React.FC<Props> = ({
 				MenuListProps={{ dense: true }}
 			>
 				<MenuItem
-					disabled={!isMaster && isPartnerTab}
+					disabled={actionsLoading || (!isMaster && isPartnerTab)}
 					onClick={() => handleOpenPartnerPopup(false)}
 				>
 					Make a Partner
 				</MenuItem>
 
 				<MenuItem
-					disabled={isMaster && isPartnerTab}
+					disabled={actionsLoading || (isMaster && isPartnerTab)}
 					onClick={() => handleOpenPartnerPopup(true)}
 				>
 					Make a Master Partner
+				</MenuItem>
+
+				<MenuItem
+					disabled={actionsLoading || !isPartnerTab}
+					onClick={toggleWhitelabel}
+				>
+					{whitelabelEnabled ? "Disable " : "Enable "}
+					whitelabel
 				</MenuItem>
 
 				<MenuItem onMouseEnter={handleOpenSubmenu}>
@@ -171,19 +195,19 @@ export const ActionsMenu: React.FC<Props> = ({
 				}}
 			>
 				<MenuItem
-					disabled={currentPlanAlias === "Basic"}
+					disabled={actionsLoading || currentPlanAlias === "Basic"}
 					onClick={() => onPlanClick("Basic")}
 				>
 					Move to Basic plan
 				</MenuItem>
 				<MenuItem
-					disabled={currentPlanAlias === "Smart Audience"}
+					disabled={actionsLoading || currentPlanAlias === "Smart Audience"}
 					onClick={() => onPlanClick("Smart Audience")}
 				>
 					Move to Smart Audience plan
 				</MenuItem>
 				<MenuItem
-					disabled={currentPlanAlias === "Pro"}
+					disabled={actionsLoading || currentPlanAlias === "Pro"}
 					onClick={() => onPlanClick("Pro")}
 				>
 					Move to Pro plan

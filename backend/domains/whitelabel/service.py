@@ -3,6 +3,7 @@ import uuid
 from fastapi import UploadFile
 
 from domains.referrals.service import ReferralService
+from domains.users.service import UsersService
 from domains.whitelabel.services.aws import WhitelabelAwsService
 from .persistence import WhitelabelSettingsPersistence
 from .schemas import WhitelabelSettingsSchema
@@ -16,11 +17,13 @@ class WhitelabelService:
     def __init__(
         self,
         repo: WhitelabelSettingsPersistence,
+        users: UsersService,
         aws: WhitelabelAwsService,
         referral: ReferralService,
     ):
         self.repo = repo
         self.aws = aws
+        self.users = users
         self.referral = referral
 
     def get_whitelabel_settings(self, user_id: int) -> WhitelabelSettingsSchema:
@@ -53,6 +56,18 @@ class WhitelabelService:
             brand_logo_url="/logo.svg",
             brand_icon_url="/logo-icon.svg",
         )
+
+    def enable_whitelabel_settings(self, user_id: int):
+        """
+        Raises UserNotFound
+        """
+        self.users.toggle_whitelabel_settings(user_id, True)
+
+    def disable_whitelabel_settings(self, user_id: int):
+        """
+        Raises UserNotFound
+        """
+        self.users.toggle_whitelabel_settings(user_id, False)
 
     def update_whitelabel_settings(
         self,

@@ -35,6 +35,10 @@ import CustomSwitch from "@/components/ui/CustomSwitch";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import type { UserData } from "../schemas";
 import { ActionsMenu } from "../accounts/ActionsMenu";
+import {
+	useDisableWhitelabel,
+	useEnableWhitelabel,
+} from "../accounts/requests";
 
 interface tableHeaders {
 	key: string;
@@ -159,6 +163,13 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	const meItem =
 		typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
 	const meData = meItem ? JSON.parse(meItem) : { full_name: "", email: "" };
+
+	const [enableWhitelabel, enableWhitelabelLoading] = useEnableWhitelabel();
+	const [disableWhitelabel, disableWhitelabelLoading] = useDisableWhitelabel();
+
+	const whitelabelActionsLoading =
+		enableWhitelabelLoading || disableWhitelabelLoading;
+
 	const whitelabel = useWhitelabel();
 
 	const handleLogin = async (user_account_id: number) => {
@@ -540,6 +551,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							onPlanChanged={onPlanChanged}
 							isPartnerTab={isPartnerTab || row.is_partner}
 							isMaster={isMaster || row.is_master}
+							actionsLoading={whitelabelActionsLoading}
+							whitelabelEnabled={row.whitelabel_settings_enabled}
+							enableWhitelabel={() =>
+								enableWhitelabel(row.id).then(onPlanChanged)
+							}
+							disableWhitelabel={() =>
+								disableWhitelabel(row.id).then(onPlanChanged)
+							}
 						/>
 					</Box>
 				);
