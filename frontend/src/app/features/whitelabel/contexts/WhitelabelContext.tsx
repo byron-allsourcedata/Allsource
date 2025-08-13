@@ -55,7 +55,8 @@ export function WhitelabelProvider({
 			if (
 				response?.status === 200 &&
 				whitelabelSettings &&
-				String(response.config?.headers?.Authorization)?.length > 10
+				(String(response.config?.headers?.Authorization)?.length > 10 ||
+					response?.config.params?.referral)
 			) {
 				localStorage.setItem("whitelabel", JSON.stringify(whitelabelSettings));
 				setWhitelabel(whitelabelSettings);

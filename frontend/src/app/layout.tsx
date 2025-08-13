@@ -79,7 +79,7 @@ export default function RootLayout({
 			<head>
 				<title>{formattedPageTitle}</title>
 				<meta name="description" content={`Page: ${pageTitle}`} />
-				<link rel="icon" href={whitelabel.brand_icon_url} />
+				<link rel="icon" href={whitelabel.brand_icon_url ?? "/logo-icon.svg"} />
 				<meta
 					httpEquiv="Content-Security-Policy"
 					content="script-src * 'unsafe-inline' 'unsafe-eval'; object-src 'none';"
