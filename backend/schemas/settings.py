@@ -137,7 +137,8 @@ class Plan(BaseModel):
     is_active: Optional[bool] = False
     price: Price
     permanent_limits: List[Advantage]
-    monthly_limits: List[Advantage]
+    referrals: Optional[List[Advantage]] = None
+    monthly_limits: Optional[List[Advantage]] = None
     gifted_funds: List[Advantage]
 
 

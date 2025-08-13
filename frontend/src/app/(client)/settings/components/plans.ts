@@ -13,7 +13,8 @@ export type Plan = {
 	is_active: boolean;
 	is_recommended: boolean;
 	permanent_limits: Advantage[];
-	monthly_limits: Advantage[];
+	monthly_limits?: Advantage[];
+	referrals?: Advantage[];
 	gifted_funds: Advantage[];
 };
 

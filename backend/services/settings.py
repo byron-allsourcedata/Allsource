@@ -1023,6 +1023,30 @@ class SettingsService:
             ],
         )
 
+        PARTNER_BASIC = Plan(
+            title="Partner Basic",
+            alias="partner_basic",
+            price=Price(value="$500", y="month"),
+            permanent_limits=[
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                ),
+                Advantage(
+                    good=True, name="Contact Downloads:", value="Unlimited"
+                )
+            ],
+            referrals=[
+                Advantage(good=True, name="Invites", value="Unlimited"),
+                Advantage(good=True, name="Free Smart Audience Months", value="3x1"),
+            ],
+            gifted_funds=[
+                Advantage(good=True, name="Validation funds:", value="$5,000"),
+                Advantage(
+                    good=True, name="Premium Source funds:", value="$5,000"
+                ),
+            ]
+        )
+
         SMART_AUDIENCE_YEARLY = Plan(
             title="Smart Audience",
             alias="smart_audience",
@@ -1080,12 +1104,14 @@ class SettingsService:
         YEARLY_PLANS = [
             FREE_TRAIL_PLAN,
             BASIC,
+            PARTNER_BASIC,
             SMART_AUDIENCE_YEARLY,
             PRO_YEARLY,
         ]
         MONTHLY_PLANS = [
             FREE_TRAIL_PLAN,
             BASIC,
+            PARTNER_BASIC,
             SMART_AUDIENCE_MONTHLY,
             PRO_MONTHLY,
         ]
