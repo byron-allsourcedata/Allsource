@@ -4,10 +4,8 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	Box,
 	Typography,
-	Button,
 	Grid,
 	Chip,
-	Popover,
 	Paper,
 	IconButton,
 	Table,
@@ -16,28 +14,16 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	ListItemIcon,
-	ListItemText,
-	Menu,
-	MenuItem,
-	PopoverProps,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
 } from "@mui/material";
 import { useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
-import CustomTablePagination from "@/components/CustomTablePagination";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
 import { MenuIconButton } from "@/components/table";
-import { usePagination } from "@/hooks/usePagination";
-import MakePartnerPopup from "./MakePartnerPopup";
 import {
 	MoreVert,
 	SwapVertIcon,
@@ -45,12 +31,10 @@ import {
 	ArrowUpwardIcon,
 } from "@/icon";
 import { Paginator } from "@/components/PaginationComponent";
-import { useScrollShadow } from "@/hooks/useScrollShadow";
 import CustomSwitch from "@/components/ui/CustomSwitch";
-import { UserData } from "../page";
-import { ArrowRightIcon } from "@mui/x-date-pickers";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import type { UserData } from "../schemas";
+import { ActionsMenu } from "../accounts/ActionsMenu";
 
 interface tableHeaders {
 	key: string;
@@ -156,321 +140,6 @@ const TableHeader: React.FC<{
 				))}
 			</TableRow>
 		</TableHead>
-	);
-};
-
-interface ConfirmPlanChangeDialogProps {
-	open: boolean;
-	onClose: () => void;
-	onConfirm: () => void;
-	user: {
-		name: string;
-		email: string;
-		joinDate: string;
-		currentPlan: string;
-	};
-	newPlan: string;
-}
-
-const ConfirmPlanChangeDialog: React.FC<ConfirmPlanChangeDialogProps> = ({
-	open,
-	onClose,
-	onConfirm,
-	user,
-	newPlan,
-}) => {
-	return (
-		<Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-			<DialogTitle className="modal-heading">Confirm your action</DialogTitle>
-			<DialogContent>
-				<Typography className="modal-text" sx={{ mb: 2 }}>
-					Are you sure you want to move this user to <strong>{newPlan}</strong>{" "}
-					plan?
-				</Typography>
-
-				<Typography className="modal-text" sx={{ mb: 1 }}>
-					USER DETAILS
-				</Typography>
-
-				<Grid container spacing={1}>
-					{[
-						{ label: "Name", value: user.name },
-						{ label: "Email", value: user.email },
-						{
-							label: "Join Date",
-							value: new Date(user.joinDate).toLocaleDateString("en-US", {
-								year: "numeric",
-								month: "short",
-								day: "2-digit",
-							}),
-						},
-						{ label: "Current Plan", value: user.currentPlan },
-					].map(({ label, value }) => (
-						<Grid
-							item
-							xs={12}
-							key={label}
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-								py: 0.5,
-							}}
-						>
-							<Typography className="modal-text">{label}</Typography>
-							<Typography
-								className="modal-text-semibold"
-								sx={{ textAlign: "right" }}
-							>
-								{value}
-							</Typography>
-						</Grid>
-					))}
-				</Grid>
-			</DialogContent>
-
-			<DialogActions sx={{ px: 3, pb: 2, justifyContent: "flex-end", gap: 2 }}>
-				<Button
-					variant="outlined"
-					onClick={onClose}
-					sx={{
-						fontFamily: "var(--font-nunito)",
-						height: 36,
-						fontSize: "0.8rem",
-						textTransform: "none",
-						border: "1px solid rgba(56, 152, 252, 1)",
-						color: "rgba(56, 152, 252, 1)",
-						"&:hover": {
-							borderColor: "rgba(56, 152, 252, 1)",
-						},
-					}}
-				>
-					Cancel
-				</Button>
-				<Button
-					variant="contained"
-					onClick={onConfirm}
-					sx={{
-						fontFamily: "var(--font-nunito)",
-						height: 36,
-						fontSize: "0.8rem",
-						textTransform: "none",
-						backgroundColor: "rgba(56, 152, 252, 1)",
-						color: "#fff",
-						"&:hover": {
-							backgroundColor: "rgba(56, 152, 252, 1)",
-						},
-						"&.Mui-disabled": {
-							backgroundColor: "rgba(80, 82, 178, 0.6)",
-							color: "#fff",
-						},
-					}}
-				>
-					Confirm
-				</Button>
-			</DialogActions>
-		</Dialog>
-	);
-};
-
-interface ActionsMenuProps {
-	anchorEl: PopoverProps["anchorEl"];
-	handleClose: () => void;
-	userId: number;
-	currentPlanAlias: string;
-	user: {
-		name: string;
-		email: string;
-		joinDate: string;
-	};
-	onPlanChanged: () => void;
-	isPartnerTab: boolean;
-	isMaster: boolean;
-}
-
-const ActionsMenu: React.FC<ActionsMenuProps> = ({
-	anchorEl,
-	handleClose,
-	userId,
-	currentPlanAlias,
-	user,
-	onPlanChanged,
-	isPartnerTab,
-	isMaster,
-}) => {
-	const [dialogOpen, setDialogOpen] = useState(false);
-	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-	const [submenuAnchorEl, setSubmenuAnchorEl] = useState<null | HTMLElement>(
-		null,
-	);
-	const [partnerPopupOpen, setPartnerPopupOpen] = useState(false);
-	const [partnerPopupIsMaster, setPartnerPopupIsMaster] =
-		useState<boolean>(false);
-
-	const handleOpenSubmenu = (event: React.MouseEvent<HTMLElement>) => {
-		setSubmenuAnchorEl(event.currentTarget);
-	};
-
-	const handleCloseSubmenu = () => {
-		setSubmenuAnchorEl(null);
-	};
-
-	const handleOpenPartnerPopup = (isMaster: boolean) => {
-		handleCloseSubmenu();
-		handleClose();
-		setPartnerPopupIsMaster(isMaster);
-		setPartnerPopupOpen(true);
-	};
-
-	const handleClosePartnerPopup = () => {
-		setPartnerPopupOpen(false);
-	};
-
-	const changeUserPlan = async (planAlias: string) => {
-		try {
-			const response = await axiosInstance.post("/admin/change_plan", {
-				user_id: userId,
-				plan_alias: planAlias,
-			});
-
-			if (response.data?.success) {
-				showToast(response.data.message || "Successfully updated plan");
-			} else {
-				showErrorToast(response.data.message || "Failed to update plan");
-			}
-
-			return response.data;
-		} catch (error) {
-			showErrorToast("Error while updating plan");
-			console.error("Error", error);
-		}
-	};
-
-	const onPlanClick = (plan: string) => {
-		const planMap: Record<string, string> = {
-			Basic: "basic",
-			Pro: "pro",
-			"Smart Audience": "smart_audience_monthly",
-		};
-
-		const planAlias = planMap[plan];
-		if (planAlias !== currentPlanAlias) {
-			setSelectedPlan(plan);
-			setDialogOpen(true);
-		}
-	};
-
-	const handleConfirmPlanChange = async () => {
-		if (!selectedPlan) return;
-
-		const planMap: Record<string, string> = {
-			Basic: "basic",
-			Pro: "pro",
-			"Smart Audience": "smart_audience_monthly",
-		};
-		const alias = planMap[selectedPlan];
-
-		await changeUserPlan(alias);
-		onPlanChanged();
-		setDialogOpen(false);
-		setSelectedPlan(null);
-		handleClose();
-	};
-
-	return (
-		<>
-			<Menu
-				open={Boolean(anchorEl)}
-				anchorEl={anchorEl}
-				onClose={handleClose}
-				anchorOrigin={{
-					vertical: "bottom",
-					horizontal: "left",
-				}}
-				transformOrigin={{
-					vertical: "top",
-					horizontal: "right",
-				}}
-				MenuListProps={{ dense: true }}
-			>
-				<MenuItem
-					disabled={!isMaster && isPartnerTab}
-					onClick={() => handleOpenPartnerPopup(false)}
-				>
-					Make a Partner
-				</MenuItem>
-
-				<MenuItem
-					disabled={isMaster && isPartnerTab}
-					onClick={() => handleOpenPartnerPopup(true)}
-				>
-					Make a Master Partner
-				</MenuItem>
-
-				<MenuItem onMouseEnter={handleOpenSubmenu}>
-					<ListItemText>Change Plan</ListItemText>
-					<ListItemIcon>
-						<ArrowRightIcon
-							fontSize="small"
-							sx={{ color: "rgba(32, 33, 36, 1)" }}
-						/>
-					</ListItemIcon>
-				</MenuItem>
-			</Menu>
-
-			<Menu
-				anchorEl={submenuAnchorEl}
-				open={Boolean(submenuAnchorEl)}
-				onClose={handleCloseSubmenu}
-				anchorOrigin={{ vertical: "top", horizontal: "left" }}
-				transformOrigin={{ vertical: "top", horizontal: "right" }}
-				MenuListProps={{
-					dense: true,
-					onMouseEnter: () => {},
-					onMouseLeave: handleCloseSubmenu,
-				}}
-			>
-				<MenuItem
-					disabled={currentPlanAlias === "Basic"}
-					onClick={() => onPlanClick("Basic")}
-				>
-					Move to Basic plan
-				</MenuItem>
-				<MenuItem
-					disabled={currentPlanAlias === "Smart Audience"}
-					onClick={() => onPlanClick("Smart Audience")}
-				>
-					Move to Smart Audience plan
-				</MenuItem>
-				<MenuItem
-					disabled={currentPlanAlias === "Pro"}
-					onClick={() => onPlanClick("Pro")}
-				>
-					Move to Pro plan
-				</MenuItem>
-			</Menu>
-			<ConfirmPlanChangeDialog
-				open={dialogOpen}
-				onClose={() => setDialogOpen(false)}
-				onConfirm={handleConfirmPlanChange}
-				newPlan={selectedPlan ?? ""}
-				user={{
-					name: user.name,
-					email: user.email,
-					joinDate: user.joinDate,
-					currentPlan: currentPlanAlias,
-				}}
-			/>
-			<MakePartnerPopup
-				open={partnerPopupOpen}
-				onClose={handleClosePartnerPopup}
-				isMaster={partnerPopupIsMaster}
-				userID={userId}
-				updateOrAddPartner={() => {
-					onPlanChanged();
-				}}
-			/>
-		</>
 	);
 };
 
