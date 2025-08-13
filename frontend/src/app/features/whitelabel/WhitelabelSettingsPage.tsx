@@ -117,7 +117,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 
 	const [
 		{ data: initialSettings, loading: settingsLoading },
-		fetchWhitelabelSettigns,
+		fetchWhitelabelSettings,
 	] = useGetOwnWhitelabelSettings(true);
 
 	const [uploadedLogo, uploadedLogoLoading, uploadedLogoContentType] =
@@ -128,6 +128,12 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		uploadedSmallLogoLoading,
 		uploadedSmallLogoContentType,
 	] = useUploadedLogo(initialSettings?.brand_icon_url);
+
+	useEffect(() => {
+		try {
+			fetchWhitelabelSettings();
+		} catch {}
+	}, []);
 
 	useEffect(() => {
 		if (uploadedLogo) {
