@@ -32,7 +32,7 @@ export const Logo: FC<Props> = ({
 		setIsClient(true);
 	}, []);
 
-	if (!isClient) {
+	if (!isClient || !url) {
 		return (
 			<Skeleton
 				variant="rounded"

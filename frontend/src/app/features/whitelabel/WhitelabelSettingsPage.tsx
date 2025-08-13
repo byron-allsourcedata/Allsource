@@ -80,7 +80,6 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			paddingBottom: 20,
 		});
 	const [brandNameField, setBrandName] = useFieldValue("-");
-
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 	const [logoUrl, setLogoUrl] = useLogoUrl(logoFile);
 
