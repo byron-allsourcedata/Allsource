@@ -9,6 +9,17 @@ export type WhitelabelContextValue = {
 
 const WhitelabelContext = createContext<WhitelabelContextValue | null>(null);
 
+export function isClientSide() {
+	return typeof window !== "undefined";
+}
+
+export function getUrlSearchParam() {
+	if (!isClientSide()) {
+		return null;
+	}
+	return new URLSearchParams(window.location.search).get("referral");
+}
+
 export function WhitelabelProvider({
 	children,
 	whitelabel,
@@ -20,7 +31,7 @@ export function WhitelabelProvider({
 	setWhitelabel: (whitelabel: WhitelabelSettingsSchema) => void;
 	autofetch: boolean;
 }) {
-	const referral = new URLSearchParams(window.location.search).get("referral");
+	const referral = getUrlSearchParam();
 
 	const [{ data: whitelabelSettings }, refetch] = useGetWhitelabelSettings(
 		String(referral),
