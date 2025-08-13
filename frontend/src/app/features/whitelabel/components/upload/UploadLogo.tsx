@@ -9,16 +9,27 @@ import type { FC } from "react";
 type Props = {
 	containerRef: React.RefObject<HTMLDivElement>;
 	dragProps: FileDnd;
+	sizes?: {
+		width?: number;
+		height?: number;
+	};
 	onClick: () => void;
 };
 
-export const UploadLogo: FC<Props> = ({ containerRef, dragProps, onClick }) => {
+export const UploadLogo: FC<Props> = ({
+	containerRef,
+	dragProps,
+	sizes,
+	onClick,
+}) => {
 	return (
 		<UploadLogoContainer ref={containerRef} {...dragProps} onClick={onClick}>
 			<UploadIcon />
 			<Column gap="0.5rem">
 				<Title>Upload a file</Title>
-				<Description>130x30, SVG or PNG, Max 10 MB</Description>
+				<Description>
+					{sizes?.width ?? 130}x{sizes?.height ?? 30}, SVG or PNG, Max 10 MB
+				</Description>
 			</Column>
 		</UploadLogoContainer>
 	);

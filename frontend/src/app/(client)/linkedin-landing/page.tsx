@@ -11,6 +11,7 @@ import {
 	showToast,
 } from "../../../components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { Logo } from "@/components/ui/Logo";
 
 const LinkedinLandingInner = () => {
 	const router = useRouter();
@@ -68,7 +69,7 @@ const LinkedinLandingInner = () => {
 				sx={{ alignItems: "center", textDecoration: "none" }}
 				href="https://allsourcedata.io"
 			>
-				<Image src={"/logo.svg"} width={61} height={39} alt="Maximiz" />
+				<Logo width={61} height={39} />
 				<Typography
 					variant="h1"
 					color={"#F8464B"}

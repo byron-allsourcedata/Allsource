@@ -26,6 +26,20 @@ export function useGetWhitelabelSettings(
 	);
 }
 
+export function useGetOwnWhitelabelSettings(
+	autofetch?: boolean,
+): UseAxiosResult<WhitelabelSettingsSchema> {
+	return useAxios(
+		{
+			url: "/whitelabel/own-settings",
+			method: "GET",
+		},
+		{
+			manual: !autofetch,
+		},
+	);
+}
+
 export function usePostWhitelabelSettings(): UseAxiosResult<unknown> {
 	return useAxios(
 		{

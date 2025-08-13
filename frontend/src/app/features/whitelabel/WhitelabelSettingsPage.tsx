@@ -18,6 +18,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import useDefaultAxios from "axios-hooks";
 import { useFilePicker } from "./hooks/useFilePicker";
 import {
+	useGetOwnWhitelabelSettings,
 	useGetWhitelabelSettings,
 	usePostWhitelabelSettings,
 } from "./requests";
@@ -115,7 +116,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	const [
 		{ data: initialSettings, loading: settingsLoading },
 		fetchWhitelabelSettigns,
-	] = useGetWhitelabelSettings();
+	] = useGetOwnWhitelabelSettings(true);
 
 	const [uploadedLogo, uploadedLogoLoading, uploadedLogoContentType] =
 		useUploadedLogo(initialSettings?.brand_logo_url);

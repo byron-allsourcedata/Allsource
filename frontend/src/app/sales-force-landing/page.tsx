@@ -11,6 +11,7 @@ import {
 	showToast,
 } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/FirstLevelLoader";
+import { Logo } from "@/components/ui/Logo";
 
 const GoogleAdsLanding = () => {
 	const router = useRouter();
@@ -59,7 +60,7 @@ const GoogleAdsLanding = () => {
 				display={"flex"}
 				sx={{ alignItems: "center", textDecoration: "none" }}
 			>
-				<Image src={"/logo.svg"} width={100} height={200} alt="Allsource" />
+				<Logo width={100} height={200} />
 			</Link>
 			<Image
 				src={"/app_intalled.svg"}

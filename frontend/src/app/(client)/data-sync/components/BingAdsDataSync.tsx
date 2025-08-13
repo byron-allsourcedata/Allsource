@@ -2126,12 +2126,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 													},
 												}}
 											>
-												<Image
-													src="/logo.svg"
-													alt="logo"
-													height={15}
-													width={24}
-												/>
+												<Logo height={15} width={24} />
 											</Grid>
 											<Grid
 												item

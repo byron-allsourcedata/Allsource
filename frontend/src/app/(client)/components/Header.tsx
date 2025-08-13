@@ -31,6 +31,7 @@ import { getCurrentImpersonationLevel } from "@/utils/impersonation";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
 import type { WhitelabelSettingsSchema } from "@/app/features/whitelabel/schemas";
 import { resetLocalStorage } from "@/components/utils";
+import { Logo } from "@/components/ui/Logo";
 
 const headerStyles = {
 	headers: {
@@ -260,15 +261,7 @@ const Header: React.FC<HeaderProps> = ({
 								padding: "2px",
 							}}
 						>
-							{whitelabelData && (
-								<Image
-									priority
-									src={whitelabelData.brand_logo_url ?? "/logo.svg"}
-									alt="logo"
-									height={30}
-									width={130}
-								/>
-							)}
+							<Logo />
 						</IconButton>
 						{visibleButton && (
 							<Button

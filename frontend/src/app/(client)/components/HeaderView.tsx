@@ -29,6 +29,7 @@ import { usePathname } from "next/navigation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
 import { resetLocalStorage } from "@/components/utils";
+import { Logo } from "@/components/ui/Logo";
 
 const headerStyles = {
 	headers: {
@@ -213,13 +214,7 @@ export const HeaderView: React.FC<Props> = ({
 								padding: "2px",
 							}}
 						>
-							<Image
-								priority
-								src={logoSrc ?? "/logo.svg"}
-								alt="logo"
-								height={30}
-								width={130}
-							/>
+							<Logo height={30} width={130} />
 						</IconButton>
 						{visibleButton && (
 							<Button

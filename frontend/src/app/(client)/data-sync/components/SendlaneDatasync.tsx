@@ -33,6 +33,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { Logo } from "@/components/ui/Logo";
 
 interface ConnectKlaviyoPopupProps {
 	open: boolean;
@@ -1578,12 +1579,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo.svg"
-												alt="logo"
-												height={15}
-												width={24}
-											/>
+											<Logo height={15} width={24} />
 										</Grid>
 										<Grid
 											item

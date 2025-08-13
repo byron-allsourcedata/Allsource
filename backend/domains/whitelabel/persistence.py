@@ -34,6 +34,19 @@ class WhitelabelSettingsPersistence:
             .first()
         )
 
+    def get_own_whitelabel_settings(
+        self, user_id: int
+    ) -> WhitelabelSettings | None:
+        user = self.db.query(Users).where(Users.id == user_id).first()
+        if user is None:
+            return None
+
+        return (
+            self.db.query(WhitelabelSettings)
+            .where(WhitelabelSettings.user_id == user.id)
+            .first()
+        )
+
     def update_whitelabel_settings(
         self,
         user_id: int,

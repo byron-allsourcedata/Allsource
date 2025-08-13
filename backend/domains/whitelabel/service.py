@@ -38,6 +38,20 @@ class WhitelabelService:
             brand_icon_url=settings.brand_icon_url,
         )
 
+    def get_own_whitelabel_settings(
+        self, user_id: int
+    ) -> WhitelabelSettingsSchema:
+        settings = self.repo.get_own_whitelabel_settings(user_id)
+
+        if settings is None:
+            return self.default_whitelabel_settings()
+
+        return WhitelabelSettingsSchema(
+            brand_name=settings.brand_name,
+            brand_logo_url=settings.brand_logo_url,
+            brand_icon_url=settings.brand_icon_url,
+        )
+
     def get_whitelabel_settings_by_referral_code(
         self, referral_code: str
     ) -> WhitelabelSettingsSchema:
