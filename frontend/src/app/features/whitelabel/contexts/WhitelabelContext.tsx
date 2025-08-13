@@ -23,6 +23,16 @@ export function getUrlSearchParam() {
 	return new URLSearchParams(window.location.search).get("referral");
 }
 
+export function restoreWhitelabel(): WhitelabelSettingsSchema | undefined {
+	if (!isClientSide()) {
+		return undefined;
+	}
+
+	const whitelabel = localStorage.getItem("whitelabel");
+
+	return whitelabel ? JSON.parse(whitelabel) : undefined;
+}
+
 export function WhitelabelProvider({
 	children,
 	whitelabel,

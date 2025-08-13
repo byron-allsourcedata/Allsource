@@ -16,7 +16,10 @@ import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
 import { Nunito_Sans, Roboto } from "next/font/google";
-import { WhitelabelProvider } from "./features/whitelabel/contexts/WhitelabelContext";
+import {
+	restoreWhitelabel,
+	WhitelabelProvider,
+} from "./features/whitelabel/contexts/WhitelabelContext";
 import type { WhitelabelSettingsSchema } from "./features/whitelabel/schemas";
 import { getStoredWhitelabel } from "@/components/utils";
 
@@ -57,13 +60,11 @@ export default function RootLayout({
 	children: React.ReactNode;
 }) {
 	const [whitelabel, setWhitelabel] = useState<WhitelabelSettingsSchema>(
-		getStoredWhitelabel()
-			? JSON.parse(getStoredWhitelabel() as string)
-			: {
-					brand_name: "",
-					brand_logo_url: "/logo.svg",
-					brand_icon_url: "/logo-icon.svg",
-				},
+		restoreWhitelabel() ?? {
+			brand_name: "",
+			brand_logo_url: "/logo.svg",
+			brand_icon_url: "/logo-icon.svg",
+		},
 	);
 
 	const pathname = usePathname();
