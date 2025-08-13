@@ -30,6 +30,7 @@ from schemas.settings import (
     Plan,
     Price,
     Advantage,
+    SubscriptionPlans,
 )
 from services.domains import UserDomainsService
 from services.subscriptions import SubscriptionService
@@ -1023,28 +1024,23 @@ class SettingsService:
             ],
         )
 
-        PARTNER_BASIC = Plan(
-            title="Partner Basic",
-            alias="partner_basic",
+        PARTNER_PROGRAM = Plan(
+            title="Partner Program",
+            alias="partner_program",
             price=Price(value="$500", y="month"),
-            permanent_limits=[
-                Advantage(
-                    good=True, name="Domains monitored:", value="Unlimited"
-                ),
-                Advantage(
-                    good=True, name="Contact Downloads:", value="Unlimited"
-                )
-            ],
             referrals=[
-                Advantage(good=True, name="Invites", value="Unlimited"),
-                Advantage(good=True, name="Free Smart Audience Months", value="3x1"),
-            ],
-            gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$5,000"),
+                Advantage(good=True, name="Sub-customers:", value="Unlimited"),
+                Advantage(good=True, name="Sub-customers:", value="50%"),
                 Advantage(
-                    good=True, name="Premium Source funds:", value="$5,000"
+                    good=True, name="All other platform Revenue:", value="30%"
                 ),
-            ]
+            ],
+            gifts=[
+                Advantage(good=True, name="White label access"),
+                Advantage(good=True, name="Onboarding and Support"),
+                Advantage(good=True, name="Customer Client Invitation Links"),
+                Advantage(good=True, name="Automated Payments via Stripe"),
+            ],
         )
 
         SMART_AUDIENCE_YEARLY = Plan(
@@ -1101,18 +1097,31 @@ class SettingsService:
             update={"price": Price(value="$15,000", y="month")}
         )
 
-        YEARLY_PLANS = [
-            FREE_TRAIL_PLAN,
+        NORMAL_YEARLY_PLANS = [
+            # FREE_TRAIL_PLAN,
             BASIC,
-            PARTNER_BASIC,
             SMART_AUDIENCE_YEARLY,
             PRO_YEARLY,
         ]
-        MONTHLY_PLANS = [
-            FREE_TRAIL_PLAN,
+        NORMAL_MONTHLY_PLANS = [
+            # FREE_TRAIL_PLAN,
             BASIC,
-            PARTNER_BASIC,
             SMART_AUDIENCE_MONTHLY,
             PRO_MONTHLY,
         ]
-        return PlansResponse(monthly=MONTHLY_PLANS, yearly=YEARLY_PLANS)
+
+        PARTNER_YEARLY_PLANS = [
+            PARTNER_PROGRAM,
+        ]
+        PARTNER_MONTHLY_PLANS = [
+            PARTNER_PROGRAM,
+        ]
+
+        return PlansResponse(
+            normal_plans=SubscriptionPlans(
+                monthly=NORMAL_MONTHLY_PLANS, yearly=NORMAL_YEARLY_PLANS
+            ),
+            partner_plans=SubscriptionPlans(
+                monthly=PARTNER_MONTHLY_PLANS, yearly=PARTNER_YEARLY_PLANS
+            ),
+        )

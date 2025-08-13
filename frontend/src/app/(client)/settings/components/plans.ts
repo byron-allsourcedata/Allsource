@@ -12,10 +12,11 @@ export type Plan = {
 	};
 	is_active: boolean;
 	is_recommended: boolean;
-	permanent_limits: Advantage[];
+	permanent_limits?: Advantage[];
 	monthly_limits?: Advantage[];
 	referrals?: Advantage[];
-	gifted_funds: Advantage[];
+	gifted_funds?: Advantage[];
+	gifts?: Advantage[];
 };
 
 export const freeTrialPlan: Plan = {
@@ -62,13 +63,19 @@ export const freeTrialPlan: Plan = {
 
 export type PlanPeriod = "month" | "year";
 
-type PlanResponse = {
+type SubscriptionPlans = {
 	monthly: Plan[];
 	yearly: Plan[];
 };
 
-export function usePlans(period: PlanPeriod): [Plan[], string | null] {
-	const [visiblePlans, setVisiblePlans] = useState<Plan[]>([]);
+type PlanResponse = {
+	normal_plans: SubscriptionPlans;
+	partner_plans: SubscriptionPlans;
+};
+
+export function usePlans(period: PlanPeriod): [Plan[], Plan[], string | null] {
+	const [normalPlans, setNormalPlans] = useState<Plan[]>([]);
+	const [partnerPlans, setPartnerPlans] = useState<Plan[]>([]);
 
 	const currentPlanAlias = usePlanAlias();
 	const freeTrial = useIsFreeTrial();
@@ -76,8 +83,14 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const getPlans = async () => {
 		const response = await axiosInstance.get<PlanResponse>("/settings/plans");
 		if (response.status === 200) {
-			const { monthly, yearly } = response.data;
-			let plans = period === "month" ? monthly : yearly;
+			const { normal_plans, partner_plans } = response.data;
+
+			setPartnerPlans(
+				period === "month" ? partner_plans.monthly : partner_plans.yearly,
+			);
+
+			let plans =
+				period === "month" ? normal_plans.monthly : normal_plans.yearly;
 
 			if (freeTrial) {
 				plans = [...plans];
@@ -88,7 +101,7 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 			);
 
 			if (planIndex === -1) {
-				return setVisiblePlans(plans);
+				return setNormalPlans(plans);
 			}
 
 			const newPlans = [
@@ -99,7 +112,7 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 				...plans.slice(planIndex + 1),
 			];
 
-			setVisiblePlans(newPlans);
+			setNormalPlans(newPlans);
 		}
 	};
 
@@ -107,5 +120,5 @@ export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 		getPlans();
 	}, [currentPlanAlias, freeTrial, period]);
 
-	return [visiblePlans, currentPlanAlias];
+	return [normalPlans, partnerPlans, currentPlanAlias];
 }

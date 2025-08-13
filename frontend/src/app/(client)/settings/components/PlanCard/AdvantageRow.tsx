@@ -1,9 +1,9 @@
 import { Divider, styled, Typography } from "@mui/material";
-import { FC } from "react";
+import type { FC } from "react";
 import { AdvantageMark } from "./AdvantageMark";
 import { Row } from "@/components/Row";
 import { Column } from "@/components/Column";
-import { Advantage } from "./Advantages";
+import type { Advantage } from "./Advantages";
 
 const AdvantageName = styled(Typography)`
     font-family: var(--font-nunito);
@@ -43,7 +43,9 @@ export const AdvantageRow: FC<AdvantageRowProps> = (props) => {
 					<AdvantageMark good={advantage.good} />
 					<AdvantageName>{advantage.name}</AdvantageName>
 				</Row>
-				<AdvantageValue>{advantage.value}</AdvantageValue>
+				{advantage.value ? (
+					<AdvantageValue>{advantage.value}</AdvantageValue>
+				) : null}
 			</Row>
 			{addDivider && <Divider />}
 		</Column>

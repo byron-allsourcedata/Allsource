@@ -29,6 +29,7 @@ import { fetchUserData } from "@/services/meService";
 import { BookACallPopup } from "../../components/BookACallPopup";
 
 import { useBookingUrl } from "@/services/booking";
+import { AddRounded } from "@mui/icons-material";
 
 const subscriptionStyles = {
 	title: {
@@ -42,6 +43,9 @@ const subscriptionStyles = {
 		gap: 3,
 		justifyContent: "space-between",
 		width: "100%",
+		minHeight: "550px",
+		height: "600px",
+		alignItems: "center",
 		"@media (max-width: 900px)": {
 			flexDirection: "column",
 			marginTop: "24px",
@@ -49,7 +53,8 @@ const subscriptionStyles = {
 	},
 	formWrapper: {
 		display: "flex",
-		alignItems: "end",
+		pt: 1,
+		height: "100%",
 		justifyContent: "center",
 		"@media (min-width: 901px)": {
 			width: "100%",
@@ -121,7 +126,9 @@ export const SettingsSubscription: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
-	const [visiblePlans] = usePlans(tabValue === 0 ? "month" : "year");
+	const [normalPlans, partnerPlans] = usePlans(
+		tabValue === 0 ? "month" : "year",
+	);
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
@@ -418,6 +425,65 @@ export const SettingsSubscription: React.FC = () => {
 		}
 	};
 
+	const getVisiblePlans = (plans: Plan[], isPartner = false) => {
+		if (plans?.length > 0) {
+			return plans.map((plan, index) => {
+				let buttonText = "Speak to Us";
+				let disabled = false;
+
+				let handle = handleOpenPopup;
+				if (isTrial === true) {
+					if (plan.title === "Free Trial") {
+						buttonText = "Current Plan";
+						disabled = true;
+					} else if (plan.title === "Basic") {
+						buttonText = "Instant Upgrade";
+						disabled = false;
+						handle = handleInstantUpgrade;
+					} else {
+						buttonText = "Speak to Us";
+						disabled = false;
+					}
+				}
+
+				if (isPartner) {
+					buttonText = "Become partner";
+				}
+
+				if (plan.is_active) {
+					buttonText = "Current Plan";
+					disabled = true;
+				}
+
+				return (
+					<Box
+						key={plan.title}
+						sx={{
+							...subscriptionStyles.formWrapper,
+						}}
+					>
+						<PlanCard
+							plan={plan}
+							isRecommended={plan.is_recommended}
+							isActive={plan.is_active}
+							buttonProps={{
+								onChoose: handle,
+								text: buttonText,
+								disabled: disabled,
+							}}
+							isPartner={isPartner}
+						/>
+					</Box>
+				);
+			});
+		}
+
+		return <Typography>No plans available</Typography>;
+	};
+
+	const visibleNormalPlans = getVisiblePlans(normalPlans);
+	const visiblePartnerPlans = getVisiblePlans(partnerPlans, true);
+
 	return (
 		<Box
 			sx={{
@@ -518,60 +584,18 @@ export const SettingsSubscription: React.FC = () => {
 					sx={{
 						...subscriptionStyles.formContainer,
 						overflowX: "auto",
+						overflowY: "none",
 					}}
 				>
-					{visiblePlans?.length > 0 ? (
-						visiblePlans.map((plan, index) => {
-							if (isTrial === false && plan.title === "Free Trial") {
-								return null;
-							}
-							let buttonText = "Speak to Us";
-							let disabled = false;
-
-							let handle = handleOpenPopup;
-							if (isTrial === true) {
-								if (plan.title === "Free Trial") {
-									buttonText = "Current Plan";
-									disabled = true;
-								} else if (plan.title === "Basic") {
-									buttonText = "Instant Upgrade";
-									disabled = false;
-									handle = handleInstantUpgrade;
-								} else {
-									buttonText = "Speak to Us";
-									disabled = false;
-								}
-							}
-
-							if (plan.is_active) {
-								buttonText = "Current Plan";
-								disabled = true;
-							}
-
-							return (
-								<Box
-									key={plan.title}
-									sx={{
-										...subscriptionStyles.formWrapper,
-										pt: 1,
-									}}
-								>
-									<PlanCard
-										plan={plan}
-										isRecommended={plan.is_recommended}
-										isActive={plan.is_active}
-										buttonProps={{
-											onChoose: handle,
-											text: buttonText,
-											disabled: disabled,
-										}}
-									/>
-								</Box>
-							);
-						})
-					) : (
-						<Typography>No plans available</Typography>
-					)}
+					{visibleNormalPlans}
+					{visiblePartnerPlans ? (
+						<Box>
+							<AddRounded
+								sx={{ width: "56px", height: "56px", color: "#E4E4E4" }}
+							/>
+						</Box>
+					) : null}
+					{visiblePartnerPlans}
 				</Box>
 			</Box>
 			{sourcePlatform !== "shopify" && (

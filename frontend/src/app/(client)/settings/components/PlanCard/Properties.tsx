@@ -1,10 +1,10 @@
 import { Column } from "@/components/Column";
 import { Row } from "@/components/Row";
 import { styled, Table, TableBody, Typography } from "@mui/material";
-import { FC, ReactNode } from "react";
+import type { FC, ReactNode } from "react";
 import { AdvantageMark } from "./AdvantageMark";
 import { AdvantageRow } from "./AdvantageRow";
-import { Advantage } from "./Advantages";
+import type { Advantage } from "./Advantages";
 
 type Props = {
 	icon: ReactNode;
@@ -14,9 +14,10 @@ type Props = {
 };
 
 const T = Typography;
-const Title = styled(Typography)`
+export const Title = styled(Typography)`
     font-family: var(--font-nunito);
     font-weight: 600;
+	color: "#202124";
     font-size: 14px;
     line-height: 22px;
     letter-spacing: 0%;
@@ -34,7 +35,7 @@ export const PlanProperties: FC<Props> = (props) => {
 				<Title>{title}</Title>
 			</Row>
 
-			<Column gap="1rem">
+			<Column gap="0.4rem">
 				{advantages?.map((advantage, i) => (
 					<AdvantageRow
 						key={i}
