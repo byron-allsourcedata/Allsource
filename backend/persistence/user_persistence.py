@@ -1007,6 +1007,7 @@ class UserPersistence:
                 case((subq_domain_resolved, True), else_=False).label(
                     "is_another_domain_resolved"
                 ),
+                Users.whitelabel_settings_enabled,
             )
             .join(Partner, Partner.user_id == Users.id)
             .filter(Partner.is_master.is_(is_master))

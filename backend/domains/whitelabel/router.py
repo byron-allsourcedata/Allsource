@@ -36,9 +36,7 @@ async def get_whitelabel_icons(
     user: MaybeAuthUser,
     referral: str | None = None,
 ) -> WhitelabelSettingsSchema:
-    logger.info(f"Provided referral code: {referral}")
     if user is not None:
-        logger.info("checking for user id ")
         user_id = user.get("id")
         return whitelabel_service.get_whitelabel_settings(user_id)
 
@@ -48,10 +46,7 @@ async def get_whitelabel_icons(
                 referral
             )
         except InvalidReferralCode:
-            logger.info("Invalid Referral Code")
             return whitelabel_service.default_whitelabel_settings()
-
-    logger.info("No authorization or referral code provided")
     return whitelabel_service.default_whitelabel_settings()
 
 

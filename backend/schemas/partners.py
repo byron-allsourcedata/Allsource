@@ -23,6 +23,7 @@ class PartnersResponse(BaseModel):
     reward_amount: Optional[float] = None
     reward_status: Optional[str] = None
     reward_payout_date: Optional[datetime] = None
+    whitelabel_settings_enabled: Optional[bool] = False
     isActive: bool = False
 
 
