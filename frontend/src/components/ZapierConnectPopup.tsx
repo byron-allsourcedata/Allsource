@@ -19,6 +19,7 @@ import TabContext from "@mui/lab/TabContext";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { ContentCopy } from "@mui/icons-material";
+import { LogoSmall } from "./ui/Logo";
 
 interface ApIkeyPopup {
 	open: boolean;
@@ -266,12 +267,7 @@ const ZapierConnectPopup = ({
 								}}
 							>
 								<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-									<Image
-										src="/logo-icon.svg"
-										alt="Allsource"
-										height={26}
-										width={32}
-									/>
+									<LogoSmall height={26} width={32} />
 									<Typography
 										variant="h6"
 										sx={{

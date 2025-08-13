@@ -19,6 +19,7 @@ import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined
 import { useSSE } from "../../../context/SSEContext";
 import QuestionMarkOutlinedIcon from "@mui/icons-material/QuestionMarkOutlined";
 import PersonIcon from "@mui/icons-material/Person";
+import { Logo } from "@/components/ui/Logo";
 
 const headerStyles = {
 	headers: {
@@ -140,13 +141,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
 						onClick={handleLogoClick}
 						sx={{ "&:hover": { backgroundColor: "transparent" } }}
 					>
-						<Image
-							src="/logo.svg"
-							alt="logo"
-							height={30}
-							width={130}
-							priority
-						/>
+						<Logo />
 					</IconButton>
 				</Box>
 				<Box sx={{ display: "flex", alignItems: "center" }}>

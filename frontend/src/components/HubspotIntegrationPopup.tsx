@@ -33,6 +33,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface CreateHubspotProps {
 	fromAudience?: boolean;
@@ -132,6 +133,7 @@ const HubspotIntegrationPopup = ({
 	const [disableButton, setDisableButton] = useState(false);
 	const label = { inputProps: { "aria-label": "Switch demo" } };
 	const { data, loading, error, sendRequest } = useAxiosHook();
+	const { whitelabel } = useWhitelabel();
 
 	const [value, setValue] = useState("1");
 
@@ -167,7 +169,10 @@ const HubspotIntegrationPopup = ({
 			text: 'Navigate to "Integrations" and select "Private Apps".',
 		},
 		{ id: "unique-id-4", text: 'Click on "Create a private app".' },
-		{ id: "unique-id-5", text: 'Enter "Allsource" as the app name.' },
+		{
+			id: "unique-id-5",
+			text: `Enter "${whitelabel.brand_name}" as the app name.`,
+		},
 		{
 			id: "unique-id-6",
 			text: 'Assign full access permissions to "CRM", "Contacts", and "Objects".',
@@ -178,7 +183,7 @@ const HubspotIntegrationPopup = ({
 		},
 		{
 			id: "unique-id-8",
-			text: "Copy the generated API key and paste it into the API Key field in the Allsource Hubspot section.",
+			text: `Copy the generated API key and paste it into the API Key field in the ${whitelabel.brand_name} Hubspot section.`,
 		},
 		{
 			id: "unique-id-9",

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from fastapi import Depends, HTTPException, Header, status
 from jose import JWTError, jwt
@@ -9,6 +10,8 @@ from persistence.user_persistence import UserDict, UserPersistence
 from typing import Annotated
 
 from schemas.auth_token import Token
+
+logger = logging.getLogger(__name__)
 
 
 def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
@@ -53,12 +56,21 @@ def check_user_authentication(
         ) != user.get("id"):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "status": UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value
-                },
+                detail={"status": UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value},
             )
         user["team_member"] = team_memer
     return user
 
 
+def maybe_check_user_authentication(
+    Authorization: Annotated[str, Header()],
+    user_persistence_service: UserPersistence,
+) -> Token | None:
+    try:
+        return check_user_authentication(Authorization, user_persistence_service)
+    except HTTPException:
+        return None
+
+
 AuthUser = Annotated[UserDict, Depends(check_user_authentication)]
+MaybeAuthUser = Annotated[UserDict | None, Depends(maybe_check_user_authentication)]

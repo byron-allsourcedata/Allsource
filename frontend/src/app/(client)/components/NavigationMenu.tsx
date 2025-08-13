@@ -48,6 +48,7 @@ import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import InsightsIcon from "@mui/icons-material/Insights";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 const navigationmenuStyles = {
 	mobileMenuHeader: {
@@ -156,6 +157,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 	const isAuthorized = useRef(false);
 
 	const [openPixel, setOpenPixel] = useState(false);
+	const { whitelabel } = useWhitelabel();
 
 	const handleTogglePixel = () => {
 		setOpenPixel((prev) => !prev);
@@ -253,7 +255,13 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 					</IconButton>
 
 					{/* Centered Logo (Adjust src to your logo) */}
-					<Image src="/logo.svg" priority alt="logo" height={30} width={130} />
+					<Image
+						src={whitelabel.brand_logo_url}
+						priority
+						alt="logo"
+						height={30}
+						width={130}
+					/>
 				</Box>
 
 				{/* Placeholder for Right Icon */}

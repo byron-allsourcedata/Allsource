@@ -15,6 +15,7 @@ import ReCAPTCHA from "react-google-recaptcha";
 import { SetStateAction, useRef, useState } from "react";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { Logo } from "@/components/ui/Logo";
 
 export default function CcpaPage() {
 	const recaptchaRef = useRef<ReCAPTCHA>(null);
@@ -120,12 +121,7 @@ export default function CcpaPage() {
 							left: 32,
 						}}
 					>
-						<Image
-							src="/logo.svg"
-							alt="Allsource logo"
-							width={120}
-							height={32}
-						/>
+						<Logo width={120} height={32} />
 					</Box>
 
 					<Paper

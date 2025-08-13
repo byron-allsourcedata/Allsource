@@ -55,7 +55,7 @@ export const WhitelabelExample: FC<Props> = ({
 				<Column width="min(80vw, 1200px)" overflow="clip">
 					<ImportSourcePageView
 						brandName={brandName}
-						smallIconSrc={smallLogoSrc}
+						smallIconSrc={smallLogoSrc ?? "/logo-icon.svg"}
 						loading={false}
 						showGetStarted={false}
 						hasNotification={false}

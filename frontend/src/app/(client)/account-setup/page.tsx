@@ -19,6 +19,8 @@ import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import PersonIcon from "@mui/icons-material/Person";
 import { fetchUserData } from "@/services/meService";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { resetLocalStorage } from "@/components/utils";
 
 const AccountSetup = () => {
 	const [websiteLink, setWebsiteLink] = useState("");
@@ -36,6 +38,7 @@ const AccountSetup = () => {
 	const [fullName, setFullName] = useState<string | null>(null);
 	const [email, setEmail] = useState<string | null>(null);
 	const { full_name: userFullName, email: userEmail, partner } = useUser();
+	const { whitelabel } = useWhitelabel();
 
 	useEffect(() => {
 		const fetchCompanyInfo = async () => {
@@ -117,7 +120,7 @@ const AccountSetup = () => {
 	};
 
 	const handleSignOut = () => {
-		localStorage.clear();
+		resetLocalStorage();
 		sessionStorage.clear();
 		router.push("/signin");
 	};
@@ -278,7 +281,7 @@ const AccountSetup = () => {
 				>
 					<Box sx={styles.logo}>
 						<Image
-							src="/logo.svg"
+							src={whitelabel.brand_logo_url}
 							priority
 							alt="logo"
 							height={30}

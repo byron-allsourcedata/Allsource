@@ -35,6 +35,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface ConnectWebhookPopupProps {
 	open: boolean;
@@ -1170,12 +1171,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo-icon.svg"
-												alt="logo"
-												height={20}
-												width={24}
-											/>
+											<LogoSmall height={20} width={24} />
 										</Grid>
 										<Grid
 											item

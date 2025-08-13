@@ -29,6 +29,7 @@ import { showToast } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import { InfoIcon } from "@/icon";
 import UserTip from "@/components/UserTip";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface OnmisendDataSyncProps {
 	open: boolean;
@@ -868,12 +869,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo-icon.svg"
-												alt="logo"
-												height={22}
-												width={34}
-											/>
+											<LogoSmall alt="logo" height={22} width={34} />
 										</Grid>
 										<Grid
 											item

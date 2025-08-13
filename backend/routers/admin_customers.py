@@ -12,8 +12,11 @@ from config.rmq_connection import (
     RabbitMQConnection,
 )
 from schemas.users import UpdateUserRequest
+from domains.whitelabel.admin_router import router as whitelabel_admin_router
 
 router = APIRouter()
+
+router.include_router(whitelabel_admin_router, prefix="/whitelabel")
 
 
 @router.get("/confirm_customer")

@@ -34,6 +34,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface ConnectS3PopupProps {
 	open: boolean;
@@ -1135,12 +1136,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo-icon.svg"
-												alt="logo"
-												height={20}
-												width={24}
-											/>
+											<LogoSmall alt="logo" height={20} width={24} />
 										</Grid>
 										<Grid
 											item

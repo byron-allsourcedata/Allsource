@@ -1,7 +1,8 @@
 "use client";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import React from "react";
+import type React from "react";
+import { useState } from "react";
 import { UserProvider } from "../context/UserContext";
 import { PrivacyPolicyProvider } from "../context/PrivacyPolicyContext";
 import ToastNotificationContainer from "../components/ToastNotification";
@@ -15,6 +16,12 @@ import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
 import { Nunito_Sans, Roboto } from "next/font/google";
+import {
+	restoreWhitelabel,
+	WhitelabelProvider,
+} from "./features/whitelabel/contexts/WhitelabelContext";
+import type { WhitelabelSettingsSchema } from "./features/whitelabel/schemas";
+import { getStoredWhitelabel } from "@/components/utils";
 
 const inter = Inter({ subsets: ["latin"] });
 const nunito = Nunito_Sans({
@@ -52,13 +59,27 @@ export default function RootLayout({
 }: {
 	children: React.ReactNode;
 }) {
+	const [whitelabel, setWhitelabel] = useState<WhitelabelSettingsSchema>(
+		restoreWhitelabel() ?? {
+			brand_name: "",
+			brand_logo_url: "",
+			brand_icon_url: "/logo-icon.svg",
+		},
+	);
+
 	const pathname = usePathname();
 	const pageTitle = formatPageTitle(pathname || "");
+
+	const formattedPageTitle = pageTitle
+		? `${whitelabel.brand_name} | ${pageTitle} `
+		: `${whitelabel.brand_name}`;
+
 	return (
 		<html lang="en" className={`${nunito.variable} ${roboto.variable}`}>
 			<head>
-				<title>{pageTitle ? `Allsource | ${pageTitle} ` : "Allsource"}</title>
+				<title>{formattedPageTitle}</title>
 				<meta name="description" content={`Page: ${pageTitle}`} />
+				<link rel="icon" href={whitelabel.brand_icon_url ?? "/logo-icon.svg"} />
 				<meta
 					httpEquiv="Content-Security-Policy"
 					content="script-src * 'unsafe-inline' 'unsafe-eval'; object-src 'none';"
@@ -73,7 +94,13 @@ export default function RootLayout({
 									<BillingProvider>
 										<PrivacyPolicyProvider>
 											<UserProvider>
-												<IntegrationProvider>{children}</IntegrationProvider>
+												<WhitelabelProvider
+													whitelabel={whitelabel}
+													setWhitelabel={setWhitelabel}
+													autofetch={true}
+												>
+													<IntegrationProvider>{children}</IntegrationProvider>
+												</WhitelabelProvider>
 											</UserProvider>
 										</PrivacyPolicyProvider>
 									</BillingProvider>
@@ -82,6 +109,7 @@ export default function RootLayout({
 						</SidebarProvider>
 					</SSEProvider>
 				</GoogleOAuthProvider>
+
 				<ToastNotificationContainer />
 				<script
 					defer={true}

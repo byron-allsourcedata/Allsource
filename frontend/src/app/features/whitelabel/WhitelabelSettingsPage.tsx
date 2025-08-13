@@ -15,34 +15,14 @@ import { usePageDragging } from "@/components/premium-sources/hooks/useFileDragA
 import { CustomButton } from "@/components/ui";
 
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import { useAxios } from "@/axios/axiosInterceptorInstance";
-import type { UseAxiosResult } from "axios-hooks";
 import useDefaultAxios from "axios-hooks";
-import Image from "next/image";
 import { useFilePicker } from "./hooks/useFilePicker";
-
-export type WhitelabelSettingsSchema = {
-	brand_name: string;
-	brand_logo_url: string;
-	brand_icon_url: string;
-};
-
-function useGetWhitelabelSettings(): UseAxiosResult<WhitelabelSettingsSchema> {
-	return useAxios({
-		url: "/whitelabel/settings",
-		method: "GET",
-	});
-}
-
-function usePostWhitelabelSettings(): UseAxiosResult<unknown> {
-	return useAxios(
-		{
-			url: "/whitelabel/settings",
-			method: "POST",
-		},
-		{ manual: true },
-	);
-}
+import {
+	useGetOwnWhitelabelSettings,
+	useGetWhitelabelSettings,
+	usePostWhitelabelSettings,
+} from "./requests";
+import { useWhitelabel } from "./contexts/WhitelabelContext";
 
 type Props = {};
 
@@ -101,12 +81,13 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			paddingBottom: 20,
 		});
 	const [brandNameField, setBrandName] = useFieldValue("-");
-
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 	const [logoUrl, setLogoUrl] = useLogoUrl(logoFile);
 
 	const [smallLogoFile, setSmallLogoFile] = useState<File | null>(null);
 	const [smallLogoUrl, setSmallLogoUrl] = useLogoUrl(smallLogoFile);
+
+	const { refetch: refetchWhitelabel } = useWhitelabel();
 
 	const isWindowDragging = usePageDragging();
 
@@ -136,8 +117,8 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 
 	const [
 		{ data: initialSettings, loading: settingsLoading },
-		fetchWhitelabelSettigns,
-	] = useGetWhitelabelSettings();
+		fetchWhitelabelSettings,
+	] = useGetOwnWhitelabelSettings(true);
 
 	const [uploadedLogo, uploadedLogoLoading, uploadedLogoContentType] =
 		useUploadedLogo(initialSettings?.brand_logo_url);
@@ -147,6 +128,12 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		uploadedSmallLogoLoading,
 		uploadedSmallLogoContentType,
 	] = useUploadedLogo(initialSettings?.brand_icon_url);
+
+	useEffect(() => {
+		try {
+			fetchWhitelabelSettings();
+		} catch {}
+	}, []);
 
 	useEffect(() => {
 		if (uploadedLogo) {
@@ -190,6 +177,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			}
 			updateSettings({ data: formData })
 				.then(() => {
+					refetchWhitelabel();
 					showToast("Whitelabel settings updated");
 				})
 				.catch((error) => {

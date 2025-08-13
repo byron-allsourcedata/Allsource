@@ -7,6 +7,7 @@ import { AxiosError } from "axios";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { resetStyles } from "./resetStyles";
 import { showToast } from "../../../components/ToastNotification";
+import { Logo } from "@/components/ui/Logo";
 
 const ResetPassword: React.FC = () => {
 	const router = useRouter();
@@ -84,7 +85,7 @@ const ResetPassword: React.FC = () => {
 	return (
 		<>
 			<Box sx={resetStyles.logoContainer}>
-				<Image src="/logo.svg" alt="logo" height={30} width={130} />
+				<Logo />
 			</Box>
 
 			<Box sx={resetStyles.mainContent}>

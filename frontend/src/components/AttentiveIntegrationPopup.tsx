@@ -30,6 +30,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface CreateAttentiveProps {
 	handleClose: () => void;
@@ -115,6 +116,8 @@ const AttentiveIntegrationPopup = ({
 	const [checked, setChecked] = useState(false);
 	const label = { inputProps: { "aria-label": "Switch demo" } };
 
+	const { whitelabel } = useWhitelabel();
+
 	useEffect(() => {
 		setApiKey(initApiKey || "");
 	}, [initApiKey]);
@@ -140,7 +143,7 @@ const AttentiveIntegrationPopup = ({
 		},
 		{
 			id: "unique-id-3",
-			text: "Click Create Private API Key Name to Allsource.",
+			text: `Click Create Private API Key Name to ${whitelabel.brand_name}.`,
 		},
 		{
 			id: "unique-id-4",
@@ -149,7 +152,7 @@ const AttentiveIntegrationPopup = ({
 		{ id: "unique-id-5", text: "Click Create." },
 		{
 			id: "unique-id-6",
-			text: "Copy the API key in the next screen and paste to API Key field located in Allsource Attentive section.",
+			text: `Copy the API key in the next screen and paste to API Key field located in ${whitelabel.brand_name} Attentive section.`,
 		},
 		{ id: "unique-id-7", text: "Click Connect." },
 	];

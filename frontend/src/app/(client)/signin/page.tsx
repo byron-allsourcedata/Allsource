@@ -21,6 +21,7 @@ import PageWithLoader from "@/components/FirstLevelLoader";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import { flagStore } from "@/services/oneDollar";
 import { useUser } from "@/context/UserContext";
+import { Logo } from "@/components/ui/Logo";
 
 const Signin: React.FC = () => {
 	const router = useRouter();
@@ -284,7 +285,7 @@ const Signin: React.FC = () => {
 	return (
 		<>
 			<Box sx={loginStyles.logoContainer}>
-				<Image src="/logo.svg" alt="logo" height={31} width={130} />
+				<Logo />
 			</Box>
 
 			<Box sx={loginStyles.mainContent}>

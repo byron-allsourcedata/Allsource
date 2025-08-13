@@ -10,6 +10,9 @@ const axiosInterceptorInstance = axios.create({
 
 axiosInterceptorInstance.interceptors.request.use(
 	async (config) => {
+		if (typeof window === "undefined") {
+			return;
+		}
 		const accessToken = localStorage.getItem("token");
 		let currentDomain = sessionStorage.getItem("current_domain");
 
@@ -56,6 +59,11 @@ axiosInterceptorInstance.interceptors.response.use(
 		return response;
 	},
 	(error) => {
+		const url = error.config?.url;
+		if (url?.endsWith("/whitelabel/settings")) {
+			return Promise.reject(error);
+		}
+
 		if (error.response) {
 			switch (error.response.status) {
 				case 307:

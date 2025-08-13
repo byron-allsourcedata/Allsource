@@ -13,6 +13,7 @@ import {
 	SxProps,
 	Theme,
 } from "@mui/material";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 export interface DemoFeedbackCardProps {
 	email: string;
@@ -30,6 +31,7 @@ const DemoFeedbackCard: React.FC<DemoFeedbackCardProps> = ({
 	onSubmit,
 	sx,
 }) => {
+	const { whitelabel } = useWhitelabel();
 	const labelTypographySx: SxProps<Theme> = {
 		fontFamily: "var(--font-nunito)",
 		fontWeight: 400,
@@ -116,7 +118,8 @@ const DemoFeedbackCard: React.FC<DemoFeedbackCardProps> = ({
 							color: "rgba(0, 0, 0, 1)",
 						}}
 					>
-						How likely are you to consider Allsource for your needs?
+						How likely are you to consider {whitelabel.brand_name} for your
+						needs?
 					</Typography>
 					<RadioGroup
 						value={purchaseLikelihood}

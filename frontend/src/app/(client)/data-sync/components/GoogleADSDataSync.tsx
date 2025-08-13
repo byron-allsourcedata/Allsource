@@ -36,6 +36,7 @@ import {
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface ConnectGoogleAdsPopupProps {
 	open: boolean;
@@ -1593,12 +1594,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 													},
 												}}
 											>
-												<Image
-													src="/logo-icon.svg"
-													alt="logo"
-													height={25}
-													width={24}
-												/>
+												<LogoSmall height={25} width={24} />
 											</Grid>
 											<Grid
 												item

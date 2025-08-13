@@ -1,4 +1,4 @@
-import React, { FC, useState, useEffect } from "react";
+import React, { FC, useState, useEffect, use } from "react";
 import {
 	Box,
 	Typography,
@@ -10,6 +10,7 @@ import {
 import Image from "next/image";
 import { getInteractiveSx } from "../utils";
 import { motion } from "framer-motion";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 export interface AudienceSynergyPreviewProps {
 	headerTitle: string;
@@ -33,6 +34,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
 	sx,
 }) => {
 	const [activeLogo, setActiveLogo] = useState(0);
+	const { whitelabel } = useWhitelabel();
 
 	// useEffect(() => {
 	//   const interval = setInterval(() => {
@@ -93,7 +95,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
 				>
 					<Image
 						src={tableSrc}
-						alt="Allsource integrations diagram"
+						alt={`${whitelabel.brand_name} integrations diagram`}
 						width={600}
 						height={160}
 						style={{ maxWidth: "100%", height: "auto" }}

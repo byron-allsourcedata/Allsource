@@ -27,6 +27,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { Logo } from "@/components/ui/Logo";
 
 interface Data {
 	id: number;
@@ -840,12 +841,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo.svg"
-												alt="logo"
-												height={22}
-												width={34}
-											/>
+											<Logo height={22} width={34} />
 										</Grid>
 										<Grid
 											item

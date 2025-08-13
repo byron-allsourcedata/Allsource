@@ -22,6 +22,7 @@ import {
 	showToast,
 } from "../../../components/ToastNotification";
 import { fetchUserData } from "@/services/meService";
+import { Logo } from "@/components/ui/Logo";
 
 const ForgotPassword: React.FC = () => {
 	const router = useRouter();
@@ -193,7 +194,7 @@ const ForgotPassword: React.FC = () => {
 	return (
 		<>
 			<Box sx={updatepasswordStyles.logoContainer}>
-				<Image src="/logo.svg" alt="logo" height={30} width={130} />
+				<Logo />
 			</Box>
 			<Box sx={updatepasswordStyles.mainContent}>
 				<Box sx={updatepasswordStyles.container}>

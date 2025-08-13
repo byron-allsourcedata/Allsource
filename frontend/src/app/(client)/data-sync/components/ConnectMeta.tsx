@@ -40,6 +40,8 @@ import {
 import LinearProgress from "@mui/material/LinearProgress";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { LogoSmall } from "@/components/ui/Logo";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface ConnectMetaPopupProps {
 	open: boolean;
@@ -133,6 +135,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		dailyBudget: 100,
 	});
 	const [isChecked, setIsChecked] = useState(false);
+
+	const { whitelabel } = useWhitelabel();
 
 	const handleInputChange = (e: any) => {
 		const { name, value } = e.target;
@@ -1910,7 +1914,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				color="textSecondary"
 																				paragraph
 																			>
-																				We will not run your campaign. Allsource
+																				We will not run your campaign.
+																				{whitelabel.brand_name}
 																				will create a campaign template in your
 																				ad account. We won&apos;t run anything
 																				without your confirmation.
@@ -2042,12 +2047,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo-icon.svg"
-												alt="logo"
-												height={22}
-												width={34}
-											/>
+											<LogoSmall height={22} width={34} />
 										</Grid>
 										<Grid
 											item
