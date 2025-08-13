@@ -33,20 +33,34 @@ from services.integrations.abstract_integration_service import (
     AbstractIntegrationService,
     IntegrationLeadStatus,
 )
-from utils import validate_and_format_phone, get_valid_phone, get_valid_location
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from services.integrations.million_verifier_exceptions import VerificationEmailException
+from utils import (
+    validate_and_format_phone,
+    get_valid_phone,
+    get_valid_location,
+    get_valid_email,
+)
 
 logger = logging.getLogger(__name__)
 
 
 @injectable
 class CustomerIoIntegrationsService(AbstractIntegrationService):
+    CONSTANT_FIELD_NAME_MAX_LENGTH = 25
+    CONSTANT_FIELD_VALUE_MAX_LENGTH = 30
+
     def __init__(
         self,
         integrations_persistence: IntegrationsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
+        million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.integrations_persistence = integrations_persistence
         self.sync_persistence = sync_persistence
+        self.million_verifier_integrations = million_verifier_integrations
 
     def _get_api_token(self, user_integration: UserIntegration) -> str:
         return user_integration.access_token
@@ -178,7 +192,10 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
 
         for lead_user, fxf_user in user_data:
             try:
-                customer_io_traits = self._map_lead(fxf_user, data_map)
+                customer_io_traits = await self._map_lead(
+                    fxf_user, data_map, is_email_validation_enabled
+                )
+
                 user_id = str(
                     uuid.uuid5(uuid.NAMESPACE_DNS, customer_io_traits["email"])
                 )
@@ -203,7 +220,14 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
                     logger.error(
                         f"API Client failed to send user with lead_id={lead_user.id}, 5x5_user_id={fxf_user.id}"
                     )
-
+            except VerificationEmailException as e:
+                logger.info(e.message)
+                results.append(
+                    IntegrationLeadStatus(
+                        lead_id=lead_user.id,
+                        status=ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+                    )
+                )
             except Exception as e:
                 logger.error(
                     f"Failed to send user with lead_id={lead_user.id}, 5x5_user_id={fxf_user.id}, exception found:\n{e}"
@@ -213,7 +237,7 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
 
         return results
 
-    def _get_email(self, fxf_user: FiveXFiveUser) -> str:
+    def _get_email(self, fxf_user: FiveXFiveUser) -> str | None:
         return getattr(fxf_user, "business_email", None) or getattr(
             fxf_user, "personal_emails", None
         )
@@ -221,11 +245,29 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
     def _get_phone(self, fxf_user: FiveXFiveUser) -> str:
         return validate_and_format_phone(get_valid_phone(fxf_user))
 
-    def _map_lead(
-        self, fxf_user: FiveXFiveUser, data_map: list[DataMap]
+    async def _map_lead(
+        self,
+        fxf_user: FiveXFiveUser,
+        data_map: list[DataMap],
+        is_email_validation_enabled: bool,
     ) -> dict:
+        """
+        Raises:
+            VerificationEmailException - raises when is_email_validation_enabled=True, but can't verify user
+        """
+
         # Necessary fields
-        email = self._get_email(fxf_user)
+
+        if is_email_validation_enabled:
+            email = await get_valid_email(
+                fxf_user, self.million_verifier_integrations
+            )
+
+            if email in (ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value):
+                raise VerificationEmailException(f"Failed to verify 5x5_user {fxf_user.id}")
+        else:
+            email = self._get_email(fxf_user)
+
         firstName = getattr(fxf_user, "first_name", None)
         lastName = getattr(fxf_user, "last_name", None)
         address_info = get_valid_location(fxf_user)
@@ -249,9 +291,15 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
 
         # Additional fields
         for data_map_item in data_map:
-            customer_io_traits[data_map_item.type] = fxf_user.__dict__[
-                data_map_item.type
-            ]
+            # Add constant fields to profile
+            if data_map_item.is_constant:
+                truncated_name = data_map_item.type[:self.CONSTANT_FIELD_NAME_MAX_LENGTH]
+                truncated_value = data_map_item.value[:self.CONSTANT_FIELD_VALUE_MAX_LENGTH]
+                customer_io_traits[truncated_name] = truncated_value
+            else:
+                customer_io_traits[data_map_item.type] = fxf_user.__dict__[
+                    data_map_item.type
+                ]
 
         return customer_io_traits
 

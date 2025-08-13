@@ -1,8 +1,9 @@
 import logging
 from fastapi import APIRouter, File, Form, UploadFile, status
 
-from auth_dependencies import AuthUser
+from auth_dependencies import AuthUser, MaybeAuthUser
 from db_dependencies import Db
+from domains.referrals.exceptions import InvalidReferralCode
 from domains.whitelabel.services.aws import WhitelabelAwsService
 
 from .schemas import WhitelabelSettingsSchema
@@ -13,29 +14,45 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/settings")
+@router.get("/own-settings")
 async def get_whitelabel_settings(
     user: AuthUser, whitelabel_service: WhitelabelService
 ) -> WhitelabelSettingsSchema:
-    settings_schema = whitelabel_service.get_whitelabel_settings(user.get("id"))
+    settings_schema = whitelabel_service.get_own_whitelabel_settings(
+        user.get("id")
+    )
     return settings_schema
 
 
 @router.get("/is-enabled")
 async def is_whitelabel_enabled(user: AuthUser) -> bool:
-    logger.info(
-        "user whitelabel enabled: "
-        + str(user.get("whitelabel_settings_enabled"))
-    )
     return user.get("whitelabel_settings_enabled")
 
 
+@router.get("/settings")
 @router.get("/icons")
 async def get_whitelabel_icons(
-    user: AuthUser, whitelabel_service: WhitelabelService
+    whitelabel_service: WhitelabelService,
+    user: MaybeAuthUser,
+    referral: str | None = None,
 ) -> WhitelabelSettingsSchema:
-    user_id = user.get("id")
-    return whitelabel_service.get_whitelabel_settings(user_id)
+    logger.info(f"Provided referral code: {referral}")
+    if user is not None:
+        logger.info("checking for user id ")
+        user_id = user.get("id")
+        return whitelabel_service.get_whitelabel_settings(user_id)
+
+    if referral is not None:
+        try:
+            return whitelabel_service.get_whitelabel_settings_by_referral_code(
+                referral
+            )
+        except InvalidReferralCode:
+            logger.info("Invalid Referral Code")
+            return whitelabel_service.default_whitelabel_settings()
+
+    logger.info("No authorization or referral code provided")
+    return whitelabel_service.default_whitelabel_settings()
 
 
 @router.post("/settings")

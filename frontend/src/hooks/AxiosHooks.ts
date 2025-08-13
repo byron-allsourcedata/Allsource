@@ -21,6 +21,9 @@ export const useAxiosHook = (
 		data?: any;
 		params?: Record<string, any> | null;
 	}) => {
+		if (typeof window === "undefined") {
+			return;
+		}
 		const accessToken = localStorage.getItem("token");
 		let currentDomain = sessionStorage.getItem("current_domain");
 

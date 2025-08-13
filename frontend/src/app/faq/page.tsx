@@ -5,6 +5,7 @@ import { FaqStyle } from "./faq-style";
 import Image from "next/image";
 import { questions } from "./faq-data";
 import FaqCard from "./components/FaqCard";
+import { Logo } from "@/components/ui/Logo";
 
 export default function FaqPage() {
 	return (
@@ -15,7 +16,7 @@ export default function FaqPage() {
 					marginLeft: "32px",
 				}}
 			>
-				<Image src="/logo.svg" alt="Allsource logo" width={120} height={32} />
+				<Logo width={120} height={32} />
 			</Box>
 
 			<Container maxWidth="md" sx={FaqStyle.mainContent}>

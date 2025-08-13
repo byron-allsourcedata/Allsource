@@ -29,7 +29,9 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { useReturnToAdmin } from "@/hooks/useReturnToAdmin";
 import { getCurrentImpersonationLevel } from "@/utils/impersonation";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
-import { WhitelabelSettingsSchema } from "@/app/features/whitelabel/WhitelabelSettingsPage";
+import type { WhitelabelSettingsSchema } from "@/app/features/whitelabel/schemas";
+import { resetLocalStorage } from "@/components/utils";
+import { Logo } from "@/components/ui/Logo";
 
 const headerStyles = {
 	headers: {
@@ -130,7 +132,7 @@ const Header: React.FC<HeaderProps> = ({
 	}, []);
 
 	const handleSignOut = () => {
-		localStorage.clear();
+		resetLocalStorage();
 		sessionStorage.clear();
 		resetUserData();
 		resetTrialData();
@@ -259,15 +261,7 @@ const Header: React.FC<HeaderProps> = ({
 								padding: "2px",
 							}}
 						>
-							{whitelabelData && (
-								<Image
-									priority
-									src={whitelabelData.brand_logo_url ?? "/logo.svg"}
-									alt="logo"
-									height={30}
-									width={130}
-								/>
-							)}
+							<Logo />
 						</IconButton>
 						{visibleButton && (
 							<Button

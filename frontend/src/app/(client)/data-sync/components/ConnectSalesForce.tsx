@@ -28,6 +28,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface SalesForceDataSyncProps {
 	open: boolean;
@@ -804,12 +805,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo-icon.svg"
-												alt="logo"
-												height={22}
-												width={34}
-											/>
+											<LogoSmall height={22} width={34} />
 										</Grid>
 										<Grid
 											item

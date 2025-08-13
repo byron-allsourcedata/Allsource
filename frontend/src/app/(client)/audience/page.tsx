@@ -12,6 +12,7 @@ import { useNotification } from "../../../context/NotificationContext";
 import { showErrorToast } from "@/components/ToastNotification";
 import AIAudience from "./AIAudience";
 import AudiencePopup from "./AudienceSyncSlider";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 const Audience: React.FC = () => {
 	const { hasNotification } = useNotification();
@@ -23,6 +24,8 @@ const Audience: React.FC = () => {
 	const [loading, setLoading] = useState(false);
 	const [showAIAudience, setShowAIAudience] = useState(false);
 	const [openAudienceSyncPopup, setOpenAudienceSyncPopup] = useState(true);
+
+	const { whitelabel } = useWhitelabel();
 
 	const handleClosePopup = () => {
 		setOpenAudienceSyncPopup(false);
@@ -141,8 +144,8 @@ const Audience: React.FC = () => {
 											className="table-data"
 											sx={{ textAlign: "left", pt: "6px" }}
 										>
-											Leverage Allsource AI to deliver high-intent lookalikes
-											from your data
+											Leverage {whitelabel.brand_name} AI to deliver high-intent
+											lookalikes from your data
 										</Typography>
 									</Box>
 								</Button>

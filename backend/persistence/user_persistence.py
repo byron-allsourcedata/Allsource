@@ -541,6 +541,7 @@ class UserPersistence:
                 case((subq_domain_resolved, True), else_=False).label(
                     "is_another_domain_resolved"
                 ),
+                Users.whitelabel_settings_enabled,
                 Users.is_partner,
                 Partner.is_master.label("is_master"),
             )
@@ -783,6 +784,7 @@ class UserPersistence:
                 ReferralPayouts.created_at,
                 Users.source_platform,
                 Users.utm_params,
+                Users.whitelabel_settings_enabled,
             )
             .outerjoin(ReferralPayouts, Users.id == ReferralPayouts.user_id)
             .outerjoin(ReferralUser, Users.id == ReferralUser.user_id)
@@ -818,41 +820,46 @@ class UserPersistence:
             except json.JSONDecodeError:
                 return "Other"
 
-        return [
-            {
-                "id": account[0],
-                "email": account[1],
-                "full_name": account[2],
-                "created_at": account[3],
-                "plan_amount": account[4] if account[4] else "--",
-                "status": (
-                    "Signup"
-                    if account[7] and not account[8]
-                    else "Active"
-                    if account[7] and account[8]
-                    else "Inactive"
-                ),
-                "sources": (
-                    f"{account[9].capitalize()}({account[10]})"
-                    if account[9] and account[10]
-                    else account[14]
-                    if account[14]
-                    else parse_utm_source(account[15])
-                ),
-                "reward_status": account[5].capitalize()
-                if account[5]
-                else "Inactive",
-                "will_pay": True if account[12] else False,
-                "paid_at": False if account[6] else True,
-                "reward_payout_date": account[6]
-                if account[6]
-                else (datetime.now().replace(day=1) + timedelta(days=32))
-                .replace(day=1)
-                .strftime("%Y-%m-%d"),
-                "last_payment_date": account[13],
-            }
-            for account in accounts
-        ], query.count()
+        result = []
+        for account in accounts:
+            whitelabel_settings_enabled = account[16]
+
+            result.append(
+                {
+                    "id": account[0],
+                    "email": account[1],
+                    "full_name": account[2],
+                    "created_at": account[3],
+                    "plan_amount": account[4] if account[4] else "--",
+                    "status": (
+                        "Signup"
+                        if account[7] and not account[8]
+                        else "Active"
+                        if account[7] and account[8]
+                        else "Inactive"
+                    ),
+                    "sources": (
+                        f"{account[9].capitalize()}({account[10]})"
+                        if account[9] and account[10]
+                        else account[14]
+                        if account[14]
+                        else parse_utm_source(account[15])
+                    ),
+                    "reward_status": account[5].capitalize()
+                    if account[5]
+                    else "Inactive",
+                    "will_pay": True if account[12] else False,
+                    "paid_at": False if account[6] else True,
+                    "reward_payout_date": account[6]
+                    if account[6]
+                    else (datetime.now().replace(day=1) + timedelta(days=32))
+                    .replace(day=1)
+                    .strftime("%Y-%m-%d"),
+                    "last_payment_date": account[13],
+                    "whitelabel_settings_enabled": whitelabel_settings_enabled,
+                }
+            )
+        return result, query.count()
 
     def has_sources_for_user(self, user_id: int) -> bool:
         return (

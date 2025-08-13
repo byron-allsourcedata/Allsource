@@ -27,10 +27,13 @@ import { fetchUserData } from "@/services/meService";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import PageWithLoader from "@/components/FirstLevelLoader";
 import { flagStore } from "@/services/oneDollar";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { Logo } from "@/components/ui/Logo";
 
 const UTM_STORAGE_KEY = "utm_params";
 
 const Signup: React.FC = () => {
+	const [isClient, setIsClient] = useState(false);
 	const { setPrivacyPolicyPromiseResolver } = usePrivacyPolicyContext();
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -84,6 +87,12 @@ const Signup: React.FC = () => {
 	});
 	const [formSubmitted, setFormSubmitted] = useState(false);
 
+	const { whitelabel } = useWhitelabel();
+
+	useEffect(() => {
+		setIsClient(true);
+	}, []);
+
 	useEffect(() => {
 		document.body.style.overflow = "hidden";
 		return () => {
@@ -92,6 +101,7 @@ const Signup: React.FC = () => {
 	}, []);
 
 	const navigateTo = (path: string) => {
+		console.log("navigate in signup");
 		window.location.href = path;
 	};
 
@@ -398,7 +408,7 @@ const Signup: React.FC = () => {
 	return (
 		<>
 			<Box sx={signupStyles.logoContainer}>
-				<Image src="/logo.svg" alt="logo" height={30} width={130} />
+				<Logo />
 			</Box>
 			<Box sx={signupStyles.mainContent}>
 				<Box sx={signupStyles.container}>
@@ -408,7 +418,7 @@ const Signup: React.FC = () => {
 						className="heading-text"
 						sx={signupStyles.title}
 					>
-						Create your Allsource account
+						Create your {isClient ? whitelabel.brand_name : ""} account
 					</Typography>
 					<GoogleLogin
 						onSuccess={async (credentialResponse) => {

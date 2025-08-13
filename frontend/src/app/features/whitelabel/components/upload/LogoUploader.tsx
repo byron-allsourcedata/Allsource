@@ -93,6 +93,7 @@ export const LogoUploader: FC<Props> = ({
 
 	return wrap(
 		<UploadLogo
+			sizes={image}
 			containerRef={elementRef}
 			dragProps={dragHandlers}
 			onClick={onOpenFilePicker}

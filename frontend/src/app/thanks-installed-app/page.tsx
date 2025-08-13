@@ -3,8 +3,12 @@ import Image from "next/image";
 import { Typography, Box, Link } from "@mui/material";
 import { useEffect } from "react";
 import { thanksInstalledAppStyle } from "./thanksInstalledAppStyle";
+import { LogoSmall } from "@/components/ui/Logo";
+import { useWhitelabel } from "../features/whitelabel/contexts/WhitelabelContext";
 
 const ThanksInstalledApp = () => {
+	const { whitelabel } = useWhitelabel();
+
 	useEffect(() => {
 		document.body.style.overflow = "hidden";
 		return () => {
@@ -17,14 +21,14 @@ const ThanksInstalledApp = () => {
 				display={"flex"}
 				sx={{ alignItems: "center", textDecoration: "none" }}
 			>
-				<Image src={"/logo-icon.svg"} width={61} height={39} alt="Allsource" />
+				<LogoSmall width={61} height={39} />
 				<Typography
 					variant="h1"
 					color={"#002868"}
 					fontSize={"51.21px"}
 					fontWeight={400}
 				>
-					Allsource
+					{whitelabel.brand_name}
 				</Typography>
 			</Link>
 			<Image
@@ -34,7 +38,8 @@ const ThanksInstalledApp = () => {
 				alt="Maximiz installed"
 			/>
 			<Typography variant="h6" fontSize={"16px"} fontWeight={400} mt={2}>
-				Allsource installed! Get ready to supercharge your store’s success!
+				{whitelabel.brand_name} installed! Get ready to supercharge your store’s
+				success!
 			</Typography>
 		</Box>
 	);

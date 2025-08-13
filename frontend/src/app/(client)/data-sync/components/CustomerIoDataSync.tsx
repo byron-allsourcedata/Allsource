@@ -27,6 +27,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { Logo } from "@/components/ui/Logo";
 
 interface Data {
 	id: number;
@@ -55,6 +56,8 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 	data,
 	isEdit,
 }) => {
+	const maxLengthFieldName = 25;
+	const maxLengthFieldValue = 30;
 	const defaultRadioValue = "allContacts";
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
@@ -404,7 +407,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 	};
 
 	const isSafeFieldName = (str: string): boolean => {
-		return /^[a-zA-Z][a-zA-Z0-9_ ]*$/.test(str);
+		return /^[a-zA-Z][a-zA-Z0-9_]*$/.test(str);
 	};
 
 	const isDuplicate = (value: string, currentIndex: number) => {
@@ -827,12 +830,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo.svg"
-												alt="logo"
-												height={22}
-												width={34}
-											/>
+											<Logo height={22} width={34} />
 										</Grid>
 										<Grid
 											item
@@ -1176,7 +1174,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 															onChange={(e) =>
 																handleChangeField(index, "type", e.target.value)
 															}
-															placeholder="Enter field name"
+															placeholder={`Enter field name (${maxLengthFieldName} characters max)`}
 															error={
 																field.is_constant &&
 																!!field.type &&
@@ -1226,6 +1224,9 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 																		marginLeft: "0",
 																	},
 																},
+															}}
+															inputProps={{
+																maxLength: maxLengthFieldName,
 															}}
 														/>
 													) : (
@@ -1348,7 +1349,11 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 														onChange={(e) =>
 															handleChangeField(index, "value", e.target.value)
 														}
-														placeholder="Enter value"
+														placeholder={
+															field.is_constant
+																? `Enter value (${maxLengthFieldValue} characters max)`
+																: "Enter value"
+														}
 														InputLabelProps={{
 															sx: {
 																fontFamily: "var(--font-nunito)",
@@ -1388,6 +1393,11 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 																	},
 															},
 														}}
+														inputProps={
+															field.is_constant
+																? { maxLength: maxLengthFieldValue }
+																: {}
+														}
 													/>
 												</Grid>
 												<Grid
@@ -1407,6 +1417,24 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 														/>
 													</IconButton>
 												</Grid>
+												{field.type && !isSafeFieldName(field.type) && (
+													<Box
+														sx={{ width: "100%", pl: 2.25, mt: "-6px", mb: 1 }}
+													>
+														<Typography
+															sx={{
+																color: "#d32f2f",
+																fontSize: "12px",
+																marginTop: "4px",
+																marginLeft: "2px",
+																fontFamily: "var(--font-roboto)",
+															}}
+														>
+															Field name must consist of letters, numbers and
+															underscores only.
+														</Typography>
+													</Box>
+												)}
 											</Grid>
 										))}
 										<Box

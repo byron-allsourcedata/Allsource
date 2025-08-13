@@ -37,6 +37,7 @@ import {
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { Logo } from "@/components/ui/Logo";
 
 interface ConnectSlackPopupProps {
 	open: boolean;
@@ -1395,12 +1396,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo.svg"
-												alt="logo"
-												height={15}
-												width={24}
-											/>
+											<Logo height={15} width={24} />
 										</Grid>
 										<Grid
 											item

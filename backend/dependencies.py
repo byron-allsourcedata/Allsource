@@ -804,6 +804,9 @@ def is_user_admin(
     return "admin" in (user.get("role") or "")
 
 
+AdminUser = Annotated[UserDict, Depends(check_user_admin)]
+
+
 def check_api_key(
     domain_persistence: UserDomainsPersistence,
     maximiz_api_key=Header(None),

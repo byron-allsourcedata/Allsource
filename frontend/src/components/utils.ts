@@ -1,4 +1,31 @@
+"use client";
+
 import { SxProps, Theme } from "@mui/material";
+
+export function resetLocalStorage(resetWhitelabel?: boolean) {
+	if (
+		typeof window === "undefined" ||
+		typeof window.localStorage === "undefined"
+	)
+		return;
+
+	const whitelabel = localStorage.getItem("whitelabel");
+	localStorage.clear();
+
+	if (!resetWhitelabel && whitelabel) {
+		localStorage.setItem("whitelabel", whitelabel);
+	}
+}
+
+export function getStoredWhitelabel() {
+	if (
+		typeof window === "undefined" ||
+		typeof window.localStorage === "undefined"
+	)
+		return;
+
+	return localStorage.getItem("whitelabel");
+}
 
 export function getInteractiveSx(interactive: boolean): SxProps<Theme> {
 	if (!interactive) return {};

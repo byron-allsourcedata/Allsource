@@ -25,6 +25,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Checkbox from "@mui/material/Checkbox";
 import { width } from "@mui/system";
+import { Logo } from "@/components/ui/Logo";
 
 const SidebarAdmin = dynamic(() => import("../../components/SidebarAdmin"), {
 	suspense: true,
@@ -160,13 +161,7 @@ const Reseller: React.FC = () => {
 			<Box sx={resellerStyle.headers}>
 				<Box sx={resellerStyle.logoContainer}>
 					<Link href="/" underline="none" sx={{ zIndex: 10 }}>
-						<Image
-							src="/logo.svg"
-							priority
-							alt="logo"
-							height={31}
-							width={130}
-						/>
+						<Logo />
 					</Link>
 				</Box>
 				<Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>

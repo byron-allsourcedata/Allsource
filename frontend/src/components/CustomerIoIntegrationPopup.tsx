@@ -23,6 +23,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 interface CreateCustomerIoProps {
 	fromAudience?: boolean;
@@ -113,6 +114,8 @@ const CustomerIoConnect = ({
 	const label = { inputProps: { "aria-label": "Switch demo" } };
 	const [disableButton, setDisableButton] = useState(false);
 
+	const { whitelabel } = useWhitelabel();
+
 	useEffect(() => {
 		setApiKey(initApiKey || "");
 	}, [initApiKey]);
@@ -134,14 +137,16 @@ const CustomerIoConnect = ({
 	const instructions: Instruction[] = [
 		{ text: "Go to your Customer.io account → People → Customer.io API" },
 		{ text: "Copy the API token provided in Customer.io API" },
-		{ text: "Go to Allsource" },
-		{ text: "Paste it into the API field in the Allsource integration popup" },
+		{ text: `Go to ${whitelabel.brand_name}` },
+		{
+			text: `Paste it into the API field in the ${whitelabel.brand_name} integration popup`,
+		},
 		{ text: "Click the Test connection button" },
 		{ text: "Go back to the Customer.io connection page" },
 		{
 			text: "Click the Complete Setup button if the source was connected successfully; otherwise, check that you pasted the correct token",
 		},
-		{ text: "Go to Allsource and click the Connect button" },
+		{ text: `Go to ${whitelabel.brand_name} and click the Connect button` },
 		{ text: "You're good to go!" },
 	];
 

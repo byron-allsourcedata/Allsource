@@ -63,6 +63,7 @@ export interface UserData {
 	cost_leads_overage: number;
 	is_partner: boolean;
 	is_master: boolean;
+	whitelabel_settings_enabled?: boolean;
 }
 
 const Users: React.FC = () => {
@@ -74,7 +75,7 @@ const Users: React.FC = () => {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState<number>(50);
 	const [totalCount, setTotalCount] = useState(0);
-	const [order, setOrder] = useState<"asc" | "desc">("desc");
+	const [order, setOrder] = useState<"asc" | "desc" | "unset">("unset");
 	const [orderBy, setOrderBy] = useState<string>("");
 	const [isSliderOpen, setSliderOpen] = useState(false);
 	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -103,11 +104,11 @@ const Users: React.FC = () => {
 
 	useEffect(() => {
 		fetchData();
-	}, [order, selectedFilters, excludeTestUsers]);
+	}, [order, orderBy, selectedFilters, excludeTestUsers]);
 
 	useEffect(() => {
 		fetchUserData();
-	}, [tabIndex, page, rowsPerPage, order, selectedFilters]);
+	}, [tabIndex, page, rowsPerPage, order, orderBy, selectedFilters]);
 
 	const handleSearchChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
