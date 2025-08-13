@@ -61,6 +61,7 @@ import {
 	type SkeletonState,
 } from "@/app/features/sources/builder/components/PixelDomainSelector";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface Row {
 	id: number;
@@ -1344,12 +1345,7 @@ const SourcesImport: React.FC = () => {
 											sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
 										>
 											<Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-												<Image
-													src="/logo-icon.svg"
-													alt="logo"
-													height={22}
-													width={34}
-												/>
+												<LogoSmall alt="logo" height={22} width={34} />
 											</Grid>
 											<Grid item xs={1} sm={0.5}>
 												&nbsp;

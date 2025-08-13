@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Typography, Box, Link } from "@mui/material";
 import { useEffect } from "react";
 import { thanksInstalledAppStyle } from "./thanksInstalledAppStyle";
+import { LogoSmall } from "@/components/ui/Logo";
 
 const ThanksInstalledApp = () => {
 	useEffect(() => {
@@ -17,7 +18,7 @@ const ThanksInstalledApp = () => {
 				display={"flex"}
 				sx={{ alignItems: "center", textDecoration: "none" }}
 			>
-				<Image src={"/logo-icon.svg"} width={61} height={39} alt="Allsource" />
+				<LogoSmall width={61} height={39} alt="Allsource" />
 				<Typography
 					variant="h1"
 					color={"#002868"}

@@ -40,6 +40,7 @@ import {
 import LinearProgress from "@mui/material/LinearProgress";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface ConnectMetaPopupProps {
 	open: boolean;
@@ -2042,12 +2043,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 												},
 											}}
 										>
-											<Image
-												src="/logo-icon.svg"
-												alt="logo"
-												height={22}
-												width={34}
-											/>
+											<LogoSmall height={22} width={34} />
 										</Grid>
 										<Grid
 											item
