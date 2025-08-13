@@ -337,6 +337,7 @@ class AdminCustomersService:
                     "type": "user",
                     "credits_count": user.credits_count,
                     "is_another_domain_resolved": user.is_another_domain_resolved,
+                    "whitelabel_settings_enabled": user.whitelabel_settings_enabled,
                 }
             )
 
