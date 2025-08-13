@@ -75,7 +75,7 @@ export const LogoSmall: FC<Props> = ({
 		setIsClient(true);
 	}, []);
 
-	if (!isClient) {
+	if (!isClient || !url) {
 		return (
 			<Skeleton
 				variant="rounded"

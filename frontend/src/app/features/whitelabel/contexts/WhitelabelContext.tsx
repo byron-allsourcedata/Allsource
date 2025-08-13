@@ -30,7 +30,17 @@ export function restoreWhitelabel(): WhitelabelSettingsSchema | undefined {
 
 	const whitelabel = localStorage.getItem("whitelabel");
 
-	return whitelabel ? JSON.parse(whitelabel) : undefined;
+	if (!whitelabel) {
+		return undefined;
+	}
+
+	const parsed = JSON.parse(whitelabel);
+
+	return {
+		brand_name: parsed?.brand_name ?? "Allsource",
+		brand_logo_url: parsed?.brand_logo_url ?? "/logo.svg",
+		brand_icon_url: parsed?.brand_icon_url ?? "/logo-icon.svg",
+	};
 }
 
 export function WhitelabelProvider({
@@ -59,7 +69,11 @@ export function WhitelabelProvider({
 					response?.config.params?.referral)
 			) {
 				localStorage.setItem("whitelabel", JSON.stringify(whitelabelSettings));
-				setWhitelabel(whitelabelSettings);
+				setWhitelabel({
+					brand_name: whitelabelSettings.brand_name ?? "Allsource",
+					brand_logo_url: whitelabelSettings.brand_logo_url ?? "/logo.svg",
+					brand_icon_url: whitelabelSettings.brand_icon_url ?? "/logo-icon.svg",
+				});
 			}
 		}
 	}, [whitelabelSettings, setWhitelabel, response]);

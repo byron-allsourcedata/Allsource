@@ -63,6 +63,8 @@ type Props = {
 	showActions: boolean;
 	headerRef?: React.RefObject<HTMLDivElement>;
 	logoSrc?: string;
+	setVisibleButton?: (visible: boolean) => void;
+	visibleButton?: boolean;
 };
 
 export const HeaderView: React.FC<Props> = ({
@@ -72,6 +74,8 @@ export const HeaderView: React.FC<Props> = ({
 	onDismissNotification,
 	showActions,
 	headerRef,
+	setVisibleButton,
+	visibleButton,
 }) => {
 	const pathname = usePathname();
 	const [hasNotification, setHasNotification] = useState(
@@ -101,7 +105,7 @@ export const HeaderView: React.FC<Props> = ({
 	const [hasNewNotifications, setHasNewNotifications] =
 		useState<boolean>(false);
 	const buttonRef = useRef<HTMLButtonElement>(null);
-	const [visibleButton, setVisibleButton] = useState(false);
+
 	const [parentAccountType, setParentAccountType] = useState<string | null>("");
 	const returnToAdmin = useReturnToAdmin();
 	const { showHints, toggleHints } = useHints();
@@ -126,9 +130,9 @@ export const HeaderView: React.FC<Props> = ({
 		let token = localStorage.getItem("parent_token");
 		const isPaymentFailed = urlParams.get("payment_failed") === "true";
 		if ((backButton || token) && !isPaymentFailed) {
-			setVisibleButton(true);
+			setVisibleButton?.(true);
 		} else {
-			setVisibleButton(false);
+			setVisibleButton?.(false);
 		}
 	}, [backButton, setBackButton]);
 
@@ -136,7 +140,7 @@ export const HeaderView: React.FC<Props> = ({
 		await returnToAdmin({
 			onAfterUserData: () => {
 				setBackButton(false);
-				setVisibleButton(false);
+				setVisibleButton?.(false);
 			},
 		});
 	};
@@ -214,7 +218,12 @@ export const HeaderView: React.FC<Props> = ({
 								padding: "2px",
 							}}
 						>
-							<Logo height={30} width={130} />
+							<Image
+								src={logoSrc ?? "/logo.svg"}
+								alt="logo"
+								height={30}
+								width={130}
+							/>
 						</IconButton>
 						{visibleButton && (
 							<Button

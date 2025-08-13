@@ -22,6 +22,7 @@ import {
 	useGetWhitelabelSettings,
 	usePostWhitelabelSettings,
 } from "./requests";
+import { useWhitelabel } from "./contexts/WhitelabelContext";
 
 type Props = {};
 
@@ -85,6 +86,8 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 
 	const [smallLogoFile, setSmallLogoFile] = useState<File | null>(null);
 	const [smallLogoUrl, setSmallLogoUrl] = useLogoUrl(smallLogoFile);
+
+	const { refetch: refetchWhitelabel } = useWhitelabel();
 
 	const isWindowDragging = usePageDragging();
 
@@ -168,6 +171,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			}
 			updateSettings({ data: formData })
 				.then(() => {
+					refetchWhitelabel();
 					showToast("Whitelabel settings updated");
 				})
 				.catch((error) => {

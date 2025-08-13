@@ -44,7 +44,7 @@ class WhitelabelService:
         settings = self.repo.get_own_whitelabel_settings(user_id)
 
         if settings is None:
-            return self.default_whitelabel_settings()
+            return WhitelabelSettingsSchema()
 
         return WhitelabelSettingsSchema(
             brand_name=settings.brand_name,

@@ -1,9 +1,13 @@
+import logging
 from sqlalchemy.dialects.postgresql import insert
 from models.referral_users import ReferralUser
 from models.users import Users
 from models.whitelabel_settings import WhitelabelSettings
 from resolver import injectable
 from db_dependencies import Db
+
+
+logger = logging.getLogger(__name__)
 
 
 @injectable
@@ -23,10 +27,14 @@ class WhitelabelSettingsPersistence:
             .first()
         )
 
-        if referal_user is not None:
+        if not user.whitelabel_settings_enabled and referal_user is not None:
             check_setttings_for_user_id = referal_user.parent_user_id
         else:
             check_setttings_for_user_id = user_id
+
+        logger.info(
+            "check_setttings_for_user_id: " + str(check_setttings_for_user_id)
+        )
 
         return (
             self.db.query(WhitelabelSettings)

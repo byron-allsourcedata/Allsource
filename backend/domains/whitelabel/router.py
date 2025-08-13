@@ -38,6 +38,7 @@ async def get_whitelabel_icons(
 ) -> WhitelabelSettingsSchema:
     logger.info(f"Provided referral code: {referral}")
     if user is not None:
+        logger.info("checking for user id ")
         user_id = user.get("id")
         return whitelabel_service.get_whitelabel_settings(user_id)
 
