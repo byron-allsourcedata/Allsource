@@ -8,6 +8,7 @@ import { showToast } from "../ToastNotification";
 import DemoFeedbackCard from "./DemoFeedbackCard";
 import DemoFollowup, { type FollowupLink } from "./DemoFollowup";
 import { useBookingUrl } from "@/services/booking";
+import { useKnowledgeBaseUrl } from "@/hooks/knowledge-base/useKnowledgeBaseUrl";
 
 interface HelpPoint {
 	title: string;
@@ -25,6 +26,8 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 	description,
 	helpPoints,
 }) => {
+	const knowledgeBaseUrl = useKnowledgeBaseUrl();
+
 	const initialPrefill = { email: "", name: "" };
 	const [prefillData, setPrefillData] = useState<{
 		email: string;
@@ -86,7 +89,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 			links: [
 				{
 					label: "Beginner’s Guide to AI Audiences",
-					href: "https://example.com/guide-ai-audiences",
+					href: knowledgeBaseUrl,
 				},
 			] as FollowupLink[],
 		},
@@ -96,7 +99,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 			links: [
 				{
 					label: "Free Audience Analyzer Tool",
-					href: "https://example.com/audience-analyzer",
+					href: knowledgeBaseUrl,
 				},
 			] as FollowupLink[],
 		},
@@ -106,7 +109,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 			links: [
 				{
 					label: "How AI Predicts Customer Behavior",
-					href: "https://example.com/ai-predicts-behavior",
+					href: knowledgeBaseUrl,
 				},
 			] as FollowupLink[],
 		},
