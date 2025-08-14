@@ -4,11 +4,12 @@ import { UploadLogo } from "./UploadLogo";
 import { useInitialHeight } from "../../hooks/useInitialHeight";
 import { FileCard } from "./BadUpload";
 import { formatBytes } from "@/utils/format";
-import { useBlobUrl } from "../../hooks/useBlobUrl";
 import { useFileDragAndDrop } from "@/components/premium-sources/hooks/useFileDragAndDrop";
 import { Column } from "@/components/Column";
+import { Skeleton } from "@mui/material";
 
 type Props = {
+	loading: boolean;
 	selectedFile: File | null;
 	isDragging: boolean;
 	allowedTypes?: string[];
@@ -24,6 +25,7 @@ type Props = {
 };
 
 export const LogoUploader: FC<Props> = ({
+	loading,
 	selectedFile,
 	isDragging,
 	logoUrl,
@@ -67,6 +69,10 @@ export const LogoUploader: FC<Props> = ({
 			</Column>
 		);
 	};
+
+	if (loading) {
+		return wrap(<Skeleton height="4.5rem" variant="rounded" />);
+	}
 
 	if (isDragging) {
 		return wrap(

@@ -5,7 +5,10 @@ import { useEffect, useState, type FC } from "react";
 import { SettingCard } from "./components/SettingCard";
 import { Paper, styled, TextField, ThemeProvider } from "@mui/material";
 import { whitelabelTheme } from "./theme";
-import { useFieldValue } from "@/components/premium-sources/hooks/useFieldValue";
+import {
+	useFieldValue,
+	useOptionalFieldValue,
+} from "@/components/premium-sources/hooks/useFieldValue";
 import { WhitelabelExample } from "./components/example/WhitelabelExample";
 import { Row } from "@/components/Row";
 import { useElementViewportPosition } from "./hooks/useViewportPosition";
@@ -22,11 +25,12 @@ import {
 	usePostWhitelabelSettings,
 } from "./requests";
 import { useWhitelabel } from "./contexts/WhitelabelContext";
+import { LoadingTextField } from "./components/LoadingTextField";
 
 type Props = {};
 
 function useLogoUrl(file: File | null) {
-	const [logoUrl, setLogoUrl] = useState("/-.svg");
+	const [logoUrl, setLogoUrl] = useState<string>();
 	const fileBlobUrl = useBlobUrl(file);
 
 	useEffect(() => {
@@ -79,8 +83,8 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		useElementViewportPosition<HTMLDivElement>({
 			paddingBottom: 20,
 		});
-	const [brandNameField, setBrandName] = useFieldValue("-");
-	const [meetingUrlField, setMeetingUrl] = useFieldValue("");
+	const [brandNameField, setBrandName] = useOptionalFieldValue();
+	const [meetingUrlField, setMeetingUrl] = useOptionalFieldValue();
 
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 	const [logoUrl, setLogoUrl] = useLogoUrl(logoFile);
@@ -92,15 +96,14 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 
 	const isWindowDragging = usePageDragging();
 
-	const { openFileDialog: openFileDialog, FileInput: hiddenLogoFileInput } =
-		useFilePicker({
-			accept: "image/svg+xml,image/png",
-			onFileUpload: (files) => {
-				const file = files[0];
-				setLogoFile(file);
-			},
-			multiple: false,
-		});
+	const { openFileDialog, FileInput: hiddenLogoFileInput } = useFilePicker({
+		accept: "image/svg+xml,image/png",
+		onFileUpload: (files) => {
+			const file = files[0];
+			setLogoFile(file);
+		},
+		multiple: false,
+	});
 
 	const {
 		openFileDialog: openSmallFileDialog,
@@ -166,7 +169,10 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	const onSave = () => {
 		if (!settingsUpdateLoading) {
 			const formData = new FormData();
-			formData.append("brand_name", brandNameField.value);
+
+			if (brandNameField.value) {
+				formData.append("brand_name", brandNameField.value);
+			}
 
 			if (logoFile) {
 				formData.append("logo", logoFile || "");
@@ -218,7 +224,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							title="Enter Your Brand Name"
 							description="This name will appear across the platform as your brand identity"
 						>
-							<TextField {...brandNameField} size="small" />
+							<LoadingTextField {...brandNameField} />
 						</SettingCard>
 
 						<SettingCard
@@ -226,6 +232,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your agency's logo to replace the Allsource one"
 						>
 							<LogoUploader
+								loading={settingsLoading}
 								logoUrl={logoUrl}
 								selectedFile={logoFile}
 								isDragging={isWindowDragging}
@@ -246,6 +253,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your smaller version of logo"
 						>
 							<LogoUploader
+								loading={settingsLoading}
 								logoUrl={smallLogoUrl}
 								selectedFile={smallLogoFile}
 								isDragging={isWindowDragging}
@@ -261,7 +269,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							title="Change your meeting url"
 							description="Change url that will be used when scheduling a demo call"
 						>
-							<TextField size="small" {...meetingUrlField} />
+							<LoadingTextField {...meetingUrlField} />
 						</SettingCard>
 						<Row width="inherit" justifyContent="flex-end">
 							<CustomButton
