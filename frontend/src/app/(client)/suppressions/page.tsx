@@ -9,7 +9,6 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import Image from "next/image";
 import { useNotification } from "../../../context/NotificationContext";
 import { showErrorToast } from "@/components/ToastNotification";
 import GettingStartedSection from "@/components/GettingStartedSection";
@@ -116,51 +115,58 @@ const Suppressions: React.FC = () => {
 	return (
 		<Box sx={{ ...suppressionsStyle.mainContent }}>
 			{status !== "PIXEL_INSTALLATION_NEEDED" && (
-				<>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: "row",
+						alignItems: "center",
+						position: "sticky",
+						top: 0,
+						pl: "0.5rem",
+						zIndex: 9,
+						pt: 1.5,
+						backgroundColor: "#fff",
+						justifyContent: "space-between",
+						width: "100%",
+						"@media (max-width: 900px)": {
+							zIndex: 10,
+						},
+						"@media (max-width: 600px)": {
+							pt: "4.25rem",
+							flexDirection: "column",
+							pl: "0.5rem",
+							alignItems: "flex-start",
+							zIndex: 10,
+							width: "100%",
+							pr: 1.5,
+						},
+						"@media (max-width: 440px)": {
+							flexDirection: "column",
+							zIndex: 1,
+							justifyContent: "flex-start",
+						},
+						"@media (max-width: 400px)": {
+							pb: "6px",
+						},
+					}}
+				>
 					<Box
 						sx={{
+							flexShrink: 0,
 							display: "flex",
 							flexDirection: "row",
 							alignItems: "center",
-							position: "sticky",
-							top: 0,
-							pl: "0.5rem",
-							zIndex: 9,
-							pt: 1.5,
-							backgroundColor: "#fff",
-							justifyContent: "space-between",
-							width: "100%",
-							"@media (max-width: 900px)": {
-								zIndex: 10,
-							},
-							"@media (max-width: 600px)": {
-								pt: "4.25rem",
-								flexDirection: "column",
-								pl: "0.5rem",
-								alignItems: "flex-start",
-								zIndex: 10,
-								width: "100%",
-								pr: 1.5,
-							},
-							"@media (max-width: 440px)": {
-								flexDirection: "column",
-								zIndex: 1,
-								justifyContent: "flex-start",
-							},
-							"@media (max-width: 400px)": {
-								pb: "6px",
-							},
+							gap: 1,
+							"@media (max-width: 600px)": { mb: 2 },
+							"@media (max-width: 440px)": { mb: 1 },
 						}}
 					>
 						<Box
 							sx={{
-								flexShrink: 0,
 								display: "flex",
 								flexDirection: "row",
 								alignItems: "center",
-								gap: 1,
-								"@media (max-width: 600px)": { mb: 2 },
-								"@media (max-width: 440px)": { mb: 1 },
+								gap: 3,
 							}}
 						>
 							<Box
@@ -168,135 +174,126 @@ const Suppressions: React.FC = () => {
 									display: "flex",
 									flexDirection: "row",
 									alignItems: "center",
-									gap: 3,
+									gap: 1,
 								}}
 							>
-								<Box
-									sx={{
-										display: "flex",
-										flexDirection: "row",
-										alignItems: "center",
-										gap: 1,
-									}}
+								<Typography
+									className="first-sub-title"
+									sx={{ textWrap: "nowrap" }}
 								>
-									<Typography
-										className="first-sub-title"
-										sx={{ textWrap: "nowrap" }}
-									>
-										Suppressions
-									</Typography>
-									<CustomTooltip
-										title={
-											"Contacts automatically sync across devices and platforms."
-										}
-										linkText="Learn more"
-										linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/company"
-									/>
-								</Box>
+									Suppressions
+								</Typography>
+								<CustomTooltip
+									title={
+										"Contacts automatically sync across devices and platforms."
+									}
+									linkText="Learn more"
+									linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/company"
+								/>
 							</Box>
 						</Box>
-						<Box
-							sx={{
-								flexGrow: 1,
-								flexShrink: 1,
-								display: "flex",
-								overflow: "hidden",
-								justifyContent: "center",
+					</Box>
+					<Box
+						sx={{
+							flexGrow: 1,
+							flexShrink: 1,
+							display: "flex",
+							overflow: "hidden",
+							justifyContent: "center",
+							width: "100%",
+							pr: "10%",
+							alignItems: "center",
+							"@media (max-width: 900px)": { pr: 0 },
+							"@media (max-width: 600px)": {
 								width: "100%",
-								pr: "10%",
-								alignItems: "center",
-								"@media (max-width: 900px)": { pr: 0 },
-								"@media (max-width: 600px)": {
-									width: "100%",
-									pr: "0",
-								},
-							}}
-						>
-							{status === "PIXEL_INSTALLATION_NEEDED" ? (
-								""
-							) : (
-								<Tabs
-									value={tabIndex}
-									onChange={handleTabChange}
+								pr: "0",
+							},
+						}}
+					>
+						{status === "PIXEL_INSTALLATION_NEEDED" ? (
+							""
+						) : (
+							<Tabs
+								value={tabIndex}
+								onChange={handleTabChange}
+								sx={{
+									textTransform: "none",
+									minHeight: 0,
+									"& .MuiTabs-indicator": {
+										backgroundColor: "rgba(56, 152, 252, 1)",
+										height: "1.4px",
+									},
+									"@media (max-width: 600px)": {
+										border: "1px solid rgba(228, 228, 228, 1)",
+										borderRadius: "4px",
+										width: "100%",
+										"& .MuiTabs-indicator": {
+											height: "0",
+										},
+									},
+								}}
+								aria-label="suppression tabs"
+							>
+								<Tab
+									className="main-text"
 									sx={{
 										textTransform: "none",
-										minHeight: 0,
-										"& .MuiTabs-indicator": {
-											backgroundColor: "rgba(56, 152, 252, 1)",
-											height: "1.4px",
+										padding: "4px 10px",
+										pb: "10px",
+										flexGrow: 1,
+										marginRight: "3em",
+										minHeight: "auto",
+										minWidth: "auto",
+										fontSize: "14px",
+										fontWeight: 700,
+										lineHeight: "19.1px",
+										textAlign: "left",
+										mr: 2,
+										"&.Mui-selected": {
+											color: "rgba(56, 152, 252, 1)",
 										},
 										"@media (max-width: 600px)": {
-											border: "1px solid rgba(228, 228, 228, 1)",
+											mr: 0,
 											borderRadius: "4px",
-											width: "100%",
-											"& .MuiTabs-indicator": {
-												height: "0",
+											"&.Mui-selected": {
+												backgroundColor: "rgba(249, 249, 253, 1)",
+												border: "1px solid rgba(220, 220, 239, 1)",
 											},
 										},
 									}}
-									aria-label="suppression tabs"
-								>
-									<Tab
-										className="main-text"
-										sx={{
-											textTransform: "none",
-											padding: "4px 10px",
-											pb: "10px",
-											flexGrow: 1,
-											marginRight: "3em",
-											minHeight: "auto",
-											minWidth: "auto",
-											fontSize: "14px",
-											fontWeight: 700,
-											lineHeight: "19.1px",
-											textAlign: "left",
-											mr: 2,
+									label="Suppression Rules"
+								/>
+								<Tab
+									className="main-text"
+									sx={{
+										textTransform: "none",
+										padding: "4px 10px",
+										minHeight: "auto",
+										flexGrow: 1,
+										pb: "10px",
+										textAlign: "center",
+										fontSize: "14px",
+										fontWeight: 700,
+										lineHeight: "19.1px",
+										minWidth: "auto",
+										"&.Mui-selected": {
+											color: "rgba(56, 152, 252, 1)",
+										},
+										"@media (max-width: 600px)": {
+											mr: 0,
+											borderRadius: "4px",
 											"&.Mui-selected": {
-												color: "rgba(56, 152, 252, 1)",
+												backgroundColor: "rgba(249, 249, 253, 1)",
+												border: "1px solid rgba(220, 220, 239, 1)",
 											},
-											"@media (max-width: 600px)": {
-												mr: 0,
-												borderRadius: "4px",
-												"&.Mui-selected": {
-													backgroundColor: "rgba(249, 249, 253, 1)",
-													border: "1px solid rgba(220, 220, 239, 1)",
-												},
-											},
-										}}
-										label="Suppression Rules"
-									/>
-									<Tab
-										className="main-text"
-										sx={{
-											textTransform: "none",
-											padding: "4px 10px",
-											minHeight: "auto",
-											flexGrow: 1,
-											pb: "10px",
-											textAlign: "center",
-											fontSize: "14px",
-											fontWeight: 700,
-											lineHeight: "19.1px",
-											minWidth: "auto",
-											"&.Mui-selected": {
-												color: "rgba(56, 152, 252, 1)",
-											},
-											"@media (max-width: 600px)": {
-												mr: 0,
-												borderRadius: "4px",
-												"&.Mui-selected": {
-													backgroundColor: "rgba(249, 249, 253, 1)",
-													border: "1px solid rgba(220, 220, 239, 1)",
-												},
-											},
-										}}
-										label="Collection Rules"
-									/>
-								</Tabs>
-							)}
-						</Box>
+										},
+									}}
+									label="Collection Rules"
+								/>
+							</Tabs>
+						)}
 					</Box>
-				</>
+				</Box>
 			)}
 			{status === "PIXEL_INSTALLATION_NEEDED" ? (
 				<Box sx={{ mr: 2, width: "100%", px: 1 }}>

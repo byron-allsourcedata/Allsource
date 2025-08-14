@@ -30,7 +30,6 @@ import {
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { suppressionsStyles } from "./suppressions";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	showErrorToast,
@@ -39,7 +38,6 @@ import {
 import dayjs from "dayjs";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from "../../../../components/CustomizedProgressBar";
-import CancelIcon from "@mui/icons-material/Cancel";
 import { TagsInput } from "react-tag-input-component";
 import "@/css/suppressionsStyle.css";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -51,7 +49,6 @@ import CustomTooltip from "../../../../components/customToolTip";
 import HintCard from "../../components/HintCard";
 import { suppressionsHintCards } from "../context/hintsCardsContent";
 import { useSuppressionsHints } from "../context/SuppressionsHintsContext";
-import { builderHintCards } from "../../lookalikes/context/hintsCardsContent";
 
 const isValidUrlOrPath = (input: string): boolean => {
 	const fullUrlRegex =
@@ -333,6 +330,13 @@ const SuppressionRules: React.FC = () => {
 				handleDeleteFile();
 				setCountDeleteContacts(response.data.delete_leads_count);
 				setCountAddedContacts(response.data.new_leads_count);
+
+				if (response.data.new_leads_count != null) {
+					showToast(
+						`✓ ${response.data.new_leads_count} unique contact${response.data.new_leads_count === 1 ? "" : "'s"} were successfully added to your contact list`,
+						{ autoClose: 4000 },
+					);
+				}
 			} else {
 				showErrorToast("Failed to upload file.");
 			}
@@ -520,7 +524,7 @@ const SuppressionRules: React.FC = () => {
 		try {
 			setLoading(true);
 			const response = await axiosInstance.get(
-				`/suppressions/suppressed-contacts-count`,
+				"/suppressions/suppressed-contacts-count",
 			);
 			const data = response.data;
 			setContactCount(data.suppressed_contacts_count);
@@ -1824,7 +1828,7 @@ const SuppressionRules: React.FC = () => {
 										closeClick={() => {
 											changeSuppressionsHint("uploadCsv", "showBody", "close");
 										}}
-									></HintCard>
+									/>
 								</Box>
 
 								{uploadedFile && (

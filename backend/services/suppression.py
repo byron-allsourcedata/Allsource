@@ -1,3 +1,4 @@
+import logging
 import os
 import csv
 import pandas as pd
@@ -33,6 +34,34 @@ class SuppressionService:
             "is_url_certain_activation": is_url_certain_activation,
         }
 
+    def _get_email_list_from_file(self, file: UploadFile) -> list[str] | None:
+        text = file.file.read().decode("utf-8", errors="replace")
+        df = pd.read_csv(StringIO(text))
+
+        # Find email column
+        columns = df.columns
+        email_column = None
+
+        for column in columns:
+            if column.lower() == "email":
+                email_column = column
+                break
+
+        if not email_column:
+            return None
+
+        # Get email list
+        email_list = (
+            df[email_column]
+            .dropna()
+            .astype(str)
+            .str.strip()
+            .loc[lambda s: s != ""]
+            .tolist()
+        )
+
+        return email_list
+
     def process_suppression_list(
         self, file: UploadFile, domain_id: int
     ) -> Dict[str, Any]:
@@ -40,16 +69,11 @@ class SuppressionService:
         if not filename.endswith(".csv"):
             return {"status": SuppressionStatus.INCOMPLETE, "leads_count": 0}
 
-        text = file.file.read().decode("utf-8", errors="replace")
-        df = pd.read_csv(StringIO(text), usecols=["email"])
-        email_list = (
-            df["email"]
-            .dropna()
-            .astype(str)
-            .str.strip()
-            .loc[lambda s: s != ""]
-            .tolist()
-        )
+        try:
+            email_list = self._get_email_list_from_file(file)
+        except Exception as e:
+            logging.info(f"Can't get list of emails from {filename}, Exception found: {e}")
+            return {"status": SuppressionStatus.INCOMPLETE, "leads_count": 0}
 
         if not email_list:
             return {
