@@ -22,12 +22,15 @@ import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import { flagStore } from "@/services/oneDollar";
 import { useUser } from "@/context/UserContext";
 import { Logo } from "@/components/ui/Logo";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
 const Signin: React.FC = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const { partner } = useUser();
 	const { setPrivacyPolicyPromiseResolver } = usePrivacyPolicyContext();
+	const { refetch: refetchWhitelabel } = useWhitelabel();
+
 	useEffect(() => {
 		document.body.style.overflow = "hidden";
 		return () => {
@@ -168,6 +171,7 @@ const Signin: React.FC = () => {
 
 			if (response.status === 200) {
 				const responseData = response.data;
+				refetchWhitelabel();
 				if (typeof window !== "undefined") {
 					if (responseData.token && responseData.token !== null) {
 						localStorage.setItem("token", responseData.token);

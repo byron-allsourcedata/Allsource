@@ -65,6 +65,8 @@ const Signup: React.FC = () => {
 	const isShopifyDataComplete = Object.values(initialShopifyData).every(
 		(value) => value !== null,
 	);
+	const { refetch: refetchWhitelabel } = useWhitelabel();
+
 	const [formValues, setFormValues] = useState({
 		full_name: "",
 		email: user_mail,
@@ -283,6 +285,7 @@ const Signup: React.FC = () => {
 				let userData = null;
 				if (response.status === 200) {
 					localStorage.removeItem(UTM_STORAGE_KEY);
+					refetchWhitelabel();
 					const responseData = response.data;
 					if (typeof window !== "undefined") {
 						localStorage.setItem("show_hints", String(true));
