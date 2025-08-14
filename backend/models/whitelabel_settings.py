@@ -29,6 +29,9 @@ class WhitelabelSettings(Base):
     brand_icon_url: Mapped[str | None] = mapped_column(
         sqlalchemy.VARCHAR, nullable=True
     )
+    meeting_url: Mapped[str | None] = mapped_column(
+        sqlalchemy.VARCHAR, nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         sqlalchemy.TIMESTAMP, nullable=False, default=datetime.now()
     )

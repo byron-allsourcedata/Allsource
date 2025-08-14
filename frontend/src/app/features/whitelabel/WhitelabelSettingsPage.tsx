@@ -19,7 +19,6 @@ import useDefaultAxios from "axios-hooks";
 import { useFilePicker } from "./hooks/useFilePicker";
 import {
 	useGetOwnWhitelabelSettings,
-	useGetWhitelabelSettings,
 	usePostWhitelabelSettings,
 } from "./requests";
 import { useWhitelabel } from "./contexts/WhitelabelContext";
@@ -81,6 +80,8 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			paddingBottom: 20,
 		});
 	const [brandNameField, setBrandName] = useFieldValue("-");
+	const [meetingUrlField, setMeetingUrl] = useFieldValue("");
+
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 	const [logoUrl, setLogoUrl] = useLogoUrl(logoFile);
 
@@ -158,6 +159,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			setBrandName(initialSettings.brand_name || "Allsource");
 			setLogoUrl(initialSettings.brand_logo_url || "/logo.svg");
 			setSmallLogoUrl(initialSettings.brand_icon_url || "/logo-icon.svg");
+			setMeetingUrl(initialSettings.meeting_url ?? "");
 		}
 	}, [initialSettings]);
 
@@ -173,6 +175,11 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			if (smallLogoFile) {
 				formData.append("small_logo", smallLogoFile || "");
 			}
+
+			if (meetingUrlField.value) {
+				formData.append("meeting_url", meetingUrlField.value);
+			}
+
 			updateSettings({ data: formData })
 				.then(() => {
 					refetchWhitelabel();
@@ -249,6 +256,12 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 									setSmallLogoFile(null);
 								}}
 							/>
+						</SettingCard>
+						<SettingCard
+							title="Change your meeting url"
+							description="Change url that will be used when scheduling a demo call"
+						>
+							<TextField size="small" {...meetingUrlField} />
 						</SettingCard>
 						<Row width="inherit" justifyContent="flex-end">
 							<CustomButton

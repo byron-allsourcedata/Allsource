@@ -61,6 +61,7 @@ class WhitelabelSettingsPersistence:
         brand_name: str,
         brand_logo_url: str | None,
         brand_icon_url: str | None,
+        meeting_url: str | None,
     ):
         query = (
             insert(WhitelabelSettings)
@@ -76,6 +77,7 @@ class WhitelabelSettingsPersistence:
                     "brand_name": brand_name,
                     "brand_logo_url": brand_logo_url,
                     "brand_icon_url": brand_icon_url,
+                    "meeting_url": meeting_url,
                 },
             )
         )

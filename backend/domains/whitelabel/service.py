@@ -36,6 +36,7 @@ class WhitelabelService:
             brand_name=settings.brand_name,
             brand_logo_url=settings.brand_logo_url,
             brand_icon_url=settings.brand_icon_url,
+            meeting_url=settings.meeting_url,
         )
 
     def get_own_whitelabel_settings(
@@ -50,6 +51,7 @@ class WhitelabelService:
             brand_name=settings.brand_name,
             brand_logo_url=settings.brand_logo_url,
             brand_icon_url=settings.brand_icon_url,
+            meeting_url=settings.meeting_url,
         )
 
     def get_whitelabel_settings_by_referral_code(
@@ -89,12 +91,17 @@ class WhitelabelService:
         brand_name: str,
         brand_logo: UploadFile | None,
         brand_icon: UploadFile | None,
+        meeting_url: str | None,
     ):
         brand_logo_url = self.maybe_upload_image(brand_logo)
         brand_icon_url = self.maybe_upload_image(brand_icon)
 
-        self.repo.update_whitelabel_settings(
-            user_id, brand_name, brand_logo_url, brand_icon_url
+        _ = self.repo.update_whitelabel_settings(
+            user_id,
+            brand_name,
+            brand_logo_url,
+            brand_icon_url,
+            meeting_url=meeting_url,
         )
 
     def maybe_upload_image(self, image: UploadFile | None) -> str | None:
