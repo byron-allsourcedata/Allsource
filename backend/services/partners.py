@@ -340,7 +340,9 @@ class PartnersService:
             reward_payout_date=partner.reward_payout_date,
             count=partner.count_accounts,
             status=partner.status.capitalize(),
-            whitelabel_settings_enabled=partner.whitelabel_settings_enabled,
+            whitelabel_settings_enabled=getattr(
+                partner, "whitelabel_settings_enabled", None
+            ),
             isActive=partner.is_active,
         ).model_dump()
 
