@@ -58,6 +58,7 @@ async def update_whitelabel_settings(
     brand_name: str = Form(...),
     logo: UploadFile | None = File(None),
     small_logo: UploadFile | None = File(None),
+    meeting_url: str | None = Form(None),
 ):
     if not user["whitelabel_settings_enabled"]:
         logger.info(
@@ -70,6 +71,7 @@ async def update_whitelabel_settings(
         brand_name=brand_name,
         brand_logo=logo,
         brand_icon=small_logo,
+        meeting_url=meeting_url,
     )
 
     db.commit()

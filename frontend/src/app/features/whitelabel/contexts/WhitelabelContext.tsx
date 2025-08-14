@@ -73,6 +73,7 @@ export function WhitelabelProvider({
 					brand_name: whitelabelSettings.brand_name ?? "Allsource",
 					brand_logo_url: whitelabelSettings.brand_logo_url ?? "/logo.svg",
 					brand_icon_url: whitelabelSettings.brand_icon_url ?? "/logo-icon.svg",
+					meeting_url: whitelabelSettings.meeting_url,
 				});
 			}
 		}

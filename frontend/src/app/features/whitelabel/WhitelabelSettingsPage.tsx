@@ -5,7 +5,10 @@ import { useEffect, useState, type FC } from "react";
 import { SettingCard } from "./components/SettingCard";
 import { Paper, styled, TextField, ThemeProvider } from "@mui/material";
 import { whitelabelTheme } from "./theme";
-import { useFieldValue } from "@/components/premium-sources/hooks/useFieldValue";
+import {
+	useFieldValue,
+	useOptionalFieldValue,
+} from "@/components/premium-sources/hooks/useFieldValue";
 import { WhitelabelExample } from "./components/example/WhitelabelExample";
 import { Row } from "@/components/Row";
 import { useElementViewportPosition } from "./hooks/useViewportPosition";
@@ -19,15 +22,15 @@ import useDefaultAxios from "axios-hooks";
 import { useFilePicker } from "./hooks/useFilePicker";
 import {
 	useGetOwnWhitelabelSettings,
-	useGetWhitelabelSettings,
 	usePostWhitelabelSettings,
 } from "./requests";
 import { useWhitelabel } from "./contexts/WhitelabelContext";
+import { LoadingTextField } from "./components/LoadingTextField";
 
 type Props = {};
 
 function useLogoUrl(file: File | null) {
-	const [logoUrl, setLogoUrl] = useState("/-.svg");
+	const [logoUrl, setLogoUrl] = useState<string>();
 	const fileBlobUrl = useBlobUrl(file);
 
 	useEffect(() => {
@@ -40,7 +43,7 @@ function useLogoUrl(file: File | null) {
 }
 
 function useUploadedLogoRequest(url: string) {
-	const [{ data, loading, response }, refetch] = useDefaultAxios(
+	const [{ data, loading, response, error }, refetch] = useDefaultAxios(
 		{
 			url,
 		},
@@ -53,12 +56,13 @@ function useUploadedLogoRequest(url: string) {
 		data,
 		loading,
 		refetch,
+		error,
 		contentType: response?.headers["content-type"],
 	};
 }
 
 function useUploadedLogo(url: string | undefined) {
-	const { data, loading, refetch, contentType } = useUploadedLogoRequest(
+	const { data, loading, error, refetch, contentType } = useUploadedLogoRequest(
 		url ?? "",
 	);
 
@@ -72,7 +76,7 @@ function useUploadedLogo(url: string | undefined) {
 		}
 	}, [url, refetch]);
 
-	return [data, loading, contentType] as const;
+	return [data, loading, contentType, error] as const;
 }
 
 export const WhitelabelSettingsPage: FC<Props> = ({}) => {
@@ -80,7 +84,9 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		useElementViewportPosition<HTMLDivElement>({
 			paddingBottom: 20,
 		});
-	const [brandNameField, setBrandName] = useFieldValue("-");
+	const [brandNameField, setBrandName] = useOptionalFieldValue();
+	const [meetingUrlField, setMeetingUrl] = useOptionalFieldValue();
+
 	const [logoFile, setLogoFile] = useState<File | null>(null);
 	const [logoUrl, setLogoUrl] = useLogoUrl(logoFile);
 
@@ -91,15 +97,14 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 
 	const isWindowDragging = usePageDragging();
 
-	const { openFileDialog: openFileDialog, FileInput: hiddenLogoFileInput } =
-		useFilePicker({
-			accept: "image/svg+xml,image/png",
-			onFileUpload: (files) => {
-				const file = files[0];
-				setLogoFile(file);
-			},
-			multiple: false,
-		});
+	const { openFileDialog, FileInput: hiddenLogoFileInput } = useFilePicker({
+		accept: "image/svg+xml,image/png",
+		onFileUpload: (files) => {
+			const file = files[0];
+			setLogoFile(file);
+		},
+		multiple: false,
+	});
 
 	const {
 		openFileDialog: openSmallFileDialog,
@@ -120,19 +125,22 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		fetchWhitelabelSettings,
 	] = useGetOwnWhitelabelSettings(true);
 
-	const [uploadedLogo, uploadedLogoLoading, uploadedLogoContentType] =
-		useUploadedLogo(initialSettings?.brand_logo_url);
+	const [
+		uploadedLogo,
+		uploadedLogoLoading,
+		uploadedLogoContentType,
+		logoError,
+	] = useUploadedLogo(initialSettings?.brand_logo_url);
 
 	const [
 		uploadedSmallLogo,
 		uploadedSmallLogoLoading,
 		uploadedSmallLogoContentType,
+		iconError,
 	] = useUploadedLogo(initialSettings?.brand_icon_url);
 
 	useEffect(() => {
-		try {
-			fetchWhitelabelSettings();
-		} catch {}
+		fetchWhitelabelSettings().catch(() => {});
 	}, []);
 
 	useEffect(() => {
@@ -160,13 +168,17 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			setBrandName(initialSettings.brand_name || "Allsource");
 			setLogoUrl(initialSettings.brand_logo_url || "/logo.svg");
 			setSmallLogoUrl(initialSettings.brand_icon_url || "/logo-icon.svg");
+			setMeetingUrl(initialSettings.meeting_url ?? "");
 		}
 	}, [initialSettings]);
 
 	const onSave = () => {
 		if (!settingsUpdateLoading) {
 			const formData = new FormData();
-			formData.append("brand_name", brandNameField.value);
+
+			if (brandNameField.value) {
+				formData.append("brand_name", brandNameField.value);
+			}
 
 			if (logoFile) {
 				formData.append("logo", logoFile || "");
@@ -175,6 +187,11 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 			if (smallLogoFile) {
 				formData.append("small_logo", smallLogoFile || "");
 			}
+
+			if (meetingUrlField.value) {
+				formData.append("meeting_url", meetingUrlField.value);
+			}
+
 			updateSettings({ data: formData })
 				.then(() => {
 					refetchWhitelabel();
@@ -194,13 +211,16 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 				gap="1.5rem"
 				sx={{
 					height: pxToBottom,
+
 					padding: 2,
 					overflowX: "clip",
 				}}
 			>
 				{hiddenLogoFileInput}
 				{hiddenSmallLogoFileInput}
-				<Paper>
+				<Paper
+					sx={{ minWidth: "440px", overflowY: "auto", overflowX: "hidden" }}
+				>
 					<Column
 						height="inherit"
 						sx={{ minWidth: "400px" }}
@@ -213,7 +233,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							title="Enter Your Brand Name"
 							description="This name will appear across the platform as your brand identity"
 						>
-							<TextField {...brandNameField} size="small" />
+							<LoadingTextField {...brandNameField} />
 						</SettingCard>
 
 						<SettingCard
@@ -221,6 +241,8 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your agency's logo to replace the Allsource one"
 						>
 							<LogoUploader
+								loading={settingsLoading}
+								errorLoadingFile={!!logoError}
 								logoUrl={logoUrl}
 								selectedFile={logoFile}
 								isDragging={isWindowDragging}
@@ -241,6 +263,8 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your smaller version of logo"
 						>
 							<LogoUploader
+								loading={settingsLoading}
+								errorLoadingFile={!!iconError}
 								logoUrl={smallLogoUrl}
 								selectedFile={smallLogoFile}
 								isDragging={isWindowDragging}
@@ -251,6 +275,12 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 									setSmallLogoFile(null);
 								}}
 							/>
+						</SettingCard>
+						<SettingCard
+							title="Change your meeting url"
+							description="Change url that will be used when scheduling a demo call"
+						>
+							<LoadingTextField {...meetingUrlField} />
 						</SettingCard>
 						<Row width="inherit" justifyContent="flex-end">
 							<CustomButton

@@ -56,6 +56,17 @@ class AudienceInsightsService:
 
         return self._combine_limit_20(sources, lookalikes)
 
+    def _fill_gapped_financial_info(self, financial_profile: dict) -> dict:
+        # Fill skipped number of credit lines
+        number_of_credit_lines = [str(i) for i in range(1, 9 + 1)]
+
+        for credit_line in number_of_credit_lines:
+            if credit_line not in financial_profile["number_of_credit_lines"]:
+                financial_profile["number_of_credit_lines"][credit_line] = 0
+
+        return financial_profile
+
+
     def _build_response(self, data: dict, is_debug: bool) -> dict:
         # B2B
         professional_profile = data.get("professional_profile", {})
@@ -67,6 +78,8 @@ class AudienceInsightsService:
         financial = data.get("financial", {})
         lifestyle = data.get("lifestyle", {})
         voter = data.get("voter", {})
+
+        self._fill_gapped_financial_info(financial)
 
         # Deleting unknown values
         if not is_debug:

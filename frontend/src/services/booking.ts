@@ -1,4 +1,5 @@
-import { AxiosInstance } from "axios";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import type { AxiosInstance } from "axios";
 import { useEffect, useState } from "react";
 
 export type PrefillData = {
@@ -11,12 +12,19 @@ export function getBookingUrl(): string {
 	return "https://meetings-na2.hubspot.com/mikhail-sofin/allsource";
 }
 
-export function useBookingUrl(axios: AxiosInstance) {
+export function useBaseBookingUrl(axios: AxiosInstance) {
 	const [utmParams, setUtmParams] = useState<string | null>(null);
 
 	const { prefillData } = usePrefillData(axios, setUtmParams);
 
 	return getCalendlyPopupUrl(utmParams, prefillData);
+}
+
+export function useBookingUrl(axios: AxiosInstance) {
+	const baseBookingUrl = useBaseBookingUrl(axios);
+	const { whitelabel } = useWhitelabel();
+
+	return whitelabel.meeting_url ?? baseBookingUrl;
 }
 
 export function usePrefillData(
