@@ -38,7 +38,7 @@ export const ErrorBox: FC<ErrorBoxProps> = ({ message }) => (
 
 type FileCardProps = {
 	filename: string;
-	size: string;
+	size: string | undefined;
 	logoSrc?: string;
 	onDelete?: () => void;
 	width?: number;
@@ -80,18 +80,20 @@ export const FileCard: FC<FileCardProps> = ({
 			>
 				{filename}
 			</Typography>
-			<Typography
-				variant="body2"
-				color="text.secondary"
-				noWrap
-				sx={{
-					textOverflow: "ellipsis",
-					overflow: "hidden",
-					whiteSpace: "nowrap",
-				}}
-			>
-				{size}
-			</Typography>
+			{size && (
+				<Typography
+					variant="body2"
+					color="text.secondary"
+					noWrap
+					sx={{
+						textOverflow: "ellipsis",
+						overflow: "hidden",
+						whiteSpace: "nowrap",
+					}}
+				>
+					{size}
+				</Typography>
+			)}
 		</Box>
 
 		<IconButton aria-label="delete" onClick={onDelete}>

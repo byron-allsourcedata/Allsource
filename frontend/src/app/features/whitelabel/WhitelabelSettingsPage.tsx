@@ -43,7 +43,7 @@ function useLogoUrl(file: File | null) {
 }
 
 function useUploadedLogoRequest(url: string) {
-	const [{ data, loading, response }, refetch] = useDefaultAxios(
+	const [{ data, loading, response, error }, refetch] = useDefaultAxios(
 		{
 			url,
 		},
@@ -56,12 +56,13 @@ function useUploadedLogoRequest(url: string) {
 		data,
 		loading,
 		refetch,
+		error,
 		contentType: response?.headers["content-type"],
 	};
 }
 
 function useUploadedLogo(url: string | undefined) {
-	const { data, loading, refetch, contentType } = useUploadedLogoRequest(
+	const { data, loading, error, refetch, contentType } = useUploadedLogoRequest(
 		url ?? "",
 	);
 
@@ -75,7 +76,7 @@ function useUploadedLogo(url: string | undefined) {
 		}
 	}, [url, refetch]);
 
-	return [data, loading, contentType] as const;
+	return [data, loading, contentType, error] as const;
 }
 
 export const WhitelabelSettingsPage: FC<Props> = ({}) => {
@@ -124,13 +125,18 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 		fetchWhitelabelSettings,
 	] = useGetOwnWhitelabelSettings(true);
 
-	const [uploadedLogo, uploadedLogoLoading, uploadedLogoContentType] =
-		useUploadedLogo(initialSettings?.brand_logo_url);
+	const [
+		uploadedLogo,
+		uploadedLogoLoading,
+		uploadedLogoContentType,
+		logoError,
+	] = useUploadedLogo(initialSettings?.brand_logo_url);
 
 	const [
 		uploadedSmallLogo,
 		uploadedSmallLogoLoading,
 		uploadedSmallLogoContentType,
+		iconError,
 	] = useUploadedLogo(initialSettings?.brand_icon_url);
 
 	useEffect(() => {
@@ -205,13 +211,16 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 				gap="1.5rem"
 				sx={{
 					height: pxToBottom,
+
 					padding: 2,
 					overflowX: "clip",
 				}}
 			>
 				{hiddenLogoFileInput}
 				{hiddenSmallLogoFileInput}
-				<Paper>
+				<Paper
+					sx={{ minWidth: "440px", overflowY: "auto", overflowX: "hidden" }}
+				>
 					<Column
 						height="inherit"
 						sx={{ minWidth: "400px" }}
@@ -233,6 +242,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 						>
 							<LogoUploader
 								loading={settingsLoading}
+								errorLoadingFile={!!logoError}
 								logoUrl={logoUrl}
 								selectedFile={logoFile}
 								isDragging={isWindowDragging}
@@ -254,6 +264,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 						>
 							<LogoUploader
 								loading={settingsLoading}
+								errorLoadingFile={!!iconError}
 								logoUrl={smallLogoUrl}
 								selectedFile={smallLogoFile}
 								isDragging={isWindowDragging}

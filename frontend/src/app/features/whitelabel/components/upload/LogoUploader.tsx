@@ -10,6 +10,7 @@ import { Skeleton } from "@mui/material";
 
 type Props = {
 	loading: boolean;
+	errorLoadingFile: boolean;
 	selectedFile: File | null;
 	isDragging: boolean;
 	allowedTypes?: string[];
@@ -26,6 +27,7 @@ type Props = {
 
 export const LogoUploader: FC<Props> = ({
 	loading,
+	errorLoadingFile,
 	selectedFile,
 	isDragging,
 	logoUrl,
@@ -90,6 +92,19 @@ export const LogoUploader: FC<Props> = ({
 				filename={selectedFile.name}
 				logoSrc={logoUrl}
 				size={formatBytes(selectedFile.size)}
+				width={image?.width}
+				height={image?.height}
+				onDelete={onRemoveFile}
+			/>,
+		);
+	}
+
+	if (errorLoadingFile) {
+		return wrap(
+			<FileCard
+				filename={"logo"}
+				logoSrc={logoUrl}
+				size={undefined}
 				width={image?.width}
 				height={image?.height}
 				onDelete={onRemoveFile}
