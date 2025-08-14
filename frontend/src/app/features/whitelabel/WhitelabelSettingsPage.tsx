@@ -130,9 +130,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	] = useUploadedLogo(initialSettings?.brand_icon_url);
 
 	useEffect(() => {
-		try {
-			fetchWhitelabelSettings();
-		} catch {}
+		fetchWhitelabelSettings().catch(() => {});
 	}, []);
 
 	useEffect(() => {
