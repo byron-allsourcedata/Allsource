@@ -175,7 +175,7 @@ class PartnersPersistence:
             .outerjoin(
                 ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id
             )
-            .outerjoin(Users, Users.user_id == Partner.user_id)
+            .outerjoin(Users, Users.id == Partner.user_id)
             .outerjoin(
                 ReferralUser, ReferralUser.parent_user_id == Partner.user_id
             )
