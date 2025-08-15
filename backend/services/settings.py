@@ -1004,7 +1004,6 @@ class SettingsService:
             title="Basic",
             alias="basic",
             price=Price(value="$0,08", y="record"),
-            is_recommended=True,
             permanent_limits=[
                 Advantage(
                     good=True, name="Domains monitored:", value="Unlimited"
@@ -1046,6 +1045,7 @@ class SettingsService:
         SMART_AUDIENCE_YEARLY = Plan(
             title="Smart Audience",
             alias="smart_audience",
+            is_recommended=True,
             price=Price(value="$5,000", y="month"),
             permanent_limits=[
                 Advantage(
