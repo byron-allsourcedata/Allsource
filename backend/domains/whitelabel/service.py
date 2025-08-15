@@ -73,6 +73,21 @@ class WhitelabelService:
             brand_icon_url="/logo-icon.svg",
         )
 
+    def with_none_filled(
+        self, settings: WhitelabelSettingsSchema
+    ) -> WhitelabelSettingsSchema:
+        """
+        Sets default values to empty fields using mutation on the object
+        """
+
+        if settings.brand_name is None:
+            settings.brand_name = "Allsource"
+        if settings.brand_logo_url is None:
+            settings.brand_logo_url = "/logo.svg"
+        if settings.brand_icon_url is None:
+            settings.brand_icon_url = "/logo-icon.svg"
+        return settings
+
     def enable_whitelabel_settings(self, user_id: int):
         """
         Raises UserNotFound

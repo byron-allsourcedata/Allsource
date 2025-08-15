@@ -33,7 +33,7 @@ class SendgridHandler:
         cls,
         template_id: str,
         template_placeholder: dict,
-        to_emails: List[str],
+        to_emails: list[str] | str,
         attachedfile: Optional[any] = None,
         cc_emails: List[str] = None,
         html_content: str = None,
@@ -61,6 +61,8 @@ class SendgridHandler:
             "Total": template_placeholder.get("total"),
             "Message": template_placeholder.get("message"),
             "commission": template_placeholder.get("commission"),
+            "logo_src": template_placeholder.get("logo_src"),
+            "whitelabel_name": template_placeholder.get("whitelabel_name"),
         }
         message.is_multiple = True
         if attachedfile is not None:

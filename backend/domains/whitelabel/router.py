@@ -4,7 +4,6 @@ from fastapi import APIRouter, File, Form, UploadFile, status
 from auth_dependencies import AuthUser, MaybeAuthUser
 from db_dependencies import Db
 from domains.referrals.exceptions import InvalidReferralCode
-from domains.whitelabel.services.aws import WhitelabelAwsService
 
 from .schemas import WhitelabelSettingsSchema
 from .service import WhitelabelService

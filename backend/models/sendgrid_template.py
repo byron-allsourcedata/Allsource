@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import Column, Sequence
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
 
@@ -15,8 +16,8 @@ class SendgridTemplate(Base):
         primary_key=True,
         nullable=False,
     )
-    alias = Column(VARCHAR, nullable=True)
-    template_id = Column(VARCHAR, nullable=True)
+    alias: Mapped[str] = mapped_column(VARCHAR, nullable=True)
+    template_id: Mapped[str] = mapped_column(VARCHAR, nullable=True)
     subject = Column(VARCHAR, nullable=True)
     description = Column(VARCHAR, nullable=True)
     created_at = Column(

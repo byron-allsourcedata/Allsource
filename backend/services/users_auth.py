@@ -9,6 +9,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
 
+from config.sendgrid import MailingConfig
 from db_dependencies import Db
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
@@ -651,7 +652,14 @@ class UsersAuth:
             logger.info("Password Verification Failed")
             return {"status": LoginStatus.INCORRECT_PASSWORD_OR_EMAIL}
 
-    async def create_account(self, user_form: UserSignUpForm):
+    async def create_account(
+        self, user_form: UserSignUpForm, whitelabel_settings=None
+    ):
+        """
+        whitelabel settings is WhitelabelSettingsSchema | None
+        it does not have type annotation because of circular dependency issues
+        """
+
         if not user_form.password or " " in user_form.password:
             logger.debug("Invalid password provided.")
             return {
@@ -864,7 +872,9 @@ class UsersAuth:
             self.__on_create_account(
                 email=user_object.email, full_name=user_object.full_name
             )
-            return self._send_email_verification(user_object, token)
+            return self._send_email_verification(
+                user_object, token, whitelabel_settings
+            )
 
         if teams_token:
             return {
@@ -951,7 +961,23 @@ class UsersAuth:
 
         return True
 
-    def _send_email_verification(self, user_object, token):
+    def _send_email_verification(
+        self, user_object, token, whitelabel_settings=None
+    ):
+        """
+        whitelabel settings is WhitelabelSettingsSchema | None
+        """
+        default_logo_src = MailingConfig.default_logo_src
+        default_whitelabel_name = MailingConfig.default_whitelabel_name
+
+        brand_logo: str = default_logo_src
+        whitelabel_name: str = default_whitelabel_name
+        if whitelabel_settings is not None:
+            if whitelabel_settings.brand_logo_url is not None:
+                brand_logo = whitelabel_settings.brand_logo_url
+            if whitelabel_settings.brand_name is not None:
+                whitelabel_name = whitelabel_settings.brand_name
+
         template_id = self.send_grid_persistence_service.get_template_by_alias(
             SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value
         )
@@ -966,6 +992,8 @@ class UsersAuth:
             template_placeholder={
                 "full_name": user_object.full_name,
                 "link": confirm_email_url,
+                "logo_src": brand_logo,
+                "whitelabel_name": whitelabel_name,
             },
         )
         self.user_persistence_service.set_verified_email_sent_now(

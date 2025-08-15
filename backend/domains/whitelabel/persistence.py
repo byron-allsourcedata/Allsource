@@ -28,17 +28,13 @@ class WhitelabelSettingsPersistence:
         )
 
         if not user.whitelabel_settings_enabled and referal_user is not None:
-            check_setttings_for_user_id = referal_user.parent_user_id
+            check_settings_for_user_id = referal_user.parent_user_id
         else:
-            check_setttings_for_user_id = user_id
-
-        logger.info(
-            "check_setttings_for_user_id: " + str(check_setttings_for_user_id)
-        )
+            check_settings_for_user_id = user_id
 
         return (
             self.db.query(WhitelabelSettings)
-            .where(WhitelabelSettings.user_id == check_setttings_for_user_id)
+            .where(WhitelabelSettings.user_id == check_settings_for_user_id)
             .first()
         )
 
