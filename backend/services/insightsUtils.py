@@ -10,7 +10,6 @@ import logging
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from db_dependencies import Clickhouse
 import json
 from enums import BusinessType
 from models import AudienceSource
@@ -287,7 +286,7 @@ class InsightsUtils:
 
     @staticmethod
     def is_invalid(val: Any) -> bool:
-        return val is None or str(val).upper() in {"UNKNOWN", "U", "2", "", "-"}
+        return val is None or str(val).upper() in {"UNKNOWN", "U", "", "-"}
 
     @staticmethod
     def process_insights_for_asids(
