@@ -61,6 +61,8 @@ class SendgridHandler:
             "Total": template_placeholder.get("total"),
             "Message": template_placeholder.get("message"),
             "commission": template_placeholder.get("commission"),
+            "logo_src": template_placeholder.get("logo_src"),
+            "whitelabel_name": template_placeholder.get("whitelabel_name"),
         }
         message.is_multiple = True
         if attachedfile is not None:

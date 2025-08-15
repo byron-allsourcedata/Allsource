@@ -13,6 +13,7 @@ from dependencies import (
     check_user_authentication,
     get_notification_service,
 )
+from domains.auth.signup.service import SignupService
 from models.users_domains import UserDomains
 from schemas.auth_google_token import AuthGoogleData
 from schemas.users import (
@@ -99,9 +100,9 @@ def check_user_authorization(
 @router.post("/sign-up", response_model=UserSignUpFormResponse)
 async def create_user(
     user_form: UserSignUpForm,
-    users_service: UsersAuth,
+    signup_service: SignupService,
 ):
-    user_data = await users_service.create_account(user_form)
+    user_data = await signup_service.create_account(user_form)
     if user_data.get("is_success"):
         return UserSignUpFormResponse(
             status=user_data.get("status"), token=user_data.get("token")
