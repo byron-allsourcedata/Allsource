@@ -33,7 +33,7 @@ class SendgridHandler:
         cls,
         template_id: str,
         template_placeholder: dict,
-        to_emails: List[str],
+        to_emails: list[str] | str,
         attachedfile: Optional[any] = None,
         cc_emails: List[str] = None,
         html_content: str = None,
