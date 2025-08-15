@@ -21,6 +21,10 @@ from resolver import injectable
 from schemas.domains import AdditionalScriptsInfo
 
 
+class DomainNotFound(Exception):
+    pass
+
+
 @injectable
 class UserDomainsPersistence:
     def __init__(self, db: Db, leads_persistence: LeadsPersistence):
@@ -198,10 +202,27 @@ class UserDomainsPersistence:
     def get_domain_by_filter(self, **filter_by):
         return self.db.query(UserDomains).filter_by(**filter_by).all()
 
+    def get_data_provider_id(self, domain_id: int) -> str | None:
+        row = (
+            self.db.query(UserDomains.data_provider_id)
+            .where(UserDomains.id == domain_id)
+            .first()
+        )
+
+        if not row:
+            raise DomainNotFound(domain_id)
+
+        (data_provider_id,) = row.tuple()
+        return data_provider_id
+
     def update_data_provider_id(self, domain_id: int, data_provider_id: str):
-        self.db.query(UserDomains).filter(UserDomains.id == domain_id).update(
-            {UserDomains.data_provider_id: data_provider_id},
-            synchronize_session=False,
+        _ = (
+            self.db.query(UserDomains)
+            .filter(UserDomains.id == domain_id)
+            .update(
+                {UserDomains.data_provider_id: data_provider_id},
+                synchronize_session=False,
+            )
         )
         self.db.commit()
 
