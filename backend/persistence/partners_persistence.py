@@ -170,7 +170,6 @@ class PartnersPersistence:
                     (Partner.master_id > 0, MasterPartner.company_name),
                     else_="Direct",
                 ).label("source"),
-                Users.whitelabel_settings_enabled,
             )
             .outerjoin(
                 ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id
