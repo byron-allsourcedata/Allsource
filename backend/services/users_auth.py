@@ -9,6 +9,7 @@ from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from sqlalchemy.orm import Session
 
+from config.sendgrid import MailingConfig
 from db_dependencies import Db
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
@@ -966,8 +967,8 @@ class UsersAuth:
         """
         whitelabel settings is WhitelabelSettingsSchema | None
         """
-        default_logo_src = "http://cdn.mcauto-images-production.sendgrid.net/cf02022f155a2940/b895956c-4d95-49f7-aadd-c66e7a3dfcf9/350x130.png"
-        default_whitelabel_name = "Allsource"
+        default_logo_src = MailingConfig.default_logo_src
+        default_whitelabel_name = MailingConfig.default_whitelabel_name
 
         brand_logo: str = default_logo_src
         whitelabel_name: str = default_whitelabel_name

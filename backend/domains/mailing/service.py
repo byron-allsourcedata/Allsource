@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import Any
+from config.sendgrid import MailingConfig
 from domains.mailing.exceptions import InvalidTemplateAlias
 from domains.whitelabel.schemas import (
     FilledWhitelabelSettingsSchema,
@@ -72,8 +73,8 @@ class MailingService:
     def fill_whitelabel_settings(
         self, settings: WhitelabelSettingsSchema
     ) -> FilledWhitelabelSettingsSchema:
-        default_logo_src = "http://cdn.mcauto-images-production.sendgrid.net/cf02022f155a2940/b895956c-4d95-49f7-aadd-c66e7a3dfcf9/350x130.png"
-        default_whitelabel_name = "Allsource"
+        default_logo_src = MailingConfig.default_logo_src
+        default_whitelabel_name = MailingConfig.default_whitelabel_name
 
         brand_logo: str = default_logo_src
         whitelabel_name: str = default_whitelabel_name
