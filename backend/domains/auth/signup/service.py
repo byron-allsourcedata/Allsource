@@ -1,3 +1,4 @@
+from domains.whitelabel.schemas import WhitelabelSettingsSchema
 from domains.whitelabel.service import WhitelabelService
 from resolver import injectable
 from schemas.users import UserSignUpForm
@@ -22,7 +23,7 @@ class SignupService:
 
     def get_whitelabel_by_referral_code(self, referral_code: str | None):
         if not referral_code:
-            return self.whitelabel.default_whitelabel_settings()
+            return WhitelabelSettingsSchema()
         return self.whitelabel.get_whitelabel_settings_by_referral_code(
             referral_code
         )
