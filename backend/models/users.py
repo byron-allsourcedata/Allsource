@@ -78,7 +78,9 @@ class Users(Base):
     )
     company_role = Column(VARCHAR(16), nullable=True)
     company_website_visits = Column(VARCHAR(16), nullable=True)
-    pixel_code_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
+    pixel_code_sent_at: Mapped[datetime | None] = mapped_column(
+        TIMESTAMP(precision=7), nullable=True
+    )
     calendly_uuid = Column(VARCHAR(64), nullable=True)
     calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)
     activate_steps_percent = Column(

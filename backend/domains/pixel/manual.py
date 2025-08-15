@@ -11,7 +11,7 @@ class ManualPixelService:
     def __init__(self, domains: UserDomainsService):
         self.domains = domains
 
-    def get_manual_pixel_code(self, client_id: str) -> tuple[str, str]:
+    def get_manual_pixel_code(self, client_id: str) -> str:
         pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
         script = (
             f'<script src="https://{pixel_script_domain}/pixel.js?dpid={client_id}"></script>'
@@ -35,4 +35,4 @@ class ManualPixelService:
             "</script>"
         )
 
-        return script, client_id
+        return script

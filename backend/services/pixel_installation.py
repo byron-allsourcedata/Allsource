@@ -118,31 +118,6 @@ class PixelInstallationService:
         client_id = self._get_or_create_client_id(user, domain)
         return f"""<script>/* converted_sale code for {domain.domain} with ID {client_id} */</script>"""
 
-    def send_pixel_code_in_email(
-        self, email: str, user: dict, domain: UserDomains
-    ):
-        message_expiration_time = user.get("pixel_code_sent_at", None)
-        time_now = datetime.now()
-        if message_expiration_time is not None:
-            if (message_expiration_time + timedelta(minutes=1)) > time_now:
-                return BaseEnum.SUCCESS
-        pixel_code, pixel_client_id = self.get_manual(user, domain)
-        mail_object = SendgridHandler()
-        template_id = self.send_grid_persistence_service.get_template_by_alias(
-            SendgridTemplate.SEND_PIXEL_CODE_TEMPLATE.value
-        )
-        full_name = email.split("@")[0]
-        mail_object.send_sign_up_mail(
-            to_emails=email,
-            template_id=template_id,
-            template_placeholder={
-                "full_name": full_name,
-                "pixel_code": pixel_code,
-                "email": email,
-            },
-        )
-        return BaseEnum.SUCCESS
-
     def parse_website(self, url, domain):
         try:
             response = requests.get(url)

@@ -119,22 +119,24 @@ class UserDomainsService:
             for domain in domains
         ]
 
-    def generate_data_provider_id(self, domain_id: str) -> str:
+    def generate_data_provider_id(self, domain_id: int | str) -> str:
         return hashlib.sha256(
             (str(domain_id) + getenv("SECRET_SALT")).encode()
         ).hexdigest()
 
     def ensure_data_provider_id(self, domain_id: int) -> str:
-        client_id = domain.data_provider_id
+        client_id = self.get_data_provider_id(domain_id)
         if client_id is None:
             client_id = self.generate_data_provider_id(domain_id)
 
-            self.domains.update_data_provider_id(domain.id, client_id)
+            self.domain_persistence.update_data_provider_id(
+                domain_id, client_id
+            )
 
         return client_id
 
-    def get_data_provider_id(self, domain_id: int):
-        self.domain_persistence.
+    def get_data_provider_id(self, domain_id: int) -> str | None:
+        return self.domain_persistence.get_data_provider_id(domain_id)
 
     def update_data_provider_id(self, domain_id: int, data_provider_id: str):
         """

@@ -1,5 +1,8 @@
+import logging
 from domains.mailing.sender import MailSenderService
 from resolver import injectable
+
+logger = logging.getLogger(__name__)
 
 
 @injectable

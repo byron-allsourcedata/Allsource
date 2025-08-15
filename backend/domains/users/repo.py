@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from sqlalchemy import select, update
 from db_dependencies import Db
 from domains.users.exceptions import UserNotFound
 from models.users import Users
@@ -30,6 +33,21 @@ class UsersPersistence:
 
         user.whitelabel_settings_enabled = is_enabled
         self.db.flush()
+
+    def get_pixel_code_last_sent(self, user_id: int) -> datetime | None:
+        return self.db.execute(
+            select(Users.pixel_code_sent_at).where(Users.id == user_id)
+        ).scalar()
+
+    def set_pixel_code_last_sent(
+        self, user_id: int, pixel_code_sent_at: datetime
+    ):
+        _ = self.db.execute(
+            update(Users)
+            .where(Users.id == user_id)
+            .values(pixel_code_sent_at=pixel_code_sent_at)
+        )
+        self.commit()
 
     def commit(self):
         self.db.commit()
