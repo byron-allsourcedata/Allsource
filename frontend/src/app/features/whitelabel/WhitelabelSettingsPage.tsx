@@ -69,6 +69,7 @@ function useUploadedLogo(url: string | undefined) {
 	useEffect(() => {
 		if (url) {
 			refetch({
+				responseType: "blob",
 				headers: {
 					Authorization: undefined,
 				},
@@ -241,7 +242,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your agency's logo to replace the Allsource one"
 						>
 							<LogoUploader
-								loading={settingsLoading}
+								loading={settingsLoading || uploadedLogoLoading}
 								errorLoadingFile={!!logoError}
 								logoUrl={logoUrl}
 								selectedFile={logoFile}
@@ -263,7 +264,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 							description="Add your smaller version of logo"
 						>
 							<LogoUploader
-								loading={settingsLoading}
+								loading={settingsLoading || uploadedSmallLogoLoading}
 								errorLoadingFile={!!iconError}
 								logoUrl={smallLogoUrl}
 								selectedFile={smallLogoFile}
