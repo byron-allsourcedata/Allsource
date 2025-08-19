@@ -1,14 +1,40 @@
 from typing import Any
 from domains.mailing.schemas import FilledWhitelabelSettingsSchema
 from domains.mailing.whitelabel import MailingWhitelabelService
+from persistence.sendgrid_persistence import SendgridPersistence
 from resolver import injectable
 from services.sendgrid import SendgridHandler
 
 
 @injectable
 class MailSenderService:
-    def __init__(self, whitelabel: MailingWhitelabelService):
+    def __init__(
+        self,
+        whitelabel: MailingWhitelabelService,
+        sendgrid_repo: SendgridPersistence,
+    ):
         self.whitelabel = whitelabel
+        self.sendgrid_repo = sendgrid_repo
+
+    def send_email_by_alias_with_whitelabel(
+        self,
+        to_email: str,
+        template_alias: str,
+        templates: dict[str, str],
+        whitelabel_settings: FilledWhitelabelSettingsSchema,
+    ):
+        """
+        Raises TemplateNotFound
+        """
+        template_id = self.sendgrid_repo.unwrap_template_by_alias(
+            template_alias
+        )
+        return self.send_email_with_whitelabel(
+            to_email=to_email,
+            template_id=template_id,
+            templates=templates,
+            whitelabel_settings=whitelabel_settings,
+        )
 
     def send_email_with_whitelabel(
         self,
@@ -28,6 +54,26 @@ class MailSenderService:
         )
 
         return response
+
+    def send_email_by_alias(
+        self,
+        to_email: str,
+        template_alias: str,
+        templates: dict[str, str],
+        from_user_id: int | None = None,
+    ):
+        """
+        Raises TemplateNotFound
+        """
+        template_id = self.sendgrid_repo.unwrap_template_by_alias(
+            template_alias
+        )
+        return self.send_email(
+            to_email=to_email,
+            template_id=template_id,
+            templates=templates,
+            from_user_id=from_user_id,
+        )
 
     def send_email(
         self,

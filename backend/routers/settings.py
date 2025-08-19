@@ -7,6 +7,14 @@ from dependencies import (
     check_user_setting_access,
     check_team_access_owner_user,
 )
+from domains.mailing.teams.mailing import TeamsMailingService
+from domains.teams.invitations.exceptions import (
+    InvalidAccessLevel,
+    InvitationLimitReached,
+    UserAlreadyInvited,
+)
+from domains.teams.invitations.service import TeamsInvitationsService
+from enums import SettingStatus
 from models.users import User
 from schemas.settings import (
     AccountDetailsRequest,
@@ -85,14 +93,26 @@ def change_teams(
 @router.post("/teams")
 def invite_user(
     teams_details: TeamsDetailsRequest,
-    settings_service: SettingsService,
     user: TeamAdmin,
+    team_mailing: TeamsInvitationsService,
 ):
-    return settings_service.invite_user(
-        user=user,
-        invite_user=teams_details.invite_user,
-        access_level=teams_details.access_level,
-    )
+    invited_user_email = teams_details.invite_user
+    if invited_user_email is None:
+        raise HTTPException(400, detail="invited_user_email is required.")
+    try:
+        return team_mailing.invite_user(
+            user=user,
+            access_level=teams_details.access_level,
+            invited_user_email=invited_user_email,
+        )
+    except InvalidAccessLevel:
+        raise HTTPException(
+            400, detail="Requested invalid access level."
+        ) from None
+    except InvitationLimitReached:
+        return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
+    except UserAlreadyInvited:
+        return {"status": SettingStatus.ALREADY_INVITED}
 
 
 @router.post("/teams/resend-invitation")

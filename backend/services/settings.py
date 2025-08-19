@@ -295,29 +295,16 @@ class SettingsService:
         return template_id
 
     def _generate_invitation_link(
-        self, user_id: str, invite_user: str
+        self, user_id: str, invited_user: str
     ) -> tuple[str, str]:
         md5_token_info = {
             "id": user_id,
-            "user_mail": invite_user,
+            "user_mail": invited_user,
             "salt": os.getenv("SECRET_SALT"),
         }
         json_string = json.dumps(md5_token_info, sort_keys=True)
         md5_hash = hashlib.md5(json_string.encode()).hexdigest()
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
-        return confirm_email_url, md5_hash
-
-    def _generate_invitation_link(
-        self, user_id: str, invite_user: str
-    ) -> tuple[str, str]:
-        md5_token_info = {
-            "id": user_id,
-            "user_mail": invite_user,
-            "salt": os.getenv("SECRET_SALT"),
-        }
-        json_string = json.dumps(md5_token_info, sort_keys=True)
-        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
-        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invited_user}"
         return confirm_email_url, md5_hash
 
     def _send_invitation_email(

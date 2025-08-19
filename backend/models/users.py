@@ -40,7 +40,7 @@ class Users(Base):
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
     image = Column(VARCHAR, nullable=True)
-    company_name = Column(VARCHAR, nullable=True)
+    company_name: Mapped[str | None] = mapped_column(VARCHAR, nullable=True)
     created_at = Column(
         TIMESTAMP,
         nullable=False,
