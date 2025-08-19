@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Any, List
+from typing import Optional, Any
 from decimal import Decimal
 from enums import TypeFunds
 
@@ -122,7 +122,7 @@ class BillingSubscriptionDetails(BaseModel):
 class Advantage(BaseModel):
     good: bool
     name: str
-    value: str
+    value: str | None = None
 
 
 class Price(BaseModel):
@@ -133,17 +133,24 @@ class Price(BaseModel):
 class Plan(BaseModel):
     title: str
     alias: str
-    is_recommended: Optional[bool] = False
-    is_active: Optional[bool] = False
+    is_recommended: bool | None = False
+    is_active: bool | None = False
     price: Price
-    permanent_limits: List[Advantage]
-    monthly_limits: List[Advantage]
-    gifted_funds: List[Advantage]
+    permanent_limits: list[Advantage] | None = None
+    referrals: list[Advantage] | None = None
+    monthly_limits: list[Advantage] | None = None
+    gifted_funds: list[Advantage] | None = None
+    gifts: list[Advantage] | None = None
+
+
+class SubscriptionPlans(BaseModel):
+    monthly: list[Plan]
+    yearly: list[Plan]
 
 
 class PlansResponse(BaseModel):
-    monthly: List[Plan]
-    yearly: List[Plan]
+    normal_plans: SubscriptionPlans
+    partner_plans: SubscriptionPlans
 
 
 class BuyFundsRequest(BaseModel):

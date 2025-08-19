@@ -8,6 +8,7 @@ from dependencies import (
     check_team_access_owner_user,
 )
 from models.users import User
+from persistence.user_persistence import UserDict
 from schemas.settings import (
     AccountDetailsRequest,
     TeamsDetailsRequest,
@@ -19,7 +20,6 @@ from schemas.settings import (
 from schemas.users import VerifyTokenResponse
 from schemas.settings import BuyFundsRequest, BuyCreditsRequest
 from services.settings import SettingsService
-from services.stripe_service import StripeService
 
 router = APIRouter(dependencies=[Depends(check_user_setting_access)])
 
@@ -323,6 +323,6 @@ def buy_funds(
 )
 def get_all_plans(
     settings_service: SettingsService,
-    user: dict = Depends(check_user_authorization_without_pixel),
+    user: UserDict = Depends(check_user_authorization_without_pixel),
 ):
-    return settings_service.get_all_plans()
+    return settings_service.get_all_plans(user)

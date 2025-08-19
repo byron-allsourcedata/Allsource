@@ -10,10 +10,11 @@ from models import UserSubscriptions
 from models.users import User
 from persistence.leads_persistence import LeadsPersistence
 from persistence.plans_persistence import PlansPersistence
+from persistence.referral_user import ReferralUserPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.team_invitation_persistence import TeamInvitationPersistence
-from persistence.user_persistence import UserPersistence
+from persistence.user_persistence import UserPersistence, UserDict
 from schemas.settings import (
     AccountDetailsRequest,
     BillingSubscriptionDetails,
@@ -30,6 +31,7 @@ from schemas.settings import (
     Plan,
     Price,
     Advantage,
+    SubscriptionPlans,
 )
 from services.domains import UserDomainsService
 from services.subscriptions import SubscriptionService
@@ -66,6 +68,7 @@ class SettingsService:
         lead_persistence: LeadsPersistence,
         team_invitation_persistence: TeamInvitationPersistence,
         stripe_service: StripeService,
+        referral_user_persistence: ReferralUserPersistence
     ):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
@@ -76,6 +79,7 @@ class SettingsService:
         self.lead_persistence = lead_persistence
         self.team_invitation_persistence = team_invitation_persistence
         self.stripe_service = stripe_service
+        self.referral_user_persistence = referral_user_persistence
 
     def get_account_details(self, user):
         member_id = None
@@ -975,7 +979,7 @@ class SettingsService:
 
         return result
 
-    def get_all_plans(self) -> PlansResponse:
+    def get_all_plans(self, user: UserDict) -> PlansResponse:
         FREE_TRAIL_PLAN = Plan(
             title="Free Trial",
             alias="free_trial",
@@ -1003,7 +1007,6 @@ class SettingsService:
             title="Basic",
             alias="basic",
             price=Price(value="$0,08", y="record"),
-            is_recommended=True,
             permanent_limits=[
                 Advantage(
                     good=True, name="Domains monitored:", value="Unlimited"
@@ -1023,9 +1026,29 @@ class SettingsService:
             ],
         )
 
+        PARTNER_PROGRAM = Plan(
+            title="Partner Program",
+            alias="partner_program",
+            price=Price(value="$500", y="month"),
+            referrals=[
+                Advantage(good=True, name="Sub-customers:", value="Unlimited"),
+                Advantage(good=True, name="Sub-customers:", value="50%"),
+                Advantage(
+                    good=True, name="All other platform Revenue:", value="30%"
+                ),
+            ],
+            gifts=[
+                Advantage(good=True, name="White label access"),
+                Advantage(good=True, name="Onboarding and Support"),
+                Advantage(good=True, name="Customer Client Invitation Links"),
+                Advantage(good=True, name="Automated Payments via Stripe"),
+            ],
+        )
+
         SMART_AUDIENCE_YEARLY = Plan(
             title="Smart Audience",
             alias="smart_audience",
+            is_recommended=True,
             price=Price(value="$5,000", y="month"),
             permanent_limits=[
                 Advantage(
@@ -1077,16 +1100,36 @@ class SettingsService:
             update={"price": Price(value="$15,000", y="month")}
         )
 
-        YEARLY_PLANS = [
-            FREE_TRAIL_PLAN,
+        NORMAL_YEARLY_PLANS = [
             BASIC,
             SMART_AUDIENCE_YEARLY,
             PRO_YEARLY,
         ]
-        MONTHLY_PLANS = [
-            FREE_TRAIL_PLAN,
+        NORMAL_MONTHLY_PLANS = [
             BASIC,
             SMART_AUDIENCE_MONTHLY,
             PRO_MONTHLY,
         ]
-        return PlansResponse(monthly=MONTHLY_PLANS, yearly=YEARLY_PLANS)
+
+        PARTNER_YEARLY_PLANS = []
+        PARTNER_MONTHLY_PLANS = []
+
+        is_referral = self.referral_user_persistence.is_user_referral(user["id"])
+        is_become_partner_enabled = os.getenv("BECOME_PARTNER_ENABLED") == "True"
+
+        if is_become_partner_enabled and not is_referral:
+            PARTNER_YEARLY_PLANS.extend([
+                PARTNER_PROGRAM
+            ])
+            PARTNER_MONTHLY_PLANS.extend([
+                PARTNER_PROGRAM
+            ])
+
+        return PlansResponse(
+            normal_plans=SubscriptionPlans(
+                monthly=NORMAL_MONTHLY_PLANS, yearly=NORMAL_YEARLY_PLANS
+            ),
+            partner_plans=SubscriptionPlans(
+                monthly=PARTNER_MONTHLY_PLANS, yearly=PARTNER_YEARLY_PLANS
+            ),
+        )

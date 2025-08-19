@@ -1,6 +1,6 @@
 import { Table, TableBody } from "@mui/material";
 import { AdvantageRow } from "./AdvantageRow";
-import { FC } from "react";
+import type { FC } from "react";
 
 type AdvantagesProps = {
 	advantages: Advantage[];
@@ -9,7 +9,7 @@ type AdvantagesProps = {
 export type Advantage = {
 	good: boolean;
 	name: string;
-	value: string;
+	value?: string;
 };
 
 export const Advantages: FC<AdvantagesProps> = (props) => {

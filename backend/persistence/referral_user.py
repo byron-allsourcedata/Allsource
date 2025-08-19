@@ -1,14 +1,12 @@
-from sqlalchemy.orm import Session
 
 from db_dependencies import Db
 from models.referral_payouts import ReferralPayouts
-from sqlalchemy import func, extract, case, or_, desc, asc
+from sqlalchemy import func, case, or_, desc, asc
 from models.users import Users
 from models.partner import Partner
 from models.subscriptions import UserSubscriptions
 from models.referral_users import ReferralUser
 from datetime import datetime
-import pytz
 
 from resolver import injectable
 
@@ -108,6 +106,17 @@ class ReferralUserPersistence:
             }
             for account in accounts
         ], query.count()
+
+    def is_user_referral(self, user_id: int) -> bool:
+        return (
+            self.db.query(ReferralUser)
+            .filter(
+                ReferralUser.user_id == user_id,
+            )
+            .first()
+            is not None
+        )
+
 
     def verify_user_relationship(self, parent_id: int, user_id: int) -> bool:
         return (
