@@ -307,20 +307,6 @@ class SettingsService:
         confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?teams_token={md5_hash}&user_mail={invite_user}"
         return confirm_email_url, md5_hash
 
-    def _send_invitation_email(
-        self, to_email: str, link: str, company_name: str, template_id: str
-    ):
-        mail_object = SendgridHandler()
-        mail_object.send_sign_up_mail(
-            to_emails=to_email,
-            template_id=template_id,
-            template_placeholder={
-                "full_name": to_email,
-                "link": link,
-                "company_name": company_name,
-            },
-        )
-
     def _generate_invitation_link(
         self, user_id: str, invite_user: str
     ) -> tuple[str, str]:
