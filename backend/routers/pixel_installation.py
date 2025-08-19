@@ -1,7 +1,8 @@
 import logging
+from fastapi.responses import JSONResponse
 from typing_extensions import deprecated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 import os
 
 from db_dependencies import Db
@@ -71,7 +72,12 @@ async def send_pixel_code_in_email(
             ),
         )
     except WaitMailTimeoutException:
-        return BaseEnum.FAILURE
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": "Email was already sent. Please wait a few minutes and try again later."
+            },
+        )
 
     db.commit()
 

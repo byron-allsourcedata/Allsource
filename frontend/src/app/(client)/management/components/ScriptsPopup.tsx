@@ -17,8 +17,12 @@ import { InfoIcon } from "@/icon";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "../../../../components/ToastNotification";
+import {
+	showErrorToast,
+	showToast,
+} from "../../../../components/ToastNotification";
 import { ScriptKey } from "../add-additional-script/page";
+import { AxiosError } from "axios";
 
 const style = {
 	position: "fixed" as "fixed",
@@ -114,8 +118,15 @@ const ScriptsPopup: React.FC<PopupProps> = ({
 			.then(() => {
 				showToast("Successfully sent email");
 			})
-			.catch(() => {
-				showToast("Failed to send email");
+			.catch((error) => {
+				if (error instanceof AxiosError) {
+					if (error?.status === 429) {
+						return showErrorToast(
+							"Email was already sent. Please wait a few minutes and try again.",
+						);
+					}
+				}
+				showErrorToast("Failed to send email");
 			});
 	};
 

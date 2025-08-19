@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.params import Path
+from fastapi.responses import JSONResponse
 from domains.mailing.exceptions import WaitMailTimeoutException
 from domains.pixel.mailing.exceptions import (
     PixelScriptNotFound,
@@ -71,7 +72,12 @@ async def send_pixel_code_in_email(
             domain_id=domain.id,
         )
     except WaitMailTimeoutException:
-        return BaseEnum.FAILURE
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": "Email was already sent. Please wait a few minutes and try again later."
+            },
+        )
     except TemplateNotFound:
         raise HTTPException(status_code=500, detail="Error while sending email")
     except UnknownScriptType:
