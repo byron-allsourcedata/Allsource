@@ -99,7 +99,7 @@ export const LogoUploader: FC<Props> = ({
 		);
 	}
 
-	if (errorLoadingFile) {
+	if (logoUrl && errorLoadingFile) {
 		return wrap(
 			<FileCard
 				filename={"logo"}
