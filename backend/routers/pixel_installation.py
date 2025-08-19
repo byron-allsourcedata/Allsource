@@ -1,15 +1,22 @@
 import logging
+from fastapi.responses import JSONResponse
 from typing_extensions import deprecated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 import os
 
+from db_dependencies import Db
 from dependencies import (
     SecretPixelKey,
     check_user_authorization_without_pixel,
     check_user_authentication,
     check_domain,
     UserDomainsService,
+)
+from domains.mailing.exceptions import WaitMailTimeoutException
+from domains.pixel.mailing.schemas import MailingUserData, ManualPixelRequest
+from domains.pixel.mailing.service import (
+    MailingPixelService,
 )
 from enums import BaseEnum
 from models.users import User
@@ -45,13 +52,36 @@ async def manual(
 @router.post("/send-pixel-code")
 async def send_pixel_code_in_email(
     email_form: EmailFormRequest,
-    pixel_installation_service: PixelInstallationService,
+    db: Db,
+    pixel_mailing: MailingPixelService,
     user: User = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
-    return pixel_installation_service.send_pixel_code_in_email(
-        email_form.email, user, domain
-    )
+    receiver_email = email_form.email
+    receiver_name = receiver_email.split("@")[0]
+
+    try:
+        pixel_mailing.send_normal_pixel_code(
+            user_data=MailingUserData(
+                email=receiver_email,
+                full_name=receiver_name,
+            ),
+            manual_pixel_req=ManualPixelRequest(
+                domain_id=domain.id,
+                user_id=user["id"],
+            ),
+        )
+    except WaitMailTimeoutException:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": "Email was already sent. Please wait a few minutes and try again later."
+            },
+        )
+
+    db.commit()
+
+    return BaseEnum.SUCCESS
 
 
 @router.put("/update-domain")

@@ -13,11 +13,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "../../../../components/ToastNotification";
+import {
+	showErrorToast,
+	showToast,
+} from "../../../../components/ToastNotification";
 import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 import { useGetStartedHints } from "./context/PixelInstallHintsContext";
 import { ManualInstallHintCards } from "./context/hintsCardsContent";
+import { AxiosError } from "axios";
 
 interface HintCardInterface {
 	description: string;
@@ -86,7 +90,15 @@ const Popup: React.FC<PopupProps> = ({
 			.then((response) => {
 				showToast("Successfully send email");
 			})
-			.catch((error) => {});
+			.catch((error) => {
+				if (error instanceof AxiosError) {
+					if (error?.status === 429) {
+						showErrorToast(
+							"Email was already sent. Please wait a few minutes and try again.",
+						);
+					}
+				}
+			});
 		onInstallStatusChange("success");
 		scrollToBottom();
 	};

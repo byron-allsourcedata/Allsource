@@ -7,6 +7,15 @@ from dependencies import (
     check_user_setting_access,
     check_team_access_owner_user,
 )
+from domains.mailing.teams.mailing import TeamsMailingService
+from domains.teams.invitations.exceptions import (
+    AccessDeniedError,
+    InvalidAccessLevel,
+    InvitationLimitReached,
+    UserAlreadyInvited,
+)
+from domains.teams.invitations.service import TeamsInvitationsService
+from enums import SettingStatus
 from models.users import User
 from persistence.user_persistence import UserDict
 from schemas.settings import (
@@ -85,27 +94,47 @@ def change_teams(
 @router.post("/teams")
 def invite_user(
     teams_details: TeamsDetailsRequest,
-    settings_service: SettingsService,
     user: TeamAdmin,
+    team_mailing: TeamsInvitationsService,
 ):
-    return settings_service.invite_user(
-        user=user,
-        invite_user=teams_details.invite_user,
-        access_level=teams_details.access_level,
-    )
+    invited_user_email = teams_details.invite_user
+    if invited_user_email is None:
+        raise HTTPException(400, detail="invited_user_email is required.")
+    try:
+        return team_mailing.invite_user(
+            user=user,
+            access_level=teams_details.access_level,
+            invited_user_email=invited_user_email,
+        )
+    except InvalidAccessLevel:
+        raise HTTPException(
+            400, detail="Requested invalid access level."
+        ) from None
+    except InvitationLimitReached:
+        return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
+    except UserAlreadyInvited:
+        return {"status": SettingStatus.ALREADY_INVITED}
 
 
 @router.post("/teams/resend-invitation")
 def resend_invitation(
     resend_request: TeamsDetailsRequest,
-    settings_service: SettingsService,
-    user: dict = Depends(check_user_authorization_without_pixel),
+    team_invitations: TeamsInvitationsService,
+    user: UserDict = Depends(check_user_authorization_without_pixel),
 ):
-    return settings_service.resend_invitation_email(
-        user=user,
-        invite_user=resend_request.invite_user,
-        access_level=resend_request.access_level,
-    )
+    if resend_request.invite_user is None:
+        raise HTTPException(400, detail="invited_user_email is required.")
+
+    try:
+        return team_invitations.resend_invitation_email(
+            user=user,
+            invited_user_email=resend_request.invite_user,
+        )
+    except AccessDeniedError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Admins only.",
+        )
 
 
 @router.post("/teams/change-user-role")

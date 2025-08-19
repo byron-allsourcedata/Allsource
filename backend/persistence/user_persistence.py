@@ -46,6 +46,7 @@ class UserDict(TypedDict):
     email: str
     role: list[str]
     full_name: str
+    company_name: str | None
     created_at: datetime
     current_subscription_id: int
     random_seed: int

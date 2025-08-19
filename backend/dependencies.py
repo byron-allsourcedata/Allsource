@@ -476,7 +476,7 @@ def check_team_admin(
     return user
 
 
-TeamAdmin = Annotated[dict, Depends(check_team_admin)]
+TeamAdmin = Annotated[UserDict, Depends(check_team_admin)]
 
 
 def check_user_setting_access(

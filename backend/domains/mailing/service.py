@@ -3,8 +3,11 @@ import os
 from typing import Any
 from config.sendgrid import MailingConfig
 from domains.mailing.exceptions import InvalidTemplateAlias
+from domains.mailing.pixel_code.service import PixelCodeMailingService
+from domains.mailing.schemas import FilledWhitelabelSettingsSchema
+from domains.mailing.sender import MailSenderService
+from domains.mailing.whitelabel import MailingWhitelabelService
 from domains.whitelabel.schemas import (
-    FilledWhitelabelSettingsSchema,
     WhitelabelSettingsSchema,
 )
 from enums import SendgridTemplate
@@ -19,22 +22,17 @@ logger = logging.getLogger(__name__)
 @injectable
 class MailingService:
     def __init__(
-        self, repo: SendgridPersistence, users_repo: UserPersistence
+        self,
+        repo: SendgridPersistence,
+        users_repo: UserPersistence,
+        pixel_code: PixelCodeMailingService,
+        whitelabel: MailingWhitelabelService,
+        sender: MailSenderService,
     ) -> None:
         self.repo = repo
         self.users_repo = users_repo
-
-    def send_email(
-        self, to_email: str, template_id: str, templates: dict[str, str]
-    ) -> dict[str, Any]:
-        mail_object = SendgridHandler()
-        response = mail_object.send_sign_up_mail(
-            to_emails=to_email,
-            template_id=template_id,
-            template_placeholder=templates,
-        )
-
-        return response
+        self.whitelabel = whitelabel
+        self.sender = sender
 
     def send_verification_email(
         self,
@@ -47,7 +45,9 @@ class MailingService:
         Raises InvalidTemplateAlias
         """
 
-        whitelabel = self.fill_whitelabel_settings(whitelabel_settings)
+        whitelabel = self.whitelabel.fill_whitelabel_settings(
+            whitelabel_settings
+        )
 
         template_id = self.repo.get_template_by_alias(
             SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value
@@ -58,7 +58,7 @@ class MailingService:
 
         confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}"
 
-        _ = self.send_email(
+        _ = self.sender.send_email(
             to_email=user_email,
             template_id=template_id,
             templates={
@@ -69,22 +69,3 @@ class MailingService:
             },
         )
         logger.info("Confirmation Email Sent")
-
-    def fill_whitelabel_settings(
-        self, settings: WhitelabelSettingsSchema
-    ) -> FilledWhitelabelSettingsSchema:
-        default_logo_src = MailingConfig.default_logo_src
-        default_whitelabel_name = MailingConfig.default_whitelabel_name
-
-        brand_logo: str = default_logo_src
-        whitelabel_name: str = default_whitelabel_name
-
-        if settings.brand_logo_url is not None:
-            brand_logo = settings.brand_logo_url
-        if settings.brand_name is not None:
-            whitelabel_name = settings.brand_name
-
-        return FilledWhitelabelSettingsSchema(
-            brand_name=whitelabel_name,
-            brand_logo_url=brand_logo,
-        )

@@ -1,9 +1,11 @@
+import hashlib
 from typing import List
 from typing_extensions import deprecated
 
 from fastapi import HTTPException
 import uuid
 import os
+from config.util import getenv
 from enums import SubscriptionStatus
 from models import Users
 from persistence.domains import UserDomainsPersistence, UserDomains
@@ -117,7 +119,29 @@ class UserDomainsService:
             for domain in domains
         ]
 
-    def update_data_provider_id(self, domain_id, data_provider_id):
+    def generate_data_provider_id(self, domain_id: int | str) -> str:
+        return hashlib.sha256(
+            (str(domain_id) + getenv("SECRET_SALT")).encode()
+        ).hexdigest()
+
+    def ensure_data_provider_id(self, domain_id: int) -> str:
+        client_id = self.get_data_provider_id(domain_id)
+        if client_id is None:
+            client_id = self.generate_data_provider_id(domain_id)
+
+            self.domain_persistence.update_data_provider_id(
+                domain_id, client_id
+            )
+
+        return client_id
+
+    def get_data_provider_id(self, domain_id: int) -> str | None:
+        return self.domain_persistence.get_data_provider_id(domain_id)
+
+    def update_data_provider_id(self, domain_id: int, data_provider_id: str):
+        """
+        auto-commits
+        """
         self.domain_persistence.update_data_provider_id(
             domain_id=domain_id, data_provider_id=data_provider_id
         )
