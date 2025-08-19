@@ -375,7 +375,7 @@ class SettingsService:
         self,
         user: dict,
         invite_user: str,
-        access_level: str = TeamAccessLevel.READ_ONLY,
+        access_level: str | None = TeamAccessLevel.READ_ONLY.value,
     ):
         if user.get("team_member") and user["team_member"].get(
             "team_access_level"

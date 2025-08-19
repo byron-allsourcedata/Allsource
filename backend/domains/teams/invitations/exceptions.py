@@ -8,3 +8,7 @@ class InvitationLimitReached(Exception):
 
 class UserAlreadyInvited(Exception):
     pass
+
+
+class AccessDeniedError(Exception):
+    pass
