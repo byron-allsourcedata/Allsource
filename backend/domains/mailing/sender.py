@@ -43,7 +43,10 @@ class MailSenderService:
         templates: dict[str, str],
         whitelabel_settings: FilledWhitelabelSettingsSchema,
     ) -> dict[str, Any]:
-        whitelabel_vars_dict = whitelabel_settings.__dict__
+        whitelabel_vars_dict = {
+            "logo_src": whitelabel_settings.brand_logo_url,
+            "whitelabel_name": whitelabel_settings.brand_name,
+        }
         templates_clone = {**templates, **whitelabel_vars_dict}
 
         mail_object = SendgridHandler()
