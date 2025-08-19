@@ -321,38 +321,6 @@ class SettingsService:
             },
         )
 
-    def invite_user(
-        self,
-        user: dict,
-        invite_user,
-        access_level=TeamAccessLevel.READ_ONLY,
-    ):
-        user_id = user.get("id")
-        if not self.subscription_service.check_invitation_limit(
-            user_id=user_id
-        ):
-            return {"status": SettingStatus.INVITATION_LIMIT_REACHED}
-
-        if access_level not in {
-            TeamAccessLevel.ADMIN.value,
-            TeamAccessLevel.OWNER.value,
-            TeamAccessLevel.STANDARD.value,
-            TeamAccessLevel.READ_ONLY.value,
-        }:
-            raise HTTPException(
-                status_code=500,
-                detail={"error": SettingStatus.INVALID_ACCESS_LEVEL.value},
-            )
-
-        if self.team_invitation_persistence.exists(
-            user_id=user_id, email=invite_user
-        ):
-            return {"status": SettingStatus.ALREADY_INVITED}
-
-        template_id = self._get_invitation_template_id()
-        if not template_id:
-            return {"status": SettingStatus.FAILED}
-
     def _generate_invitation_link(
         self, user_id: str, invite_user: str
     ) -> tuple[str, str]:
