@@ -43,8 +43,7 @@ const subscriptionStyles = {
 		gap: 3,
 		justifyContent: "space-between",
 		width: "100%",
-		minHeight: "550px",
-		height: "600px",
+		height: "610px",
 		alignItems: "center",
 		"@media (max-width: 900px)": {
 			flexDirection: "column",
@@ -478,11 +477,25 @@ export const SettingsSubscription: React.FC = () => {
 			});
 		}
 
-		return <Typography>No plans available</Typography>;
+		return null;
 	};
 
 	const visibleNormalPlans = getVisiblePlans(normalPlans);
 	const visiblePartnerPlans = getVisiblePlans(partnerPlans, true);
+
+	const visiblePlans = [
+		...(visibleNormalPlans ?? []),
+		...(visiblePartnerPlans
+			? [
+					<Box key="add-icon">
+						<AddRounded
+							sx={{ width: "56px", height: "56px", color: "#E4E4E4" }}
+						/>
+					</Box>,
+					...visiblePartnerPlans,
+				]
+			: []),
+	];
 
 	return (
 		<Box
@@ -585,17 +598,17 @@ export const SettingsSubscription: React.FC = () => {
 						...subscriptionStyles.formContainer,
 						overflowX: "auto",
 						overflowY: "none",
+						justifyContent:
+							visiblePlans.length > 0
+								? subscriptionStyles.formContainer.justifyContent
+								: "center",
 					}}
 				>
-					{visibleNormalPlans}
-					{visiblePartnerPlans ? (
-						<Box>
-							<AddRounded
-								sx={{ width: "56px", height: "56px", color: "#E4E4E4" }}
-							/>
-						</Box>
-					) : null}
-					{visiblePartnerPlans}
+					{visiblePlans.length > 0 ? (
+						visiblePlans
+					) : (
+						<Typography>No plans available</Typography>
+					)}
 				</Box>
 			</Box>
 			{sourcePlatform !== "shopify" && (
