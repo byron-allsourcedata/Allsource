@@ -45,7 +45,7 @@ function useLogoUrl(file: File | null) {
 function useUploadedLogoRequest(url: string) {
 	const [{ data, loading, response, error }, refetch] = useDefaultAxios(
 		{
-			url,
+			url: `${url}?xhr=true`,
 		},
 		{
 			manual: true,
@@ -147,7 +147,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	useEffect(() => {
 		if (uploadedLogo) {
 			setLogoFile(
-				new File([uploadedLogo], "logo.svg", {
+				new File([uploadedLogo], "logo", {
 					type: String(uploadedLogoContentType),
 				}),
 			);
@@ -157,7 +157,7 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 	useEffect(() => {
 		if (uploadedSmallLogo) {
 			setSmallLogoFile(
-				new File([uploadedSmallLogo], "logo-icon.svg", {
+				new File([uploadedSmallLogo], "logo-icon", {
 					type: String(uploadedSmallLogoContentType),
 				}),
 			);
