@@ -166,6 +166,7 @@ class SmartsResponse(BaseModel):
     status: str
     integrations: Optional[List[str]]
     n_a: bool
+    target_schema: str | None = None
 
 
 class SmartsCreateResponse(BaseModel):

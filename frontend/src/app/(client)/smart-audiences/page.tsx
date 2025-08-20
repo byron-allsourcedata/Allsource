@@ -99,6 +99,7 @@ interface Smarts {
 	processed_active_segment_records: number;
 	status: string;
 	integrations: string[];
+	target_schema: string;
 	n_a: boolean;
 }
 
@@ -2248,6 +2249,8 @@ const SmartAudiences: React.FC = () => {
 									<CreateSyncPopup
 										open={dataSyncPopupOpen}
 										id={selectedRowData?.id}
+										useCase={selectedRowData?.use_case_alias}
+										targetSchema={selectedRowData?.target_schema}
 										activeSegmentRecords={
 											selectedRowData?.n_a
 												? selectedRowData?.active_segment_records

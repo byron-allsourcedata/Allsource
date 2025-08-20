@@ -208,8 +208,8 @@ def download_persons(
 @router.get(
     "/get-processing-smart-source", response_model=Optional[SmartsResponse]
 )
-def get_processing_source(
+def get_processing_smarts(
     audience_smarts_service: AudienceSmartsService,
     id: str = Query(...),
 ):
-    return audience_smarts_service.get_processing_source(id)
+    return audience_smarts_service.get_processing_smarts(id)

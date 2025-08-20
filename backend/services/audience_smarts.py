@@ -58,8 +58,8 @@ class AudienceSmartsService:
         per_page: int,
         sort_by: Optional[str] = None,
         sort_order: Optional[str] = None,
-        from_date: Optional[str] = None,
-        to_date: Optional[str] = None,
+        from_date: Optional[int] = None,
+        to_date: Optional[int] = None,
         search_query: Optional[str] = None,
         statuses: Optional[List[str]] = None,
         use_cases: Optional[List[str]] = None,
@@ -96,6 +96,7 @@ class AudienceSmartsService:
                     "integrations": integrations,
                     "processed_active_segment_records": item[10],
                     "n_a": item[11] == "{}",
+                    "target_schema": item[12],
                 }
             )
 
@@ -532,8 +533,8 @@ class AudienceSmartsService:
         output.seek(0)
         return output
 
-    def get_processing_source(self, id: str) -> Optional[SmartsResponse]:
-        smart_source = self.audience_smarts_persistence.get_processing_sources(
+    def get_processing_smarts(self, id: str) -> Optional[SmartsResponse]:
+        smart_source = self.audience_smarts_persistence.get_processing_smarts(
             id
         )
         if not smart_source:
@@ -551,6 +552,7 @@ class AudienceSmartsService:
             processed_active_segment_records,
             status,
             validations,
+            target_schema,
         ) = smart_source
 
         return SmartsResponse(
@@ -566,6 +568,7 @@ class AudienceSmartsService:
             status=status,
             integrations=None,
             n_a=validations == "{}",
+            target_schema=target_schema,
         )
 
     def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID):

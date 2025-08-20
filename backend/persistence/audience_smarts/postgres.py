@@ -336,6 +336,7 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmartsUseCase.integrations,
                 AudienceSmart.processed_active_segment_records,
                 AudienceSmart.validations,
+                AudienceSmart.target_schema,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
@@ -458,7 +459,7 @@ class AudienceSmartsPostgresPersistence:
         self.db.commit()
         return updated_count
 
-    def get_processing_sources(
+    def get_processing_smarts(
         self, id
     ):  #############################################################
         query = (
@@ -474,6 +475,7 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmart.processed_active_segment_records,
                 AudienceSmart.status,
                 AudienceSmart.validations,
+                AudienceSmart.target_schema,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
