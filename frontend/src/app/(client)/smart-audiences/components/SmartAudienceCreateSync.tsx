@@ -58,6 +58,8 @@ interface AudiencePopupProps {
 	updateSmartAudStatus: (id: string) => void;
 	integrationsList?: string[];
 	id?: string;
+	useCase?: string;
+	targetSchema?: string;
 	activeSegmentRecords?: number;
 	isDownloadAction: boolean;
 	setIsPageLoading: (state: boolean) => void;
@@ -266,8 +268,6 @@ const customFieldsListHubspot: Row[] = [
 ];
 
 const customFieldsListCSV: Row[] = [
-	{ id: 1, type: "First Name", value: "first_name" },
-	{ id: 2, type: "Last Name", value: "last_name" },
 	{ id: 3, type: "Business Email", value: "business_email" },
 	{ id: 4, type: "Personal Email", value: "personal_email" },
 	{ id: 5, type: "Other Emails", value: "other_emails" },
@@ -346,6 +346,45 @@ const defaultRowsGoogleAds: Row[] = [
 	{ id: 7, type: "Country code", value: "country_code" },
 ];
 
+const postalCustomFields = [
+	{
+		type: "Home Address Line 1",
+		value: "home_address_line_1",
+		is_constant: false,
+	},
+	{
+		type: "Home Address Line 2",
+		value: "home_address_line_2",
+		is_constant: false,
+	},
+	{ type: "Home Postal Code", value: "home_postal_code", is_constant: false },
+	{
+		type: "Home Address Last Seen",
+		value: "home_address_last_seen",
+		is_constant: false,
+	},
+	{
+		type: "Business Address Line 1",
+		value: "business_address_line_1",
+		is_constant: false,
+	},
+	{
+		type: "Business Address Line 2",
+		value: "business_address_line_2",
+		is_constant: false,
+	},
+	{
+		type: "Business Postal Code",
+		value: "business_postal_code",
+		is_constant: false,
+	},
+	{
+		type: "Business Address Last Seen",
+		value: "business_address_last_seen",
+		is_constant: false,
+	},
+];
+
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	open,
 	onClose,
@@ -355,6 +394,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	activeSegmentRecords = 0,
 	isDownloadAction,
 	setIsPageLoading,
+	useCase,
+	targetSchema,
 }) => {
 	const { triggerSync } = useIntegrationContext();
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
@@ -432,8 +473,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			fetchData();
 		}
 	}, [open]);
-
-	useEffect(() => {}, [customFields]);
 
 	useEffect(() => {
 		if (isDownloadAction) {
@@ -720,6 +759,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		}
 	};
 
+	// helper
+	const getPostalFieldsBySchema = (
+		targetSchema: string | undefined,
+	): typeof postalCustomFields => {
+		if (targetSchema === "b2c") {
+			return postalCustomFields.filter((f) => f.value.startsWith("home_"));
+		}
+		return postalCustomFields;
+	};
+
 	const actionBasedOnService = () => {
 		if (activeService === "mailchimp") {
 			setActiveUrl(
@@ -780,6 +829,19 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 					value: field.type,
 				})),
 			);
+			if (useCase === "postal") {
+				setCustomFields([
+					...customFieldsList.map((field) => ({
+						type: field.value,
+						value: field.type,
+					})),
+					...getPostalFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				]);
+			}
 		}
 
 		if (activeService === "CSV") {
@@ -793,6 +855,19 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 					value: field.type,
 				})),
 			);
+			if (useCase === "postal") {
+				setCustomFields([
+					...customFieldsList.map((field) => ({
+						type: field.value,
+						value: field.type,
+					})),
+					...getPostalFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				]);
+			}
 		}
 
 		if (activeService === "sales_force") {
@@ -1073,10 +1148,18 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		go_high_level: customFieldsList,
 	};
 
-	const extendedFieldsList = [
+	let extendedFieldsList = [
 		{ value: "__constant__", type: "Constant field" },
-		...arrayWithCustomFields[(activeService as ServiceType) ?? "default"],
+		...(arrayWithCustomFields[(activeService as ServiceType) ?? "default"] ??
+			[]),
 	];
+
+	if (useCase === "postal") {
+		extendedFieldsList = [
+			...extendedFieldsList,
+			...getPostalFieldsBySchema(targetSchema),
+		];
+	}
 
 	const isValueDuplicate = (value: string, currentIndex: number): boolean => {
 		return (
