@@ -887,6 +887,19 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 					value: field.type,
 				})),
 			);
+			if (useCase === "postal") {
+				setCustomFields([
+					...customFieldsList.map((field) => ({
+						type: field.value,
+						value: field.type,
+					})),
+					...getPostalFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				]);
+			}
 		}
 		if (activeService === "s3") {
 			setActiveUrl(
