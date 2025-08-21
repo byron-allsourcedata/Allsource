@@ -51,6 +51,7 @@ import UserTip from "@/components/UserTip";
 import { width } from "@mui/system";
 import CustomButton from "@/components/ui/CustomButton";
 import { Logo } from "@/components/ui/Logo";
+import { count } from "console";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -238,24 +239,12 @@ const integrationsImage = [
 ];
 
 const customFieldsList: Row[] = [
-	{ id: 1, type: "Business Email", value: "business_email" },
-	{ id: 2, type: "Personal Email", value: "personal_email" },
-	{ id: 3, type: "Phone", value: "phone" },
-	{ id: 4, type: "City", value: "city" },
-	{ id: 5, type: "State", value: "state" },
-	{ id: 6, type: "Country code", value: "country_code" },
-	{ id: 7, type: "Company", value: "company" },
-	{
-		id: 8,
-		type: "Business email last seen date",
-		value: "business_email_last_seen_date",
-	},
-	{
-		id: 9,
-		type: "Personal email last seen",
-		value: "personal_email_last_seen",
-	},
-	{ id: 10, type: "Linkedin url", value: "linkedin_url" },
+	{ id: 1, type: "Phone", value: "phone" },
+	{ id: 2, type: "City", value: "city" },
+	{ id: 3, type: "State", value: "state" },
+	{ id: 4, type: "Country code", value: "country_code" },
+	{ id: 5, type: "Company", value: "company" },
+	{ id: 6, type: "Linkedin url", value: "linkedin_url" },
 ];
 
 const customFieldsListHubspot: Row[] = [
@@ -274,18 +263,8 @@ const customFieldsListCSV: Row[] = [
 	{ id: 6, type: "Phone Mobile 1", value: "phone_mobile1" },
 	{ id: 7, type: "Phone Mobile 2", value: "phone_mobile2" },
 	{ id: 8, type: "Mobile Phone DNC", value: "mobile_phone_dnc" },
-	{
-		id: 9,
-		type: "Business Email last seen",
-		value: "business_email_last_seen_date",
-	},
-	{
-		id: 10,
-		type: "Personal Email last seen",
-		value: "personal_email_last_seen",
-	},
-	{ id: 11, type: "Linkedin URL", value: "linkedin_url" },
-	{ id: 12, type: "Gender", value: "gender" },
+	{ id: 9, type: "Linkedin URL", value: "linkedin_url" },
+	{ id: 10, type: "Gender", value: "gender" },
 	// { id: 13, type: 'Lon', value: 'lon' },
 	// { id: 14, type: 'Has credit card', value: 'has_credit_card' },
 	// { id: 15, type: 'Length of residence years', value: 'length_of_residence_years' },
@@ -308,14 +287,15 @@ const defaultSalesForce: Row[] = [
 	{ id: 1, type: "Email", value: "email" },
 	{ id: 2, type: "Firstname", value: "firstname" },
 	{ id: 3, type: "Lastname", value: "lastname" },
-	{ id: 4, type: "Company", value: "company" },
-	{ id: 5, type: "Title", value: "title" },
-	{ id: 6, type: "Phone", value: "phone" },
-	{ id: 7, type: "Industry", value: "industry" },
-	{ id: 8, type: "City", value: "city" },
-	{ id: 9, type: "State", value: "state" },
-	{ id: 10, type: "PostalCode", value: "postal_code" },
-	{ id: 11, type: "Country", value: "country" },
+	{ id: 4, type: "Gender", value: "gender" },
+	{ id: 5, type: "Company", value: "company" },
+	{ id: 6, type: "Title", value: "title" },
+	{ id: 7, type: "Phone", value: "phone" },
+	{ id: 8, type: "Industry", value: "industry" },
+	{ id: 9, type: "City", value: "city" },
+	{ id: 10, type: "State", value: "state" },
+	{ id: 11, type: "PostalCode", value: "postal_code" },
+	{ id: 12, type: "Country", value: "country" },
 ];
 
 const defaultRowsHubspot: Row[] = [
@@ -359,11 +339,6 @@ const postalCustomFields = [
 	},
 	{ type: "Home Postal Code", value: "home_postal_code", is_constant: false },
 	{
-		type: "Home Address Last Seen",
-		value: "home_address_last_seen",
-		is_constant: false,
-	},
-	{
 		type: "Business Address Line 1",
 		value: "business_address_line_1",
 		is_constant: false,
@@ -376,11 +351,6 @@ const postalCustomFields = [
 	{
 		type: "Business Postal Code",
 		value: "business_postal_code",
-		is_constant: false,
-	},
-	{
-		type: "Business Address Last Seen",
-		value: "business_address_last_seen",
 		is_constant: false,
 	},
 ];
@@ -830,11 +800,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				})),
 			);
 			if (useCase === "postal") {
-				setCustomFields([
-					...customFieldsList.map((field) => ({
-						type: field.value,
-						value: field.type,
-					})),
+				setCustomFields((prev) => [
+					...prev,
 					...getPostalFieldsBySchema(targetSchema).map((field) => ({
 						type: field.value,
 						value: field.type,
@@ -856,11 +823,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				})),
 			);
 			if (useCase === "postal") {
-				setCustomFields([
-					...customFieldsList.map((field) => ({
-						type: field.value,
-						value: field.type,
-					})),
+				setCustomFields((prev) => [
+					...prev,
 					...getPostalFieldsBySchema(targetSchema).map((field) => ({
 						type: field.value,
 						value: field.type,
@@ -875,6 +839,32 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
 			);
 			setRows(defaultSalesForce);
+			const excluded = [
+				"phone",
+				"city",
+				"state",
+				"zip_code",
+				"postal_code",
+				"company",
+			];
+			setCustomFields(
+				customFieldsList
+					.filter((field) => !excluded.includes(field.value.toLowerCase()))
+					.map((field) => ({
+						type: field.value,
+						value: field.type,
+					})),
+			);
+			if (useCase === "postal") {
+				setCustomFields((prev) => [
+					...prev,
+					...getPostalFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				]);
+			}
 		}
 		if (activeService === "go_high_level") {
 			setActiveUrl(
@@ -1148,21 +1138,33 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		go_high_level: handleCreateGoHighLevelOpen,
 		s3: handleCreateS3Open,
 	};
+	const excludedSalesforce = [
+		"phone",
+		"city",
+		"state",
+		"zip_code",
+		"postal_code",
+		"company",
+	];
 
 	const arrayWithCustomFields: ArrayMapping = {
-		hubspot: customFieldsList,
+		hubspot: customFieldsListHubspot,
 		mailchimp: customFieldsList,
 		CSV: customFieldsListCSV,
 		default: customFieldsList,
 		meta: customFieldsList,
 		s3: customFieldsList,
 		google_ads: customFieldsList,
-		sales_force: customFieldsList,
+		sales_force: customFieldsList.filter(
+			(field) => !excludedSalesforce.includes(field.value.toLowerCase()),
+		),
 		go_high_level: customFieldsList,
 	};
 
 	let extendedFieldsList = [
-		{ value: "__constant__", type: "Constant field" },
+		...(activeService === "hubspot"
+			? [{ value: "__constant__", type: "Constant field" }]
+			: []),
 		...(arrayWithCustomFields[(activeService as ServiceType) ?? "default"] ??
 			[]),
 	];
@@ -1173,6 +1175,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			...getPostalFieldsBySchema(targetSchema),
 		];
 	}
+
+	const availableFields = extendedFieldsList.filter(
+		(field) => !customFields.some((cf) => cf.type === field.value),
+	);
 
 	const isValueDuplicate = (value: string, currentIndex: number): boolean => {
 		return (
@@ -1607,7 +1613,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 								</Box>
 							</TabPanel>
 							<TabPanel value="2" sx={{ p: 0 }}>
-								<Box sx={{ display: "flex", px: 2, pb: 3 }}>
+								<Box sx={{ display: "flex", px: 2, pb: 3, pt: 2 }}>
 									<Card
 										sx={{
 											display: "flex",
@@ -1793,6 +1799,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 									</Box>
 								</TabPanel>
 							)}
+
 							<TabPanel value={contactSyncTab ? "4" : "3"} sx={{ p: 0 }}>
 								<Box
 									sx={{
@@ -2411,45 +2418,46 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 												</Grid>
 											</Grid>
 										))}
-										{customFields.length !== 0 && (
-											<Box
-												sx={{
-													display: "flex",
-													justifyContent: "flex-end",
-													mb: 2,
-													mr: 6,
-												}}
-											>
-												<Button
-													onClick={handleAddField}
-													aria-haspopup="true"
+										{customFields.length !== 0 &&
+											availableFields.length > 0 && (
+												<Box
 													sx={{
-														textTransform: "none",
-														border: "1px solid rgba(56, 152, 252, 1)",
-														borderRadius: "4px",
-														padding: "9px 16px",
-														minWidth: "auto",
-														"@media (max-width: 900px)": {
-															display: "none",
-														},
+														display: "flex",
+														justifyContent: "flex-end",
+														mb: 2,
+														mr: 6,
 													}}
 												>
-													<Typography
+													<Button
+														onClick={handleAddField}
+														aria-haspopup="true"
 														sx={{
-															marginRight: "0.5em",
-															fontFamily: "var(--font-nunito)",
-															lineHeight: "22.4px",
-															fontSize: "16px",
-															textAlign: "left",
-															fontWeight: "500",
-															color: "rgba(56, 152, 252, 1)",
+															textTransform: "none",
+															border: "1px solid rgba(56, 152, 252, 1)",
+															borderRadius: "4px",
+															padding: "9px 16px",
+															minWidth: "auto",
+															"@media (max-width: 900px)": {
+																display: "none",
+															},
 														}}
 													>
-														Add
-													</Typography>
-												</Button>
-											</Box>
-										)}
+														<Typography
+															sx={{
+																marginRight: "0.5em",
+																fontFamily: "var(--font-nunito)",
+																lineHeight: "22.4px",
+																fontSize: "16px",
+																textAlign: "left",
+																fontWeight: "500",
+																color: "rgba(56, 152, 252, 1)",
+															}}
+														>
+															Add
+														</Typography>
+													</Button>
+												</Box>
+											)}
 									</Box>
 								</Box>
 							</TabPanel>

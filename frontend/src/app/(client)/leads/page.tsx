@@ -1240,12 +1240,12 @@ const Leads: React.FC = () => {
 			key: "first_visited_date",
 			label: "Visited date",
 			sortable: true,
-			widths: { width: "135px", minWidth: "135px", maxWidth: "135px" },
+			widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
 		},
 		{
 			key: "funnel",
 			label: "Lead Status",
-			widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
+			widths: { width: "125px", minWidth: "125px", maxWidth: "125px" },
 		},
 		{
 			key: "status",
@@ -2083,7 +2083,7 @@ const Leads: React.FC = () => {
 															<Box
 																sx={{
 																	display: "flex",
-																	padding: "2px 8px",
+																	padding: "2px 0px",
 																	borderRadius: "2px",
 																	fontFamily: "var(--font-roboto)",
 																	fontSize: "12px",
