@@ -145,7 +145,7 @@ class AudienceSmartsUnifiedPersistence(AudienceSmartsPersistenceInterface):
             ids, order_by_clause
         )
 
-    def get_processing_sources(self, id: int) -> Optional[Row]:
+    def get_processing_smarts(self, id: int) -> Optional[Row]:
         return self.postgres.get_processing_smarts(id)
 
     def get_enrichment_users_for_confirmation_validation(

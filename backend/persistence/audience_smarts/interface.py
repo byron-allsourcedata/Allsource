@@ -147,7 +147,7 @@ class AudienceSmartsPersistenceInterface(ABC):
         pass
 
     @abstractmethod
-    def get_processing_sources(self, id: int) -> Optional[Row]:
+    def get_processing_smarts(self, id: int) -> Optional[Row]:
         pass
 
     @abstractmethod
