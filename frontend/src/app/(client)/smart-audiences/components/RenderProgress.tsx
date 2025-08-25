@@ -3,6 +3,16 @@ import Image from "next/image";
 import { Box } from "@mui/material";
 import ThreeDotsLoader from "../../sources/components/ThreeDotsLoader";
 
+type StepProgress = {
+	completed_steps: number;
+	total_steps: number;
+	current_step_index: number;
+	current_step_key: string | null;
+	current_step_name: string | null;
+	eta_seconds: number | null;
+	time_progress: number | null;
+};
+
 const renderActiveSegmentProgress = (
 	activeSegmentTotal: number,
 	processedDB: number,
@@ -44,6 +54,7 @@ const renderValidatedStatusIcon = (
 	isNA: boolean,
 	validatedRecords: number,
 	progressValidationTotal?: number,
+	progressValidation?: StepProgress | null,
 ) => {
 	if (status === "unvalidated") {
 		return (
@@ -53,6 +64,63 @@ const renderValidatedStatusIcon = (
 
 	if (status === "n_a" || isNA) {
 		return <Box textAlign="center">N/A</Box>;
+	}
+
+	const formatEta = (seconds: number): string => {
+		if (seconds < 60) {
+			return `${seconds}s`;
+		}
+		const minutes = Math.floor(seconds / 60);
+		const remainingSeconds = seconds % 60;
+		return `${minutes}m ${remainingSeconds}s`;
+	};
+
+	if (status === "validating" && progressValidation) {
+		return (
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					justifyContent: "space-between",
+					minWidth: "120px",
+				}}
+			>
+				<Box sx={{ width: "100%", alignItems: "center", display: "flex" }}>
+					<ProgressBar
+						progress={{
+							total: 100,
+							processed: progressValidation.time_progress
+								? progressValidation.time_progress * 100
+								: 0,
+						}}
+					/>
+				</Box>
+				<Box
+					sx={{
+						fontSize: "12px",
+						marginTop: "4px",
+						color: "gray",
+						display: "flex",
+						justifyContent: "space-between",
+						width: "100%",
+					}}
+				>
+					<span>
+						{progressValidation.current_step_index}/
+						{progressValidation.total_steps}{" "}
+						{progressValidation.current_step_name
+							? `(${progressValidation.current_step_name})`
+							: ""}
+					</span>
+					<span>
+						{typeof progressValidation.eta_seconds === "number"
+							? `~${formatEta(Math.max(0, Math.round(progressValidation.eta_seconds)))}`
+							: "N/A"}
+					</span>
+				</Box>
+			</Box>
+		);
 	}
 
 	if (

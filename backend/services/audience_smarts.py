@@ -1,37 +1,46 @@
-from collections.abc import Sequence
-import logging
-from sqlalchemy.orm.query import RowReturningQuery
-from typing import Optional, List, Dict
-import json
-import io
 import csv
-from utils import to_snake_case
+from datetime import datetime, timezone
+import io
+import json
+import logging
+from collections.abc import Sequence
+from typing import Optional, List, Dict
+from uuid import UUID
 
-from persistence.audience_lookalikes import AudienceLookalikesPersistence
-from persistence.audience_sources import AudienceSourcesPersistence
-from persistence.audience_settings import AudienceSettingPersistence
-from schemas.audience import (
-    SmartsAudienceObjectResponse,
-    SmartsCreateResponse,
-    DataSourcesFormat,
-    DataSourcesResponse,
-    SmartsResponse,
-    ValidationHistory,
-)
-from persistence.audience_smarts import AudienceSmartsPersistence
-from models.enrichment.enrichment_user_contact import EnrichmentUserContact
+from sqlalchemy.orm.query import RowReturningQuery
+
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
 )
-from models.users import User
 from enums import AudienceSmartDataSource, QueueName
-from uuid import UUID
 from enums import AudienceSmartStatuses
-from schemas.audience_smart import AccessCheckResponse, SmartMatchingInfo
+from models.users import User
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_settings import AudienceSettingPersistence
+from persistence.audience_smarts import AudienceSmartsPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
 from resolver import injectable
+from schemas.audience import (
+    SmartsAudienceObjectResponse,
+    DataSourcesFormat,
+    DataSourcesResponse,
+    SmartsResponse,
+    ValidationHistory,
+    SmartsProgress,
+)
+from schemas.audience_smart import AccessCheckResponse, SmartMatchingInfo
+from utils import to_snake_case
 
 logger = logging.getLogger(__name__)
+
+STEP_CATEGORY_MAP = {
+    "personal_email": "Personal Email",
+    "business_email": "Business Email",
+    "phone": "Phone",
+    "postal_cas_verification": "Postal Address",
+    "linked_in": "LinkedIn",
+}
 
 
 @injectable
@@ -82,6 +91,12 @@ class AudienceSmartsService:
         audience_smarts_list = []
         for item in audience_smarts:
             integrations = json.loads(item[9]) if item[9] else []
+
+            progress_dict = self.compute_eta(
+                step_size_json=item[13],
+                step_processed_json=item[14],
+                step_start_time_json=item[15],
+            )
             audience_smarts_list.append(
                 {
                     "id": item[0],
@@ -97,6 +112,7 @@ class AudienceSmartsService:
                     "processed_active_segment_records": item[10],
                     "n_a": item[11] == "{}",
                     "target_schema": item[12],
+                    "progress_info": progress_dict,
                 }
             )
 
@@ -121,6 +137,117 @@ class AudienceSmartsService:
             id
         )
         return count_deleted > 0
+
+    def compute_eta(
+        self,
+        step_size_json: Optional[str],
+        step_processed_json: Optional[str],
+        step_start_time_json: Optional[str],
+    ) -> SmartsProgress:
+        """
+        Args:
+            step_size_json
+            step_processed_json
+            step_start_time_json
+
+        Returns:
+            dict SmartsProgress:
+            {
+              "completed_steps": int,
+              "total_steps": int,
+              "current_step_index": int,
+              "current_step_key": Optional[str],
+              "eta_seconds": Optional[int],
+            }
+        """
+        now = datetime.now(timezone.utc)
+
+        step_size: Dict[str, int] = json.loads(step_size_json or "{}")
+        step_processed: Dict[str, int] = json.loads(step_processed_json or "{}")
+        step_start_time: Dict[str, Optional[str]] = json.loads(
+            step_start_time_json or "{}"
+        )
+
+        steps: List[str] = list(step_size.keys())
+
+        if not steps:
+            return SmartsProgress(
+                completed_steps=0,
+                total_steps=0,
+                current_step_index=0,
+                current_step_key=None,
+                current_step_name=None,
+                eta_seconds=None,
+                time_progress=None,
+            )
+
+        completed_steps = 0
+        current_step_key: Optional[str] = None
+
+        for key in steps:
+            size = int(step_size.get(key, 0) or 0)
+            processed = int(step_processed.get(key, 0) or 0)
+            if size == 0 or processed >= size:
+                completed_steps += 1
+            else:
+                current_step_key = key
+                break
+
+        total_steps = len(steps)
+
+        if current_step_key is None:
+            return SmartsProgress(
+                completed_steps=completed_steps,
+                total_steps=total_steps,
+                current_step_index=total_steps,
+                current_step_key=None,
+                current_step_name=None,
+                eta_seconds=None,
+                time_progress=None,
+            )
+
+        current_step_index = completed_steps + 1
+
+        size = int(step_size.get(current_step_key, 0) or 0)
+        processed = int(step_processed.get(current_step_key, 0) or 0)
+        start_iso = step_start_time.get(current_step_key)
+
+        eta_seconds: Optional[int] = None
+        if start_iso and processed > 0 and processed < size:
+            try:
+                start_dt = datetime.fromisoformat(start_iso)
+                if start_dt.tzinfo is None:
+                    start_dt = start_dt.replace(tzinfo=timezone.utc)
+                elapsed = (now - start_dt).total_seconds()
+                if elapsed > 0:
+                    speed = processed / elapsed
+                    if speed > 0:
+                        eta_seconds = int((size - processed) / speed)
+                        total_time = elapsed + eta_seconds
+                        time_progress = min(1.0, elapsed / total_time)
+            except Exception:
+                eta_seconds = None
+                time_progress = None
+        else:
+            time_progress = None
+
+        def humanize_step_name(step_key: Optional[str]) -> Optional[str]:
+            if not step_key:
+                return None
+            category, *_ = step_key.split("-", 1)
+            return STEP_CATEGORY_MAP.get(
+                category, category.replace("_", " ").title()
+            )
+
+        return SmartsProgress(
+            completed_steps=completed_steps,
+            total_steps=total_steps,
+            current_step_index=current_step_index,
+            current_step_key=current_step_key,
+            current_step_name=humanize_step_name(current_step_key),
+            eta_seconds=eta_seconds,
+            time_progress=time_progress,
+        )
 
     # def estimates_predictable_validation(
     #     self, validations: List[str]
@@ -553,7 +680,16 @@ class AudienceSmartsService:
             status,
             validations,
             target_schema,
+            step_size,
+            step_processed,
+            step_start_time,
         ) = smart_source
+
+        progress_dict = self.compute_eta(
+            step_size_json=step_size,
+            step_processed_json=step_processed,
+            step_start_time_json=step_start_time,
+        )
 
         return SmartsResponse(
             id=source_id,
@@ -569,6 +705,7 @@ class AudienceSmartsService:
             integrations=None,
             n_a=validations == "{}",
             target_schema=target_schema,
+            progress_info=progress_dict,
         )
 
     def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID):
