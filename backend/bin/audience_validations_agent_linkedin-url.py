@@ -27,6 +27,7 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from persistence.user_persistence import UserPersistence
 from models.audience_linkedin_verification import AudienceLinkedinVerification
 from services.audience_smarts import AudienceSmartsService
+from services.smart_validation_agent import SmartValidationAgent
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -64,6 +65,7 @@ async def process_rmq_message(
     channel: Channel,
     user_persistence: UserPersistence,
     audience_smarts_service: AudienceSmartsService,
+    smart_validation_agent_service: SmartValidationAgent,
 ):
     try:
         body = json.loads(message.body)
@@ -229,6 +231,12 @@ async def process_rmq_message(
                         if validation_count == total_count:
                             rule[key]["processed"] = True
             aud_smart.validations = json.dumps(validations)
+
+        smart_validation_agent_service.update_step_processed(
+            aud_smart_id=aud_smart_id,
+            validation_type="linked_in-job_validation",
+            batch_size=validation_count,
+        )
 
         db_session.commit()
 

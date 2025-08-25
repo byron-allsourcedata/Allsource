@@ -75,6 +75,9 @@ class AudienceSmart(Base):
     )
     validations = Column(JSON, nullable=True)
     target_schema = Column(VARCHAR(128), nullable=True)
+    validations_step_start_time = Column(JSON, nullable=True)
+    validations_step_size = Column(JSON, nullable=True)
+    validations_step_processed = Column(JSON, nullable=True)
 
     __table_args__ = (
         Index(

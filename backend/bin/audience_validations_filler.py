@@ -12,7 +12,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from typing import List
-
+from datetime import datetime
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -60,6 +60,13 @@ DATABASE_COLUMN_MAPPING = {
     "postal_cas_verification-cas_home_address": "cas_home_address",
     "postal_cas_verification-cas_office_address": "cas_office_address",
 }
+
+
+def reverse_map(mapping: dict[str, str]) -> dict[str, str]:
+    return {v: k for k, v in mapping.items()}
+
+
+REVERSE_DATABASE_MAPPING = reverse_map(DATABASE_COLUMN_MAPPING)
 
 QUEUE_MAPPING = {
     "personal_email_validation_status": AUDIENCE_VALIDATION_AGENT_NOAPI,
@@ -264,6 +271,94 @@ async def complete_validation(
 #     logging.info(f"completed validation, status audience smart ready")
 
 
+def init_all_steps_eta(
+    db_session: Session,
+    aud_smart_id: UUID,
+    priority_values: list[str],
+    validation_params: dict,
+    audience_smarts_service: AudienceSmartsService,
+):
+    smart = (
+        db_session.query(AudienceSmart)
+        .filter(AudienceSmart.id == aud_smart_id)
+        .first()
+    )
+    if not smart:
+        return
+
+    step_size: dict[str, int] = json.loads(smart.validations_step_size or "{}")
+    step_processed: dict[str, int] = json.loads(
+        smart.validations_step_processed or "{}"
+    )
+    step_start_time: dict[str, str | None] = json.loads(
+        smart.validations_step_start_time or "{}"
+    )
+
+    for pr in priority_values:
+        src_key, v_type = pr.split("-")
+
+        src_section = validation_params.get(src_key)
+        if not src_section:
+            continue
+
+        param_details = None
+        for param in src_section:
+            if v_type in param:
+                param_details = param[v_type]
+                break
+
+        if not param_details:
+            continue
+
+        if param_details.get("processed", False):
+            submitted = param_details.get("count_submited", 0) or 0
+            step_size[pr] = submitted
+            step_processed[pr] = submitted
+            step_start_time.setdefault(pr, None)
+            continue
+
+        column_name = DATABASE_COLUMN_MAPPING.get(pr)
+        if not column_name:
+            continue
+
+        enrichment_users = get_enrichment_users(
+            v_type, aud_smart_id, audience_smarts_service, column_name
+        )
+        total_count = len(enrichment_users)
+
+        step_size[pr] = total_count
+        step_processed[pr] = 0
+        step_start_time.setdefault(pr, None)
+
+    smart.validations_step_size = json.dumps(step_size)
+    smart.validations_step_processed = json.dumps(step_processed)
+    smart.validations_step_start_time = json.dumps(step_start_time)
+
+    db_session.add(smart)
+    db_session.commit()
+
+
+def mark_step_started(
+    db_session: Session,
+    aud_smart_id: int,
+    priority_key: str,
+):
+    smart = (
+        db_session.query(AudienceSmart)
+        .filter(AudienceSmart.id == aud_smart_id)
+        .first()
+    )
+    if not smart:
+        return
+
+    step_start_time = json.loads(smart.validations_step_start_time or "{}")
+    step_start_time[priority_key] = datetime.utcnow().isoformat()
+
+    smart.validations_step_start_time = json.dumps(step_start_time)
+    db_session.add(smart)
+    db_session.commit()
+
+
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
@@ -290,6 +385,18 @@ async def process_rmq_message(
         validation_params = json.loads(validations)
 
         priority_values = priority_record.split(",")
+
+        filtered_validation_params = {
+            key: value for key, value in validation_params.items() if value
+        }
+
+        init_all_steps_eta(
+            db_session=db_session,
+            aud_smart_id=aud_smart_id,
+            priority_values=priority_values,
+            validation_params=filtered_validation_params,
+            audience_smarts_service=audience_smarts_service,
+        )
 
         target: dict | None = None
 
@@ -342,6 +449,12 @@ async def process_rmq_message(
             aud_smart_id,
             audience_smarts_service,
             column_name,
+        )
+
+        mark_step_started(
+            db_session=db_session,
+            aud_smart_id=aud_smart_id,
+            priority_key=target["priority_key"],
         )
 
         if not enrichment_users:
