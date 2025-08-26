@@ -5,6 +5,7 @@ from uuid import UUID
 
 from persistence.audience_smarts import AudienceSmartsPersistence
 from resolver import injectable
+from services.validation_stats_service import ValidationStatsService
 
 logger = logging.getLogger(__name__)
 
@@ -36,8 +37,10 @@ class SmartValidationAgent:
     def __init__(
         self,
         audience_smarts_persistence: AudienceSmartsPersistence,
+        validation_stats: ValidationStatsService,
     ):
         self.audience_smarts_persistence = audience_smarts_persistence
+        self.validation_stats = validation_stats
 
     def get_validation_temp_counts(self, smart_audience_id: UUID):
         return self.audience_smarts_persistence.get_validation_temp_counts(
@@ -74,6 +77,13 @@ class SmartValidationAgent:
 
         if validation_count == total_count:
             rule["processed"] = True
+
+    def update_step_processed(
+        self, aud_smart_id: int, validation_type: str, batch_size: int
+    ):
+        self.validation_stats.update_step_processed(
+            aud_smart_id, validation_type, batch_size
+        )
 
     def update_validations_json(
         self,

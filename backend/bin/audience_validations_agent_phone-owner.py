@@ -28,6 +28,7 @@ from models.audience_phones_verification import AudiencePhoneVerification
 from persistence.user_persistence import UserPersistence
 from models.audience_smarts_validations import AudienceSmartValidation
 from services.audience_smarts import AudienceSmartsService
+from services.smart_validation_agent import SmartValidationAgent
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -67,6 +68,7 @@ async def process_rmq_message(
     channel: Channel,
     user_persistence: UserPersistence,
     audience_smarts_service: AudienceSmartsService,
+    smart_validation_agent_service: SmartValidationAgent,
 ):
     try:
         message_body = json.loads(message.body)
@@ -289,6 +291,12 @@ async def process_rmq_message(
 
             aud_smart.validations = json.dumps(validations)
 
+        smart_validation_agent_service.update_step_processed(
+            aud_smart_id=aud_smart_id,
+            validation_type=f"phone-{validation_type}",
+            batch_size=validation_count,
+        )
+
         db_session.commit()
 
         if validation_count == total_count:
@@ -355,6 +363,9 @@ async def main():
             audience_smarts_service = await resolver.resolve(
                 AudienceSmartsService
             )
+            smart_validation_agent_service = await resolver.resolve(
+                SmartValidationAgent
+            )
             user_persistence = UserPersistence(db_session)
 
             queue = await channel.declare_queue(
@@ -367,6 +378,7 @@ async def main():
                     db_session=db_session,
                     user_persistence=user_persistence,
                     audience_smarts_service=audience_smarts_service,
+                    smart_validation_agent_service=smart_validation_agent_service,
                 )
             )
 

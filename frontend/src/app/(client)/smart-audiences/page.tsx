@@ -101,6 +101,17 @@ interface Smarts {
 	integrations: string[];
 	target_schema: string;
 	n_a: boolean;
+	progress_info: SmartsProgress | null;
+}
+
+export interface SmartsProgress {
+	completed_steps: number;
+	total_steps: number;
+	current_step_index: number;
+	current_step_key: string | null;
+	current_step_name: string | null;
+	eta_seconds: number | null;
+	time_progress: number | null;
 }
 
 interface FetchDataParams {
@@ -180,7 +191,7 @@ const columns = [
 	{
 		key: "validations",
 		label: "Validations",
-		widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+		widths: { width: "220px", minWidth: "220px", maxWidth: "220px" },
 	},
 	{
 		key: "created_date",
@@ -1875,6 +1886,7 @@ const SmartAudiences: React.FC = () => {
 																					row.n_a,
 																					row.validated_records,
 																					progressValidation?.total,
+																					row.progress_info ?? null,
 																				) ??
 																					renderValidatedCountOrLink(
 																						row.status,

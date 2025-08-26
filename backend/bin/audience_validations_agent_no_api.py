@@ -1,16 +1,17 @@
-import logging
-import os
-import sys
 import asyncio
 import functools
 import json
+import logging
+import os
+import sys
 import time
 from datetime import datetime, timezone
 from decimal import Decimal
+
 from aio_pika import IncomingMessage, Channel
-from sqlalchemy.orm.exc import StaleDataError
-from sqlalchemy.orm import Session
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
+from sqlalchemy.orm.exc import StaleDataError
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -19,7 +20,6 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from config.sentry import SentryConfig
 from db_dependencies import Db
 from resolver import Resolver
-from utils import send_sse
 from persistence.user_persistence import UserPersistence
 from services.audience_smarts import AudienceSmartsService
 from services.smart_validation_agent import SmartValidationAgent
@@ -184,6 +184,12 @@ async def aud_validation_agent(
             validation_count=validation_count,
             count_persons_before_validation=count_persons_before_validation,
             count_subtracted=count_subtracted,
+        )
+
+        smart_validation_agent_service.update_step_processed(
+            aud_smart_id=aud_smart_id,
+            validation_type=validation_type,
+            batch_size=len(batch),
         )
 
         db_session.commit()

@@ -38,6 +38,7 @@ import {
 	renderValidatedCountOrLink,
 	renderValidatedStatusIcon,
 } from "../components/RenderProgress";
+import { SmartsProgress } from "../page";
 
 interface SmartAudienceSource {
 	id: string;
@@ -52,6 +53,7 @@ interface SmartAudienceSource {
 	status: string;
 	integrations: string[] | null;
 	n_a: boolean;
+	progress_info: SmartsProgress | null;
 }
 
 const SourcesList: React.FC = () => {
@@ -365,6 +367,7 @@ const SourcesList: React.FC = () => {
 												createdData.n_a,
 												createdData.validated_records,
 												progressValidation?.total,
+												createdData.progress_info ?? null,
 											) ??
 												renderValidatedCountOrLink(
 													createdData.status,

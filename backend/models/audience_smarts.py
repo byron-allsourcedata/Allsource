@@ -14,6 +14,7 @@ from sqlalchemy import (
     event,
 )
 from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base, update_timestamps
 
@@ -75,6 +76,15 @@ class AudienceSmart(Base):
     )
     validations = Column(JSON, nullable=True)
     target_schema = Column(VARCHAR(128), nullable=True)
+    validations_step_start_time: Mapped[dict[str, str] | None] = mapped_column(
+        JSON, nullable=True
+    )
+    validations_step_size: Mapped[dict[str, int] | None] = mapped_column(
+        JSON, nullable=True
+    )
+    validations_step_processed: Mapped[dict[str, int] | None] = mapped_column(
+        JSON, nullable=True
+    )
 
     __table_args__ = (
         Index(

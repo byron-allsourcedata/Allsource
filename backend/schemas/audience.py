@@ -153,6 +153,16 @@ class SourceForRegenerate(BaseModel):
     processed_records: int
 
 
+class SmartsProgress(BaseModel):
+    completed_steps: int
+    total_steps: int
+    current_step_index: int
+    current_step_key: str | None = None
+    current_step_name: str | None = None
+    eta_seconds: int | None = None
+    time_progress: float | None = None
+
+
 class SmartsResponse(BaseModel):
     id: UUID
     name: str
@@ -167,6 +177,7 @@ class SmartsResponse(BaseModel):
     integrations: Optional[List[str]]
     n_a: bool
     target_schema: str | None = None
+    progress_info: SmartsProgress | None = None
 
 
 class SmartsCreateResponse(BaseModel):

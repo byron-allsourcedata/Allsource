@@ -337,6 +337,9 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmart.processed_active_segment_records,
                 AudienceSmart.validations,
                 AudienceSmart.target_schema,
+                AudienceSmart.validations_step_size,
+                AudienceSmart.validations_step_processed,
+                AudienceSmart.validations_step_start_time,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
@@ -476,6 +479,9 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmart.status,
                 AudienceSmart.validations,
                 AudienceSmart.target_schema,
+                AudienceSmart.validations_step_size,
+                AudienceSmart.validations_step_processed,
+                AudienceSmart.validations_step_start_time,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
