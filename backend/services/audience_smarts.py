@@ -138,6 +138,40 @@ class AudienceSmartsService:
         )
         return count_deleted > 0
 
+    def _compute_step_eta(
+        self,
+        size: int,
+        processed: int,
+        start_iso: str | None,
+        now: datetime,
+    ) -> (int | None, float | None):
+        """
+        Helper function for calculating ETA and step progress.
+        """
+        if not (start_iso and processed > 0 and processed < size):
+            return None, None
+
+        try:
+            start_dt = datetime.fromisoformat(start_iso)
+            if start_dt.tzinfo is None:
+                start_dt = start_dt.replace(tzinfo=timezone.utc)
+
+            elapsed = (now - start_dt).total_seconds()
+            if elapsed <= 0:
+                return None, None
+
+            speed = processed / elapsed
+            if speed <= 0:
+                return None, None
+
+            eta_seconds = int((size - processed) / speed)
+            total_time = elapsed + eta_seconds
+            time_progress = min(1.0, elapsed / total_time)
+            return eta_seconds, time_progress
+
+        except Exception:
+            return None, None
+
     def compute_eta(
         self,
         step_size_json: Optional[str],
@@ -212,24 +246,12 @@ class AudienceSmartsService:
         processed = int(step_processed.get(current_step_key, 0) or 0)
         start_iso = step_start_time.get(current_step_key)
 
-        eta_seconds: Optional[int] = None
-        if start_iso and processed > 0 and processed < size:
-            try:
-                start_dt = datetime.fromisoformat(start_iso)
-                if start_dt.tzinfo is None:
-                    start_dt = start_dt.replace(tzinfo=timezone.utc)
-                elapsed = (now - start_dt).total_seconds()
-                if elapsed > 0:
-                    speed = processed / elapsed
-                    if speed > 0:
-                        eta_seconds = int((size - processed) / speed)
-                        total_time = elapsed + eta_seconds
-                        time_progress = min(1.0, elapsed / total_time)
-            except Exception:
-                eta_seconds = None
-                time_progress = None
-        else:
-            time_progress = None
+        eta_seconds, time_progress = self._compute_step_eta(
+            size=size,
+            processed=processed,
+            start_iso=start_iso,
+            now=now,
+        )
 
         def humanize_step_name(step_key: Optional[str]) -> Optional[str]:
             if not step_key:
