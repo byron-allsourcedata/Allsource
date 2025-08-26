@@ -26,8 +26,10 @@ class ValidationStatsService:
             return
 
         # validation agent receives already mapped validation type, but for eta calculation we need the initial one
-        validation_type = REVERSE_DATABASE_MAPPING[validation_type]
-
+        try:
+            validation_type = REVERSE_DATABASE_MAPPING[validation_type]
+        except:
+            pass
         step_processed = json.loads(smart.validations_step_processed or "{}")
         step_processed[validation_type] = (
             step_processed.get(validation_type, 0) + batch_size
