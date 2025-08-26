@@ -363,6 +363,9 @@ async def main():
             audience_smarts_service = await resolver.resolve(
                 AudienceSmartsService
             )
+            smart_validation_agent_service = await resolver.resolve(
+                SmartValidationAgent
+            )
             user_persistence = UserPersistence(db_session)
 
             queue = await channel.declare_queue(
@@ -375,6 +378,7 @@ async def main():
                     db_session=db_session,
                     user_persistence=user_persistence,
                     audience_smarts_service=audience_smarts_service,
+                    smart_validation_agent_service=smart_validation_agent_service,
                 )
             )
 
