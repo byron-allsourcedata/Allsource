@@ -1,7 +1,8 @@
 import ProgressBar from "../../sources/components/ProgressLoader";
 import Image from "next/image";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import ThreeDotsLoader from "../../sources/components/ThreeDotsLoader";
+import { useEffect, useState } from "react";
 
 type StepProgress = {
 	completed_steps: number;
@@ -12,6 +13,32 @@ type StepProgress = {
 	eta_seconds: number | null;
 	time_progress: number | null;
 };
+
+function LoadingDots() {
+	const [dots, setDots] = useState("");
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
+		}, 500);
+		return () => clearInterval(interval);
+	}, []);
+
+	return (
+		<Typography
+			component="span"
+			sx={{
+				width: "10px",
+				height: "1px",
+				padding: 0,
+				margin: 0,
+				fontSize: "14px",
+			}}
+		>
+			{dots || "\u00A0"}
+		</Typography>
+	);
+}
 
 const renderActiveSegmentProgress = (
 	activeSegmentTotal: number,
@@ -113,11 +140,15 @@ const renderValidatedStatusIcon = (
 							? `(${progressValidation.current_step_name})`
 							: ""}
 					</span>
-					<span>
-						{typeof progressValidation.eta_seconds === "number"
-							? `~${formatEta(Math.max(0, Math.round(progressValidation.eta_seconds)))}`
-							: "N/A"}
-					</span>
+					<Typography
+						sx={{ display: "flex", alignItems: "center", gap: 0.5, p: 0 }}
+					>
+						{typeof progressValidation.eta_seconds === "number" ? (
+							`~${formatEta(Math.max(0, Math.round(progressValidation.eta_seconds)))}`
+						) : (
+							<ThreeDotsLoader />
+						)}
+					</Typography>
 				</Box>
 			</Box>
 		);
