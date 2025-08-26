@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Box, Typography } from "@mui/material";
 import ThreeDotsLoader from "../../sources/components/ThreeDotsLoader";
 import { useEffect, useState } from "react";
+import { formatEta } from "@/utils/format";
 
 type StepProgress = {
 	completed_steps: number;
@@ -92,15 +93,6 @@ const renderValidatedStatusIcon = (
 	if (status === "n_a" || isNA) {
 		return <Box textAlign="center">N/A</Box>;
 	}
-
-	const formatEta = (seconds: number): string => {
-		if (seconds < 60) {
-			return `${seconds}s`;
-		}
-		const minutes = Math.floor(seconds / 60);
-		const remainingSeconds = seconds % 60;
-		return `${minutes}m ${remainingSeconds}s`;
-	};
 
 	if (status === "validating" && progressValidation) {
 		return (

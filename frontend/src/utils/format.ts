@@ -20,3 +20,12 @@ function formatParsedBytes(bytes: ParsedBytes): string {
 export function formatBytes(bytes: number): string {
 	return formatParsedBytes(parseBytes(bytes));
 }
+
+export function formatEta(seconds: number): string {
+	if (seconds < 60) {
+		return `${seconds}s`;
+	}
+	const minutes = Math.floor(seconds / 60);
+	const remainingSeconds = seconds % 60;
+	return `${minutes}m ${remainingSeconds}s`;
+}
