@@ -234,6 +234,16 @@ class PartnersPersistence:
             partner.company_name = company
             self.db.commit()
 
+    def is_user_partner(self, user_id: int) -> bool:
+        return (
+            self.db.query(Partner)
+            .filter(
+                Partner.user_id == user_id,
+            )
+            .first()
+            is not None
+        )
+
     def update_partner(
         self, partner_id: int, **kwargs
     ) -> Tuple[Optional[Partner], bool]:

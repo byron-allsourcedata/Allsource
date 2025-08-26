@@ -9,6 +9,7 @@ from enums import VerifyToken, PaymentStatus
 from models import UserSubscriptions
 from models.users import User
 from persistence.leads_persistence import LeadsPersistence
+from persistence.partners_persistence import PartnersPersistence
 from persistence.plans_persistence import PlansPersistence
 from persistence.referral_user import ReferralUserPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
@@ -68,7 +69,8 @@ class SettingsService:
         lead_persistence: LeadsPersistence,
         team_invitation_persistence: TeamInvitationPersistence,
         stripe_service: StripeService,
-        referral_user_persistence: ReferralUserPersistence
+        referral_user_persistence: ReferralUserPersistence,
+        partners_persistence: PartnersPersistence,
     ):
         self.settings_persistence = settings_persistence
         self.plan_persistence = plan_persistence
@@ -80,6 +82,7 @@ class SettingsService:
         self.team_invitation_persistence = team_invitation_persistence
         self.stripe_service = stripe_service
         self.referral_user_persistence = referral_user_persistence
+        self.partners_persistence = partners_persistence
 
     def get_account_details(self, user):
         member_id = None
@@ -1055,16 +1058,17 @@ class SettingsService:
         PARTNER_YEARLY_PLANS = []
         PARTNER_MONTHLY_PLANS = []
 
-        is_referral = self.referral_user_persistence.is_user_referral(user["id"])
-        is_become_partner_enabled = os.getenv("BECOME_PARTNER_ENABLED") == "True"
+        is_referral = self.referral_user_persistence.is_user_referral(
+            user["id"]
+        )
+        is_partner = self.partners_persistence.is_user_partner(user["id"])
+        is_become_partner_enabled = (
+            os.getenv("BECOME_PARTNER_ENABLED") == "True"
+        )
 
-        if is_become_partner_enabled and not is_referral:
-            PARTNER_YEARLY_PLANS.extend([
-                PARTNER_PROGRAM
-            ])
-            PARTNER_MONTHLY_PLANS.extend([
-                PARTNER_PROGRAM
-            ])
+        if is_become_partner_enabled and not is_referral and not is_partner:
+            PARTNER_YEARLY_PLANS.extend([PARTNER_PROGRAM])
+            PARTNER_MONTHLY_PLANS.extend([PARTNER_PROGRAM])
 
         return PlansResponse(
             normal_plans=SubscriptionPlans(

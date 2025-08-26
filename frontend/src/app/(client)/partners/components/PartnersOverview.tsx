@@ -243,6 +243,9 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 		return <CustomizedProgressBar />;
 	}
 
+	const options = [withoutDiscountCode, ...(discountCodeOptions ?? [])];
+	const isSingleOption = options.length === 1;
+
 	return (
 		<>
 			{loading && <CustomizedProgressBar />}
@@ -781,6 +784,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 									<Select
 										value={discountCode?.name}
 										onChange={handleDiscountCodeChange}
+										disabled={isSingleOption}
 										sx={{
 											backgroundColor: "#fff",
 											borderRadius: "4px",
@@ -820,7 +824,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 											)
 										}
 									>
-										{[withoutDiscountCode, ...discountCodeOptions].map(
+										{[withoutDiscountCode, ...(discountCodeOptions ?? [])].map(
 											(option, index) => (
 												<MenuItem
 													key={index}
