@@ -286,8 +286,8 @@ class PartnersPersistence:
 
         self.db.commit()
         self.db.refresh(partner)
-        if partner.is_master == True:
-            self.add_default_referral_user(partner.user_id)
+        # if partner.is_master == True:
+        #     self.add_default_referral_user(partner.user_id)
 
         return partner
 
