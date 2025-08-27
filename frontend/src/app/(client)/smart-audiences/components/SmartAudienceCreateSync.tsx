@@ -457,6 +457,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 					value: field.type,
 				})),
 			]);
+			if (useCase === "postal") {
+				setCustomFields((prev) => [
+					...prev,
+					...getPostalFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				]);
+			}
 		} else {
 			setValue("1");
 		}
@@ -2493,7 +2503,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 								<CustomButton
 									variant="contained"
 									onClick={handleNextTab}
-									disabled={hasAnyDuplicates()}
+									disabled={
+										hasAnyDuplicates() ||
+										(valueContactSync === 0 && value === "2")
+									}
 									sx={{
 										padding: "0.75em 2.5em",
 									}}
