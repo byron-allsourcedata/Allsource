@@ -11,6 +11,7 @@ from decimal import Decimal
 from typing import List, Union, Optional, Tuple
 from uuid import UUID
 
+import aiormq
 import boto3
 import dateparser
 import pytz
@@ -767,12 +768,53 @@ async def process_and_send_chunks(
             outgoing.append((queue_name, msg))
 
     for queue, msg in outgoing:
-        await publish_rabbitmq_message_with_channel(
-            channel=channel, queue_name=queue, message_body=msg
-        )
-        logging.info(
-            f"Sent chunk to {queue}: {msg.data.data_for_normalize.matched_size}/{total_count}"
-        )
+        try:
+            if connection.is_closed:
+                logging.warning(
+                    "RabbitMQ connection is closed. Reconnecting..."
+                )
+                rmq_connection = RabbitMQConnection()
+                connection = await rmq_connection.connect()
+                channel = await connection.channel()
+                await channel.set_qos(prefetch_count=1)
+
+            if channel.is_closed:
+                logging.warning("RabbitMQ channel is closed. Reopening...")
+                channel = await connection.channel()
+                await channel.set_qos(prefetch_count=1)
+
+            await publish_rabbitmq_message_with_channel(
+                channel=channel, queue_name=queue, message_body=msg
+            )
+
+            logging.info(
+                f"Sent chunk to {queue}: {msg.data.data_for_normalize.matched_size}/{total_count}"
+            )
+
+        except (
+            asyncio.CancelledError,
+            aiormq.exceptions.ChannelInvalidStateError,
+        ) as e:
+            logging.error(
+                f"Failed to publish chunk for source {source_id}: {e}"
+            )
+            try:
+                channel = await connection.channel()
+                await channel.set_qos(prefetch_count=1)
+                await publish_rabbitmq_message_with_channel(
+                    channel=channel, queue_name=queue, message_body=msg
+                )
+                logging.info(f"Retried and sent chunk for {source_id}")
+            except Exception as retry_err:
+                logging.critical(
+                    f"Retry failed for source {source_id}: {retry_err}"
+                )
+                raise
+        except Exception as e:
+            logging.exception(
+                f"Unexpected error while sending chunk for {source_id}: {e}"
+            )
+            raise
 
     logging.info(f"All {len(outgoing)} chunks sent for source_id {source_id}")
 
