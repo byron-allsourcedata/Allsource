@@ -1896,388 +1896,401 @@ const Leads: React.FC = () => {
 												</TableRow>
 											</TableHead>
 											<TableBody>
-												{data.map((row) => (
-													<TableRow
-														key={row.id}
-														selected={selectedRows.has(row.id)}
-														sx={{
-															backgroundColor: "#fff",
-															"&:hover": {
-																backgroundColor: "rgba(247, 247, 247, 1)",
-																"& .sticky-cell": {
+												{data.map((row) => {
+													const visitsSecs =
+														row.page_visits?.map(
+															(visit: any) => visit.spent_time_sec,
+														) ?? [];
+
+													let visitSecsSum = 0;
+													for (const secs of visitsSecs) visitSecsSum += secs;
+
+													const formattedVisitTime =
+														visitSecsSum > 0
+															? formatTimeSpent(visitSecsSum)
+															: "--";
+
+													return (
+														<TableRow
+															key={row.id}
+															selected={selectedRows.has(row.id)}
+															sx={{
+																backgroundColor: "#fff",
+																"&:hover": {
 																	backgroundColor: "rgba(247, 247, 247, 1)",
+																	"& .sticky-cell": {
+																		backgroundColor: "rgba(247, 247, 247, 1)",
+																	},
 																},
-															},
-															"&:last-of-type .MuiTableCell-root": {
-																borderBottom: "none",
-															},
-														}}
-													>
-														{/* Name */}
-														<SmartCell
-															cellOptions={{
-																className: "sticky-cell",
-																sx: {
-																	zIndex: 8,
-																	position: "sticky",
-																	left: 0,
-																	backgroundColor: "#fff",
-																	boxShadow: isScrolledX
-																		? "3px 0px 3px #00000033"
-																		: "none",
-																	color: "rgba(56, 152, 252, 1)",
-																	cursor: "pointer",
+																"&:last-of-type .MuiTableCell-root": {
+																	borderBottom: "none",
 																},
-																hideDivider: isScrolledX,
-																onClick: (e) => {
-																	e.stopPropagation();
-																	handleOpenPopup(row);
-																},
-															}}
-															tooltipOptions={{
-																content: row.first_name + " " + row.last_name,
 															}}
 														>
-															{row.first_name} {row.last_name}
-														</SmartCell>
+															{/* Name */}
+															<SmartCell
+																cellOptions={{
+																	className: "sticky-cell",
+																	sx: {
+																		zIndex: 8,
+																		position: "sticky",
+																		left: 0,
+																		backgroundColor: "#fff",
+																		boxShadow: isScrolledX
+																			? "3px 0px 3px #00000033"
+																			: "none",
+																		color: "rgba(56, 152, 252, 1)",
+																		cursor: "pointer",
+																	},
+																	hideDivider: isScrolledX,
+																	onClick: (e) => {
+																		e.stopPropagation();
+																		handleOpenPopup(row);
+																	},
+																}}
+																tooltipOptions={{
+																	content: row.first_name + " " + row.last_name,
+																}}
+															>
+																{row.first_name} {row.last_name}
+															</SmartCell>
 
-														{/* Personal Email */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																},
-															}}
-															contentOptions={{}}
-															tooltipOptions={{
-																content: row.is_active
-																	? row.personal_emails
-																		? row.personal_emails.split(",")[0]
-																		: "--"
-																	: "",
-															}}
-														>
-															{row.is_active ? (
-																row.personal_emails ? (
-																	<span className="truncate-email">
-																		{row.personal_emails.split(",")[0]}
-																	</span>
+															{/* Personal Email */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																	},
+																}}
+																contentOptions={{}}
+																tooltipOptions={{
+																	content: row.is_active
+																		? row.personal_emails
+																			? row.personal_emails.split(",")[0]
+																			: "--"
+																		: "",
+																}}
+															>
+																{row.is_active ? (
+																	row.personal_emails ? (
+																		<span className="truncate-email">
+																			{row.personal_emails.split(",")[0]}
+																		</span>
+																	) : (
+																		<span className="truncate-email">--</span>
+																	)
 																) : (
-																	<span className="truncate-email">--</span>
-																)
-															) : (
-																<UnlockButton
-																	onClick={() => handleUnlock()}
-																	label="Unlock email"
-																/>
-															)}
-														</SmartCell>
+																	<UnlockButton
+																		onClick={() => handleUnlock()}
+																		label="Unlock email"
+																	/>
+																)}
+															</SmartCell>
 
-														{/* Business Email Column */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																},
-															}}
-															contentOptions={{}}
-															tooltipOptions={{
-																content: row.is_active
-																	? row.business_email
-																		? row.business_email.split(",")[0]
-																		: "--"
-																	: "",
-															}}
-														>
-															{row.is_active ? (
-																row.business_email ? (
-																	<span className="truncate-email">
-																		{row.business_email.split(",")[0]}
-																	</span>
+															{/* Business Email Column */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																	},
+																}}
+																contentOptions={{}}
+																tooltipOptions={{
+																	content: row.is_active
+																		? row.business_email
+																			? row.business_email.split(",")[0]
+																			: "--"
+																		: "",
+																}}
+															>
+																{row.is_active ? (
+																	row.business_email ? (
+																		<span className="truncate-email">
+																			{row.business_email.split(",")[0]}
+																		</span>
+																	) : (
+																		<span className="truncate-email">--</span>
+																	)
 																) : (
-																	<span className="truncate-email">--</span>
-																)
-															) : (
-																<UnlockButton
-																	onClick={() => handleUnlock()}
-																	label="Unlock email"
-																/>
-															)}
-														</SmartCell>
+																	<UnlockButton
+																		onClick={() => handleUnlock()}
+																		label="Unlock email"
+																	/>
+																)}
+															</SmartCell>
 
-														{/* Mobile Phone Column */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																},
-															}}
-															tooltipOptions={{
-																content: row.is_active
-																	? row.mobile_phone
-																		? row.mobile_phone.split(",")[0]
-																		: row.personal_phone
-																			? row.personal_phone.split(",")[0]
-																			: row.direct_number
-																				? row.direct_number.split(",")[0]
-																				: "--"
-																	: "",
-															}}
-														>
-															{row.is_active ? (
-																row.mobile_phone ? (
-																	row.mobile_phone.split(",")[0]
-																) : row.personal_phone ? (
-																	row.personal_phone.split(",")[0]
-																) : row.direct_number ? (
-																	row.direct_number.split(",")[0]
+															{/* Mobile Phone Column */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																	},
+																}}
+																tooltipOptions={{
+																	content: row.is_active
+																		? row.mobile_phone
+																			? row.mobile_phone.split(",")[0]
+																			: row.personal_phone
+																				? row.personal_phone.split(",")[0]
+																				: row.direct_number
+																					? row.direct_number.split(",")[0]
+																					: "--"
+																		: "",
+																}}
+															>
+																{row.is_active ? (
+																	row.mobile_phone ? (
+																		row.mobile_phone.split(",")[0]
+																	) : row.personal_phone ? (
+																		row.personal_phone.split(",")[0]
+																	) : row.direct_number ? (
+																		row.direct_number.split(",")[0]
+																	) : (
+																		"--"
+																	)
 																) : (
-																	"--"
-																)
-															) : (
-																<UnlockButton
-																	onClick={() => handleUnlock()}
-																	label="Unlock mobile number"
-																/>
-															)}
-														</SmartCell>
+																	<UnlockButton
+																		onClick={() => handleUnlock()}
+																		label="Unlock mobile number"
+																	/>
+																)}
+															</SmartCell>
 
-														{/* Visited Date */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																},
-															}}
-															tooltipOptions={{
-																content: row.first_visited_date
+															{/* Visited Date */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																	},
+																}}
+																tooltipOptions={{
+																	content: row.first_visited_date
+																		? (() => {
+																				const [day, month, year] =
+																					row.first_visited_date.split(".");
+																				return `${month}/${day}/${year}`;
+																			})()
+																		: "--",
+																}}
+															>
+																{row.first_visited_date
 																	? (() => {
 																			const [day, month, year] =
 																				row.first_visited_date.split(".");
 																			return `${month}/${day}/${year}`;
 																		})()
-																	: "--",
-															}}
-														>
-															{row.first_visited_date
-																? (() => {
-																		const [day, month, year] =
-																			row.first_visited_date.split(".");
-																		return `${month}/${day}/${year}`;
-																	})()
-																: "--"}
-														</SmartCell>
+																	: "--"}
+															</SmartCell>
 
-														{/* Lead Status */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																},
-															}}
-															tooltipOptions={{
-																content:
-																	formatFunnelText(row.behavior_type) || "--",
-															}}
-														>
-															<Box
-																sx={{
-																	display: "flex",
-																	padding: "2px 0px",
-																	borderRadius: "2px",
-																	fontFamily: "var(--font-roboto)",
-																	fontSize: "12px",
-																	fontWeight: "400",
-																	lineHeight: "normal",
-																	backgroundColor: getStatusStyle(
-																		row.behavior_type,
-																	).background,
-																	color: getStatusStyle(row.behavior_type)
-																		.color,
-																	justifyContent: "center",
-																	// minWidth: "110px",
-																	textTransform: "capitalize",
+															{/* Lead Status */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																	},
+																}}
+																tooltipOptions={{
+																	content:
+																		formatFunnelText(row.behavior_type) || "--",
 																}}
 															>
-																{formatFunnelText(row.behavior_type) || "--"}
-															</Box>
-														</SmartCell>
-
-														{/* Visitor Type */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																},
-															}}
-															tooltipOptions={{
-																content:
-																	formatFunnelText(row.visitor_type) || "--",
-															}}
-														>
-															<Box
-																sx={{
-																	display: "flex",
-																	padding: "2px 8px",
-																	borderRadius: "2px",
-																	fontFamily: "var(--font-roboto)",
-																	fontSize: "12px",
-																	fontWeight: "400",
-																	lineHeight: "normal",
-																	backgroundColor: getStatusStyle(
-																		row.visitor_type,
-																	).background,
-																	color: getStatusStyle(row.visitor_type).color,
-																	justifyContent: "center",
-																	// minWidth: "110px",
-																	textTransform: "capitalize",
-																}}
-															>
-																{formatFunnelText(row.visitor_type) || "--"}
-															</Box>
-														</SmartCell>
-
-														{/* URL Visited */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																	cursor: "pointer",
-																	color: "rgba(56, 152, 252, 1)",
-																},
-																onClick: (e) => {
-																	e.stopPropagation();
-																	handleOpenPopup(row);
-																},
-															}}
-														>
-															<Box onClick={(e) => e.stopPropagation()}>
-																<Tooltip
-																	onClick={(e) => {
-																		e.stopPropagation();
+																<Box
+																	sx={{
+																		display: "flex",
+																		padding: "2px 0px",
+																		borderRadius: "2px",
+																		fontFamily: "var(--font-roboto)",
+																		fontSize: "12px",
+																		fontWeight: "400",
+																		lineHeight: "normal",
+																		backgroundColor: getStatusStyle(
+																			row.behavior_type,
+																		).background,
+																		color: getStatusStyle(row.behavior_type)
+																			.color,
+																		justifyContent: "center",
+																		// minWidth: "110px",
+																		textTransform: "capitalize",
 																	}}
-																	componentsProps={{
-																		tooltip: {
-																			sx: {
-																				backgroundColor: "#fff",
-																				color: "#000",
-																				boxShadow:
-																					"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-																				border:
-																					" 0.5px solid rgba(228, 228, 228, 1)",
-																				borderRadius: "4px",
-																				maxHeight: "100%",
-																				maxWidth: "500px",
-																				minWidth: "200px",
-																				padding: "11px 10px",
-																			},
-																		},
-																	}}
-																	title={
-																		Array.isArray(row.page_visits) &&
-																		row.page_visits.length > 0 ? (
-																			<div>
-																				<Box
-																					sx={{
-																						overflow: "hidden",
-																						minWidth: 200,
-																					}}
-																				>
-																					{row.page_visits.map(
-																						(
-																							visit: {
-																								page: string;
-																								spent_time_sec: number;
-																							},
-																							idx: number,
-																						) => (
-																							<Box
-																								key={idx}
-																								sx={{
-																									display: "flex",
-																									justifyContent:
-																										"space-between",
-																									alignItems: "center",
-																									px: 1,
-																									py: 0.5,
-																									gap: 2,
-																									borderBottom:
-																										idx !==
-																										row.page_visits.length - 1
-																											? "1px solid #eee"
-																											: "none",
-																								}}
-																							>
-																								<Typography
-																									className="table-data"
-																									sx={{
-																										fontSize: "12px",
-																										maxWidth: 500,
-																										textDecoration: "none",
-																										color:
-																											"rgba(56, 152, 252, 1) !important",
-																									}}
-																									component="a"
-																									href={
-																										visit.page.startsWith(
-																											"http",
-																										)
-																											? visit.page
-																											: `https://${visit.page}`
-																									}
-																									target="_blank"
-																									rel="noopener noreferrer"
-																								>
-																									{visit.page}
-																								</Typography>
-																								<Typography
-																									className="table-data"
-																									sx={{ fontSize: "12px" }}
-																								>
-																									{visit.spent_time_sec}s
-																								</Typography>
-																							</Box>
-																						),
-																					)}
-																				</Box>
-																			</div>
-																		) : (
-																			"No page visits"
-																		)
-																	}
-																	placement="left"
-																	arrow
 																>
-																	<span>
-																		{Array.isArray(row.page_visits)
-																			? row.page_visits.length
-																			: "--"}
-																	</span>
-																</Tooltip>
-															</Box>
-														</SmartCell>
+																	{formatFunnelText(row.behavior_type) || "--"}
+																</Box>
+															</SmartCell>
 
-														{/* Time on site */}
-														<SmartCell
-															cellOptions={{
-																sx: {
-																	position: "relative",
-																	borderRight: "1px solid rgba(235,235,235,1)",
-																},
-																hideDivider: true,
-															}}
-															tooltipOptions={{
-																content: row.average_time_sec
-																	? formatTimeSpent(row.average_time_sec)
-																	: "--",
-															}}
-														>
-															{row.average_time_sec
-																? formatTimeSpent(row.average_time_sec)
-																: "--"}
-														</SmartCell>
-													</TableRow>
-												))}
+															{/* Visitor Type */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																	},
+																}}
+																tooltipOptions={{
+																	content:
+																		formatFunnelText(row.visitor_type) || "--",
+																}}
+															>
+																<Box
+																	sx={{
+																		display: "flex",
+																		padding: "2px 8px",
+																		borderRadius: "2px",
+																		fontFamily: "var(--font-roboto)",
+																		fontSize: "12px",
+																		fontWeight: "400",
+																		lineHeight: "normal",
+																		backgroundColor: getStatusStyle(
+																			row.visitor_type,
+																		).background,
+																		color: getStatusStyle(row.visitor_type)
+																			.color,
+																		justifyContent: "center",
+																		// minWidth: "110px",
+																		textTransform: "capitalize",
+																	}}
+																>
+																	{formatFunnelText(row.visitor_type) || "--"}
+																</Box>
+															</SmartCell>
+
+															{/* URL Visited */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																		cursor: "pointer",
+																		color: "rgba(56, 152, 252, 1)",
+																	},
+																	onClick: (e) => {
+																		e.stopPropagation();
+																		handleOpenPopup(row);
+																	},
+																}}
+															>
+																<Box onClick={(e) => e.stopPropagation()}>
+																	<Tooltip
+																		onClick={(e) => {
+																			e.stopPropagation();
+																		}}
+																		componentsProps={{
+																			tooltip: {
+																				sx: {
+																					backgroundColor: "#fff",
+																					color: "#000",
+																					boxShadow:
+																						"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																					border:
+																						" 0.5px solid rgba(228, 228, 228, 1)",
+																					borderRadius: "4px",
+																					maxHeight: "100%",
+																					maxWidth: "500px",
+																					minWidth: "200px",
+																					padding: "11px 10px",
+																				},
+																			},
+																		}}
+																		title={
+																			Array.isArray(row.page_visits) &&
+																			row.page_visits.length > 0 ? (
+																				<div>
+																					<Box
+																						sx={{
+																							overflow: "hidden",
+																							minWidth: 200,
+																						}}
+																					>
+																						{row.page_visits.map(
+																							(
+																								visit: {
+																									page: string;
+																									spent_time_sec: number;
+																								},
+																								idx: number,
+																							) => (
+																								<Box
+																									key={idx}
+																									sx={{
+																										display: "flex",
+																										justifyContent:
+																											"space-between",
+																										alignItems: "center",
+																										px: 1,
+																										py: 0.5,
+																										gap: 2,
+																										borderBottom:
+																											idx !==
+																											row.page_visits.length - 1
+																												? "1px solid #eee"
+																												: "none",
+																									}}
+																								>
+																									<Typography
+																										className="table-data"
+																										sx={{
+																											fontSize: "12px",
+																											maxWidth: 500,
+																											textDecoration: "none",
+																											color:
+																												"rgba(56, 152, 252, 1) !important",
+																										}}
+																										component="a"
+																										href={
+																											visit.page.startsWith(
+																												"http",
+																											)
+																												? visit.page
+																												: `https://${visit.page}`
+																										}
+																										target="_blank"
+																										rel="noopener noreferrer"
+																									>
+																										{visit.page}
+																									</Typography>
+																									<Typography
+																										className="table-data"
+																										sx={{ fontSize: "12px" }}
+																									>
+																										{visit.spent_time_sec}s
+																									</Typography>
+																								</Box>
+																							),
+																						)}
+																					</Box>
+																				</div>
+																			) : (
+																				"No page visits"
+																			)
+																		}
+																		placement="left"
+																		arrow
+																	>
+																		<span>
+																			{Array.isArray(row.page_visits)
+																				? row.page_visits.length
+																				: "--"}
+																		</span>
+																	</Tooltip>
+																</Box>
+															</SmartCell>
+
+															{/* Time on site */}
+															<SmartCell
+																cellOptions={{
+																	sx: {
+																		position: "relative",
+																		borderRight:
+																			"1px solid rgba(235,235,235,1)",
+																	},
+																	hideDivider: true,
+																}}
+																tooltipOptions={{
+																	content: formattedVisitTime,
+																}}
+															>
+																{formattedVisitTime}
+															</SmartCell>
+														</TableRow>
+													);
+												})}
 											</TableBody>
 										</Table>
 									</TableContainer>
