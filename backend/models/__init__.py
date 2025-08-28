@@ -95,6 +95,7 @@ from .opt_out import OptOutBlackList
 from .privacy_policy_user import PrivacyPolicyUser
 
 from .whitelabel_settings import WhitelabelSettings
+from .million_verify_files import MillionVerifyFiles
 
 from .anonymous_requests import AnonymousRequests
 from .anonymous_visits import AnonymousVisits
@@ -191,4 +192,5 @@ __all__ = [
     "OptOutBlackList",
     "PrivacyPolicyUser",
     "WhitelabelSettings",
+    "MillionVerifyFiles",
 ]
