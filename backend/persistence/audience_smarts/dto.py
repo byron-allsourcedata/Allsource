@@ -51,6 +51,12 @@ class PersonRecord(BaseModel):
     personal_email_validation_status: Optional[str] = None
     linkedin_url: Optional[str] = None
     email: Optional[str] = None
+    home_address_line_1: Optional[str] = None
+    home_address_line_2: Optional[str] = None
+    home_postal_code: Optional[str] = None
+    business_address_line_1: Optional[str] = None
+    business_address_line_2: Optional[str] = None
+    business_postal_code: Optional[str] = None
 
     # enrichment_personal_profiles
     age: Optional[str] = None
