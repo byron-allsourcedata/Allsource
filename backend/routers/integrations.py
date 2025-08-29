@@ -279,7 +279,7 @@ async def get_ad_accounts(
     domain=Depends(check_domain),
 ):
     if domain is not None:
-        domain_id = domain.get("id")
+        domain_id = domain.id
     else:
         domain_id = None
 
