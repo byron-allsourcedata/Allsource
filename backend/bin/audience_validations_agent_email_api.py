@@ -67,13 +67,10 @@ async def process_bulk_validation(
     if not emails:
         return None
 
-    # 1. Сохраняем batch в файл
     file_content = "\n".join(emails)
 
-    # 2 Считаем md5
     md5_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()
 
-    # 3 Проверяем, не загружали ли этот файл раньше
     existing_file = (
         db_session.query(MillionVerifyFiles)
         .filter(MillionVerifyFiles.md5_hash == md5_hash)
@@ -82,7 +79,6 @@ async def process_bulk_validation(
     if existing_file:
         file_id = existing_file.file_id
     else:
-        # 4 Загружаем новый файл
         response = await million_verifier_service.bulk_upload_file(
             file_content, aud_smart_id, md5_hash
         )
@@ -90,7 +86,6 @@ async def process_bulk_validation(
             raise MillionVerifierError(response["error"])
         file_id = int(response["file_id"])
 
-    # 5 Ждем пока файл будет готов
     max_tries = 60
     current_try = 0
     while current_try < max_tries:
@@ -99,17 +94,15 @@ async def process_bulk_validation(
         if info.get("status") == "finished":
             persistence.mark_file_ready(file_id)
             break
-        await asyncio.sleep(30)  # каждые 30 сек API
+        await asyncio.sleep(30)
 
     if current_try == max_tries:
         raise MillionVerifierError(
             "Timeiout reached while waiting for million verifier bulk responses"
         )
 
-    # 6 Скачиваем результат
     csv_content = await million_verifier_service.bulk_download_report(file_id)
 
-    # 7 Парсим CSV и готовим объекты
     results = []
     reader = csv.DictReader(io.StringIO(csv_content))
     for row in reader:
