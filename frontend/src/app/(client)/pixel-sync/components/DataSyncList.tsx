@@ -1416,7 +1416,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.successful_contacts}
+												{row.synced_contacts}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
