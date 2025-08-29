@@ -1,4 +1,6 @@
 import asyncio
+import hashlib
+import io
 import logging
 import os
 
@@ -25,18 +27,20 @@ class MillionVerifierIntegrationsService:
         self.million_verifier_persistence = million_verifier_persistence
         self.api_key = os.getenv("MILLION_VERIFIER_KEY")
         self.api_url = "https://api.millionverifier.com/api/v3/"
+        self.bulk_api_url = "https://bulkapi.millionverifier.com/bulkapi/v2/"
 
     async def __async_handle_request(
         self,
         method: str,
         url: str,
-        json: dict = None,
-        params: dict = None,
+        json: dict | None = None,
+        params: dict | None = None,
+        files: dict | None = None,
+        stream: bool = False,
         max_retries: int = 1,
         retry_delay: float = 2.0,
     ):
         headers = {
-            "Content-Type": "application/json",
             "Accept": "application/json",
         }
 
@@ -50,6 +54,7 @@ class MillionVerifierIntegrationsService:
                         headers=headers,
                         json=json,
                         params=params,
+                        files=files,
                     )
 
                 if response.status_code == 429:
@@ -62,6 +67,9 @@ class MillionVerifierIntegrationsService:
                     await asyncio.sleep(retry_after)
                     attempt += 1
                     continue
+
+                if stream:
+                    return response
 
                 return response.json()
 
@@ -92,6 +100,8 @@ class MillionVerifierIntegrationsService:
                 return {"error": str(e)}
 
         return {"error": "Max retries exceeded"}
+
+    # ---------- SINGLE API ----------
 
     async def is_email_verify(self, email: str):
         is_verify = False
@@ -138,3 +148,65 @@ class MillionVerifierIntegrationsService:
         )
 
         return response
+
+    # ---------- BULK API ----------
+
+    async def bulk_upload_file(
+        self, file_content: str, origin_aud_id: str, md5_hash: str
+    ) -> dict:
+        url = f"{self.bulk_api_url}upload"
+        params = {"key": self.api_key}
+
+        # создаём in-memory файл
+        fake_file = io.BytesIO(file_content.encode("utf-8"))
+        fake_file.seek(0)
+        files = {"file_contents": ("emails.txt", fake_file, "text/plain")}
+
+        response = await self.__async_handle_request(
+            method="POST", url=url, params=params, files=files
+        )
+
+        logging.error(f"MillionVerifier upload response: {response}")
+
+        if response.get("error"):
+            raise MillionVerifierError(response["error"])
+
+        file_id = response.get("file_id")
+        if file_id:
+            self.million_verifier_persistence.save_file_record(
+                file_id=int(file_id),
+                md5_hash=md5_hash,
+                origin_aud_id=origin_aud_id,
+                is_ready=(response.get("status") == "finished"),
+            )
+
+        return response
+
+    async def bulk_file_info(self, file_id: str) -> dict:
+        url = f"{self.bulk_api_url}fileinfo"
+        params = {"key": self.api_key, "file_id": file_id}
+
+        response = await self.__async_handle_request(
+            method="GET", url=url, params=params
+        )
+
+        return response
+
+    async def bulk_download_report(
+        self, file_id: str, filter_type: str = "all"
+    ) -> str | dict:
+        url = f"{self.bulk_api_url}download"
+        params = {
+            "key": self.api_key,
+            "file_id": file_id,
+            "filter": filter_type,
+        }
+
+        response = await self.__async_handle_request(
+            method="GET", url=url, params=params, stream=True
+        )
+
+        if isinstance(response, dict) and response.get("error"):
+            return response
+
+        return response.content.decode("utf-8")

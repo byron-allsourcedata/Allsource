@@ -20,7 +20,6 @@ function formatParsedBytes(bytes: ParsedBytes): string {
 export function formatBytes(bytes: number): string {
 	return formatParsedBytes(parseBytes(bytes));
 }
-
 export function formatEta(seconds: number): string {
 	if (seconds < 60) {
 		return `${seconds}s`;
@@ -28,4 +27,17 @@ export function formatEta(seconds: number): string {
 	const minutes = Math.floor(seconds / 60);
 	const remainingSeconds = seconds % 60;
 	return `${minutes}m ${remainingSeconds}s`;
+}
+
+export function formatDate(date: Date): string {
+	return date.toLocaleDateString("en-US", {
+		month: "short", // "Jun"
+		day: "numeric", // "1"
+		year: "numeric", // "2025"
+	});
+}
+
+export function parseDate(input: string): Date {
+	const trimmed = input.replace(/\.\d{6}/, "");
+	return new Date(trimmed);
 }

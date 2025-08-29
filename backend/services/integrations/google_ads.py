@@ -5,6 +5,16 @@ import re
 import time
 from typing import Tuple, Annotated
 
+
+from google.ads.googleads.v20.common import UserData, UserIdentifier
+from google.ads.googleads.v20.enums import ConsentStatusEnum
+from google.ads.googleads.v20.resources.types import (
+    OfflineUserDataJob,
+)
+from google.ads.googleads.v20.services import (
+    AddOfflineUserDataJobOperationsRequest,
+    OfflineUserDataJobOperation,
+)
 import google.api_core.exceptions
 import httpx
 from fastapi import HTTPException, Depends
@@ -49,7 +59,31 @@ from utils import (
     get_valid_email_without_million,
 )
 
+from pydantic import BaseModel
+
 logger = logging.getLogger(__name__)
+
+
+class NewList(BaseModel):
+    name: str
+    customer_id: str
+
+
+class CreatedList(BaseModel):
+    list_id: str
+    list_name: str
+
+
+class GoogleAdsIntegrationError(Exception):
+    pass
+
+
+class GoogleAdsInvalidCredentials(GoogleAdsIntegrationError):
+    pass
+
+
+class GoogleAdsCreateListFailed(GoogleAdsIntegrationError):
+    pass
 
 
 @injectable
@@ -190,6 +224,7 @@ class GoogleAdsIntegrationsService:
         token_info = response.json()
         access_token = token_info.get("refresh_token")
         if not access_token:
+            logger.info(f"Failed to get access token, response: {token_info}")
             raise HTTPException(
                 status_code=400, detail="Failed to get access token"
             )
@@ -593,11 +628,12 @@ class GoogleAdsIntegrationsService:
 
         client = GoogleAdsClient(
             credentials=credentials,
+            use_proto_plus=True,
             developer_token=os.getenv("GOOGLE_ADS_TOKEN"),
         )
         return client
 
-    def create_list(self, list, domain_id, user_id):
+    def create_list(self, list: NewList, domain_id: int | None, user_id: int):
         try:
             credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
@@ -624,12 +660,39 @@ class GoogleAdsIntegrationsService:
                 "message": str(ex.error.code().name),
             }
 
+    def try_create_list(
+        self, list: NewList, domain_id: int | None, user_id: int
+    ) -> CreatedList:
+        """
+        Raises `GoogleAdsCreateListFailed` \n
+        Raises `GoogleAdsInvalidCredentials`
+        """
+        result = self.create_list(list, domain_id, user_id)
+
+        status = result["status"]
+
+        if status == IntegrationsStatus.CREATE_IS_FAILED.value:
+            raise GoogleAdsCreateListFailed()
+        elif status == IntegrationsStatus.CREDENTIALS_INVALID.value:
+            message = result["message"]
+            raise GoogleAdsInvalidCredentials(message)
+
+        channel: dict[str, str] = result["channel"]
+
+        created_list = CreatedList(
+            list_id=channel["list_id"],
+            list_name=channel["list_name"],
+        )
+        return created_list
+
     def create_customer_match_user_list(self, client, customer_id, list_name):
+        # TODO: extract to config
+        app_name = "Allsource"
         user_list_service_client = client.get_service("UserListService")
         user_list_operation = client.get_type("UserListOperation")
         user_list = user_list_operation.create
         user_list.name = list_name
-        user_list.description = "List of customers by Maximiz app"
+        user_list.description = f"List of customers by {app_name} app"
         user_list.crm_based_user_list.upload_key_type = (
             client.enums.CustomerMatchUploadKeyTypeEnum.CONTACT_INFO
         )
@@ -645,7 +708,7 @@ class GoogleAdsIntegrationsService:
     def add_users_to_customer_match_user_list(
         self,
         profiles,
-        client,
+        client: GoogleAdsClient,
         customer_id,
         user_list_resource_name,
         offline_user_data_job_id,
@@ -700,8 +763,184 @@ class GoogleAdsIntegrationsService:
             resource_name=offline_user_data_job_resource_name
         )
 
+    def fetch_customer_match_list(
+        self, client: GoogleAdsClient, customer_id: str, user_list_id: str
+    ) -> str:
+        googleads_service = client.get_service("GoogleAdsService")
+
+        user_list_resource_name = googleads_service.user_list_path(
+            customer_id, user_list_id
+        )
+
+        return user_list_resource_name
+
+    def add_users_to_list_hashed(
+        self,
+        access_token: str,
+        hashed_emails: list[str],
+        customer_id: str,
+        user_list_id: str,
+    ):
+        client = self.get_google_ads_client(access_token)
+        customer_match_resource = self.fetch_customer_match_list(
+            client, customer_id, user_list_id
+        )
+        self.add_users_to_customer_match_list_hashed(
+            hashed_emails, client, customer_id, customer_match_resource
+        )
+
+    def add_users_to_customer_match_list_hashed(
+        self,
+        hashed_emails: list[str],
+        client: GoogleAdsClient,
+        customer_id: str,
+        user_list_resource: str,
+        ad_user_data_consent: ConsentStatusEnum.ConsentStatus = ConsentStatusEnum.ConsentStatus.GRANTED,
+        ad_personalization_consent: ConsentStatusEnum.ConsentStatus = ConsentStatusEnum.ConsentStatus.GRANTED,
+    ):
+        data_job_resource = self.create_data_job_with_consent(
+            client,
+            customer_id,
+            user_list_resource,
+            ad_user_data_consent,
+            ad_personalization_consent,
+        )
+
+        operations = self.get_hashed_emails_data_job_operations(
+            client, hashed_emails
+        )
+
+        self.add_operations_to_data_job_and_run(
+            client, data_job_resource, operations
+        )
+
+    def create_data_job_with_consent(
+        self,
+        client: GoogleAdsClient,
+        customer_id: str,
+        user_list: str,
+        ad_user_data_consent: ConsentStatusEnum.ConsentStatus = ConsentStatusEnum.ConsentStatus.GRANTED,
+        ad_personalization_consent: ConsentStatusEnum.ConsentStatus = ConsentStatusEnum.ConsentStatus.GRANTED,
+    ) -> str:
+        data_job_service = client.get_service("OfflineUserDataJobService")
+
+        offline_user_data_job = OfflineUserDataJob()
+        offline_user_data_job.type_ = (
+            client.enums.OfflineUserDataJobTypeEnum.CUSTOMER_MATCH_USER_LIST
+        )
+        offline_user_data_job.customer_match_user_list_metadata.user_list = (
+            user_list
+        )
+
+        offline_user_data_job.customer_match_user_list_metadata.consent.ad_user_data = ad_user_data_consent
+        offline_user_data_job.customer_match_user_list_metadata.consent.ad_personalization = ad_personalization_consent
+
+        create_offline_user_data_job_response = (
+            data_job_service.create_offline_user_data_job(
+                customer_id=customer_id, job=offline_user_data_job
+            )
+        )
+
+        offline_user_data_job_resource_name = (
+            create_offline_user_data_job_response.resource_name
+        )
+
+        return offline_user_data_job_resource_name
+
+    def ensure_data_job(
+        self,
+        client: GoogleAdsClient,
+        offline_user_data_job_id: str | None,
+        customer_id: str,
+        user_list: str,
+    ) -> str:
+        offline_user_data_job_service_client = client.get_service(
+            "OfflineUserDataJobService"
+        )
+
+        if offline_user_data_job_id:
+            offline_user_data_job_resource_name = (
+                offline_user_data_job_service_client.offline_user_data_job_path(
+                    customer_id, offline_user_data_job_id
+                )
+            )
+        else:
+            offline_user_data_job_resource_name = (
+                self.create_data_job_with_consent(
+                    client, customer_id, user_list
+                )
+            )
+
+        return offline_user_data_job_resource_name
+
+    def add_operations_to_data_job_and_run(
+        self,
+        client: GoogleAdsClient,
+        data_job_resource_name: str,
+        operations: list[OfflineUserDataJobOperation],
+    ):
+        offline_user_data_job_service_client = client.get_service(
+            "OfflineUserDataJobService"
+        )
+
+        offline_user_data_job_resource_name = data_job_resource_name
+
+        request: AddOfflineUserDataJobOperationsRequest = client.get_type(
+            "AddOfflineUserDataJobOperationsRequest"
+        )
+        request.resource_name = offline_user_data_job_resource_name
+        request.operations.extend(operations)
+        request.enable_partial_failure = True
+
+        _ = offline_user_data_job_service_client.add_offline_user_data_job_operations(
+            request=request
+        )
+        logger.debug("Successfully added offline user data job operations")
+
+        _ = offline_user_data_job_service_client.run_offline_user_data_job(
+            resource_name=offline_user_data_job_resource_name
+        )
+
+    def get_hashed_emails_data_job_operations(
+        self, client: GoogleAdsClient, hashed_emails: list[str]
+    ) -> list[OfflineUserDataJobOperation]:
+        # operations = map(self.create_operation, hashed_emails)
+
+        operations = [
+            self.create_operation(client, hashed_email)
+            for hashed_email in hashed_emails
+        ]
+
+        return list(operations)
+
+    def create_user_identifier(
+        self, client: GoogleAdsClient, hashed_email: str
+    ) -> UserIdentifier:
+        user_identifier: UserIdentifier = client.get_type("UserIdentifier")
+        user_identifier.hashed_email = hashed_email
+        return user_identifier
+
+    def create_operation(
+        self, client: GoogleAdsClient, hashed_email: str
+    ) -> OfflineUserDataJobOperation:
+        user_id = self.create_user_identifier(client, hashed_email)
+        user_data: UserData = client.get_type("UserData")
+        # user_data.user_identifiers.append(user_id)
+        operation: OfflineUserDataJobOperation = client.get_type(
+            "OfflineUserDataJobOperation"
+        )
+
+        operation.create = user_data
+
+        # operation.create.consent. = user_data.consent
+        # operation.create.transaction_attribute = user_data.transaction_attribute
+        # operation.create.user_attribute = user_data.user_attribute
+        # operation.create.user_identifiers.append(user_id)
+
+        return operation
+
     def build_offline_user_data_job_operations(
-        self, client, profiles: List[GoogleAdsProfile]
+        self, client: GoogleAdsClient, profiles: List[GoogleAdsProfile]
     ):
         raw_records = []
         for profile in profiles:
@@ -719,7 +958,7 @@ class GoogleAdsIntegrationsService:
 
         operations = []
         for record in raw_records:
-            user_data = client.get_type("UserData")
+            user_data: UserData = client.get_type("UserData")
 
             if "email" in record:
                 user_identifier = client.get_type("UserIdentifier")

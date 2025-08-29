@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef } from "react";
+import type React from "react";
+import { useState, useEffect, Suspense, useRef } from "react";
+import { integrationsStyle } from "./integrationsStyle";
+
 import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import {
@@ -60,19 +63,7 @@ import HintCard from "../components/HintCard";
 import { useIntegrationHints } from "./context/IntegrationsHintsContext";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
-
-interface IntegrationBoxProps {
-	image: string;
-	handleClick?: () => void;
-	handleDelete?: () => void;
-	service_name: string;
-	active?: boolean;
-	is_avalible?: boolean;
-	error_message?: string;
-	is_failed?: boolean;
-	is_integrated?: boolean;
-	isEdit?: boolean;
-}
+import type { IntegrationBoxProps } from "@/components/ui/integrations/IntegrationBox";
 
 interface IntegrationCredentials {
 	access_token: string;
@@ -121,7 +112,7 @@ const IntegrationBox = ({
 	is_avalible,
 	is_failed,
 	is_integrated = false,
-	isEdit,
+	// isEdit,
 }: IntegrationBoxProps) => {
 	const [anchorEl, setAnchorEl] = useState(null);
 	const openPopover = Boolean(anchorEl);

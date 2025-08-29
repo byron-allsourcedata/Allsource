@@ -56,6 +56,7 @@ export interface UserData {
 	sources_count?: number;
 	lookalikes_count?: number;
 	credits_count?: number;
+	premium_sources: number;
 	type?: string;
 	is_email_validation_enabled: boolean;
 	is_another_domain_resolved: boolean;

@@ -15,6 +15,7 @@ from sqlalchemy import (
     Sequence,
 )
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
 
@@ -27,9 +28,9 @@ class UserIntegration(Base):
         primary_key=True,
         nullable=False,
     )
-    access_token = Column(VARCHAR, nullable=True)
+    access_token: Mapped[str | None] = mapped_column(VARCHAR, nullable=True)
     shop_domain = Column(VARCHAR(64), nullable=True)
-    service_name = Column(VARCHAR(32), nullable=True)
+    service_name: Mapped[str | None] = mapped_column(VARCHAR(32), nullable=True)
     data_center = Column(VARCHAR, nullable=True)
     consumer_key = Column(VARCHAR, nullable=True)
     consumer_secret = Column(VARCHAR, nullable=True)
@@ -86,8 +87,8 @@ class Integration(Base):
         primary_key=True,
         nullable=False,
     )
-    service_name = Column(String(255), nullable=False)
-    image_url = Column(Text, nullable=True)
+    service_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    image_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     fields = Column(JSONB, nullable=True)
     type = Column(
         String,
@@ -97,3 +98,6 @@ class Integration(Base):
     is_active = Column(Boolean, nullable=True, server_default=text("true"))
     for_pixel = Column(Boolean, nullable=False, server_default=text("true"))
     for_audience = Column(Boolean, nullable=False, server_default=text("true"))
+    for_premium_sources: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )

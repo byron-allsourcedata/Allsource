@@ -32,7 +32,7 @@ class Users(Base):
         Boolean, nullable=True, server_default=text("false")
     )
     password = Column(VARCHAR, nullable=True)
-    full_name = Column(VARCHAR, nullable=True)
+    full_name: Mapped[str | None] = mapped_column(VARCHAR, nullable=True)
     business_type = Column(
         VARCHAR, nullable=False, server_default=text("'d2c'::character varying")
     )

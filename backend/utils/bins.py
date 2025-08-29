@@ -1,7 +1,12 @@
 from asyncio import sleep
-from collections.abc import Coroutine
+import asyncio
+from collections.abc import Awaitable, Coroutine
 import logging
 from typing import Any, Callable
+
+from resolver import Resolver
+
+logger = logging.getLogger(__name__)
 
 
 def handle_interrupt(logger: logging.Logger | None = None):
@@ -31,3 +36,18 @@ def wrap_with_keyboard_interrupt(func: Callable[..., None]):
         func()
     except KeyboardInterrupt:
         handle_interrupt()
+
+
+async def interrupt_handler(
+    script_main: Callable[[Resolver], Awaitable[None]],
+):
+    resolver = Resolver()
+    try:
+        await script_main(resolver)
+    except asyncio.CancelledError:
+        logger.info("Future was cancelled")
+    except KeyboardInterrupt:
+        logger.info("Received interrupt")
+    logger.info("Shutting down...")
+    await resolver.cleanup()
+    logger.info("Done")

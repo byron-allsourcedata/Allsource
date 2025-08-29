@@ -1,6 +1,7 @@
 from typing import Optional
 
-from sqlalchemy import or_
+from sqlalchemy import and_, or_, select
+from sqlalchemy.sql.functions import coalesce
 
 from db_dependencies import Db
 from enums import DataSyncType, SourcePlatformEnum
@@ -274,3 +275,25 @@ class IntegrationsPersistence:
             UserIntegration.id == integration_id
         ).update({"access_token": refresh_token}, synchronize_session="fetch")
         self.db.commit()
+
+    def get_premium_sources_integrations(self, user_id: int):
+        return [
+            row.tuple()
+            for row in self.db.execute(
+                select(
+                    Integration,
+                    UserIntegration.id,
+                    (UserIntegration.id.is_not(None).label("has_integration")),
+                    (UserIntegration.is_failed),
+                )
+                .outerjoin(
+                    UserIntegration,
+                    and_(
+                        UserIntegration.user_id == user_id,
+                        UserIntegration.service_name
+                        == Integration.service_name,
+                    ),
+                )
+                .where(Integration.for_premium_sources)
+            )
+        ]

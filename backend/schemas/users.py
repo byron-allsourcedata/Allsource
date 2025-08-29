@@ -45,12 +45,27 @@ class UserSignUpForm(BaseModel):
     admin_token: Optional[str] = None
     referral_token: Optional[str] = None
     spi: Optional[str] = None
+    """
+    Stripe Price Id
+    """
     pft: Optional[str] = None
+    """
+    Plan Free Trial???
+    """
     shopify_data: Optional[ShopifyPayloadModel] = None
     awc: Optional[str] = None
+    """
+    a win ?????
+    """
     coupon: Optional[str] = None
     ift: Optional[str] = None
+    """
+    is free trial
+    """
     ftd: Optional[str] = None
+    """
+    free trial duration???????????????????
+    """
     referral: Optional[str] = None
     shop_hash: Optional[str] = None
     utm_params: Optional[UtmParams] = None

@@ -1,5 +1,6 @@
-from typing import Annotated
+from typing import Annotated, TypeAlias
 
+from aio_pika.abc import AbstractChannel, AbstractConnection
 import clickhouse_connect
 from clickhouse_connect.driver import Client
 
@@ -8,6 +9,7 @@ from fastapi import Depends
 
 from config import ClickhouseConfig
 from config.database import SessionLocal
+from config.rmq_connection import RabbitMQConnection
 
 
 def get_db():
@@ -18,7 +20,7 @@ def get_db():
         db.close()
 
 
-Db = Annotated[Session, Depends(get_db)]
+Db: TypeAlias = Annotated[Session, Depends(get_db)]
 
 
 def get_clickhouse_db():
@@ -42,3 +44,24 @@ def get_clickhouse_inserter_db():
 Clickhouse = Annotated[Client, Depends(get_clickhouse_db)]
 
 ClickhouseInserter = Annotated[Client, Depends(get_clickhouse_inserter_db)]
+
+
+async def get_rmq_connection():
+    rmq_connection = RabbitMQConnection()
+    connection = await rmq_connection.connect()
+    channel = await connection.channel()
+    _ = await channel.set_qos(prefetch_count=1)
+
+    yield connection, channel
+
+    try:
+        await channel.close()
+        await connection.close()
+    except:
+        pass
+
+
+Rmq = Annotated[
+    tuple[AbstractConnection, AbstractChannel],
+    Depends(get_rmq_connection),
+]

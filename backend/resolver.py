@@ -4,7 +4,7 @@ import inspect
 
 from functools import wraps
 from types import GeneratorType
-from typing import Any, Callable, Optional, get_args, TypeVar, Type
+from typing import Any, Callable, Optional, TypeAlias, get_args, TypeVar, Type
 
 from fastapi import Depends
 from typing_extensions import Annotated
@@ -57,7 +57,7 @@ class Resolver:
         self._cleanup_stack = []
 
     def inject(
-        self, dependency_annotation: Type[T] | Annotated[T, Any], value: T
+        self, dependency_annotation: type[T] | Annotated[T, ...], value: T
     ):
         try:
             fastapi_dep = dependency_annotation.__metadata__[0]
@@ -68,7 +68,7 @@ class Resolver:
         self.deps_cache[fastapi_dep.dependency] = value
 
     async def resolve(
-        self, fastapi_dep_annotation: Type[T] | Annotated[T, Any]
+        self, fastapi_dep_annotation: type[T] | Annotated[T, Any]
     ) -> T:
         try:
             fastapi_dep = fastapi_dep_annotation.__metadata__[0]
@@ -136,6 +136,7 @@ class Resolver:
                     pass
 
         self._cleanup_stack.clear()
+        self.deps_cache.clear()
 
 
 def dep_constructor(cls) -> Callable:

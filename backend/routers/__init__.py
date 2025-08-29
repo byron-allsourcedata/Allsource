@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from domains import premium_sources
 from routers import (
     subscriptions,
     users,
@@ -79,3 +80,4 @@ main_router.include_router(insights.router, prefix="/audience-insights")
 main_router.include_router(opt_out.router, prefix="/opt-out")
 main_router.include_router(privacy_policy.router, prefix="/privacy-policy")
 main_router.include_router(whitelabel.router, prefix="/whitelabel")
+main_router.include_router(premium_sources.router, prefix="/premium-sources")

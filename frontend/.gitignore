@@ -17,6 +17,7 @@
 yarn.lock
 /.pnp
 .pnp.js
+pnpm-lock.yaml
 
 #turbo
 .turbo/

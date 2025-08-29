@@ -250,6 +250,7 @@ async def create_campaign(
     user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
+    # TODO: handle bad requests (wrong service name)
     async with integrations_service as service:
         service = getattr(service, service_name)
         return service.create_campaign(
@@ -277,10 +278,15 @@ async def get_ad_accounts(
     user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
+    if domain is not None:
+        domain_id = domain.get("id")
+    else:
+        domain_id = None
+
     async with integration_service as service:
         service = getattr(service, service_name)
         return service.get_ad_accounts(
-            domain_id=domain.id, user_id=user.get("id")
+            domain_id=domain_id, user_id=user.get("id")
         )
 
 
