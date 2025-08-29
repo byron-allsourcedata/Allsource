@@ -134,6 +134,7 @@ const renderValidatedStatusIcon = (
 					</span>
 					<Typography
 						sx={{ display: "flex", alignItems: "center", gap: 0.5, p: 0 }}
+						className="paragraph"
 					>
 						{typeof progressValidation.eta_seconds === "number" ? (
 							`~${formatEta(Math.max(0, Math.round(progressValidation.eta_seconds)))}`
