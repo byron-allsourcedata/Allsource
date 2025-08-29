@@ -14,6 +14,7 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	Link,
 } from "@mui/material";
 import { useRef, useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
@@ -40,6 +41,7 @@ import {
 	useEnableWhitelabel,
 } from "../accounts/requests";
 import { formatMoney } from "@/components/PartnersAccounts";
+import { Row } from "@/components/Row";
 
 interface tableHeaders {
 	key: string;
@@ -481,6 +483,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 					: "N/A";
 			case "has_credit_card":
 				return row.has_credit_card ? "Yes" : "No";
+			case "premium_sources":
+				return (
+					<Row>
+						<Link href={`/admin/premium-sources/${row.id}`}>
+							{row.premium_sources}
+						</Link>
+					</Row>
+				);
 			case "credits_count":
 				return formatCreditsCount(row.credits_count || 0);
 			case "status":
@@ -665,6 +675,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "join_date", label: "Join date", sortable: true },
 				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "has_credit_card", label: "Has CC", sortable: true },
+				{ key: "premium_sources", label: "Premium Sources", sortable: false },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
 				{ key: "contacts_count", label: "Contacts", sortable: true },
 				{ key: "sources_count", label: "Sources", sortable: false },

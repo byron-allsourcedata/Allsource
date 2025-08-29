@@ -1,0 +1,49 @@
+from fastapi import APIRouter
+from uuid import UUID
+
+from db_dependencies import Db
+from dependencies import AuthUser
+from domains.premium_sources.sync.schemas import (
+    CreateGoogleAdsPremiumSyncRequest,
+)
+from domains.premium_sources.sync.service import PremiumSourceSyncService
+
+
+router = APIRouter()
+
+
+@router.post("/google-ads")
+async def create_google_ads_premium_source_sync(
+    user: AuthUser,
+    db: Db,
+    premium_source_sync_service: PremiumSourceSyncService,
+    request: CreateGoogleAdsPremiumSyncRequest,
+):
+    _ = premium_source_sync_service.create_google_ads_sync_checked(
+        user_id=user["id"],
+        premium_source_id=request.premium_source_id,
+        user_integration_id=request.user_integration_id,
+        request=request,
+    )
+    db.commit()
+
+
+@router.post("/meta")
+async def create_meta_premium_source_sync(
+    user: AuthUser,
+    db: Db,
+    premium_source_sync_service: PremiumSourceSyncService,
+    premium_source_id: UUID,
+    user_integration_id: int,
+):
+    db.commit()
+
+
+@router.get("/")
+@router.get("")
+async def get_premium_source_syncs(
+    user: AuthUser,
+    premium_source_sync_service: PremiumSourceSyncService,
+):
+    user_id = user["id"]
+    return premium_source_sync_service.list(user_id=user_id)

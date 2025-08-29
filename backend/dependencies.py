@@ -773,6 +773,9 @@ def check_user_admin(
     return user
 
 
+Admin = Annotated[Token, Depends(check_user_admin)]
+
+
 def is_user_admin(
     authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,

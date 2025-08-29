@@ -12,6 +12,17 @@ class UsersPersistence:
     def __init__(self, db: Db) -> None:
         self.db = db
 
+    def _by_id(self, user_id: int) -> Users | None:
+        return self.db.execute(
+            select(Users).where(Users.id == user_id)
+        ).scalar()
+
+    def full_name_by_id(self, user_id: int) -> str | None:
+        user = self._by_id(user_id)
+        if user is None:
+            return None
+        return user.full_name
+
     def update_user_by_id(self, user_id: int) -> Users | None:
         return (
             self.db.query(Users)

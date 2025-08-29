@@ -1,5 +1,10 @@
-import React from "react";
-import { Button, ButtonProps, SxProps, Theme } from "@mui/material";
+import type React from "react";
+import {
+	Button,
+	type ButtonProps,
+	type SxProps,
+	type Theme,
+} from "@mui/material";
 
 interface CustomButtonProps extends Omit<ButtonProps, "sx"> {
 	children: React.ReactNode;
@@ -31,6 +36,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 		borderRadius: "4px",
 		gap: "10px",
 		p: "10px 24px",
+		transition: "opacity 0.2s ease-in-out",
 	};
 
 	const variantStyles: Record<"contained" | "outlined", SxProps<Theme>> = {

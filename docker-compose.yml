@@ -25,6 +25,22 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
 
+  clickhouse-server:
+    image: clickhouse/clickhouse-server:23.3
+    container_name: clickhouse-server
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: "${CLICKHOUSE_DATABASE:-default}"
+      CLICKHOUSE_USER: "${CLICKHOUSE_USER:-default}"
+      CLICKHOUSE_PASSWORD: "${CLICKHOUSE_PASSWORD:-}"
+    ports:
+      - "9000:9000"   
+      - "8123:8123"                       
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse  
+
 volumes:
   postgres_data:
   rabbitmq_data:
+  clickhouse_data:
+

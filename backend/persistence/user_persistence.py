@@ -21,7 +21,9 @@ from models import (
     SubscriptionPlan,
     UserSubscriptions,
 )
+from models import premium_source
 from models.partner import Partner
+from models.premium_source import PremiumSource
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
 from models.teams_invitations import TeamInvitation
@@ -521,6 +523,8 @@ class UserPersistence:
             else_=SubscriptionPlan.title,
         ).label("subscription_plan")
 
+        premium_source_count = premium_source.count_by_user().subquery()
+
         query = (
             self.db.query(
                 Users.id,
@@ -545,6 +549,10 @@ class UserPersistence:
                 Users.whitelabel_settings_enabled,
                 Users.is_partner,
                 Partner.is_master.label("is_master"),
+                func.coalesce(
+                    premium_source_count.c.count,
+                    0,
+                ).label("premium_sources"),
             )
             .outerjoin(
                 UserSubscriptions,
@@ -553,6 +561,10 @@ class UserPersistence:
             .outerjoin(
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .outerjoin(
+                premium_source_count,
+                premium_source_count.c.id == Users.id,
             )
             .outerjoin(Partner, Partner.user_id == Users.id)
             .filter(Users.role.any("customer"))
@@ -762,6 +774,8 @@ class UserPersistence:
     ):
         parent_users = aliased(Users)
 
+        premium_source_counts = premium_source.count_by_user().subquery()
+
         order_column = getattr(Users, order_by, Users.id)
         order_direction = (
             asc(order_column) if order == "asc" else desc(order_column)
@@ -786,9 +800,13 @@ class UserPersistence:
                 Users.source_platform,
                 Users.utm_params,
                 Users.whitelabel_settings_enabled,
+                premium_source_counts.c.count,
             )
             .outerjoin(ReferralPayouts, Users.id == ReferralPayouts.user_id)
             .outerjoin(ReferralUser, Users.id == ReferralUser.user_id)
+            .outerjoin(
+                premium_source_counts, premium_source_counts.c.id == Users.id
+            )
             .outerjoin(
                 parent_users, ReferralUser.parent_user_id == parent_users.id
             )
@@ -858,6 +876,7 @@ class UserPersistence:
                     .strftime("%Y-%m-%d"),
                     "last_payment_date": account[13],
                     "whitelabel_settings_enabled": whitelabel_settings_enabled,
+                    "premium_source_count": account[17],
                 }
             )
         return result, query.count()

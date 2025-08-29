@@ -13,10 +13,14 @@ from config.rmq_connection import (
 )
 from schemas.users import UpdateUserRequest
 from domains.whitelabel.admin_router import router as whitelabel_admin_router
+from domains.premium_sources.admin_router import (
+    router as premium_sources_admin_router,
+)
 
 router = APIRouter()
 
 router.include_router(whitelabel_admin_router, prefix="/whitelabel")
+router.include_router(premium_sources_admin_router, prefix="/premium-sources")
 
 
 @router.get("/confirm_customer")

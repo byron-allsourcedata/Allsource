@@ -2,6 +2,7 @@
 import type React from "react";
 import {
 	type Dispatch,
+	type FC,
 	type SetStateAction,
 	useEffect,
 	useRef,
@@ -51,6 +52,7 @@ import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import { useSidebar } from "@/context/SidebarContext";
 import CustomTooltip from "@/components/customToolTip";
 import { Row } from "./Row";
+import { features } from "@/app/config/features";
 
 const sidebarStyles = {
 	container: {
@@ -684,8 +686,6 @@ const Sidebar: React.FC<SidebarProps> = ({
 							</ListItemIcon>
 							<ListItemText primary="Data Sync" />
 						</ListItem>
-
-						<PremiumSources />
 					</List>
 
 					{!isSourceInstalled && !loading && (
@@ -721,6 +721,14 @@ const Sidebar: React.FC<SidebarProps> = ({
 						</Box>
 					)}
 				</Box>
+				<PremiumSources
+					active={isActive("/premium-sources")}
+					onClick={() => {
+						if (features.premiumSources) {
+							handleNavigation("/premium-sources");
+						}
+					}}
+				/>
 				{/* Integrations */}
 				<ListItem
 					button
@@ -736,6 +744,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 					</ListItemIcon>
 					<ListItemText primary="Integrations" />
 				</ListItem>
+
 				{isPartnerAvailable && (
 					<ListItem
 						button
@@ -783,74 +792,52 @@ const Sidebar: React.FC<SidebarProps> = ({
 	);
 };
 
-const PremiumSources = () => {
+type PremiumSourcesProps = {
+	active?: boolean;
+	onClick: () => void;
+};
+
+const PremiumSources: FC<PremiumSourcesProps> = ({ active, onClick }) => {
+	const listItemSx = active ? sidebarStyles.activeItem : sidebarStyles.ListItem;
+
+	const iconColor = active ? "rgba(56, 152, 252, 1)" : undefined;
+	const filter =
+		"brightness(0) saturate(100%) invert(49%) sepia(76%) saturate(2575%) hue-rotate(192deg) brightness(103%) contrast(98%)";
 	return (
 		<ListItem
+			button
+			onClick={onClick}
 			sx={{
-				...sidebarStyles.ListItem,
-				backgroundColor: "transparent",
-				"&:hover": {
-					backgroundColor: "transparent !important",
-				},
+				...listItemSx,
+				// "&:hover": {
+				// 	backgroundColor: "#e0e0e0",
+				// },
 			}}
 		>
-			<Tooltip
-				title={
-					<Box
-						sx={{
-							backgroundColor: "#fff",
-							margin: 0,
-							ml: 0,
-							padding: 0,
-							display: "flex",
-							flexDirection: "row",
-							alignItems: "center",
+			<Row gap="0px" alignItems="center">
+				<ListItemIcon
+					sx={{
+						...sidebarStyles.listItemIcon,
+
+						justifyContent: "center",
+					}}
+				>
+					<Image
+						src="/crown-flat.svg"
+						alt=""
+						color="red"
+						width={18}
+						height={18}
+						style={{
+							filter: active ? filter : undefined,
 						}}
-					>
-						<Typography
-							className="table-data"
-							component="div"
-							sx={{ fontSize: "14px !important" }}
-						>
-							Coming soon...
-						</Typography>
-					</Box>
-				}
-				componentsProps={{
-					tooltip: {
-						sx: {
-							backgroundColor: "#fff",
-							color: "#000",
-							boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-							border: " 0.2px solid rgba(255, 255, 255, 1)",
-							borderRadius: "4px",
-							maxHeight: "100%",
-							maxWidth: "500px",
-							padding: "11px 10px",
-						},
-					},
-				}}
-				placement="bottom"
-				PopperProps={{
-					modifiers: [
-						{
-							name: "offset",
-							options: {
-								offset: [75, -15],
-							},
-						},
-					],
-				}}
-			>
-				<Row gap="0px" alignItems="center">
-					<ListItemIcon
-						sx={{ ...sidebarStyles.listItemIcon, justifyContent: "center" }}
-					>
-						<Image src="/crown-flat.svg" alt="" width={18} height={18} />
-					</ListItemIcon>
-					<ListItemText primary="Premium Sources" sx={{ color: "#A8A8A8" }} />
-				</Row>
-			</Tooltip>
+					/>
+				</ListItemIcon>
+				<ListItemText
+					primary="Premium Sources"
+					sx={{ whiteSpace: "nowrap", color: "rgba(59, 59, 59, 1)" }}
+				/>
+			</Row>
 		</ListItem>
 	);
 };

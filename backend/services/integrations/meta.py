@@ -352,8 +352,8 @@ class MetaIntegrationsService:
         access_token,
         list_id,
         campaign_name,
-        bid_amount=None,
-        campaign_objective=None,
+        bid_amount: str | None = None,
+        campaign_objective: str | None = None,
     ):
         url = f"https://graph.facebook.com/v22.0/{ad_account_id}/adsets"
         ad_set_data = {
@@ -498,7 +498,7 @@ class MetaIntegrationsService:
         target_schema: str,
         validations: dict = {},
     ):
-        profiles = []
+        profiles: list[list[str]] = []
         results = []
         for enrichment_user in enrichment_users:
             profile = self.__hash_mapped_meta_user(
@@ -538,6 +538,18 @@ class MetaIntegrationsService:
                     result["status"] = bulk_result
 
         return results
+
+    async def add_hashed_emails_to_list(
+        self, access_token: str, list_id: str, hashed_emails: list[str]
+    ):
+        profiles = [[hashed_email] for hashed_email in hashed_emails]
+        bulk_result = self.__create_user(
+            custom_audience_id=list_id,
+            access_token=access_token,
+            profiles=profiles,
+        )
+
+        return bulk_result
 
     async def process_data_sync_lead(
         self,
