@@ -166,7 +166,7 @@ class MillionVerifierIntegrationsService:
             method="POST", url=url, params=params, files=files
         )
 
-        logging.error(f"MillionVerifier upload response: {response}")
+        logger.info(f"MillionVerifier upload response: {response}")
 
         if response.get("error"):
             raise MillionVerifierError(response["error"])
