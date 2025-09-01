@@ -1,4 +1,5 @@
 import csv
+from datetime import datetime, timezone
 import hashlib
 import io
 import logging
@@ -105,6 +106,7 @@ async def process_bulk_validation(
 
     results = []
     reader = csv.DictReader(io.StringIO(csv_content))
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     for row in reader:
         email = row.get("email")
         result = row.get("result")
@@ -116,6 +118,7 @@ async def process_bulk_validation(
                 email=email,
                 is_verify=is_verify,
                 verify_result=result,
+                created_at=now,
             )
         )
 
