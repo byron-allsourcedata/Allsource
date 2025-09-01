@@ -188,7 +188,7 @@ export const UserPremiumSourcesPage: FC = () => {
 
 	return (
 		<ThemeProvider theme={premiumSourcesTheme}>
-			<PageContainer>
+			<PageContainer gap={"1rem"}>
 				<Title>Premium Sources</Title>
 				{pageContent}
 			</PageContainer>
