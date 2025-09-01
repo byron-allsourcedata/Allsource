@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from sqlalchemy import (
     Column,
@@ -93,7 +94,7 @@ class Users(Base):
     validation_funds = Column(
         DECIMAL(10, 2), nullable=False, server_default=text("0")
     )
-    premium_source_credits = Column(
+    premium_source_credits: Mapped[Decimal | None] = mapped_column(
         DECIMAL(10, 2), nullable=True, server_default=text("0")
     )
     smart_audience_quota = Column(

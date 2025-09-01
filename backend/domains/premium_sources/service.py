@@ -131,6 +131,17 @@ class PremiumSourceService:
 
         return premium_source.s3_url
 
+    def get_cost(self, source_id: UUID) -> int:
+        """
+        Raises `PremiumSourceNotFound`
+        """
+        source = self.repo.get(source_id)
+
+        if source is None:
+            raise PremiumSourceNotFound()
+
+        return source.price
+
     def user_sources(self, user_id: int) -> UserPremiumSourcesDto:
         user_name = self.users.name_by_id(user_id)
 
