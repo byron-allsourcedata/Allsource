@@ -33,6 +33,7 @@ from dependencies import (
     check_api_key,
 )
 from enums import CreateDataSync, TeamAccessLevel
+from models.users_domains import get_domain_id
 from persistence.domains import UserDomains
 from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
@@ -239,13 +240,20 @@ async def get_list(
 async def create_list(
     list_data: CreateListOrTags,
     integrations_service: IntegrationService,
+    domain: OptionalDomain,
     service_name: str = Query(...),
     user=Depends(check_user_authorization_without_pixel),
-    domain=Depends(check_domain),
+    
 ):
     async with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_list(list_data, domain.id, user.get("id"))
+
+        if domain is not None:
+            domain_id = domain.id
+        else:
+            domain_id = None
+
+        return service.create_list(list_data, domain_id, user.get("id"))
 
 
 @router.post("/sync/campaign/", status_code=201)
@@ -270,11 +278,12 @@ async def create_campaign(
 @router.get("/sync/sender", status_code=200)
 async def get_sender(
     integrations_service: IntegrationService,
+    domain: OptionalDomain,
     user=Depends(check_user_authorization_without_pixel),
-    domain=Depends(check_domain),
 ):
     async with integrations_service as service:
-        return service.sendlane.get_sender(domain.id, user.get("id"))
+        domain_id = get_domain_id(domain)
+        return service.sendlane.get_sender(domain_id, user.get("id"))
 
 
 @router.get("/sync/ad_accounts")

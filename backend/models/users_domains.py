@@ -72,3 +72,9 @@ class UserDomains(Base):
         Index("users_domains_is_enable_idx", is_enable),
         UniqueConstraint("api_key", name="users_domains_unique"),
     )
+
+
+def get_domain_id(domain: UserDomains | None) -> int | None:
+    if domain is None:
+        return None
+    return domain.id
