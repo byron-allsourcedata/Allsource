@@ -803,6 +803,8 @@ const PremiumSources: FC<PremiumSourcesProps> = ({ active, onClick }) => {
 	const iconColor = active ? "rgba(56, 152, 252, 1)" : undefined;
 	const filter =
 		"brightness(0) saturate(100%) invert(49%) sepia(76%) saturate(2575%) hue-rotate(192deg) brightness(103%) contrast(98%)";
+
+	const textColor = active ? "rgba(56, 152, 252, 1)" : "rgba(59, 59, 59, 1)";
 	return (
 		<ListItem
 			button
@@ -814,7 +816,7 @@ const PremiumSources: FC<PremiumSourcesProps> = ({ active, onClick }) => {
 				// },
 			}}
 		>
-			<Row gap="0px" alignItems="center">
+			<Row gap="0px" alignItems="center" color={iconColor}>
 				<ListItemIcon
 					sx={{
 						...sidebarStyles.listItemIcon,
@@ -835,7 +837,7 @@ const PremiumSources: FC<PremiumSourcesProps> = ({ active, onClick }) => {
 				</ListItemIcon>
 				<ListItemText
 					primary="Premium Sources"
-					sx={{ whiteSpace: "nowrap", color: "rgba(59, 59, 59, 1)" }}
+					sx={{ whiteSpace: "nowrap", color: textColor }}
 				/>
 			</Row>
 		</ListItem>
