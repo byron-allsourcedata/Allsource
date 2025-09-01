@@ -5,6 +5,7 @@ from db_dependencies import Db
 from dependencies import AuthUser
 from domains.premium_sources.sync.schemas import (
     CreateGoogleAdsPremiumSyncRequest,
+    CreateMetaPremiumSyncRequest,
 )
 from domains.premium_sources.sync.service import PremiumSourceSyncService
 
@@ -35,7 +36,14 @@ async def create_meta_premium_source_sync(
     premium_source_sync_service: PremiumSourceSyncService,
     premium_source_id: UUID,
     user_integration_id: int,
+    request: CreateMetaPremiumSyncRequest
 ):
+    await premium_source_sync_service.create_meta_sync_checked(
+        user_id=user["id"],
+        premium_source_id=premium_source_id,
+        user_integration_id=user_integration_id,
+        request=request,
+    )
     db.commit()
 
 

@@ -23,6 +23,7 @@ from config.rmq_connection import (
 )
 from dependencies import (
     IntegrationService,
+    OptionalDomain,
     check_user_authorization_without_pixel,
     check_domain,
     check_pixel_install_domain,
@@ -215,13 +216,18 @@ async def delete_integration(
 @router.get("/sync/list/")
 async def get_list(
     integration_service: IntegrationService,
+    domain: OptionalDomain,
     ad_account_id: str = Query(None),
     service_name: str = Query(...),
-    user=Depends(check_user_authorization_without_pixel),
-    domain=Depends(check_domain),
+    user=Depends(check_user_authorization_without_pixel)
 ):
     async with integration_service as service:
-        params = {"domain_id": domain.id, "user_id": user.get("id")}
+        if domain is not None:
+            domain_id = domain.id
+        else:
+            domain_id = None
+
+        params = {"domain_id": domain_id, "user_id": user.get("id")}
         if ad_account_id:
             params["ad_account_id"] = ad_account_id
         service = getattr(service, service_name.lower())

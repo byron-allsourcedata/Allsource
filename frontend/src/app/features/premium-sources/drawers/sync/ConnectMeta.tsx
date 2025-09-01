@@ -55,6 +55,8 @@ interface ConnectMetaPopupProps {
 	onClose: () => void;
 	onCloseCreateSync?: () => void;
 	isEdit?: boolean;
+	integrationId: number;
+	premiumSourceId: string;
 	data: any;
 }
 
@@ -84,6 +86,8 @@ export const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 	open,
 	onClose,
 	onCloseCreateSync,
+	integrationId,
+	premiumSourceId,
 	data,
 	isEdit,
 }) => {
@@ -178,6 +182,7 @@ export const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		}
 
 		if (isChecked) {
+			console.log("creating new campaign");
 			createNewCampaign();
 			handleCloseCampaign();
 		}
@@ -565,7 +570,7 @@ export const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 					<Button
 						variant="contained"
 						onClick={handleSaveSync}
-						disabled={!selectedOption || !selectedRadioValue}
+						disabled={!selectedOption || !selectedOptionCampaign}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -719,9 +724,14 @@ export const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 			}
 
 			const response = await axiosInstance.post(
-				"/premium-sources/sync/meta",
+				"/premium-sources/syncs/meta",
 				requestData,
-				{},
+				{
+					params: {
+						user_integration_id: integrationId,
+						premium_source_id: premiumSourceId,
+					},
+				},
 			);
 
 			if (response.status === 201 || response.status === 200) {

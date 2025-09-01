@@ -21,7 +21,7 @@ from .base import Base
 class UserDomains(Base):
     __tablename__ = "users_domains"
 
-    id = Column(
+    id: Mapped[int] = mapped_column(
         BigInteger,
         Sequence("users_domains_id_seq", metadata=Base.metadata),
         primary_key=True,

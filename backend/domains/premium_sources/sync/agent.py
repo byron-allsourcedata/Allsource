@@ -7,6 +7,7 @@ from aio_pika.exceptions import QueueEmpty
 from domains.premium_sources.sync.integrations.google_ads import (
     GoogleAdsPremiumSourceSyncService,
 )
+from domains.premium_sources.sync.integrations.meta import MetaPremiumSourceSyncService
 from domains.premium_sources.sync.schemas import UnprocessedPremiumSourceBatch
 from domains.premium_sources.sync.sync_queue import (
     PremiumSourceSyncQueueService,
@@ -25,9 +26,11 @@ class PremiumSourceSyncAgent:
         self,
         sync_queue: PremiumSourceSyncQueueService,
         sync_log: PremiumSourceSyncLogPersistence,
+        meta: MetaPremiumSourceSyncService,
         google_ads: GoogleAdsPremiumSourceSyncService,
     ) -> None:
         self.google_ads = google_ads
+        self.meta = meta
         self.sync_queue = sync_queue
         self.sync_log = sync_log
 
@@ -58,16 +61,28 @@ class PremiumSourceSyncAgent:
         google_sync_details = self.google_ads.fetch_sync_details(sync_id)
 
         if google_sync_details:
+            logger.info("syncing to google ads")
             self.google_ads.sync_premium_source_batch(batch)
             logging.info("marking rows as processed")
             self.sync_log.mark_processed_batch(row_ids_batch)
             logging.info("marked rows as processed")
             return
+
+        meta_sync_details = self.meta.fetch_sync_details(sync_id)        
+
+        if meta_sync_details:
+            logger.info("syncing to meta")
+            self.meta.sync_premium_source_batch(batch)
+            logging.info("marking rows as processed")
+            self.sync_log.mark_processed_batch(row_ids_batch)
+            logging.info("marked rows as processed")
+            return
+
         logger.info(
-            "no google sync details were found for this batch, marking as failed"
+            "no sync details were found for this batch, marking as failed"
         )
 
         self.sync_log.mark_failed_batch(
             row_ids_batch,
-            error_message="no google sync details were found for this batch",
+            error_message="no sync details were found for this batch",
         )

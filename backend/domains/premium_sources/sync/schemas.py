@@ -26,16 +26,17 @@ class CreateGoogleAdsPremiumSyncRequest(BaseModel):
     list_name: str
 
 
-class CreateMetaPremiumSyncRequest(BaseModel):
-    premium_source_id: UUID
-    user_integration_id: int
-    customer_id: str
+class MetaCampaign(BaseModel):
+    bid_amount: str
     campaign_id: str
+    campaign_name: str
+
+
+class CreateMetaPremiumSyncRequest(BaseModel):
+    customer_id: str
     list_id: str
     list_name: str
-
-    bid_amount: int
-    campaign_name: str
+    campaign: MetaCampaign
 
 
 class UnprocessedPremiumSourceRow(BaseModel):

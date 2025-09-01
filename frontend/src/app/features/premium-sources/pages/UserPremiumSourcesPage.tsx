@@ -250,9 +250,6 @@ export const PremiumSyncDrawerController: FC<SyncDrawerProps> = ({
 		selectedIntegration: string,
 		selectedIntegrationId: number,
 	) => {
-		if (selectedIntegration === "meta") {
-			router.push("/integrations");
-		}
 		setState({
 			step: "setup_integration",
 			selectedIntegration,
@@ -268,9 +265,17 @@ export const PremiumSyncDrawerController: FC<SyncDrawerProps> = ({
 			/>
 		);
 	} else if (state.step === "setup_integration") {
-		// if (selectedIntegration === "meta") {
-		// return <MetaPremiumSync open={true} onClose={onClose} data={{}} />;
-		// }
+		if (state.selectedIntegration === "meta") {
+			return (
+				<MetaPremiumSync
+					open={true}
+					onClose={onClose}
+					data={{}}
+					integrationId={state.selectedIntegrationId}
+					premiumSourceId={premiumSourceId}
+				/>
+			);
+		}
 		return (
 			<GoogleAdsPremiumSyncPopup
 				integration_id={state.selectedIntegrationId}

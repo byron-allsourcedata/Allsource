@@ -282,6 +282,8 @@ def check_domain(
 
     return current_domain[0]
 
+OptionalDomain = Annotated[UserDomains | None, Depends(check_domain)]
+
 
 def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
     if domain is None:
