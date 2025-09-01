@@ -93,9 +93,11 @@ from .transaction_history import TransactionHistory
 from .charging_credits_history import ChargingCreditsHistory
 from .opt_out import OptOutBlackList
 from .privacy_policy_user import PrivacyPolicyUser
+
 from .premium_source import PremiumSource
 from .premium_source_sync import PremiumSourceSync
 from .premium_source_syncs.google_ads import GoogleAdsPremiumSourceSync
+from .premium_source_syncs.meta import MetaPremiumSourceSync
 
 from .whitelabel_settings import WhitelabelSettings
 from .million_verify_files import MillionVerifyFiles
@@ -199,4 +201,5 @@ __all__ = [
     "PremiumSource",
     "PremiumSourceSync",
     "GoogleAdsPremiumSourceSync",
+    "MetaPremiumSourceSync"
 ]

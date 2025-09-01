@@ -10,7 +10,7 @@ from ..base import Base
 
 class MetaPremiumSourceSync(Base):
     """
-    Table that stores Google Ads-specific credentials and information about the sync
+    Table that stores Meta-specific credentials and information about the sync
     """
 
     __tablename__ = "premium_source_syncs_meta"

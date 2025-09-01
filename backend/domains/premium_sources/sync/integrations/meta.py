@@ -43,6 +43,7 @@ class MetaPremiumSourceSyncService:
         self,
         user_id: int,
         premium_source_sync_id: UUID,
+        campaign_id: str,
         customer_id: str,
         list_id: str,
         list_name: str,
@@ -53,11 +54,13 @@ class MetaPremiumSourceSyncService:
         Flushes, no commit
         """
 
+        logger.info(f"creating meta premium source sync")
         new_id = uuid4()
         new_meta_ads_sync = MetaPremiumSourceSync(
             id=new_id,
             premium_source_sync_id=premium_source_sync_id,
             customer_id=customer_id,
+            campaign_id=campaign_id,
             list_id=list_id,
             list_name=list_name,
         )
@@ -83,10 +86,12 @@ class MetaPremiumSourceSyncService:
             user_id=user_id, domain_id=domain_id
         )
 
+        logger.info(f"got creds for prem source")
         if not credentials:
             raise IntegrationNotFound()
 
         if campaign_id:
+            logger.info(f"creating adset")
             self.meta.create_adset(
                 ad_account_id=customer_id,
                 campaign_id=campaign_id,
@@ -97,8 +102,10 @@ class MetaPremiumSourceSyncService:
                 bid_amount=bid_amount,
             )
 
+        logger.info(f"creating premium sync")
         _ = self.create_premium_sync(
             user_id=user_id,
+            campaign_id=campaign_id,
             premium_source_sync_id=premium_source_sync_id,
             customer_id=customer_id,
             list_id=list_id,

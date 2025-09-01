@@ -160,7 +160,13 @@ export const UserPremiumSourcesPage: FC = () => {
 				onDownload={(source) => {}}
 			/>
 		),
-		syncs: <PremiumSourcesSyncsTable syncs={syncs} onDelete={onDeleteSync} />,
+		syncs: (
+			<PremiumSourcesSyncsTable
+				syncs={syncs}
+				onBeginSync={() => changeTab("sources")}
+				onDelete={onDeleteSync}
+			/>
+		),
 	};
 
 	const onClose = () => {
@@ -188,7 +194,7 @@ export const UserPremiumSourcesPage: FC = () => {
 
 	return (
 		<ThemeProvider theme={premiumSourcesTheme}>
-			<PageContainer>
+			<PageContainer gap={"1rem"}>
 				<Title>Premium Sources</Title>
 				{pageContent}
 			</PageContainer>
@@ -244,9 +250,6 @@ export const PremiumSyncDrawerController: FC<SyncDrawerProps> = ({
 		selectedIntegration: string,
 		selectedIntegrationId: number,
 	) => {
-		if (selectedIntegration === "meta") {
-			router.push("/integrations");
-		}
 		setState({
 			step: "setup_integration",
 			selectedIntegration,
@@ -262,9 +265,17 @@ export const PremiumSyncDrawerController: FC<SyncDrawerProps> = ({
 			/>
 		);
 	} else if (state.step === "setup_integration") {
-		// if (selectedIntegration === "meta") {
-		// return <MetaPremiumSync open={true} onClose={onClose} data={{}} />;
-		// }
+		if (state.selectedIntegration === "meta") {
+			return (
+				<MetaPremiumSync
+					open={true}
+					onClose={onClose}
+					data={{}}
+					integrationId={state.selectedIntegrationId}
+					premiumSourceId={premiumSourceId}
+				/>
+			);
+		}
 		return (
 			<GoogleAdsPremiumSyncPopup
 				integration_id={state.selectedIntegrationId}

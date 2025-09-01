@@ -155,15 +155,15 @@ class PremiumSourceSyncService:
         sync_id = self.create_sync_checked(
             user_id, premium_source_id, user_integration_id
         )
-        logger.debug(f"created meta premium sync with id {sync_id}")
+        logger.info(f"created meta premium sync with id {sync_id}")
         _google_sync_id = await self.meta.create_sync(
             user_id=user_id,
             domain_id=None,
-            campaign_id=request.campaign_id,
-            campaign_name=request.campaign_name,
+            campaign_id=request.campaign.campaign_id,
+            campaign_name=request.campaign.campaign_name,
             premium_source_sync_id=sync_id,
             customer_id=request.customer_id,
             list_id=request.list_id,
             campaign_objective=None,
-            bid_amount=str(request.bid_amount),
+            bid_amount=str(request.campaign.bid_amount),
         )

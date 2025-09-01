@@ -11,7 +11,7 @@ from enums import TypeOfSourceOrigin, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.users import Users
 from models.users_domains import UserDomains
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Any
 from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Query
 
@@ -253,3 +253,38 @@ class AudienceSourcesPersistence:
             .filter_by(id=str(source_id))
             .one_or_none()
         )._asdict()
+
+    def get_problematic_sources(self) -> List[dict[str, Any]]:
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        rows = (
+            self.db.query(
+                AudienceSource.id,
+                AudienceSource.name,
+                AudienceSource.user_id,
+                Users.email,
+                AudienceSource.created_at,
+                AudienceSource.matched_records_status,
+            )
+            .join(Users, Users.id == AudienceSource.user_id)
+            .filter(AudienceSource.matched_records_status == "pending")
+            .all()
+        )
+
+        result: List[dict[str, Any]] = []
+        for row in rows:
+            minutes_passed = int((now - row.created_at).total_seconds() // 60)
+
+            result.append(
+                {
+                    "id": str(row.id),
+                    "name": row.name,
+                    "user_id": row.user_id,
+                    "email": row.email,
+                    "created_at": row.created_at,
+                    "minutes_passed": minutes_passed,
+                    "status": row.matched_records_status,
+                }
+            )
+
+        return result

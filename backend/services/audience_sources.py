@@ -8,7 +8,7 @@ from openai import OpenAI
 import csv
 import io
 from uuid import UUID
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 from schemas.audience import (
     Row,
@@ -740,3 +740,9 @@ class AudienceSourceService:
         return SourceMatchingInfo(
             **self.audience_sources_persistence.get_matching_info(id)
         )
+
+    def get_problematic_sources(self) -> list[dict[str, Any]]:
+        """
+        Returns a list of problematic sources.
+        """
+        return self.audience_sources_persistence.get_problematic_sources()

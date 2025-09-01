@@ -583,3 +583,51 @@ class AudienceLookalikesPostgresPersistence(
         )
 
         return result
+
+    def get_problematic_lookalikes(self) -> list[dict[str, Any]]:
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        rows = (
+            self.db.query(
+                AudienceLookalikes.id,
+                AudienceLookalikes.name,
+                AudienceLookalikes.user_id,
+                Users.email,
+                AudienceLookalikes.created_date,
+                AudienceLookalikes.status,
+                AudienceLookalikes.train_model_size,
+                AudienceLookalikes.processed_train_model_size,
+            )
+            .join(Users, Users.id == AudienceLookalikes.user_id)
+            .filter(AudienceLookalikes.status.in_(["failed", "new", "now"]))
+            .all()
+        )
+
+        result: list[dict[str, Any]] = []
+        for row in rows:
+            minutes_passed = int((now - row.created_date).total_seconds() // 60)
+
+            eta = None
+            if row.train_model_size and row.processed_train_model_size:
+                total = row.train_model_size
+                processed = row.processed_train_model_size
+                if processed > 0 and processed < total:
+                    elapsed = (now - row.created_date).total_seconds()
+                    speed = processed / elapsed
+                    if speed > 0:
+                        eta = int((total - processed) / speed)
+
+            result.append(
+                {
+                    "id": str(row.id),
+                    "name": row.name,
+                    "user_id": row.user_id,
+                    "email": row.email,
+                    "created_date": row.created_date,
+                    "minutes_passed": minutes_passed,
+                    "eta": eta,
+                    "status": row.status,
+                }
+            )
+
+        return result

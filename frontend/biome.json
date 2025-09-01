@@ -28,7 +28,8 @@
 				"useJsxKeyInIterable": "info"
 			},
 			"style": {
-				"noInferrableTypes": "off"
+				"noInferrableTypes": "off",
+				"noUselessElse": "off"
 			}
 		}
 	},
