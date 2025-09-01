@@ -7,13 +7,23 @@ import { Column } from "@/components/Column";
 import { Actions } from "./actions";
 import { PremiumSyncStatus } from "./status";
 import { minWidth } from "@mui/system";
+import { UserPremiumSourceSyncsZeroScreen } from "@/app/features/premium-sources/components/UserPremiumSourceSyncsZeroScreen";
 
 type Props = {
-	syncs: PremiumSync[];
+	syncs?: PremiumSync[];
+	onBeginSync: () => void;
 	onDelete: (syncId: string) => void;
 };
 
-export const PremiumSourcesSyncsTable: FC<Props> = ({ syncs, onDelete }) => {
+export const PremiumSourcesSyncsTable: FC<Props> = ({
+	syncs,
+	onDelete,
+	onBeginSync,
+}) => {
+	if (!syncs || syncs.length === 0) {
+		return <UserPremiumSourceSyncsZeroScreen onBeginClick={onBeginSync} />;
+	}
+
 	const columns: TableColumn[] = [
 		{
 			head: "Name",

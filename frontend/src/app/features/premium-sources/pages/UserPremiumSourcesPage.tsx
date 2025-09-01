@@ -160,7 +160,13 @@ export const UserPremiumSourcesPage: FC = () => {
 				onDownload={(source) => {}}
 			/>
 		),
-		syncs: <PremiumSourcesSyncsTable syncs={syncs} onDelete={onDeleteSync} />,
+		syncs: (
+			<PremiumSourcesSyncsTable
+				syncs={syncs}
+				onBeginSync={() => changeTab("sources")}
+				onDelete={onDeleteSync}
+			/>
+		),
 	};
 
 	const onClose = () => {
