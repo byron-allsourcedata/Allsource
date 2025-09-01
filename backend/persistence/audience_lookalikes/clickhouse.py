@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -286,3 +286,6 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
 
     def get_max_size(self, lookalike_size: str) -> int:
         return self.postgres.get_max_size(lookalike_size)
+
+    def get_problematic_lookalikes(self) -> list[dict[str, Any]]:
+        return self.postgres.get_problematic_lookalikes()

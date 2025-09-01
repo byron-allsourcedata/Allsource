@@ -1,5 +1,5 @@
 import logging
-from typing import List, Tuple, Dict, Set
+from typing import List, Tuple, Dict, Set, Any
 from uuid import UUID
 import json
 
@@ -518,3 +518,9 @@ class AudienceLookalikesService:
         asids: list[UUID] = [s["asid"] for s in enrichment_lookalike_scores]
 
         return asids
+
+    def get_problematic_lookalikes(self) -> list[dict[str, Any]]:
+        """
+        Returns a list of problematic lookalikes with time and eta calculations.
+        """
+        return self.lookalikes_persistence_service.get_problematic_lookalikes()
