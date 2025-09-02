@@ -216,3 +216,10 @@ class AudienceSmartsUnifiedPersistence(AudienceSmartsPersistenceInterface):
 
     def update_success_persons(self, failed_ids):
         return self.postgres.update_success_persons(failed_ids)
+
+    def get_problematic_smart_audiences(
+        self, min_records_threshold: int
+    ) -> list[dict[str, Any]]:
+        return self.postgres.get_problematic_smart_audiences(
+            min_records_threshold
+        )
