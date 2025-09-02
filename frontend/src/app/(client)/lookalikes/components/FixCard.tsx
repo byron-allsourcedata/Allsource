@@ -83,7 +83,7 @@ const FixCard = ({
 							top: 0,
 							right: 0,
 							marginTop: "4px",
-							marginRight: "8px",
+							marginRight: "4px",
 
 							"@media (max-width:900px)": {
 								position: "static",

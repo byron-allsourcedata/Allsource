@@ -66,15 +66,15 @@ const BadLookalikeErrorModal: React.FC<ModalProps> = ({ open, onClose }) => {
 					position: "absolute",
 					top: "50%",
 					left: "50%",
-					padding: "24px",
+					padding: "12px 20px",
 					transform: "translate(-50%, -50%)",
-					width: "75%",
-					maxWidth: "1000px",
 					bgcolor: "#fff",
 					borderRadius: "4px",
 					boxShadow: "1px 4px 6.8px rgba(0, 0, 0, 0.15)",
 					maxHeight: "90vh",
 					overflowY: "auto",
+					border: "none",
+					"&:focus": { outline: "none" },
 				}}
 			>
 				{/* Close button */}
@@ -277,6 +277,9 @@ const BadLookalikeErrorModal: React.FC<ModalProps> = ({ open, onClose }) => {
 								fontWeight: 600,
 								color: "#3898FC",
 								boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.25)",
+								"&:focus": {
+									outline: "none",
+								},
 							}}
 						>
 							Contact Support
@@ -291,6 +294,9 @@ const BadLookalikeErrorModal: React.FC<ModalProps> = ({ open, onClose }) => {
 								fontWeight: 600,
 								backgroundColor: "#3898FC",
 								boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.25)",
+								"&:focus": {
+									outline: "none",
+								},
 							}}
 						>
 							Re-Upload CSV
