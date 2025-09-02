@@ -1,9 +1,7 @@
 import asyncio
-import hashlib
 import io
 import logging
 import os
-
 import httpcore
 import httpx
 
@@ -113,13 +111,13 @@ class MillionVerifierIntegrationsService:
 
         result = await self.__check_verify_email(email)
 
+        if result.get("error"):
+            raise MillionVerifierError(result.get("error"))
+
         if result.get("credits") <= 0:
             raise InsufficientCreditsError(
                 "Insufficient credits for million_verifier"
             )
-
-        if result.get("error"):
-            raise MillionVerifierError(result.get("error"))
 
         subresult_value = result.get("subresult")
 

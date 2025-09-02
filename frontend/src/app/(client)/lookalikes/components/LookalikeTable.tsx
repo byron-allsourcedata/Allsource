@@ -46,6 +46,7 @@ import {
 } from "@/components/PaginationComponent";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { TableRowData } from "../page";
+import BadLookalikeErrorModal from "./BadLookalikeErrorModal";
 
 interface LookalikeTableProps {
 	tableData: TableRowData[];
@@ -181,8 +182,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 	const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
-	const { smartLookaLikeProgress } = useSSE();
-	const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+	const [openfailedPopup, setOpenfailedPopup] = useState(false);
 	const [openRowId, setOpenRowId] = useState<string | null>(null);
 	const tableContainerRef = useRef<HTMLDivElement>(null);
 	const { isScrolledX, isScrolledY } = useScrollShadow(
@@ -335,6 +335,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 
 	const truncateText = (text: string, maxLength: number) => {
 		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+	};
+
+	const handleOpenFailedPopup = () => {
+		setOpenfailedPopup(true);
 	};
 
 	return (
@@ -561,11 +565,17 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 								<>
 									<TableRow
 										key={row.id}
+										onClick={() => {
+											if (row.status === "failed") {
+												handleOpenFailedPopup();
+											}
+										}}
 										sx={{
 											backgroundColor:
 												selectedRows.has(row.id) && !loader_for_table
 													? "rgba(247, 247, 247, 1)"
 													: "#fff",
+											cursor: row.status === "failed" ? "pointer" : "default",
 											"&:hover": {
 												backgroundColor: "rgba(247, 247, 247, 1)",
 												"& .sticky-cell": {
@@ -677,9 +687,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 															opacity: 1,
 														},
 													}}
-													onClick={(event) =>
-														handleRename(event, row.id, row.name)
-													}
+													onClick={(event) => {
+														event.stopPropagation();
+														handleRename(event, row.id, row.name);
+													}}
 												>
 													<EditIcon
 														sx={{ maxHeight: "16px", fontSize: "16px" }}
@@ -896,6 +907,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 											cellOptions={{
 												sx: {
 													position: "relative",
+													textAlign: "center",
 												},
 											}}
 										>
@@ -914,7 +926,20 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												/>
 											)} */}
 											{row.status === "failed" ? (
-												0
+												<span
+													style={{
+														display: "inline-block",
+														borderBottom: "1px dashed rgba(56, 152, 252, 1)",
+														lineHeight: 0,
+													}}
+												>
+													<img
+														src="/danger_yellow.svg"
+														alt="danger"
+														width={24}
+														height={24}
+													/>
+												</span>
 											) : row.status === "success" ? (
 												row.size.toLocaleString("en-US")
 											) : (
@@ -960,9 +985,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 														opacity: 1,
 													},
 												}}
-												onClick={(event) =>
-													handleOpenConfirm(event, row.id, row.name)
-												}
+												onClick={(event) => {
+													event.stopPropagation();
+													handleOpenConfirm(event, row.id, row.name);
+												}}
 											>
 												<DeleteIcon sx={{ maxHeight: "18px" }} />
 											</IconButton>
@@ -1258,6 +1284,12 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 			>
 				<Paginator tableMode {...paginationProps} />
 			</Box>
+			<BadLookalikeErrorModal
+				open={openfailedPopup}
+				onClose={() => {
+					setOpenfailedPopup(false);
+				}}
+			/>
 		</Box>
 	);
 };
