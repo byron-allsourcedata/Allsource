@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 import hashlib
 import io
 import logging
-import os
 import sys
 import asyncio
 import functools
@@ -16,11 +15,6 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import StaleDataError
 from dotenv import load_dotenv
-
-
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
 from services.exceptions import InsufficientCreditsError, MillionVerifierError
 from db_dependencies import Db
 from resolver import Resolver
@@ -63,13 +57,24 @@ async def process_bulk_validation(
     million_verifier_service: MillionVerifierIntegrationsService,
     persistence: MillionVerifierPersistence,
     db_session: Session,
-) -> int:
+) -> int | None:
     emails = sorted(set(emails))
     if not emails:
         return None
 
-    file_content = "\n".join(emails)
+    existing_emails = {
+        row[0]
+        for row in db_session.query(LeadEmailsVerification.email)
+        .filter(LeadEmailsVerification.email.in_(emails))
+        .all()
+    }
 
+    new_emails = [e for e in emails if e not in existing_emails]
+
+    if not new_emails:
+        return None
+
+    file_content = "\n".join(new_emails)
     md5_hash = hashlib.md5(file_content.encode("utf-8")).hexdigest()
 
     existing_file = (
