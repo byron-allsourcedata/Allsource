@@ -1,5 +1,6 @@
 import logging
 from uuid import UUID
+from domains.premium_sources.exceptions import PremiumSourceNotFound
 from domains.premium_sources.premium_sources_rows.service import (
     PremiumSourcesRowsService,
 )
@@ -57,6 +58,17 @@ class PremiumSourceService:
 
     def list(self, user_id: int) -> list[PremiumSourceDto]:
         return self.repo.list(user_id)
+
+    def is_owned_by_user(self, user_id: int, source_id: UUID) -> bool:
+        """
+        Raises `PremiumSourceNotFound`
+        """
+        source = self.repo.get(source_id)
+
+        if source is None:
+            raise PremiumSourceNotFound()
+
+        return source.user_id == user_id
 
     def user_sources(self, user_id: int) -> UserPremiumSourcesDto:
         user_name = self.users.name_by_id(user_id)
