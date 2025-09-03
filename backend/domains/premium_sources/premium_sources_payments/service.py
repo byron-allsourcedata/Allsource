@@ -38,7 +38,17 @@ class PremiumSourcesPaymentsService:
         user_id: int,
         premium_source_id: UUID,
     ):
+        """
+        Raises `UserNotFound` \n
+        Raises `PremiumSourceNotFound` \n
+        Raises `IncorrectPremiumSource` \n
+        Raises `DeductionNotFound` \n
+        Raises `MultipleTransactionsError` \n
+        Raises `InsuffientFunds` \n
+        Raises `MultipleUsersUpdated`
+        """
         user_premium_source_funds = self.users_funds.premium_funds(user_id)
+        self.sources.owned_by_user(user_id, premium_source_id)
         premium_source_cost = self.sources.get_cost(premium_source_id)
 
         paid_amount = self.paid_amount_by_premium_source_id(premium_source_id)
@@ -70,8 +80,9 @@ class PremiumSourcesPaymentsService:
         transaction_amount_cents: int,
     ):
         """
-        InsuffientFunds
-        UserNotFound
+        Raises `InsuffientFunds` \n
+        Raises `UserNotFound` \n
+        Raises `MultipleUsersUpdated`
         """
         transaction_id = self.transactions.create(
             user_id=user_id,
@@ -88,7 +99,8 @@ class PremiumSourcesPaymentsService:
 
     def paid_amount_by_premium_source_id(self, premium_source_id: UUID):
         """
-        Raises MultipleTransactionsError
+        Raises `MultipleTransactionsError` \n
+        Raises `DeductionNotFound`
         """
         transaction = self.transactions.id_by_premium_source_id(
             premium_source_id

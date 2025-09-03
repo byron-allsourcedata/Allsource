@@ -24,7 +24,8 @@ class UserFundsService:
     def deduct_premium_funds(self, user_id: int, amount: int):
         """
         raises InsuffientFunds \n
-        raises UserNotFound
+        raises UserNotFound \n
+        raises MultipleUsersUpdated
         """
         premium_source_funds = self.repo.get_premium_source_funds(user_id)
 
