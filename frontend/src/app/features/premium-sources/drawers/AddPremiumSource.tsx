@@ -104,6 +104,7 @@ export const AddPremiumSource: FC<Props> = ({ userId, onClose, onDone }) => {
 							dndState={dndState}
 							onUploadClick={openFileDialog}
 						/>
+						<Divider />
 					</Column>
 					<Row justifyContent="flex-end">
 						<CustomButton disabled={!uploadEnabled} onClick={onUpload}>

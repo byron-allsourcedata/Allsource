@@ -21,7 +21,9 @@ class PremiumSource(Base):
     s3 object token for this source's .csv file
     """
     rows: Mapped[int] = mapped_column(nullable=False)
-    price: Mapped[int] = mapped_column(Integer, nullable=False)
+    price: Mapped[int] = mapped_column(
+        Integer, server_default="0", nullable=False
+    )
     """
     price in cents for this premium source
     """
