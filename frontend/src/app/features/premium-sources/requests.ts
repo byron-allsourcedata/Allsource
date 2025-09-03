@@ -123,6 +123,37 @@ type CreateCampaignParams = {
 	dailyBudget: number | undefined;
 };
 
+export function openDownloadPremiumSource(downloadToken: string) {
+	const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}premium-sources/download?token=${downloadToken}`;
+	window.open(url, "_blank");
+}
+
+export function usePremiumSourceDownloadLinkRequest() {
+	const [{ loading, data }, refetch] = useAxios<string>(
+		{
+			url: "/premium-sources/download-link",
+			method: "GET",
+		},
+		{
+			manual: true,
+		},
+	);
+
+	const request = (premium_source_id: string) => {
+		return refetch({
+			params: {
+				premium_source_id: premium_source_id,
+			},
+		});
+	};
+
+	return {
+		loading,
+		data,
+		request,
+	};
+}
+
 export const metaCreateCampaign = async (
 	axios: AxiosInstance,
 	{

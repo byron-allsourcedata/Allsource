@@ -1,5 +1,6 @@
 import logging
 from uuid import UUID
+from domains.aws.service import AwsService
 from domains.premium_sources.downloads.token import DownloadToken
 from domains.premium_sources.exceptions import (
     BadPremiumSourceUrl,
@@ -28,10 +29,12 @@ class PremiumSourceService:
         repo: PremiumSourcePersistence,
         premium_source_rows: PremiumSourcesRowsService,
         users: UsersService,
+        aws: AwsService,
     ):
         self.repo = repo
         self.premium_source_rows = premium_source_rows
         self.users = users
+        self.aws = aws
 
     def create(
         self,
@@ -89,6 +92,19 @@ class PremiumSourceService:
             user_id=user_id, premium_source_id=source_id
         ).encode()
 
+    def get_name_unchecked(self, source_id: UUID) -> str:
+        """
+        Does not check ownership
+
+        Raises `PremiumSourceNotFound`
+        """
+        premium_source = self.repo.get(source_id)
+
+        if premium_source is None:
+            raise PremiumSourceNotFound()
+
+        return premium_source.name
+
     def get_download_url(self, user_id: int, source_id: UUID) -> str:
         """
         Check user permissions and return download url for premium source
@@ -100,12 +116,12 @@ class PremiumSourceService:
         if not self.is_owned_by_user(user_id, source_id):
             raise PremiumSourceNotOwned()
 
-        s3_url = self.s3_url_by_id(source_id)
+        s3_file_token = self.s3_url_by_id(source_id)
 
-        if s3_url is None or s3_url == "":
+        if s3_file_token is None or s3_file_token == "":
             raise BadPremiumSourceUrl()
 
-        return s3_url
+        return self.aws.get_file_url(s3_file_token)
 
     def s3_url_by_id(self, source_id: UUID) -> str | None:
         premium_source = self.repo.get(source_id)

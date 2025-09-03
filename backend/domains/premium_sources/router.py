@@ -23,6 +23,7 @@ from domains.premium_sources.exceptions import (
 )
 from domains.premium_sources.sync.service import PremiumSourceSyncService
 from utils.csv import parse_csv_bytes
+from utils.strings import to_snake_case
 
 
 from .config import PremiumSourceConfig
@@ -105,6 +106,11 @@ def download_raw_premium_source(
     try:
         s3_url = premium_sources.get_download_url(user_id, premium_source_id)
 
+        premium_source_name = premium_sources.get_name_unchecked(
+            premium_source_id
+        )
+        filename = to_snake_case(premium_source_name)
+
         async def file_iterator():
             async with httpx.AsyncClient(
                 follow_redirects=True, timeout=None
@@ -119,7 +125,11 @@ def download_raw_premium_source(
                         yield chunk
 
         return StreamingResponse(
-            file_iterator(), media_type="application/octet-stream"
+            file_iterator(),
+            media_type="application/octet-stream",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}.csv"'
+            },
         )
     except PremiumSourceNotFound:
         return Response(status_code=404, content="File not found")
