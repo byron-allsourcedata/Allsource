@@ -4,3 +4,7 @@ class PremiumSourceNotFound(Exception):
 
 class PremiumSourceNotOwned(Exception):
     pass
+
+
+class BadPremiumSourceUrl(Exception):
+    pass

@@ -15,7 +15,7 @@ class PremiumSource(Base):
     """
     user, for which this source is uploaded
     """
-    s3_url: Mapped[str] = mapped_column(nullable=True)
+    s3_url: Mapped[str | None] = mapped_column(nullable=True)
     """
     s3_url for this source's .csv file
     """

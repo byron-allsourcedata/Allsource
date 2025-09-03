@@ -1,6 +1,10 @@
 import logging
 from uuid import UUID
-from domains.premium_sources.exceptions import PremiumSourceNotFound
+from domains.premium_sources.exceptions import (
+    BadPremiumSourceUrl,
+    PremiumSourceNotFound,
+    PremiumSourceNotOwned,
+)
 from domains.premium_sources.premium_sources_rows.service import (
     PremiumSourcesRowsService,
 )
@@ -69,6 +73,32 @@ class PremiumSourceService:
             raise PremiumSourceNotFound()
 
         return source.user_id == user_id
+
+    def get_download_url(self, user_id: int, source_id: UUID) -> str:
+        """
+        Check user permissions and return download url for premium source
+
+        Raises `PremiumSourceNotFound` \n
+        Raises `PremiumSourceNotOwned` \n
+        Raises `BadPremiumSourceUrl`
+        """
+        if not self.is_owned_by_user(user_id, source_id):
+            raise PremiumSourceNotOwned()
+
+        s3_url = self.s3_url_by_id(source_id)
+
+        if s3_url is None or s3_url == "":
+            raise BadPremiumSourceUrl()
+
+        return s3_url
+
+    def s3_url_by_id(self, source_id: UUID) -> str | None:
+        premium_source = self.repo.get(source_id)
+
+        if premium_source is None:
+            raise PremiumSourceNotFound()
+
+        return premium_source.s3_url
 
     def user_sources(self, user_id: int) -> UserPremiumSourcesDto:
         user_name = self.users.name_by_id(user_id)
