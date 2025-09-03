@@ -24,7 +24,12 @@ import { sourcesSample } from "@/app/(client)/premium-sources/sources/sample";
 import { PremiumSourcesSyncsTable } from "@/app/(client)/premium-sources/syncs/table";
 import { premiumSourcesTheme } from "@/app/(client)/premium-sources/theme";
 import { sampleSyncs } from "@/app/(client)/premium-sources/syncs/sample";
-import { useGetPremiumSources, useGetPremiumSyncs } from "../requests";
+import {
+	openDownloadPremiumSource,
+	useGetPremiumSources,
+	useGetPremiumSyncs,
+	usePremiumSourceDownloadLinkRequest,
+} from "../requests";
 import { showErrorToast } from "@/components/ToastNotification";
 import { useRouter } from "next/navigation";
 import GoogleAdsDataSync from "@/app/(client)/data-sync/components/GoogleADSDataSync";
@@ -118,6 +123,9 @@ export const UserPremiumSourcesPage: FC = () => {
 	const [{ data: premiumSourcesData, loading }, refetchSources, cancelSources] =
 		useGetPremiumSources();
 
+	const { data: downloadToken, request: getDownloadLink } =
+		usePremiumSourceDownloadLinkRequest();
+
 	const firstTimeLoading = loading && premiumSourcesData == null;
 
 	const [{ data: premiumSyncsData }, refetchSyncs] = useGetPremiumSyncs();
@@ -157,7 +165,16 @@ export const UserPremiumSourcesPage: FC = () => {
 					setSelectedSource(source.id);
 					setSyncDrawerOpen(true);
 				}}
-				onDownload={(source) => {}}
+				onDownload={async (source) => {
+					try {
+						const token = await getDownloadLink(source.id);
+						if (token?.data) {
+							openDownloadPremiumSource(token.data);
+						}
+					} catch (error) {
+						showErrorToast("Failed to download premium source");
+					}
+				}}
 			/>
 		),
 		syncs: (

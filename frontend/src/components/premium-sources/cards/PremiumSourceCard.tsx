@@ -138,7 +138,7 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 								<SyncButton disabled={!canSync} onClick={props.onSync}>
 									Sync
 								</SyncButton>
-								{/* <DownloadButton onClick={props.onDownload} /> */}
+								<DownloadButton onClick={props.onDownload} />
 							</Row>
 						</CardColumn>
 					)}
