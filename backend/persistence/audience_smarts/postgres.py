@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytz
 from sqlalchemy import desc, asc, or_, func, select, case
@@ -25,7 +25,7 @@ from persistence.audience_smarts.dto import (
     AudienceSmartDTO,
 )
 from schemas.audience import DataSourcesFormat, RegeneretedAudienceSmart
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Any
 from typing_extensions import override
 from sqlalchemy.engine.row import Row
 from uuid import UUID
@@ -651,3 +651,50 @@ class AudienceSmartsPostgresPersistence:
                 ).label("validation_count"),
             ).where(AudienceSmartPerson.smart_audience_id == smart_audience_id)
         ).one()
+
+    def get_problematic_smart_audiences(
+        self, min_records_threshold: int
+    ) -> list[dict[str, Any]]:
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        rows = (
+            self.db.query(
+                AudienceSmart.id,
+                AudienceSmart.name,
+                AudienceSmart.user_id,
+                Users.email,
+                AudienceSmart.created_at,
+                AudienceSmart.status,
+                AudienceSmart.active_segment_records,
+            )
+            .join(Users, Users.id == AudienceSmart.user_id)
+            .filter(
+                or_(
+                    AudienceSmart.status.in_(
+                        ["n_a", "data_syncing", "validating"]
+                    ),
+                    AudienceSmart.active_segment_records
+                    < min_records_threshold,
+                )
+            )
+            .all()
+        )
+
+        results: List[dict[str, Any]] = []
+        for row in rows:
+            minutes_passed = int((now - row.created_at).total_seconds() // 60)
+
+            results.append(
+                {
+                    "id": row.id,
+                    "name": row.name,
+                    "user_id": row.user_id,
+                    "email": row.email,
+                    "active_segment_records": row.active_segment_records,
+                    "created": row.created_at,
+                    "minutes_passed": minutes_passed,
+                    "status": row.status,
+                }
+            )
+
+        return results

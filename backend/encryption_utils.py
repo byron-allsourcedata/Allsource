@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
@@ -16,11 +17,13 @@ def encrypt_data(data: str) -> str:
     )
     encrypted_data = cipher.encrypt(padded_data.encode())
     encrypted_data_with_iv = iv + encrypted_data
-    return base64.urlsafe_b64encode(encrypted_data_with_iv).decode()
+    b64 = base64.urlsafe_b64encode(encrypted_data_with_iv).decode()
+    return urllib.parse.quote(b64)
 
 
 def decrypt_data(encrypted_data: str) -> str:
-    encrypted_data_bytes = base64.urlsafe_b64decode(encrypted_data.encode())
+    b64 = urllib.parse.unquote(encrypted_data)
+    encrypted_data_bytes = base64.urlsafe_b64decode(b64.encode())
     iv = encrypted_data_bytes[: AES.block_size]
     encrypted_data_bytes = encrypted_data_bytes[AES.block_size :]
     cipher = AES.new(key, AES.MODE_CBC, iv)

@@ -823,3 +823,8 @@ class AudienceSmartsService:
             self.audience_settings_persistence.set_stats_item_validations(
                 {validation_type: new_data}
             )
+
+    def get_problematic_smart_audiences(self, min_records_threshold: int):
+        return self.audience_smarts_persistence.get_problematic_smart_audiences(
+            min_records_threshold
+        )
