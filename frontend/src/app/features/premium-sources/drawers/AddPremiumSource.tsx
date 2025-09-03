@@ -5,14 +5,10 @@ import {
 import { DrawerHeader } from "@/components/drawers/DrawerHeader";
 import { Divider, LinearProgress, TextField, Typography } from "@mui/material";
 import { useState, type FC } from "react";
-import { PremiumSourceUpload } from "../../../../components/premium-sources/components/PremiumSourceUpload";
 import { useFileDragAndDrop } from "../../../../components/premium-sources/hooks/useFileDragAndDrop";
 import { Column } from "@/components/Column";
 import { Row } from "@/components/Row";
 import { CustomButton } from "@/components/ui";
-import axiosInterceptorInstance, {
-	useAxios,
-} from "@/axios/axiosInterceptorInstance";
 import { PremiumSourceFileSlot } from "../../../../components/premium-sources/components/PremiumSourceFileSlot";
 import { useFieldValue } from "../../../../components/premium-sources/hooks/useFieldValue";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
