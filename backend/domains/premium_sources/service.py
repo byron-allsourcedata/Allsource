@@ -1,5 +1,6 @@
 import logging
 from uuid import UUID
+from domains.premium_sources.downloads.token import DownloadToken
 from domains.premium_sources.exceptions import (
     BadPremiumSourceUrl,
     PremiumSourceNotFound,
@@ -73,6 +74,20 @@ class PremiumSourceService:
             raise PremiumSourceNotFound()
 
         return source.user_id == user_id
+
+    def get_download_token(self, user_id: int, source_id: UUID) -> str:
+        """
+        Check user permissions and return download token for premium source
+
+        Raises `PremiumSourceNotFound` \n
+        Raises `PremiumSourceNotOwned`
+        """
+        if not self.is_owned_by_user(user_id, source_id):
+            raise PremiumSourceNotOwned()
+
+        return DownloadToken(
+            user_id=user_id, premium_source_id=source_id
+        ).encode()
 
     def get_download_url(self, user_id: int, source_id: UUID) -> str:
         """

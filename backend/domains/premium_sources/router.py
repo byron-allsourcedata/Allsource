@@ -11,20 +11,17 @@ from types_boto3_s3.client import S3Client
 
 from db_dependencies import Db
 from dependencies import AuthUser
-from domains.aws.schemas import PresignedUrlResponse
-from domains.aws.service import AwsService
 from domains.integrations.schemas import (
     PremiumSourceIntegration,
 )
 from domains.integrations.service import IntegrationsService
+from domains.premium_sources.downloads.token import DownloadToken
 from domains.premium_sources.exceptions import (
     BadPremiumSourceUrl,
     PremiumSourceNotFound,
     PremiumSourceNotOwned,
 )
 from domains.premium_sources.sync.service import PremiumSourceSyncService
-from models import premium_source
-from models.premium_source_sync import PremiumSourceSync
 from utils.csv import parse_csv_bytes
 
 
@@ -79,21 +76,32 @@ def get_premium_sources(user: AuthUser, sources_service: PremiumSourceService):
 
 
 @router.get("/download-link")
-def get_presigned_url(aws: AwsService) -> PresignedUrlResponse:
-    return aws.presign_upload_url(
-        bucket_name=PremiumSourceConfig.BUCKET_NAME,
-        object_name="test.csv",
-        max_bytes=1 * 1024 * 1024,
-    )
-
-
-@router.get("/download-link")
-def download_raw_premium_source(
+def get_presigned_url(
     user: AuthUser,
     premium_source_id: UUID,
     premium_sources: PremiumSourceService,
 ):
-    user_id = user["id"]
+    try:
+        user_id = user["id"]
+        download_token = premium_sources.get_download_token(
+            user_id, premium_source_id
+        )
+        return download_token
+    except PremiumSourceNotFound:
+        return Response(status_code=404, content="File not found")
+    except PremiumSourceNotOwned:
+        # we'd like to hide which other sources exist
+        return Response(status_code=403, content="Forbidden")
+
+
+@router.get("/download")
+def download_raw_premium_source(
+    token: str,
+    premium_sources: PremiumSourceService,
+):
+    download_token = DownloadToken.decode(token)
+    user_id = download_token.user_id
+    premium_source_id = download_token.premium_source_id
     try:
         s3_url = premium_sources.get_download_url(user_id, premium_source_id)
 
