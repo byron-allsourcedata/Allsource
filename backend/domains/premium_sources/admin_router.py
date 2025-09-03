@@ -10,6 +10,7 @@ from domains.premium_sources.premium_sources_rows.service import (
     MissingHashedEmailError,
 )
 from domains.premium_sources.router import (
+    upload_premium_source_to_s3,
     validate_uploaded_csv,
 )
 from domains.premium_sources.schemas import UserPremiumSourcesDto
@@ -55,10 +56,8 @@ async def upload_premium_source(
         return HTTPException(status_code=400, detail="Invalid file")
 
     try:
-        # key = upload_premium_source_to_s3(
-        #     file_bytes, aws.s3_client, metadata.name
-        # )
-        pass
+        s3_key = str(uuid4())
+        key = upload_premium_source_to_s3(file_bytes, aws.s3_client, s3_key)
     except Exception as e:
         logger.error(f"Error uploading file to S3: {e}")
         return HTTPException(status_code=500, detail="Failed to save file")
@@ -70,7 +69,7 @@ async def upload_premium_source(
             return Response(
                 status_code=400, content="File contains not enough rows"
             )
-        key = str(uuid4())
+
         logger.info(
             f"Uploading {len(csv_rows)} hashed rows as premium source for user {user_id}"
         )

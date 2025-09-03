@@ -1,6 +1,6 @@
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import TIMESTAMP, VARCHAR, Uuid, event, func, select, text
+from sqlalchemy import TIMESTAMP, Uuid, event, func, select, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.users import Users
@@ -15,9 +15,9 @@ class PremiumSource(Base):
     """
     user, for which this source is uploaded
     """
-    s3_url: Mapped[str] = mapped_column(nullable=True)
+    s3_url: Mapped[str | None] = mapped_column(nullable=True)
     """
-    s3_url for this source's .csv file
+    s3 object token for this source's .csv file
     """
     rows: Mapped[int] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(
