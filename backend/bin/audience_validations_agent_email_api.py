@@ -104,7 +104,7 @@ async def process_bulk_validation(
 
     if current_try == max_tries:
         raise MillionVerifierError(
-            "Timeiout reached while waiting for million verifier bulk responses"
+            "Timeout reached while waiting for million verifier bulk responses"
         )
 
     csv_content = await million_verifier_service.bulk_download_report(file_id)
@@ -171,8 +171,6 @@ async def process_rmq_message(
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
 
-        # ===== Новый bulk-код =====
-        # собираем список email из batch
         emails = []
         failed_ids: list[int] = []
         for rec in batch:
