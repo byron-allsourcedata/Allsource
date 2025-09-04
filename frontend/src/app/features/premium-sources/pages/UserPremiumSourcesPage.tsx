@@ -31,7 +31,7 @@ import {
 	useGetPremiumSyncs,
 	usePremiumSourceDownloadLinkRequest,
 } from "../requests";
-import { showErrorToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useRouter } from "next/navigation";
 import GoogleAdsDataSync from "@/app/(client)/data-sync/components/GoogleADSDataSync";
 import { GoogleAdsPremiumSyncPopup } from "../drawers/GoogleAdsPremiumSync";
@@ -225,9 +225,7 @@ export const UserPremiumSourcesPage: FC = () => {
 	return (
 		<ThemeProvider theme={premiumSourcesTheme}>
 			<PageContainer gap={"1rem"}>
-				<Title>
-					Premium Sources {sources.find((s) => s.id === selectedSource)?.price}
-				</Title>
+				<Title>Premium Sources</Title>
 				{pageContent}
 			</PageContainer>
 			<Drawer open={syncDrawerOpen} onClose={onClose} anchor="right">
@@ -253,6 +251,7 @@ export const UserPremiumSourcesPage: FC = () => {
 				onPay={(sourceId, amountCents, paymentMethod) => {
 					buySource(sourceId, amountCents, paymentMethod)
 						.then(() => {
+							showToast("Premium source unlocked successfully");
 							closePayment();
 							refetchSources().catch(() => {});
 						})

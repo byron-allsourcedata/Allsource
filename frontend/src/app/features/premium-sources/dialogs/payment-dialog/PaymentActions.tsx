@@ -9,7 +9,14 @@ type Props = {
 
 export const PaymentActions: FC<Props> = ({ onCancel, onPay }) => {
 	return (
-		<Row>
+		<Row
+			sx={{
+				padding: "1.25rem 1rem",
+				gap: "1rem",
+				borderTop: "1px solid var(--Border, #E4E4E4)",
+			}}
+			justifyContent={"end"}
+		>
 			<CustomButton variant="outlined" onClick={onCancel}>
 				Cancel
 			</CustomButton>

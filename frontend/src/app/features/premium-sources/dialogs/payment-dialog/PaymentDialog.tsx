@@ -37,9 +37,9 @@ export const PaymentDialog: FC<Props> = ({
 	} = useGetAddedCards();
 
 	useEffect(() => {
-		refetch();
-		refetchCards();
-	}, []);
+		refetch().catch(() => {});
+		refetchCards().catch(() => {});
+	}, [sourceId]);
 
 	// const cards: CardDetails[] = [
 	// 	{
@@ -57,26 +57,49 @@ export const PaymentDialog: FC<Props> = ({
 	const [selectedCard, setSelectedCard] = useState("0");
 	return (
 		<Dialog open={open} onClose={onClose}>
-			<Column>
-				<DialogHeader title="Complete Your Payment" onClose={() => {}} />
-				<PremiumSourcePrice price={price} />
-
-				{!loading && premiumFunds != null && (
-					<RadioGroup
-						value={selectedCard}
-						onChange={(_, value) => {
-							setSelectedCard(value);
+			<Column
+				justifyContent={"space-between"}
+				sx={{
+					height: "70dvh",
+					overflow: "hidden",
+				}}
+			>
+				<Column>
+					<DialogHeader
+						title="Complete Your Payment"
+						onClose={() => {
+							onClose();
 						}}
-						sx={{ width: "100%", gap: 2 }}
+					/>
+					<Column
+						sx={{
+							padding: "1rem 1.5rem",
+							gap: "1rem",
+						}}
 					>
-						<PaymentMethods
-							availableFunds={premiumFunds}
-							cards={billing?.card_details ?? []}
-						/>
-					</RadioGroup>
-				)}
+						<PremiumSourcePrice price={price} />
+
+						{!loading && premiumFunds != null && (
+							<RadioGroup
+								value={selectedCard}
+								onChange={(_, value) => {
+									setSelectedCard(value);
+								}}
+								sx={{ width: "100%", gap: 2 }}
+							>
+								<PaymentMethods
+									availableFunds={premiumFunds}
+									showCards={premiumFunds < price}
+									cards={billing?.card_details ?? []}
+								/>
+							</RadioGroup>
+						)}
+					</Column>
+				</Column>
 				<PaymentActions
-					onCancel={() => {}}
+					onCancel={() => {
+						onClose();
+					}}
 					onPay={() => {
 						onPay(sourceId, price, billing?.card_details[+selectedCard]?.id);
 					}}
