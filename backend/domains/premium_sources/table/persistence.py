@@ -3,7 +3,10 @@ from uuid import UUID
 import uuid
 
 from sqlalchemy import select
-from domains.premium_sources.schemas import PremiumSourceDto
+from domains.premium_sources.schemas import (
+    BasePremiumSourceDto,
+    PremiumSourceDto,
+)
 from domains.premium_sources.sync.persistence import (
     PremiumSourceSyncPersistence,
 )
@@ -30,11 +33,16 @@ class PremiumSourcePersistence:
         self.sync_logs = sync_logs
 
     def create(
-        self, name: str, user_id: int, s3_url: str, rows: int
+        self, name: str, price: int, user_id: int, s3_url: str, rows: int
     ) -> PremiumSource:
         id = uuid.uuid4()
         new_source = PremiumSource(
-            id=id, name=name, user_id=user_id, s3_url=s3_url, rows=rows
+            id=id,
+            name=name,
+            price=price,
+            user_id=user_id,
+            s3_url=s3_url,
+            rows=rows,
         )
         self.db.add(new_source)
         self.db.flush()
@@ -61,7 +69,7 @@ class PremiumSourcePersistence:
             return True
         return False
 
-    def list(self, user_id: int) -> list[PremiumSourceDto]:
+    def list(self, user_id: int) -> list[BasePremiumSourceDto]:
         raw_list = list(
             self.db.execute(
                 select(PremiumSource)
@@ -72,31 +80,14 @@ class PremiumSourcePersistence:
             .all()
         )
 
-        result = []
+        result: list[BasePremiumSourceDto] = []
         for row in raw_list:
-            result_syncs = self.syncs.by_source_id(row.id)
-
-            logger.debug(f"result_syncs: {len(result_syncs)}")
-
-            if not result_syncs:
-                status = "ready"
-            else:
-                synced_count = self.sync_logs.count(
-                    result_syncs[0].id, "synced"
-                )
-
-                if synced_count == row.rows:
-                    status = "synced"
-                else:
-                    status = "syncing"
-
             result.append(
-                PremiumSourceDto(
+                BasePremiumSourceDto(
                     id=row.id,
                     name=row.name,
+                    price=row.price,
                     user_id=row.user_id,
-                    s3_url=row.s3_url,
-                    status=status,
                     rows=row.rows,
                     created_at=row.created_at,
                 )

@@ -10,8 +10,8 @@ import {
 	type SelectChangeEvent,
 } from "@mui/material";
 import { MetaButton } from "./buttons/MetaButton";
-import { DollarTextField } from "./DollarTextField";
 import type { FC } from "react";
+import { DollarTextField } from "@/components/ui/inputs/DollarTextField";
 
 type Props = {
 	anchorEl: HTMLElement | null;

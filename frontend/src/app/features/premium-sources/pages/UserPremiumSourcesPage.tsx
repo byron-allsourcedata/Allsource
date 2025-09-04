@@ -26,11 +26,12 @@ import { premiumSourcesTheme } from "@/app/(client)/premium-sources/theme";
 import { sampleSyncs } from "@/app/(client)/premium-sources/syncs/sample";
 import {
 	openDownloadPremiumSource,
+	useBuyPremiumSource,
 	useGetPremiumSources,
 	useGetPremiumSyncs,
 	usePremiumSourceDownloadLinkRequest,
 } from "../requests";
-import { showErrorToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useRouter } from "next/navigation";
 import GoogleAdsDataSync from "@/app/(client)/data-sync/components/GoogleADSDataSync";
 import { GoogleAdsPremiumSyncPopup } from "../drawers/GoogleAdsPremiumSync";
@@ -40,6 +41,8 @@ import type {
 } from "@/app/(client)/premium-sources/syncs/schemas";
 import { UserPremiumSourceFirstTimeContent } from "../components/UserPremiumSourceFirstTimeContent";
 import { MetaPremiumSync } from "../drawers/MetaPremiumSync";
+import { useDialog } from "@/hooks/useDialog";
+import { PaymentDialog } from "../dialogs/payment-dialog/PaymentDialog";
 
 const Title = styled(Typography)`
     color: #202124;
@@ -119,6 +122,11 @@ export const UserPremiumSourcesPage: FC = () => {
 	const [selectedSource, setSelectedSource] = useState<string | null>(null);
 
 	const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
+	const {
+		isOpen: paymentOpen,
+		open: openPayment,
+		close: closePayment,
+	} = useDialog();
 
 	const [{ data: premiumSourcesData, loading }, refetchSources, cancelSources] =
 		useGetPremiumSources();
@@ -129,6 +137,7 @@ export const UserPremiumSourcesPage: FC = () => {
 	const firstTimeLoading = loading && premiumSourcesData == null;
 
 	const [{ data: premiumSyncsData }, refetchSyncs] = useGetPremiumSyncs();
+	const { loading: buyLoading, request: buySource } = useBuyPremiumSource();
 
 	const router = useRouter();
 
@@ -174,6 +183,10 @@ export const UserPremiumSourcesPage: FC = () => {
 					} catch (error) {
 						showErrorToast("Failed to download premium source");
 					}
+				}}
+				onUnlock={(source) => {
+					setSelectedSource(source.id);
+					openPayment();
 				}}
 			/>
 		),
@@ -230,6 +243,23 @@ export const UserPremiumSourcesPage: FC = () => {
 					}}
 				/>
 			</Drawer>
+			<PaymentDialog
+				sourceId={selectedSource!}
+				price={sources?.find((s) => s.id === selectedSource)?.price ?? 0}
+				open={paymentOpen}
+				onClose={closePayment}
+				onPay={(sourceId, amountCents, paymentMethod) => {
+					buySource(sourceId, amountCents, paymentMethod)
+						.then(() => {
+							showToast("Premium source unlocked successfully");
+							closePayment();
+							refetchSources().catch(() => {});
+						})
+						.catch(() => {
+							showErrorToast("Failed to buy premium source");
+						});
+				}}
+			/>
 		</ThemeProvider>
 	);
 };

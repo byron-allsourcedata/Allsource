@@ -56,7 +56,9 @@ def check_user_authentication(
         ) != user.get("id"):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail={"status": UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value},
+                detail={
+                    "status": UserAuthorizationStatus.TEAM_TOKEN_EXPIRED.value
+                },
             )
         user["team_member"] = team_memer
     return user
@@ -67,10 +69,14 @@ def maybe_check_user_authentication(
     user_persistence_service: UserPersistence,
 ) -> Token | None:
     try:
-        return check_user_authentication(Authorization, user_persistence_service)
+        return check_user_authentication(
+            Authorization, user_persistence_service
+        )
     except HTTPException:
         return None
 
 
 AuthUser = Annotated[UserDict, Depends(check_user_authentication)]
-MaybeAuthUser = Annotated[UserDict | None, Depends(maybe_check_user_authentication)]
+MaybeAuthUser = Annotated[
+    UserDict | None, Depends(maybe_check_user_authentication)
+]
