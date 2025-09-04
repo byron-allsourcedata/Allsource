@@ -41,6 +41,7 @@ interface ReferralDiscountCode {
 
 interface PartnersOverviewProps {
 	isMaster: boolean;
+	monthlyComission: any[];
 }
 
 const withoutDiscountCode = {
@@ -49,7 +50,10 @@ const withoutDiscountCode = {
 	discount_amount: 0,
 };
 
-const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
+const PartnersOverview: React.FC<PartnersOverviewProps> = ({
+	monthlyComission,
+	isMaster,
+}) => {
 	const [loading, setLoading] = useState(false);
 	const [expanded, setExpanded] = useState<number | false>(false);
 	const [isLoading, setIsLoading] = useState(true);
@@ -972,23 +976,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 										gap: 2,
 									}}
 								>
-									{[
-										{
-											title: "Pixel Resolutions Commission",
-											percentage: 50,
-											revenue: 2679,
-										},
-										{
-											title: "Pixel Resolutions Commission",
-											percentage: 50,
-											revenue: 2679,
-										},
-										{
-											title: "Pixel Resolutions Commission",
-											percentage: 50,
-											revenue: 2679,
-										},
-									].map((item, index) => (
+									{monthlyComission.map((item: any, index: number) => (
 										<Box
 											key={index}
 											sx={{

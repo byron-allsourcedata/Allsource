@@ -98,6 +98,7 @@ const Partners: React.FC = () => {
 	const [commission, setCommission] = useState(0);
 	const [id, setId] = useState(0);
 	const [formPopupOpen, setFormPopupOpen] = useState(false);
+	const [monthlyComission, setMonthlyCommisions] = useState<any[]>([]);
 	const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
@@ -201,6 +202,7 @@ const Partners: React.FC = () => {
 				setIsMaster(masterPartner);
 				setId(responseMe.data.id);
 				setCommission(responseMe.data.commission);
+				setMonthlyCommisions(responseMe.data.monthly_comissions);
 			} else {
 				setIsMaster(false);
 			}
@@ -679,7 +681,10 @@ const Partners: React.FC = () => {
 							}}
 						>
 							<TabPanel value={tabIndex} index={0}>
-								<PartnersOverview isMaster={isMaster ?? false} />
+								<PartnersOverview
+									isMaster={isMaster ?? false}
+									monthlyComission={monthlyComission}
+								/>
 							</TabPanel>
 						</Box>
 						<Box sx={{ width: "100%", padding: 0, margin: 0 }}>

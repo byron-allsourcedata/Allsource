@@ -117,8 +117,7 @@ def get_masterpartner_data(
     user: dict = Depends(check_user_partner),
 ):
     response = get_partners_service.get_partner(user.get("email"))
-
-    return response.get("data")
+    return response
 
 
 @router.post("/")
