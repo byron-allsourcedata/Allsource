@@ -242,14 +242,14 @@ const SourcesImport: React.FC = () => {
 
 	const customerConversionsMapping: Row[] = [
 		{
-			id: 5,
+			id: 6,
 			type: "Transaction Date",
 			value: "",
-			canDelete: false,
+			canDelete: true,
 			isHidden: false,
 		},
 		{
-			id: 6,
+			id: 5,
 			type: "Order Amount",
 			value: "",
 			canDelete: false,
@@ -262,7 +262,7 @@ const SourcesImport: React.FC = () => {
 			id: 5,
 			type: "Lead Date",
 			value: "",
-			canDelete: false,
+			canDelete: true,
 			isHidden: false,
 		},
 	];
@@ -272,7 +272,7 @@ const SourcesImport: React.FC = () => {
 			id: 5,
 			type: "Interest Date",
 			value: "",
-			canDelete: false,
+			canDelete: true,
 			isHidden: false,
 		},
 	];
@@ -511,6 +511,28 @@ const SourcesImport: React.FC = () => {
 		return true;
 	};
 
+	const validateRowCount = async (file: File): Promise<boolean> => {
+		try {
+			const maxRows = 200000;
+			const text = await file.text();
+			const lines = text.split(/\r\n|\n|\r/);
+
+			const dataRowCount = lines.length - 1;
+
+			if (dataRowCount > maxRows) {
+				handleDeleteFile();
+				showErrorToast(
+					`The uploaded CSV file exceeds the limit of ${maxRows} rows (excluding header).`,
+				);
+				return false;
+			}
+			return true;
+		} catch (e) {
+			showErrorToast("Failed to validate row count.");
+			return false;
+		}
+	};
+
 	// Formatting and Sending
 
 	const convertToDBFormat = (sourceType: string) => {
@@ -743,6 +765,8 @@ const SourcesImport: React.FC = () => {
 			if (!file) return;
 
 			if (!validateFileSize(file, 500)) return;
+
+			if (!(await validateRowCount(file))) return;
 
 			const url = await getFileUploadUrl(file.type);
 
@@ -1086,7 +1110,7 @@ const SourcesImport: React.FC = () => {
 												sx={{
 													display: "flex",
 													alignItems: "center",
-													width: "316px",
+													width: "346px",
 													border: dragActive
 														? "2px dashed rgba(56, 152, 252, 1)"
 														: "1px dashed rgba(56, 152, 252, 1)",
@@ -1150,7 +1174,7 @@ const SourcesImport: React.FC = () => {
 															color: "rgba(32, 33, 36, 1)",
 														}}
 													>
-														CSV.Max 500MB
+														CSV, Max 500MB, Up to 200,000 Rows
 													</Typography>
 												</Box>
 												<input
