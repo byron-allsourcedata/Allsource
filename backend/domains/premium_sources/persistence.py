@@ -30,11 +30,16 @@ class PremiumSourcePersistence:
         self.sync_logs = sync_logs
 
     def create(
-        self, name: str, user_id: int, s3_url: str, rows: int
+        self, name: str, price: int, user_id: int, s3_url: str, rows: int
     ) -> PremiumSource:
         id = uuid.uuid4()
         new_source = PremiumSource(
-            id=id, name=name, user_id=user_id, s3_url=s3_url, rows=rows
+            id=id,
+            name=name,
+            price=price,
+            user_id=user_id,
+            s3_url=s3_url,
+            rows=rows,
         )
         self.db.add(new_source)
         self.db.flush()
@@ -72,7 +77,7 @@ class PremiumSourcePersistence:
             .all()
         )
 
-        result = []
+        result: list[PremiumSourceDto] = []
         for row in raw_list:
             result_syncs = self.syncs.by_source_id(row.id)
 
@@ -94,6 +99,7 @@ class PremiumSourcePersistence:
                 PremiumSourceDto(
                     id=row.id,
                     name=row.name,
+                    price=row.price,
                     user_id=row.user_id,
                     s3_url=row.s3_url,
                     status=status,

@@ -39,6 +39,7 @@ class PremiumSourceService:
     def create(
         self,
         name: str,
+        price: int,
         user_id: int,
         s3_url: str,
         rows: int,
@@ -48,7 +49,7 @@ class PremiumSourceService:
         Raises `MissingHashedEmailError`
         """
         source = self.repo.create(
-            name=name, user_id=user_id, s3_url=s3_url, rows=rows
+            name=name, price=price, user_id=user_id, s3_url=s3_url, rows=rows
         )
 
         logger.debug(

@@ -41,6 +41,7 @@ async def upload_premium_source(
     aws: AwsService,
     user_id: int = Form(...),
     source_name: str = Form(...),
+    source_price: int = Form(...),
     file: UploadFile = File(..., media_type="text/csv"),
 ):
     # user may not exist
@@ -48,6 +49,13 @@ async def upload_premium_source(
     # file may not be valid
     # upload to s3 may fail
     # saving to db may fail
+    # file name may be invalid (empty)
+
+    # please remember to check for integer overflow attacks
+    if source_price < 0 or source_price > 10000_00:
+        logger.info("Rejected premium source because of invalid price")
+        return Response(status_code=400, content="Invalid price")
+
     file_bytes = file.file.read()
 
     metadata = validate_uploaded_csv(file)
@@ -74,7 +82,7 @@ async def upload_premium_source(
             f"Uploading {len(csv_rows)} hashed rows as premium source for user {user_id}"
         )
         _source_id = save_premium_source(
-            serv, user_id, source_name, key, csv_rows=csv_rows[1:]
+            serv, user_id, source_name, source_price, key, csv_rows=csv_rows[1:]
         )
 
         db.commit()
@@ -110,6 +118,7 @@ def save_premium_source(
     serv: PremiumSourceService,
     user_id: int,
     source_name: str,
+    source_price: int,
     key: str,
     csv_rows: list[dict[str, str]],
 ) -> UUID:
@@ -118,6 +127,7 @@ def save_premium_source(
     """
     return serv.create(
         name=source_name,
+        price=source_price,
         user_id=user_id,
         s3_url=key,
         rows=len(csv_rows),

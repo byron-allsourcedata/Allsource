@@ -5,6 +5,7 @@ export type PremiumSourceData = {
 	name: string;
 	created_at: string;
 	rows: string;
+	price: number;
 	status: Status;
 };
 

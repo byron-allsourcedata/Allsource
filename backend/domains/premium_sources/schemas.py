@@ -11,6 +11,7 @@ class PremiumSourceDto(BaseModel):
     id: UUID
     name: str
     user_id: int
+    price: int
     s3_url: str | None
     rows: int
     status: PremiumSourceStatus
