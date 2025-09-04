@@ -40,7 +40,8 @@ class UsersFundsPersistence:
             update(Users)
             .where(Users.id == user_id)
             .values(
-                premium_source_credits=Users.premium_source_credits - amount
+                premium_source_credits=Users.premium_source_credits
+                - float(amount) / 100.0
             ),
         ).rowcount
 

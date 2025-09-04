@@ -1,4 +1,4 @@
-class InsuffientFunds(Exception):
+class InsufficientFunds(Exception):
     pass
 
 

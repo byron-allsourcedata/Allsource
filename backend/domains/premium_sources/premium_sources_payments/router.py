@@ -12,7 +12,7 @@ from domains.premium_sources.premium_sources_payments.service import (
 )
 from domains.users.exceptions import UserNotFound
 from domains.users.users_funds.exception import (
-    InsuffientFunds,
+    InsufficientFunds,
     MultipleUsersUpdated,
 )
 
@@ -44,7 +44,7 @@ async def unlock_premium_source(
         return Response(
             status_code=404, content="Premium source does not exist"
         )
-    except InsuffientFunds:
+    except InsufficientFunds:
         pass
     except MultipleUsersUpdated:
         pass

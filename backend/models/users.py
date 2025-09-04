@@ -57,7 +57,10 @@ class Users(Base):
         nullable=True,
         server_default=text("'PENDING'::character varying"),
     )
-    customer_id = Column(VARCHAR(32), nullable=False)
+    customer_id: Mapped[str] = mapped_column(VARCHAR(32), nullable=False)
+    """
+    stripe customer id
+    """
     company_website = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
     is_with_card = Column(Boolean, nullable=True, server_default=text("false"))

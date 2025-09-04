@@ -12,3 +12,7 @@ class TransactionNotFound(Exception):
 
 class InsufficientFunds(Exception):
     pass
+
+
+class PriceHasChangedError(Exception):
+    pass

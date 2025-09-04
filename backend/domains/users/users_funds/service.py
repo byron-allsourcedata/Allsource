@@ -1,6 +1,6 @@
 from domains.users.exceptions import UserNotFound
 from domains.users.users_funds.exception import (
-    InsuffientFunds,
+    InsufficientFunds,
     MultipleUsersUpdated,
 )
 from resolver import injectable
@@ -23,7 +23,7 @@ class UserFundsService:
 
     def deduct_premium_funds(self, user_id: int, amount: int):
         """
-        raises InsuffientFunds \n
+        raises InsufficientFunds \n
         raises UserNotFound \n
         raises MultipleUsersUpdated
         """
@@ -34,7 +34,7 @@ class UserFundsService:
             return
 
         if premium_source_funds < amount:
-            raise InsuffientFunds()
+            raise InsufficientFunds()
 
         rows_updated = self.repo.deduct_funds(user_id, amount)
 

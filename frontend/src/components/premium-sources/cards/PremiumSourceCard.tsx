@@ -82,6 +82,7 @@ export type UserCardProps = {
 	source: PremiumSourceData;
 	onSync: () => void;
 	onDownload: () => void;
+	onUnlock: () => void;
 };
 
 export type AdminCardProps = {
@@ -144,7 +145,7 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 							price={source.price}
 							onSync={props.onSync}
 							onDownload={props.onDownload}
-							onUnlock={() => {}}
+							onUnlock={props.onUnlock}
 						/>
 					)}
 
