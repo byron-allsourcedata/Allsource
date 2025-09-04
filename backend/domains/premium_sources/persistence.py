@@ -101,7 +101,6 @@ class PremiumSourcePersistence:
                     name=row.name,
                     price=row.price,
                     user_id=row.user_id,
-                    s3_url=row.s3_url,
                     status=status,
                     rows=row.rows,
                     created_at=row.created_at,
