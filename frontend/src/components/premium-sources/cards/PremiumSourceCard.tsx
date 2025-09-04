@@ -123,6 +123,10 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 						<Header>No of Rows</Header>
 						<Value>{source.rows}</Value>
 					</CardColumn>
+
+					{props.cardType === "admin" && (
+						<PriceColumn price={props.source.price} />
+					)}
 					<CardColumn
 						sx={{
 							width: "5rem",
@@ -144,7 +148,10 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 					)}
 
 					{props.cardType === "admin" && (
-						<CardColumn flexDirection={"row-reverse"}>
+						<CardColumn
+							flexDirection={"row-reverse"}
+							sx={{ width: "min-content" }}
+						>
 							<IconButton
 								onClick={() => setMenuOpen(true)}
 								ref={menuAnchor as RefObject<HTMLButtonElement>}
@@ -164,5 +171,20 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 				</CardInnerContainer>
 			</CardContainer>
 		</Row>
+	);
+};
+
+type PriceColumnProps = {
+	price: number;
+};
+
+export const PriceColumn: FC<PriceColumnProps> = ({ price }) => {
+	const formattedPrice = (price / 100).toFixed(2);
+
+	return (
+		<CardColumn>
+			<Header>Price</Header>
+			<Value>${formattedPrice}</Value>
+		</CardColumn>
 	);
 };
