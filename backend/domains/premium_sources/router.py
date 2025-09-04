@@ -22,6 +22,8 @@ from domains.premium_sources.exceptions import (
     PremiumSourceNotOwned,
 )
 from domains.premium_sources.sync.service import PremiumSourceSyncService
+from domains.users.exceptions import UserNotFound
+from domains.users.users_funds.service import UserFundsService
 from utils.csv import parse_csv_bytes
 from utils.strings import to_snake_case
 
@@ -74,6 +76,16 @@ def upload_premium_source_to_s3(file: bytes, s3: S3Client, key: str) -> str:
 @router.get("/")
 def get_premium_sources(user: AuthUser, sources_service: PremiumSourceService):
     return sources_service.list(user["id"])
+
+
+@router.get("/funds")
+def get_premium_funds(user: AuthUser, user_funds: UserFundsService):
+    user_id = user["id"]
+
+    try:
+        return user_funds.premium_funds(user_id)
+    except UserNotFound:
+        return Response(status_code=403, content="Unauthorized")
 
 
 @router.get("/download-link")

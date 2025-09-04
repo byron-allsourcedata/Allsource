@@ -203,3 +203,21 @@ export const metaCreateCampaign = async (
 		setLoading(false);
 	}
 };
+
+export const useGetPremiumFunds = () => {
+	const [{ loading, data }, refetch] = useAxios<number | null>(
+		{
+			url: "/premium-sources/funds",
+			method: "GET",
+		},
+		{
+			manual: true,
+		},
+	);
+
+	return {
+		loading,
+		data,
+		refetch,
+	};
+};
