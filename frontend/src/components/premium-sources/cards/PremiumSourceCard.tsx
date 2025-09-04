@@ -10,6 +10,7 @@ import { MoreVert } from "@/icon";
 import type { PremiumSourceData } from "@/app/features/premium-sources/schemas";
 import { useCardMenu, type CardMenuProps } from "../hooks/useCardMenu";
 import { StatusLabel } from "@/app/(client)/premium-sources/components/status";
+import { formatMoney } from "@/components/PartnersAccounts";
 
 const Header = styled(Typography)`
 	color: #202124;
@@ -137,14 +138,14 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 					</CardColumn>
 
 					{props.cardType === "user" && (
-						<CardColumn>
-							<Row alignItems="center" gap="0.5rem">
-								<SyncButton disabled={!canSync} onClick={props.onSync}>
-									Sync
-								</SyncButton>
-								<DownloadButton onClick={props.onDownload} />
-							</Row>
-						</CardColumn>
+						<UserButtonGroup
+							locked={source.status === "locked"}
+							canSync={source.status === "ready"}
+							price={source.price}
+							onSync={props.onSync}
+							onDownload={props.onDownload}
+							onUnlock={() => {}}
+						/>
 					)}
 
 					{props.cardType === "admin" && (
@@ -185,6 +186,52 @@ export const PriceColumn: FC<PriceColumnProps> = ({ price }) => {
 		<CardColumn>
 			<Header>Price</Header>
 			<Value>${formattedPrice}</Value>
+		</CardColumn>
+	);
+};
+
+type UserButtonGroupProps = {
+	locked: boolean;
+	canSync: boolean;
+	price: number;
+	onSync: () => void;
+	onDownload: () => void;
+	onUnlock: () => void;
+};
+
+export const UserButtonGroup: FC<UserButtonGroupProps> = ({
+	locked,
+	canSync,
+	price,
+	onSync,
+	onDownload,
+	onUnlock,
+}) => {
+	const formattedPrice = formatMoney(price / 100);
+
+	if (locked) {
+		return (
+			<CardColumn>
+				<CustomButton
+					onClick={onUnlock}
+					sx={{
+						whiteSpace: "nowrap",
+					}}
+				>
+					Unlock | {formattedPrice}
+				</CustomButton>
+			</CardColumn>
+		);
+	}
+
+	return (
+		<CardColumn>
+			<Row alignItems="center" gap="0.5rem">
+				<SyncButton disabled={!canSync} onClick={onSync}>
+					Sync
+				</SyncButton>
+				<DownloadButton onClick={onDownload} />
+			</Row>
 		</CardColumn>
 	);
 };

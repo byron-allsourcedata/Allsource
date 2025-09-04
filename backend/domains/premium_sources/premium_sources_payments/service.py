@@ -10,7 +10,7 @@ from domains.premium_sources.premium_sources_payments.funds_deductions_repo impo
 from domains.premium_sources.premium_sources_payments.transactions_service import (
     PremiumSourceTransactionsService,
 )
-from domains.premium_sources.service import PremiumSourceService
+from domains.premium_sources.table.service import PremiumSourceTableService
 from domains.users.users_funds.service import UserFundsService
 from resolver import injectable
 
@@ -22,7 +22,7 @@ class PremiumSourcesPaymentsService:
     def __init__(
         self,
         db: Db,
-        sources: PremiumSourceService,
+        sources: PremiumSourceTableService,
         funds_deductions: FundsDeductionsPersistence,
         transactions: PremiumSourceTransactionsService,
         user_funds: UserFundsService,
@@ -48,7 +48,7 @@ class PremiumSourcesPaymentsService:
         Raises `MultipleUsersUpdated`
         """
         user_premium_source_funds = self.users_funds.premium_funds(user_id)
-        self.sources.owned_by_user(user_id, premium_source_id)
+        self.sources.assert_owned_by_user(user_id, premium_source_id)
         premium_source_cost = self.sources.get_cost(premium_source_id)
 
         paid_amount = self.paid_amount_by_premium_source_id(premium_source_id)

@@ -1,4 +1,10 @@
-export type Status = "ready" | "syncing" | "synced" | "disabled" | "failed";
+export type Status =
+	| "ready"
+	| "syncing"
+	| "synced"
+	| "disabled"
+	| "failed"
+	| "locked";
 
 export type PremiumSourceData = {
 	id: string;

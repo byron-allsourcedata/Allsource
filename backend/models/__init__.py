@@ -98,6 +98,8 @@ from .premium_source import PremiumSource
 from .premium_source_sync import PremiumSourceSync
 from .premium_source_syncs.google_ads import GoogleAdsPremiumSourceSync
 from .premium_source_syncs.meta import MetaPremiumSourceSync
+from .premium_sources_transactions import PremiumSourceTransaction
+from .premium_sources_funds_deduction import PremiumSourceFundsDeduction
 
 from .whitelabel_settings import WhitelabelSettings
 from .million_verify_files import MillionVerifyFiles
@@ -201,5 +203,7 @@ __all__ = [
     "PremiumSource",
     "PremiumSourceSync",
     "GoogleAdsPremiumSourceSync",
-    "MetaPremiumSourceSync"
+    "MetaPremiumSourceSync",
+    "PremiumSourceTransaction",
+    "PremiumSourceFundsDeduction",
 ]

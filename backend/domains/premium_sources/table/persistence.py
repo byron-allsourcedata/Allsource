@@ -3,7 +3,10 @@ from uuid import UUID
 import uuid
 
 from sqlalchemy import select
-from domains.premium_sources.schemas import PremiumSourceDto
+from domains.premium_sources.schemas import (
+    BasePremiumSourceDto,
+    PremiumSourceDto,
+)
 from domains.premium_sources.sync.persistence import (
     PremiumSourceSyncPersistence,
 )
@@ -66,7 +69,7 @@ class PremiumSourcePersistence:
             return True
         return False
 
-    def list(self, user_id: int) -> list[PremiumSourceDto]:
+    def list(self, user_id: int) -> list[BasePremiumSourceDto]:
         raw_list = list(
             self.db.execute(
                 select(PremiumSource)
@@ -77,31 +80,14 @@ class PremiumSourcePersistence:
             .all()
         )
 
-        result: list[PremiumSourceDto] = []
+        result: list[BasePremiumSourceDto] = []
         for row in raw_list:
-            result_syncs = self.syncs.by_source_id(row.id)
-
-            logger.debug(f"result_syncs: {len(result_syncs)}")
-
-            if not result_syncs:
-                status = "ready"
-            else:
-                synced_count = self.sync_logs.count(
-                    result_syncs[0].id, "synced"
-                )
-
-                if synced_count == row.rows:
-                    status = "synced"
-                else:
-                    status = "syncing"
-
             result.append(
-                PremiumSourceDto(
+                BasePremiumSourceDto(
                     id=row.id,
                     name=row.name,
                     price=row.price,
                     user_id=row.user_id,
-                    status=status,
                     rows=row.rows,
                     created_at=row.created_at,
                 )

@@ -4,17 +4,20 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
-PremiumSourceStatus = Literal["ready", "syncing", "synced", "failed"]
+PremiumSourceStatus = Literal["ready", "locked", "syncing", "synced", "failed"]
 
 
-class PremiumSourceDto(BaseModel):
+class BasePremiumSourceDto(BaseModel):
     id: UUID
     name: str
     user_id: int
     price: int
     rows: int
-    status: PremiumSourceStatus
     created_at: datetime
+
+
+class PremiumSourceDto(BasePremiumSourceDto):
+    status: PremiumSourceStatus
 
 
 class NewPremiumSource(BaseModel):

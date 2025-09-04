@@ -34,6 +34,11 @@ export const StatusLabel: FC<StatusProps> = ({ status }) => {
 			text: "#4A4A4A",
 			label: "Disabled",
 		},
+		locked: {
+			background: "#DBDBDB",
+			text: "#4A4A4A",
+			label: "Locked",
+		},
 	} satisfies Record<Status, unknown>;
 
 	if (config[status] == null) {
