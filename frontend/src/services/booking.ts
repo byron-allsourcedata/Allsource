@@ -9,7 +9,7 @@ export type PrefillData = {
 };
 
 export function getBookingUrl(): string {
-	return "https://meetings-na2.hubspot.com/mikhail-sofin/allsource";
+	return "https://meetings-na2.hubspot.com/mark-lombardi/mark-premium-source-inquiry";
 }
 
 export function useBaseBookingUrl(axios: AxiosInstance) {
