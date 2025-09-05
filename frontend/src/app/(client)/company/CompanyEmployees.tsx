@@ -58,6 +58,7 @@ import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import { checkHasActivePlan } from "@/services/checkActivePlan";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -532,7 +533,12 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 				console.error("Error downloading file:", response.statusText);
 			}
 		} catch (error) {
-			console.error("Error during the download process:", error);
+			if (!checkHasActivePlan({ withoutApi: true })) {
+				return;
+			}
+			showErrorToast(
+				`Error during the download process, please contact support.`,
+			);
 		} finally {
 			setLoading(false);
 		}

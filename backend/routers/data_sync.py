@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from starlette.responses import StreamingResponse
 
+from auth_dependencies import UnlimitedUser
 from dependencies import (
     IntegrationService,
     check_domain,
@@ -84,6 +85,7 @@ async def switch_toggle(
 
 @router.post("/sync")
 async def create_sync(
+    _user: UnlimitedUser,
     data: SyncCreate,
     integration_service: IntegrationService,
     service_name: str = Query(...),
@@ -116,6 +118,7 @@ async def create_sync(
 
 @router.post("/create-smart-audience-sync")
 async def create_smart_audience_sync(
+    _user: UnlimitedUser,
     data: SmartAudienceSyncCreate,
     integration_service: IntegrationService,
     audience_smarts_service: AudienceSmartsService,
@@ -251,6 +254,7 @@ async def create_tag(
 
 @router.post("/download-persons")
 def download_persons(
+    _user: UnlimitedUser,
     audience_smarts_service: AudienceSmartsService,
     id: int = Query(...),
 ):

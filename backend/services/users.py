@@ -81,6 +81,9 @@ class UsersService:
                 "source": team_member.get("source_platform"),
                 "leads_credits": team_member.get("leads_credits"),
                 "validation_funds": team_member.get("validation_funds"),
+                "has_active_plan": True
+                if team_member.get("current_subscription_id", None)
+                else False,
             }
         return {
             "email": self.user.get("email"),
@@ -90,6 +93,9 @@ class UsersService:
             "source_platform": self.user.get("source_platform"),
             "leads_credits": self.user.get("leads_credits"),
             "validation_funds": self.user.get("validation_funds"),
+            "has_active_plan": True
+            if self.user.get("current_subscription_id", None)
+            else False,
         }
 
     def get_domain_with_stats(

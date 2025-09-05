@@ -252,12 +252,15 @@ class SettingsService:
         current_subscription = self.plan_persistence.get_user_subscription(
             user_id=user.get("id")
         )
-        member_limit = current_subscription.members_limit
+        if current_subscription:
+            member_limit = current_subscription.members_limit
+        else:
+            member_limit = 3
         member_count = len(
             self.user_persistence.get_team_members(user_id=user.get("id"))
         )
-        result["member_limit"] = member_limit if current_subscription else 0
-        result["member_count"] = member_count + 1 if current_subscription else 0
+        result["member_limit"] = member_limit
+        result["member_count"] = member_count + 1
         return result
 
     def get_pending_invations(self, user: dict):
@@ -473,20 +476,37 @@ class SettingsService:
         user_subscription = self.subscription_service.get_user_subscription(
             user_id=user_id
         )
+
+        if user_subscription is not None:
+            plan_start = user_subscription.plan_start
+            plan_end = user_subscription.plan_end
+        else:
+            plan_start = None
+            plan_end = None
+
         current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
-        plan_limit_domain = current_plan.domains_limit or -1
-        validation_funds_limit = current_plan.validation_funds
-        leads_credits_limit = current_plan.leads_credits
-        smart_audience_quota_limit = current_plan.smart_audience_quota
+
+        if current_plan is not None:
+            plan_limit_domain = current_plan.domains_limit or -1
+            validation_funds_limit = current_plan.validation_funds
+            leads_credits_limit = current_plan.leads_credits
+            smart_audience_quota_limit = current_plan.smart_audience_quota
+            plan_interval: str = current_plan.interval
+            plan_title: str = current_plan.title
+        else:
+            plan_limit_domain = -1
+            validation_funds_limit = 0
+            leads_credits_limit = -1
+            smart_audience_quota_limit = 0
+            plan_interval = "month"
+            plan_title = "Basic"
         money_contacts_overage = self.calculate_money_contacts_overage(
             overage_leads_count=user.get("overage_leads_count")
         )
         total_key = (
-            "monthly_total"
-            if current_plan.interval == "month"
-            else "yearly_total"
+            "monthly_total" if plan_interval == "month" else "yearly_total"
         )
-        plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
+        plan_name = f"{plan_title} {'yearly' if plan_interval == 'year' else ''}".strip()
 
         next_billing_date = (
             user_subscription.plan_end.strftime("%b %d, %Y")
@@ -512,8 +532,8 @@ class SettingsService:
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
                 detail_type="billing_cycle",
-                plan_start=user_subscription.plan_start,
-                plan_end=user_subscription.plan_end,
+                plan_start=plan_start,
+                plan_end=plan_end,
             ),
             plan_name=PlanName(detail_type="as_is", value=plan_name),
             domains=LimitedDetail(

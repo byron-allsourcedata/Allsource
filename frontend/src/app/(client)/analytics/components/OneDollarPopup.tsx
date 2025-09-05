@@ -11,10 +11,13 @@ import {
 	Card,
 	Stack,
 	Divider,
+	IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import CustomButton from "@/components/ui/CustomButton";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { flagStore } from "@/services/oneDollar";
 
 const OneDollarPopup = () => {
 	const [open, setOpen] = useState(true);
@@ -22,6 +25,7 @@ const OneDollarPopup = () => {
 
 	const handleClose = () => {
 		setOpen(false);
+		flagStore.set(false);
 	};
 
 	const redirectToCheckoutSession = async () => {
@@ -65,8 +69,22 @@ const OneDollarPopup = () => {
 						borderRadius: "16px",
 					},
 				}}
-				onClose={() => {}}
+				onClose={() => handleClose()}
 			>
+				<Box>
+					<IconButton
+						aria-label="close"
+						onClick={handleClose}
+						sx={{
+							position: "absolute",
+							right: 8,
+							top: 8,
+							color: "rgba(82, 82, 82, 1)",
+						}}
+					>
+						<CloseIcon />
+					</IconButton>
+				</Box>
 				<DialogTitle sx={{ p: "16px 16px 8px" }}>
 					<Box sx={{ pt: 2 }}>
 						<Typography

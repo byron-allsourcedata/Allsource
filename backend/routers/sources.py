@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, Query
+
+from auth_dependencies import UnlimitedUser
 from dependencies import (
     get_domain_service,
     check_user_authorization_without_pixel,
@@ -66,6 +68,7 @@ def get_sources(
 
 @router.get("/download/{source_id}")
 def download_value_calculation(
+    _user: UnlimitedUser,
     source_id: UUID,
     sources_service: AudienceSourceService,
 ):

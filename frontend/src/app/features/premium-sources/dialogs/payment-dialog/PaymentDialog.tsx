@@ -127,7 +127,7 @@ const DialogContent: FC<DialogContentProps> = ({
 	selectedCard,
 	loading,
 }) => {
-	if (availableFunds > price) {
+	if (availableFunds >= price) {
 		return (
 			<EnoughFundsPaymentSummary
 				price={price}

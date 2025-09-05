@@ -15,6 +15,7 @@ import Image from "next/image";
 import DownloadIcon from "@mui/icons-material/Download";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast } from "@/components/ToastNotification";
+import { checkHasActivePlan } from "@/services/checkActivePlan";
 
 interface PopupDetailsProps {
 	open: boolean;
@@ -98,7 +99,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 				showErrorToast(`Error downloading file:${response.statusText}`);
 			}
 		} catch (error) {
-			showErrorToast(`Error during the download process: ${error}`);
+			if (!checkHasActivePlan({ withoutApi: true })) {
+				return;
+			}
+			showErrorToast(
+				`Error during the download process, please contact support.`,
+			);
 		}
 	};
 
