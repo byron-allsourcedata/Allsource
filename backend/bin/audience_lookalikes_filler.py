@@ -1,3 +1,13 @@
+"""
+# Lookalikes
+
+The lookalikes scripts are responsible for creating lookalikes from a given source.
+
+This script performs the scoring of persons and sends them over RabbitMQ for further processing.
+
+Details about scoring are in `LookalikeFillerService.process_lookalike_pipeline`
+"""
+
 import asyncio
 import json
 import logging

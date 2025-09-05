@@ -46,6 +46,12 @@ class SimilarityStats(TypedDict):
 
 
 class LookalikeFillerServiceBase:
+    """
+    The most important method - process_lookalike_pipeline
+
+    It does not use @injectable annotation because of python's multiprocessing and pickling restrictions
+    """
+
     def __init__(
         self,
         db: Db,
@@ -144,6 +150,26 @@ class LookalikeFillerServiceBase:
     def process_lookalike_pipeline(
         self, audience_lookalike: AudienceLookalikes
     ):
+        """
+        Processes a lookalike
+
+        This method fetches a user profiles from source and trains a catboost regression model
+
+        Source scripts should have matched uploaded .csv files with our IDGraph and have calculated value_score for each matched user
+
+        Details on value_score calculations are in source scripts. value_score is a float in 0..1 range
+
+        We train regression into that value_score
+
+        (gender, income_range, age, ...) -> value_score
+
+
+        So here we fetch which fields should be used for training,
+        Get data from clickhouse using those column names
+        Train the model on profile data
+
+        Use that trained model on each user in IDGraph and save users with top scores
+        """
         sig = audience_lookalike.significant_fields or {}
         config = self.audiences_scores.get_config(sig)
         profiles = self.profile_fetcher.fetch_profiles_from_lookalike(
