@@ -724,9 +724,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 				<PremiumSources
 					active={isActive("/premium-sources")}
 					onClick={() => {
-						if (features.premiumSources) {
-							handleNavigation("/premium-sources");
-						}
+						handleNavigation("/premium-sources");
 					}}
 				/>
 				{/* Integrations */}

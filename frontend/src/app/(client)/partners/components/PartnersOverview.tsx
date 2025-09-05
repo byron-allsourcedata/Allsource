@@ -26,6 +26,7 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import { showToast } from "@/components/ToastNotification";
 import React from "react";
+import { partnersStyle } from "../partnersStyles";
 
 interface FAQItem {
 	question: string;
@@ -38,8 +39,15 @@ interface ReferralDiscountCode {
 	discount_amount: number;
 }
 
+interface MonthlyComission {
+	title: string;
+	percentage: number;
+	revenue: number;
+}
+
 interface PartnersOverviewProps {
 	isMaster: boolean;
+	monthlyComission: MonthlyComission[];
 }
 
 const withoutDiscountCode = {
@@ -48,7 +56,10 @@ const withoutDiscountCode = {
 	discount_amount: 0,
 };
 
-const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
+const PartnersOverview: React.FC<PartnersOverviewProps> = ({
+	monthlyComission,
+	isMaster,
+}) => {
 	const [loading, setLoading] = useState(false);
 	const [expanded, setExpanded] = useState<number | false>(false);
 	const [isLoading, setIsLoading] = useState(true);
@@ -761,7 +772,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 									width: "100%",
 								}}
 							>
-								<Typography className="second-sub-title">
+								<Typography className="first-sub-title">
 									Referral Details
 								</Typography>
 							</Box>
@@ -956,24 +967,82 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 								display: "flex",
 								flexDirection: "column",
 								width: "100%",
-								border: "1px solid rgba(235, 235, 235, 1)",
-								height: "225px",
-								justifyContent: "center",
-								alignItems: "start",
-								borderRadius: "4px",
-								padding: "0.5rem 1.5rem 1rem 1.5rem",
-								gap: 2,
-								maxHeight: "225px",
-								"@media (max-width: 900px)": { display: "none" },
+								gap: 1,
 							}}
 						>
-							<Typography className="second-sub-title">How it works</Typography>
-							<Image
-								src={"/partner-how-it-work.svg"}
-								width={641}
-								height={150}
-								alt="stripe-icon"
-							/>
+							<Box sx={partnersStyle.montlyComissionContainer}>
+								<Typography className="first-sub-title">
+									Monthly Commissions
+								</Typography>
+								<Box
+									sx={{
+										width: "100%",
+										display: "flex",
+										flexDirection: "column",
+										gap: 2,
+									}}
+								>
+									{monthlyComission.map((item, index) => (
+										<Box
+											key={index}
+											sx={{
+												display: "flex",
+												flexDirection: "row",
+												gap: 2,
+											}}
+										>
+											<Box key={index} sx={partnersStyle.monthlyComission}>
+												<Typography
+													className="seventh-sub-title"
+													sx={partnersStyle.monthlyComissionValue}
+												>
+													{item.title}
+												</Typography>
+												<Typography
+													className="eighth-sub-title"
+													sx={partnersStyle.monthlyComissionValue}
+												>
+													{item.percentage}%
+												</Typography>
+											</Box>
+											<Box key={index} sx={partnersStyle.monthlyComission}>
+												<Typography className="seventh-sub-title">
+													This month revenue:
+												</Typography>
+												<Typography className="eighth-sub-title">
+													${item.revenue.toLocaleString("en-US")}
+												</Typography>
+											</Box>
+										</Box>
+									))}
+								</Box>
+							</Box>
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									width: "100%",
+									border: "1px solid rgba(235, 235, 235, 1)",
+									height: "225px",
+									justifyContent: "center",
+									alignItems: "start",
+									borderRadius: "4px",
+									padding: "0.5rem 1.5rem 1rem 1.5rem",
+									gap: 2,
+									maxHeight: "225px",
+									"@media (max-width: 900px)": { display: "none" },
+								}}
+							>
+								<Typography className="first-sub-title">
+									How it works
+								</Typography>
+								<Image
+									src={"/partner-how-it-work.svg"}
+									width={641}
+									height={150}
+									alt="stripe-icon"
+								/>
+							</Box>
 						</Box>
 
 						<Box
@@ -997,7 +1066,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 									width: "100%",
 								}}
 							>
-								<Typography className="second-sub-title">
+								<Typography className="first-sub-title">
 									Frequently asked questions
 								</Typography>
 							</Box>

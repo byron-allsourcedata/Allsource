@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import logging
 from uuid import UUID
-from domains.premium_sources.persistence import PremiumSourcePersistence
+from domains.premium_sources.table.persistence import PremiumSourcePersistence
 from domains.premium_sources.premium_sources_rows.service import (
     PremiumSourcesRowsService,
 )
@@ -22,6 +22,7 @@ from domains.premium_sources.sync.schemas import (
 from domains.premium_sources.sync_log.persistence import (
     PremiumSourceSyncLogPersistence,
 )
+from models.premium_source_sync import PremiumSourceSync
 from resolver import injectable
 
 logger = logging.getLogger(__name__)
@@ -60,6 +61,9 @@ class PremiumSourceSyncService:
             user_integration_id=user_integration_id,
         )
         return sync_id
+
+    def by_source_id(self, source_id: UUID) -> list[PremiumSourceSync]:
+        return self.repo.by_source_id(source_id)
 
     def list(self, user_id: int) -> list[PremiumSyncSchema]:
         # TODO: rewrite it into single query

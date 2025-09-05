@@ -1,3 +1,4 @@
+from decimal import Decimal
 import logging
 import os
 import hashlib
@@ -19,6 +20,8 @@ from schemas.partners import (
     PartnerUserData,
     PartnersObjectResponse,
     PartnerCreateRequest,
+    PartnerResponse,
+    MonthlyCommission,
 )
 from services.sendgrid import SendgridHandler
 from enums import SendgridTemplate
@@ -88,13 +91,40 @@ class PartnersService:
         ]
         return {"data": {"items": result, "totalCount": total_count}}
 
-    def get_partner(self, email) -> PartnersObjectResponse:
-        partner = self.partners_persistence.get_partner_by_email(email)
-
+    def get_partner(self, email) -> PartnerResponse | None:
+        partner = self.partners_persistence.get_partner_overview_by_email(email)
         if not partner:
-            raise HTTPException(status_code=404, detail="Partner not found")
+            return None
 
-        return {"data": partner.to_dict()}
+        return PartnerResponse(
+            id=partner["id"],
+            is_master=partner["is_master"],
+            commission=partner["commission"],
+            monthly_comissions=[
+                MonthlyCommission(
+                    title="Pixel Resolutions Commission",
+                    percentage=partner["commission"],
+                    revenue=partner["overage_total"]
+                    * (Decimal(partner["commission"]) / Decimal(100)),
+                ),
+                MonthlyCommission(
+                    title="Upgrades Commission",
+                    percentage=partner["commission"],
+                    revenue=partner["subscription_total"]
+                    * (Decimal(partner["commission"]) / Decimal(100)),
+                ),
+                MonthlyCommission(
+                    title="Premium Sources Commission",
+                    percentage=partner["commission"],
+                    revenue=partner["premium_sources_total"]
+                    * (
+                        Decimal(partner["commission"])
+                        / Decimal(100)
+                        / Decimal(100)
+                    ),
+                ),
+            ],
+        )
 
     def get_partner_partners(
         self, email, start_date, end_date, page, rowsPerPage
@@ -105,7 +135,7 @@ class PartnersService:
         partner = self.partners_persistence.get_partner_by_email(email)
         partners, total_count = (
             self.partners_persistence.get_partners_by_partner_id(
-                partner.id, start_date, end_date, offset, limit
+                partner["id"], start_date, end_date, offset, limit
             )
         )
 

@@ -10,8 +10,10 @@ import { ArrowRightIcon } from "@mui/x-date-pickers";
 import { useState } from "react";
 import { ConfirmPlanChangeDialog } from "./ConfirmPlanChangeDialog";
 import MakePartnerPopup from "../components/MakePartnerPopup";
+import ConfirmDialog from "@/components/ui/dialogs/ConfirmDialog";
 
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import React from "react";
 
 type Props = {
 	anchorEl: PopoverProps["anchorEl"];
@@ -54,6 +56,9 @@ export const ActionsMenu: React.FC<Props> = ({
 	const [partnerPopupOpen, setPartnerPopupOpen] = useState(false);
 	const [partnerPopupIsMaster, setPartnerPopupIsMaster] =
 		useState<boolean>(false);
+	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+	const [anchorElConfirmDialog, setAnchorElConfirmDialog] =
+		React.useState<null | HTMLElement>(null);
 
 	const handleOpenSubmenu = (event: React.MouseEvent<HTMLElement>) => {
 		setSubmenuAnchorEl(event.currentTarget);
@@ -72,6 +77,26 @@ export const ActionsMenu: React.FC<Props> = ({
 
 	const handleClosePartnerPopup = () => {
 		setPartnerPopupOpen(false);
+	};
+
+	const handleCloseConfirmDialog = () => {
+		setOpenConfirmDialog(false);
+	};
+
+	const sendLetterWithResetPassword = async () => {
+		try {
+			const response = await axiosInstance.post("/reset-password", {
+				email: user.email,
+			});
+			if (response.status === 200) {
+				showToast("Password reset email sent successfully");
+				handleCloseConfirmDialog();
+				handleClose();
+			}
+		} catch (error) {
+			showErrorToast("Error while password reset email");
+			console.error("Error", error);
+		}
 	};
 
 	const changeUserPlan = async (planAlias: string) => {
@@ -133,6 +158,11 @@ export const ActionsMenu: React.FC<Props> = ({
 		}
 	};
 
+	const handleOpenPopover = (event: React.MouseEvent<HTMLElement>) => {
+		setAnchorElConfirmDialog(event.currentTarget);
+		setOpenConfirmDialog(true);
+	};
+
 	return (
 		<>
 			<Menu
@@ -149,6 +179,8 @@ export const ActionsMenu: React.FC<Props> = ({
 				}}
 				MenuListProps={{ dense: true }}
 			>
+				<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+
 				<MenuItem
 					disabled={actionsLoading || (!isMaster && isPartnerTab)}
 					onClick={() => handleOpenPartnerPopup(false)}
@@ -213,6 +245,16 @@ export const ActionsMenu: React.FC<Props> = ({
 					Move to Pro plan
 				</MenuItem>
 			</Menu>
+
+			<ConfirmDialog
+				openConfirmDialog={openConfirmDialog}
+				confirmAction={sendLetterWithResetPassword}
+				handleCloseConfirmDialog={handleCloseConfirmDialog}
+				anchorEl={anchorElConfirmDialog}
+				title="Confirm Reset Password"
+				description="Are you sure you want to reset your password?"
+				successButtonText="Reset"
+			/>
 			<ConfirmPlanChangeDialog
 				open={dialogOpen}
 				onClose={() => setDialogOpen(false)}

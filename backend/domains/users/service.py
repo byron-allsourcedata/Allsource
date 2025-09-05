@@ -8,6 +8,9 @@ class UsersService:
     def __init__(self, repo: UsersPersistence) -> None:
         self.repo = repo
 
+    def stripe_customer_id_by_id(self, user_id: int) -> str:
+        return self.repo.stripe_customer_id_by_id(user_id)
+
     def name_by_id(self, user_id: int) -> str | None:
         return self.repo.full_name_by_id(user_id)
 

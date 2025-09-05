@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from sqlalchemy import (
     Column,
@@ -56,7 +57,10 @@ class Users(Base):
         nullable=True,
         server_default=text("'PENDING'::character varying"),
     )
-    customer_id = Column(VARCHAR(32), nullable=False)
+    customer_id: Mapped[str] = mapped_column(VARCHAR(32), nullable=False)
+    """
+    stripe customer id
+    """
     company_website = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
     is_with_card = Column(Boolean, nullable=True, server_default=text("false"))
@@ -93,7 +97,7 @@ class Users(Base):
     validation_funds = Column(
         DECIMAL(10, 2), nullable=False, server_default=text("0")
     )
-    premium_source_credits = Column(
+    premium_source_credits: Mapped[Decimal | None] = mapped_column(
         DECIMAL(10, 2), nullable=True, server_default=text("0")
     )
     smart_audience_quota = Column(

@@ -1,10 +1,17 @@
-export type Status = "ready" | "syncing" | "synced" | "disabled" | "failed";
+export type Status =
+	| "ready"
+	| "syncing"
+	| "synced"
+	| "disabled"
+	| "failed"
+	| "locked";
 
 export type PremiumSourceData = {
 	id: string;
 	name: string;
 	created_at: string;
 	rows: string;
+	price: number;
 	status: Status;
 };
 
