@@ -1,15 +1,10 @@
 import asyncio
 import json
 import logging
-import os
 import sys
 
 import aio_pika
 from dotenv import load_dotenv
-
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
 
 from services.lookalikes import AudienceLookalikesService
 from enums import LookalikeStatus
