@@ -184,6 +184,14 @@ body {
 	color: #202124;
 }
 
+.eighth-sub-title {
+	font-family: var(--font-nunito);
+	font-size: 14px;
+	line-height: normal;
+	font-weight: 400;
+	color: #3b3b3b;
+}
+
 .table-heading {
 	font-family: var(--font-nunito);
 	font-size: 12px;
