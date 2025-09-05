@@ -106,7 +106,6 @@ axiosInterceptorInstance.interceptors.response.use(
 							break;
 						case "NEED_PAY_BASIC":
 							flagStore.set(true);
-							console.log("SET FLAG TO TRUE");
 							break;
 						case "PIXEL_INSTALLATION_NEEDED":
 							break;
