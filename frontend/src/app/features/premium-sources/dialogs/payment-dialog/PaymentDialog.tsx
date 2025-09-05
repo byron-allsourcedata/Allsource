@@ -155,6 +155,7 @@ const DialogContent: FC<DialogContentProps> = ({
 			cards={cards}
 			selectedCard={selectedCard}
 			setSelectedCard={setSelectedCard}
+			loading={loading}
 		/>
 	);
 };
@@ -232,6 +233,7 @@ type CardPaymentSummaryProps = {
 	cards: CardDetails[];
 	selectedCard: string;
 	setSelectedCard: (cardId: string) => void;
+	loading?: boolean;
 };
 
 export const CardPaymentSummary: FC<CardPaymentSummaryProps> = ({
@@ -239,6 +241,7 @@ export const CardPaymentSummary: FC<CardPaymentSummaryProps> = ({
 	cards,
 	selectedCard,
 	setSelectedCard,
+	loading,
 }) => {
 	return (
 		<Column gap="1.5rem">
@@ -251,6 +254,7 @@ export const CardPaymentSummary: FC<CardPaymentSummaryProps> = ({
 				cards={cards}
 				selectedCard={selectedCard}
 				setSelectedCard={setSelectedCard}
+				loading={loading}
 			/>
 		</Column>
 	);
