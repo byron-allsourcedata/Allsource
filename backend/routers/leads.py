@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
+from auth_dependencies import UnlimitedUser
 from dependencies import check_pixel_install_domain
 from enums import BaseEnum
 from models import UserDomains
@@ -96,6 +97,7 @@ async def search_contact(
 
 @router.post("/download_leads")
 async def download_leads(
+    _user: UnlimitedUser,
     leads_service: LeadsService,
     leads_request: LeadsRequest,
     domain: UserDomains = Depends(check_pixel_install_domain),
@@ -114,6 +116,7 @@ async def download_leads(
 
 @router.get("/download_leads")
 async def download_leads(
+    _user: UnlimitedUser,
     leads_service: LeadsService,
     domain: UserDomains = Depends(check_pixel_install_domain),
     from_date: int = Query(None, description="Start date in integer format"),

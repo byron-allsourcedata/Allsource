@@ -58,10 +58,23 @@ axiosInterceptorInstance.interceptors.response.use(
 	(response) => {
 		return response;
 	},
-	(error) => {
+	async (error) => {
 		const url = error.config?.url;
 		if (url?.endsWith("/whitelabel/settings")) {
 			return Promise.reject(error);
+		}
+
+		if (
+			error.response &&
+			error.response.data instanceof Blob &&
+			error.response.data.type === "application/json"
+		) {
+			try {
+				const text = await error.response.data.text();
+				error.response.data = JSON.parse(text);
+			} catch (e) {
+				console.error("Failed to parse blob error response:", e);
+			}
 		}
 
 		if (error.response) {
@@ -76,7 +89,7 @@ axiosInterceptorInstance.interceptors.response.use(
 					navigateTo("/signin");
 					break;
 				case 403:
-					console.log(error.response.data.status)
+					console.log(error.response.data);
 					switch (error.response.data.status) {
 						case "DOMAIN_NOT_FOUND":
 							navigateTo("dashboard");
@@ -132,7 +145,8 @@ axiosInterceptorInstance.interceptors.response.use(
 				// Handle other statuses if needed
 				default:
 					showErrorToast(
-						`An error occurred: ${error.response.data.status || "Unknown error"
+						`An error occurred: ${
+							error.response.data.status || "Unknown error"
 						}`,
 					);
 			}
@@ -144,10 +158,8 @@ axiosInterceptorInstance.interceptors.response.use(
 	},
 );
 
-export const useAxios = makeUseAxios(
-	{
-		axios: axiosInterceptorInstance,
-	},
-)
+export const useAxios = makeUseAxios({
+	axios: axiosInterceptorInstance,
+});
 
 export default axiosInterceptorInstance;

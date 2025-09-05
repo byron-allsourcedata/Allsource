@@ -62,6 +62,7 @@ export const fetchUserData = async (
 						price: userPlan.price,
 						plan_alias: userPlan.plan_alias,
 						currency: userPlan.currency,
+						has_active_plan: userInfo.has_active_plan,
 					}),
 				);
 
@@ -98,6 +99,7 @@ export const fetchUserData = async (
 					get_started: getStartedInfo,
 					price: userPlan.price,
 					currency: userPlan.currency,
+					has_active_plan: userInfo.has_active_plan,
 				};
 			}
 		}

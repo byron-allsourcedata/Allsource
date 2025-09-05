@@ -86,6 +86,7 @@ import {
 	renderValidatedCountOrLink,
 	renderValidatedStatusIcon,
 } from "./components/RenderProgress";
+import { checkHasActivePlan } from "@/services/checkActivePlan";
 
 interface Smarts {
 	id: string;
@@ -2084,6 +2085,14 @@ const SmartAudiences: React.FC = () => {
 																								},
 																							}}
 																							onClick={() => {
+																								if (
+																									!checkHasActivePlan({
+																										withoutApi: true,
+																									})
+																								) {
+																									handleCloseMorePopover();
+																									return;
+																								}
 																								handleCloseMorePopover();
 																								handleDataSyncPopupOpen();
 																							}}
@@ -2110,6 +2119,14 @@ const SmartAudiences: React.FC = () => {
 																								},
 																							}}
 																							onClick={() => {
+																								if (
+																									!checkHasActivePlan({
+																										withoutApi: true,
+																									})
+																								) {
+																									handleCloseMorePopover();
+																									return;
+																								}
 																								setIsDownloadAction(true);
 																								handleCloseMorePopover();
 																								handleDataSyncPopupOpen();

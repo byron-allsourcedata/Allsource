@@ -76,7 +76,19 @@ def maybe_check_user_authentication(
         return None
 
 
+def check_unlimited_user(
+    user: Annotated[UserDict, Depends(check_user_authentication)],
+) -> UserDict:
+    if user.get("current_subscription_id") is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"status": UserAuthorizationStatus.NEED_PAY_BASIC.value},
+        )
+    return user
+
+
 AuthUser = Annotated[UserDict, Depends(check_user_authentication)]
 MaybeAuthUser = Annotated[
     UserDict | None, Depends(maybe_check_user_authentication)
 ]
+UnlimitedUser = Annotated[UserDict, Depends(check_unlimited_user)]

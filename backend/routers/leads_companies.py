@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
+from auth_dependencies import UnlimitedUser
 from dependencies import (
     get_companies_service,
     check_user_authorization_without_pixel,
@@ -153,6 +154,7 @@ async def get_seniority(
 
 @router.get("/download-companies")
 async def download_companies(
+    _user: UnlimitedUser,
     company_id: Optional[int] = Query(None),
     from_date: Optional[int] = Query(
         None, description="Start date in integer format"
@@ -197,6 +199,7 @@ async def download_companies(
 
 @router.get("/download-employees")
 async def download_employees(
+    _user: UnlimitedUser,
     company_id: int = Query(None),
     job_title: str = Query(None),
     department: str = Query(None),
@@ -233,6 +236,7 @@ async def download_employees(
 
 @router.get("/download-employee/{employee_id}")
 async def download_employee(
+    _user: UnlimitedUser,
     employee_id: int,
     company_id: int = Query(None),
     company_service: CompanyService = Depends(get_companies_service),

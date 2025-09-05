@@ -252,12 +252,15 @@ class SettingsService:
         current_subscription = self.plan_persistence.get_user_subscription(
             user_id=user.get("id")
         )
-        member_limit = current_subscription.members_limit
+        if current_subscription:
+            member_limit = current_subscription.members_limit
+        else:
+            member_limit = 3
         member_count = len(
             self.user_persistence.get_team_members(user_id=user.get("id"))
         )
-        result["member_limit"] = member_limit if current_subscription else 0
-        result["member_count"] = member_count + 1 if current_subscription else 0
+        result["member_limit"] = member_limit
+        result["member_count"] = member_count + 1
         return result
 
     def get_pending_invations(self, user: dict):
