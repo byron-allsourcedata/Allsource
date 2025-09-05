@@ -10,6 +10,7 @@ import { MoreVert } from "@/icon";
 import type { PremiumSourceData } from "@/app/features/premium-sources/schemas";
 import { useCardMenu, type CardMenuProps } from "../hooks/useCardMenu";
 import { StatusLabel } from "@/app/(client)/premium-sources/components/status";
+import { formatMoney } from "@/components/PartnersAccounts";
 
 const Header = styled(Typography)`
 	color: #202124;
@@ -81,6 +82,7 @@ export type UserCardProps = {
 	source: PremiumSourceData;
 	onSync: () => void;
 	onDownload: () => void;
+	onUnlock: () => void;
 };
 
 export type AdminCardProps = {
@@ -123,6 +125,10 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 						<Header>No of Rows</Header>
 						<Value>{source.rows}</Value>
 					</CardColumn>
+
+					{props.cardType === "admin" && (
+						<PriceColumn price={props.source.price} />
+					)}
 					<CardColumn
 						sx={{
 							width: "5rem",
@@ -133,18 +139,21 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 					</CardColumn>
 
 					{props.cardType === "user" && (
-						<CardColumn>
-							<Row alignItems="center" gap="0.5rem">
-								<SyncButton disabled={!canSync} onClick={props.onSync}>
-									Sync
-								</SyncButton>
-								{/* <DownloadButton onClick={props.onDownload} /> */}
-							</Row>
-						</CardColumn>
+						<UserButtonGroup
+							locked={source.status === "locked"}
+							canSync={source.status === "ready"}
+							price={source.price}
+							onSync={props.onSync}
+							onDownload={props.onDownload}
+							onUnlock={props.onUnlock}
+						/>
 					)}
 
 					{props.cardType === "admin" && (
-						<CardColumn flexDirection={"row-reverse"}>
+						<CardColumn
+							flexDirection={"row-reverse"}
+							sx={{ width: "min-content" }}
+						>
 							<IconButton
 								onClick={() => setMenuOpen(true)}
 								ref={menuAnchor as RefObject<HTMLButtonElement>}
@@ -164,5 +173,70 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 				</CardInnerContainer>
 			</CardContainer>
 		</Row>
+	);
+};
+
+type PriceColumnProps = {
+	price: number;
+};
+
+export const PriceColumn: FC<PriceColumnProps> = ({ price }) => {
+	const formattedPrice = (price / 100).toFixed(2);
+
+	return (
+		<CardColumn>
+			<Header>Price</Header>
+			<Value>${formattedPrice}</Value>
+		</CardColumn>
+	);
+};
+
+type UserButtonGroupProps = {
+	locked: boolean;
+	canSync: boolean;
+	price: number;
+	onSync: () => void;
+	onDownload: () => void;
+	onUnlock: () => void;
+};
+
+export const UserButtonGroup: FC<UserButtonGroupProps> = ({
+	locked,
+	canSync,
+	price,
+	onSync,
+	onDownload,
+	onUnlock,
+}) => {
+	const formattedPrice = formatMoney(price / 100);
+
+	if (locked) {
+		return (
+			<CardColumn
+				sx={{
+					width: "8.5rem",
+				}}
+			>
+				<CustomButton
+					onClick={onUnlock}
+					sx={{
+						whiteSpace: "nowrap",
+					}}
+				>
+					Unlock | {formattedPrice}
+				</CustomButton>
+			</CardColumn>
+		);
+	}
+
+	return (
+		<CardColumn>
+			<Row alignItems="center" gap="0.5rem">
+				<SyncButton disabled={!canSync} onClick={onSync}>
+					Sync
+				</SyncButton>
+				<DownloadButton onClick={onDownload} />
+			</Row>
+		</CardColumn>
 	);
 };

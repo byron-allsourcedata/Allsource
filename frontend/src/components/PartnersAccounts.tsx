@@ -30,6 +30,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
+import { format } from "path";
 
 const tableHeaders = [
 	{ key: "account_name", label: "Account name", sortable: false },
@@ -91,6 +92,10 @@ export function formatMoney(value: number | string): string {
 		style: "currency",
 		currency: "USD",
 	});
+}
+
+export function formatCents(value: number): string {
+	return formatMoney(value / 100);
 }
 
 interface PartnersAccountsProps {

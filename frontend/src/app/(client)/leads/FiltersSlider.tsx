@@ -2759,8 +2759,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 							</Box>
 						</Collapse>
 					</Box>
-					{/* Average time spent */}
-					<Box sx={filterStyles.main_filter_form}>
+					{/* Average time spent removed, because it was confusing */}
+
+					{/* <Box sx={filterStyles.main_filter_form}>
 						<Box
 							sx={filterStyles.filter_form}
 							onClick={() => setIsTimeSpentOpen(!isTimeSpentOpen)}
@@ -2918,7 +2919,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								</Box>
 							</Box>
 						</Collapse>
-					</Box>
+					</Box> */}
 					{/* Recurring Visits */}
 					<Box
 						sx={{

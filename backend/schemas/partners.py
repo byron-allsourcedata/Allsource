@@ -8,6 +8,19 @@ class ErrorResponse(BaseModel):
     message: str
 
 
+class MonthlyCommission(BaseModel):
+    title: str
+    percentage: int
+    revenue: float
+
+
+class PartnerResponse(BaseModel):
+    id: int
+    is_master: bool = False
+    commission: int
+    monthly_comissions: list[MonthlyCommission]
+
+
 class PartnersResponse(BaseModel):
     id: int
     partner_name: str

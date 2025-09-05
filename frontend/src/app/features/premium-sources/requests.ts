@@ -6,6 +6,7 @@ import type {
 } from "@/app/(client)/premium-sources/syncs/schemas";
 import type { AxiosInstance } from "axios";
 import { showErrorToast } from "@/components/ToastNotification";
+import type { CardDetails } from "./dialogs/payment-dialog/PaymentMethod";
 
 export function useGetPremiumSources() {
 	return useAxios<PremiumSourceData[]>(
@@ -123,6 +124,37 @@ type CreateCampaignParams = {
 	dailyBudget: number | undefined;
 };
 
+export function openDownloadPremiumSource(downloadToken: string) {
+	const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}premium-sources/download?token=${downloadToken}`;
+	window.open(url, "_blank");
+}
+
+export function usePremiumSourceDownloadLinkRequest() {
+	const [{ loading, data }, refetch] = useAxios<string>(
+		{
+			url: "/premium-sources/download-link",
+			method: "GET",
+		},
+		{
+			manual: true,
+		},
+	);
+
+	const request = (premium_source_id: string) => {
+		return refetch({
+			params: {
+				premium_source_id: premium_source_id,
+			},
+		});
+	};
+
+	return {
+		loading,
+		data,
+		request,
+	};
+}
+
 export const metaCreateCampaign = async (
 	axios: AxiosInstance,
 	{
@@ -171,4 +203,77 @@ export const metaCreateCampaign = async (
 	} finally {
 		setLoading(false);
 	}
+};
+
+export const useGetPremiumFunds = () => {
+	const [{ loading, data }, refetch] = useAxios<number | null>(
+		{
+			url: "/premium-sources/funds",
+			method: "GET",
+		},
+		{
+			manual: true,
+		},
+	);
+
+	return {
+		loading,
+		data,
+		refetch,
+	};
+};
+
+export const useBuyPremiumSource = () => {
+	const [{ loading, data }, refetch, cancel] = useAxios<number | null>(
+		{
+			url: "/premium-sources/unlock",
+			method: "GET",
+		},
+		{
+			manual: true,
+		},
+	);
+
+	const request = (
+		sourceId: string,
+		amount: number,
+		paymentMethodId?: string,
+	) => {
+		return refetch({
+			params: {
+				premium_source_id: sourceId,
+				amount: amount,
+				payment_method_id: paymentMethodId,
+			},
+		});
+	};
+
+	return {
+		loading,
+		data,
+		request,
+		cancel,
+	};
+};
+
+type BillingResponse = {
+	card_details: CardDetails[];
+};
+
+export const useGetAddedCards = () => {
+	const [{ loading, data }, refetch] = useAxios<BillingResponse>(
+		{
+			url: "/settings/billing",
+			method: "GET",
+		},
+		{
+			manual: true,
+		},
+	);
+
+	return {
+		loading,
+		data,
+		refetch,
+	};
 };

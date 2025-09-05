@@ -7,9 +7,15 @@ type Props = {
 	sources: PremiumSourceData[];
 	onSync: (source: PremiumSourceData) => void;
 	onDownload: (source: PremiumSourceData) => void;
+	onUnlock: (source: PremiumSourceData) => void;
 };
 
-export const UserSourcesList: FC<Props> = ({ sources, onSync, onDownload }) => {
+export const UserSourcesList: FC<Props> = ({
+	sources,
+	onSync,
+	onDownload,
+	onUnlock,
+}) => {
 	const cards = sources.map((source, idx) => (
 		<>
 			<UserPremiumSourceCard
@@ -17,6 +23,7 @@ export const UserSourcesList: FC<Props> = ({ sources, onSync, onDownload }) => {
 				source={source}
 				onSync={() => onSync(source)}
 				onDownload={() => onDownload(source)}
+				onUnlock={() => onUnlock(source)}
 			/>
 		</>
 	));

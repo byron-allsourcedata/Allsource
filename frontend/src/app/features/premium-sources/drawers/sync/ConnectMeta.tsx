@@ -46,7 +46,6 @@ import { MetaMappingHeader } from "./meta/MetaMappingHeader";
 import { ListName } from "./meta/typography";
 import { MetaCampaignItem } from "./meta/MetaCampaignItem";
 import { MetaButton } from "./meta/buttons/MetaButton";
-import { DollarTextField } from "./meta/DollarTextField";
 import { MetaCreateCampaignForm } from "./meta/MetaCreateCampaignForm";
 import { metaCreateCampaign } from "../../requests";
 

@@ -3,12 +3,17 @@ from models.partner import Partner
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
 import os
-from sqlalchemy import or_, func, asc, desc, nulls_last, nulls_first
+from sqlalchemy import Float, or_, func, asc, desc, nulls_last, nulls_first
 from typing import Optional, Tuple, Any
 from datetime import datetime, timezone, date
 from models.referral_payouts import ReferralPayouts
 from models.users import Users
 from models.plans import SubscriptionPlan
+from models.subscriptions import UserSubscriptions
+from models.premium_sources_transactions import PremiumSourceTransaction
+from models.premium_sources_stripe_deductions import (
+    PremiumSourceStripeDeduction,
+)
 from models.referral_users import ReferralUser
 from enums import ConfirmationStatus, PayoutsStatus
 from resolver import injectable
@@ -221,8 +226,68 @@ class PartnersPersistence:
     def get_partner_by_id(self, partner_id):
         return self.db.query(Partner).filter(Partner.id == partner_id).first()
 
-    def get_partner_by_email(self, email):
-        return self.db.query(Partner).filter(Partner.email == email).first()
+    def get_partner_by_email(self, email: str):
+        result = (
+            self.db.query(
+                Partner.id,
+                Partner.commission,
+                Partner.is_master,
+            )
+            .filter_by(email=email)
+            .one_or_none()
+        )
+
+        return result._asdict() if result else None
+
+    def get_partner_overview_by_email(self, email: str):
+        PartnerReferralUsers = aliased(Users)
+
+        result = (
+            self.db.query(
+                Partner.id,
+                Partner.commission,
+                Partner.is_master,
+                func.coalesce(func.sum(SubscriptionPlan.price), 0).label(
+                    "subscription_total"
+                ),
+                func.coalesce(func.sum(Users.overage_leads_count), 0).label(
+                    "overage_total"
+                ),
+                func.coalesce(
+                    func.sum(PremiumSourceStripeDeduction.amount), 0
+                ).label("premium_sources_total"),
+            )
+            .join(Users, Partner.user_id == Users.id)
+            .join(ReferralUser, ReferralUser.parent_user_id == Users.id)
+            .join(
+                PartnerReferralUsers,
+                ReferralUser.user_id == PartnerReferralUsers.id,
+            )
+            .join(
+                UserSubscriptions,
+                UserSubscriptions.id
+                == PartnerReferralUsers.current_subscription_id,
+            )
+            .join(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .outerjoin(
+                PremiumSourceTransaction,
+                PremiumSourceTransaction.user_id == PartnerReferralUsers.id,
+            )
+            .outerjoin(
+                PremiumSourceStripeDeduction,
+                PremiumSourceTransaction.id
+                == PremiumSourceStripeDeduction.transaction_id,
+            )
+            .filter(Partner.email == email)
+            .group_by(Partner.id, Partner.commission, Partner.is_master)
+        )
+
+        result = result.one_or_none()
+
+        return result._asdict() if result else None
 
     def get_partner_by_user_id(self, user_id):
         return self.db.query(Partner).filter(Partner.user_id == user_id).first()

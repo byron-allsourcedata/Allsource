@@ -211,7 +211,7 @@ async def process_user_data(
             requested_at=requested_at,
             visit_id=visit_id,
             trovo_id=trovo_id,
-            spent_time_sec=10,
+            spent_time_sec=1,
         )
         .on_conflict_do_nothing()
     )
@@ -242,7 +242,7 @@ def process_anonymous_requests(
     start_time = start_date_time.time()
     end_date = end_date_time.date()
     end_time = end_date_time.time()
-    total_time_sec = int((end_date_time - start_date_time).total_seconds() + 10)
+    total_time_sec = int((end_date_time - start_date_time).total_seconds() + 1)
     pages_set = set()
     for i in range(len(leads_requests_sorted)):
         current_request = leads_requests_sorted[i]
