@@ -1,3 +1,4 @@
+from decimal import Decimal
 import logging
 import os
 import hashlib
@@ -103,12 +104,14 @@ class PartnersService:
                 MonthlyCommission(
                     title="Pixel Resolutions Commission",
                     percentage=partner["commission"],
-                    revenue=partner["overage_commission_total"],
+                    revenue=partner["overage_total"]
+                    * (Decimal(partner["commission"]) / Decimal(100)),
                 ),
                 MonthlyCommission(
                     title="Upgrades Commission",
                     percentage=partner["commission"],
-                    revenue=partner["subscription_commission_total"],
+                    revenue=partner["subscription_total"]
+                    * (Decimal(partner["commission"]) / Decimal(100)),
                 ),
                 MonthlyCommission(
                     title="Premium Sources Commission",

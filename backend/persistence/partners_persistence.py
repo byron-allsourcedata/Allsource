@@ -243,18 +243,12 @@ class PartnersPersistence:
                 Partner.id,
                 Partner.commission,
                 Partner.is_master,
-                func.coalesce(
-                    func.sum(
-                        SubscriptionPlan.price * (Partner.commission / 100.0)
-                    ),
-                    0,
-                ).label("subscription_commission_total"),
-                func.coalesce(
-                    func.sum(
-                        Users.overage_leads_count * (Partner.commission / 100.0)
-                    ),
-                    0,
-                ).label("overage_commission_total"),
+                func.coalesce(func.sum(SubscriptionPlan.price), 0).label(
+                    "subscription_total"
+                ),
+                func.coalesce(func.sum(Users.overage_leads_count), 0).label(
+                    "overage_total"
+                ),
             )
             .join(Users, Partner.user_id == Users.id)
             .join(ReferralUser, ReferralUser.parent_user_id == Users.id)
