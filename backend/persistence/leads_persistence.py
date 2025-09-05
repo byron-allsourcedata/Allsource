@@ -247,7 +247,6 @@ class LeadsPersistence:
             "state": FiveXFiveLocations.state_id,
             "city": FiveXFiveLocations.city,
             "age": FiveXFiveUser.age_min,
-            "average_time_sec": LeadUser.avarage_visit_time,
             "status": LeadUser.is_returning_visitor,
             "funnel": LeadUser.behavior_type,
         }
@@ -420,30 +419,6 @@ class LeadsPersistence:
                     filters.append(LeadsVisits.pages_count == 3)
                 elif visit == "1_pages":
                     filters.append(LeadsVisits.pages_count == 1)
-            query = query.filter(or_(*filters))
-
-        if average_time_sec:
-            page_visits_list = average_time_sec.split(",")
-            filters = []
-            for visit in page_visits_list:
-                if visit == "under_10":
-                    filters.append(LeadUser.avarage_visit_time <= 10)
-                elif visit == "10-30_secs":
-                    filters.append(
-                        and_(
-                            LeadUser.avarage_visit_time > 10,
-                            LeadUser.avarage_visit_time <= 30,
-                        )
-                    )
-                elif visit == "30-60_secs":
-                    filters.append(
-                        and_(
-                            LeadUser.avarage_visit_time > 30,
-                            LeadUser.avarage_visit_time <= 60,
-                        )
-                    )
-                else:
-                    filters.append(LeadUser.avarage_visit_time > 60)
             query = query.filter(or_(*filters))
 
         if search_query:
@@ -1137,29 +1112,6 @@ class LeadsPersistence:
                         visit_map[v]
                         for v in page_visits.split(",")
                         if v in visit_map
-                    )
-                )
-            )
-
-        if average_time_spent:
-            time_map = {
-                "under_10_secs": LeadsVisits.average_time_sec < 10,
-                "10-30_secs": and_(
-                    LeadsVisits.average_time_sec >= 10,
-                    LeadsVisits.average_time_sec <= 30,
-                ),
-                "30-60_secs": and_(
-                    LeadsVisits.average_time_sec >= 30,
-                    LeadsVisits.average_time_sec <= 60,
-                ),
-                "over_60_secs": LeadsVisits.average_time_sec > 60,
-            }
-            query = query.filter(
-                or_(
-                    *(
-                        time_map[t]
-                        for t in average_time_spent.split(",")
-                        if t in time_map
                     )
                 )
             )

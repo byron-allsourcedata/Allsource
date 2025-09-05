@@ -133,7 +133,7 @@ class StripeService:
                 return result
 
             payment_intent = stripe.PaymentIntent.create(
-                amount=amount_usd * 100,
+                amount=int(amount_usd * 100),
                 currency=currency,
                 customer=customer_id,
                 payment_method=payment_method_id,
@@ -570,7 +570,11 @@ def get_billing_history_by_userid(customer_id, page, per_page):
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     for charge in charges:
         charge_type = getattr(charge, "metadata", {}).get("charge_type", "")
-        if charge_type in {"contacts_overage", "buy_funds"}:
+        if charge_type in {
+            "contacts_overage",
+            "buy_funds",
+            "buy_premium_source",
+        }:
             billing_history.append(charge)
 
     count = len(billing_history)

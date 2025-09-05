@@ -5,20 +5,19 @@ import {
 import { DrawerHeader } from "@/components/drawers/DrawerHeader";
 import { Divider, LinearProgress, TextField, Typography } from "@mui/material";
 import { useState, type FC } from "react";
-import { PremiumSourceUpload } from "../../../../components/premium-sources/components/PremiumSourceUpload";
 import { useFileDragAndDrop } from "../../../../components/premium-sources/hooks/useFileDragAndDrop";
 import { Column } from "@/components/Column";
 import { Row } from "@/components/Row";
 import { CustomButton } from "@/components/ui";
-import axiosInterceptorInstance, {
-	useAxios,
-} from "@/axios/axiosInterceptorInstance";
 import { PremiumSourceFileSlot } from "../../../../components/premium-sources/components/PremiumSourceFileSlot";
 import { useFieldValue } from "../../../../components/premium-sources/hooks/useFieldValue";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useAdminPostPremiumSources } from "@/app/features/premium-sources/requests";
 import { useFilePicker } from "../../whitelabel/hooks/useFilePicker";
 import type { AxiosError } from "axios";
+import { DollarTextField } from "@/components/ui/inputs/DollarTextField";
+import { PriceInputField } from "@/components/ui/inputs/PriceInputField";
+import { usePriceInput } from "@/components/ui/inputs/usePriceField";
 
 const T = Typography;
 
@@ -52,6 +51,13 @@ export const AddPremiumSource: FC<Props> = ({ userId, onClose, onDone }) => {
 
 	const uploadedFile = pickedFile ?? dndState.droppedFiles[0];
 
+	const {
+		value: sourcePrice,
+		cents: sourcePriceCents,
+		onChange: onPriceChange,
+		onBlur: onPriceBlur,
+	} = usePriceInput();
+
 	const onUpload = () => {
 		const file = uploadedFile;
 
@@ -59,6 +65,7 @@ export const AddPremiumSource: FC<Props> = ({ userId, onClose, onDone }) => {
 
 		data.append("file", file);
 		data.append("user_id", String(userId));
+		data.append("source_price", String(sourcePriceCents));
 		data.append("source_name", nameField.value);
 
 		upload({ data })
@@ -107,6 +114,14 @@ export const AddPremiumSource: FC<Props> = ({ userId, onClose, onDone }) => {
 							selectedFile={pickedFile ?? undefined}
 							dndState={dndState}
 							onUploadClick={openFileDialog}
+						/>
+						<Divider />
+						<PriceInputField
+							label={"Source Price"}
+							name={"Source Price"}
+							value={sourcePrice}
+							onChange={onPriceChange}
+							onBlur={onPriceBlur}
 						/>
 					</Column>
 					<Row justifyContent="flex-end">

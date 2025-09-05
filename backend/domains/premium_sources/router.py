@@ -21,7 +21,22 @@ from domains.premium_sources.exceptions import (
     PremiumSourceNotFound,
     PremiumSourceNotOwned,
 )
+from domains.premium_sources.premium_sources_payments.exceptions import (
+    DeductionNotFound,
+    InsufficientFunds,
+    MultiplePremiumSourceTransactionsError,
+    PriceHasChangedError,
+)
+from domains.premium_sources.premium_sources_payments.service import (
+    PremiumSourcesPaymentsService,
+)
 from domains.premium_sources.sync.service import PremiumSourceSyncService
+from domains.premium_sources.table.service import PremiumSourceTableService
+from domains.users.exceptions import UserNotFound
+from domains.users.users_funds.exception import (
+    MultipleUsersUpdated,
+)
+from domains.users.users_funds.service import UserFundsService
 from utils.csv import parse_csv_bytes
 from utils.strings import to_snake_case
 
@@ -76,6 +91,56 @@ def get_premium_sources(user: AuthUser, sources_service: PremiumSourceService):
     return sources_service.list(user["id"])
 
 
+@router.get("/funds")
+def get_premium_funds(user: AuthUser, user_funds: UserFundsService):
+    user_id = user["id"]
+
+    try:
+        return user_funds.premium_funds(user_id)
+    except UserNotFound:
+        return Response(status_code=403, content="Unauthorized")
+
+
+@router.get("/unlock")
+async def unlock_premium_source(
+    user: AuthUser,
+    premium_source_id: UUID,
+    amount: int,
+    payment_method_id: str | None,
+    premium_source_payments: PremiumSourcesPaymentsService,
+):
+    """
+    This route expects amount, to account for possibility of price changing since user requested price last time
+    """
+
+    user_id = user["id"]
+
+    try:
+        premium_source_payments.charge_for_premium_source(
+            user_id=user_id,
+            premium_source_id=premium_source_id,
+            payment_method_id=payment_method_id,
+            amount=amount,
+        )
+        premium_source_payments.commit()
+    except UserNotFound:
+        return Response(status_code=403, content="Unauthorized")
+    except PremiumSourceNotFound:
+        return Response(status_code=404, content="File not found")
+    except InsufficientFunds:
+        return Response(status_code=402, content="Insufficient funds")
+    except MultipleUsersUpdated:
+        raise HTTPException(status_code=500)
+    except MultiplePremiumSourceTransactionsError:
+        raise HTTPException(status_code=500)
+    except DeductionNotFound:
+        raise HTTPException(status_code=500)
+    except PriceHasChangedError:
+        return Response(status_code=400, content="Price has changed")
+
+    return Response(status_code=200, content="File unlocked")
+
+
 @router.get("/download-link")
 def get_presigned_url(
     user: AuthUser,
@@ -98,7 +163,7 @@ def get_presigned_url(
 @router.get("/download")
 def download_raw_premium_source(
     token: str,
-    premium_sources: PremiumSourceService,
+    premium_sources: PremiumSourceTableService,
 ):
     download_token = DownloadToken.decode(token)
     user_id = download_token.user_id

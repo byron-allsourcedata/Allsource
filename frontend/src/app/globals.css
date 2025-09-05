@@ -16,6 +16,10 @@ html {
 	height: 100%;
 }
 
+.debug * {
+	outline: 1px solid red;
+}
+
 body {
 	margin: 0;
 	padding: 0;
@@ -178,6 +182,14 @@ body {
 	line-height: normal;
 	font-weight: 500;
 	color: #202124;
+}
+
+.eighth-sub-title {
+	font-family: var(--font-nunito);
+	font-size: 14px;
+	line-height: normal;
+	font-weight: 400;
+	color: #3b3b3b;
 }
 
 .table-heading {
