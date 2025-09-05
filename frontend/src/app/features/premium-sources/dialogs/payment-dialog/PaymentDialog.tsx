@@ -1,5 +1,5 @@
 import { Column } from "@/components/Column";
-import { Dialog, DialogTitle, RadioGroup } from "@mui/material";
+import { Dialog, DialogTitle, RadioGroup, styled } from "@mui/material";
 import { useEffect, useState, type FC } from "react";
 import { DialogHeader } from "./DialogHeader";
 import { PaymentActions } from "./PaymentActions";
@@ -7,6 +7,7 @@ import { PaymentMethods } from "./PaymentMethods";
 import { PremiumSourcePrice } from "./PremiumSourcePrice";
 import { useGetAddedCards, useGetPremiumFunds } from "../../requests";
 import type { CardDetails } from "./PaymentMethod";
+import { PaymentCalculation } from "./PaymentCalculation";
 
 type Props = {
 	open: boolean;
@@ -79,6 +80,11 @@ export const PaymentDialog: FC<Props> = ({
 					>
 						<PremiumSourcePrice price={price} />
 
+						<PaymentCalculation
+							price={price}
+							availableFunds={premiumFunds ?? 0}
+						/>
+
 						{!loading && premiumFunds != null && (
 							<RadioGroup
 								value={selectedCard}
@@ -108,3 +114,17 @@ export const PaymentDialog: FC<Props> = ({
 		</Dialog>
 	);
 };
+
+type DebugProps = {
+	disable?: boolean;
+};
+
+export const Debug = styled(Column)<DebugProps>`
+${({ disable }) =>
+	!disable &&
+	`
+* {
+	outline: 1px solid red;
+}
+	`}
+`;
