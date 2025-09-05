@@ -10,6 +10,10 @@ from models.referral_payouts import ReferralPayouts
 from models.users import Users
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
+from models.premium_sources_transactions import PremiumSourceTransaction
+from models.premium_sources_stripe_deductions import (
+    PremiumSourceStripeDeduction,
+)
 from models.referral_users import ReferralUser
 from enums import ConfirmationStatus, PayoutsStatus
 from resolver import injectable
@@ -249,6 +253,9 @@ class PartnersPersistence:
                 func.coalesce(func.sum(Users.overage_leads_count), 0).label(
                     "overage_total"
                 ),
+                func.coalesce(
+                    func.sum(PremiumSourceStripeDeduction.amount), 0
+                ).label("premium_sources_total"),
             )
             .join(Users, Partner.user_id == Users.id)
             .join(ReferralUser, ReferralUser.parent_user_id == Users.id)
@@ -264,6 +271,15 @@ class PartnersPersistence:
             .join(
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .outerjoin(
+                PremiumSourceTransaction,
+                PremiumSourceTransaction.user_id == PartnerReferralUsers.id,
+            )
+            .outerjoin(
+                PremiumSourceStripeDeduction,
+                PremiumSourceTransaction.id
+                == PremiumSourceStripeDeduction.transaction_id,
             )
             .filter(Partner.email == email)
             .group_by(Partner.id, Partner.commission, Partner.is_master)

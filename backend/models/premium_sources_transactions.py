@@ -1,6 +1,15 @@
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import TIMESTAMP, ForeignKey, Uuid, event, func, select, text
+from sqlalchemy import (
+    TIMESTAMP,
+    ForeignKey,
+    BigInteger,
+    Uuid,
+    event,
+    func,
+    select,
+    text,
+)
 import sqlalchemy
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -15,7 +24,9 @@ class PremiumSourceTransaction(Base):
     premium_source_id: Mapped[UUID] = mapped_column(
         sqlalchemy.UUID, ForeignKey(PremiumSource.id), nullable=False
     )
-    user_id: Mapped[int] = mapped_column(nullable=False)
+    user_id: Mapped[BigInteger] = mapped_column(
+        ForeignKey(Users.id, ondelete="CASCADE"), nullable=False
+    )
     """
     user, that made payment
     """
@@ -34,4 +45,3 @@ class PremiumSourceTransaction(Base):
 
 
 event.listen(PremiumSource, "before_update", update_timestamps)
-

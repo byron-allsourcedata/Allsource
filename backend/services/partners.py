@@ -116,7 +116,12 @@ class PartnersService:
                 MonthlyCommission(
                     title="Premium Sources Commission",
                     percentage=partner["commission"],
-                    revenue=0,
+                    revenue=partner["premium_sources_total"]
+                    * (
+                        Decimal(partner["commission"])
+                        / Decimal(100)
+                        / Decimal(100)
+                    ),
                 ),
             ],
         )
