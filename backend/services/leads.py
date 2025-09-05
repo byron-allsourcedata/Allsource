@@ -109,7 +109,6 @@ class LeadsService:
                         "first_visited_date": adjusted_date,
                         "first_visited_time": adjusted_time,
                         "visitor_type": lead[63],
-                        "average_time_sec": lead[64],
                         "is_active": lead[66],
                     }
                 )
@@ -222,7 +221,6 @@ class LeadsService:
                         "time_spent": lead[61],
                         "recurring_visits": lead[62],
                         "visitor_type": lead[63],
-                        "average_time_sec": lead[64],
                         "is_active": lead[66],
                         "page_visits": leads_requests.get(lead[67]),
                     }

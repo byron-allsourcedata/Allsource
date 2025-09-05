@@ -1038,7 +1038,7 @@ async def process_user_data(
             page=normalize_url(page),
             requested_at=requested_at,
             visit_id=lead_visit_id,
-            spent_time_sec=10,
+            spent_time_sec=1,
         )
         .on_conflict_do_nothing()
     )
@@ -1085,7 +1085,7 @@ def process_leads_requests(
     start_time = start_date_time.time()
     end_date = end_date_time.date()
     end_time = end_date_time.time()
-    total_time_sec = int((end_date_time - start_date_time).total_seconds() + 10)
+    total_time_sec = int((end_date_time - start_date_time).total_seconds() + 1)
     pages_set = set()
     for i in range(len(leads_requests_sorted)):
         current_request = leads_requests_sorted[i]
@@ -1093,12 +1093,8 @@ def process_leads_requests(
             pages_set.add(normalize_url(current_request[1]))
 
     pages_count = len(pages_set)
-    average_time_sec = int(total_time_sec / len(leads_requests_sorted))
     lead_user.total_visit_time = (
         lead_user.total_visit_time - lead_visit_full_time_sec + total_time_sec
-    )
-    lead_user.avarage_visit_time = int(
-        lead_user.total_visit_time / lead_user.total_visit
     )
 
     session.query(LeadsVisits).filter_by(id=visit_id).update(
@@ -1109,7 +1105,6 @@ def process_leads_requests(
             "end_time": end_time,
             "pages_count": pages_count,
             "full_time_sec": total_time_sec,
-            "average_time_sec": average_time_sec,
             "behavior_type": behavior_type,
         }
     )
@@ -1126,7 +1121,7 @@ def add_new_leads_visits(
 ):
     start_date = visited_datetime.date()
     start_time = visited_datetime.time()
-    date_page = visited_datetime + timedelta(seconds=10)
+    date_page = visited_datetime + timedelta(seconds=1)
     end_date = date_page.date()
     end_time = date_page.time()
     leads_visits = LeadsVisits(
@@ -1143,10 +1138,7 @@ def add_new_leads_visits(
     session.flush()
 
     lead_user.total_visit += 1
-    lead_user.total_visit_time += 10
-    lead_user.avarage_visit_time = int(
-        lead_user.total_visit_time / lead_user.total_visit
-    )
+    lead_user.total_visit_time += 1
 
     session.flush()
     return leads_visits
