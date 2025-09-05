@@ -39,9 +39,15 @@ interface ReferralDiscountCode {
 	discount_amount: number;
 }
 
+interface MonthlyComission {
+	title: string;
+	percentage: number;
+	revenue: number;
+}
+
 interface PartnersOverviewProps {
 	isMaster: boolean;
-	monthlyComission: any[];
+	monthlyComission: MonthlyComission[];
 }
 
 const withoutDiscountCode = {
@@ -976,7 +982,7 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({
 										gap: 2,
 									}}
 								>
-									{monthlyComission.map((item: any, index: number) => (
+									{monthlyComission.map((item, index) => (
 										<Box
 											key={index}
 											sx={{
