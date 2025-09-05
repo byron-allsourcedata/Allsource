@@ -18,3 +18,5 @@ class BigcommerceConfig(Base):
     external_app_installed = (
         f"{os.getenv('SITE_HOST_URL')}/{os.getenv('EXTERNAL_APP_INSTALLED')}"
     )
+    frontend_sign_up_redirect = f"{os.getenv('SITE_HOST_URL')}/signup"
+    frontend_sign_in_redirect = f"{os.getenv('SITE_HOST_URL')}/signin"
