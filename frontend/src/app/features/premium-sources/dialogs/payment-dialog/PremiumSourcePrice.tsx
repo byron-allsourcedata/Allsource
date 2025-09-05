@@ -10,7 +10,7 @@ type Props = {
 
 export const PremiumSourcePrice: FC<Props> = ({ price }) => {
 	return (
-		<Column>
+		<Column gap="0.5rem">
 			<PriceHeader>Price:</PriceHeader>
 			<Price>{formatMoney(price / 100)}</Price>
 		</Column>

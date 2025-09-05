@@ -137,7 +137,11 @@ export const UserPremiumSourcesPage: FC = () => {
 	const firstTimeLoading = loading && premiumSourcesData == null;
 
 	const [{ data: premiumSyncsData }, refetchSyncs] = useGetPremiumSyncs();
-	const { loading: buyLoading, request: buySource } = useBuyPremiumSource();
+	const {
+		loading: buyLoading,
+		request: buySource,
+		cancel: cancelBuy,
+	} = useBuyPremiumSource();
 
 	const router = useRouter();
 
@@ -247,7 +251,11 @@ export const UserPremiumSourcesPage: FC = () => {
 				sourceId={selectedSource!}
 				price={sources?.find((s) => s.id === selectedSource)?.price ?? 0}
 				open={paymentOpen}
-				onClose={closePayment}
+				buyLoading={buyLoading}
+				onClose={() => {
+					cancelBuy();
+					closePayment();
+				}}
 				onPay={(sourceId, amountCents, paymentMethod) => {
 					buySource(sourceId, amountCents, paymentMethod)
 						.then(() => {

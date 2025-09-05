@@ -43,7 +43,14 @@ align-items: center;
 gap: 0.75rem;
 `;
 
-const CardIcon = () => <CreditCard />;
+const CardIcon = () => (
+	<CreditCard
+		sx={{
+			width: "46px",
+			height: "46px",
+		}}
+	/>
+);
 
 const Name = styled(T)`
 color: #4A4A4A;

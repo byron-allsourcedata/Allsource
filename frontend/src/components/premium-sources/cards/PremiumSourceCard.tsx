@@ -212,7 +212,11 @@ export const UserButtonGroup: FC<UserButtonGroupProps> = ({
 
 	if (locked) {
 		return (
-			<CardColumn>
+			<CardColumn
+				sx={{
+					width: "8.5rem",
+				}}
+			>
 				<CustomButton
 					onClick={onUnlock}
 					sx={{

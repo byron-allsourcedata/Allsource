@@ -5,9 +5,10 @@ import type { FC } from "react";
 type Props = {
 	onCancel: () => void;
 	onPay: () => void;
+	loading: boolean;
 };
 
-export const PaymentActions: FC<Props> = ({ onCancel, onPay }) => {
+export const PaymentActions: FC<Props> = ({ onCancel, onPay, loading }) => {
 	return (
 		<Row
 			sx={{
@@ -20,7 +21,9 @@ export const PaymentActions: FC<Props> = ({ onCancel, onPay }) => {
 			<CustomButton variant="outlined" onClick={onCancel}>
 				Cancel
 			</CustomButton>
-			<CustomButton onClick={onPay}>Pay</CustomButton>
+			<CustomButton disabled={loading} onClick={onPay}>
+				Pay
+			</CustomButton>
 		</Row>
 	);
 };

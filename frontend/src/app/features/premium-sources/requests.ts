@@ -224,7 +224,7 @@ export const useGetPremiumFunds = () => {
 };
 
 export const useBuyPremiumSource = () => {
-	const [{ loading, data }, refetch] = useAxios<number | null>(
+	const [{ loading, data }, refetch, cancel] = useAxios<number | null>(
 		{
 			url: "/premium-sources/unlock",
 			method: "GET",
@@ -252,6 +252,7 @@ export const useBuyPremiumSource = () => {
 		loading,
 		data,
 		request,
+		cancel,
 	};
 };
 

@@ -27,7 +27,7 @@ padding: 1.5rem 1rem;
 justify-content: space-between;
 align-items: center;
 max-width: 800px;
-width: 70dvw;
+width: 100%;
 border-bottom: 1px solid var(--Border, #E4E4E4);
 `;
 

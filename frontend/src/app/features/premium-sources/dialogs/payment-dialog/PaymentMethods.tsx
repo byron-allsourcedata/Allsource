@@ -6,6 +6,7 @@ import { T } from "@/components/ui/T";
 
 type Props = {
 	availableFunds: number;
+	showFunds: boolean;
 	showCards: boolean;
 	cards: CardDetails[];
 };
@@ -13,11 +14,12 @@ type Props = {
 export const PaymentMethods: FC<Props> = ({
 	availableFunds,
 	showCards,
+	showFunds,
 	cards,
 }) => {
 	return (
 		<Column gap="1rem">
-			{availableFunds > 0 && (
+			{showFunds && (
 				<PremiumFundsPaymentMethod availableFunds={availableFunds} />
 			)}
 

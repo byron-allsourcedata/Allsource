@@ -104,7 +104,7 @@ class PremiumSourcesPaymentsService:
             self.stripe.charge_customer_immediately(
                 user_id=user_id,
                 payment_method_id=payment_method_id,
-                amount=amount_to_pay,
+                amount_cents=amount_to_pay,
                 premium_source_id=premium_source_id,
             )
 
