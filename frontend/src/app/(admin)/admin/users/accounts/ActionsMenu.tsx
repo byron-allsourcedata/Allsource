@@ -179,12 +179,7 @@ export const ActionsMenu: React.FC<Props> = ({
 				}}
 				MenuListProps={{ dense: true }}
 			>
-				<MenuItem
-					disabled={actionsLoading || (isMaster && isPartnerTab)}
-					onClick={handleOpenPopover}
-				>
-					Change password
-				</MenuItem>
+				<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
 
 				<MenuItem
 					disabled={actionsLoading || (!isMaster && isPartnerTab)}
