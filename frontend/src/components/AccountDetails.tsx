@@ -102,7 +102,25 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 				showErrorToast(`Error downloading file:${response.statusText}`);
 			}
 		} catch (error) {
-			showErrorToast(`Error during the download process: ${error}`);
+			const me = sessionStorage.getItem("me");
+			let hasActivePlan = false;
+
+			if (me) {
+				try {
+					const parsed = JSON.parse(me);
+					hasActivePlan = parsed.has_active_plan;
+				} catch (e) {
+					showErrorToast("Please reload this page");
+					return;
+				}
+			}
+
+			if (!hasActivePlan) {
+				return;
+			}
+			showErrorToast(
+				`Error during the download process, please contact support.`,
+			);
 		}
 	};
 

@@ -23,6 +23,7 @@ import { showErrorToast } from "@/components/ToastNotification";
 import CorporateFareRoundedIcon from "@mui/icons-material/CorporateFareRounded";
 import dayjs from "dayjs";
 import UnlockButton from "./UnlockButton";
+import { checkHasActivePlan } from "@/services/checkActivePlan";
 
 interface PopupDetailsProps {
 	open: boolean;
@@ -115,7 +116,12 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 				showErrorToast(`Error downloading file:${response.statusText}`);
 			}
 		} catch (error) {
-			showErrorToast(`Error during the download process: ${error}`);
+			if (!checkHasActivePlan({ withoutApi: true })) {
+				return;
+			}
+			showErrorToast(
+				`Error during the download process, please contact support.`,
+			);
 		}
 	};
 

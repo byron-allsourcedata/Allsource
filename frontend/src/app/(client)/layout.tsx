@@ -9,16 +9,15 @@ import Header from "./components/Header";
 import Slider from "@/components/Slider";
 import CustomizedProgressBar from "@/components/FirstLevelLoader";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import CustomNotification from "@/components/CustomNotification";
 import { useSSE } from "@/context/SSEContext";
 import { NotificationProvider } from "@/context/NotificationContext";
-import { HintsProvider } from "@/context/HintsContext";
 import { useSidebar } from "@/context/SidebarContext";
 import { fetchUserData } from "@/services/meService";
 import PixelSubheader from "./components/PixelSubheader";
 import { useHasSubheader } from "@/hooks/useHasSubheader";
 import OneDollarPopup from "./analytics/components/OneDollarPopup";
 import { useGlobalFlag } from "@/hooks/useOneDollar";
+import { flagStore } from "@/services/oneDollar";
 
 interface ClientLayoutProps {
 	children: ReactNode;
@@ -72,7 +71,14 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 				const fetchData = async () => {
 					try {
 						const response = await axiosInstance.get("/notification");
-						await fetchUserData(setIsGetStartedPage, setInstalledResources);
+						const userData = await fetchUserData(
+							setIsGetStartedPage,
+							setInstalledResources,
+						);
+
+						if (userData && userData.has_active_plan === false) {
+							flagStore.set(true);
+						}
 						const notifications = response.data;
 
 						const unreadNotifications = notifications.filter(
@@ -231,25 +237,21 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						onDismissNotification={handleDismissNotification}
 					/>
 					{isUnauthorized && <OneDollarPopup />}
-					{isUnauthorized && (
-						<Box
-							sx={{
-								flexGrow: 1,
-								...(isUnauthorized && {
-									filter: "blur(12px)",
-								}),
-							}}
-						>
-							<PixelSubheader />
-							{renderGrid()}
-						</Box>
-					)}
-					{!isUnauthorized && (
-						<>
-							<PixelSubheader />
-							{renderGrid()}
-						</>
-					)}
+					<Box
+						sx={{
+							flexGrow: 1,
+							display: "flex",
+							flexDirection: "column",
+							minHeight: 0,
+							overflow: "hidden",
+							...(isUnauthorized && {
+								filter: "blur(12px)",
+							}),
+						}}
+					>
+						<PixelSubheader />
+						{renderGrid()}
+					</Box>
 				</Box>
 			)}
 		</>

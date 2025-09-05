@@ -282,6 +282,7 @@ def check_domain(
 
     return current_domain[0]
 
+
 OptionalDomain = Annotated[UserDomains | None, Depends(check_domain)]
 
 
@@ -378,11 +379,6 @@ def check_user_authorization(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
         )
 
-    if not user.get("current_subscription_id") and not is_admin:
-        raise_forbidden(
-            {"status": UserAuthorizationStatus.NEED_PAY_BASIC.value}
-        )
-
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
         stripe_payment_url = get_stripe_payment_url(
             user.get("customer_id"),
@@ -429,11 +425,6 @@ def check_user_authorization_without_pixel(
     if not exist_privacy_policy and not is_admin:
         raise_forbidden(
             {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
-        )
-
-    if not user.get("current_subscription_id") and not is_admin:
-        raise_forbidden(
-            {"status": UserAuthorizationStatus.NEED_PAY_BASIC.value}
         )
 
     if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:

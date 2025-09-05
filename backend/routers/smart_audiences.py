@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, Query, Body, HTTPException
 from starlette.responses import StreamingResponse
+
+from auth_dependencies import UnlimitedUser
 from dependencies import (
     check_user_authorization_without_pixel,
     check_domain,
@@ -187,6 +189,7 @@ def update_audience_smart(
 
 @router.post("/download-persons")
 def download_persons(
+    _user: UnlimitedUser,
     payload: SmartAudienceSyncCreate,
     audience_smarts_service: AudienceSmartsService,
 ):
