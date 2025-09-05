@@ -1093,12 +1093,8 @@ def process_leads_requests(
             pages_set.add(normalize_url(current_request[1]))
 
     pages_count = len(pages_set)
-    average_time_sec = int(total_time_sec / len(leads_requests_sorted))
     lead_user.total_visit_time = (
         lead_user.total_visit_time - lead_visit_full_time_sec + total_time_sec
-    )
-    lead_user.avarage_visit_time = int(
-        lead_user.total_visit_time / lead_user.total_visit
     )
 
     session.query(LeadsVisits).filter_by(id=visit_id).update(
@@ -1109,7 +1105,6 @@ def process_leads_requests(
             "end_time": end_time,
             "pages_count": pages_count,
             "full_time_sec": total_time_sec,
-            "average_time_sec": average_time_sec,
             "behavior_type": behavior_type,
         }
     )
@@ -1143,9 +1138,6 @@ def add_new_leads_visits(
     session.flush()
 
     lead_user.total_visit += 1
-    lead_user.avarage_visit_time = int(
-        lead_user.total_visit_time / lead_user.total_visit
-    )
     lead_user.total_visit_time += 1
 
     session.flush()
