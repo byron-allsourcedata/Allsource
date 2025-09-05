@@ -17,6 +17,12 @@ class UsersPersistence:
             select(Users).where(Users.id == user_id)
         ).scalar()
 
+    def stripe_customer_id_by_id(self, user_id: int) -> str:
+        user = self._by_id(user_id)
+        if user is None:
+            raise UserNotFound(user_id)
+        return user.customer_id
+
     def full_name_by_id(self, user_id: int) -> str | None:
         user = self._by_id(user_id)
         if user is None:

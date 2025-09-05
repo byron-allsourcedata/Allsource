@@ -99,10 +99,11 @@ async def close_connection(
     connection: AbstractConnection | None, channel: AbstractChannel | None
 ):
     try:
-        if connection is not None:
-            await connection.close()
         if channel is not None:
             await channel.close()
+        if connection is not None:
+            if not getattr(connection, "is_closed", False):
+                await connection.close()
     except BaseException as e:
         logging.error(f"Close conn: {e}", exc_info=True)
 
@@ -119,7 +120,20 @@ async def init_connection() -> tuple[AbstractConnection, AbstractChannel]:
 
 async def get_connection() -> AbstractChannel:
     global globel_channel, global_connection
-    await close_connection(global_connection, globel_channel)
+
+    if (
+        global_connection
+        and not global_connection.is_closed
+        and globel_channel
+        and not globel_channel.is_closed
+    ):
+        return globel_channel
+
+    if global_connection:
+        try:
+            await close_connection(global_connection, globel_channel)
+        except Exception:
+            logging.error("Error while closing old connection")
 
     connection, channel = await init_connection()
 

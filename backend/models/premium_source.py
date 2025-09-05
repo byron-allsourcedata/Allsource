@@ -1,9 +1,10 @@
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import TIMESTAMP, Uuid, event, func, select, text
+from sqlalchemy import TIMESTAMP, Integer, Uuid, event, func, select, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.users import Users
+
 from .base import Base, update_timestamps
 
 
@@ -20,6 +21,12 @@ class PremiumSource(Base):
     s3 object token for this source's .csv file
     """
     rows: Mapped[int] = mapped_column(nullable=False)
+    price: Mapped[int] = mapped_column(
+        Integer, server_default="0", nullable=False
+    )
+    """
+    price in cents for this premium source
+    """
     created_at: Mapped[datetime] = mapped_column(
         TIMESTAMP,
         nullable=False,
