@@ -48,6 +48,7 @@ import CustomTooltip from "../../../../components/customToolTip";
 import CloseIcon from "@mui/icons-material/Close";
 import { MoreVert } from "@/icon";
 import SortIcon from "@mui/icons-material/Sort"; // Import the sort icon
+import { checkHasActivePlan } from "@/services/checkActivePlan";
 
 const teamsStyles = {
 	tableColumn: {
@@ -226,6 +227,9 @@ export const SettingsTeams: React.FC = () => {
 						setInviteUsersPopupOpen(true);
 						break;
 					case "INVITATION_LIMIT_REACHED":
+						if (!checkHasActivePlan({ withoutApi: true })) {
+							return;
+						}
 						setUpgradePlanPopup(true);
 						break;
 					default:

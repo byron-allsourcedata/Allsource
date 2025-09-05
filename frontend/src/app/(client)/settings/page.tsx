@@ -16,6 +16,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import { WhitelabelSettingsPage } from "@/app/features/whitelabel/WhitelabelSettingsPage";
+import { flagStore } from "@/services/oneDollar";
 
 const Settings: React.FC = () => {
 	const router = useRouter();
@@ -156,24 +157,25 @@ const Settings: React.FC = () => {
 						<SettingTab
 							tabName="accountDetails"
 							label="Account Details"
+							userHasSubscription={userHasSubscription}
 							{...tabProps}
 						/>
 						<SettingTab
 							tabName="teams"
 							label="Teams"
-							disabled={!userHasSubscription}
+							userHasSubscription={userHasSubscription}
 							{...tabProps}
 						/>
 						<SettingTab
 							tabName="billing"
 							label="Billing"
-							disabled={!userHasSubscription}
+							userHasSubscription={userHasSubscription}
 							{...tabProps}
 						/>
 						<SettingTab
 							tabName="subscription"
 							label="Subscription"
-							disabled={!userHasSubscription}
+							userHasSubscription={userHasSubscription}
 							{...tabProps}
 						/>
 						{whitelabelEnabled && (
@@ -181,6 +183,7 @@ const Settings: React.FC = () => {
 								tabName="whitelabel"
 								label="Whitelabel"
 								disabled={!userHasSubscription}
+								userHasSubscription={true}
 								{...tabProps}
 							/>
 						)}
@@ -236,6 +239,7 @@ type Props = {
 	tabName: string;
 	activeTab: string;
 	disabled?: boolean;
+	userHasSubscription: boolean;
 	handleTabChange: (tab: string) => void;
 };
 
@@ -245,6 +249,7 @@ const SettingTab: FC<Props> = ({
 	disabled,
 	handleTabChange,
 	label,
+	userHasSubscription,
 }) => {
 	return (
 		<Button
@@ -252,7 +257,17 @@ const SettingTab: FC<Props> = ({
 			disabled={disabled}
 			sx={planStyles.buttonHeading}
 			variant={activeTab === tabName ? "contained" : "outlined"}
-			onClick={() => handleTabChange(tabName)}
+			onClick={() => {
+				if (
+					!userHasSubscription &&
+					tabName !== "accountDetails" &&
+					tabName !== "teams"
+				) {
+					flagStore.set(true);
+					return;
+				}
+				handleTabChange(tabName);
+			}}
 		>
 			{label}
 		</Button>

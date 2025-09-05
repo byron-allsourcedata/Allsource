@@ -17,14 +17,12 @@ import {
 	SxProps,
 	Theme,
 } from "@mui/material";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { leadsStyles } from "./leadsStyles";
 import Slider from "../../../components/Slider";
 import { SliderProvider } from "../../../context/SliderContext";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import FilterListIcon from "@mui/icons-material/FilterList";

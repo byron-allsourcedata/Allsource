@@ -957,21 +957,22 @@ class SubscriptionService:
 
     def check_invitation_limit(self, user_id):
         user_subscription = self.get_user_subscription(user_id)
-        if user_subscription:
-            subscription_member_limit = user_subscription.members_limit
-            user_member_limit = (
-                len(
-                    self.user_persistence_service.get_combined_team_info(
-                        user_id=user_id
-                    )
+        subscription_member_limit = (
+            user_subscription.members_limit if user_subscription else 3
+        )
+        user_member_limit = (
+            len(
+                self.user_persistence_service.get_combined_team_info(
+                    user_id=user_id
                 )
-                + 1
             )
-            if (
-                user_member_limit < subscription_member_limit
-                or subscription_member_limit == self.UNLIMITED
-            ):
-                return True
+            + 1
+        )
+        if (
+            user_member_limit < subscription_member_limit
+            or subscription_member_limit == self.UNLIMITED
+        ):
+            return True
 
         return False
 
