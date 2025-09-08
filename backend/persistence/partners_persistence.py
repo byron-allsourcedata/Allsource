@@ -227,22 +227,17 @@ class PartnersPersistence:
         return self.db.query(Partner).filter(Partner.id == partner_id).first()
 
     def get_partner_by_email(self, email: str):
-        result = (
-            self.db.query(
-                Partner.id,
-                Partner.commission,
-                Partner.is_master,
-            )
-            .filter_by(email=email)
-            .one_or_none()
-        )
-
-        return result._asdict() if result else None
+        return self.db.query(Partner).filter_by(email=email).one_or_none()
 
     def get_partner_overview_by_email(self, email: str):
+        partner = self.get_partner_by_email(email)
+
+        if not partner:
+            return None
+
         PartnerReferralUsers = aliased(Users)
 
-        result = (
+        query = (
             self.db.query(
                 Partner.id,
                 Partner.commission,
@@ -250,25 +245,25 @@ class PartnersPersistence:
                 func.coalesce(func.sum(SubscriptionPlan.price), 0).label(
                     "subscription_total"
                 ),
-                func.coalesce(func.sum(Users.overage_leads_count), 0).label(
-                    "overage_total"
-                ),
+                func.coalesce(
+                    func.sum(PartnerReferralUsers.overage_leads_count), 0
+                ).label("overage_total"),
                 func.coalesce(
                     func.sum(PremiumSourceStripeDeduction.amount), 0
                 ).label("premium_sources_total"),
             )
-            .join(Users, Partner.user_id == Users.id)
-            .join(ReferralUser, ReferralUser.parent_user_id == Users.id)
-            .join(
+            .outerjoin(Users, Partner.user_id == Users.id)
+            .outerjoin(ReferralUser, ReferralUser.parent_user_id == Users.id)
+            .outerjoin(
                 PartnerReferralUsers,
                 ReferralUser.user_id == PartnerReferralUsers.id,
             )
-            .join(
+            .outerjoin(
                 UserSubscriptions,
                 UserSubscriptions.id
                 == PartnerReferralUsers.current_subscription_id,
             )
-            .join(
+            .outerjoin(
                 SubscriptionPlan,
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
@@ -281,13 +276,14 @@ class PartnersPersistence:
                 PremiumSourceTransaction.id
                 == PremiumSourceStripeDeduction.transaction_id,
             )
-            .filter(Partner.email == email)
+            .filter(
+                or_(Partner.email == email, Partner.master_id == partner.id)
+            )
             .group_by(Partner.id, Partner.commission, Partner.is_master)
         )
 
-        result = result.one_or_none()
-
-        return result._asdict() if result else None
+        result = query.all()
+        return [row._asdict() for row in result]
 
     def get_partner_by_user_id(self, user_id):
         return self.db.query(Partner).filter(Partner.user_id == user_id).first()

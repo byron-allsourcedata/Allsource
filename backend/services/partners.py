@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 @injectable
 class PartnersService:
+    COST_CONTACT_ON_BASIC_PLAN = Decimal(0.08)
+
     def __init__(
         self,
         partners_persistence: PartnersPersistence,
@@ -92,36 +94,53 @@ class PartnersService:
         return {"data": {"items": result, "totalCount": total_count}}
 
     def get_partner(self, email) -> PartnerResponse | None:
-        partner = self.partners_persistence.get_partner_overview_by_email(email)
-        if not partner:
+        partners = self.partners_persistence.get_partner_overview_by_email(
+            email
+        )
+        if not partners:
             return None
 
+        master = partners[0]
+
+        total_overage = Decimal(0)
+        total_subscription = Decimal(0)
+        total_premium = Decimal(0)
+
+        for partner in partners:
+            if master["is_master"] and master["id"] != partner["id"]:
+                commission = master["commission"] - partner["commission"]
+            else:
+                commission = partner["commission"]
+
+            total_overage += Decimal(partner["overage_total"]) * (
+                commission * self.COST_CONTACT_ON_BASIC_PLAN / Decimal(100)
+            )
+            total_subscription += Decimal(partner["subscription_total"]) * (
+                commission / Decimal(100)
+            )
+            total_premium += Decimal(partner["premium_sources_total"]) * (
+                commission / Decimal(100) / Decimal(100)
+            )
+
         return PartnerResponse(
-            id=partner["id"],
-            is_master=partner["is_master"],
-            commission=partner["commission"],
+            id=master["id"],
+            is_master=master["is_master"],
+            commission=master["commission"],
             monthly_comissions=[
                 MonthlyCommission(
                     title="Pixel Resolutions Commission",
-                    percentage=partner["commission"],
-                    revenue=partner["overage_total"]
-                    * (Decimal(partner["commission"]) / Decimal(100)),
+                    percentage=master["commission"],
+                    revenue=total_overage,
                 ),
                 MonthlyCommission(
                     title="Upgrades Commission",
-                    percentage=partner["commission"],
-                    revenue=partner["subscription_total"]
-                    * (Decimal(partner["commission"]) / Decimal(100)),
+                    percentage=master["commission"],
+                    revenue=total_subscription,
                 ),
                 MonthlyCommission(
                     title="Premium Sources Commission",
-                    percentage=partner["commission"],
-                    revenue=partner["premium_sources_total"]
-                    * (
-                        Decimal(partner["commission"])
-                        / Decimal(100)
-                        / Decimal(100)
-                    ),
+                    percentage=master["commission"],
+                    revenue=total_premium,
                 ),
             ],
         )
@@ -135,7 +154,7 @@ class PartnersService:
         partner = self.partners_persistence.get_partner_by_email(email)
         partners, total_count = (
             self.partners_persistence.get_partners_by_partner_id(
-                partner["id"], start_date, end_date, offset, limit
+                partner.id, start_date, end_date, offset, limit
             )
         )
 
