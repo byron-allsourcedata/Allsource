@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 @injectable
 class PartnersService:
+    COST_CONTACT_ON_BASIC_PLAN = Decimal(0.08)
+
     def __init__(
         self,
         partners_persistence: PartnersPersistence,
@@ -105,7 +107,11 @@ class PartnersService:
                     title="Pixel Resolutions Commission",
                     percentage=partner["commission"],
                     revenue=partner["overage_total"]
-                    * (Decimal(partner["commission"]) / Decimal(100)),
+                    * (
+                        Decimal(partner["commission"])
+                        * self.COST_CONTACT_ON_BASIC_PLAN
+                        / Decimal(100)
+                    ),
                 ),
                 MonthlyCommission(
                     title="Upgrades Commission",
@@ -135,7 +141,7 @@ class PartnersService:
         partner = self.partners_persistence.get_partner_by_email(email)
         partners, total_count = (
             self.partners_persistence.get_partners_by_partner_id(
-                partner["id"], start_date, end_date, offset, limit
+                partner.id, start_date, end_date, offset, limit
             )
         )
 
