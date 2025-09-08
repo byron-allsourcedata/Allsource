@@ -230,9 +230,14 @@ class PartnersPersistence:
         return self.db.query(Partner).filter_by(email=email).one_or_none()
 
     def get_partner_overview_by_email(self, email: str):
+        partner = self.get_partner_by_email(email)
+
+        if not partner:
+            return None
+
         PartnerReferralUsers = aliased(Users)
 
-        result = (
+        query = (
             self.db.query(
                 Partner.id,
                 Partner.commission,
@@ -271,13 +276,14 @@ class PartnersPersistence:
                 PremiumSourceTransaction.id
                 == PremiumSourceStripeDeduction.transaction_id,
             )
-            .filter(Partner.email == email)
+            .filter(
+                or_(Partner.email == email, Partner.master_id == partner.id)
+            )
             .group_by(Partner.id, Partner.commission, Partner.is_master)
         )
 
-        result = result.one_or_none()
-
-        return result._asdict() if result else None
+        result = query.all()
+        return [row._asdict() for row in result]
 
     def get_partner_by_user_id(self, user_id):
         return self.db.query(Partner).filter(Partner.user_id == user_id).first()
