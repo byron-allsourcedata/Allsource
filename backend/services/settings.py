@@ -523,11 +523,11 @@ class SettingsService:
 
         total_sum = f"${money_contacts_overage}"
 
-        is_active = (
-            subscription.get("status") in ["active", "trialing"]
-            if subscription
-            else user_subscription.status == "active"
-        )
+        is_active = False
+        if subscription:
+            is_active = subscription.get("status") in ["active", "trialing"]
+        elif user_subscription:
+            is_active = user_subscription.status == "active"
 
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
@@ -571,7 +571,9 @@ class SettingsService:
 
         billing_detail = BillingSubscriptionDetails(
             subscription_details=subscription_details,
-            canceled_at=user_subscription.cancel_scheduled_at,
+            canceled_at=user_subscription.cancel_scheduled_at
+            if user_subscription
+            else None,
         )
 
         return billing_detail
@@ -661,10 +663,18 @@ class SettingsService:
                 ),
                 "value": user.get("smart_audience_quota"),
             },
-            "plan_leads_credits": current_plan.leads_credits,
-            "plan_premium_source_collected": current_plan.premium_source_credits,
-            "plan_smart_audience_collected": current_plan.smart_audience_quota,
-            "validation_funds_limit": current_plan.validation_funds,
+            "plan_leads_credits": current_plan.leads_credits
+            if current_plan
+            else 0,
+            "plan_premium_source_collected": current_plan.premium_source_credits
+            if current_plan
+            else 0,
+            "plan_smart_audience_collected": current_plan.smart_audience_quota
+            if current_plan
+            else 0,
+            "validation_funds_limit": current_plan.validation_funds
+            if current_plan
+            else 0,
         }
         return result
 
