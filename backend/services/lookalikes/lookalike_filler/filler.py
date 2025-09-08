@@ -23,8 +23,8 @@ from persistence.enrichment_lookalike_scores import (
 from persistence.enrichment_users import EnrichmentUsersPersistence
 from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
-from services.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
-from services.lookalike_filler.worker import filler_worker
+from services.lookalikes.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
+from services.lookalikes.lookalike_filler.worker import filler_worker
 from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher

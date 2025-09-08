@@ -16,7 +16,7 @@ import sys
 import aio_pika
 from dotenv import load_dotenv
 
-from services.lookalikes import AudienceLookalikesService
+from services.lookalikes.service import AudienceLookalikesService
 from enums import LookalikeStatus
 from config.util import get_int_env
 from db_dependencies import Db
@@ -30,7 +30,7 @@ from config.rmq_connection import (
 )
 from sqlalchemy.orm import Session
 
-from services.lookalike_filler import LookalikeFillerService
+from services.lookalikes.lookalike_filler import LookalikeFillerService
 
 
 load_dotenv()

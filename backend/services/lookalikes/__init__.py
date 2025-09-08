@@ -79,3 +79,7 @@ Ranked candidates
    ↓
 lookalike_persons (persist top N)
 """
+
+from .service import AudienceLookalikesService
+
+__all__ = ["AudienceLookalikesService"]

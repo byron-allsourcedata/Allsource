@@ -18,10 +18,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from enums import LookalikeStatus
-from services.lookalikes import AudienceLookalikesService
+from services.lookalikes.service import AudienceLookalikesService
 
-from services.lookalike_agent.agent import LookalikeAgentService
-from services.lookalike_filler.rabbitmq import LookalikesMatchingMessage
+from services.lookalikes.lookalike_agent.agent import LookalikeAgentService
+from services.lookalikes.lookalike_filler.rabbitmq import LookalikesMatchingMessage
 from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
