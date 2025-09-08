@@ -1,7 +1,7 @@
 import logging
 import statistics
 import time
-from typing import Tuple, Dict, List, TypedDict
+from typing import TypedDict
 from typing_extensions import deprecated
 
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
@@ -118,7 +118,7 @@ class LookalikeFillerServiceBase:
 
     def get_enrichment_users_partition(
         self,
-        significant_fields: dict,
+        significant_fields: dict[str, str],
         bucket: list[int],
         limit: int | None = None,
     ) -> tuple[StreamContext, list[str]]:
@@ -205,7 +205,7 @@ class LookalikeFillerServiceBase:
     def train_and_save_model(
         self,
         lookalike_id: UUID,
-        user_profiles: List[Dict],
+        user_profiles: list[dict[str, str]],
         config: NormalizationConfig,
     ) -> CatBoostRegressor:
         dict_enrichment = [
@@ -309,7 +309,7 @@ class LookalikeFillerServiceBase:
 
     def filler_worker(
         self,
-        significant_fields: dict,
+        significant_fields: dict[str, str],
         config: NormalizationConfig,
         value_by_asid: dict[UUID, float],
         lookalike_id: UUID,
@@ -330,6 +330,7 @@ class LookalikeFillerServiceBase:
         batch_buffer = []
 
         top_scores: list[PersonScore] = []
+
 
         _ = db.execute(
             update(AudienceLookalikes)
@@ -415,7 +416,7 @@ class LookalikeFillerServiceBase:
         between Postgres and ClickHouse — we assume the full batch is received.
         """
 
-        self.db.execute(
+        _ = self.db.execute(
             update(AudienceLookalikes)
             .where(AudienceLookalikes.id == lookalike_id)
             .values(
