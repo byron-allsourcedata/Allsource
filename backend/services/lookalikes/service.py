@@ -466,9 +466,18 @@ class AudienceLookalikesService:
             audience_feature_importance_other=other,
         )
 
-    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
-        return self.lookalikes_persistence_service.update_dataset_size(
+    def update_total_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        self.lookalikes_persistence_service.update_total_dataset_size(lookalike_id=lookalike_id, dataset_size=dataset_size)
+
+    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
+        self.lookalikes_persistence_service.update_processed_dataset_size(lookalike_id=lookalike_id, processed_dataset_size=processed_dataset_size)
+    
+    def prepare_lookalike_size(self, lookalike_id: UUID, dataset_size: int):
+        self.update_total_dataset_size(
             lookalike_id=lookalike_id, dataset_size=dataset_size
+        )
+        self.update_processed_dataset_size(
+            lookalike_id, 0
         )
 
     def get_processing_lookalike(self, id: str):

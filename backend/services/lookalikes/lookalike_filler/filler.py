@@ -15,7 +15,7 @@ from db_dependencies import Clickhouse, Db, ClickhouseInserter, get_db
 from resolver import injectable
 
 from config.clickhouse import ClickhouseConfig
-from config.util import get_int_env, try_get_int_env
+from config.util import get_int_env
 
 from models import AudienceLookalikes
 
@@ -96,8 +96,8 @@ class LookalikeFillerServiceBase:
         return bucket_ranges
 
     def get_enrichment_users(
-        self, significant_fields: Dict
-    ) -> Tuple[StreamContext, List[str]]:
+        self, significant_fields: dict[str, str]
+    ) -> tuple[StreamContext, list[str]]:
         """
         Returns a stream of blocks of enrichment users and a list of column names
         """
@@ -248,7 +248,7 @@ class LookalikeFillerServiceBase:
 
         dataset_size = LOOKALIKE_MAX_SIZE if LOOKALIKE_MAX_SIZE else users_count
 
-        self.lookalikes.update_dataset_size(
+        self.lookalikes.prepare_lookalike_size(
             lookalike_id=lookalike_id, dataset_size=dataset_size
         )
 
@@ -263,13 +263,6 @@ class LookalikeFillerServiceBase:
 
         config = self.audiences_scores.prepare_config(lookalike_id)
         
-
-        _ = self.db.execute(
-            update(AudienceLookalikes)
-            .where(AudienceLookalikes.id == lookalike_id)
-            .values(processed_train_model_size=0)
-        )
-        self.db.commit()
 
         buckets = self.get_buckets(thread_count)
 
