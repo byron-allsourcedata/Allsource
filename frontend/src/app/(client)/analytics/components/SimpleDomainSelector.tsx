@@ -17,6 +17,7 @@ import { AxiosError } from "axios";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { DeleteOutlinedIcon } from "@/icon";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { flagStore } from "@/services/oneDollar";
 
 interface Domain {
 	id: number;
@@ -69,7 +70,9 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 			if (error instanceof AxiosError) {
 				if (error.response?.status === 403) {
 					if (error.response.data.status === "NEED_UPGRADE_PLAN") {
-						setUpgradePlanPopup(true);
+						flagStore.set(true);
+						handleClose();
+						//setUpgradePlanPopup(true);
 					} else if (error.response.data.status === "NEED_BOOK_CALL") {
 						sessionStorage.setItem("is_slider_opened", "true");
 						setShowSlider(true);
@@ -320,7 +323,9 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 					</MenuItem>
 					<AddDomainPopup
 						open={showDomainPopup}
-						handleClose={() => setDomainPopup(false)}
+						handleClose={() => {
+							setDomainPopup(false), handleClose();
+						}}
 						handleSave={handleSave}
 					/>
 				</Box>

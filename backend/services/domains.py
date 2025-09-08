@@ -33,10 +33,11 @@ class UserDomainsService:
         plan_info = self.subscription_service.get_user_subscription(
             (user.get("id"))
         )
-        if plan_info.domains_limit != self.UNLIMITED:
+        if not plan_info:
+            default_limit = 1
             if (
                 self.domain_persistence.count_domain(user.get("id"))
-                >= plan_info.domains_limit
+                >= default_limit
             ):
                 raise HTTPException(
                     status_code=403,
@@ -44,6 +45,18 @@ class UserDomainsService:
                         "status": SubscriptionStatus.NEED_UPGRADE_PLAN.value
                     },
                 )
+        else:
+            if plan_info.domains_limit != self.UNLIMITED:
+                if (
+                    self.domain_persistence.count_domain(user.get("id"))
+                    >= plan_info.domains_limit
+                ):
+                    raise HTTPException(
+                        status_code=403,
+                        detail={
+                            "status": SubscriptionStatus.NEED_UPGRADE_PLAN.value
+                        },
+                    )
         new_domain = self.domain_persistence.create_domain(
             user.get("id"), {"domain": normalize_url(domain)}
         )

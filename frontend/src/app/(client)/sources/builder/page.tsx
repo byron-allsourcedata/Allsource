@@ -62,6 +62,7 @@ import {
 } from "@/app/features/sources/builder/components/PixelDomainSelector";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { LogoSmall } from "@/components/ui/Logo";
+import { T } from "@/components/ui/T";
 
 interface Row {
 	id: number;
@@ -1174,7 +1175,8 @@ const SourcesImport: React.FC = () => {
 															color: "rgba(32, 33, 36, 1)",
 														}}
 													>
-														CSV, Max 500MB, Up to 200,000 Rows
+														CSV, Max 500MB, <TightNumber>500</TightNumber> to{" "}
+														<TightNumber>200,000</TightNumber> Rows
 													</Typography>
 												</Box>
 												<input
@@ -2253,3 +2255,12 @@ const SourceBuilder: React.FC = () => {
 };
 
 export default SourceBuilder;
+
+const TightNumber = styled(T)`
+letter-spacing: -0.7px;
+display: inline;
+font-family: var(--font-nunito);
+font-size: 14px;
+font-weight: 500;
+color: rgba(32, 33, 36, 1);
+`;
