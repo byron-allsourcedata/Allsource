@@ -3,6 +3,7 @@ import json
 import logging
 
 from aio_pika import Message
+from aio_pika.abc import AbstractChannel
 from pydantic import BaseModel
 
 from config.rmq_connection import publish_rabbitmq_message_with_channel
@@ -19,7 +20,7 @@ class RabbitmqService:
         pass
 
     async def publish_rabbitmq_message(
-        self, connection, queue_name: str, message_body: MessageBody | dict
+        self, connection, queue_name: str, message_body: MessageBody | dict[str, str]
     ):
         channel = await connection.channel()
 
@@ -43,9 +44,9 @@ class RabbitmqService:
 
     async def publish_rabbitmq_message_with_channel(
         self,
-        channel,
+        channel: AbstractChannel,
         queue_name: str,
-        message_body: MessageBody | Mapping[str, object] | dict,
+        message_body: MessageBody | Mapping[str, object] | dict[str, str],
     ):
         return await publish_rabbitmq_message_with_channel(
             channel=channel,
