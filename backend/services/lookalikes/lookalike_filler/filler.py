@@ -1,18 +1,24 @@
-from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 import logging
 import statistics
 import time
 from typing import Tuple, Dict, List, TypedDict
-from uuid import UUID
-
-from config import ClickhouseConfig
-from catboost import CatBoostRegressor
-from clickhouse_connect.driver.common import StreamContext
-from sqlalchemy import update
 from typing_extensions import deprecated
 
+from concurrent.futures import Future, ProcessPoolExecutor, as_completed
+
+from uuid import UUID
+from clickhouse_connect.driver.common import StreamContext
+from catboost import CatBoostRegressor
+from sqlalchemy import update
+
 from db_dependencies import Clickhouse, Db, ClickhouseInserter, get_db
+from resolver import injectable
+
+from config.clickhouse import ClickhouseConfig
+from config.util import get_int_env, try_get_int_env
+
 from models import AudienceLookalikes
+
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_matched_persons import (
     AudienceSourcesMatchedPersonsPersistence,
@@ -21,19 +27,17 @@ from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
 )
 from persistence.enrichment_users import EnrichmentUsersPersistence
-from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
 from services.lookalikes.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
 from services.lookalikes.lookalike_filler.worker import filler_worker
 from services.lookalikes import AudienceLookalikesService
-from services.similar_audiences import SimilarAudienceService
+from services.similar_audiences.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
 from services.similar_audiences.column_selector import AudienceColumnSelector
 from services.similar_audiences.similar_audience_scores import (
     PersonScore,
     SimilarAudiencesScoresService,
 )
-from config.util import get_int_env, try_get_int_env
 
 logger = logging.getLogger(__name__)
 
