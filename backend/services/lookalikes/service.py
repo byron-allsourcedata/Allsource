@@ -25,6 +25,7 @@ from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
 from schemas.similar_audiences import (
     NormalizationConfig,
 )
+from services.lookalikes.exceptions import LookalikeNotFound
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.exceptions import (
     LessThenTwoTrainDataset,
@@ -187,6 +188,15 @@ class AudienceLookalikesService:
 
     def get_lookalike(self, lookalike_id: UUID) -> AudienceLookalikes | None:
         return self.lookalikes_persistence_service.get_lookalike(lookalike_id)
+
+    def get_lookalike_unsafe(self, lookalike_id: UUID) -> AudienceLookalikes:
+        """
+        Raises `LookalikeNotFound`
+        """
+        lookalike = self.get_lookalike(lookalike_id)
+        if not lookalike:
+            raise LookalikeNotFound(lookalike_id)
+        return lookalike
 
     def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(

@@ -11,6 +11,7 @@ from clickhouse_connect.driver.common import StreamContext
 from catboost import CatBoostRegressor
 from sqlalchemy import update
 
+from config.lookalikes import LookalikesConfig
 from db_dependencies import Clickhouse, Db, ClickhouseInserter, get_db
 from resolver import injectable
 
@@ -226,16 +227,20 @@ class LookalikeFillerServiceBase:
         model,
         lookalike_id: UUID,
     ):
-        lookalike = self.lookalikes.get_lookalike(lookalike_id)
+        """
+        Exception list is not exhaustive 
+        
+        Raises `LookalikeNotFound`
+        """
+        lookalike = self.lookalikes.get_lookalike_unsafe(lookalike_id)
         significant_fields = lookalike.significant_fields
         top_n: int = lookalike.size
 
-        BULK_SIZE = get_int_env("LOOKALIKE_BULK_SIZE")
-        thread_count = get_int_env("LOOKALIKE_THREAD_COUNT")
+        THREAD_COUNT = LookalikesConfig.THREAD_COUNT
+        LOOKALIKE_MAX_SIZE = LookalikesConfig.LOOKALIKE_MAX_SIZE
 
-        LOOKALIKE_MAX_SIZE = try_get_int_env("LOOKALIKE_MAX_SIZE")
         limit = self.get_lookalike_limit(
-            thread_count=thread_count, total_limit=LOOKALIKE_MAX_SIZE
+            thread_count=THREAD_COUNT, total_limit=LOOKALIKE_MAX_SIZE
         )
 
         value_by_asid: dict[UUID, float] = {
@@ -257,9 +262,9 @@ class LookalikeFillerServiceBase:
         config = self.audiences_scores.prepare_config(lookalike_id)
         
 
-        buckets = self.get_buckets(thread_count)
+        buckets = self.get_buckets(THREAD_COUNT)
 
-        with ProcessPoolExecutor(max_workers=thread_count) as executor:
+        with ProcessPoolExecutor(max_workers=THREAD_COUNT) as executor:
             futures: list[Future[list[PersonScore]]] = []
 
             for bucket in buckets:
