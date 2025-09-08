@@ -252,13 +252,6 @@ class LookalikeFillerServiceBase:
             lookalike_id=lookalike_id, dataset_size=dataset_size
         )
 
-        rows_stream, column_names = self.get_enrichment_users(
-            significant_fields=significant_fields
-        )
-
-        count = 0
-        batch_buffer = []
-
         top_scores: list[PersonScore] = []
 
         config = self.audiences_scores.prepare_config(lookalike_id)
