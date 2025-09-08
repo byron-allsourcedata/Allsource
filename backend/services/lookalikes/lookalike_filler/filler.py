@@ -1,4 +1,4 @@
-from concurrent.futures import Future, ProcessPoolExecutor
+from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 import logging
 import statistics
 import time
@@ -258,7 +258,7 @@ class LookalikeFillerServiceBase:
         top_scores: list[PersonScore] = []
 
         config = self.audiences_scores.prepare_config(lookalike_id)
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
 
         _ = self.db.execute(
             update(AudienceLookalikes)
@@ -301,7 +301,7 @@ class LookalikeFillerServiceBase:
 
         logging.info("running clickhouse query")
 
-        # strange multiprocessing issue, clickhouse client is 'locked' by concurrent client, but is should execute synchronously..
+        # strange multiprocessing issue, clickhouse client is 'locked' by concurrent client, but this code block should execute synchronously..
         # so i re-init the client
         self.clickhouse = ClickhouseConfig.get_client()
         _ = self.clickhouse.command("SET max_query_size = 20485760")
