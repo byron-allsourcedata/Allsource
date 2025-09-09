@@ -4,11 +4,7 @@ import type React from "react";
 import { Box, Typography, Stack } from "@mui/material";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import { getGradient } from "@/utils/colors";
-
-export type BarData = {
-	label: string;
-	percent: number;
-};
+import type { BarData } from "./schemas";
 
 type VerticalGradientBarChartProps = {
 	title: string;

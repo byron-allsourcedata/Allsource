@@ -6,7 +6,7 @@ import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
 
 import { mapGenericPercentage, extractSemiCirclePercent } from "./mappingUtils";
 
-import type { BarData } from "../VerticalGradientBarChart";
+import type { BarData } from "../schemas";
 import type { FieldRankMap, FinancialInfo } from "@/types/insights";
 import { StatsRowProvider } from "../StatsRowContext";
 import { SmartGradientBarChart } from "../SmartGradientHorizonalBarChart";

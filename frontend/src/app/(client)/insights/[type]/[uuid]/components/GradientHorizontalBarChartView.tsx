@@ -4,11 +4,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
 import { getGradient } from "@/utils/colors";
-
-type BarData = {
-	label: string;
-	percent: number;
-};
+import type { BarData } from "./schemas";
 
 type Props = {
 	title: string;

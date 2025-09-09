@@ -1,10 +1,6 @@
 import { GradientBarChartView } from "./GradientHorizontalBarChartView";
+import type { BarData } from "./schemas";
 import { useStatsRowContext } from "./StatsRowContext";
-
-type BarData = {
-	label: string;
-	percent: number;
-};
 
 type Props = {
 	title: string;

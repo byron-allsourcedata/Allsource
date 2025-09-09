@@ -23,7 +23,7 @@ import type {
 	FieldRankMap,
 } from "@/types/insights";
 
-import type { BarData } from "../VerticalGradientBarChart";
+import type { BarData } from "../schemas";
 
 interface B2CPersonalProps {
 	data: PersonalInfo;
