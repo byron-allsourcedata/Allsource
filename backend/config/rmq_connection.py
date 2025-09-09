@@ -1,7 +1,7 @@
 import os
 from typing import Mapping, Union
 
-from aio_pika import connect, Message
+from aio_pika import Message, connect_robust
 import json
 import logging
 
@@ -20,12 +20,13 @@ class RabbitMQConnection:
         self._connection = None
 
     async def connect(self):
-        self._connection = await connect(
+        self._connection = await connect_robust(
             host=os.getenv("RABBITMQ_HOST"),
             port=int(os.getenv("RABBITMQ_PORT")),
             virtualhost=os.getenv("RABBITMQ_VIRTUALHOST"),
             login=os.getenv("RABBITMQ_LOGIN"),
             password=os.getenv("RABBITMQ_PASSWORD"),
+            heartbeat=1800,
             max_message_size=30000000,
             timeout=30000,
         )
