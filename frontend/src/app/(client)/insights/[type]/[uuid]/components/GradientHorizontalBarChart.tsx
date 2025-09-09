@@ -3,6 +3,7 @@ import { Box, Typography, Stack, IconButton, Collapse } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import { getGradient } from "@/utils/colors";
 
 type BarData = {
 	label: string;
@@ -17,17 +18,6 @@ type GradientBarChartProps = {
 	rank?: number;
 	textPadding?: boolean;
 	hidePercent?: boolean;
-};
-
-const getGradient = (relativePercent: number, gradientColor: string) => {
-	const opacity = 0.4 + 0.6 * relativePercent;
-
-	if (gradientColor.startsWith("rgba(")) {
-		const rgbValues = gradientColor.match(/\d+/g)?.slice(0, 3).join(", ");
-		return `rgba(${rgbValues}, ${opacity})`;
-	}
-
-	return `rgba(${gradientColor}, ${opacity})`;
 };
 
 export const GradientBarChart: React.FC<GradientBarChartProps> = ({
