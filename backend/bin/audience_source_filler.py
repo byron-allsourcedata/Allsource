@@ -271,13 +271,18 @@ async def parse_csv_file(
     send_rows = 0
     mapped_fields: Dict[str, str] = data.get("mapped_fields", {})
     status = data.get("statuses", "").strip() or None
+
+    def map_csv_row(row: dict[str, str], mappings: dict[str, str]):
+        extracted_data = {
+            key: row.get(mappings.get(key, ""), "").strip() for key in mappings
+        }
+
+        return extracted_data
+
     while send_rows < total_rows:
         batch_rows: List[PersonRow] = []
         for row in islice(csv_reader, SELECTED_ROW_COUNT):
-            extracted_data = {
-                key: row.get(mapped_fields.get(key, ""), "").strip()
-                for key in mapped_fields
-            }
+            extracted_data = map_csv_row(row, mapped_fields)
 
             email = extracted_data.get("Email", "")
             sale_amount_raw = extracted_data.get("Order Amount", "")
