@@ -1237,7 +1237,7 @@ const Leads: React.FC = () => {
 			widths: { width: "120px", minWidth: "120px", maxWidth: "120px" },
 		},
 		{
-			key: "average_time_sec",
+			key: "time_spent",
 			label: "Time on site",
 			sortable: true,
 			widths: { width: "140px", minWidth: "140px", maxWidth: "140px" },
@@ -1753,7 +1753,7 @@ const Leads: React.FC = () => {
 														} = col;
 
 														const isNameColumn = key === "name";
-														const isActionsColumn = key === "average_time_sec";
+														const isActionsColumn = key === "time_spent";
 														const hideDivider =
 															(isNameColumn && isScrolledX) || isActionsColumn;
 														const baseCellSX: SxProps<Theme> = {
@@ -2246,13 +2246,13 @@ const Leads: React.FC = () => {
 																hideDivider: true,
 															}}
 															tooltipOptions={{
-																content: row.average_time_sec
-																	? formatTimeSpent(row.average_time_sec)
+																content: row.time_spent
+																	? formatTimeSpent(row.time_spent)
 																	: "--",
 															}}
 														>
-															{row.average_time_sec
-																? formatTimeSpent(row.average_time_sec)
+															{row.time_spent
+																? formatTimeSpent(row.time_spent)
 																: "--"}
 														</SmartCell>
 													</TableRow>
