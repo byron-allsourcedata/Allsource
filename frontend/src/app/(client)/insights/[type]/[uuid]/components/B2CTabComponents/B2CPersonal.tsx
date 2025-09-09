@@ -1,23 +1,29 @@
 import { Box } from "@mui/material";
+
 import { IconFillIndicator } from "../CustomChart";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
 import { PieChartWithLegend } from "../CircularChart";
 import { MultiIconFillIndicator } from "../MultiIconChart";
-import { USHeatMapCard } from "../USMap";
-import { BarData } from "../VerticalGradientBarChart";
+import { SmartGradientBarChart } from "../SmartGradientHorizonalBarChart";
+import MapChart from "../MapChart";
+
+import { StatsRowProvider } from "../StatsRowContext";
+
 import {
 	mapGender,
 	mapState,
 	mapGenericPercentage,
 	mapPieChart,
 } from "./mappingUtils";
-import {
+
+import type {
 	PersonalInfo,
 	BooleanDistribution,
 	FieldRankMap,
 } from "@/types/insights";
-import MapChart from "../MapChart";
+
+import type { BarData } from "../VerticalGradientBarChart";
 
 interface B2CPersonalProps {
 	data: PersonalInfo;
@@ -118,25 +124,26 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 						/>
 					</Box> */}
 
-					<Box sx={{ display: "flex", width: "32%" }}>
-						<GradientBarChart
-							title="Languages"
-							data={mapGenericPercentage(data.languages)}
-							rank={fieldRanks["language_code"]}
-							gradientColor="155, 223, 196"
-							textPadding={true}
-						/>
-					</Box>
+					<StatsRowProvider>
+						<Box sx={{ display: "flex", width: "32%" }}>
+							<SmartGradientBarChart
+								title="Languages"
+								data={mapGenericPercentage(data.languages)}
+								rank={fieldRanks["language_code"]}
+								gradientColor="155, 223, 196"
+								textPadding={true}
+							/>
+						</Box>
 
-					<Box sx={{ display: "flex", width: "32%" }}>
-						<GradientBarChart
-							title="Religion"
-							data={mapGenericPercentage(data.religion)}
-							rank={fieldRanks["religion"]}
-							gradientColor="249, 155, 171"
-						/>
-					</Box>
-
+						<Box sx={{ display: "flex", width: "32%" }}>
+							<SmartGradientBarChart
+								title="Religion"
+								data={mapGenericPercentage(data.religion)}
+								rank={fieldRanks["religion"]}
+								gradientColor="249, 155, 171"
+							/>
+						</Box>
+					</StatsRowProvider>
 					<Box sx={{ display: "flex", width: "32%" }}>
 						<IconFillIndicator
 							imageSrc="/pets.svg"
@@ -162,11 +169,13 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({
 					</Box> */}
 
 					<Box sx={{ display: "flex", width: "65.5%" }}>
-						<MapChart
-							title="Location"
-							regions={mapState(data.state)}
-							rank={fieldRanks["state"]}
-						/>
+						<StatsRowProvider>
+							<MapChart
+								title="Location"
+								regions={mapState(data.state)}
+								rank={fieldRanks["state"]}
+							/>
+						</StatsRowProvider>
 					</Box>
 					<Box sx={{ display: "flex", width: "32%" }}>
 						<GradientBarChart

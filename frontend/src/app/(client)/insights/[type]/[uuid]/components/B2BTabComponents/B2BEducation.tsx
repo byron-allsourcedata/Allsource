@@ -1,10 +1,10 @@
 import { Box } from "@mui/material";
+
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 
 import { mapGenericPercentage } from "./mappingUtils";
-import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
-import { EducationInfo, FieldRankMap } from "@/types/insights";
-import MapChart from "../MapChart";
+
+import type { EducationInfo, FieldRankMap } from "@/types/insights";
 
 interface B2BEducationProps {
 	data: EducationInfo;

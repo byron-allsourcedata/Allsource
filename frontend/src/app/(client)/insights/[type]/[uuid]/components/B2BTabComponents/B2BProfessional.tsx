@@ -1,10 +1,13 @@
 import { Box } from "@mui/material";
-import { GradientBarChart } from "../GradientHorizontalBarChart";
 
-import { mapGenericPercentage } from "./mappingUtils";
-import { FieldRankMap, ProfessionalInfo } from "@/types/insights";
 import MapChart from "../MapChart";
+import { StatsRowProvider } from "../StatsRowContext";
+import { SmartGradientBarChart } from "../SmartGradientHorizonalBarChart";
+
 import { aggregateByState } from "../B2BTabComponents/mapChartUtils";
+import { mapGenericPercentage } from "./mappingUtils";
+
+import type { FieldRankMap, ProfessionalInfo } from "@/types/insights";
 
 interface B2BProffesionalProps {
 	data: ProfessionalInfo;
@@ -30,72 +33,76 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 				<Box
 					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
 				>
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Top Employers"
-							data={mapGenericPercentage(data.current_company_name)}
-							gradientColor="155, 223, 196"
-							rank={fieldRanks["current_company_name"]}
-							hidePercent={true}
-							textPadding={false}
-						/>
-					</Box>
+					<StatsRowProvider>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Top Employers"
+								data={mapGenericPercentage(data.current_company_name)}
+								gradientColor="155, 223, 196"
+								rank={fieldRanks["current_company_name"]}
+								hidePercent={true}
+								textPadding={false}
+							/>
+						</Box>
 
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Job Level"
-							data={mapGenericPercentage(data.job_level)}
-							rank={fieldRanks["job_level"]}
-						/>
-					</Box>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Job Level"
+								data={mapGenericPercentage(data.job_level)}
+								rank={fieldRanks["job_level"]}
+							/>
+						</Box>
 
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Current Job Title"
-							data={mapGenericPercentage(data.current_job_title)}
-							rank={fieldRanks["current_job_title"]}
-						/>
-					</Box>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Current Job Title"
+								data={mapGenericPercentage(data.current_job_title)}
+								rank={fieldRanks["current_job_title"]}
+							/>
+						</Box>
+					</StatsRowProvider>
 				</Box>
 
 				<Box
 					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
 				>
-					{/* <Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Current Duration"
-							data={mapGenericPercentage(data.job_duration)}
-							gradientColor="249, 155, 171"
-							rank={fieldRanks["job_duration"]}
-						/>
-					</Box> */}
+					<StatsRowProvider>
+						{/* <Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Current Duration"
+								data={mapGenericPercentage(data.job_duration)}
+								gradientColor="249, 155, 171"
+								rank={fieldRanks["job_duration"]}
+							/>
+						</Box> */}
 
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Primary Industry"
-							data={mapGenericPercentage(data.primary_industry)}
-							gradientColor="159, 151, 247"
-							rank={fieldRanks["primary_industry"]}
-						/>
-					</Box>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Primary Industry"
+								data={mapGenericPercentage(data.primary_industry)}
+								gradientColor="159, 151, 247"
+								rank={fieldRanks["primary_industry"]}
+							/>
+						</Box>
 
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Company Size"
-							data={mapGenericPercentage(data.company_size)}
-							gradientColor="155, 223, 196"
-							rank={fieldRanks["company_size"]}
-						/>
-					</Box>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Company Size"
+								data={mapGenericPercentage(data.company_size)}
+								gradientColor="155, 223, 196"
+								rank={fieldRanks["company_size"]}
+							/>
+						</Box>
 
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Annual Sales"
-							data={mapGenericPercentage(data.annual_sales)}
-							gradientColor="155, 223, 196"
-							rank={fieldRanks["annual_sales"]}
-						/>
-					</Box>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Annual Sales"
+								data={mapGenericPercentage(data.annual_sales)}
+								gradientColor="155, 223, 196"
+								rank={fieldRanks["annual_sales"]}
+							/>
+						</Box>
+					</StatsRowProvider>
 				</Box>
 
 				<Box
@@ -106,29 +113,31 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 						gap: 2,
 					}}
 				>
-					<Box sx={{ display: "flex", width: "49%" }}>
-						<GradientBarChart
-							title="Department"
-							data={mapGenericPercentage(data.department)}
-							gradientColor="159, 151, 247"
-							rank={fieldRanks["department"]}
-						/>
-					</Box>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "row",
-							width: "100%",
-							gap: 2,
-						}}
-					>
-						<MapChart
-							title="Job Location"
-							regions={aggregateByState(data.job_location)}
-							rank={fieldRanks["job_location"]}
-							hasCityMode={true}
-						/>
-					</Box>
+					<StatsRowProvider>
+						<Box sx={{ display: "flex", width: "49%" }}>
+							<SmartGradientBarChart
+								title="Department"
+								data={mapGenericPercentage(data.department)}
+								gradientColor="159, 151, 247"
+								rank={fieldRanks["department"]}
+							/>
+						</Box>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "row",
+								width: "100%",
+								gap: 2,
+							}}
+						>
+							<MapChart
+								title="Job Location"
+								regions={aggregateByState(data.job_location)}
+								rank={fieldRanks["job_location"]}
+								hasCityMode={true}
+							/>
+						</Box>
+					</StatsRowProvider>
 				</Box>
 			</Box>
 		</Box>

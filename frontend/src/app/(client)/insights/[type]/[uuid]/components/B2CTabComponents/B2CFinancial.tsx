@@ -1,10 +1,15 @@
-import { Box, Typography } from "@mui/material";
+import { Box } from "@mui/material";
+
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
 import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
+
 import { mapGenericPercentage, extractSemiCirclePercent } from "./mappingUtils";
-import { BarData } from "../VerticalGradientBarChart";
-import { FieldRankMap, FinancialInfo } from "@/types/insights";
+
+import type { BarData } from "../VerticalGradientBarChart";
+import type { FieldRankMap, FinancialInfo } from "@/types/insights";
+import { StatsRowProvider } from "../StatsRowContext";
+import { SmartGradientBarChart } from "../SmartGradientHorizonalBarChart";
 
 function parseNetWorthStart(label: string): number {
 	const normalizedLabel = label.toLowerCase();
@@ -156,33 +161,35 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
 				<Box
 					sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
 				>
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Income range"
-							data={incomeRangeData}
-							sortByPercent={false}
-							rank={fieldRanks["income_range"]}
-						/>
-					</Box>
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Credit score range"
-							data={creditScoreRangeData}
-							rank={fieldRanks["credit_rating"]}
-							gradientColor="249, 155, 171"
-							sortByPercent={false}
-						/>
-					</Box>
+					<StatsRowProvider>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Income range"
+								data={incomeRangeData}
+								sortByPercent={false}
+								rank={fieldRanks["income_range"]}
+							/>
+						</Box>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Credit score range"
+								data={creditScoreRangeData}
+								rank={fieldRanks["credit_rating"]}
+								gradientColor="249, 155, 171"
+								sortByPercent={false}
+							/>
+						</Box>
 
-					<Box sx={{ display: "flex", width: "100%" }}>
-						<GradientBarChart
-							title="Net worth range"
-							data={netWorthRangeData}
-							sortByPercent={false}
-							rank={fieldRanks["net_worth"]}
-							gradientColor="152, 223, 192"
-						/>
-					</Box>
+						<Box sx={{ display: "flex", width: "100%" }}>
+							<SmartGradientBarChart
+								title="Net worth range"
+								data={netWorthRangeData}
+								sortByPercent={false}
+								rank={fieldRanks["net_worth"]}
+								gradientColor="152, 223, 192"
+							/>
+						</Box>
+					</StatsRowProvider>
 				</Box>
 
 				<Box

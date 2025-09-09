@@ -1,11 +1,12 @@
-import type React from "react";
-import { useState } from "react";
-
 import { GradientBarChartView } from "./GradientHorizontalBarChartView";
+import { useStatsRowContext } from "./StatsRowContext";
 
-import type { BarData } from "./schemas";
+type BarData = {
+	label: string;
+	percent: number;
+};
 
-type GradientBarChartProps = {
+type Props = {
 	title: string;
 	data: BarData[];
 	gradientColor?: string;
@@ -15,7 +16,7 @@ type GradientBarChartProps = {
 	hidePercent?: boolean;
 };
 
-export const GradientBarChart: React.FC<GradientBarChartProps> = ({
+export const SmartGradientBarChart: React.FC<Props> = ({
 	title,
 	data,
 	gradientColor = "98, 178, 253",
@@ -24,8 +25,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 	textPadding,
 	hidePercent = false,
 }) => {
-	const [expanded, setExpanded] = useState(false);
-	const toggle = () => setExpanded((prev) => !prev);
+	const { expanded, toggle } = useStatsRowContext();
 
 	return (
 		<GradientBarChartView

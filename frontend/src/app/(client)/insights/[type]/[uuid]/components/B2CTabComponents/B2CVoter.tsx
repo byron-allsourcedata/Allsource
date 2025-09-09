@@ -1,14 +1,15 @@
+import { Box } from "@mui/material";
+
+import { GradientBarChart } from "../GradientHorizontalBarChart";
+import { PieChartWithLegend } from "../CircularChart";
+
 import {
 	mapGenericPercentage,
 	extractSemiCirclePercent,
 	mapPieChart,
 } from "./mappingUtils";
-import { Box } from "@mui/material";
-import { GradientBarChart } from "../GradientHorizontalBarChart";
-import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
-import { FieldRankMap, PercentageMap, VoterInfo } from "@/types/insights";
-import { PieChartWithLegend } from "../CircularChart";
 
+import type { FieldRankMap, PercentageMap, VoterInfo } from "@/types/insights";
 interface B2CVoterProps {
 	data: VoterInfo;
 	fieldRanks: FieldRankMap;

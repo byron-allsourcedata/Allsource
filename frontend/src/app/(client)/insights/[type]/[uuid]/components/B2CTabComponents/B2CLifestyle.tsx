@@ -1,7 +1,10 @@
-import { Box } from "@mui/material";
-import { IconFillIndicator } from "../CustomChart";
 import _ from "lodash";
-import { FieldRankMap, LifestyleData } from "@/types/insights";
+
+import { Box } from "@mui/material";
+
+import { IconFillIndicator } from "../CustomChart";
+
+import type { FieldRankMap, LifestyleData } from "@/types/insights";
 
 interface B2CLifestyleProps {
 	data: LifestyleData;
