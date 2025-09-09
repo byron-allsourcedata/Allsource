@@ -39,6 +39,7 @@ import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 const DataSync = () => {
 	const router = useRouter();
@@ -51,6 +52,8 @@ const DataSync = () => {
 	const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false);
 	const [hasContacts, setHasContacts] = useState(false);
 	const [hasDataSync, setHasDataSync] = useState(false);
+
+	useZohoChatToggle(filterPopup || openCreateDataSyncPopup);
 
 	const handleFilterPopupOpen = () => {
 		setFilterPopup(true);

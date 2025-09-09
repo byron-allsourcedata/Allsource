@@ -87,6 +87,7 @@ import {
 	renderValidatedStatusIcon,
 } from "./components/RenderProgress";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface Smarts {
 	id: string;
@@ -411,6 +412,14 @@ const SmartAudiences: React.FC = () => {
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
 	const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
+
+	useZohoChatToggle(
+		filterPopupOpen ||
+			isCalendarOpen ||
+			detailsPopupOpen ||
+			validationHistoryPopupOpen ||
+			dataSyncPopupOpen,
+	);
 
 	const [hasSource, setHasSource] = useState(false);
 	const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] =

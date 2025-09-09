@@ -1497,7 +1497,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 
 													{/* Show static options */}
 													{klaviyoList &&
-														klaviyoList.map((klaviyo, option) => (
+														klaviyoList?.map((klaviyo, option) => (
 															<MenuItem
 																key={klaviyo.id}
 																onClick={() => handleSelectOption(klaviyo)}

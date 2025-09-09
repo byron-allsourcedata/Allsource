@@ -18,6 +18,7 @@ import { useHasSubheader } from "@/hooks/useHasSubheader";
 import OneDollarPopup from "./analytics/components/OneDollarPopup";
 import { useGlobalFlag } from "@/hooks/useOneDollar";
 import { flagStore } from "@/services/oneDollar";
+import Script from "next/script";
 
 interface ClientLayoutProps {
 	children: ReactNode;

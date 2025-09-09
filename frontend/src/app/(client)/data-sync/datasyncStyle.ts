@@ -8,6 +8,7 @@ export const datasyncStyle: { [key: string]: SxProps<Theme> } = {
 		padding: 0,
 		margin: 0,
 		alignItems: "center",
+		pb: 5.5,
 		justifyContent: "center",
 	},
 	table_column: {

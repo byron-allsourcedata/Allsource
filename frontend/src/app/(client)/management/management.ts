@@ -8,6 +8,7 @@ export const managementStyle: { [key: string]: SxProps<Theme> } = {
 		width: "100%",
 		padding: 0,
 		margin: 0,
+		paddingBottom: "100px",
 		alignItems: "center",
 		justifyContent: "center",
 		"@media (max-width: 440px)": {

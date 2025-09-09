@@ -74,6 +74,7 @@ import SmartCell from "@/components/table/SmartCell";
 import { usePagination } from "@/hooks/usePagination";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import RenderProgress from "./components/RenderProgress";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface Source {
 	id: string;
@@ -427,6 +428,8 @@ const Sources: React.FC = () => {
 	const handleFilterPopupClose = () => {
 		setFilterPopupOpen(false);
 	};
+
+	useZohoChatToggle(filterPopupOpen);
 
 	const handleOpenPopover = (
 		event: React.MouseEvent<HTMLElement>,
