@@ -792,6 +792,11 @@ const UserIntegrationsList = ({
 						placeholder="Search integrations"
 						value={search}
 						onChange={handleSearch}
+						inputProps={{
+							style: {
+								padding: 0,
+							},
+						}}
 						InputProps={{
 							startAdornment: (
 								<InputAdornment position="start">
