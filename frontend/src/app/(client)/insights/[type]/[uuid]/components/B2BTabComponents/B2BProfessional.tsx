@@ -39,7 +39,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 								title="Top Employers"
 								data={mapGenericPercentage(data.current_company_name)}
 								gradientColor="155, 223, 196"
-								rank={fieldRanks["current_company_name"]}
+								rank={fieldRanks.current_company_name}
 								hidePercent={true}
 								textPadding={false}
 							/>
@@ -49,7 +49,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 							<SmartGradientBarChart
 								title="Job Level"
 								data={mapGenericPercentage(data.job_level)}
-								rank={fieldRanks["job_level"]}
+								rank={fieldRanks.job_level}
 							/>
 						</Box>
 
@@ -57,7 +57,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 							<SmartGradientBarChart
 								title="Current Job Title"
 								data={mapGenericPercentage(data.current_job_title)}
-								rank={fieldRanks["current_job_title"]}
+								rank={fieldRanks.current_job_title}
 							/>
 						</Box>
 					</StatsRowProvider>
@@ -81,7 +81,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 								title="Primary Industry"
 								data={mapGenericPercentage(data.primary_industry)}
 								gradientColor="159, 151, 247"
-								rank={fieldRanks["primary_industry"]}
+								rank={fieldRanks.primary_industry}
 							/>
 						</Box>
 
@@ -90,7 +90,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 								title="Company Size"
 								data={mapGenericPercentage(data.company_size)}
 								gradientColor="155, 223, 196"
-								rank={fieldRanks["company_size"]}
+								rank={fieldRanks.company_size}
 							/>
 						</Box>
 
@@ -99,7 +99,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 								title="Annual Sales"
 								data={mapGenericPercentage(data.annual_sales)}
 								gradientColor="155, 223, 196"
-								rank={fieldRanks["annual_sales"]}
+								rank={fieldRanks.annual_sales}
 							/>
 						</Box>
 					</StatsRowProvider>
@@ -119,7 +119,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 								title="Department"
 								data={mapGenericPercentage(data.department)}
 								gradientColor="159, 151, 247"
-								rank={fieldRanks["department"]}
+								rank={fieldRanks.department}
 							/>
 						</Box>
 						<Box
@@ -133,7 +133,7 @@ const B2BProfessional: React.FC<B2BProffesionalProps> = ({
 							<MapChart
 								title="Job Location"
 								regions={aggregateByState(data.job_location)}
-								rank={fieldRanks["job_location"]}
+								rank={fieldRanks.job_location}
 								hasCityMode={true}
 							/>
 						</Box>

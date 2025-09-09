@@ -61,7 +61,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
 						<GradientBarChart
 							title="Congressional District"
 							data={congressionalData}
-							rank={fieldRanks["congressional_district"]}
+							rank={fieldRanks.congressional_district}
 							gradientColor="249, 155, 171"
 						/>
 					</Box>
@@ -70,7 +70,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
 						<GradientBarChart
 							title="Political Party"
 							data={politicalPartyData}
-							rank={fieldRanks["party_affiliation"]}
+							rank={fieldRanks.party_affiliation}
 						/>
 					</Box>
 
@@ -83,7 +83,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
 						<PieChartWithLegend
 							title="Voting Propensity"
 							data={votingPieChartData}
-							rank={fieldRanks["voting_propensity"]}
+							rank={fieldRanks.voting_propensity}
 						/>
 					</Box>
 				</Box>

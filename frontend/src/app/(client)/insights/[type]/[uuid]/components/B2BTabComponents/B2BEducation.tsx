@@ -31,7 +31,7 @@ const B2BEducation: React.FC<B2BEducationProps> = ({ data, fieldRanks }) => {
 						<GradientBarChart
 							title="Institution Name"
 							data={mapGenericPercentage(data?.institution_name)}
-							rank={fieldRanks["institution_name"]}
+							rank={fieldRanks.institution_name}
 						/>
 					</Box>
 
@@ -40,7 +40,7 @@ const B2BEducation: React.FC<B2BEducationProps> = ({ data, fieldRanks }) => {
 							title="Post-graduation time"
 							data={mapGenericPercentage(data?.post_graduation_time)}
 							gradientColor="249, 155, 171"
-							rank={fieldRanks["post_graduation_time"]}
+							rank={fieldRanks.post_graduation_time}
 						/>
 					</Box>
 				</Box>
@@ -52,7 +52,7 @@ const B2BEducation: React.FC<B2BEducationProps> = ({ data, fieldRanks }) => {
 						<GradientBarChart
 							title="Degree"
 							data={mapGenericPercentage(data?.degree)}
-							rank={fieldRanks["degree"]}
+							rank={fieldRanks.degree}
 							gradientColor="155, 223, 196"
 						/>
 					</Box>

@@ -34,7 +34,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 							<SmartGradientBarChart
 								title="№ of jobs(last 5 years)"
 								data={mapGenericPercentage(data.number_of_jobs)}
-								rank={fieldRanks["number_of_jobs"]}
+								rank={fieldRanks.number_of_jobs}
 							/>
 						</Box>
 
@@ -43,7 +43,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 								title="Top Previous Employers"
 								data={mapGenericPercentage(data.company_name)}
 								gradientColor="155, 223, 196"
-								rank={fieldRanks["company_name"]}
+								rank={fieldRanks.company_name}
 								hidePercent={true}
 								textPadding={false}
 							/>
@@ -54,7 +54,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 								title="Job Tenure"
 								data={mapGenericPercentage(data.job_tenure)}
 								gradientColor="249, 155, 171"
-								rank={fieldRanks["job_tenure"]}
+								rank={fieldRanks.job_tenure}
 							/>
 						</Box>
 					</StatsRowProvider>
@@ -68,7 +68,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 							<SmartGradientBarChart
 								title="Top Job Title"
 								data={mapGenericPercentage(data.job_title)}
-								rank={fieldRanks["job_title"]}
+								rank={fieldRanks.job_title}
 								hidePercent={true}
 								textPadding={false}
 							/>
@@ -85,7 +85,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
 							<MapChart
 								title="Job Location"
 								regions={mapState(data.job_location)}
-								rank={fieldRanks["job_location"]}
+								rank={fieldRanks.job_location}
 							/>
 						</Box>
 					</StatsRowProvider>
