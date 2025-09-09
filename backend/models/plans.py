@@ -1,3 +1,4 @@
+from decimal import Decimal
 from sqlalchemy import (
     Column,
     Integer,
@@ -59,7 +60,9 @@ class SubscriptionPlan(Base):
     )
     smart_audience_quota = Column(Integer, nullable=True)
     enrichment_credits = Column(DECIMAL(10, 2), nullable=True)
-    premium_source_credits = Column(DECIMAL(10, 2), nullable=True)
+    premium_source_credits: Mapped[Decimal | None] = mapped_column(
+        DECIMAL(10, 2), nullable=True
+    )
 
     __table_args__ = (
         Index("subscription_plans_alias_idx", alias, unique=True),

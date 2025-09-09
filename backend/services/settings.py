@@ -36,6 +36,7 @@ from schemas.settings import (
 )
 from services.domains import UserDomainsService
 from services.subscriptions import SubscriptionService
+from utils.coalesce import or_default
 from .jwt_service import (
     get_password_hash,
     create_access_token,
@@ -462,13 +463,17 @@ class SettingsService:
         return str(money_contacts_overage.quantize(Decimal("0.01")))
 
     def extract_subscription_details(
-        self, user: User
+        self, user: UserDict
     ) -> BillingSubscriptionDetails:
         customer_id = user.get("customer_id")
         validation_funds = user.get("validation_funds")
         leads_credits = user.get("leads_credits")
         smart_audience_quota = user.get("smart_audience_quota")
         user_id = user.get("id")
+        premium_source_credits = or_default(
+            user.get("premium_source_credits"), Decimal(0)
+        )
+
         amount_user_domains = len(
             self.user_domains_service.get_domains(user_id)
         )
@@ -493,11 +498,18 @@ class SettingsService:
             smart_audience_quota_limit = current_plan.smart_audience_quota
             plan_interval: str = current_plan.interval
             plan_title: str = current_plan.title
+
+            gifted_premium_source_funds = or_default(
+                current_plan.premium_source_credits,
+                Decimal(0),
+            )
+
         else:
             plan_limit_domain = -1
             validation_funds_limit = 0
             leads_credits_limit = -1
             smart_audience_quota_limit = 0
+            gifted_premium_source_funds = Decimal(0)
             plan_interval = "month"
             plan_title = "Basic"
         money_contacts_overage = self.calculate_money_contacts_overage(
@@ -556,7 +568,11 @@ class SettingsService:
                 limit_value=validation_funds_limit,
                 current_value=validation_funds,
             ),
-            premium_sources_funds="Coming soon",
+            premium_sources_funds=FundsDetail(
+                detail_type="funds",
+                limit_value=gifted_premium_source_funds,
+                current_value=premium_source_credits,
+            ),
             next_billing_date=NextBillingDate(
                 detail_type="next_billing_date", value=next_billing_date
             ),

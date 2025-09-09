@@ -102,10 +102,10 @@ class SubscriptionDetails(BaseModel):
     contacts_downloads: LimitedDetail
     smart_audience: LimitedDetail
     validation_funds: FundsDetail
-    premium_sources_funds: str
+    premium_sources_funds: FundsDetail
     next_billing_date: NextBillingDate
-    monthly_total: Optional[TotalKey] = None
-    yearly_total: Optional[TotalKey] = None
+    monthly_total: TotalKey | None = None
+    yearly_total: TotalKey | None = None
     active: ActivePlan
 
 
