@@ -91,8 +91,15 @@ async def process_rmq_message(
         for record in batch:
             person_id = record.get("audience_smart_person_id")
             full_name = record.get("full_name")
+            phone1_valid = False
 
             for phone_field in ["phone_mobile1", "phone_mobile2"]:
+                if phone_field == "phone_mobile2" and phone1_valid:
+                    logging.info(
+                        f"Skip phone_mobile2 for {person_id} because phone_mobile1 is valid"
+                    )
+                    break
+
                 if (
                     phone_field == "phone_mobile1"
                     and record.get("phone_mobile1")
@@ -171,18 +178,18 @@ async def process_rmq_message(
                     logging.info("There is such a Phone in our database")
                     is_verify = existing_verification.is_verify
 
-                if not is_verify and phone_field == "phone_mobile2":
-                    failed_ids.append(person_id)
-                elif is_verify:
+                if is_verify:
                     verified_phones.append(
                         AudienceSmartValidation(
                             audience_smart_person_id=person_id,
                             verified_phone=phone_number,
                         )
                     )
+                    if phone_field == "phone_mobile1":
+                        phone1_valid = True
                     break
-                else:
-                    continue
+                elif not is_verify and phone_field == "phone_mobile2":
+                    failed_ids.append(person_id)
 
         if write_off_funds:
             count_subtracted = user_persistence.deduct_validation_funds(
