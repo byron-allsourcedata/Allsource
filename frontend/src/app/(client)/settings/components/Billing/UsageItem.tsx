@@ -1,10 +1,17 @@
 "use client";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
+
 import { Box, Typography, Tooltip, Link, LinearProgress } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+
 import { AddFundsPopup } from "./AddFunds";
-import { CardDetails } from "./types";
 import CustomButton from "@/components/ui/CustomButton";
+import { TextLoader } from "@/components/ui/loaders/TextLoader";
+
+import { percentage } from "@/utils/math";
+
+import type { CardDetails } from "./types";
 
 interface UsageItemProps {
 	cardDetails: CardDetails[];
@@ -16,6 +23,7 @@ interface UsageItemProps {
 	needButton?: boolean;
 	commingSoon?: boolean;
 	moneyContactsOverage?: string;
+	loading?: boolean;
 }
 
 export const UsageItem: React.FC<UsageItemProps> = ({
@@ -24,12 +32,13 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	title,
 	limitValue,
 	currentValue,
+	loading,
 	available = true,
 	needButton = true,
 	commingSoon = false,
 	moneyContactsOverage = "0",
 }) => {
-	const limit = Math.round(((limitValue - currentValue) / limitValue) * 100);
+	const usage = getUsage(currentValue, limitValue);
 	const [addFundsPopupOpen, setAddFundsPopupOpen] = useState(false);
 
 	const valueLinearProgress = () => {
@@ -38,7 +47,10 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 		} else if (!available || moneyContactsOverage !== "0") {
 			return 0;
 		} else {
-			return 100 - limit;
+			if (usage === null) {
+				return 100;
+			}
+			return 100 - usage;
 		}
 	};
 
@@ -46,6 +58,8 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 		limitValue === -1
 			? "Unlimited"
 			: `${needButton ? "$" : ""}${Math.max(0, currentValue).toLocaleString("en-US")} out of ${needButton ? "$" : ""}${limitValue?.toLocaleString("en-US")} Remaining`;
+
+	const limitDefined = usage !== null;
 
 	return (
 		<>
@@ -64,7 +78,7 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 					>
 						{title}
 					</Typography>
-					{moneyContactsOverage !== "0" && (
+					{moneyContactsOverage !== "" && moneyContactsOverage !== "0" && (
 						<Typography
 							className="second-sub-title"
 							sx={{ lineHeight: "20px !important" }}
@@ -123,19 +137,31 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 						opacity: commingSoon ? 0.6 : 1,
 					}}
 				/>
+
 				<Box sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
-					{available && (
-						<Typography
-							className="paragraph"
-							sx={{
-								color: "#787878 !important",
-								opacity: commingSoon ? 0.6 : 1,
-							}}
-						>
-							{commingSoon ? "Coming Soon" : valueText}
-						</Typography>
-					)}
-					{!available && (
+					<TextLoader
+						loading={!!loading}
+						text={
+							available &&
+							limitDefined && (
+								<Typography
+									className="paragraph"
+									sx={{
+										color: "#787878 !important",
+										opacity: commingSoon ? 0.6 : 1,
+									}}
+								>
+									{commingSoon ? "Coming Soon" : valueText}
+								</Typography>
+							)
+						}
+						skeleton={{
+							width: "12rem",
+							height: "20px",
+						}}
+					/>
+
+					{!loading && !available && (
 						<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
 							<WarningAmberIcon
 								sx={{ color: "#E65A59", width: "16px", height: "16px" }}
@@ -150,17 +176,27 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 							</Typography>
 						</Box>
 					)}
-					{limitValue !== -1 &&
-						available &&
-						moneyContactsOverage === "0" &&
-						!commingSoon && (
-							<Typography
-								className="second-sub-title"
-								sx={{ lineHeight: "20px !important" }}
-							>
-								{limit}% Used
-							</Typography>
-						)}
+
+					<TextLoader
+						loading={!!loading}
+						text={
+							limitValue !== -1 &&
+							available &&
+							limitDefined &&
+							moneyContactsOverage === "0" &&
+							!commingSoon && (
+								<Typography
+									className="second-sub-title"
+									sx={{ lineHeight: "20px !important" }}
+								>
+									{usage}% Used
+								</Typography>
+							)
+						}
+						skeleton={{
+							width: "3rem",
+						}}
+					/>
 				</Box>
 			</Box>
 			<AddFundsPopup
@@ -172,3 +208,10 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 		</>
 	);
 };
+
+/**
+ * Returns the limit of the usage item or null if no limit is set
+ */
+function getUsage(used: number, limit: number): number | null {
+	return percentage(used, limit);
+}
