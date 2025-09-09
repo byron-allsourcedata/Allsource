@@ -66,6 +66,7 @@ import { FilterButton } from "./FilterButton";
 import { SelectedFilter } from "./schemas";
 import { usePagination } from "@/hooks/usePagination";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -131,6 +132,7 @@ const Leads: React.FC = () => {
 	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 124, [
 		data.length,
 	]);
+	useZohoChatToggle(isCalendarOpen || openPopup || filterPopupOpen);
 
 	const handleOpenPopover = (
 		event: React.MouseEvent<HTMLElement>,

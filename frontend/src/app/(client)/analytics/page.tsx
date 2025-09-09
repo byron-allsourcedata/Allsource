@@ -18,6 +18,7 @@ import useMediaQuery from "@mui/system/useMediaQuery/useMediaQuery";
 
 import { PixelAnalytics } from "./components/analytics";
 import { DashboardContacts } from "./components/DashboardContactB2B";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 const Dashboard: React.FC = () => {
 	const router = useRouter();
@@ -46,7 +47,7 @@ const Dashboard: React.FC = () => {
 		total_abandoned_cart: 0,
 		total_converted_sale: 0,
 	});
-
+	useZohoChatToggle(isCalendarOpen);
 	const isMobile = useMediaQuery("(max-width:600px)");
 
 	useEffect(() => {

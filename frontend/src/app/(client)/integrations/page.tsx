@@ -64,6 +64,7 @@ import { useIntegrationHints } from "./context/IntegrationsHintsContext";
 import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
 import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
 import type { IntegrationBoxProps } from "@/components/ui/integrations/IntegrationBox";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface IntegrationCredentials {
 	access_token: string;
@@ -669,6 +670,8 @@ const UserIntegrationsList = ({
 	const [isLoading, setIsLoading] = useState(false);
 	const { hints, cards, changeIntegrationHint, resetIntegrationHints } =
 		useIntegrationHints();
+
+	useZohoChatToggle(openDeletePopup || openModal !== null);
 
 	const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearch(event.target.value);

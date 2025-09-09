@@ -55,6 +55,7 @@ import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -134,6 +135,10 @@ const Leads: React.FC = () => {
 	const handleClosePopup = () => {
 		setOpenPopup(false);
 	};
+
+	useZohoChatToggle(
+		audiencePopupOpen || openPopup || filterPopupOpen || isCalendarOpen,
+	);
 
 	interface FilterParams {
 		from_date: number | null;

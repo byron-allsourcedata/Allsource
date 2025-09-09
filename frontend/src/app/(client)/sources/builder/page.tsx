@@ -906,6 +906,7 @@ const SourcesImport: React.FC = () => {
 					flexDirection: "column",
 					height: isGetStartedPage ? "100%" : "calc(100vh - 4.25rem)",
 					overflow: "auto",
+					pb: 4.5,
 					"@media (max-width: 1024px)": {
 						pr: 2,
 					},

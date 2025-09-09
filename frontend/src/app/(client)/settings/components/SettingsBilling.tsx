@@ -123,7 +123,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 
 	return (
 		<>
-			<Box sx={{ pr: 2, pt: 1 }}>
+			<Box sx={{ pr: 2, pt: 1, pb: 5 }}>
 				{isLoading && <CustomizedProgressBar />}
 				<Box
 					sx={{

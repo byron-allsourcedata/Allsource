@@ -66,6 +66,7 @@ import GoHighLevelDataSync from "../../data-sync/components/GoHighLevelDataSync"
 import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
 import CustomerIoDataSync from "@/app/(client)/data-sync/components/CustomerIoDataSync";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -612,6 +613,32 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			setAnchorEl(null);
 		}
 	};
+
+	useZohoChatToggle(
+		klaviyoIconPopupOpen ||
+			metaIconPopupOpen ||
+			mailchimpIconPopupOpen ||
+			omnisendIconPopupOpen ||
+			openSendlaneConnect ||
+			openS3Connect ||
+			openSlackConnect ||
+			openGoogleADSConnect ||
+			openLinkedinConnect ||
+			openWebhookConnect ||
+			openHubspotConnect ||
+			openSalesForceConnect ||
+			openGoHighLevelConnect ||
+			salesForceIconPopupOpen ||
+			hubspotIconPopupOpen ||
+			googleADSIconPopupOpen ||
+			goHighLevelIconPopupOpen ||
+			customerIoIconPopupOpen ||
+			openCustomerIoConnect ||
+			openMetaConnect ||
+			openKlaviyoConnect ||
+			openMailchimpConnect ||
+			openOmnisendConnect,
+	);
 
 	const handleSendlaneIconPopupClose = () => {
 		setOpenSendlaneIconPopup(false);

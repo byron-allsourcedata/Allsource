@@ -59,6 +59,7 @@ import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -165,6 +166,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 		setFilterPopupOpen(false);
 	};
 
+	useZohoChatToggle(openPopup || filterPopupOpen);
 	const handleSortRequest = (property: string) => {
 		const isAsc = orderBy === property && order === "asc";
 		setOrder(isAsc ? "desc" : "asc");

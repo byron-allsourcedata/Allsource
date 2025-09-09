@@ -261,8 +261,8 @@ const CreateLookalikePage: React.FC = () => {
 				display: "flex",
 				flexDirection: "column",
 				// alignItems: 'center',
-				height: "calc(100vh - 4.25rem)",
 				width: "100%",
+				pb: 6.5,
 				overflow: "auto",
 			}}
 		>

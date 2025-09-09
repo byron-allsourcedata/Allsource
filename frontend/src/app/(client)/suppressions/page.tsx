@@ -344,6 +344,7 @@ const Suppressions: React.FC = () => {
 						width: "100%",
 						pr: "2.5rem",
 						pl: "2.5rem",
+						pb: 2,
 						"@media (max-width: 600px)": { pr: 0, pl: 0 },
 					}}
 				>
