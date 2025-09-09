@@ -484,7 +484,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									...filterStyles.filter_name,
 								}}
 							>
-								Type
+								Status
 							</Typography>
 							{Object.keys(checkedFiltersTypes).some(
 								(key) => checkedFiltersTypes[key],
