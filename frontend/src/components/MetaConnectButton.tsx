@@ -159,7 +159,8 @@ const MetaConnectButton = ({
 					appId: appID ?? "",
 					cookie: true,
 					xfbml: true,
-					version: "v20.0",
+					// version: "v20.0",
+					version: "v23.0",
 				});
 			};
 			(function (d, s, id) {

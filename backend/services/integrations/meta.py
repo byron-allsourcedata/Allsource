@@ -9,6 +9,7 @@ import httpx
 import logging
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
+from facebook_business.exceptions import FacebookRequestError
 from fastapi import HTTPException, Depends
 
 from config.meta import MetaConfig
@@ -49,6 +50,7 @@ from utils import (
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
+API_VERSION = "v23.0"
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +72,12 @@ class MetaIntegrationsService:
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
+
+    def _ensure_act_prefix(slef, ad_account_id: str) -> str:
+        ad_id = str(ad_account_id)
+        if not ad_id.startswith("act_"):
+            return f"act_{ad_id}"
+        return ad_id
 
     def __handle_request(
         self,
@@ -119,7 +127,7 @@ class MetaIntegrationsService:
         return credential
 
     def get_info_by_access_token(self, access_token: str):
-        url = "https://graph.facebook.com/v22.0/me"
+        url = f"https://graph.facebook.com/{API_VERSION}/me"
         params = {"access_token": access_token}
         response = self.__handle_request("GET", url=url, params=params)
         if response.status_code != 200:
@@ -185,9 +193,13 @@ class MetaIntegrationsService:
         return integartion
 
     def check_custom_audience_terms(self, ad_account_id, access_token):
-        url = (
-            f"https://graph.facebook.com/v22.0/{ad_account_id}/customaudiences"
-        )
+        acct = ad_account_id
+        if acct.startswith("act_"):
+            acct_no_prefix = acct.replace("act_", "")
+        else:
+            acct_no_prefix = acct
+
+        url = f"https://graph.facebook.com/{API_VERSION}/act_{acct_no_prefix}/customaudiences"
 
         params = {
             "access_token": access_token,
@@ -203,18 +215,18 @@ class MetaIntegrationsService:
 
         error_data = response.json()
         if error_data.get("error", {}).get("error_subcode") == 1870090:
-            ad_account_id = ad_account_id.replace("act_", "")
-            terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={ad_account_id}"
+            terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={acct_no_prefix}"
             return {"terms_accepted": False, "terms_link": terms_link}
 
         return {"terms_accepted": False, "error": error_data}
 
     def get_long_lived_token(self, fb_exchange_token):
-        url = "https://graph.facebook.com/v22.0/oauth/access_token"
+        url = f"https://graph.facebook.com/{API_VERSION}/oauth/access_token"
         params = {
+            "grant_type": "fb_exchange_token",
             "client_id": APP_ID,
             "client_secret": APP_SECRET,
-            "code": fb_exchange_token,
+            "fb_exchange_token": fb_exchange_token,
         }
         response = self.__handle_request("GET", url=url, params=params)
         if response.status_code != 200:
@@ -227,7 +239,7 @@ class MetaIntegrationsService:
         }
 
     def __get_ad_accounts(self, access_token: str):
-        url = "https://graph.facebook.com/v22.0/me/adaccounts"
+        url = f"https://graph.facebook.com/{API_VERSION}/me/adaccounts"
         params = {"fields": "name", "access_token": access_token}
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
@@ -244,17 +256,19 @@ class MetaIntegrationsService:
             return
         return [
             self.__mapped_ad_account(ad_account)
-            for ad_account in response.json().get("data")
+            for ad_account in response.json().get("data", [])
         ]
 
     def __get_audience_list(self, ad_account_id, access_token: str):
-        url = f"https://graph.facebook.com/v22.0/{ad_account_id}/customaudiences?fields=name"
+        ad_account_id = self._ensure_act_prefix(ad_account_id)
+        url = f"https://graph.facebook.com/{API_VERSION}/{ad_account_id}/customaudiences"
         params = {"fields": "name", "access_token": access_token}
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
 
     def __get_campaigns_list(self, ad_account_id, access_token: str):
-        url = f"https://graph.facebook.com/v22.0/{ad_account_id}/campaigns?fields=name"
+        ad_account_id = self._ensure_act_prefix(ad_account_id)
+        url = f"https://graph.facebook.com/{API_VERSION}/{ad_account_id}/campaigns"
         params = {"fields": "name", "access_token": access_token}
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
@@ -292,7 +306,7 @@ class MetaIntegrationsService:
         }
 
     def create_list(
-        self, list, domain_id: int, user_id: int, description: str = None
+        self, list_obj, domain_id: int, user_id: int, description: str = None
     ):
         credential = self.get_credentials(domain_id, user_id)
         if not credential:
@@ -302,29 +316,30 @@ class MetaIntegrationsService:
                     "status": IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
                 },
             )
-        FacebookAdsApi.init(access_token=credential.access_token)
-        fields = []
+        FacebookAdsApi.init(
+            access_token=credential.access_token, api_version=API_VERSION
+        )
         params = {
-            "name": list.name,
+            "name": list_obj.name,
             "subtype": "CUSTOM",
-            "description": description if description else None,
+            "description": description or "",
             "customer_file_source": "USER_PROVIDED_ONLY",
         }
+
+        ad_account_id = str(list_obj.ad_account_id)
+        if not ad_account_id.startswith("act_"):
+            ad_account_id = f"act_{ad_account_id}"
+
         try:
-            id_account = (
-                AdAccount(f"{list.ad_account_id}")
-                .create_custom_audience(
-                    fields=fields,
-                    params=params,
-                )
-                .get("id")
-            )
-        except:
+            ad_account = AdAccount(ad_account_id)
+            resp = ad_account.create_custom_audience(fields=[], params=params)
+            audience_id = resp.get("id")
+        except FacebookRequestError as e:
             return self.check_custom_audience_terms(
-                list.ad_account_id, credential.access_token
+                ad_account_id, credential.access_token
             )
 
-        return {"id": id_account, "list_name": list.name}
+        return {"id": audience_id, "list_name": list_obj.name}
 
     def edit_sync(
         self,
@@ -355,7 +370,8 @@ class MetaIntegrationsService:
         bid_amount: str | None = None,
         campaign_objective: str | None = None,
     ):
-        url = f"https://graph.facebook.com/v22.0/{ad_account_id}/adsets"
+        ad_account_id = self._ensure_act_prefix(ad_account_id)
+        url = f"https://graph.facebook.com/{API_VERSION}/{ad_account_id}/adsets"
         ad_set_data = {
             "name": f"{campaign_name}_ad",
             "billing_event": "IMPRESSIONS",
@@ -368,13 +384,10 @@ class MetaIntegrationsService:
             "status": "PAUSED",
         }
 
-        if campaign_objective:
-            ad_set_data["optimization_goal"] = campaign_objective
-        else:
-            ad_set_data["optimization_goal"] = "LANDING_PAGE_VIEWS"
+        ad_set_data["optimization_goal"] = campaign_objective or "LINK_CLICKS"
 
         if bid_amount is not None:
-            ad_set_data["bid_amount"] = bid_amount
+            ad_set_data["bid_amount"] = int(bid_amount)
 
         response = self.__handle_request(
             method="POST", url=url, json=ad_set_data
@@ -384,27 +397,43 @@ class MetaIntegrationsService:
         self, campaign_name: str, daily_budget: str, ad_account_id, user_id: int
     ):
         credentials = self.get_smart_credentials(user_id=user_id)
-        url = f"https://graph.facebook.com/v22.0/{ad_account_id}/campaigns"
+        ad_account_id = self._ensure_act_prefix(ad_account_id)
+        url = f"https://graph.facebook.com/{API_VERSION}/{ad_account_id}/campaigns"
+
+        try:
+            daily_budget_int = int(daily_budget)
+        except Exception:
+            logger.warning(
+                "daily_budget not integer, trying to cast from string"
+            )
+            try:
+                daily_budget_int = int(float(daily_budget))
+            except Exception:
+                logger.exception("Invalid daily_budget format")
+                raise
+
         start_time = datetime.now(timezone.utc).isoformat()
         end_time = (
             datetime.now(timezone.utc) + timedelta(days=365)
         ).isoformat()
         campaign_data = {
             "name": campaign_name,
-            "objective": "OUTCOME_TRAFFIC",
+            "objective": "LINK_CLICKS",
             "status": "ACTIVE",
             "buying_type": "AUCTION",
-            "daily_budget": daily_budget,
+            "daily_budget": daily_budget_int,
             "start_time": start_time,
             "end_time": end_time,
-            "access_token": credentials.access_token,
             "special_ad_categories": [],
         }
         response = self.__handle_request(
             method="POST", url=url, json=campaign_data
         )
         response = response.json()
-        campaign_id = response["id"]
+        campaign_id = response.get("id")
+        if not campaign_id:
+            logger.error("create_campaign: no id returned %s", response)
+            raise Exception("No campaign id returned")
         return {"id": campaign_id, "list_name": campaign_name}
 
     async def create_sync(
@@ -623,7 +652,7 @@ class MetaIntegrationsService:
             "last_batch_flag": True,
             "estimated_num_total": len(profiles),
         }
-        url = f"https://graph.facebook.com/v22.0/{custom_audience_id}/users"
+        url = f"https://graph.facebook.com/{API_VERSION}/{custom_audience_id}/users"
         response = self.__handle_request(
             method="POST",
             url=url,
