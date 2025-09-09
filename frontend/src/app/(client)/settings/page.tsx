@@ -30,9 +30,13 @@ const Settings: React.FC = () => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [userHasSubscription, setUserHasSubscription] = useState(false);
 
-	const [{ data: whitelabelEnabled }] = useAxios({
+	const [{ data: whitelabelEnabled }, refetch] = useAxios({
 		url: "/whitelabel/is-enabled",
-	});
+	}, { manual: true});
+
+	useEffect(() => {
+		refetch().catch(() => { })
+	}, [])
 
 	const fetchAccountDetails = async () => {
 		try {
