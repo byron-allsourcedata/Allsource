@@ -375,6 +375,7 @@ class MetaIntegrationsService:
             "targeting": {
                 "custom_audiences": [{"id": list_id}],
                 "geo_locations": {"countries": ["US"]},
+                "targeting_automation": {"advantage_audience": 0},
             },
             "campaign_id": campaign_id,
             "access_token": access_token,
