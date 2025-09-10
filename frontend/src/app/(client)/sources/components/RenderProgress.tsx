@@ -17,7 +17,7 @@ const renderPogress = (
 
 	const allProcessed =
 		(processedSseVal && processedSseVal === totalDB) ||
-		(processedDB === totalDB && processedDB !== 0);
+		(processedDB >= totalDB && processedDB !== 0);
 
 	if (status === "complete" && allProcessed) {
 		const matched = Math.max(matchedDB, matchedSseVal);
