@@ -229,16 +229,17 @@ class SettingsService:
             return {"status": VerifyToken.SUCCESS, "user_token": user_token}
         return {"status": VerifyToken.INCORRECT_TOKEN}
 
-    def get_team_members(self, user: dict):
+    def get_team_members(self, user: UserDict):
         result = {}
         team_arr = []
         teams_data = self.settings_persistence.get_team_members_by_userid(
             user_id=user.get("id")
         )
         for team_data in teams_data:
-            invited, inviter_mail = team_data
+            invited, inviter_mail = team_data.tuple()
             team_info = {
                 "email": invited.email,
+                "full_name": invited.full_name,
                 "last_sign_in": invited.last_login.strftime("%b %d, %Y")
                 if invited.last_login
                 else None,

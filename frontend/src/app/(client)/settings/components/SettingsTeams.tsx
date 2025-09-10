@@ -4,13 +4,6 @@ import {
 	Box,
 	Typography,
 	Button,
-	TextField,
-	Dialog,
-	DialogActions,
-	Tooltip,
-	Slider,
-	DialogContent,
-	DialogTitle,
 	IconButton,
 	Table,
 	TableBody,
@@ -18,20 +11,12 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Paper,
-	TableSortLabel,
-	InputAdornment,
 	Drawer,
 	Divider,
-	List,
-	ListItem,
-	ListItemIcon,
-	ListItemText,
 	FormControl,
 	Select,
 	MenuItem,
-	OutlinedInput,
-	SelectChangeEvent,
+	type SelectChangeEvent,
 	Popover,
 } from "@mui/material";
 import axios from "axios";
@@ -47,8 +32,8 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "../../../../components/customToolTip";
 import CloseIcon from "@mui/icons-material/Close";
 import { MoreVert } from "@/icon";
-import SortIcon from "@mui/icons-material/Sort"; // Import the sort icon
 import { checkHasActivePlan } from "@/services/checkActivePlan";
+import { useGetTeamsMembers, type TeamMember } from "./requests";
 
 const teamsStyles = {
 	tableColumn: {
@@ -118,7 +103,7 @@ const roleOptions = [
 export const SettingsTeams: React.FC = () => {
 	const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 	const [pendingInvitations, setPendingInvitations] = useState<any[]>([]);
-	const [teamMembers, setTeamMembers] = useState<any[]>([]);
+	const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 	const [inviteUsersPopupOpen, setInviteUsersPopupOpen] = useState(false);
 	const [idCounter, setIdCounter] = useState<number>(0);
 	const [memberLimit, setMemberLimit] = useState<number>(0);
@@ -136,13 +121,15 @@ export const SettingsTeams: React.FC = () => {
 	const [sortField, setSortField] = useState<string>("email");
 	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
+	const { teams, loading, refetch: refetchTeams } = useGetTeamsMembers();
+
 	const fetchTeamsData = async () => {
 		try {
 			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get("/settings/teams");
+			const response = await refetchTeams();
 			const data = response.data;
 			setTeamMembers(
-				data.teams.sort((a: any, b: any) => {
+				data.teams.sort((a, b) => {
 					if (a.access_level === "owner" && b.access_level !== "owner") {
 						return -1;
 					}
@@ -877,7 +864,12 @@ export const SettingsTeams: React.FC = () => {
 										/>
 									</IconButton>
 								</TableCell>
-
+								<TableCell
+									className="table-heading"
+									sx={teamsStyles.tableColumn}
+								>
+									Name
+								</TableCell>
 								<TableCell
 									className="table-heading"
 									sx={teamsStyles.tableColumn}
@@ -958,10 +950,20 @@ export const SettingsTeams: React.FC = () => {
 
 										<TableCell
 											className="table-data"
+											sx={{
+												...teamsStyles.tableBodyColumn,
+												whiteSpace: "nowrap",
+											}}
+										>
+											{member.full_name ?? "--"}
+										</TableCell>
+										<TableCell
+											className="table-data"
 											sx={teamsStyles.tableBodyColumn}
 										>
 											{member.last_sign_in}
 										</TableCell>
+
 										<TableCell
 											className="table-data"
 											sx={teamsStyles.tableBodyColumn}
