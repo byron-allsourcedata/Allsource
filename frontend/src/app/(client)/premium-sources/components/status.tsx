@@ -66,6 +66,7 @@ const StatusLabelBox = styled("div")`
     justify-content: center;
     align-items: center;
     gap: 0.125rem;
+	border-radius: 2px;
 `;
 
 const StatusLabelText = styled(Typography)`
