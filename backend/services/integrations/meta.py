@@ -432,7 +432,7 @@ class MetaIntegrationsService:
         ).isoformat()
         campaign_data = {
             "name": campaign_name,
-            "objective": "LINK_CLICKS",
+            "objective": "OUTCOME_TRAFFIC",
             "status": "ACTIVE",
             "buying_type": "AUCTION",
             "daily_budget": daily_budget_int,
