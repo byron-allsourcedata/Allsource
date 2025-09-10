@@ -1,4 +1,6 @@
+import { Box, Typography } from "@mui/material";
 import ProgressBar from "./ProgressLoader";
+import { formatEta } from "@/utils/format";
 
 const renderPogress = (
 	status: string,
@@ -8,6 +10,7 @@ const renderPogress = (
 	totalSSE: number | undefined,
 	matchedSSE: number | undefined,
 	processedSSE: number | undefined,
+	etaSeconds: number | undefined,
 ) => {
 	const totalSseVal = totalSSE ?? 0;
 	const matchedSseVal = matchedSSE ?? 0;
@@ -26,36 +29,84 @@ const renderPogress = (
 
 	if (allProcessed) {
 		return (
-			<ProgressBar
-				progress={{
-					total: totalDB,
-					processed: processedDB,
-					matched: matchedDB,
-				}}
-			/>
+			<Box>
+				<ProgressBar
+					progress={{
+						total: totalDB,
+						processed: processedDB,
+						matched: matchedDB,
+					}}
+				/>
+				{typeof etaSeconds === "number" && etaSeconds > 0 && (
+					<Typography
+						sx={{
+							color: "#202124",
+							fontSize: "12px",
+							fontFamily: "var(--font-nunito)",
+							fontWeight: 500,
+							backgroundColor: "white",
+							px: 0.5,
+							mt: 0.5,
+						}}
+					>
+						{formatEta(etaSeconds)}
+					</Typography>
+				)}
+			</Box>
 		);
 	}
 
 	if (processedDB !== 0) {
 		return (
-			<ProgressBar
-				progress={{
-					total: totalDB,
-					processed: processedDB,
-					matched: matchedDB,
-				}}
-			/>
+			<Box>
+				<ProgressBar
+					progress={{
+						total: totalDB,
+						processed: processedDB,
+						matched: matchedDB,
+					}}
+				/>
+				{typeof etaSeconds === "number" && etaSeconds > 0 && (
+					<Typography
+						sx={{
+							color: "#202124",
+							fontSize: "12px",
+							fontFamily: "var(--font-nunito)",
+							fontWeight: 500,
+							textAlign: "center",
+						}}
+					>
+						{formatEta(etaSeconds)}
+					</Typography>
+				)}
+			</Box>
 		);
 	}
 
 	return (
-		<ProgressBar
-			progress={{
-				total: totalSseVal,
-				processed: processedSseVal,
-				matched: matchedSseVal,
-			}}
-		/>
+		<Box>
+			<ProgressBar
+				progress={{
+					total: totalSseVal,
+					processed: processedSseVal,
+					matched: matchedSseVal,
+				}}
+			/>
+			{typeof etaSeconds === "number" && etaSeconds > 0 && (
+				<Typography
+					sx={{
+						color: "#202124",
+						fontSize: "12px",
+						fontFamily: "var(--font-nunito)",
+						fontWeight: 500,
+						backgroundColor: "white",
+						px: 0.5,
+					}}
+				>
+					{formatEta(etaSeconds)}
+				</Typography>
+			)}
+		</Box>
 	);
 };
 

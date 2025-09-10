@@ -90,6 +90,7 @@ interface Source {
 	matched_records: number;
 	matched_records_status: string;
 	is_disabled: boolean;
+	eta_seconds: number;
 }
 
 interface FetchDataParams {
@@ -1569,6 +1570,7 @@ const Sources: React.FC = () => {
 																					progress?.total,
 																					progress?.matched,
 																					progress?.processed,
+																					row.eta_seconds,
 																				)}
 																			</SmartCell>
 
