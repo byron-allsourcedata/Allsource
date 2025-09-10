@@ -381,7 +381,7 @@ class MetaIntegrationsService:
             "status": "PAUSED",
         }
 
-        ad_set_data["optimization_goal"] = campaign_objective or "LINK_CLICKS"
+        ad_set_data["optimization_goal"] = "LINK_CLICKS"
 
         # if campaign_objective:
         #     ad_set_data["optimization_goal"] = campaign_objective
