@@ -401,11 +401,11 @@ class MetaIntegrationsService:
             body = resp.json()
         except Exception:
             logger.exception("create_adset: can't parse response")
-            raise
+            raise RuntimeError("Failed to parse Meta API response")
 
         if body.get("error"):
             logger.error("create_adset error: %s", body["error"])
-            raise
+            raise RuntimeError(f"Meta API error: {body['error']}")
 
     def create_campaign(
         self, campaign_name: str, daily_budget: str, ad_account_id, user_id: int
