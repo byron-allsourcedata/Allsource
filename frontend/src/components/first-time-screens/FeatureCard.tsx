@@ -34,7 +34,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 		>
 			<CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
 				<Box sx={{ display: "flex", justifyContent: "space-between" }}>
-					<Box sx={{ display: "flex" }}>
+					<Box sx={{ display: "flex", alignItems: "center" }}>
 						{showInstalled && (
 							<CheckCircleIcon
 								sx={{
@@ -52,6 +52,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 								display: "flex",
 								flexDirection: "column",
 								gap: 0.5,
+								opacity: 0,
 							}}
 						>
 							<Typography
@@ -68,12 +69,13 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 							</Typography>
 						</Box>
 					)}
-					{showInstalled && (
+					{
 						<Box
 							sx={{
 								display: "flex",
 								flexDirection: "column",
 								gap: 0.5,
+								opacity: showInstalled ? 1 : 0,
 							}}
 						>
 							<Typography
@@ -89,7 +91,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 								Completed
 							</Typography>
 						</Box>
-					)}
+					}
 				</Box>
 
 				<Box

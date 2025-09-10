@@ -72,6 +72,7 @@ import GoHighLevelDataSync from "./GoHighLevelDataSync";
 import CustomerIoDataSync from "@/app/(client)/data-sync/components/CustomerIoDataSync";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
 import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -142,6 +143,32 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
 	const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
 	const [openHubspotConnect, setOpenHubspotConnect] = useState(false);
+
+	useZohoChatToggle(
+		klaviyoIconPopupOpen ||
+			metaIconPopupOpen ||
+			mailchimpIconPopupOpen ||
+			omnisendIconPopupOpen ||
+			openSendlaneConnect ||
+			openS3Connect ||
+			openSlackConnect ||
+			openGoogleADSConnect ||
+			openLinkedinConnect ||
+			openWebhookConnect ||
+			openHubspotConnect ||
+			openSalesForceConnect ||
+			openGoHighLevelConnect ||
+			salesForceIconPopupOpen ||
+			hubspotIconPopupOpen ||
+			googleADSIconPopupOpen ||
+			goHighLevelIconPopupOpen ||
+			customerIoIconPopupOpen ||
+			openCustomerIoConnect ||
+			openMetaConnect ||
+			openKlaviyoConnect ||
+			openMailchimpConnect ||
+			openOmnisendConnect,
+	);
 
 	const paginationProps = usePagination(totalRows ?? 0);
 	const handleCloseIntegrate = () => {

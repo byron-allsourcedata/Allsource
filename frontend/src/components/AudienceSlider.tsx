@@ -732,7 +732,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												<IntegrationBox
 													image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
 													serviceName={toCamelCase(integration.service_name)}
-													active={activeService === integration.service_name}
 													isAvalible={
 														isIntegrated || integrationCred?.is_failed
 													}

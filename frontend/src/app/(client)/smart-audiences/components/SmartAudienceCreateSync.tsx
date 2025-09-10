@@ -375,7 +375,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	const [createHubspot, setCreateHubspot] = useState<boolean>(false);
 	const [createSalesForce, setCreateSalesForce] = useState<boolean>(false);
 	const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false);
-	const [CreateGoHighLevel, setCreateGoHighLevel] = useState<boolean>(false);
+	const [createGoHighLevel, setCreateGoHighLevel] = useState<boolean>(false);
 	const [integrations, setIntegrations] = useState<Integrations[]>([]);
 	const [metaConnectApp, setMetaConnectApp] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
@@ -2535,7 +2535,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				}
 			/>
 			<GoHighLevelConnectPopup
-				open={createGoogleAds}
+				open={createGoHighLevel}
 				handlePopupClose={handleCreateGoHighLevelClose}
 			/>
 			<SalesForceIntegrationPopup

@@ -36,7 +36,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 	const [sendInvoicePopupOpen, setSendInvoicePopupOpen] = useState(false);
 	const [isAvailableSmartAudience, setIsAvailableSmartAudience] =
 		useState(false);
-	const [isLoading, setIsLoading] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
 	const [hide, setHide] = useState(false);
 
 	const [paymentFailed, setPaymentFailed] = useState(false);
@@ -123,7 +123,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 
 	return (
 		<>
-			<Box sx={{ pr: 2, pt: 1 }}>
+			<Box sx={{ pr: 2, pt: 1, pb: 5 }}>
 				{isLoading && <CustomizedProgressBar />}
 				<Box
 					sx={{
@@ -164,6 +164,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 								{!hide && (
 									<>
 										<UsageItem
+											loading={isLoading}
 											handleCheckoutSuccess={handleCheckoutSuccess}
 											cardDetails={cardDetails}
 											title="Contacts Downloaded"
@@ -179,6 +180,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 										/>
 
 										<UsageItem
+											loading={isLoading}
 											handleCheckoutSuccess={handleCheckoutSuccess}
 											cardDetails={cardDetails}
 											title="Smart Audience"
@@ -213,6 +215,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 								{!hide && (
 									<>
 										<UsageItem
+											loading={isLoading}
 											handleCheckoutSuccess={handleCheckoutSuccess}
 											cardDetails={cardDetails}
 											title="Validation funds"
@@ -224,6 +227,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											currentValue={validationFundsCollected}
 										/>
 										<UsageItem
+											loading={isLoading}
 											handleCheckoutSuccess={handleCheckoutSuccess}
 											cardDetails={cardDetails}
 											title="Premium Source funds"
@@ -233,7 +237,6 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 													: planPremiumSourceCollected
 											}
 											currentValue={premiumSourceCollected}
-											commingSoon={true}
 										/>
 									</>
 								)}

@@ -1,13 +1,10 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { Box, Typography, Stack } from "@mui/material";
 import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
-
-export type BarData = {
-	label: string;
-	percent: number;
-};
+import { getGradient } from "@/utils/colors";
+import type { BarData } from "./schemas";
 
 type VerticalGradientBarChartProps = {
 	title: string;
@@ -15,17 +12,6 @@ type VerticalGradientBarChartProps = {
 	fieldKey?: string;
 	rank?: number;
 	gradientColor?: string;
-};
-
-const getGradient = (relativePercent: number, gradientColor: string) => {
-	const opacity = 0.4 + 0.6 * relativePercent;
-
-	if (gradientColor.startsWith("rgba(")) {
-		const rgbValues = gradientColor.match(/\d+/g)?.slice(0, 3).join(", ");
-		return `rgba(${rgbValues}, ${opacity})`;
-	}
-
-	return `rgba(${gradientColor}, ${opacity})`;
 };
 
 export const VerticalGradientBarChart: React.FC<

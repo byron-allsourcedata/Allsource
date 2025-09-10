@@ -9,9 +9,8 @@ import os
 import re
 import sys
 import time
-from datetime import datetime, timezone
 from itertools import islice
-from typing import Callable, List, Dict, Tuple, Union
+from typing import Any, Callable, List, Dict, Union
 from typing_extensions import Coroutine
 
 from aio_pika.abc import AbstractChannel, AbstractConnection
@@ -25,11 +24,8 @@ from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
 
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
-
 from db_dependencies import Db
+from domains.sources.order_count_service import SourcesOrderCountService
 from resolver import Resolver
 from config.sentry import SentryConfig
 from schemas.scripts.audience_source import (
@@ -56,6 +52,9 @@ AUDIENCE_SOURCES_MATCHING = "aud_sources_matching"
 SOURCE_PROCESSING_PROGRESS = "SOURCE_PROCESSING_PROGRESS"
 S3_BUCKET_NAME = "allsource-data"
 SELECTED_ROW_COUNT = 500
+
+
+logger = logging.getLogger(__name__)
 
 
 def setup_logging(level):
@@ -191,7 +190,8 @@ def check_existing_csv_source(
 
 async def parse_csv_file(
     *,
-    data: Dict,
+    sources_order_count: SourcesOrderCountService,
+    data: dict[str, Any],
     channel: Channel,
     source_id: str,
     db_session: Session,
@@ -271,16 +271,22 @@ async def parse_csv_file(
     send_rows = 0
     mapped_fields: Dict[str, str] = data.get("mapped_fields", {})
     status = data.get("statuses", "").strip() or None
+
+    def map_csv_row(row: dict[str, str], mappings: dict[str, str]):
+        extracted_data = {
+            key: row.get(mappings.get(key, ""), "").strip() for key in mappings
+        }
+
+        return extracted_data
+
     while send_rows < total_rows:
         batch_rows: List[PersonRow] = []
         for row in islice(csv_reader, SELECTED_ROW_COUNT):
-            extracted_data = {
-                key: row.get(mapped_fields.get(key, ""), "").strip()
-                for key in mapped_fields
-            }
+            extracted_data = map_csv_row(row, mapped_fields)
 
             email = extracted_data.get("Email", "")
             sale_amount_raw = extracted_data.get("Order Amount", "")
+            raw_order_count = extracted_data.get("Order Count", "")
 
             date_field = None
             if status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
@@ -304,13 +310,27 @@ async def parse_csv_file(
                         f"Error parsing amount '{sale_amount_raw}': {sale_error}"
                     )
 
-            batch_rows.append(
-                PersonRow(
-                    email=email,
-                    date=date,
-                    sale_amount=str(sale_amount),
-                )
+            parsed_order_count = sources_order_count.parse_order_count(
+                raw_order_count
             )
+            if parsed_order_count:
+                duplicated_rows = (
+                    sources_order_count.get_duplicated_person_rows(
+                        email=email,
+                        date=date,
+                        order_amount=sale_amount,
+                        order_count=parsed_order_count,
+                    )
+                )
+                batch_rows.extend(duplicated_rows)
+            else:
+                batch_rows.append(
+                    PersonRow(
+                        email=email,
+                        date=date,
+                        sale_amount=str(sale_amount),
+                    )
+                )
 
         if batch_rows:
             message_body = MessageBody(
@@ -558,8 +578,14 @@ async def aud_sources_reader(
             return
         user_id = data.get("user_id")
         source_id = str(data.get("source_id"))
+
+        resolver = Resolver()
+        resolver.inject(Db, db_session)
+        sources_order_count = await resolver.resolve(SourcesOrderCountService)
+
         if type == SourceType.CSV.value:
             await parse_csv_file(
+                sources_order_count=sources_order_count,
                 channel=channel,
                 data=data,
                 source_id=source_id,

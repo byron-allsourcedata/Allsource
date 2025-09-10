@@ -73,10 +73,17 @@ class QueueService(Generic[T]):
         json_bytes = batch.model_dump_json().encode("utf-8")
 
         message = Message(json_bytes)
-        _ = await self.channel.default_exchange.publish(
-            message,
-            routing_key=self._get_queue_name(),
-        )
+
+        try:
+            _ = await self.channel.default_exchange.publish(
+                message,
+                routing_key=self._get_queue_name(),
+            )
+        except Exception:
+            _ = await self.channel.default_exchange.publish(
+                message,
+                routing_key=self._get_queue_name(),
+            )
 
     async def consume(
         self, handler: Callable[[AbstractIncomingMessage], Awaitable[None]]
@@ -84,7 +91,10 @@ class QueueService(Generic[T]):
         queue = self._get_queue()
         queue_iter = queue.iterator()
         async for message in queue_iter:
-            await handler(message)
+            try:
+                await handler(message)
+            except Exception:
+                await handler(message)
 
     async def fetch(self, timeout: int = 60) -> AbstractIncomingMessage:
         """

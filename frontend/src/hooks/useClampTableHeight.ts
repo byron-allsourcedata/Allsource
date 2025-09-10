@@ -33,14 +33,23 @@ export const useClampTableHeight = (
 		if (!tableRef.current) return;
 
 		const clamp = () => {
-			const tableTop = tableRef.current!.getBoundingClientRect().top;
+			if (!tableRef.current) return;
+
+			const tableTop = tableRef.current.getBoundingClientRect().top;
 			const pagHeight =
 				paginatorRef.current?.getBoundingClientRect().height ?? 0;
 
-			const avail = window.innerHeight - tableTop - pagHeight - gap;
+			// ищем Zoho виджет
+			const chatWidget = document.getElementById("zsiq_float");
+			const chatHeight = chatWidget
+				? chatWidget.getBoundingClientRect().height + 16 // чуть запас
+				: 0;
+
+			const avail =
+				window.innerHeight - tableTop - pagHeight - gap - chatHeight;
 			const px = Math.max(avail, minHeight);
 
-			tableRef.current!.style.maxHeight = `${px}px`;
+			tableRef.current.style.maxHeight = `${px}px`;
 		};
 
 		clamp();

@@ -27,9 +27,10 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({
 				border: border,
 				borderRadius: 1,
 				p: 2,
+				gap: "1rem",
 			}}
 		>
-			<InfoIcon sx={{ color: iconColor, mr: 3 }} />
+			<InfoIcon sx={{ color: iconColor }} />
 			<Typography
 				sx={{
 					color: "rgba(50,54,62,1)",

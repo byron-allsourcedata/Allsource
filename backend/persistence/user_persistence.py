@@ -54,6 +54,7 @@ class UserDict(TypedDict):
     random_seed: int
     team_owner_id: int | None
     whitelabel_settings_enabled: bool
+    premium_source_credits: Decimal | None
 
 
 @injectable

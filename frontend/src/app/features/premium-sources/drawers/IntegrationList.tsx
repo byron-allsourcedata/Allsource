@@ -2,7 +2,7 @@ import { Column } from "@/components/Column";
 import { Row } from "@/components/Row";
 import { IntegrationBoxSync } from "@/components/ui/integrations/IntegrationBoxSync";
 import { styled, Typography } from "@mui/material";
-import type { FC } from "react";
+import { useEffect, type FC } from "react";
 import { DrawerHeader } from "@/components/drawers/DrawerHeader";
 import { usePremiumSyncIntegrations } from "../requests";
 
@@ -48,7 +48,12 @@ export const IntegrationList: FC<Props> = ({
 	onIntegrationSelected,
 	onAddIntegration,
 }) => {
-	const [{ data: integrations }] = usePremiumSyncIntegrations();
+	const [{ data: integrations }, refetchIntegrations] =
+		usePremiumSyncIntegrations();
+
+	useEffect(() => {
+		refetchIntegrations().catch(() => {});
+	}, []);
 
 	return (
 		<Container>

@@ -2,7 +2,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserProvider } from "../context/UserContext";
 import { PrivacyPolicyProvider } from "../context/PrivacyPolicyContext";
 import ToastNotificationContainer from "../components/ToastNotification";
@@ -22,6 +22,7 @@ import {
 } from "./features/whitelabel/contexts/WhitelabelContext";
 import type { WhitelabelSettingsSchema } from "./features/whitelabel/schemas";
 import { getStoredWhitelabel } from "@/components/utils";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 const inter = Inter({ subsets: ["latin"] });
 const nunito = Nunito_Sans({
@@ -69,10 +70,38 @@ export default function RootLayout({
 
 	const pathname = usePathname();
 	const pageTitle = formatPageTitle(pathname || "");
+	const isAdminPage = pathname?.startsWith("/admin");
 
 	const formattedPageTitle = pageTitle
 		? `${whitelabel.brand_name} | ${pageTitle} `
 		: `${whitelabel.brand_name}`;
+
+	useZohoChatToggle(isAdminPage);
+
+	useEffect(() => {
+		if (!isAdminPage) {
+			if (!document.getElementById("zsiqscript")) {
+				const init = document.createElement("script");
+				init.id = "zoho-init";
+				init.innerHTML = `
+        window.$zoho = window.$zoho || {};
+        $zoho.salesiq = $zoho.salesiq || { ready: function(){} };
+
+        $zoho.salesiq.ready = function() {
+          $zoho.salesiq.chatbutton.visible("show");
+        };
+      `;
+				document.body.appendChild(init);
+
+				const script = document.createElement("script");
+				script.id = "zsiqscript";
+				script.src =
+					"https://salesiq.zohopublic.com/widget?wc=siqb8de147bca1b487624f8f2587b4ee3e1eda041e3130528d6440dbf53a2d200eb";
+				script.defer = true;
+				document.body.appendChild(script);
+			}
+		}
+	}, [isAdminPage]);
 
 	return (
 		<html lang="en" className={`${nunito.variable} ${roboto.variable}`}>

@@ -453,22 +453,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 	}
 
 	return (
-		<Box
-			sx={{
-				height: "100%",
-				overflow: "auto",
-				paddingLeft: ".5rem",
-				paddingRight: "1.5rem",
-				"@media (min-width: 1600px)": {
-					paddingLeft: "4.25rem",
-					paddingRight: "4.25rem",
-				},
-				"@media (max-width: 600px)": {
-					paddingLeft: "0",
-					paddingRight: "0",
-				},
-			}}
-		>
+		<Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
 			<Box
 				sx={{
 					width: "100%",

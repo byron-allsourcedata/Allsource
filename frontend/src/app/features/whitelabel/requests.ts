@@ -3,7 +3,6 @@
 import type { UseAxiosResult } from "axios-hooks";
 import type { WhitelabelSettingsSchema } from "./schemas";
 import { useAxios } from "@/axios/axiosInterceptorInstance";
-
 export function useGetWhitelabelSettings(
 	referral?: string,
 	autofetch?: boolean,
@@ -14,16 +13,11 @@ export function useGetWhitelabelSettings(
 		params.referral = referral;
 	}
 
-	return useAxios(
-		{
-			url: "/whitelabel/settings",
-			method: "GET",
-			params,
-		},
-		{
-			manual: !autofetch,
-		},
-	);
+	return useAxios({
+		url: "/whitelabel/settings",
+		method: "GET",
+		params,
+	});
 }
 
 export function useGetOwnWhitelabelSettings(

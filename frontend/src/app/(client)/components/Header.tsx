@@ -65,10 +65,16 @@ interface HeaderProps {
 }
 
 function useWhitelabelIcons() {
-	return useAxios<WhitelabelSettingsSchema>({
+	const result = useAxios<WhitelabelSettingsSchema>({
 		url: "/whitelabel/icons",
 		method: "GET",
-	});
+	}, { manual: true });
+
+	const [data, refetch] = result;
+	useEffect(() => {
+		refetch().catch(() => { });
+	}, []);
+	return result;
 }
 
 const Header: React.FC<HeaderProps> = ({

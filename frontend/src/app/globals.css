@@ -451,3 +451,8 @@ textarea:-webkit-autofill {
 	background-color: transparent !important;
 	-webkit-text-fill-color: #000 !important;
 }
+
+body.hide-zoho #zsiq_float,
+body.hide-zoho #zsiq_chatbtn {
+	display: none !important;
+}

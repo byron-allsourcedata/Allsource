@@ -1628,7 +1628,7 @@ export const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 												</Grid>
 
 												<MetaMiddleIconToggle
-													selected={!!row.selectValue}
+													selected={true}
 													showChevron={row.selectValue !== undefined}
 												/>
 												<Grid item xs="auto" sm={5}>

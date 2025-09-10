@@ -303,3 +303,32 @@ def maybe_unlimited(
         limit = max(limit, clamp_min)
 
     return limit, is_unlimited
+
+
+def calculate_eta_seconds(
+    created_at: datetime,
+    total_records: int | None = None,
+    processed_records: int | None = None,
+) -> int | None:
+    """
+    Calculate the ETA (in seconds) for processing the source.
+    Returns None if it cannot be calculated.
+    """
+    if not total_records or processed_records is None:
+        return None
+
+    if processed_records <= 0 or processed_records >= total_records:
+        return None
+
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=timezone.utc)
+
+    elapsed = (datetime.now(timezone.utc) - created_at).total_seconds()
+    if elapsed <= 0:
+        return None
+
+    speed = processed_records / elapsed
+    if speed <= 0:
+        return None
+
+    return int((total_records - processed_records) / speed)

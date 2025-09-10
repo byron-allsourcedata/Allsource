@@ -1102,7 +1102,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 								]}
 								series={filteredSeries}
 								height={mainchartSize}
-								margin={{ left: 40, right: 20, top: 20, bottom: 20 }}
+								margin={{ left: 45, right: 30, top: 20, bottom: 20 }}
 								grid={{ horizontal: true }}
 								sx={{ border: "none" }}
 								slotProps={{ legend: { hidden: true } }}

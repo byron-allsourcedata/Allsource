@@ -20,6 +20,7 @@ import {
 	defaultColor,
 	RegionData,
 } from "./B2BTabComponents/mapChartUtils";
+import { useStatsRowContext } from "./StatsRowContext";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
@@ -39,8 +40,9 @@ const MapChart: FC<MapChartProps> = ({
 	hasCityMode = false,
 }) => {
 	const [geographies, setGeographies] = useState<any[]>([]);
-	const [expanded, setExpanded] = useState(false);
 	const [mode, setMode] = useState<"state" | "city">("state");
+
+	const { expanded, toggle: toggleExpanded } = useStatsRowContext();
 
 	const fipsToColor: Record<string, string> = useMemo(() => {
 		const map: Record<string, string> = {};
@@ -331,10 +333,7 @@ const MapChart: FC<MapChartProps> = ({
 
 					{regions.length > 4 && (
 						<Box mt={2} display="flex" justifyContent="center">
-							<IconButton
-								onClick={() => setExpanded((prev) => !prev)}
-								size="small"
-							>
+							<IconButton onClick={toggleExpanded} size="small">
 								<Typography sx={{ fontSize: 14, mr: 0.5 }}>
 									{expanded ? "Show Less" : "Show More"}
 								</Typography>

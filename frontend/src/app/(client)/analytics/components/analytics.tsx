@@ -303,6 +303,14 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
 							flexDirection: "column",
 							overflow: "auto",
 							flexGrow: 1,
+							paddingLeft: "1.5rem",
+							paddingRight: "1.5rem",
+							pb: 7,
+							"@media (max-width: 600px)": {
+								pt: 4,
+								paddingLeft: 0,
+								paddingRight: 1,
+							},
 						}}
 					>
 						<TabPanel value={tabIndex} index={0}>

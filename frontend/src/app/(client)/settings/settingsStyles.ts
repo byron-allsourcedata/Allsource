@@ -34,6 +34,7 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
 		marginTop: "2em",
 	},
 	title: {
+		fontSize: "18px",
 		whiteSpace: "nowrap",
 		textAlign: "start",
 		lineHeight: "22px",

@@ -153,6 +153,7 @@ const SourcesImport: React.FC = () => {
 	const customerConversionHeadingSubstitution = {
 		"Transaction Date": false,
 		"Order Amount": false,
+		"Order Count": false,
 	};
 
 	const failedLeadsHeadingSubstitution = {
@@ -243,6 +244,13 @@ const SourcesImport: React.FC = () => {
 
 	const customerConversionsMapping: Row[] = [
 		{
+			id: 5,
+			type: "Order Amount",
+			value: "",
+			canDelete: false,
+			isHidden: false,
+		},
+		{
 			id: 6,
 			type: "Transaction Date",
 			value: "",
@@ -250,10 +258,10 @@ const SourcesImport: React.FC = () => {
 			isHidden: false,
 		},
 		{
-			id: 5,
-			type: "Order Amount",
+			id: 7,
+			type: "Order Count",
 			value: "",
-			canDelete: false,
+			canDelete: true,
 			isHidden: false,
 		},
 	];
@@ -906,6 +914,7 @@ const SourcesImport: React.FC = () => {
 					flexDirection: "column",
 					height: isGetStartedPage ? "100%" : "calc(100vh - 4.25rem)",
 					overflow: "auto",
+					pb: 4.5,
 					"@media (max-width: 1024px)": {
 						pr: 2,
 					},

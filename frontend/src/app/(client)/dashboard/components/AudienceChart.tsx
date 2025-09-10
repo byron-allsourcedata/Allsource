@@ -24,6 +24,7 @@ import { showErrorToast } from "@/components/ToastNotification";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CalendarPopup from "@/components/CustomCalendar";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 dayjs.extend(isSameOrBefore);
 
@@ -63,6 +64,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 		null,
 	);
 	const isCalendarOpen = Boolean(calendarAnchorEl);
+	useZohoChatToggle(isCalendarOpen);
 	const today = new Date();
 	const oneYearAgo = new Date();
 	oneYearAgo.setFullYear(today.getFullYear() - 1);

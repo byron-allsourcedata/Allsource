@@ -47,7 +47,7 @@ class Users(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    last_login = Column(
+    last_login: Mapped[datetime] = mapped_column(
         TIMESTAMP,
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
