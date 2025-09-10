@@ -144,6 +144,8 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
 						sx={{
 							mt: bannerVisible ? 3 : 0,
 							width: "100%",
+							justifyContent: "center",
+							display: "flex",
 						}}
 					>
 						{typeof Content === "function"
