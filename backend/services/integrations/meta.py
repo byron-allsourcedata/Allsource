@@ -438,6 +438,7 @@ class MetaIntegrationsService:
             "daily_budget": daily_budget_int,
             "start_time": start_time,
             "end_time": end_time,
+            "access_token": credentials.access_token,
             "special_ad_categories": [],
         }
         response = self.__handle_request(
