@@ -72,8 +72,8 @@ const CardColumn = styled(Column)`
 `;
 
 const DownloadButton = styled(Download)`
-		color: #3898FC;
-		`;
+color: #3898FC;
+`;
 
 type Props = UserCardProps | AdminCardProps;
 
@@ -235,7 +235,9 @@ export const UserButtonGroup: FC<UserButtonGroupProps> = ({
 				<SyncButton disabled={!canSync} onClick={onSync}>
 					Sync
 				</SyncButton>
-				<DownloadButton onClick={onDownload} />
+				<IconButton onClick={onDownload}>
+					<Download />
+				</IconButton>
 			</Row>
 		</CardColumn>
 	);
