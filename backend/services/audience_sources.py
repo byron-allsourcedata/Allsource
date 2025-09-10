@@ -3,7 +3,7 @@ import json
 import csv
 import logging
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 from openai import OpenAI
 import csv
 import io
@@ -32,6 +32,7 @@ from config.rmq_connection import (
 )
 from enums import QueueName, SourceType
 from models.users import User
+from utils import calculate_eta_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +161,11 @@ class AudienceSourceService:
 
         source_list = []
         for source in sources:
+            eta_seconds = calculate_eta_seconds(
+                created_at=source[6],
+                total_records=source[8],
+                processed_records=source[11],
+            )
             source_list.append(
                 {
                     "id": source[0],
@@ -175,6 +181,7 @@ class AudienceSourceService:
                     "matched_records_status": source[10],
                     "processed_records": source[11],
                     "is_disabled": True if source[12] is None else False,
+                    "eta_seconds": eta_seconds,
                 }
             )
 
@@ -729,7 +736,16 @@ class AudienceSourceService:
         row = self.audience_sources_persistence.get_processing_sources(id)
         if not row:
             return None
-        return CreateSource.model_validate(row)
+        data = dict(row._asdict())
+
+        eta_seconds = calculate_eta_seconds(
+            created_at=data["created_at"],
+            total_records=data["total_records"],
+            processed_records=data["processed_records"],
+        )
+
+        data["eta_seconds"] = eta_seconds
+        return CreateSource.model_validate(data)
 
     def get_source_for_regenerate(
         self, id: UUID

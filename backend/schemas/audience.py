@@ -116,6 +116,7 @@ class SourceResponse(BaseModel):
     matched_records_status: str
     processed_records: int
     is_disabled: bool
+    eta_seconds: int | None = None
 
 
 class CreateSource(BaseModel):
@@ -131,6 +132,7 @@ class CreateSource(BaseModel):
     matched_records: int
     matched_records_status: str
     processed_records: int
+    eta_seconds: int | None = None
 
     model_config = {"from_attributes": True}
 

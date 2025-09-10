@@ -46,6 +46,7 @@ interface Source {
 	matched_records: number;
 	matched_records_status: string;
 	is_disabled: boolean;
+	eta_seconds: number;
 }
 
 const SourcesList: React.FC = () => {
@@ -573,6 +574,7 @@ const SourcesList: React.FC = () => {
 												sourceProgress[createdData.id]?.total,
 												sourceProgress[createdData.id]?.matched,
 												sourceProgress[createdData.id]?.processed,
+												createdData.eta_seconds,
 											)}
 										</Typography>
 									</Box>
