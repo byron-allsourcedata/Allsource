@@ -326,9 +326,7 @@ class MetaIntegrationsService:
             "customer_file_source": "USER_PROVIDED_ONLY",
         }
 
-        ad_account_id = str(list_obj.ad_account_id)
-        if not ad_account_id.startswith("act_"):
-            ad_account_id = f"act_{ad_account_id}"
+        ad_account_id = self._ensure_act_prefix(list_obj.ad_account_id)
 
         try:
             ad_account = AdAccount(ad_account_id)
@@ -380,7 +378,6 @@ class MetaIntegrationsService:
                 "geo_locations": {"countries": ["US"]},
             },
             "campaign_id": campaign_id,
-            "access_token": access_token,
             "status": "PAUSED",
         }
 
