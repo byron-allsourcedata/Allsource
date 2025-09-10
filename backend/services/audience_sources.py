@@ -113,6 +113,7 @@ class AudienceSourceService:
                 "First Name",
                 "Transaction Date",
                 "Order Amount",
+                "Order Count",
             ],
             "Failed Leads": [
                 "Email",
