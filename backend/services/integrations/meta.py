@@ -223,10 +223,9 @@ class MetaIntegrationsService:
     def get_long_lived_token(self, fb_exchange_token):
         url = f"https://graph.facebook.com/{API_VERSION}/oauth/access_token"
         params = {
-            "grant_type": "fb_exchange_token",
             "client_id": APP_ID,
             "client_secret": APP_SECRET,
-            "fb_exchange_token": fb_exchange_token,
+            "code": fb_exchange_token,
         }
         response = self.__handle_request("GET", url=url, params=params)
         if response.status_code != 200:
@@ -378,17 +377,35 @@ class MetaIntegrationsService:
                 "geo_locations": {"countries": ["US"]},
             },
             "campaign_id": campaign_id,
+            "access_token": access_token,
             "status": "PAUSED",
         }
 
-        ad_set_data["optimization_goal"] = campaign_objective or "LINK_CLICKS"
+        # ad_set_data["optimization_goal"] = campaign_objective or "LINK_CLICKS"
+
+        if campaign_objective:
+            ad_set_data["optimization_goal"] = campaign_objective
+        else:
+            ad_set_data["optimization_goal"] = "LANDING_PAGE_VIEWS"
 
         if bid_amount is not None:
             ad_set_data["bid_amount"] = int(bid_amount)
 
-        response = self.__handle_request(
-            method="POST", url=url, json=ad_set_data
+        resp = self.__handle_request(
+            method="POST",
+            url=url,
+            json=ad_set_data,
         )
+
+        try:
+            body = resp.json()
+        except Exception:
+            logger.exception("create_adset: can't parse response")
+            raise
+
+        if body.get("error"):
+            logger.error("create_adset error: %s", body["error"])
+            raise
 
     def create_campaign(
         self, campaign_name: str, daily_budget: str, ad_account_id, user_id: int
@@ -427,7 +444,12 @@ class MetaIntegrationsService:
             method="POST", url=url, json=campaign_data
         )
         response = response.json()
+        if response.get("error"):
+            logger.error("create_campaign error: %s", response["error"])
+            raise Exception(response["error"])
+
         campaign_id = response.get("id")
+
         if not campaign_id:
             logger.error("create_campaign: no id returned %s", response)
             raise Exception("No campaign id returned")
