@@ -11,6 +11,7 @@ import type { PremiumSourceData } from "@/app/features/premium-sources/schemas";
 import { useCardMenu, type CardMenuProps } from "../hooks/useCardMenu";
 import { StatusLabel } from "@/app/(client)/premium-sources/components/status";
 import { formatMoney } from "@/components/PartnersAccounts";
+import { squareIconButtonSx } from "@/components/themes/squareIconButtonsTheme";
 
 const Header = styled(Typography)`
 	color: #202124;
@@ -235,7 +236,7 @@ export const UserButtonGroup: FC<UserButtonGroupProps> = ({
 				<SyncButton disabled={!canSync} onClick={onSync}>
 					Sync
 				</SyncButton>
-				<IconButton onClick={onDownload}>
+				<IconButton sx={squareIconButtonSx} onClick={onDownload}>
 					<Download />
 				</IconButton>
 			</Row>
