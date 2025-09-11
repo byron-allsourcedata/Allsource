@@ -594,8 +594,6 @@ class MailchimpIntegrationsService:
             "state": enrichment_user.postal,
             "city": enrichment_user.postal,
             "company": enrichment_user.professional_profiles,
-            "business_email_last_seen_date": enrichment_contacts,
-            "personal_email_last_seen": enrichment_contacts,
             "linkedin_url": enrichment_contacts,
         }
         result_map = {}

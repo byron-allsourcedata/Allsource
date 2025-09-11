@@ -23,12 +23,6 @@ FIELD_FILLERS = {
         result, ctx["personal_email"]
     ),
     "country_code": lambda result, ctx: add_country_code(result, ctx["postal"]),
-    "business_email_last_seen_date": lambda result,
-    ctx: add_business_email_last_seen_date(
-        result, ctx["business_email_last_seen_date"]
-    ),
-    "personal_email_last_seen": lambda result,
-    ctx: add_personal_email_last_seen(result, ctx["personal_email_last_seen"]),
     "linkedin_url": lambda result, ctx: add_linkedin_url(
         result, ctx["linkedin_url"]
     ),
