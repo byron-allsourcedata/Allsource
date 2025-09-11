@@ -12,7 +12,7 @@ import CustomTablePagination from "@/components/CustomTablePagination";
 import { borderBottom } from "@mui/system";
 
 interface PaginationComponentProps {
-	countRows: number;
+	countRows: number | null;
 	page: number;
 	rowsPerPage: number;
 	onPageChange: (
@@ -104,7 +104,7 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
 					marginRight: "16px",
 				}}
 			>
-				{`1 - ${countRows} of ${countRows}`}
+				{countRows ? `1 - ${countRows} of ${countRows}` : ""}
 			</Typography>
 		</Box>
 	);
