@@ -93,6 +93,7 @@ class IntegrationCredentials(BaseModel):
     s3: Optional[S3Credentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     customer_io: Optional[CustomerIoCredentials] = None
+    instantly: Optional[CustomerIoCredentials] = None
 
     pixel_install: bool = False
     supperssion: bool = False
