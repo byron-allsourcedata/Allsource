@@ -10,11 +10,9 @@ import {
 	ListItemText,
 	ListItemButton,
 	IconButton,
-	SelectChangeEvent,
+	type SelectChangeEvent,
 	Select,
 	MenuItem,
-	Tabs,
-	Tab,
 	InputAdornment,
 	Popover,
 	Table,
@@ -25,7 +23,7 @@ import {
 	TableRow,
 	LinearProgress,
 } from "@mui/material";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { styled } from "@mui/material/styles";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
@@ -39,15 +37,10 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import SearchIcon from "@mui/icons-material/Search";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import InvitePartnerPopup from "@/components/InvitePartnerPopup";
-import EnablePartnerPopup from "@/components/EnablePartnerPopup";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import PartnersAccounts from "@/components/PartnersAccounts";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
-import CustomizedProgressBar from "@/components/ProgressBar";
 import PaymentHistory from "@/components/PaymentHistory";
 import RewardsHistory from "./RewardsHistory";
-import Slider from "./MakePartner";
 import MakePartner from "./MakePartner";
 import PageWithLoader from "../../components/AdminProgressBar";
 
@@ -150,13 +143,6 @@ const Accounts: React.FC = () => {
 	const [menuAnchor, setMenuAnchor] = useState(null);
 	const [formPopupOpen, setFormPopupOpen] = useState(false);
 	const [noticePopupOpen, setNoticePopupOpen] = useState(false);
-	const [fileData, setFileData] = useState<NewPartner>({
-		id: 0,
-		email: "",
-		fullName: "",
-		companyName: "",
-		commission: "",
-	});
 	const [enabledData, setEnabledData] = useState<EnabledPartner>({ id: 0 });
 	const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
 	const [rewardsPage, setRewardsPage] = useState(false);
@@ -169,7 +155,6 @@ const Accounts: React.FC = () => {
 	const [paymentHistory, setPaymentHistoryPage] = useState(false);
 	const [id, setId] = useState<number | null>(null);
 	const [partnerName, setPartnerName] = useState<string | null>(null);
-	const [accountName, setAccountName] = useState<string | null>(null);
 	const [search, setSearch] = useState("");
 	const [errorResponse, setErrosResponse] = useState(false);
 	const [isSliderOpen, setSliderOpen] = useState(false);
@@ -1416,14 +1401,10 @@ const Accounts: React.FC = () => {
 												<CustomTablePagination
 													count={totalCount}
 													page={page}
-													rowsPerPage={
-														allowedRowsPerPage.includes(rowsPerPage)
-															? rowsPerPage
-															: 10
-													}
+													rowsPerPage={rowsPerPage}
 													onPageChange={handlePageChange}
 													onRowsPerPageChange={handleRowsPerPageChange}
-													rowsPerPageOptions={[10, 25, 50, 100]}
+													rowsPerPageOptions={allowedRowsPerPage}
 												/>
 											</Box>
 										</Box>

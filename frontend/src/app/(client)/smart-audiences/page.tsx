@@ -88,6 +88,10 @@ import {
 } from "./components/RenderProgress";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import {
+	filterDefaultPaginationOptions,
+	filterPaginationOptions,
+} from "@/utils/pagination";
 
 interface Smarts {
 	id: string;
@@ -360,7 +364,6 @@ const SmartAudiences: React.FC = () => {
 	const [isFirstLoad, setIsFirstLoad] = useState(true);
 
 	const [count_smarts_audience, setCount] = useState<number | null>(null);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
 	const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
 	const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -596,19 +599,6 @@ const SmartAudiences: React.FC = () => {
 			if (audience_smarts_list.length === 0) {
 				await fetchPixelInstalledAnywhere();
 			}
-			const options = [10, 20, 50, 100, 300, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= count);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 10;
-			setRowsPerPage(selectedValue);
 		} catch {
 		} finally {
 			if (isFirstLoad) {
@@ -758,17 +748,6 @@ const SmartAudiences: React.FC = () => {
 
 	const handleCloseConfirmDialog = () => {
 		setOpenConfirmDialog(false);
-	};
-
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
 	};
 
 	const handleRename = (

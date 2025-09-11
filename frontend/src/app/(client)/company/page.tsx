@@ -44,11 +44,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
 import CalendarPopup from "@/components/CustomCalendar";
-import PaginationComponent, {
-	Paginator,
-	PaginatorTable,
-} from "@/components/PaginationComponent";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Paginator } from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast } from "@/components/ToastNotification";
 import CompanyFilterPopup from "./CompanyFilters";
@@ -128,7 +124,7 @@ const Leads: React.FC = () => {
 	);
 
 	const paginationProps = usePagination(count_companies ?? 0);
-	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const { page, rowsPerPage } = paginationProps;
 	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 124, [
 		data.length,
 	]);
@@ -342,20 +338,6 @@ const Leads: React.FC = () => {
 			setData(Array.isArray(leads) ? leads : []);
 			setCount(count || 0);
 			setStatus(response.data.status);
-
-			const options = [10, 20, 50, 100, 300, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= count);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 15;
-			setRowsPerPage(selectedValue);
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				if (error.response.data.status === "NEED_BOOK_CALL") {

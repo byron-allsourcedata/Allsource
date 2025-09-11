@@ -132,15 +132,11 @@ const CreateLookalike: React.FC = () => {
 	// Pagination and Sorting
 	const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
 
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [orderBy, setOrderBy] = useState<keyof TableRowData>();
 	const [order, setOrder] = useState<"asc" | "desc">();
 
-	const paginationProps = {
-		...usePagination(count_lookalikes ?? 0),
-		rowsPerPageOptions,
-	};
-	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const paginationProps = usePagination(count_lookalikes);
+	const { page, rowsPerPage } = paginationProps;
 
 	// Calendary
 	const [selectedDates, setSelectedDates] = useState<{

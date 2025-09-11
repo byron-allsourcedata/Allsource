@@ -185,9 +185,6 @@ const PaymentHistory: React.FC = () => {
 	};
 
 	const allowedRowsPerPage = [10, 25, 50, 100];
-	const validatedRowsPerPage = allowedRowsPerPage.includes(rowsPerPage)
-		? rowsPerPage
-		: 10;
 
 	const handleDateChange = (dates: {
 		start: Date | null;
@@ -623,7 +620,7 @@ const PaymentHistory: React.FC = () => {
 									}
 									onPageChange={handlePageChange}
 									onRowsPerPageChange={handleRowsPerPageChange}
-									rowsPerPageOptions={[10, 25, 50, 100]}
+									rowsPerPageOptions={allowedRowsPerPage}
 								/>
 							</Box>
 						</Box>
