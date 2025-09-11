@@ -1,5 +1,5 @@
 import logging
-from uuid import UUID
+from uuid import UUID, uuid4
 from domains.aws.service import AwsService
 from domains.premium_sources.downloads.token import DownloadToken
 from domains.premium_sources.exceptions import (
@@ -57,14 +57,22 @@ class PremiumSourceTableService:
         """
         Raises `MissingHashedEmailError`
         """
-        source = self.repo.create(
-            name=name, price=price, user_id=user_id, s3_url=s3_url, rows=rows
-        )
-
         logger.debug(
             f"uploading premium source's {len(csv_rows)} rows to database"
         )
-        self.premium_source_rows.process_csv(source.id, csv_rows)
+
+        source_id = uuid4()
+        uploaded_rows = self.premium_source_rows.process_csv(
+            source_id, csv_rows
+        )
+        source = self.repo.create(
+            source_id=source_id,
+            name=name,
+            price=price,
+            user_id=user_id,
+            s3_url=s3_url,
+            rows=uploaded_rows,
+        )
 
         return source.id
 
