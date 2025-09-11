@@ -8,23 +8,29 @@ from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 import pandas as pd
 
 FIELD_FILLERS = {
-    "phone": lambda result, ctx: add_phone(result, ctx["main_phone"]),
+    "phone": lambda result, ctx: add_phone(result, ctx.get("main_phone")),
     "company": lambda result, ctx: add_company(
-        result, ctx["professional_profiles"]
+        result, ctx.get("professional_profiles")
     ),
-    "city": lambda result, ctx: add_city(result, ctx["postal"]),
-    "state": lambda result, ctx: add_state(result, ctx["postal"]),
-    "zip_code": lambda result, ctx: add_zip(result, ctx["personal_profiles"]),
-    "gender": lambda result, ctx: add_gender(result, ctx["personal_profiles"]),
+    "city": lambda result, ctx: add_city(result, ctx.get("postal")),
+    "state": lambda result, ctx: add_state(result, ctx.get("postal")),
+    "zip_code": lambda result, ctx: add_zip(
+        result, ctx.get("personal_profiles")
+    ),
+    "gender": lambda result, ctx: add_gender(
+        result, ctx.get("personal_profiles")
+    ),
     "business_email": lambda result, ctx: add_business_email(
-        result, ctx["business_email"]
+        result, ctx.get("business_email")
     ),
     "personal_email": lambda result, ctx: add_personal_email(
-        result, ctx["personal_email"]
+        result, ctx.get("personal_email")
     ),
-    "country_code": lambda result, ctx: add_country_code(result, ctx["postal"]),
+    "country_code": lambda result, ctx: add_country_code(
+        result, ctx.get("postal")
+    ),
     "linkedin_url": lambda result, ctx: add_linkedin_url(
-        result, ctx["linkedin_url"]
+        result, ctx.get("linkedin_url")
     ),
 }
 

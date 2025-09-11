@@ -137,7 +137,8 @@ const GetStarted: React.FC = () => {
 		>
 			<Column
 				sx={{
-					maxWidth: "1000px",
+					width: "100%",
+					maxWidth: tabIndex === 0 ? "1000px" : undefined,
 				}}
 			>
 				{welcomePopup && <WelcomePopup />}
@@ -298,8 +299,10 @@ const GetStarted: React.FC = () => {
 							<Stack
 								flexDirection={"column"}
 								height={"100%"}
-								width={"75%"}
 								justifyContent={"center"}
+								sx={{
+									maxWidth: "1500px",
+								}}
 							>
 								{tabIndex === 2 && (
 									<>
@@ -308,7 +311,6 @@ const GetStarted: React.FC = () => {
 												gap: 2,
 												display: "flex",
 												flexDirection: "column",
-												width: "100%",
 											}}
 										>
 											<Typography
