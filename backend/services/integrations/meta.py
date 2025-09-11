@@ -382,12 +382,12 @@ class MetaIntegrationsService:
             "status": "PAUSED",
         }
 
-        ad_set_data["optimization_goal"] = "LINK_CLICKS"
+        # ad_set_data["optimization_goal"] = "LINK_CLICKS"
 
-        # if campaign_objective:
-        #     ad_set_data["optimization_goal"] = campaign_objective
-        # else:
-        #     ad_set_data["optimization_goal"] = "LANDING_PAGE_VIEWS"
+        if campaign_objective:
+            ad_set_data["optimization_goal"] = campaign_objective
+        else:
+            ad_set_data["optimization_goal"] = "LANDING_PAGE_VIEWS"
 
         if bid_amount is not None:
             ad_set_data["bid_amount"] = int(bid_amount)
