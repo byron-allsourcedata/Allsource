@@ -15,7 +15,7 @@ from domains.premium_sources.router import (
 )
 from domains.premium_sources.schemas import UserPremiumSourcesDto
 from domains.premium_sources.service import PremiumSourceService
-from middlewares.upload_size import MaxUploadSize100MB
+from middlewares.upload_size import MaxUploadSize100MB, MaxUploadSize1GB
 from utils.csv import CSVEncodingError, parse_csv_bytes
 
 router = APIRouter()
@@ -35,7 +35,7 @@ def premium_sources(
 @router.post("/")
 async def upload_premium_source(
     _admin: Admin,
-    _: MaxUploadSize100MB,
+    _: MaxUploadSize1GB,
     db: Db,
     serv: PremiumSourceService,
     aws: AwsService,
