@@ -416,6 +416,7 @@ class IntegrationsUserSyncPersistence:
                 "processed_contacts": sync.processed,
                 "successful_contacts": sync.successful_contacts,
                 "validation_contacts": sync.validation,
+                "synced_contacts": sync.validation,
                 "createdBy": sync.created_by,
                 "accountId": sync.platform_user_id,
                 "campaign_id": sync.campaign_id,
