@@ -9,7 +9,7 @@ import {
 	ThemeProvider,
 	Typography,
 } from "@mui/material";
-import { useState, type FC, type SetStateAction } from "react";
+import { useEffect, useState, type FC, type SetStateAction } from "react";
 import { AddButton } from "../AddButton";
 import { PremiumSourcesList } from "@/app/features/premium-sources/components/PremiumSourcesList";
 import { AddPremiumSource } from "../../../app/features/premium-sources/drawers/AddPremiumSource";
@@ -69,6 +69,10 @@ export const AdminPremiumSources: FC = () => {
 
 	const [{ data: userSources, loading, error }, refetch] =
 		useAdminGetPremiumSources(userId);
+
+	useEffect(() => {
+		refetch().catch(() => {});
+	}, []);
 
 	const sources = userSources?.premium_sources;
 
