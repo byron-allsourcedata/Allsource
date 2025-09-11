@@ -84,6 +84,7 @@ const CustomTablePagination: React.FC<CustomTablePaginationProps> = ({
 						fontSize: "12px",
 						fontWeight: "400",
 						color: "#7a7a7a",
+						background: "white",
 					},
 					"& .MuiTablePagination-displayedRows": {
 						fontFamily: "var(--font-nunito)",

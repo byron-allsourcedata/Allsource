@@ -12,7 +12,6 @@ import {
 	DialogActions,
 	DialogContent,
 	DialogContentText,
-	Tooltip,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -24,10 +23,7 @@ import CustomTooltip from "@/components/customToolTip";
 import { MoreVert } from "@mui/icons-material";
 import { SliderProvider } from "../../../../context/SliderContext";
 import { showToast, showErrorToast } from "@/components/ToastNotification";
-import ProgressBar from "../../sources/components/ProgressLoader";
-import ThreeDotsLoader from "../../sources/components/ThreeDotsLoader";
 import { getUseCaseIcon } from "../components/utils/getUseCaseIcon";
-import Image from "next/image";
 import { getStatusStyle } from "../components/utils/getStatusStyle";
 import HintCard from "../../components/HintCard";
 import { useSmartsHints } from "../context/SmartsHintsContext";

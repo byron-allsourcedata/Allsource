@@ -17,7 +17,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Paper,
 	IconButton,
 	List,
 	ListItemText,
@@ -28,10 +27,9 @@ import {
 	DialogContentText,
 	LinearProgress,
 	Chip,
-	Tooltip,
 	Link,
-	SxProps,
-	Theme,
+	type SxProps,
+	type Theme,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
@@ -49,12 +47,10 @@ import { Paginator } from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "./components/ThreeDotsLoader";
-import ProgressBar from "./components/ProgressLoader";
 import { MoreVert } from "@mui/icons-material";
 import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
-import TableCustomCell from "./components/table/TableCustomCell";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import TableWithEmptyData from "./components/table/TableWIthEmptyData";
 import HintCard from "../components/HintCard";

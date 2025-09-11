@@ -17,7 +17,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Paper,
 	IconButton,
 	List,
 	ListItemText,
@@ -30,10 +29,10 @@ import {
 	Chip,
 	Tooltip,
 	TextField,
-	TypographyProps,
-	TooltipProps,
-	SxProps,
-	Theme,
+	type TypographyProps,
+	type TooltipProps,
+	type SxProps,
+	type Theme,
 } from "@mui/material";
 import {
 	FilterListIcon,
@@ -61,8 +60,6 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import ThreeDotsLoader from "../sources/components/ThreeDotsLoader";
-import ProgressBar from "../sources/components/ProgressLoader";
 import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SmartAudienceFilter";
 import DetailsPopup from "./components/SmartAudienceDataSources";

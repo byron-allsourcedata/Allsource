@@ -101,14 +101,14 @@ const Leads: React.FC = () => {
 	>([]);
 	const [openPopup, setOpenPopup] = React.useState(false);
 	const [popupData, setPopupData] = React.useState<any>(null);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+
 	const { changeLeadsTableHint, leadsTableHints, resetLeadsTableHints } =
 		useLeadsHints();
 	const searchParams = useSearchParams();
 	const [showPixel, setPixelPopup] = useState<boolean | null>(null);
 
 	const paginationProps = usePagination(count_leads ?? 0);
-	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const { page, rowsPerPage } = paginationProps;
 	const tableContainerRef = useRef<HTMLDivElement>(null);
 	const { isScrolledX, isScrolledY } = useScrollShadow(
 		tableContainerRef,
