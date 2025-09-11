@@ -60,6 +60,10 @@ export function WhitelabelProvider({
 		useGetWhitelabelSettings(String(referral), autofetch);
 
 	useEffect(() => {
+		refetch().catch(() => {});
+	}, []);
+
+	useEffect(() => {
 		const request = response?.request;
 		if (request) {
 			if (
