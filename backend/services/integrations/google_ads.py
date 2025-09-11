@@ -999,7 +999,7 @@ class GoogleAdsIntegrationsService:
 
             if user_data.user_identifiers:
                 operation = client.get_type("OfflineUserDataJobOperation")
-                operation.create.CopyFrom(user_data)
+                operation.create = user_data
                 operations.append(operation)
 
         return operations
