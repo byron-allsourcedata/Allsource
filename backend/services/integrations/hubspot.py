@@ -630,7 +630,7 @@ class HubspotIntegrationsService:
 
         required_types = {m["type"] for m in data_map}
         context = {
-            "main_phone": main_phone,
+            "main_phone": main_phone if main_phone else None,
             "professional_profiles": enrichment_user.professional_profiles,
             "postal": enrichment_user.postal,
             "personal_profiles": enrichment_user.personal_profiles,

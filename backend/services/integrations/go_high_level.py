@@ -577,20 +577,18 @@ class GoHighLevelIntegrationsService:
 
         required_types = {m["type"] for m in data_map}
         context = {
-            "main_phone": main_phone,
+            "main_phone": main_phone if main_phone else None,
             "professional_profiles": enrichment_user.professional_profiles,
             "postal": enrichment_user.postal,
             "personal_profiles": enrichment_user.personal_profiles,
-            "business_email": business_email,
-            "personal_email": personal_email,
+            "business_email": business_email if business_email else None,
+            "personal_email": personal_email if personal_email else None,
             "country_code": enrichment_user.postal,
             "gender": enrichment_user.personal_profiles,
             "zip_code": enrichment_user.personal_profiles,
             "state": enrichment_user.postal,
             "city": enrichment_user.postal,
             "company": enrichment_user.professional_profiles,
-            "business_email_last_seen_date": enrichment_contacts,
-            "personal_email_last_seen": enrichment_contacts,
             "linkedin_url": enrichment_contacts,
         }
         result_map = {}
