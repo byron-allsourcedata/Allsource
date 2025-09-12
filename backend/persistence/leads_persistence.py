@@ -1624,7 +1624,7 @@ class LeadsPersistence:
                     )
                 )
 
-            elif data_sync_leads_type == "abandoned_cart":
+            elif data_sync_leads_type in ("added_to_cart", "abandoned_cart"):
                 query = (
                     query.outerjoin(
                         LeadsUsersAddedToCart,
