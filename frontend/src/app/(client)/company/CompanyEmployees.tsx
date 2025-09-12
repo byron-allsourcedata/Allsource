@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
 	Box,
 	Grid,
@@ -7,17 +7,15 @@ import {
 	Button,
 	Table,
 	TableBody,
-	TableCell,
 	TableContainer,
 	TableHead,
 	TableRow,
 	Paper,
 	IconButton,
 	Chip,
-	Drawer,
 	Popover,
-	SxProps,
-	Theme,
+	type SxProps,
+	type Theme,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -25,26 +23,17 @@ import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { companyStyles } from "./companyStyles";
 import Slider from "../../../components/Slider";
-import { SliderProvider } from "../../../context/SliderContext";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
-import DateRangeIcon from "@mui/icons-material/DateRange";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterPopup from "./CompanyEmployeesFilters";
-import AudiencePopup from "@/components/AudienceSlider";
 import SouthOutlinedIcon from "@mui/icons-material/SouthOutlined";
 import NorthOutlinedIcon from "@mui/icons-material/NorthOutlined";
-import dayjs from "dayjs";
 import PopupDetails from "./EmployeeDetails";
 import PopupChargeCredits from "./ChargeCredits";
 import CloseIcon from "@mui/icons-material/Close";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
-import PaginationComponent, {
-	Paginator,
-} from "@/components/PaginationComponent";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Paginator } from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -60,6 +49,7 @@ import { SmartCell } from "@/components/table";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import { usePagination } from "@/hooks/usePagination";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -100,8 +90,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 	const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
 	const dropdownOpen = Boolean(dropdownEl);
 	const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [selectedFilters, setSelectedFilters] = useState<
@@ -110,7 +98,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 	const [openPopup, setOpenPopup] = React.useState(false);
 	const [creditsChargePopup, setCreditsChargePopup] = React.useState(false);
 	const [upgradePlanPopup, setUpgradePlanPopup] = React.useState(false);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [selectedJobTitle, setSelectedJobTitle] = React.useState<string | null>(
 		null,
@@ -137,6 +124,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 134, [
 		data.length,
 	]);
+	const paginationProps = usePagination(count_companies);
+	const { page, setPage, rowsPerPage } = paginationProps;
 
 	const handleOpenPopover = (
 		event: React.MouseEvent<HTMLElement>,
@@ -175,13 +164,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 
 	const installPixel = () => {
 		router.push("/dashboard");
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
 	};
 
 	const getEmployeeById = async (id: number) => {
@@ -236,7 +218,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 		setLoading(true);
 		try {
 			const response = await axiosInstance.get(
-				`/subscriptions/check-credit-status`,
+				"/subscriptions/check-credit-status",
 			);
 			if (response.data.status === "NO_CREDITS") {
 				setUpgradePlanPopup(true);
@@ -348,20 +330,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 			setData(Array.isArray(employees) ? employees : []);
 			setCount(count || 0);
 			setStatus(response.data.status);
-
-			const options = [10, 20, 50, 100, 300, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= count);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 10;
-			setRowsPerPage(selectedValue);
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				if (error.response.data.status === "NEED_BOOK_CALL") {
@@ -539,15 +507,11 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 				return;
 			}
 			showErrorToast(
-				`Error during the download process, please contact support.`,
+				"Error during the download process, please contact support.",
 			);
 		} finally {
 			setLoading(false);
 		}
-	};
-
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
 	};
 
 	const truncateText = (text: string, maxLength: number) => {
@@ -774,15 +738,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 			widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
 		},
 	];
-
-	const paginationProps = {
-		countRows: count_companies ?? 0,
-		page,
-		rowsPerPage,
-		onPageChange: handleChangePage,
-		onRowsPerPageChange: handleChangeRowsPerPage,
-		rowsPerPageOptions,
-	};
 
 	return (
 		<>

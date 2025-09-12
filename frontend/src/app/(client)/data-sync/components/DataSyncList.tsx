@@ -224,25 +224,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			const { length: count } = response.data;
 			setAllData(response.data);
 			setTotalRows(count);
-			let newRowsPerPageOptions: number[] = [];
-			if (count <= 10) {
-				newRowsPerPageOptions = [5, 10];
-			} else if (count <= 50) {
-				newRowsPerPageOptions = [10, 20];
-			} else if (count <= 100) {
-				newRowsPerPageOptions = [10, 20, 50];
-			} else if (count <= 300) {
-				newRowsPerPageOptions = [10, 20, 50, 100];
-			} else if (count <= 500) {
-				newRowsPerPageOptions = [10, 20, 50, 100, 300];
-			} else {
-				newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
-			}
-			if (!newRowsPerPageOptions.includes(count)) {
-				newRowsPerPageOptions.push(count);
-				newRowsPerPageOptions.sort((a, b) => a - b);
-			}
-			setRowsPerPageOptions(newRowsPerPageOptions);
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				const status = error.response.data.status;

@@ -18,28 +18,34 @@ class PremiumSourcesRowsService:
 
     def process_csv(
         self, premium_source_id: UUID, csv_content: list[dict[str, str]]
-    ) -> None:
+    ) -> int:
         """
         Raises MissingHashedEmailError
         """
 
         if not csv_content:
-            return
+            return 0
 
         hashed_column = self.get_hashed_email_column_name(csv_content[0])
 
         emails = [
-            row[hashed_column] for row in csv_content if row.get(hashed_column)
+            row[hashed_column] for row in csv_content[1:] if row[hashed_column]
         ]
 
-        self.upload_emails(premium_source_id, emails)
+        for email in emails:
+            if not email:
+                raise MissingHashedEmailError(
+                    "CSV must contain 'sha256_email' column"
+                )
+
+        return self.upload_emails(premium_source_id, emails)
 
     def get_hashed_email_column_name(self, row: dict[str, str]) -> str:
         candidates = [
             "personal_email_sha256",
-            "business_email_sha256",
             "email_sha256",
             "sha256_email",
+            "business_email_sha256",
         ]
 
         for candidate in candidates:
@@ -50,7 +56,7 @@ class PremiumSourcesRowsService:
 
     def upload_emails(
         self, premium_source_id: UUID, sha256_emails: list[str]
-    ) -> None:
+    ) -> int:
         # row_id must start from 1, because 0 is magic value in clickhouse join
         CHUNK_SIZE = 1_000_000
         row_offset = 1
@@ -72,6 +78,8 @@ class PremiumSourcesRowsService:
                     ],
                 )
             row_offset += len(chunk)
+
+        return row_offset
 
     def count_rows(self, premium_source_id: UUID) -> int:
         query = self.clickhouse.query(

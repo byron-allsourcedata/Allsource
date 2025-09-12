@@ -14,6 +14,7 @@ from domains.premium_sources.sync.schemas import UnprocessedPremiumSourceBatch
 from models.integrations.users_domains_integrations import UserIntegration
 from models.premium_source_syncs.meta import MetaPremiumSourceSync
 from resolver import injectable
+from schemas.integrations.integrations import MetaCredentials
 from services.integrations.meta import MetaIntegrationsService
 
 
@@ -82,6 +83,10 @@ class MetaPremiumSourceSyncService:
         campaign_objective: str | None,
         bid_amount: str | None,
     ):
+        """
+        Raises `MetaError`
+        """
+
         credentials = self.meta.get_credentials(
             user_id=user_id, domain_id=domain_id
         )
@@ -92,6 +97,7 @@ class MetaPremiumSourceSyncService:
 
         if campaign_id:
             logger.info(f"creating adset")
+
             self.meta.create_adset(
                 ad_account_id=customer_id,
                 campaign_id=campaign_id,

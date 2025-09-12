@@ -33,6 +33,15 @@ class IntegrationsPersistence:
         self.db.commit()
         return kajabi_model
 
+    def get_integration_name_by_id(self, integration_id: int) -> str | None:
+        service_name = self.db.execute(
+            select(UserIntegration.service_name).where(
+                UserIntegration.id == integration_id
+            )
+        ).scalar()
+
+        return service_name
+
     def get_integration_by_shop_id(self, shop_id: str) -> UserIntegration:
         user_integration = (
             self.db.query(UserIntegration)

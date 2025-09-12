@@ -1,52 +1,26 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import {
-	Box,
-	Typography,
-	TextField,
-	Button,
-	Chip,
-	Link as MuiLink,
-	Grid,
-} from "@mui/material";
-import Image from "next/image";
-import DownloadIcon from "@mui/icons-material/Download";
+import { Box, Typography, Button, Chip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterPopup from "./components/LookalikeFilters";
-import Link from "next/link";
 import CustomToolTip from "@/components/customToolTip";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import LookalikeTable from "./components/LookalikeTable";
-import CustomTablePagination from "@/components/CustomTablePagination";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
-import { ExternalLink } from "@/components/ExternalLink";
-import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import FirstTimeScreen from "./FirstTimeScreen";
 import { CardData } from "@/types/first_time_screens";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
-import { getInteractiveSx } from "@/components/utils";
-import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
-import {
-	CardsSection,
-	FirstTimeScreenCommonVariant1,
-	StepperTimeline,
-} from "@/components/first-time-screens";
-import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
+import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import BuilderIntro from "@/components/first-time-screens/BuilderIntro";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
-import { width } from "@mui/system";
 import { useLookalikesHints } from "./context/LookalikesHintsContext";
 import HintCard from "../components/HintCard";
 import { usePagination } from "@/hooks/usePagination";
-import { Paginator } from "@/components/PaginationComponent";
 import { useSearchParams } from "next/navigation";
 
 const cardData: CardData[] = [
@@ -132,15 +106,11 @@ const CreateLookalike: React.FC = () => {
 	// Pagination and Sorting
 	const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
 
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [orderBy, setOrderBy] = useState<keyof TableRowData>();
 	const [order, setOrder] = useState<"asc" | "desc">();
 
-	const paginationProps = {
-		...usePagination(count_lookalikes ?? 0),
-		rowsPerPageOptions,
-	};
-	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const paginationProps = usePagination(count_lookalikes);
+	const { page, rowsPerPage } = paginationProps;
 
 	// Calendary
 	const [selectedDates, setSelectedDates] = useState<{
@@ -357,19 +327,6 @@ const CreateLookalike: React.FC = () => {
 			if (data && meta.total > 0) {
 				setIsLookalikeGenerated(true);
 			}
-			const options = [15, 30, 50, 100, 200, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= meta.total);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 15;
-			setRowsPerPage(selectedValue);
 		} catch (error) {
 		} finally {
 			if (isFirstLoad) {

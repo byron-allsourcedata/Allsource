@@ -2,22 +2,19 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import {
 	Box,
-	Grid,
 	Typography,
 	Button,
 	Table,
 	TableBody,
-	TableCell,
 	TableContainer,
 	TableHead,
 	TableRow,
 	Paper,
 	IconButton,
 	Chip,
-	Drawer,
 	Popover,
-	SxProps,
-	Theme,
+	type SxProps,
+	type Theme,
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -26,14 +23,8 @@ import { AxiosError } from "axios";
 import { companyStyles } from "./companyStyles";
 import Slider from "../../../components/Slider";
 import { SliderProvider } from "../../../context/SliderContext";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import DownloadIcon from "@mui/icons-material/Download";
-import DateRangeIcon from "@mui/icons-material/DateRange";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterPopup from "./CompanyFilters";
-import AudiencePopup from "@/components/AudienceSlider";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import SouthOutlinedIcon from "@mui/icons-material/SouthOutlined";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import NorthOutlinedIcon from "@mui/icons-material/NorthOutlined";
@@ -44,14 +35,8 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import Tooltip from "@mui/material/Tooltip";
 import CustomToolTip from "@/components/customToolTip";
 import CalendarPopup from "@/components/CustomCalendar";
-import PaginationComponent, {
-	Paginator,
-	PaginatorTable,
-} from "@/components/PaginationComponent";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { Paginator } from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
-import { showErrorToast } from "@/components/ToastNotification";
-import CompanyFilterPopup from "./CompanyFilters";
 import CompanyEmployees from "./CompanyEmployees";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
@@ -93,7 +78,6 @@ const Leads: React.FC = () => {
 	const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
 	const dropdownOpen = Boolean(dropdownEl);
 	const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
-	const [activeFilter, setActiveFilter] = useState<string>("");
 	const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
@@ -106,14 +90,11 @@ const Leads: React.FC = () => {
 	const [companyName, setCompanyName] = useState<string>("");
 	const [companyId, setCompanyId] = useState<number>(0);
 	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-	const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
 	const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [selectedFilters, setSelectedFilters] = useState<SelectedFilter[]>([]);
 	const [openPopup, setOpenPopup] = React.useState(false);
 	const [popupData, setPopupData] = React.useState<any>(null);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
-	const [openDrawer, setOpenDrawer] = React.useState(false);
 	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
 	const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(
 		null,
@@ -128,7 +109,7 @@ const Leads: React.FC = () => {
 	);
 
 	const paginationProps = usePagination(count_companies ?? 0);
-	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const { page, rowsPerPage } = paginationProps;
 	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 124, [
 		data.length,
 	]);
@@ -342,20 +323,6 @@ const Leads: React.FC = () => {
 			setData(Array.isArray(leads) ? leads : []);
 			setCount(count || 0);
 			setStatus(response.data.status);
-
-			const options = [10, 20, 50, 100, 300, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= count);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 15;
-			setRowsPerPage(selectedValue);
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				if (error.response.data.status === "NEED_BOOK_CALL") {

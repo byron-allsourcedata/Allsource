@@ -261,7 +261,7 @@ type BillingResponse = {
 };
 
 export const useGetAddedCards = () => {
-	const [{ loading, data }, refetch] = useAxios<BillingResponse>(
+	const [{ loading, data, error }, refetch] = useAxios<BillingResponse>(
 		{
 			url: "/settings/billing",
 			method: "GET",
@@ -274,6 +274,7 @@ export const useGetAddedCards = () => {
 	return {
 		loading,
 		data,
+		error,
 		refetch,
 	};
 };

@@ -949,7 +949,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 						}
 						onPageChange={handlePageChange}
 						onRowsPerPageChange={handleRowsPerPageChange}
-						rowsPerPageOptions={[10, 25, 50, 100]}
+						rowsPerPageOptions={allowedRowsPerPage}
 					/>
 				</Box>
 			</Box>

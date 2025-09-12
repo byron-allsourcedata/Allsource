@@ -713,19 +713,29 @@ const SourcesImport: React.FC = () => {
 				throw new Error("CSV file doesn't contain headers!");
 			}
 
-			const newHeadings = await smartSubstitutionHeaders(formatterHeaders);
+			const newHeadings: string[] =
+				await smartSubstitutionHeaders(formatterHeaders);
 
 			type HeadingSubstitution = Record<string, boolean>;
 			const typeHeadings = mappingHeadingSubstitution[sourceType];
 
-			const updatedHeadingSubstitution: HeadingSubstitution = {};
+			const newHeadingsMap: Record<string, string> = {};
 			const headingKeys = [
 				...Object.keys(defautlHeadingSubstitution),
-				...Object.keys(typeHeadings),
+				...Object.keys(mappingHeadingSubstitution[sourceType]),
 			];
+
+			const updatedHeadingSubstitution: Record<string, boolean> = {};
+			headingKeys.forEach((key) => {
+				updatedHeadingSubstitution[key] = newHeadingsMap[key] === "None";
+			});
 
 			headingKeys.forEach((key, index) => {
 				updatedHeadingSubstitution[key] = newHeadings[index] === "None";
+			});
+
+			headingKeys.forEach((key, i) => {
+				newHeadingsMap[key] = newHeadings[i]; // тут индекс совпадает
 			});
 
 			setHeadingsNotSubstitution({
@@ -740,10 +750,13 @@ const SourcesImport: React.FC = () => {
 				"Interest Date": updatedHeadingSubstitution["Interest Date"] || false,
 			});
 
-			const updatedRows = mappingRows.map((row, index) => ({
-				...row,
-				value: newHeadings[index] === "None" ? "" : newHeadings[index],
-			}));
+			const updatedRows = mappingRows.map((row) => {
+				const mapped = newHeadingsMap[row.type];
+				return {
+					...row,
+					value: mapped === "None" ? "" : mapped,
+				};
+			});
 
 			setMappingRows(updatedRows);
 		} catch (error: unknown) {

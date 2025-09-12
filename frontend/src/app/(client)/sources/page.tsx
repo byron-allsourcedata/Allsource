@@ -17,7 +17,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Paper,
 	IconButton,
 	List,
 	ListItemText,
@@ -28,10 +27,9 @@ import {
 	DialogContentText,
 	LinearProgress,
 	Chip,
-	Tooltip,
 	Link,
-	SxProps,
-	Theme,
+	type SxProps,
+	type Theme,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
@@ -45,19 +43,14 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import PaginationComponent, {
-	Paginator,
-	PaginatorTable,
-} from "@/components/PaginationComponent";
+import { Paginator } from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "./components/ThreeDotsLoader";
-import ProgressBar from "./components/ProgressLoader";
 import { MoreVert } from "@mui/icons-material";
 import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
-import TableCustomCell from "./components/table/TableCustomCell";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import TableWithEmptyData from "./components/table/TableWIthEmptyData";
 import HintCard from "../components/HintCard";
@@ -75,6 +68,10 @@ import { usePagination } from "@/hooks/usePagination";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import RenderProgress from "./components/RenderProgress";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import {
+	defaultPaginationOptions,
+	filterPaginationOptions,
+} from "@/utils/pagination";
 
 interface Source {
 	id: string;
@@ -158,7 +155,6 @@ const Sources: React.FC = () => {
 		React.useState<null | HTMLElement>(null);
 	const [selectedRowData, setSelectedRowData] = useState<Source | null>(null);
 	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [selectedName, setSelectedName] = React.useState<string | null>(null);
 	const isOpen = Boolean(anchorEl);
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -174,7 +170,8 @@ const Sources: React.FC = () => {
 		useSourcesHints();
 
 	const paginationProps = usePagination(count_sources ?? 0);
-	const { page, rowsPerPage, setPage, setRowsPerPage } = paginationProps;
+	const { page, rowsPerPage, setPage } = paginationProps;
+
 	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 121, [
 		data.length,
 	]);
@@ -389,20 +386,6 @@ const Sources: React.FC = () => {
 			setData(source_list);
 			setCount(count || 0);
 			setStatus("");
-
-			const options = [10, 20, 50, 100, 300, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= count);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 10;
-			setRowsPerPage(selectedValue);
 		} catch {
 		} finally {
 			setIsMakeRequest(true);
@@ -526,17 +509,6 @@ const Sources: React.FC = () => {
 
 	const handleCloseConfirmDialog = () => {
 		setOpenConfirmDialog(false);
-	};
-
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
 	};
 
 	useEffect(() => {

@@ -1,7 +1,11 @@
+import {
+	defaultPaginationOptions,
+	filterPaginationOptions,
+} from "@/utils/pagination";
 import { useState } from "react";
 
 type PaginationProps = {
-	countRows: number;
+	countRows: number | null;
 	page: number;
 	rowsPerPage: number;
 	setPage: (page: number) => void;
@@ -14,9 +18,17 @@ type PaginationProps = {
 	rowsPerPageOptions?: number[];
 };
 
-export function usePagination(countRows: number): PaginationProps {
+export function usePagination(
+	countRows: number | null,
+	rowsPerPageOptions: number[] = defaultPaginationOptions,
+): PaginationProps {
 	const [page, setPage] = useState(0);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
+
+	const filteredPaginationOptions = filterPaginationOptions(
+		rowsPerPageOptions,
+		countRows,
+	);
 
 	const handleChangeRowsPerPage = (
 		event: React.ChangeEvent<{ value: string }>,
@@ -35,5 +47,6 @@ export function usePagination(countRows: number): PaginationProps {
 			setPage(newPage);
 		},
 		onRowsPerPageChange: handleChangeRowsPerPage,
+		rowsPerPageOptions: filteredPaginationOptions,
 	};
 }
