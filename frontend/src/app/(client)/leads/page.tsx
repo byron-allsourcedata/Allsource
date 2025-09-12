@@ -101,14 +101,14 @@ const Leads: React.FC = () => {
 	>([]);
 	const [openPopup, setOpenPopup] = React.useState(false);
 	const [popupData, setPopupData] = React.useState<any>(null);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+
 	const { changeLeadsTableHint, leadsTableHints, resetLeadsTableHints } =
 		useLeadsHints();
 	const searchParams = useSearchParams();
 	const [showPixel, setPixelPopup] = useState<boolean | null>(null);
 
 	const paginationProps = usePagination(count_leads ?? 0);
-	const { page, rowsPerPage, setRowsPerPage } = paginationProps;
+	const { page, rowsPerPage } = paginationProps;
 	const tableContainerRef = useRef<HTMLDivElement>(null);
 	const { isScrolledX, isScrolledY } = useScrollShadow(
 		tableContainerRef,
@@ -488,19 +488,6 @@ const Leads: React.FC = () => {
 			setData(Array.isArray(leads) ? leads : []);
 			setCount(count || 0);
 			setStatus(response.data.status);
-			const options = [10, 20, 50, 100, 300, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= count);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 15;
-			setRowsPerPage(selectedValue);
 		} catch (error) {
 			if (error instanceof AxiosError && error.response?.status === 403) {
 				if (error.response.data.status === "NEED_BOOK_CALL") {

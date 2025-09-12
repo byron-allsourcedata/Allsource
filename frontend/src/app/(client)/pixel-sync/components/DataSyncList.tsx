@@ -67,6 +67,7 @@ import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
 import CustomerIoDataSync from "@/app/(client)/data-sync/components/CustomerIoDataSync";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import { filterDefaultPaginationOptions } from "@/utils/pagination";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -105,7 +106,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [omnisendIconPopupOpen, setOmnisendIconPopupOpen] = useState(false);
 
 	const [totalRows, setTotalRows] = useState(0);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 	const [sendlaneIconPopupOpen, setOpenSendlaneIconPopup] = useState(false);
 	const [s3IconPopupOpen, setOpenS3IconPopup] = useState(false);
 	const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
@@ -229,25 +229,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
 			setAllData(response.data);
 			setTotalRows(count);
-			let newRowsPerPageOptions: number[] = [];
-			if (count <= 10) {
-				newRowsPerPageOptions = [5, 10];
-			} else if (count <= 50) {
-				newRowsPerPageOptions = [10, 20];
-			} else if (count <= 100) {
-				newRowsPerPageOptions = [10, 20, 50];
-			} else if (count <= 300) {
-				newRowsPerPageOptions = [10, 20, 50, 100];
-			} else if (count <= 500) {
-				newRowsPerPageOptions = [10, 20, 50, 100, 300];
-			} else {
-				newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
-			}
-			if (!newRowsPerPageOptions.includes(count)) {
-				newRowsPerPageOptions.push(count);
-				newRowsPerPageOptions.sort((a, b) => a - b);
-			}
-			setRowsPerPageOptions(newRowsPerPageOptions);
 
 			const contacts = response.data;
 			const isSynced = isAllContactsSynced(contacts);

@@ -17,7 +17,6 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
-	Paper,
 	IconButton,
 	List,
 	ListItemText,
@@ -30,10 +29,10 @@ import {
 	Chip,
 	Tooltip,
 	TextField,
-	TypographyProps,
-	TooltipProps,
-	SxProps,
-	Theme,
+	type TypographyProps,
+	type TooltipProps,
+	type SxProps,
+	type Theme,
 } from "@mui/material";
 import {
 	FilterListIcon,
@@ -61,8 +60,6 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import ThreeDotsLoader from "../sources/components/ThreeDotsLoader";
-import ProgressBar from "../sources/components/ProgressLoader";
 import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SmartAudienceFilter";
 import DetailsPopup from "./components/SmartAudienceDataSources";
@@ -88,6 +85,10 @@ import {
 } from "./components/RenderProgress";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import {
+	filterDefaultPaginationOptions,
+	filterPaginationOptions,
+} from "@/utils/pagination";
 
 interface Smarts {
 	id: string;
@@ -360,7 +361,6 @@ const SmartAudiences: React.FC = () => {
 	const [isFirstLoad, setIsFirstLoad] = useState(true);
 
 	const [count_smarts_audience, setCount] = useState<number | null>(null);
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
 
 	const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
 	const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -596,19 +596,6 @@ const SmartAudiences: React.FC = () => {
 			if (audience_smarts_list.length === 0) {
 				await fetchPixelInstalledAnywhere();
 			}
-			const options = [10, 20, 50, 100, 300, 500];
-			let RowsPerPageOptions = options.filter((option) => option <= count);
-			if (RowsPerPageOptions.length < options.length) {
-				RowsPerPageOptions = [
-					...RowsPerPageOptions,
-					options[RowsPerPageOptions.length],
-				];
-			}
-			setRowsPerPageOptions(RowsPerPageOptions);
-			const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-				? rowsPerPage
-				: 10;
-			setRowsPerPage(selectedValue);
 		} catch {
 		} finally {
 			if (isFirstLoad) {
@@ -758,17 +745,6 @@ const SmartAudiences: React.FC = () => {
 
 	const handleCloseConfirmDialog = () => {
 		setOpenConfirmDialog(false);
-	};
-
-	const handleChangePage = (event: unknown, newPage: number) => {
-		setPage(newPage);
-	};
-
-	const handleChangeRowsPerPage = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
-		setPage(0);
 	};
 
 	const handleRename = (

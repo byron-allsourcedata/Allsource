@@ -23,6 +23,7 @@ import TelegramIcon from "@mui/icons-material/Telegram";
 import CustomTablePagination from "@/components/CustomTablePagination";
 import { BillingHistoryItem } from "./types";
 import { useBillingContext } from "@/context/BillingContext";
+import { filterDefaultPaginationOptions } from "@/utils/pagination";
 
 interface BillingHistoryProps {
 	setIsLoading: (state: boolean) => void;
@@ -60,24 +61,8 @@ export const BillingHistory: React.FC<BillingHistoryProps> = ({
 				const { billing_history, count } = response.data;
 				setBillingHistory(billing_history);
 				setTotalRows(count);
-				let newRowsPerPageOptions: number[] = [];
-				if (count <= 10) {
-					newRowsPerPageOptions = [5, 10];
-				} else if (count <= 50) {
-					newRowsPerPageOptions = [10, 20];
-				} else if (count <= 100) {
-					newRowsPerPageOptions = [10, 20, 50];
-				} else if (count <= 300) {
-					newRowsPerPageOptions = [10, 20, 50, 100];
-				} else if (count <= 500) {
-					newRowsPerPageOptions = [10, 20, 50, 100, 300];
-				} else {
-					newRowsPerPageOptions = [10, 20, 50, 100, 300, 500];
-				}
-				if (!newRowsPerPageOptions.includes(count)) {
-					newRowsPerPageOptions.push(count);
-					newRowsPerPageOptions.sort((a, b) => a - b);
-				}
+
+				const newRowsPerPageOptions = filterDefaultPaginationOptions(count);
 				setRowsPerPageOptions(newRowsPerPageOptions);
 			}
 		} catch (error) {
