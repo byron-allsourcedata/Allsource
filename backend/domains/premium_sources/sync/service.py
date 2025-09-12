@@ -23,6 +23,9 @@ from domains.premium_sources.sync_log.persistence import (
     PremiumSourceSyncLogPersistence,
 )
 from models.premium_source_sync import PremiumSourceSync
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPersistence,
+)
 from resolver import injectable
 
 logger = logging.getLogger(__name__)
@@ -36,11 +39,13 @@ class PremiumSourceSyncService:
         source_repo: PremiumSourcePersistence,
         sync_log: PremiumSourceSyncLogPersistence,
         source_rows: PremiumSourcesRowsService,
+        integrations: IntegrationsPersistence,
         google_ads: GoogleAdsPremiumSourceSyncService,
         meta: MetaPremiumSourceSyncService,
     ) -> None:
         self.repo = repo
         self.source_repo = source_repo
+        self.integrations = integrations
         self.google_ads = google_ads
         self.meta = meta
         self.source_rows = source_rows
@@ -71,6 +76,10 @@ class PremiumSourceSyncService:
         sync_schemas: list[PremiumSyncSchema] = []
         sync_rows = self.repo.list_by_user_id(user_id)
         for sync_row in sync_rows:
+            integration_name = self.integrations.get_integration_name_by_id(
+                sync_row.user_integration_id
+            )
+
             premium_source = self.source_repo.get(sync_row.premium_source_id)
             if not premium_source:
                 raise Exception("Premium source not found")
@@ -91,6 +100,8 @@ class PremiumSourceSyncService:
             else:
                 status = "syncing"
 
+            sync_platform = self.format_integration_name(integration_name)
+
             sync_schema = PremiumSyncSchema(
                 name=premium_source.name,
                 created_at=sync_row.created_at,
@@ -99,13 +110,24 @@ class PremiumSourceSyncService:
                 created_by="John Button",
                 progress=progress,
                 last_sync=datetime.now(timezone.utc),
-                sync_platform="Google Ads",
+                sync_platform=sync_platform,
                 records_synced=synced_records,
             )
 
             sync_schemas.append(sync_schema)
 
         return sync_schemas
+
+    def format_integration_name(self, service_name: str | None) -> str:
+        # extract this to separate service
+        if service_name == "google_ads":
+            return "Google Ads"
+        elif service_name == "meta":
+            return "Meta"
+        elif service_name is None:
+            return "-"
+        else:
+            return service_name
 
     def create_sync(
         self, premium_source_id: UUID, user_integration_id: int
@@ -155,6 +177,8 @@ class PremiumSourceSyncService:
         """
         Checks permissions and creates meta premium sync
         Flushes, no commit
+
+        Raises `MetaError`
         """
         sync_id = self.create_sync_checked(
             user_id, premium_source_id, user_integration_id

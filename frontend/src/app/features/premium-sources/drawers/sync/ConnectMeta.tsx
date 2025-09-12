@@ -1,30 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
 	Drawer,
-	Select,
 	Box,
 	Typography,
 	IconButton,
 	TextField,
 	Divider,
-	FormControlLabel,
-	FormControl,
-	FormLabel,
-	Radio,
 	Button,
 	Link,
 	Tab,
 	Tooltip,
-	RadioGroup,
-	InputLabel,
 	MenuItem,
-	Popover,
 	Menu,
 	ListItemText,
 	ClickAwayListener,
 	InputAdornment,
 	Grid,
-	SelectChangeEvent,
 } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -34,20 +25,17 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LinearProgress from "@mui/material/LinearProgress";
-import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
-import { LogoSmall } from "@/components/ui/Logo";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { MetaDeletePopover } from "./meta/MetaDeletePopover";
 import { MetaDisabledTextField } from "./meta/MetaTextField";
 import { MetaMiddleIconToggle } from "./meta/MetaMiddleIconToggle";
-import { MetaIcon } from "./meta/icons/MetaIcon";
 import { MetaMappingHeader } from "./meta/MetaMappingHeader";
 import { ListName } from "./meta/typography";
 import { MetaCampaignItem } from "./meta/MetaCampaignItem";
-import { MetaButton } from "./meta/buttons/MetaButton";
 import { MetaCreateCampaignForm } from "./meta/MetaCreateCampaignForm";
 import { metaCreateCampaign } from "../../requests";
+import { AxiosError } from "axios";
 
 interface ConnectMetaPopupProps {
 	open: boolean;
@@ -744,6 +732,20 @@ export const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 			if (onCloseCreateSync) {
 				onCloseCreateSync();
 			}
+		} catch (e) {
+			if (e instanceof AxiosError) {
+				const response = e.response;
+
+				if (response?.status === 403) {
+					const body = e.response?.data;
+					if (typeof body === "string") {
+						showErrorToast(body);
+						return;
+					}
+				}
+			}
+
+			showErrorToast("Failed to create Meta sync");
 		} finally {
 			setLoading(false);
 		}
