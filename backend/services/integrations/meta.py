@@ -55,6 +55,16 @@ API_VERSION = "v23.0"
 logger = logging.getLogger(__name__)
 
 
+class MetaError(Exception):
+    def __init__(self, user_message: str | None):
+        super().__init__(self, user_message)
+
+        if user_message:
+            self.user_message = user_message
+        else:
+            self.user_message = "Error while connecting to Meta"
+
+
 @injectable
 class MetaIntegrationsService:
     def __init__(
@@ -402,11 +412,12 @@ class MetaIntegrationsService:
             body = resp.json()
         except Exception:
             logger.exception("create_adset: can't parse response")
-            raise RuntimeError("Failed to parse Meta API response")
+            raise MetaError("Failed to parse Meta API response")
 
         if body.get("error"):
             logger.error("create_adset error: %s", body["error"])
-            raise RuntimeError(f"Meta API error: {body['error']}")
+            message: str | None = body.get("error", {}).get("error_user_msg")
+            raise MetaError(message)
 
     def create_campaign(
         self, campaign_name: str, daily_budget: str, ad_account_id, user_id: int

@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 from uuid import UUID
 
 from db_dependencies import Db
@@ -8,6 +8,7 @@ from domains.premium_sources.sync.schemas import (
     CreateMetaPremiumSyncRequest,
 )
 from domains.premium_sources.sync.service import PremiumSourceSyncService
+from services.integrations.meta import MetaError
 
 
 router = APIRouter()
@@ -36,15 +37,18 @@ async def create_meta_premium_source_sync(
     premium_source_sync_service: PremiumSourceSyncService,
     premium_source_id: UUID,
     user_integration_id: int,
-    request: CreateMetaPremiumSyncRequest
+    request: CreateMetaPremiumSyncRequest,
 ):
-    await premium_source_sync_service.create_meta_sync_checked(
-        user_id=user["id"],
-        premium_source_id=premium_source_id,
-        user_integration_id=user_integration_id,
-        request=request,
-    )
-    db.commit()
+    try:
+        await premium_source_sync_service.create_meta_sync_checked(
+            user_id=user["id"],
+            premium_source_id=premium_source_id,
+            user_integration_id=user_integration_id,
+            request=request,
+        )
+        db.commit()
+    except MetaError as e:
+        return Response(status_code=403, content=e.user_message)
 
 
 @router.get("/")

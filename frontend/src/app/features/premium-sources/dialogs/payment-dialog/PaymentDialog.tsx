@@ -45,6 +45,7 @@ export const PaymentDialog: FC<Props> = ({
 	const {
 		loading: cardLoading,
 		data: billing,
+		error: billingError,
 		refetch: refetchCards,
 	} = useGetAddedCards();
 
@@ -59,7 +60,10 @@ export const PaymentDialog: FC<Props> = ({
 	const [selectedCard, setSelectedCard] = useState("0");
 
 	const payDisabled =
-		loading || buyLoading || billing?.card_details.length === 0;
+		loading ||
+		buyLoading ||
+		billing == null ||
+		billing?.card_details.length === 0;
 
 	return (
 		<Dialog open={open} onClose={onClose}>
