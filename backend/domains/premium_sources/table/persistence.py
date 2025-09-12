@@ -1,5 +1,5 @@
 import logging
-from uuid import UUID
+from uuid import UUID, uuid4
 import uuid
 
 from sqlalchemy import select
@@ -33,9 +33,18 @@ class PremiumSourcePersistence:
         self.sync_logs = sync_logs
 
     def create(
-        self, name: str, price: int, user_id: int, s3_url: str, rows: int
+        self,
+        name: str,
+        price: int,
+        user_id: int,
+        s3_url: str,
+        rows: int,
+        source_id: UUID | None = None,
     ) -> PremiumSource:
-        id = uuid.uuid4()
+        if source_id is not None:
+            id = source_id
+        else:
+            id = uuid.uuid4()
         new_source = PremiumSource(
             id=id,
             name=name,

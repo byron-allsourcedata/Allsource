@@ -16,6 +16,10 @@ def limit_upload_size(max_upload_size: int):
     return dependency
 
 
+MaxUploadSize1GB = Annotated[
+    None, Depends(limit_upload_size(1024 * 1024 * 1024))
+]
+
 MaxUploadSize100MB: TypeAlias = Annotated[
-    None, Depends(limit_upload_size(1000 * 1024 * 1024))
+    None, Depends(limit_upload_size(100 * 1024 * 1024))
 ]
