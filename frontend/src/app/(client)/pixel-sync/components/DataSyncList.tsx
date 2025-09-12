@@ -43,7 +43,6 @@ import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup"
 import MailchimpConnect from "@/components/MailchimpConnect";
 import OmnisendConnect from "@/components/OmnisendConnect";
 import SendlaneConnect from "@/components/SendlaneConnect";
-import ConnectInstantly from "@/components/InstantlyConnect";
 import S3Connect from "@/components/S3Connect";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
@@ -113,7 +112,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [hubspotIconPopupOpen, setOpenHubspotIconPopup] = useState(false);
 	const [goHighLevelIconPopupOpen, setOpenGoHighLevelIconPopup] =
 		useState(false);
-	const [instantlyIconPopupOpen, setOpenInstantlyIconPopup] = useState(false);
 	const [customerIoIconPopupOpen, setCustomerIoIconPopupOpen] = useState(false);
 	const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
 	const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false);
@@ -145,7 +143,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openZapierConnect, setOPenZapierComnect] = useState(false);
 	const [openSlackConnect, setOpenSlackConnect] = useState(false);
 	const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
-	const [openInstantlyConnect, setOpenInstantlyConnect] = useState(false);
 
 	const paginationProps = usePagination(totalRows ?? 0);
 
@@ -161,7 +158,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setOpenS3Connect(false);
 		setOPenZapierComnect(false);
 		setOpenSlackConnect(false);
-		setOpenInstantlyConnect(false);
 	};
 
 	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 120);
@@ -520,24 +516,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		} catch (error) {}
 	};
 
-	const handleInstantlyIconPopupClose = async () => {
-		setOpenInstantlyIconPopup(false);
-		setSelectedId(null);
-		setIsEdit(false);
-		try {
-			const response = await axiosInstance.get(
-				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
-			);
-			if (response) {
-				setData((prevData) =>
-					prevData.map((item) =>
-						item.id === selectedId ? { ...item, ...response.data } : item,
-					),
-				);
-			}
-		} catch (error) {}
-	};
-
 	const handleSalesForceIconPopupClose = async () => {
 		setSalesForceIconPopupOpen(false);
 		setSelectedId(null);
@@ -638,8 +616,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setSalesForceIconPopupOpen(true);
 			} else if (dataSyncPlatform === "go_high_level") {
 				setOpenGoHighLevelIconPopup(true);
-			} else if (dataSyncPlatform === "instantly") {
-				setOpenInstantlyIconPopup(true);
 			}
 
 			setIsLoading(false);
@@ -670,7 +646,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			openMetaConnect ||
 			openKlaviyoConnect ||
 			openMailchimpConnect ||
-			openInstantlyConnect ||
 			openOmnisendConnect,
 	);
 
@@ -806,8 +781,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenHubspotConnect(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setOpenSalesForceConnect(true);
-					} else if (dataSyncPlatform === "instantly") {
-						setOpenInstantlyConnect(true);
 					}
 					setIsLoading(false);
 					setAnchorEl(null);
@@ -1836,21 +1809,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						isEdit={isEdit}
 					/>
 				)}
-				{instantlyIconPopupOpen && isEdit === true && (
-					<ConnectInstantly
-						open={instantlyIconPopupOpen}
-						handleClose={() => {
-							setOpenInstantlyConnect(false), setIsInvalidApiKey(false);
-						}}
-						initApiKey={
-							integrationsCredentials.find(
-								(integartion) => integartion.service_name === "mailchimp",
-							)?.access_token
-						}
-						invalid_api_key={isInvalidApiKey}
-						boxShadow="rgba(0, 0, 0, 0.01)"
-					/>
-				)}
 				{metaIconPopupOpen && isEdit === true && (
 					<ConnectMeta
 						open={metaIconPopupOpen}
@@ -1864,14 +1822,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<MailchimpDatasync
 						open={mailchimpIconPopupOpen}
 						onClose={handleMailchimpIconPopupClose}
-						data={data.find((item) => item.id === selectedId)}
-						isEdit={isEdit}
-					/>
-				)}
-				{instantlyIconPopupOpen && isEdit === true && (
-					<MailchimpDatasync
-						open={instantlyIconPopupOpen}
-						onClose={handleInstantlyIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}
 						isEdit={isEdit}
 					/>
