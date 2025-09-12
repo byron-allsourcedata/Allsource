@@ -277,6 +277,11 @@ const customFieldsListCSV: Row[] = [
 	// { id: 22, type: 'Rec id', value: 'rec_id' },
 ];
 
+const defaultRowsCSV: Row[] = [
+	{ id: 1, type: "First Name", value: "first_name" },
+	{ id: 2, type: "Last Name", value: "last_name" },
+];
+
 const defaultRows: Row[] = [
 	{ id: 1, type: "Email", value: "email" },
 	{ id: 2, type: "Firstname", value: "firstname" },
@@ -583,7 +588,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				sent_contacts: valueContactSync,
 				smart_audience_id: id,
 				data_map: [
-					// ...defaultRows.map((item) => ({ value: item.type, type: toSnakeCase(item.type) })),
+					...defaultRowsCSV.map((item) => ({
+						value: item.type,
+						type: toSnakeCase(item.type),
+					})),
 					...customFields,
 				],
 			};
@@ -825,7 +833,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/csv",
 			);
-			setRows(defaultRows);
+			setRows(defaultRowsCSV);
 			setCustomFields(
 				customFieldsListCSV.map((field) => ({
 					type: field.value,
