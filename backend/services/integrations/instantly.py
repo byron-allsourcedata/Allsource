@@ -1,9 +1,10 @@
+import asyncio
 import hashlib
 import json
 import logging
 import os
 import requests
-from datetime import datetime
+from datetime import date, datetime
 from typing import Tuple
 
 import mailchimp_marketing as MailchimpMarketing
@@ -208,59 +209,121 @@ class InstantlyIntegrationsService:
             self.integrations_persistence.db.commit()
             return None
 
+    # async def process_data_sync_lead(
+    #     self,
+    #     user_integration: UserIntegration,
+    #     integration_data_sync: IntegrationUserSync,
+    #     user_data: list[tuple[LeadUser, FiveXFiveUser]],
+    #     is_email_validation_enabled: bool,
+    # ):
+    #     profiles_emails = []
+    #     results = []
+
+    #     for lead_user, five_x_five_user in user_data:
+    #         profile = await self.__map_lead_to_instantly_contact(
+    #             five_x_five_user,
+    #             integration_data_sync.data_map,
+    #             is_email_validation_enabled,
+    #         )
+    #         if profile in (
+    #             ProccessDataSyncResult.INCORRECT_FORMAT.value,
+    #             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+    #             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+    #         ):
+    #             results.append({"lead_id": lead_user.id, "status": profile})
+    #             continue
+
+    #         email = profile.get("email")
+    #         if not email:
+    #             results.append(
+    #                 {
+    #                     "lead_id": lead_user.id,
+    #                     "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
+    #                 }
+    #             )
+    #             continue
+
+    #         profiles_emails.append(email)
+    #         results.append(
+    #             {
+    #                 "lead_id": lead_user.id,
+    #                 "status": ProccessDataSyncResult.SUCCESS.value,
+    #             }
+    #         )
+
+    #     if not profiles_emails:
+    #         return results
+
+    #     status = self.sync_contacts_bulk(
+    #         integration_data_sync.list_id, profiles_emails, user_integration
+    #     )
+    #     print("status in process_data_sync_lead", status)
+    #     if status != ProccessDataSyncResult.SUCCESS.value:
+    #         for r in results:
+    #             if r["status"] == ProccessDataSyncResult.SUCCESS.value:
+    #                 r["status"] = status
+    #     return results
+    
     async def process_data_sync_lead(
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        user_data: list[tuple[LeadUser, FiveXFiveUser]],
+        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
+        requests_limit_per_minute: int = 60,
     ):
-        profiles_emails = []
+        """
+        Простая последовательная реализация:
+        - для каждого lead в user_data (≤60) делаем create_lead_single (через to_thread),
+        передавая campaign = integration_data_sync.list_id чтобы лид создавался сразу в кампанию.
+        - промежуток между запросами = 60 / requests_limit_per_minute (сек).
+        Возвращает список результатов [{lead_id, status}, ...].
+        """
+        interval = 60.0 / float(max(1, requests_limit_per_minute))  # seconds between requests
         results = []
 
+        list_id = integration_data_sync.list_id if integration_data_sync.list_id else None
+  
         for lead_user, five_x_five_user in user_data:
-            profile = await self.__map_lead_to_instantly_contact(
-                five_x_five_user,
-                integration_data_sync.data_map,
-                is_email_validation_enabled,
-            )
-            if profile in (
+            mapped = await self.__map_lead_to_instantly_contact(five_x_five_user, integration_data_sync.data_map, is_email_validation_enabled)
+
+            if mapped in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append({"lead_id": lead_user.id, "status": profile})
+                results.append({"lead_id": lead_user.id, "status": mapped})
+                # throttle between iterations anyway
+                await asyncio.sleep(interval)
                 continue
 
-            email = profile.get("email")
-            if not email:
-                results.append(
-                    {
-                        "lead_id": lead_user.id,
-                        "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                    }
-                )
-                continue
+            # подготовим payload для create_lead_single (API имена уже в mapped)
+            payload = dict(mapped)
+            if list_id:
+                payload["list_id"] = list_id
 
-            profiles_emails.append(email)
-            results.append(
-                {
-                    "lead_id": lead_user.id,
-                    "status": ProccessDataSyncResult.SUCCESS.value,
-                }
-            )
+            # вызываем синхронный запрос в пуле потоков
+            ok, info = await asyncio.to_thread(self.create_lead_single, user_integration, payload)
+            print("ok", ok)
 
-        if not profiles_emails:
-            return results
+            if ok:
+                results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.SUCCESS.value})
+            else:
+                if info == "authentication_failed":
+                    results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value})
+                    idx = user_data.index((lead_user, five_x_five_user))
+                    remaining = user_data[idx+1:]
+                    for future_lead, _ in remaining:
+                        results.append({"lead_id": future_lead.id, "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value})
+                    return results
+                elif info == "validation_failed":
+                    results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.INCORRECT_FORMAT.value})
+                else:
+                    results.append({"lead_id": lead_user.id, "status": ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value})
 
-        status = self.sync_contacts_bulk(
-            integration_data_sync.list_id, profiles_emails, user_integration
-        )
-        print("status in process_data_sync_lead", status)
-        if status != ProccessDataSyncResult.SUCCESS.value:
-            for r in results:
-                if r["status"] == ProccessDataSyncResult.SUCCESS.value:
-                    r["status"] = status
+            # throttle to respect requests_limit_per_minute
+            await asyncio.sleep(interval)
+
         return results
 
     def sync_contacts_bulk(
@@ -297,6 +360,7 @@ class InstantlyIntegrationsService:
         except requests.HTTPError as e:
             logging.error(e)
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            
 
     async def __map_lead_to_instantly_contact(
         self,
@@ -323,13 +387,67 @@ class InstantlyIntegrationsService:
             "first_name": getattr(five_x_five_user, "first_name", None),
             "last_name": getattr(five_x_five_user, "last_name", None),
             "phone": format_phone_number(phone),
-            "company": getattr(five_x_five_user, "company_name", None),
-            "job_title": getattr(five_x_five_user, "job_title", None),
-            "custom_fields": {
-                field["value"]: getattr(five_x_five_user, field["type"], None)
+            "company_name": getattr(five_x_five_user, "company_name", None),
+            "custom_variables": {
+                field["value"]: (
+                    getattr(five_x_five_user, field["type"], None).isoformat()
+                    if isinstance(getattr(five_x_five_user, field["type"], None), (datetime, date))
+                    else getattr(five_x_five_user, field["type"], None)
+                )
                 for field in data_map
             },
         }
+
+    # def create_lead_single(self, user_integration: UserIntegration, lead_payload: dict):
+    #     """
+    #     POST /api/v2/leads — создаёт один лид с полями (email, first_name, last_name, phone, company, job_title, personalization...)
+    #     """
+    #     resp = self.__handle_request(
+    #         method="POST",
+    #         url=f"{self.BASE_URL}/leads",
+    #         headers=self._auth_headers(user_integration.access_token),
+    #         json=lead_payload,
+    #     )
+    #     if resp.status_code in (200, 201, 202):
+    #         return resp.json()
+    #     if resp.status_code == 401:
+    #         return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+    #     logger.error("create_lead_single failed: %s %s", resp.status_code, resp.text)
+    #     return ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value        
+
+    def create_lead_single(self, user_integration, lead_payload):
+        """
+        Синхронный helper: POST /api/v2/leads
+        Возвращает tuple: (True, body) при успехе, (False, "authentication_failed"|"validation_failed"| "platform_error") при ошибке.
+        """
+        print("user_integration.access_token", user_integration.access_token)
+        try:
+            resp = self.__handle_request(
+                method="POST",
+                url=f"{self.BASE_URL}/leads",
+                api_key=user_integration.access_token,
+                json=lead_payload,
+            )
+        except Exception as exc:
+            logging.exception("create_lead_single: request exception: %s", exc)
+            return False, "request_failed"
+
+        try:
+            body = resp.json()
+        except Exception:
+            body = resp.text
+
+        if resp.status_code in (200, 201, 202):
+            return True, body
+        if resp.status_code in (401, 403):
+            logging.error("create_lead_single: auth error %s %s", resp.status_code, body)
+            return False, "authentication_failed"
+        if resp.status_code == 422 or resp.status_code == 400:
+            logging.warning("create_lead_single: validation error %s %s", resp.status_code, body)
+            return False, "validation_failed"
+        logging.error("create_lead_single: unexpected %s %s", resp.status_code, body)
+        return False, "platform_error"
+   
 
     def edit_sync(
         self,
