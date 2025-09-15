@@ -40,6 +40,7 @@ import DataSyncList from "@/app/(client)/data-sync/components/DataSyncList";
 import BCommerceConnect from "@/components/Bcommerce";
 import OmnisendConnect from "@/components/OmnisendConnect";
 import MailchimpConnect from "@/components/MailchimpConnect";
+import InstantlyConnect from "@/components/InstantlyConnect";
 import RevenueTracking from "@/components/RevenueTracking";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import S3Connect from "@/components/S3Connect";
@@ -1064,6 +1065,25 @@ const UserIntegrationsList = ({
 					invalid_api_key={
 						integrationsCredentials.find(
 							(integration) => integration.service_name === "mailchimp",
+						)?.is_failed === true
+					}
+					boxShadow="rgba(0, 0, 0, 0.1)"
+				/>
+			)}
+
+			{openModal === "instantly" && (
+				<InstantlyConnect
+					open={true}
+					handleClose={handleClose}
+					onSave={handleSaveSettings}
+					initApiKey={
+						integrationsCredentials.find(
+							(integration) => integration.service_name === "instantly",
+						)?.access_token
+					}
+					invalid_api_key={
+						integrationsCredentials.find(
+							(integration) => integration.service_name === "instantly",
 						)?.is_failed === true
 					}
 					boxShadow="rgba(0, 0, 0, 0.1)"

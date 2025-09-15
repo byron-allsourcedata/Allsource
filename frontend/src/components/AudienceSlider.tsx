@@ -25,10 +25,12 @@ import OnmisendDataSync from "../app/(client)/data-sync/components/OmnisendDataS
 import BingAdsDataSync from "../app/(client)/data-sync/components/BingAdsDataSync";
 import MailchimpConnect from "./MailchimpConnect";
 import MailchimpDatasync from "../app/(client)/data-sync/components/MailchimpDatasync";
+import InstantlyDatasync from "../app/(client)/data-sync/components/InstantlyDataSync";
 import SlackDatasync from "../app/(client)/data-sync/components/SlackDataSync";
 import GoogleADSDatasync from "../app/(client)/data-sync/components/GoogleADSDataSync";
 import LinkedinDataSync from "../app/(client)/data-sync/components/LinkedinDataSync";
 import SendlaneConnect from "./SendlaneConnect";
+import ConnectInstantly from "./InstantlyConnect";
 import S3Connect from "./S3Connect";
 import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
 import SendlaneDatasync from "../app/(client)/data-sync/components/SendlaneDatasync";
@@ -90,6 +92,7 @@ type ServiceHandlers = {
 	bing_ads: () => void;
 	go_high_level: () => void;
 	customer_io: () => void;
+	instantly: () => void;
 };
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({
@@ -128,11 +131,13 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [googleAdsIconPopupOpen, setOpenGoogleAdsIconPopup] = useState(false);
 	const [linkedinIconPopupOpen, setOpenLinkedinIconPopup] = useState(false);
 	const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false);
+	const [openInstantlyConnect, setOpeninstantlyConnect] = useState(false);
 	const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] =
 		useState(false);
 	const [openS3IconPopupOpen, setOpenS3IconPopupOpen] = useState(false);
 	const [openWebhookIconPopupOpen, setOpenWebhookIconPopupOpen] =
 		useState(false);
+	const [instantlyIconPopupOpen, setOpenInstantlyIconPopup] = useState(false);
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
 	const [openCustomerIoConnect, setOpenCustomerIoConnect] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
@@ -255,6 +260,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		setOpenmailchimpConnect(true);
 	};
 
+	const handleOpenInstantlyConnect = () => {
+		setOpeninstantlyConnect(true);
+	};
+
 	const handleSlackIconPopupIconOpen = () => {
 		setOpenSlackIconPopup(true);
 	};
@@ -269,6 +278,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleMailchimpIconPopupIconOpen = () => {
 		setOpenMailchimpIconPopup(true);
+	};
+
+	const handleInstantlyIconPopupIconOpen = () => {
+		setOpenInstantlyIconPopup(true);
 	};
 
 	const handleCreateSlackOpen = () => {
@@ -288,6 +301,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleMailchimpIconPopupIconClose = () => {
+		setOpenMailchimpIconPopup(false);
+		setPlusIconPopupOpen(false);
+	};
+
+	const handleInstantlyIconPopupIconClose = () => {
 		setOpenMailchimpIconPopup(false);
 		setPlusIconPopupOpen(false);
 	};
@@ -317,6 +335,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleOpenMailchimpConnectClose = () => {
 		setOpenmailchimpConnect(false);
+	};
+
+	const handleOpenInstantlyConnectClose = () => {
+		setOpeninstantlyConnect(false);
 	};
 
 	const handleIntegrationSelect = (integration: string) => {
@@ -533,6 +555,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		{ image: "zapier-icon.svg", service_name: "zapier" },
 		{ image: "omnisend_icon_black.svg", service_name: "omnisend" },
 		{ image: "sendlane-icon.svg", service_name: "sendlane" },
+		{ image: "instantly-icon.svg", service_name: "instantly" },
 		{ image: "klaviyo.svg", service_name: "klaviyo" },
 		{ image: "s3.svg", service_name: "s3" },
 	];
@@ -567,6 +590,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const integrationsHandlers: ServiceHandlers = {
 		hubspot: handleCreateHubspotOpen,
 		mailchimp: handleOpenMailchimpConnect,
+		instantly: handleOpenInstantlyConnect,
 		sales_force: handleCreateSalesForceOpen,
 		google_ads: handleCreateGoogleAdsOpen,
 		go_high_level: handleGoHightLevelOpen,
@@ -586,6 +610,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const syncHandlers: ServiceHandlers = {
 		hubspot: handleHubspotIconPopupOpen,
 		mailchimp: handleMailchimpIconPopupIconOpen,
+		instantly: handleInstantlyIconPopupIconOpen,
 		sales_force: handleSalesForceIconPopupOpen,
 		google_ads: handleGoogleAdsIconPopupIconOpen,
 		s3: handleS3IconPopupOpen,
@@ -826,6 +851,12 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				onCloseCreateSync={onClose}
 				data={null}
 			/>
+			<InstantlyDatasync
+				open={instantlyIconPopupOpen}
+				onClose={handleInstantlyIconPopupIconClose}
+				onCloseCreateSync={onClose}
+				data={null}
+			/>
 			<SlackDatasync
 				open={slackIconPopupOpen}
 				onClose={handleSlackIconPopupIconClose}
@@ -956,6 +987,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				initApiKey={
 					integrationsCredentials.find(
 						(integartion) => integartion.service_name === "mailchimp",
+					)?.access_token
+				}
+			/>
+			<ConnectInstantly
+				onSave={handleSaveSettings}
+				open={openInstantlyConnect}
+				handleClose={handleOpenInstantlyConnectClose}
+				invalid_api_key={isInvalidApiKey}
+				initApiKey={
+					integrationsCredentials.find(
+						(integartion) => integartion.service_name === "instantly",
 					)?.access_token
 				}
 			/>

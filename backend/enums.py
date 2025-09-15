@@ -75,6 +75,7 @@ class IntegrationLimit(Enum):
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
     CUSTOMER_IO = 200
+    INSTANTLY = 60
 
 
 class BusinessType(Enum):
@@ -145,6 +146,7 @@ class SourcePlatformEnum(Enum):
     LINKEDIN = "linkedin"
     GO_HIGH_LEVEL = "go_high_level"
     CUSTOMER_IO = "customer_io"
+    INSTANTLY = "instantly"
 
 
 class UserStatusInAdmin(Enum):
