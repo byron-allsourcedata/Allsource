@@ -31,6 +31,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import axios, { AxiosError } from "axios";
 
 interface CreateOmnisendProps {
 	fromAudience?: boolean;
@@ -228,6 +229,9 @@ const InstantlyConnect = ({
 				showErrorToast("Invalid API Key");
 			}
 		} catch (error) {
+			if (axios.isAxiosError(error) && error.response) {
+				showErrorToast(error.response.data.status);
+			}
 		} finally {
 			setDisableButton(false);
 			setLoading(false);

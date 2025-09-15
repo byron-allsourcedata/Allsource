@@ -285,8 +285,6 @@ async def ensure_integration(
                     is_email_validation_enabled,
                 )
 
-                print("results in cron", results)
-
                 status_counts = Counter(r.get("status") for r in results)
                 logging.info(f"Status summary: {dict(status_counts)}")
 
