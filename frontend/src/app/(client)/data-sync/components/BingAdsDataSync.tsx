@@ -1247,7 +1247,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 														}}
 													/>
 													<FormControlLabel
-														value="added_to_cart"
+														value="abandoned_cart"
 														control={
 															<Radio
 																sx={{
