@@ -306,7 +306,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleInstantlyIconPopupIconClose = () => {
-		setOpenMailchimpIconPopup(false);
+		setOpenInstantlyIconPopup(false);
 		setPlusIconPopupOpen(false);
 	};
 
