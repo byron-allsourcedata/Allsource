@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, override
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -75,8 +75,13 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
     def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
         return self.postgres.get_lookalike(lookalike_id)
 
-    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
-        self.postgres.update_dataset_size(lookalike_id, dataset_size)
+    @override
+    def update_total_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        self.postgres.update_total_dataset_size(lookalike_id, dataset_size)
+
+    @override
+    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
+        self.postgres.update_processed_dataset_size(lookalike_id, processed_dataset_size)
 
     def calculate_lookalikes(
         self, user_id: int, source_uuid: UUID, lookalike_size: str

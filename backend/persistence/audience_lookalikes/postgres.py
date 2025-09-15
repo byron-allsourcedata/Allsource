@@ -18,7 +18,7 @@ from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, override
 import math
 from sqlalchemy import asc, desc, or_, func, select, update
 from sqlalchemy.exc import IntegrityError
@@ -243,12 +243,27 @@ class AudienceLookalikesPostgresPersistence(
             )
         ).scalar()
 
-    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
-        self.db.execute(
+    @override
+    def update_total_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        _ = self.db.execute(
             update(AudienceLookalikes)
             .where(AudienceLookalikes.id == lookalike_id)
             .values(train_model_size=dataset_size)
         )
+
+    @override
+    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
+        """
+        Update processed dataset size
+
+        Auto-commits
+        """
+        _ = self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(processed_train_model_size=processed_dataset_size)
+        )
+        self.db.commit()
 
     def get_max_size(self, lookalike_size: str) -> int:
         if lookalike_size == "almost_identical":

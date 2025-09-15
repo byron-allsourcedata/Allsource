@@ -25,6 +25,7 @@ from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
 from schemas.similar_audiences import (
     NormalizationConfig,
 )
+from services.lookalikes.exceptions import LookalikeNotFound
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.exceptions import (
     LessThenTwoTrainDataset,
@@ -187,6 +188,15 @@ class AudienceLookalikesService:
 
     def get_lookalike(self, lookalike_id: UUID) -> AudienceLookalikes | None:
         return self.lookalikes_persistence_service.get_lookalike(lookalike_id)
+
+    def get_lookalike_unsafe(self, lookalike_id: UUID) -> AudienceLookalikes:
+        """
+        Raises `LookalikeNotFound`
+        """
+        lookalike = self.get_lookalike(lookalike_id)
+        if not lookalike:
+            raise LookalikeNotFound(lookalike_id)
+        return lookalike
 
     def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(
@@ -466,9 +476,18 @@ class AudienceLookalikesService:
             audience_feature_importance_other=other,
         )
 
-    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
-        return self.lookalikes_persistence_service.update_dataset_size(
+    def update_total_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        self.lookalikes_persistence_service.update_total_dataset_size(lookalike_id=lookalike_id, dataset_size=dataset_size)
+
+    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
+        self.lookalikes_persistence_service.update_processed_dataset_size(lookalike_id=lookalike_id, processed_dataset_size=processed_dataset_size)
+    
+    def prepare_lookalike_size(self, lookalike_id: UUID, dataset_size: int):
+        self.update_total_dataset_size(
             lookalike_id=lookalike_id, dataset_size=dataset_size
+        )
+        self.update_processed_dataset_size(
+            lookalike_id, 0
         )
 
     def get_processing_lookalike(self, id: str):

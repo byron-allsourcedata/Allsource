@@ -1,18 +1,25 @@
-from concurrent.futures import Future, ProcessPoolExecutor
 import logging
 import statistics
 import time
-from typing import Tuple, Dict, List, TypedDict
-from uuid import UUID
-
-from config import ClickhouseConfig
-from catboost import CatBoostRegressor
-from clickhouse_connect.driver.common import StreamContext
-from sqlalchemy import update
+from typing import TypedDict
 from typing_extensions import deprecated
 
+from concurrent.futures import Future, ProcessPoolExecutor, as_completed
+
+from uuid import UUID
+from clickhouse_connect.driver.common import StreamContext
+from catboost import CatBoostRegressor
+from sqlalchemy import update
+
+from config.lookalikes import LookalikesConfig
 from db_dependencies import Clickhouse, Db, ClickhouseInserter, get_db
+from resolver import injectable
+
+from config.clickhouse import ClickhouseConfig
+from config.util import get_int_env
+
 from models import AudienceLookalikes
+
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources_matched_persons import (
     AudienceSourcesMatchedPersonsPersistence,
@@ -21,19 +28,17 @@ from persistence.enrichment_lookalike_scores import (
     EnrichmentLookalikeScoresPersistence,
 )
 from persistence.enrichment_users import EnrichmentUsersPersistence
-from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
-from services.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
-from services.lookalike_filler.worker import filler_worker
+from services.lookalikes.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
+from services.lookalikes.lookalike_filler.worker import filler_worker
 from services.lookalikes import AudienceLookalikesService
-from services.similar_audiences import SimilarAudienceService
+from services.similar_audiences.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_profile_fetcher import ProfileFetcher
 from services.similar_audiences.column_selector import AudienceColumnSelector
 from services.similar_audiences.similar_audience_scores import (
     PersonScore,
     SimilarAudiencesScoresService,
 )
-from config.util import get_int_env, try_get_int_env
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +51,12 @@ class SimilarityStats(TypedDict):
 
 
 class LookalikeFillerServiceBase:
+    """
+    The most important method - process_lookalike_pipeline
+
+    It does not use @injectable annotation because of python's multiprocessing and pickling restrictions
+    """
+
     def __init__(
         self,
         db: Db,
@@ -86,8 +97,8 @@ class LookalikeFillerServiceBase:
         return bucket_ranges
 
     def get_enrichment_users(
-        self, significant_fields: Dict
-    ) -> Tuple[StreamContext, List[str]]:
+        self, significant_fields: dict[str, str]
+    ) -> tuple[StreamContext, list[str]]:
         """
         Returns a stream of blocks of enrichment users and a list of column names
         """
@@ -108,7 +119,7 @@ class LookalikeFillerServiceBase:
 
     def get_enrichment_users_partition(
         self,
-        significant_fields: dict,
+        significant_fields: dict[str, str],
         bucket: list[int],
         limit: int | None = None,
     ) -> tuple[StreamContext, list[str]]:
@@ -144,6 +155,26 @@ class LookalikeFillerServiceBase:
     def process_lookalike_pipeline(
         self, audience_lookalike: AudienceLookalikes
     ):
+        """
+        Processes a lookalike
+
+        This method fetches a user profiles from source and trains a catboost regression model
+
+        Source scripts should have matched uploaded .csv files with our IDGraph and have calculated value_score for each matched user
+
+        Details on value_score calculations are in source scripts. value_score is a float in 0..1 range
+
+        We train regression into that value_score
+
+        (gender, income_range, age, ...) -> value_score
+
+
+        So here we fetch which fields should be used for training,
+        Get data from clickhouse using those column names
+        Train the model on profile data
+
+        Use that trained model on each user in IDGraph and save users with top scores
+        """
         sig = audience_lookalike.significant_fields or {}
         config = self.audiences_scores.get_config(sig)
         profiles = self.profile_fetcher.fetch_profiles_from_lookalike(
@@ -175,7 +206,7 @@ class LookalikeFillerServiceBase:
     def train_and_save_model(
         self,
         lookalike_id: UUID,
-        user_profiles: List[Dict],
+        user_profiles: list[dict[str, str]],
         config: NormalizationConfig,
     ) -> CatBoostRegressor:
         dict_enrichment = [
@@ -196,16 +227,20 @@ class LookalikeFillerServiceBase:
         model,
         lookalike_id: UUID,
     ):
-        lookalike = self.lookalikes.get_lookalike(lookalike_id)
+        """
+        Exception list is not exhaustive 
+        
+        Raises `LookalikeNotFound`
+        """
+        lookalike = self.lookalikes.get_lookalike_unsafe(lookalike_id)
         significant_fields = lookalike.significant_fields
         top_n: int = lookalike.size
 
-        BULK_SIZE = get_int_env("LOOKALIKE_BULK_SIZE")
-        thread_count = get_int_env("LOOKALIKE_THREAD_COUNT")
+        THREAD_COUNT = LookalikesConfig.THREAD_COUNT
+        LOOKALIKE_MAX_SIZE = LookalikesConfig.LOOKALIKE_MAX_SIZE
 
-        LOOKALIKE_MAX_SIZE = try_get_int_env("LOOKALIKE_MAX_SIZE")
         limit = self.get_lookalike_limit(
-            thread_count=thread_count, total_limit=LOOKALIKE_MAX_SIZE
+            thread_count=THREAD_COUNT, total_limit=LOOKALIKE_MAX_SIZE
         )
 
         value_by_asid: dict[UUID, float] = {
@@ -218,32 +253,18 @@ class LookalikeFillerServiceBase:
 
         dataset_size = LOOKALIKE_MAX_SIZE if LOOKALIKE_MAX_SIZE else users_count
 
-        self.lookalikes.update_dataset_size(
+        self.lookalikes.prepare_lookalike_size(
             lookalike_id=lookalike_id, dataset_size=dataset_size
         )
-
-        rows_stream, column_names = self.get_enrichment_users(
-            significant_fields=significant_fields
-        )
-
-        count = 0
-        batch_buffer = []
 
         top_scores: list[PersonScore] = []
 
         config = self.audiences_scores.prepare_config(lookalike_id)
-        from concurrent.futures import ThreadPoolExecutor, as_completed
+        
 
-        _ = self.db.execute(
-            update(AudienceLookalikes)
-            .where(AudienceLookalikes.id == lookalike_id)
-            .values(processed_train_model_size=0)
-        )
-        self.db.commit()
+        buckets = self.get_buckets(THREAD_COUNT)
 
-        buckets = self.get_buckets(thread_count)
-
-        with ProcessPoolExecutor(max_workers=thread_count) as executor:
+        with ProcessPoolExecutor(max_workers=THREAD_COUNT) as executor:
             futures: list[Future[list[PersonScore]]] = []
 
             for bucket in buckets:
@@ -275,7 +296,7 @@ class LookalikeFillerServiceBase:
 
         logging.info("running clickhouse query")
 
-        # strange multiprocessing issue, clickhouse client is 'locked' by concurrent client, but is should execute synchronously..
+        # strange multiprocessing issue, clickhouse client is 'locked' by concurrent client, but this code block should execute synchronously..
         # so i re-init the client
         self.clickhouse = ClickhouseConfig.get_client()
         _ = self.clickhouse.command("SET max_query_size = 20485760")
@@ -286,7 +307,7 @@ class LookalikeFillerServiceBase:
 
     def filler_worker(
         self,
-        significant_fields: dict,
+        significant_fields: dict[str, str],
         config: NormalizationConfig,
         value_by_asid: dict[UUID, float],
         lookalike_id: UUID,
@@ -307,6 +328,7 @@ class LookalikeFillerServiceBase:
         batch_buffer = []
 
         top_scores: list[PersonScore] = []
+
 
         _ = db.execute(
             update(AudienceLookalikes)
@@ -392,7 +414,7 @@ class LookalikeFillerServiceBase:
         between Postgres and ClickHouse — we assume the full batch is received.
         """
 
-        self.db.execute(
+        _ = self.db.execute(
             update(AudienceLookalikes)
             .where(AudienceLookalikes.id == lookalike_id)
             .values(

@@ -2,7 +2,7 @@ import logging
 import time
 import psycopg2
 
-from typing import List, Any
+from typing import Callable, List, Any, TypeVar
 from uuid import UUID
 
 from catboost import CatBoostRegressor
@@ -36,6 +36,7 @@ PersonScore = tuple[UUID, float]
 
 logger = logging.getLogger(__name__)
 
+T = TypeVar("T")
 
 def is_uuid(value):
     try:
@@ -45,7 +46,7 @@ def is_uuid(value):
         return False
 
 
-def measure(func):
+def measure(func: Callable[[int], T]) -> tuple[T, float]:
     start = time.perf_counter()
     result = func(0)
     end = time.perf_counter()
