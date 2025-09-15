@@ -1410,7 +1410,6 @@ const Integrations = () => {
 				setLoading(true);
 				const response = await axiosInstance.get("/integrations/credentials/");
 				if (response.status === 200) {
-					console.log(response.data);
 					setIntegrationsCredentials(response.data);
 					setHasIntegrations(response.data.length > 0);
 				}
