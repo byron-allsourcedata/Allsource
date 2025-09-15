@@ -32,6 +32,8 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "./ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import axios, { AxiosError } from "axios";
+import { IntegrationConnectStyles } from "../app/(client)/integrations/styles";
+import CustomButton from "@/components/ui/CustomButton";
 
 interface CreateOmnisendProps {
 	fromAudience?: boolean;
@@ -53,66 +55,10 @@ interface IntegrationsCredentials {
 	is_with_suppression: boolean;
 }
 
-const klaviyoStyles = {
-	tabHeading: {
-		fontFamily: "var(--font-nunito)",
-		fontSize: "14px",
-		color: "#707071",
-		fontWeight: "500",
-		lineHeight: "20px",
-		textTransform: "none",
-		padding: 0,
-		minWidth: "auto",
-		px: 2,
-		pointerEvents: "none",
-		"@media (max-width: 600px)": {
-			alignItems: "flex-start",
-			p: 0,
-		},
-		"&.Mui-selected": {
-			color: "rgba(56, 152, 252, 1)",
-			fontWeight: "700",
-		},
-	},
-	inputLabel: {
-		fontFamily: "var(--font-nunito)",
-		fontSize: "14px",
-		lineHeight: "16px",
-		left: "2px",
-		color: "rgba(17, 17, 19, 0.60)",
-		"&.Mui-focused": {
-			color: "rgba(56, 152, 252, 1)",
-		},
-	},
-	formInput: {
-		"&.MuiOutlinedInput-root": {
-			height: "48px",
-			"& .MuiOutlinedInput-input": {
-				padding: "12px 16px 13px 16px",
-				fontFamily: "var(--font-roboto)",
-				color: "#202124",
-				fontSize: "14px",
-				lineHeight: "20px",
-				fontWeight: "400",
-			},
-			"& .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#A3B0C2",
-			},
-			"&:hover .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#A3B0C2",
-			},
-			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "rgba(56, 152, 252, 1)",
-			},
-			"&.Mui-error .MuiOutlinedInput-notchedOutline": {
-				borderColor: "rgba(224, 49, 48, 1)",
-			},
-		},
-		"&+.MuiFormHelperText-root": {
-			marginLeft: "0",
-		},
-	},
-};
+interface InstructionInstallInterface {
+	id: string;
+	text: string;
+}
 
 const InstantlyConnect = ({
 	fromAudience,
@@ -153,7 +99,7 @@ const InstantlyConnect = ({
 		setApiKeyError(!value.trim());
 	};
 
-	const instructions: any[] = [
+	const instructions: InstructionInstallInterface[] = [
 		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
 		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
 		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
@@ -270,37 +216,23 @@ const InstantlyConnect = ({
 		switch (tabValue) {
 			case "1":
 				return (
-					<Button
-						variant="contained"
-						onClick={handleApiKeySave}
-						disabled={!apiKey || disableButton || apiKeyError}
-						sx={{
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "var(--font-nunito)",
-							fontSize: "14px",
-							fontWeight: "600",
-							lineHeight: "20px",
-							letterSpacing: "normal",
-							color: "#fff",
-							textTransform: "none",
-							padding: "10px 24px",
-							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							":hover": {
-								backgroundColor: "rgba(30, 136, 229, 1)",
-							},
-							":active": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-							},
-							":disabled": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-								color: "#fff",
-								opacity: 0.6,
-							},
-							borderRadius: "4px",
-						}}
-					>
-						Connect
-					</Button>
+					<>
+						<CustomButton
+							variant="contained"
+							onClick={handleApiKeySave}
+							disabled={!apiKey || disableButton || apiKeyError}
+							sx={{
+								transition:
+									"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+								":hover": {
+									boxShadow:
+										"0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12)",
+								},
+							}}
+						>
+							Connect
+						</CustomButton>
+					</>
 				);
 			case "2":
 				return (
@@ -476,7 +408,10 @@ const InstantlyConnect = ({
 									<Tab
 										label="API Key"
 										value="1"
-										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
+										sx={{
+											...IntegrationConnectStyles.tabHeading,
+											cursor: "pointer",
+										}}
 									/>
 									{/* {!fromAudience && (
 										<Tab
@@ -537,8 +472,10 @@ const InstantlyConnect = ({
 										helperText={apiKeyError ? "API Key is required" : ""}
 										value={apiKey}
 										onChange={handleApiKeyChange}
-										InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-										InputProps={{ sx: klaviyoStyles.formInput }}
+										InputLabelProps={{
+											sx: IntegrationConnectStyles.inputLabel,
+										}}
+										InputProps={{ sx: IntegrationConnectStyles.formInput }}
 									/>
 								</Box>
 								{instructions.length > 0 && (
