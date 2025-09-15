@@ -43,6 +43,7 @@ import { UserPremiumSourceFirstTimeContent } from "../components/UserPremiumSour
 import { MetaPremiumSync } from "../drawers/MetaPremiumSync";
 import { useDialog } from "@/hooks/useDialog";
 import { PaymentDialog } from "../dialogs/payment-dialog/PaymentDialog";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 const Title = styled(Typography)`
     color: #202124;
@@ -127,6 +128,8 @@ export const UserPremiumSourcesPage: FC = () => {
 		open: openPayment,
 		close: closePayment,
 	} = useDialog();
+
+	useZohoChatToggle(paymentOpen || syncDrawerOpen);
 
 	const [{ data: premiumSourcesData, loading }, refetchSources, cancelSources] =
 		useGetPremiumSources();

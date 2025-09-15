@@ -1033,7 +1033,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 														}}
 													/>
 													<FormControlLabel
-														value="added_to_cart"
+														value="abandoned_cart"
 														control={
 															<Radio
 																sx={{

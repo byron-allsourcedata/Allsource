@@ -165,7 +165,7 @@ export const SyncFilter: FC<Props> = ({
 							}}
 						/>
 						<FormControlLabel
-							value="added_to_cart"
+							value="abandoned_cart"
 							control={
 								<Radio
 									sx={{
