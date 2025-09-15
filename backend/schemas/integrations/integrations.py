@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Any, Optional, List
+from typing import Optional, List
 from enum import Enum
 from uuid import UUID
 
@@ -202,12 +202,6 @@ class OrderAPI(BaseModel):
 class ListFromIntegration(BaseModel):
     id: str
     list_name: str
-
-
-class StatusFromIntegration(BaseModel):
-    status: str
-    http_status: int | None = None
-    body: Any | None = None
 
 
 class ReqestList(BaseModel):
