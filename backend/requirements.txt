@@ -47,7 +47,7 @@ email_validator==2.1.1
 environs==11.0.0
 et-xmlfile==1.1.0
 exceptiongroup==1.2.2
-facebook_business==23.0.0
+facebook_business==23.0.3
 Faker==35.2.0
 fastapi==0.115.8
 fastapi-cli==0.0.4
