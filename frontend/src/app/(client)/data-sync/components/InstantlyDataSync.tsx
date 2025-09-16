@@ -224,7 +224,7 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 			});
 			setInstantlyList(response.data);
 			const foundItem = response.data?.find(
-				(item: any) => item.list_name === data?.name,
+				(item: any) => item.list_name === data?.list_name,
 			);
 			if (foundItem) {
 				setUpdateKlaviuo(data.id);
@@ -241,7 +241,7 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 		} catch (error) {}
 	};
 	useEffect(() => {
-		if (open && !data) {
+		if (open) {
 			getInstantlyList();
 		}
 	}, [open]);
@@ -289,6 +289,8 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 						integrations_users_sync_id: data.id,
 						leads_type: selectedRadioValue,
 						data_map: customFields,
+						list_id: list?.id,
+						list_name: list?.list_name,
 					},
 					{
 						params: {

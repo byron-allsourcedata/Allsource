@@ -32,6 +32,7 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "../../data-sync/components/MailchimpDatasync";
+import InstantlyDatasync from "../../data-sync/components/InstantlyDataSync";
 import OmnisendDataSync from "../../data-sync/components/OmnisendDataSync";
 import SendlaneDatasync from "../../data-sync/components/SendlaneDatasync";
 import S3Datasync from "../../data-sync/components/S3Datasync";
@@ -102,6 +103,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false);
+	const [instantlyIconPopupOpen, setInstantlyIconPopupOpen] = useState(false);
 	const [omnisendIconPopupOpen, setOmnisendIconPopupOpen] = useState(false);
 
 	const [totalRows, setTotalRows] = useState(0);
@@ -568,6 +570,23 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		} catch (error) {}
 	};
 
+	const handleInstantlyIconPopupClose = async () => {
+		setInstantlyIconPopupOpen(false);
+		setSelectedId(null);
+		try {
+			const response = await axiosInstance.get(
+				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
+			);
+			if (response) {
+				setData((prevData) =>
+					prevData.map((item) =>
+						item.id === selectedId ? { ...item, ...response.data } : item,
+					),
+				);
+			}
+		} catch (error) {}
+	};
+
 	const handleOmnisendIconPopupClose = async () => {
 		setOmnisendIconPopupOpen(false);
 		setSelectedId(null);
@@ -616,6 +635,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setSalesForceIconPopupOpen(true);
 			} else if (dataSyncPlatform === "go_high_level") {
 				setOpenGoHighLevelIconPopup(true);
+			} else if (dataSyncPlatform === "instantly") {
+				setInstantlyIconPopupOpen(true);
 			}
 
 			setIsLoading(false);
@@ -627,6 +648,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		klaviyoIconPopupOpen ||
 			metaIconPopupOpen ||
 			mailchimpIconPopupOpen ||
+			instantlyIconPopupOpen ||
 			omnisendIconPopupOpen ||
 			openSendlaneConnect ||
 			openS3Connect ||
@@ -1372,7 +1394,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.contacts}
+												{row.contacts?.toLocaleString("en-US")}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1434,7 +1456,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														</Typography>
 													</Tooltip>
 												) : (
-													row.validation_contacts
+													row.validation_contacts?.toLocaleString("en-US")
 												)}
 											</SmartCell>
 											<SmartCell
@@ -1452,7 +1474,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.synced_contacts}
+												{row.synced_contacts?.toLocaleString("en-US")}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1822,6 +1844,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<MailchimpDatasync
 						open={mailchimpIconPopupOpen}
 						onClose={handleMailchimpIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
+				)}
+				{instantlyIconPopupOpen && isEdit === true && (
+					<InstantlyDatasync
+						open={instantlyIconPopupOpen}
+						onClose={handleInstantlyIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}
 						isEdit={isEdit}
 					/>
