@@ -96,7 +96,9 @@ class PremiumSourceSyncFiller:
             )
 
             if not unprocessed_rows:
-                self.mark_source_as_done(premium_source_id)
+                self.mark_source_as_done(sync_id)
+                self.db.commit()
+                return
             else:
                 await self.send_batch_for_processing(unprocessed_rows)
 
@@ -136,17 +138,16 @@ class PremiumSourceSyncFiller:
 
         await self.queue.publish(batch)
 
-    def mark_source_as_done(self, premium_source_id: UUID) -> None:
+    def mark_source_as_done(self, sync_id: UUID) -> None:
         """
-        Updates the status of a PremiumSource to 'done' in the primary database.
+        Updates the status of a PremiumSourceSync to 'done' in the primary database.
         """
         logger.info(
-            f"Premium source sync ({premium_source_id}) is complete. Marking it as 'done'."
+            f"Premium source sync ({sync_id}) is complete. Marking it as 'done'."
         )
         stmt = (
-            update(PremiumSource)
-            .where(PremiumSource.id == premium_source_id)
+            update(PremiumSourceSync)
+            .where(PremiumSourceSync.id == sync_id)
             .values(status="done")
         )
-
-        _ = self.db.execute(stmt)
+        self.db.execute(stmt)
