@@ -132,6 +132,7 @@ class PremiumSourceSyncFiller:
 
             if not rows:
                 self.mark_source_as_done(sync_id)
+                self.db.commit()
                 return
 
             batch = UnprocessedPremiumSourceBatch(
