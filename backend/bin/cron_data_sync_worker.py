@@ -269,6 +269,7 @@ async def ensure_integration(
             "s3": integration_service.s3,
             "go_high_level": integration_service.go_high_level,
             "customer_io": integration_service.customer_io,
+            "instantly": integration_service.instantly,
         }
         lead_user_ids = [t.lead_users_id for t in lead_user_data]
         service = service_map.get(service_name)

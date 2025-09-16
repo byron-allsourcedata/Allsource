@@ -5,6 +5,7 @@ from aio_pika import Message, connect_robust
 import json
 import logging
 
+from aio_pika.abc import AbstractChannel
 from pydantic import BaseModel
 
 from schemas.scripts.audience_source import MessageBody
@@ -38,9 +39,9 @@ class RabbitMQConnection:
 
 
 async def publish_rabbitmq_message_with_channel(
-    channel,
+    channel: AbstractChannel,
     queue_name: str,
-    message_body: Union[MessageBody, Mapping[str, object], dict],
+    message_body: MessageBody | Mapping[str, object] | dict[str, str],
 ):
     try:
         if isinstance(message_body, BaseModel):
@@ -49,6 +50,6 @@ async def publish_rabbitmq_message_with_channel(
             json_data = json.dumps(message_body).encode("utf-8")
 
         message = Message(body=json_data)
-        await channel.default_exchange.publish(message, routing_key=queue_name)
+        _ = await channel.default_exchange.publish(message, routing_key=queue_name)
     except Exception as e:
         logger.error(e)

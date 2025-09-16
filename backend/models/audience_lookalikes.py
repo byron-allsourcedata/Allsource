@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import uuid
 
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy import (
@@ -12,6 +13,7 @@ from sqlalchemy import (
     text,
     String,
 )
+from sqlalchemy.orm import Mapped, mapped_column
 
 from enums import LookalikeStatus
 from .base import Base
@@ -20,42 +22,50 @@ from .base import Base
 class AudienceLookalikes(Base):
     __tablename__ = "audience_lookalikes"
 
-    id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         nullable=False,
         server_default=text("gen_random_uuid()"),
     )
-    name = Column(String(128), nullable=False)
-    lookalike_size = Column(String(32), nullable=False)
-    status = Column(
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    lookalike_size: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[LookalikeStatus] = mapped_column(
         String(32), nullable=False, server_default=LookalikeStatus.NEW.value
     )
-    created_date = Column(
+    created_date: Mapped[datetime] = mapped_column(
         TIMESTAMP,
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    user_id = Column(
+    user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    created_by_user_id = Column(
+    created_by_user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    processed_size = Column(Integer, server_default="0", nullable=False)
-    size = Column(Integer, server_default="0", nullable=False)
-    source_uuid = Column(
+    processed_size: Mapped[int] = mapped_column(
+        Integer, server_default="0", nullable=False
+    )
+    size: Mapped[int] = mapped_column(Integer, server_default="0", nullable=False)
+    source_uuid: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("audience_sources.id", ondelete="CASCADE"),
         nullable=False,
     )
-    significant_fields = Column(JSON, nullable=True)
-    similarity_score = Column(JSON, nullable=True)
-    insights = Column(BYTEA, nullable=True)
-    processed_train_model_size = Column(
+    significant_fields: Mapped[dict[str, str] | None] = mapped_column(
+        JSON, nullable=True
+    )
+    similarity_score: Mapped[dict[str, str] | None] = mapped_column(
+        JSON, nullable=True
+    )
+    insights: Mapped[bytes | None] = mapped_column(BYTEA, nullable=True)
+    processed_train_model_size: Mapped[int] = mapped_column(
         Integer, server_default="0", nullable=False
     )
-    train_model_size = Column(Integer, server_default="0", nullable=False)
+    train_model_size: Mapped[int] = mapped_column(
+        Integer, server_default="0", nullable=False
+    )
 
     __table_args__ = (
         Index(

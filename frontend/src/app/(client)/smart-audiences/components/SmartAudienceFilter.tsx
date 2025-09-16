@@ -528,7 +528,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									"Validating",
 								]}
 								onOptionToggle={handleTypeChange}
-								placeholder="Select Status"
+								placeholder="Select Type"
 								sx={{ pt: 1, pl: 2 }}
 							/>
 						</Collapse>

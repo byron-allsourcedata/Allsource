@@ -93,6 +93,7 @@ class IntegrationCredentials(BaseModel):
     s3: Optional[S3Credentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     customer_io: Optional[CustomerIoCredentials] = None
+    instantly: Optional[CustomerIoCredentials] = None
 
     pixel_install: bool = False
     supperssion: bool = False
@@ -133,6 +134,14 @@ class Campaign(BaseModel):
     bid_amount: Optional[str] = None
 
 
+class LeadsType(str, Enum):
+    ALL_CONTACTS = "allContacts"
+    CONVERTED_SALES = "converted_sales"
+    VIEWED_PRODUCT = "viewed_product"
+    VISITOR = "visitor"
+    ABANDONED_CART = "abandoned_cart"
+
+
 class SyncCreate(BaseModel):
     list_id: Optional[str] = None
     tags_id: Optional[str] = None
@@ -141,7 +150,7 @@ class SyncCreate(BaseModel):
     webhook_url: Optional[str] = None
     method: Optional[str] = None
     integrations_users_sync_id: Optional[int] = None
-    leads_type: Optional[str] = "allContacts"
+    leads_type: LeadsType = LeadsType.ALL_CONTACTS
     data_map: Optional[List[DataMap]] = None
     campaign: Optional[Campaign] = None
 

@@ -170,7 +170,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			openOmnisendConnect,
 	);
 
-	const paginationProps = usePagination(totalRows ?? 0);
+	const paginationProps = usePagination(totalRows);
+	const { page, rowsPerPage } = paginationProps;
 	const handleCloseIntegrate = () => {
 		setOpenMetaConnect(false);
 		setOpenKlaviyoConnect(false);

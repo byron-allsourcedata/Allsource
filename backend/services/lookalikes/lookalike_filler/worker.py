@@ -1,3 +1,6 @@
+"""
+This file is a workaround for python's atrocius multithreading support and issues that pickling causes
+"""
 import logging
 import time
 from typing import Any, cast
@@ -9,7 +12,7 @@ from pandas import DataFrame
 from sqlalchemy import update
 
 from config.clickhouse import ClickhouseConfig
-from config.util import get_int_env
+from config.lookalikes import LookalikesConfig
 from db_dependencies import get_db
 from models.audience_lookalikes import AudienceLookalikes
 from schemas.similar_audiences import NormalizationConfig
@@ -35,7 +38,7 @@ def calculate_score_batches(
     normalization_service = AudienceDataNormalizationServiceBase()
     df_normed, _ = normalization_service.normalize_dataframe(df, config)
     result = model.predict(
-        df_normed, thread_count=get_int_env("LOOKALIKE_THREAD_COUNT")
+        df_normed, thread_count=LookalikesConfig.THREAD_COUNT
     )
     return result.tolist()
 
@@ -118,7 +121,7 @@ def filler_worker(
     limit: int | None = None,
 ) -> list[PersonScore]:
     db = next(get_db())
-    BULK_SIZE: int = get_int_env("LOOKALIKE_BULK_SIZE")
+    BULK_SIZE: int = LookalikesConfig.BULK_SIZE
 
     rows_stream, column_names = get_enrichment_users_partition(
         significant_fields=significant_fields,

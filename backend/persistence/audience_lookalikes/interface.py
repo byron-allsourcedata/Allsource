@@ -38,5 +38,9 @@ class AudienceLookalikesPersistenceInterface(abc.ABC):
         pass
 
     @abstractmethod
-    def update_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+    def update_total_dataset_size(self, lookalike_id: UUID, dataset_size: int):
+        pass
+
+    @abstractmethod
+    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
         pass

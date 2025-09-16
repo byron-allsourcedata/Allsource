@@ -1,6 +1,8 @@
 from typing import TypedDict
 from uuid import UUID
 
+from aio_pika.abc import AbstractChannel
+
 from resolver import injectable
 from services.rabbitmq import RabbitmqService
 
@@ -18,7 +20,7 @@ class RabbitLookalikesMatchingService:
         self.rabbit = rabbit
 
     async def inform_lookalike_agent(
-        self, channel, lookalike_id: UUID, user_id: int
+        self, channel: AbstractChannel, lookalike_id: UUID, user_id: int
     ):
         message_body = LookalikesMatchingMessage(
             lookalike_id=str(lookalike_id), user_id=user_id

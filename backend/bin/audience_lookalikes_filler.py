@@ -1,17 +1,22 @@
+"""
+# Lookalikes
+
+The lookalikes scripts are responsible for creating lookalikes from a given source.
+
+This script performs the scoring of persons and sends them over RabbitMQ for further processing.
+
+Details about scoring are in `LookalikeFillerService.process_lookalike_pipeline`
+"""
+
 import asyncio
 import json
 import logging
-import os
 import sys
 
 import aio_pika
 from dotenv import load_dotenv
 
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
-
-from services.lookalikes import AudienceLookalikesService
+from services.lookalikes.service import AudienceLookalikesService
 from enums import LookalikeStatus
 from config.util import get_int_env
 from db_dependencies import Db
@@ -25,7 +30,7 @@ from config.rmq_connection import (
 )
 from sqlalchemy.orm import Session
 
-from services.lookalike_filler import LookalikeFillerService
+from services.lookalikes.lookalike_filler import LookalikeFillerService
 
 
 load_dotenv()
