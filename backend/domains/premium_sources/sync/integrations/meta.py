@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID, uuid4
 from venv import logger
 
@@ -16,6 +17,13 @@ from models.premium_source_syncs.meta import MetaPremiumSourceSync
 from resolver import injectable
 from schemas.integrations.integrations import MetaCredentials
 from services.integrations.meta import MetaIntegrationsService
+from domains.premium_sources.sync.config import (
+    META_BATCH_SIZE,
+    SYNC_API_CONCURRENCY,
+    RETRY_ATTEMPTS,
+    RETRY_BACKOFF_BASE,
+)
+from domains.premium_sources.sync.utils import run_blocking
 
 
 @injectable
@@ -141,10 +149,9 @@ class MetaPremiumSourceSyncService:
             meta_sync_details.list_id,
         )
 
-    def sync_premium_source_batch(self, batch: UnprocessedPremiumSourceBatch):
-        """
-        Raises `IntegrationNotFound`
-        """
+    async def sync_premium_source_batch(
+        self, batch: UnprocessedPremiumSourceBatch
+    ):
         user_integration = self.sync_repo.credentials_by_premium_sync_id(
             batch.premium_source_sync_id
         )
@@ -154,14 +161,44 @@ class MetaPremiumSourceSyncService:
         access_token, customer_id, list_id = self.get_meta_credentials(
             batch.premium_source_sync_id, user_integration
         )
-
         hashes = [row.sha256_email for row in batch.rows]
 
-        try:
-            hashed_emails_result = self.meta.add_hashed_emails_to_list(
-                access_token, list_id, hashes
-            )
+        sem = asyncio.Semaphore(SYNC_API_CONCURRENCY)
+        loop = asyncio.get_running_loop()
 
-            logger.debug(f"sent hashed emails to meta: {hashed_emails_result}")
-        except Exception as e:
-            logger.error(e)
+        async def send_chunk(chunk):
+            async with sem:
+                attempt = 0
+                while True:
+                    try:
+                        return await run_blocking(
+                            self.meta.add_hashed_emails_to_list,
+                            access_token,
+                            list_id,
+                            chunk,
+                        )
+                    except Exception as e:
+                        attempt += 1
+                        if attempt >= RETRY_ATTEMPTS:
+                            logger.exception("Meta chunk failed after retries")
+                            raise
+                        backoff = RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                        logger.warning(
+                            f"Meta chunk failed, retrying after {backoff}s (attempt {attempt})"
+                        )
+                        await asyncio.sleep(backoff)
+
+        tasks = []
+        for i in range(0, len(hashes), META_BATCH_SIZE):
+            chunk = hashes[i : i + META_BATCH_SIZE]
+            tasks.append(asyncio.create_task(send_chunk(chunk)))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for r in results:
+            if isinstance(r, Exception):
+                raise r
+
+        logger.debug(
+            f"sent {len(hashes)} hashed emails to meta in {len(tasks)} chunks"
+        )

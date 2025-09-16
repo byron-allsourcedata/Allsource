@@ -8,6 +8,8 @@ from config.rmq_connection import RabbitMQConnection
 from db_dependencies import Rmq
 from domains.premium_sources.sync.schemas import UnprocessedPremiumSourceBatch
 from resolver import injectable
+from domains.premium_sources.sync.config import QUEUE_PREFETCH
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,7 @@ class QueueService(Generic[T]):
         rmq_connection = RabbitMQConnection()
         connection = await rmq_connection.connect()
         channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+        await channel.set_qos(prefetch_count=QUEUE_PREFETCH)
 
         queue = await channel.declare_queue(
             name=self.queue_name,
@@ -94,7 +96,11 @@ class QueueService(Generic[T]):
             try:
                 await handler(message)
             except Exception:
-                await handler(message)
+                logger.exception("handler raised exception, nack and requeue")
+                try:
+                    await message.nack(requeue=True)
+                except Exception:
+                    logger.exception("failed to nack message")
 
     async def fetch(self, timeout: int = 60) -> AbstractIncomingMessage:
         """

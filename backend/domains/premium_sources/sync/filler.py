@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from uuid import UUID
 from sqlalchemy import select, update
@@ -16,6 +17,11 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.premium_source import PremiumSource
 from models.premium_source_sync import PremiumSourceSync
 from resolver import injectable
+from domains.premium_sources.sync.config import (
+    FILLER_CONCURRENCY,
+    META_BATCH_SIZE,
+    GOOGLE_BATCH_SIZE,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -73,32 +79,67 @@ class PremiumSourceSyncFiller:
     async def handle_batches_for_syncs(
         self, unprocessed_syncs: list[tuple[UUID, UUID, int]]
     ):
+        sem = asyncio.Semaphore(FILLER_CONCURRENCY)
+        tasks = []
         for (
             sync_id,
             premium_source_id,
             user_integration_id,
         ) in unprocessed_syncs:
+            tasks.append(
+                asyncio.create_task(
+                    self._handle_one_sync(
+                        sem, sync_id, premium_source_id, user_integration_id
+                    )
+                )
+            )
+        await asyncio.gather(*tasks)
+
+    async def _handle_one_sync(
+        self, sem, sync_id, premium_source_id, user_integration_id
+    ):
+        async with sem:
             logger.info(
                 f"Checking for unprocessed rows for sync {sync_id} in source {premium_source_id}."
             )
-            unprocessed_rows = self.sync_log.get_unprocessed_batch(
+
+            in_progress_rows = self.sync_log.get_unprocessed_batch(
+                premium_source_id, sync_id
+            )
+            if len(in_progress_rows) > 0:
+                logger.info(
+                    f"sync {sync_id} already has in-progress rows: {len(in_progress_rows)}"
+                )
+                return
+
+            integration = self.db.execute(
+                select(UserIntegration).where(
+                    UserIntegration.id == user_integration_id
+                )
+            ).scalar_one_or_none()
+            if integration and integration.service_name == "google_ads":
+                batch_size = GOOGLE_BATCH_SIZE
+            else:
+                batch_size = META_BATCH_SIZE
+
+            self.sync_log.mark_unprocessed_batch(
+                premium_source_id, sync_id, batch_size
+            )
+
+            rows = self.sync_log.get_unprocessed_batch(
                 premium_source_id, sync_id
             )
 
-            if len(unprocessed_rows) > 0:
-                logger.info(
-                    f"sync {sync_id} has unprocessed rows {len(unprocessed_rows)}"
-                )
-                continue
-
-            unprocessed_rows = self.claim_unprocessed_batch(
-                sync_id, premium_source_id, user_integration_id, 100
-            )
-
-            if not unprocessed_rows:
+            if not rows:
                 self.mark_source_as_done(premium_source_id)
-            else:
-                await self.send_batch_for_processing(unprocessed_rows)
+                return
+
+            batch = UnprocessedPremiumSourceBatch(
+                premium_source_id=premium_source_id,
+                premium_source_sync_id=sync_id,
+                rows=rows,
+            )
+            await self.send_batch_for_processing(batch)
 
     def claim_unprocessed_batch(
         self,
