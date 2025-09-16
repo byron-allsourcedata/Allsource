@@ -49,6 +49,7 @@ from .shopify import ShopifyIntegrationService
 from .slack import SlackService
 from .webhook import WebhookIntegrationService
 from .zapier import ZapierIntegrationService
+from .instantly import InstantlyIntegrationsService
 
 
 @injectable
@@ -85,6 +86,7 @@ class IntegrationService:
         go_high_level: GoHighLevelIntegrationsService,
         linked_in: LinkedinIntegrationsService,
         customer_io: CustomerIoIntegrationsService,
+        instantly: InstantlyIntegrationsService,
     ):
         self.db = db
         self.client = httpx.Client(
@@ -123,6 +125,7 @@ class IntegrationService:
         self.go_high_level = go_high_level
         self.linked_in = linked_in
         self.customer_io = customer_io
+        self.instantly = instantly
 
     def __enter__(self):
         return self

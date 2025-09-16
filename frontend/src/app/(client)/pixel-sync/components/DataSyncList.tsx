@@ -394,6 +394,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				return (
 					<Image src={"/bing-ads.svg"} alt="bingAds" width={18} height={18} />
 				);
+			case "instantly":
+				return (
+					<Image
+						src={"/instantly-icon.svg"}
+						alt="bingAds"
+						width={18}
+						height={18}
+					/>
+				);
 			default:
 				return null;
 		}
