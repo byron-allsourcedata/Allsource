@@ -202,6 +202,24 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		setKlaviyoIconPopupOpen(true);
 	};
 
+	const handleKlaviyoIconPopupClose = () => {
+		setKlaviyoIconPopupOpen(false);
+		setPlusIconPopupOpen(false);
+	};
+
+	const handleOpenInstantlyConnect = () => {
+		setOpeninstantlyConnect(true);
+	};
+
+	const handleInstantlyIconPopupIconOpen = () => {
+		setOpenInstantlyIconPopup(true);
+	};
+
+	const handleInstantlyIconPopupClose = () => {
+		setOpenInstantlyIconPopup(false);
+		setPlusIconPopupOpen(false);
+	};
+
 	const handleBingAdsIconPopupOpen = () => {
 		setBingAdsIconPopupOpen(true);
 	};
@@ -246,11 +264,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		setOpenHubspotIconPopupOpen(true);
 	};
 
-	const handleKlaviyoIconPopupClose = () => {
-		setKlaviyoIconPopupOpen(false);
-		setPlusIconPopupOpen(false);
-	};
-
 	const handleSalesForceIconPopupClose = () => {
 		setSalesForceIconPopupOpen(false);
 		setPlusIconPopupOpen(false);
@@ -258,10 +271,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleOpenMailchimpConnect = () => {
 		setOpenmailchimpConnect(true);
-	};
-
-	const handleOpenInstantlyConnect = () => {
-		setOpeninstantlyConnect(true);
 	};
 
 	const handleSlackIconPopupIconOpen = () => {
@@ -278,10 +287,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleMailchimpIconPopupIconOpen = () => {
 		setOpenMailchimpIconPopup(true);
-	};
-
-	const handleInstantlyIconPopupIconOpen = () => {
-		setOpenInstantlyIconPopup(true);
 	};
 
 	const handleCreateSlackOpen = () => {
@@ -302,11 +307,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleMailchimpIconPopupIconClose = () => {
 		setOpenMailchimpIconPopup(false);
-		setPlusIconPopupOpen(false);
-	};
-
-	const handleInstantlyIconPopupIconClose = () => {
-		setOpenInstantlyIconPopup(false);
 		setPlusIconPopupOpen(false);
 	};
 
@@ -779,6 +779,12 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				onClose={handleKlaviyoIconPopupClose}
 				onCloseCreateSync={onClose}
 			/>
+			<InstantlyDatasync
+				open={instantlyIconPopupOpen}
+				onClose={handleInstantlyIconPopupClose}
+				onCloseCreateSync={onClose}
+				data={null}
+			/>
 			<BingAdsDataSync
 				open={bingAdsIconPopupOpen}
 				onClose={handleBingAdsIconPopupClose}
@@ -848,12 +854,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			<MailchimpDatasync
 				open={mailchimpIconPopupOpen}
 				onClose={handleMailchimpIconPopupIconClose}
-				onCloseCreateSync={onClose}
-				data={null}
-			/>
-			<InstantlyDatasync
-				open={instantlyIconPopupOpen}
-				onClose={handleInstantlyIconPopupIconClose}
 				onCloseCreateSync={onClose}
 				data={null}
 			/>

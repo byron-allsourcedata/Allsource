@@ -182,6 +182,21 @@ class InstantlyIntegrationsService:
             if self._is_name_validation_error(
                 body, http_status
             ) or http_status in (400, 422):
+                get_list_resp = self.get_list(
+                    user_id=user.get("id"), domain_id=domain_id, api_key=api_key
+                )
+
+                if (
+                    get_list_resp
+                    == ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+                ):
+                    raise HTTPException(
+                        status_code=403,
+                        detail={
+                            "status": "Insufficient permissions for Get Lists",
+                        },
+                    )
+
                 ok, code = self.create_lead_single(
                     api_key=api_key, lead_payload={"email": ""}
                 )
@@ -292,15 +307,21 @@ class InstantlyIntegrationsService:
             "body": body,
         }
 
-    def get_list(self, user_id: int, domain_id: int):
+    def get_list(self, user_id: int, domain_id: int, api_key: str = None):
         credentials = self._get_credentials(domain_id, user_id)
 
         try:
             response = self.__handle_request(
                 method="GET",
                 url=f"{self.BASE_URL}/lead-lists",
-                api_key=credentials.access_token,
+                api_key=credentials.access_token
+                if credentials
+                else api_key
+                if api_key
+                else "",
             )
+            if response.status_code in (401, 403):
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
             data = response.json()
             lists = data["items"]
             if len(lists):
@@ -309,10 +330,11 @@ class InstantlyIntegrationsService:
                     for l in lists
                 ]
         except requests.HTTPError as e:
-            credentials.error_message = str(e)
-            credentials.is_failed = True
-            self.integrations_persistence.db.commit()
-            return None
+            if credentials:
+                credentials.error_message = str(e)
+                credentials.is_failed = True
+                self.integrations_persistence.db.commit()
+            return ProccessDataSyncResult.UNEXPECTED_ERROR.value
 
     async def process_data_sync_lead(
         self,
