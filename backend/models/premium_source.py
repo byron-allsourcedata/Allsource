@@ -48,16 +48,6 @@ class PremiumSource(Base):
         default=func.now(),
         server_default=text("now()"),
     )
-    status: Mapped[str] = mapped_column(
-        String(32), nullable=False, server_default="new"
-    )
-    """
-    Processing status of the premium source:
-    - new
-    - in_progress
-    - done
-    - failed
-    """
 
 
 event.listen(PremiumSource, "before_update", update_timestamps)
