@@ -753,7 +753,7 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 					}}
 				>
 					<UserTip
-						limit={60}
+						limit={100}
 						service="Instantly"
 						sx={{
 							width: "100%",

@@ -75,7 +75,7 @@ class IntegrationLimit(Enum):
     LINKEDIN = 100
     GO_HIGH_LEVEL = 50
     CUSTOMER_IO = 200
-    INSTANTLY = 60
+    INSTANTLY = 100
 
 
 class BusinessType(Enum):

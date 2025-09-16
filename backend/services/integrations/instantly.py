@@ -5,6 +5,9 @@ import requests
 from datetime import date, datetime
 from typing import Tuple
 
+import httpx
+from aiolimiter import AsyncLimiter
+
 from fastapi import HTTPException
 
 from enums import (
@@ -58,6 +61,14 @@ class InstantlyIntegrationsService:
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
         self.client = requests.Session()
+
+        limits = httpx.Limits(max_connections=100, max_keepalive_connections=20)
+        timeout = httpx.Timeout(10.0, connect=5.0, read=20.0)
+
+        self.async_client = httpx.AsyncClient(
+            base_url=self.BASE_URL, limits=limits, timeout=timeout
+        )
+        self.global_limiter = AsyncLimiter(100, 10.0)
 
     def __handle_request(
         self,
@@ -336,24 +347,119 @@ class InstantlyIntegrationsService:
                 self.integrations_persistence.db.commit()
             return ProccessDataSyncResult.UNEXPECTED_ERROR.value
 
+    # async def process_data_sync_lead(
+    #     self,
+    #     user_integration: UserIntegration,
+    #     integration_data_sync: IntegrationUserSync,
+    #     user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+    #     is_email_validation_enabled: bool,
+    #     requests_limit_per_minute: int = 60,
+    # ):
+    #     interval = 60.0 / float(
+    #         max(1, requests_limit_per_minute)
+    #     )  # seconds between requests
+    #     results = []
+
+    #     list_id = (
+    #         integration_data_sync.list_id
+    #         if integration_data_sync.list_id
+    #         else None
+    #     )
+
+    #     for lead_user, five_x_five_user in user_data:
+    #         mapped = await self.__map_lead_to_instantly_contact(
+    #             five_x_five_user,
+    #             integration_data_sync.data_map,
+    #             is_email_validation_enabled,
+    #         )
+
+    #         if mapped in (
+    #             ProccessDataSyncResult.INCORRECT_FORMAT.value,
+    #             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+    #             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+    #         ):
+    #             results.append({"lead_id": lead_user.id, "status": mapped})
+    #             # throttle between iterations anyway
+    #             await asyncio.sleep(interval)
+    #             continue
+
+    #         payload = dict(mapped)
+    #         if list_id:
+    #             payload["list_id"] = list_id
+
+    #         ok, info = await asyncio.to_thread(
+    #             self.create_lead_single, payload, user_integration
+    #         )
+    #         logging.info(f"[PROCESS] success={ok} | status={info}")
+
+    #         if ok:
+    #             results.append(
+    #                 {
+    #                     "lead_id": lead_user.id,
+    #                     "status": ProccessDataSyncResult.SUCCESS.value,
+    #                 }
+    #             )
+    #         else:
+    #             if info == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
+    #                 results.append(
+    #                     {
+    #                         "lead_id": lead_user.id,
+    #                         "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+    #                     }
+    #                 )
+    #                 idx = user_data.index((lead_user, five_x_five_user))
+    #                 remaining = user_data[idx + 1 :]
+    #                 for future_lead, _ in remaining:
+    #                     results.append(
+    #                         {
+    #                             "lead_id": future_lead.id,
+    #                             "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+    #                         }
+    #                     )
+    #                 return results
+    #             elif (
+    #                 info
+    #                 == ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
+    #             ):
+    #                 results.append(
+    #                     {
+    #                         "lead_id": lead_user.id,
+    #                         "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
+    #                     }
+    #                 )
+    #             else:
+    #                 results.append(
+    #                     {
+    #                         "lead_id": lead_user.id,
+    #                         "status": ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value,
+    #                     }
+    #                 )
+
+    #         # throttle to respect requests_limit_per_minute
+    #         # await asyncio.sleep(interval)
+
+    #     return results
+
     async def process_data_sync_lead(
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         user_data: List[Tuple[LeadUser, FiveXFiveUser]],
         is_email_validation_enabled: bool,
-        requests_limit_per_minute: int = 60,
+        wait_between_batches: float = 10.0,
     ):
-        interval = 60.0 / float(
-            max(1, requests_limit_per_minute)
-        )  # seconds between requests
         results = []
+        if not user_data:
+            return results
 
         list_id = (
             integration_data_sync.list_id
             if integration_data_sync.list_id
             else None
         )
+
+        tasks = []
+        leads_for_tasks = []
 
         for lead_user, five_x_five_user in user_data:
             mapped = await self.__map_lead_to_instantly_contact(
@@ -368,64 +474,89 @@ class InstantlyIntegrationsService:
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
                 results.append({"lead_id": lead_user.id, "status": mapped})
-                # throttle between iterations anyway
-                await asyncio.sleep(interval)
                 continue
 
             payload = dict(mapped)
             if list_id:
                 payload["list_id"] = list_id
 
-            ok, info = await asyncio.to_thread(
-                self.create_lead_single, payload, user_integration
-            )
-            logging.info(f"[PROCESS] success={ok} | status={info}")
+            # task = asyncio.create_task(asyncio.to_thread(self.create_lead_single, payload, user_integration))
+            # tasks.append(task)
+            # leads_for_tasks.append(lead_user)
+            task_coro = self.create_lead_single_async(user_integration, payload)
+            task = asyncio.create_task(task_coro)
+            tasks.append(task)
+            leads_for_tasks.append(lead_user)
 
-            if ok:
-                results.append(
-                    {
-                        "lead_id": lead_user.id,
-                        "status": ProccessDataSyncResult.SUCCESS.value,
-                    }
-                )
-            else:
-                if info == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
-                    results.append(
-                        {
-                            "lead_id": lead_user.id,
-                            "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                        }
+        if tasks:
+            task_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for lead_user, res in zip(leads_for_tasks, task_results):
+                if isinstance(res, Exception):
+                    logging.exception(
+                        "create_lead_single unexpected exception for lead_id=%s",
+                        lead_user.id,
                     )
-                    idx = user_data.index((lead_user, five_x_five_user))
-                    remaining = user_data[idx + 1 :]
-                    for future_lead, _ in remaining:
-                        results.append(
-                            {
-                                "lead_id": future_lead.id,
-                                "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-                            }
-                        )
-                    return results
-                elif (
-                    info
-                    == ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
-                ):
-                    results.append(
-                        {
-                            "lead_id": lead_user.id,
-                            "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                        }
-                    )
-                else:
                     results.append(
                         {
                             "lead_id": lead_user.id,
                             "status": ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value,
                         }
                     )
+                    continue
 
-            # throttle to respect requests_limit_per_minute
-            # await asyncio.sleep(interval)
+                ok, info = res
+
+                if ok:
+                    results.append(
+                        {
+                            "lead_id": lead_user.id,
+                            "status": ProccessDataSyncResult.SUCCESS.value,
+                        }
+                    )
+                else:
+                    code = (
+                        (info or "").lower() if isinstance(info, str) else info
+                    )
+                    if (
+                        code
+                        == ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+                    ):
+                        results.append(
+                            {
+                                "lead_id": lead_user.id,
+                                "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                            }
+                        )
+                        processed_ids = {r["lead_id"] for r in results}
+                        for lu, _ in user_data:
+                            if lu.id not in processed_ids:
+                                results.append(
+                                    {
+                                        "lead_id": lu.id,
+                                        "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                                    }
+                                )
+                        return results
+                    elif (
+                        code
+                        == ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
+                    ):
+                        results.append(
+                            {
+                                "lead_id": lead_user.id,
+                                "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                            }
+                        )
+                    else:
+                        results.append(
+                            {
+                                "lead_id": lead_user.id,
+                                "status": ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value,
+                            }
+                        )
+
+        # await asyncio.sleep(wait_between_batches)
 
         return results
 
@@ -504,6 +635,112 @@ class InstantlyIntegrationsService:
             "create_lead_single: unexpected %s %s", resp.status_code, body
         )
         return False, ProccessDataSyncResult.UNEXPECTED_ERROR.value
+
+    async def create_lead_single_async(
+        self,
+        user_integration,
+        lead_payload,
+        max_retries: int = 3,
+    ) -> tuple[bool, str]:
+        api_key = getattr(user_integration, "access_token", None)
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Accept": "application/json",
+        }
+
+        base_backoffs = [1.0, 2.0, 4.0]
+        attempts_total = max_retries + 1
+
+        for attempt in range(1, attempts_total + 1):
+            try:
+                async with self.global_limiter:
+                    resp = await self.async_client.post(
+                        "/leads", json=lead_payload, headers=headers
+                    )
+
+                try:
+                    _body = resp.json()
+                except Exception:
+                    _body = resp.text
+
+                status = resp.status_code
+
+                if status in (200, 201, 202):
+                    return True, ProccessDataSyncResult.SUCCESS.value
+
+                if status in (401, 403):
+                    return (
+                        False,
+                        ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                    )
+
+                if status in (400, 422):
+                    return (
+                        False,
+                        ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value,
+                    )
+
+                if status == 429:
+                    logging.warning("[Instantly]: TOO MANY REQUESTS")
+                    if attempt < attempts_total:
+                        backoff = base_backoffs[
+                            min(attempt - 1, len(base_backoffs) - 1)
+                        ]
+                        await asyncio.sleep(backoff)
+                        continue
+                    return False, ProccessDataSyncResult.TOO_MANY_REQUESTS.value
+
+                if 500 <= status < 600:
+                    logging.warning(
+                        "create_lead_single_async: server error %s on attempt %s",
+                        status,
+                        attempt,
+                    )
+                    if attempt < attempts_total:
+                        backoff = base_backoffs[
+                            min(attempt - 1, len(base_backoffs) - 1)
+                        ]
+                        await asyncio.sleep(backoff)
+                        continue
+                    return False, ProccessDataSyncResult.FAILED.value
+
+                logging.error(
+                    "create_lead_single_async: unexpected status %s on attempt %s: %s",
+                    status,
+                    attempt,
+                    _body,
+                )
+                return False, ProccessDataSyncResult.UNEXPECTED_ERROR.value
+
+            except (httpx.ReadTimeout, httpx.ConnectTimeout) as exc:
+                logging.warning(
+                    "[Instantly] create_lead_single_async: timeout on attempt %s: %s",
+                    attempt,
+                    exc,
+                )
+                if attempt < attempts_total:
+                    backoff = base_backoffs[
+                        min(attempt - 1, len(base_backoffs) - 1)
+                    ]
+                    await asyncio.sleep(backoff)
+                    continue
+                return False, ProccessDataSyncResult.FAILED.value
+
+            except (httpx.RequestError, httpx.RemoteProtocolError) as exc:
+                logging.exception(
+                    "create_lead_single_async: network error on attempt %s: %s",
+                    attempt,
+                    exc,
+                )
+                if attempt < attempts_total:
+                    backoff = base_backoffs[
+                        min(attempt - 1, len(base_backoffs) - 1)
+                    ]
+                    await asyncio.sleep(backoff)
+                    continue
+                return False, ProccessDataSyncResult.FAILED.value
+
+        return False, ProccessDataSyncResult.FAILED.value
 
     def edit_sync(
         self,
