@@ -249,6 +249,7 @@ class LeadsPersistence:
             "age": FiveXFiveUser.age_min,
             "status": LeadUser.is_returning_visitor,
             "funnel": LeadUser.behavior_type,
+            "time_spent": LeadsVisits.full_time_sec,
         }
         if sort_by:
             sort_column = sort_options[sort_by]
