@@ -164,7 +164,6 @@ class MetaPremiumSourceSyncService:
         hashes = [row.sha256_email for row in batch.rows]
 
         sem = asyncio.Semaphore(SYNC_API_CONCURRENCY)
-        loop = asyncio.get_running_loop()
 
         async def send_chunk(chunk):
             async with sem:
