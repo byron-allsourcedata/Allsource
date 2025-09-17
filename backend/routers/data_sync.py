@@ -209,14 +209,13 @@ async def edit_sync(
                 detail="Access denied. Admins and standard only.",
             )
     data = {k: v for k, v in data.model_dump().items() if v}
-    with integration_service as service:
-        service = getattr(service, service_name.lower())
-        service.edit_sync(
-            **data,
-            domain_id=domain.id,
-            user_id=user.get("id"),
-            created_by=user.get("full_name"),
-        )
+    service = getattr(integration_service, service_name.lower())
+    service.edit_sync(
+        **data,
+        created_by=user.get("full_name"),
+        user_id=user.get("id"),
+        domain_id=domain.id,
+    )
 
 
 @router.get("/sync/tags")
