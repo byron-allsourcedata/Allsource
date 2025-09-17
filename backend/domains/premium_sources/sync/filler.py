@@ -49,11 +49,13 @@ class PremiumSourceSyncFiller:
         self.queue = queue
         self.sync_log = sync_log
 
-    async def fill_processing_queue(self):
-        await self.queue.init()
+    async def fill_processing_queue(self) -> bool:
         unprocessed_syncs = self.get_unprocessed_syncs()
+        if not unprocessed_syncs:
+            return False
+
         await self.handle_batches_for_syncs(unprocessed_syncs)
-        logger.info("queue was closed")
+        return True
 
     def get_unprocessed_syncs(self):
         """

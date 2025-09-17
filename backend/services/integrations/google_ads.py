@@ -879,6 +879,9 @@ class GoogleAdsIntegrationsService:
         data_job_resource_name: str,
         operations: list[OfflineUserDataJobOperation],
     ):
+        logger.debug(
+            f"Google Ads: adding {len(operations)} operations to job {data_job_resource_name}"
+        )
         offline_user_data_job_service_client = client.get_service(
             "OfflineUserDataJobService"
         )
@@ -899,6 +902,9 @@ class GoogleAdsIntegrationsService:
 
         _ = offline_user_data_job_service_client.run_offline_user_data_job(
             resource_name=offline_user_data_job_resource_name
+        )
+        logger.info(
+            f"[Google Ads] Job {data_job_resource_name} started successfully"
         )
 
     def get_hashed_emails_data_job_operations(

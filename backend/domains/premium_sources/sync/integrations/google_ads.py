@@ -130,12 +130,20 @@ class GoogleAdsPremiumSourceSyncService:
 
         sem = asyncio.Semaphore(SYNC_API_CONCURRENCY)
 
+        logger.info(
+            f"Google Ads sync: preparing to send {len(hashes)} hashed emails "
+            f"to list {list_id} (customer_id={customer_id})"
+        )
+
         async def send_chunk(chunk):
             async with sem:
                 attempt = 0
                 while True:
                     try:
-                        # Если google_ads.add_users_to_list_hashed — sync, запустить в executor
+                        logger.debug(
+                            f"Google Ads sync: sending chunk of {len(chunk)} hashed emails "
+                            f"for list {list_id}"
+                        )
                         return await run_blocking(
                             self.google_ads.add_users_to_list_hashed,
                             access_token,
@@ -162,6 +170,11 @@ class GoogleAdsPremiumSourceSyncService:
             tasks.append(asyncio.create_task(send_chunk(chunk)))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        logger.info(
+            f"Successfully sent {len(hashes)} hashed emails to Google Ads"
+            f"(list_id={list_id}) in {len(tasks)} chunks"
+        )
 
         for r in results:
             if isinstance(r, Exception):

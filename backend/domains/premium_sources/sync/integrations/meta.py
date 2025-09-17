@@ -194,6 +194,10 @@ class MetaPremiumSourceSyncService:
             tasks.append(asyncio.create_task(send_chunk(chunk)))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
+        logger.info(
+            f"Successfully sent {len(hashes)} hashed emails to Meta "
+            f"(list_id={list_id}) in {len(tasks)} chunks"
+        )
 
         for r in results:
             if isinstance(r, Exception):

@@ -17,28 +17,30 @@ async def try_cleanup(resolver: Resolver):
 
 async def main(resolver: Resolver):
     logger.info("Starting...")
+    filler = await resolver.resolve(PremiumSourceSyncFiller)
+    await filler.queue.init()
     logger.info("Initialization completed")
+
     try:
         while True:
             try:
-                filler = await resolver.resolve(PremiumSourceSyncFiller)
                 logger.info("filling queue")
-                await filler.fill_processing_queue()
-                logger.info("cleaning up...")
-                await resolver.cleanup()
-                logger.info("sleeping...")
-                await asyncio.sleep(10)
+                did_publish = await filler.fill_processing_queue()
+
+                if did_publish:
+                    await asyncio.sleep(1)
+                else:
+                    await asyncio.sleep(10)
+
             except Exception as e:
                 logger.error(
                     "Error while filling processing queue for premium source sync",
                     exc_info=e,
                 )
                 await try_cleanup(resolver)
-    except Exception as e:
-        logger.error(
-            "Error while filling processing queue for premium source sync",
-            exc_info=e,
-        )
+    finally:
+        logger.info("Final cleanup...")
+        await try_cleanup(resolver)
 
 
 if __name__ == "__main__":

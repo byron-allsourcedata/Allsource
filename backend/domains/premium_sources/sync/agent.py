@@ -40,7 +40,9 @@ class PremiumSourceSyncAgent:
     async def sync_batches(self):
         await self.sync_queue.init()
         try:
-            await self.sync_queue.consume(self.parse_and_sync_batch)
+            await self.sync_queue.consume(
+                self.parse_and_sync_batch, concurrency=8
+            )
         except Exception:
             await sleep(5)
             logger.error("error", exc_info=True)

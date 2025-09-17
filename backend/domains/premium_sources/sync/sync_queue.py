@@ -1,6 +1,7 @@
 from collections.abc import Awaitable, Callable
 import logging
 from typing import Generic, TypeVar
+import asyncio
 from aio_pika import Message
 from aio_pika.abc import AbstractIncomingMessage, AbstractQueue
 from pydantic import BaseModel
@@ -88,19 +89,31 @@ class QueueService(Generic[T]):
             )
 
     async def consume(
-        self, handler: Callable[[AbstractIncomingMessage], Awaitable[None]]
+        self,
+        handler: Callable[[AbstractIncomingMessage], Awaitable[None]],
+        concurrency: int = 8,
     ):
         queue = self._get_queue()
-        queue_iter = queue.iterator()
-        async for message in queue_iter:
+        sem = asyncio.Semaphore(concurrency)
+        active_tasks: set[asyncio.Task] = set()
+
+        async def _run_handler(message: AbstractIncomingMessage):
+            await sem.acquire()
             try:
                 await handler(message)
             except Exception:
-                logger.exception("handler raised exception, nack and requeue")
-                try:
-                    await message.nack(requeue=True)
-                except Exception:
-                    logger.exception("failed to nack message")
+                logger.exception("Handler raised an exception")
+            finally:
+                sem.release()
+
+        async with queue.iterator() as queue_iter:
+            async for message in queue_iter:
+                task = asyncio.create_task(_run_handler(message))
+                active_tasks.add(task)
+                task.add_done_callback(lambda t: active_tasks.discard(t))
+
+        if active_tasks:
+            await asyncio.wait(active_tasks)
 
     async def fetch(self, timeout: int = 60) -> AbstractIncomingMessage:
         """
