@@ -10,6 +10,7 @@ import functools
 import json
 import time
 from decimal import Decimal
+from typing import Any
 from aio_pika import IncomingMessage, Channel
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
@@ -42,6 +43,11 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_AGENT_EMAIL_API = "aud_validation_agent_email-api"
 AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
+
+MAPPING = {
+    "personal_email": ("personal_email", "verified_personal_email"),
+    "business_email": ("business_email", "verified_business_email"),
+}
 
 
 def setup_logging(level):
@@ -150,6 +156,27 @@ async def process_bulk_validation(
     return file_id
 
 
+async def _generate_one_task(
+    million_verifier_service: MillionVerifierIntegrationsService,
+    person_id: int,
+    email: str,
+):
+    try:
+        (
+            is_ok,
+            subresult,
+        ) = await million_verifier_service._fetch_email_verify_wrapper(email)
+    except Exception as e:
+        setup_logging(
+            f"Error verifying email for id={person_id}, email={email}: {e}"
+        )
+        return ("failed", person_id, email, None)
+
+    if not is_ok:
+        return ("failed", person_id, email, subresult)
+    return ("ok", person_id, email, subresult)
+
+
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
@@ -172,7 +199,9 @@ async def process_rmq_message(
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
 
-        # emails = []
+        # verified_emails = []
+        # write_off_funds = Decimal(0)
+        # count_subtracted = Decimal(0)
         # failed_ids: list[int] = []
         # for rec in batch:
         #     if validation_type == "personal_email":
@@ -180,148 +209,108 @@ async def process_rmq_message(
         #         if not email:
         #             failed_ids.append(rec["audience_smart_person_id"])
         #             continue
-        #         emails.append(email)
+
+        #         write_off_funds += Decimal(validation_cost)
+
+        #         if not await million_verifier_service.is_email_verify(email):
+        #             failed_ids.append(rec["audience_smart_person_id"])
+        #             continue
+
+        #         verified_emails.append(
+        #             AudienceSmartValidation(
+        #                 audience_smart_person_id=rec[
+        #                     "audience_smart_person_id"
+        #                 ],
+        #                 verified_personal_email=email,
+        #             )
+        #         )
 
         #     elif validation_type == "business_email":
         #         email = rec.get("business_email")
         #         if not email:
         #             failed_ids.append(rec["audience_smart_person_id"])
         #             continue
-        #         emails.append(email)
 
-        # file_id = await process_bulk_validation(
-        #     emails=emails,
-        #     aud_smart_id=aud_smart_id,
-        #     million_verifier_service=million_verifier_service,
-        #     persistence=million_verifier_service.million_verifier_persistence,
-        #     db_session=db_session,
-        # )
-        # logging.info(f"Bulk validation done for file_id={file_id}")
+        #         write_off_funds += Decimal(validation_cost)
 
-        # verified_emails = []
-        # for rec in batch:
-        #     email = (
-        #         rec.get("personal_email")
-        #         if validation_type == "personal_email"
-        #         else rec.get("business_email")
-        #     )
-        #     if not email:
-        #         continue
-        #     checked_email = million_verifier_service.million_verifier_persistence.find_checked_email(
-        #         email
-        #     )
-        #     if checked_email and checked_email.is_verify:
-        #         if validation_type == "personal_email":
-        #             verified_emails.append(
-        #                 AudienceSmartValidation(
-        #                     audience_smart_person_id=rec[
-        #                         "audience_smart_person_id"
-        #                     ],
-        #                     verified_personal_email=email,
-        #                 )
+        #         if not await million_verifier_service.is_email_verify(email):
+        #             failed_ids.append(rec["audience_smart_person_id"])
+        #             continue
+
+        #         verified_emails.append(
+        #             AudienceSmartValidation(
+        #                 audience_smart_person_id=rec[
+        #                     "audience_smart_person_id"
+        #                 ],
+        #                 verified_business_email=email,
         #             )
-        #         else:
-        #             verified_emails.append(
-        #                 AudienceSmartValidation(
-        #                     audience_smart_person_id=rec[
-        #                         "audience_smart_person_id"
-        #                     ],
-        #                     verified_business_email=email,
-        #                 )
-        #             )
-        #     else:
-        #         failed_ids.append(rec["audience_smart_person_id"])
-        # write_off_funds = Decimal(len(emails)) * Decimal(validation_cost)
-        # if write_off_funds:
-        #     count_subtracted = user_persistence.deduct_validation_funds(
-        #         user_id, write_off_funds
-        #     )
-        #     db_session.flush()
-        # else:
-        #     count_subtracted = Decimal(0)
+        #         )
 
-        # success_ids = [
-        #     rec["audience_smart_person_id"]
-        #     for rec in batch
-        #     if rec["audience_smart_person_id"] not in failed_ids
-        # ]
-        # if failed_ids:
-        #     db_session.bulk_update_mappings(
-        #         AudienceSmartPerson,
-        #         [
-        #             {
-        #                 "id": pid,
-        #                 "is_validation_processed": False,
-        #                 "is_valid": False,
-        #             }
-        #             for pid in failed_ids
-        #         ],
-        #     )
-        #     db_session.flush()
-        # logging.info(f"Failed ids len: {len(failed_ids)}")
-        # if len(verified_emails):
-        #     db_session.bulk_save_objects(verified_emails)
-        #     db_session.flush()
+        if validation_type not in MAPPING:
+            raise ValueError("Unsupported validation_type")
 
-        # if success_ids:
-        #     db_session.bulk_update_mappings(
-        #         AudienceSmartPerson,
-        #         [
-        #             {"id": pid, "is_validation_processed": False}
-        #             for pid in success_ids
-        #         ],
-        #     )
-        #     db_session.flush()
-
-        # db_session.commit()
-        # logging.info(f"Success ids len: {len(success_ids)}")
+        input_field, output_field = MAPPING[validation_type]
+        validation_cost = Decimal(validation_cost)
 
         verified_emails = []
-        write_off_funds = Decimal(0)
-        count_subtracted = Decimal(0)
-        failed_ids: list[int] = []
+        failed_ids = []
+
+        to_check = []
+        immediate_failed = []
         for rec in batch:
-            if validation_type == "personal_email":
-                email = rec.get("personal_email")
-                if not email:
-                    failed_ids.append(rec["audience_smart_person_id"])
-                    continue
+            person_id = rec.get("audience_smart_person_id")
+            email = rec.get(input_field)
+            if not email:
+                immediate_failed.append(person_id)
+            else:
+                to_check.append((person_id, email))
 
-                write_off_funds += Decimal(validation_cost)
+        tasks = [
+            asyncio.create_task(
+                _generate_one_task(million_verifier_service, pid, email)
+            )
+            for pid, email in to_check
+        ]
 
-                if not await million_verifier_service.is_email_verify(email):
-                    failed_ids.append(rec["audience_smart_person_id"])
-                    continue
+        if tasks:
+            results = await asyncio.gather(*tasks)
+        else:
+            results = []
 
-                verified_emails.append(
-                    AudienceSmartValidation(
-                        audience_smart_person_id=rec[
-                            "audience_smart_person_id"
-                        ],
-                        verified_personal_email=email,
+        checked_to_save = []
+        for status, person_id, email, subresult in results:
+            if status is not None and subresult is not None:
+                if status == "ok":
+                    verified_emails.append(
+                        AudienceSmartValidation(
+                            audience_smart_person_id=person_id,
+                            **{output_field: email},
+                        )
                     )
+                else:
+                    failed_ids.append(person_id)
+                checked_to_save.append(
+                    {
+                        "email": email,
+                        "is_verify": status == "ok",
+                        "verify_result": subresult,
+                    }
+                )
+            else:
+                failed_ids.append(person_id)
+
+        if checked_to_save:
+            for item in checked_to_save:
+                million_verifier_service.million_verifier_persistence.save_checked_email(
+                    email=item["email"],
+                    is_verify=item["is_verify"],
+                    verify_result=item["verify_result"],
                 )
 
-            elif validation_type == "business_email":
-                email = rec.get("business_email")
-                if not email:
-                    failed_ids.append(rec["audience_smart_person_id"])
-                    continue
+        failed_ids.extend(immediate_failed)
 
-                write_off_funds += Decimal(validation_cost)
-
-                if not await million_verifier_service.is_email_verify(email):
-                    failed_ids.append(rec["audience_smart_person_id"])
-                    continue
-
-                verified_emails.append(
-                    AudienceSmartValidation(
-                        audience_smart_person_id=rec[
-                            "audience_smart_person_id"
-                        ],
-                        verified_business_email=email,
-                    )
-                )
+        attempted_count = len(to_check)
+        write_off_funds = validation_cost * Decimal(attempted_count)
 
         if write_off_funds:
             count_subtracted = user_persistence.deduct_validation_funds(
@@ -334,6 +323,7 @@ async def process_rmq_message(
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
+
         if failed_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
@@ -348,6 +338,7 @@ async def process_rmq_message(
             )
             db_session.flush()
         logging.info(f"Failed ids len: {len(failed_ids)}")
+
         if len(verified_emails):
             db_session.bulk_save_objects(verified_emails)
             db_session.flush()
