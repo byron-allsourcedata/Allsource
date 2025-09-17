@@ -3,6 +3,7 @@ from venv import logger
 
 from google.ads.googleads.errors import GoogleAdsException
 from sqlalchemy import select
+import asyncio
 from db_dependencies import Db
 from domains.premium_sources.sync.integrations.exceptions import (
     IntegrationNotFound,
@@ -11,6 +12,13 @@ from domains.premium_sources.sync.integrations.exceptions import (
 from domains.premium_sources.sync.persistence import (
     PremiumSourceSyncPersistence,
 )
+from domains.premium_sources.sync.config import (
+    GOOGLE_BATCH_SIZE,
+    SYNC_API_CONCURRENCY,
+    RETRY_ATTEMPTS,
+    RETRY_BACKOFF_BASE,
+)
+from domains.premium_sources.sync.utils import run_blocking
 from domains.premium_sources.sync.schemas import UnprocessedPremiumSourceBatch
 from models.integrations.users_domains_integrations import UserIntegration
 from models.premium_source_syncs.google_ads import GoogleAdsPremiumSourceSync
@@ -103,7 +111,9 @@ class GoogleAdsPremiumSourceSyncService:
             google_sync_details.list_id,
         )
 
-    def sync_premium_source_batch(self, batch: UnprocessedPremiumSourceBatch):
+    async def sync_premium_source_batch(
+        self, batch: UnprocessedPremiumSourceBatch
+    ):
         """
         Raises `IntegrationNotFound`
         """
@@ -116,12 +126,60 @@ class GoogleAdsPremiumSourceSyncService:
         access_token, customer_id, list_id = self.get_google_credentials(
             batch.premium_source_sync_id, user_integration
         )
-
         hashes = [row.sha256_email for row in batch.rows]
 
-        try:
-            self.google_ads.add_users_to_list_hashed(
-                access_token, hashes, customer_id, list_id
-            )
-        except GoogleAdsException as e:
-            logger.error(e)
+        sem = asyncio.Semaphore(SYNC_API_CONCURRENCY)
+
+        logger.info(
+            f"Google Ads sync: preparing to send {len(hashes)} hashed emails "
+            f"to list {list_id} (customer_id={customer_id})"
+        )
+
+        async def send_chunk(chunk):
+            async with sem:
+                attempt = 0
+                while True:
+                    try:
+                        logger.debug(
+                            f"Google Ads sync: sending chunk of {len(chunk)} hashed emails "
+                            f"for list {list_id}"
+                        )
+                        return await run_blocking(
+                            self.google_ads.add_users_to_list_hashed,
+                            access_token,
+                            chunk,
+                            customer_id,
+                            list_id,
+                        )
+                    except Exception as e:
+                        attempt += 1
+                        if attempt >= RETRY_ATTEMPTS:
+                            logger.exception(
+                                "Google chunk failed after retries"
+                            )
+                            raise
+                        backoff = RETRY_BACKOFF_BASE * (2 ** (attempt - 1))
+                        logger.warning(
+                            f"Google chunk failed, retrying after {backoff}s (attempt {attempt})"
+                        )
+                        await asyncio.sleep(backoff)
+
+        tasks = []
+        for i in range(0, len(hashes), GOOGLE_BATCH_SIZE):
+            chunk = hashes[i : i + GOOGLE_BATCH_SIZE]
+            tasks.append(asyncio.create_task(send_chunk(chunk)))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        logger.info(
+            f"Successfully sent {len(hashes)} hashed emails to Google Ads"
+            f"(list_id={list_id}) in {len(tasks)} chunks"
+        )
+
+        for r in results:
+            if isinstance(r, Exception):
+                raise r
+
+        logger.debug(
+            f"sent {len(hashes)} hashed emails to google in {len(tasks)} chunks"
+        )
