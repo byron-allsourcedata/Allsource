@@ -24,13 +24,14 @@ async def main(resolver: Resolver):
     try:
         while True:
             try:
-                logger.info("filling queue")
+                logger.debug("filling queue")
                 did_publish = await filler.fill_processing_queue()
 
                 if did_publish:
                     await asyncio.sleep(1)
                 else:
-                    await asyncio.sleep(10)
+                    logger.info("Still no work to publish")
+                    await asyncio.sleep(15)
 
             except Exception as e:
                 logger.error(
