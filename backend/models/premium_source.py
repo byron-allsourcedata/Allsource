@@ -1,6 +1,15 @@
 from datetime import datetime
 from uuid import UUID
-from sqlalchemy import TIMESTAMP, Integer, Uuid, event, func, select, text
+from sqlalchemy import (
+    TIMESTAMP,
+    Integer,
+    Uuid,
+    event,
+    func,
+    select,
+    text,
+    String,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from models.users import Users

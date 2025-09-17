@@ -3,7 +3,7 @@ import logging
 from uuid import UUID
 
 from clickhouse_connect.driver.summary import QuerySummary
-from db_dependencies import Clickhouse
+from db_dependencies import Clickhouse, ClickhouseInserter
 from domains.premium_sources.sync.schemas import (
     PremiumRowIdsBatch,
     UnprocessedPremiumSourceRow,
@@ -16,8 +16,11 @@ logger = logging.getLogger(__name__)
 
 @injectable
 class PremiumSourceSyncLogPersistence:
-    def __init__(self, click: Clickhouse) -> None:
+    def __init__(
+        self, click: Clickhouse, click_inserter: ClickhouseInserter
+    ) -> None:
         self.click = click
+        self.click_inserter = click_inserter
         self.table_name = "premium_sources_sync_log"
 
     def count(self, premium_source_sync_id: UUID, status: str) -> int:
@@ -136,7 +139,9 @@ class PremiumSourceSyncLogPersistence:
             for row_id in row_ids
         ]
 
-        summary = self.click.insert(table=self.table_name, data=new_rows)
+        summary = self.click_inserter.insert(
+            table=self.table_name, data=new_rows
+        )
 
         written_rows = summary.written_rows
         return written_rows
