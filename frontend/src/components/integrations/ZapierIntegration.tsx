@@ -19,7 +19,7 @@ import TabContext from "@mui/lab/TabContext";
 import { useEffect, useState } from "react";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { ContentCopy } from "@mui/icons-material";
-import { LogoSmall } from "./ui/Logo";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface ApIkeyPopup {
 	open: boolean;

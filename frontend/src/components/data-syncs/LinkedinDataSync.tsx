@@ -33,7 +33,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	showErrorToast,
 	showToast,
-} from "../../../../components/ToastNotification";
+} from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
 import { Logo } from "@/components/ui/Logo";

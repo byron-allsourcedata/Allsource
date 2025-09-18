@@ -33,7 +33,7 @@ import {
 } from "../requests";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useRouter } from "next/navigation";
-import GoogleAdsDataSync from "@/app/(client)/data-sync/components/GoogleADSDataSync";
+import GoogleAdsDataSync from "@/components/data-syncs/GoogleADSDataSync";
 import { GoogleAdsPremiumSyncPopup } from "../drawers/GoogleAdsPremiumSync";
 import type {
 	FormattedPremiumSync,

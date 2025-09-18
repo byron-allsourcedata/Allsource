@@ -24,7 +24,7 @@ import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "../../../../components/ToastNotification";
+import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
 import { Logo } from "@/components/ui/Logo";

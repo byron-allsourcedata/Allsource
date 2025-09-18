@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
 	Drawer,
 	Box,
 	Typography,
 	IconButton,
 	TextField,
+	Divider,
 	FormControlLabel,
 	FormControl,
 	FormLabel,
@@ -24,23 +25,19 @@ import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "../../../../components/ToastNotification";
+import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { InfoIcon } from "@/icon";
 import UserTip from "@/components/UserTip";
-import { Logo } from "@/components/ui/Logo";
+import { LogoSmall } from "@/components/ui/Logo";
 
-interface Data {
-	id: number;
-	type: string;
-	data_map: { type: string; value: string }[];
-}
-
-interface CustomerIoProps {
+interface OnmisendDataSyncProps {
 	open: boolean;
 	onClose: () => void;
 	onCloseCreateSync?: () => void;
-	data?: Data;
+	data?: any;
 	isEdit?: boolean;
+	boxShadow?: string;
 }
 
 interface CustomRow {
@@ -49,68 +46,59 @@ interface CustomRow {
 	is_constant?: boolean;
 }
 
-const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
+const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 	open,
 	onClose,
 	onCloseCreateSync,
-	data,
+	data = null,
 	isEdit,
+	boxShadow,
 }) => {
-	const maxLengthFieldName = 25;
-	const maxLengthFieldValue = 30;
-	const defaultRadioValue = "allContacts";
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = React.useState("1");
-	const [selectedRadioValue, setSelectedRadioValue] = useState(
-		data?.type || defaultRadioValue,
-	);
+	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
+	const [newListName, setNewListName] = useState<string>("");
+	const [tagName, setTagName] = useState<string>("");
+	const textFieldRef = useRef<HTMLDivElement>(null);
 	const [tab2Error, setTab2Error] = useState(false);
+	const [isDropdownValid, setIsDropdownValid] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const customFieldsList = [
-		{ type: "Company Domain", value: "company_domain" },
-		{ type: "Company SIC", value: "company_sic" },
-		{ type: "Company LinkedIn URL", value: "company_linkedin_url" },
-		{ type: "Company Revenue", value: "company_revenue" },
-		{ type: "Company Employee Count", value: "company_employee_count" },
-		{ type: "Net Worth", value: "net_worth" },
-		{ type: "Personal Emails Last Seen", value: "personal_emails_last_seen" },
-		{ type: "Additional Personal Emails", value: "additional_personal_emails" },
-		{ type: "LinkedIn URL", value: "linkedin_url" },
-		{ type: "Married", value: "married" },
-		{ type: "Children", value: "children" },
-		{ type: "Income Range", value: "income_range" },
-		{ type: "Homeowner", value: "homeowner" },
-		{ type: "Seniority Level", value: "seniority_level" },
-		{ type: "Primary Industry", value: "primary_industry" },
-		{ type: "Related Domains", value: "related_domains" },
-		{ type: "Social Connections", value: "social_connections" },
-		{ type: "DPV Code", value: "dpv_code" },
-
-		// { type: "Last Updated", value: "last_updated" },
-		// { type: "Company Last Updated", value: "company_last_updated" },
-		// { type: "Job Title Last Updated", value: "job_title_last_updated" },
-		// { type: "Work History", value: "work_history" },
-		// { type: "Education History", value: "education_history" },
-		// { type: "Company Description", value: "company_description" },
-	];
-
+	const [customFieldsList, setCustomFieldsList] = useState([
+		{ type: "company", value: "company_name" },
+		{ type: "website", value: "company_domain" },
+		{ type: "lifecyclestage", value: "lifecyclestage" },
+		{ type: "jobtitle", value: "job_title" },
+		{ type: "industry", value: "primary_industry" },
+		{ type: "annualrevenue", value: "company_revenue" },
+		{ type: "hs_linkedin_url", value: "linkedin_url" },
+		{ type: "address", value: "personal_address" },
+		{ type: "state", value: "personal_state" },
+		{ type: "zip", value: "personal_zip" },
+	]);
 	const [customFields, setCustomFields] = useState<
 		{ type: string; value: string; is_constant?: boolean }[]
-	>(
-		data?.data_map ||
-			customFieldsList.map((field) => ({
-				type: field.value,
-				value: field.type,
-			})),
-	);
+	>([]);
 	const extendedCustomFieldsList = [
 		{ value: "__constant__", type: "Constant field" },
 		...customFieldsList,
 	];
+
+	useEffect(() => {
+		if (data?.data_map) {
+			setCustomFields(data?.data_map);
+		} else {
+			setCustomFields(
+				customFieldsList.map((field) => ({
+					type: field.value,
+					value: field.type,
+				})),
+			);
+		}
+	}, [open]);
 
 	const handleAddField = () => {
 		setCustomFields([...customFields, { type: "", value: "" }]);
@@ -138,26 +126,33 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 	const resetToDefaultValues = () => {
 		setLoading(false);
 		setValue("1");
-		setSelectedRadioValue(defaultRadioValue);
+		setSelectedRadioValue("");
+		setNewListName("");
+		setTagName("");
 		setTab2Error(false);
+		setIsDropdownValid(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
 	};
+
+	useEffect(() => {
+		setLoading(false);
+	}, [open]);
 
 	const handleSaveSync = async () => {
 		setLoading(true);
 		try {
 			if (isEdit) {
 				const response = await axiosInstance.put(
-					"/data-sync/sync",
+					`/data-sync/sync`,
 					{
-						integrations_users_sync_id: data?.id,
+						integrations_users_sync_id: data.id,
 						leads_type: selectedRadioValue,
 						data_map: customFields,
 					},
 					{
 						params: {
-							service_name: "customer_io",
+							service_name: "hubspot",
 						},
 					},
 				);
@@ -176,7 +171,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 					},
 					{
 						params: {
-							service_name: "customer_io",
+							service_name: "hubspot",
 						},
 					},
 				);
@@ -184,19 +179,26 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 					resetToDefaultValues();
 					onClose();
 					showToast("Data sync created successfully");
+					triggerSync();
 				}
 			}
 			handlePopupClose();
 			if (onCloseCreateSync) {
 				onCloseCreateSync();
 			}
-			triggerSync();
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	const customerIoStyles = {
+	const isDuplicate = (value: string, currentIndex: number) => {
+		return (
+			customFields.filter((f, idx) => f.type === value && idx !== currentIndex)
+				.length > 0
+		);
+	};
+
+	const hubspotStyles = {
 		tabHeading: {
 			textTransform: "none",
 			padding: 0,
@@ -231,7 +233,13 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 					lineHeight: "20px",
 					fontWeight: "400",
 				},
+				"& .MuiOutlinedInput-notchedOutline": {
+					borderColor: "#A3B0C2",
+				},
 				"&:hover .MuiOutlinedInput-notchedOutline": {
+					borderColor: "#A3B0C2",
+				},
+				"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
 					borderColor: "rgba(56, 152, 252, 1)",
 				},
 			},
@@ -241,6 +249,11 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 		},
 	};
 
+	type HighlightConfig = {
+		[keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
+	};
+
+	// Define buttons for each tab
 	const getButton = (tabValue: string) => {
 		switch (tabValue) {
 			case "1":
@@ -308,7 +321,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 							borderRadius: "4px",
 						}}
 					>
-						Save
+						Export
 					</Button>
 				);
 			default:
@@ -329,16 +342,12 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 	}
 
 	const defaultRows: Row[] = [
-		{ id: 1, type: "email", value: "Email" },
-		{ id: 2, type: "firstName", value: "First Name" },
-		{ id: 3, type: "lastName", value: "Last Name" },
-		{ id: 4, type: "name", value: "Name" },
-		{ id: 5, type: "address", value: "Address" },
-		{ id: 6, type: "phone", value: "Phone" },
-		{ id: 7, type: "city", value: "City" },
-		{ id: 8, type: "state", value: "State" },
-		{ id: 9, type: "gender", value: "Gender" },
-		{ id: 10, type: "company", value: "Company Name" },
+		{ id: 1, type: "email", value: "email" },
+		{ id: 3, type: "firstname", value: "firstname" },
+		{ id: 4, type: "lastname", value: "lastname" },
+		{ id: 5, type: "phone", value: "phone" },
+		{ id: 6, type: "city", value: "city" },
+		{ id: 7, type: "gender", value: "gender" },
 	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -373,6 +382,17 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 		}
 	};
 
+	// Add row function
+	const handleAddRow = () => {
+		const newRow: Row = {
+			id: Date.now(), // Unique ID for each new row
+			type: "",
+			value: "",
+			canDelete: true, // This new row can be deleted
+		};
+		setRows([...rows, newRow]);
+	};
+
 	const validateTab2 = () => {
 		if (selectedRadioValue === null) {
 			setTab2Error(true);
@@ -392,6 +412,11 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 			if (validateTab2()) {
 				setValue((prevValue) => String(Number(prevValue) + 1));
 			}
+		} else if (value === "3") {
+			if (isDropdownValid) {
+				// Proceed to next tab
+				setValue((prevValue) => String(Number(prevValue) + 1));
+			}
 		}
 	};
 
@@ -403,23 +428,17 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 	};
 
 	const handlePopupClose = () => {
+		resetToDefaultValues();
 		onClose();
 	};
 
-	const isSafeFieldName = (str: string): boolean => {
-		return /^[a-zA-Z][a-zA-Z0-9_]*$/.test(str);
-	};
-
-	const isDuplicate = (value: string, currentIndex: number) => {
-		return (
-			customFields.filter((f, idx) => f.type === value && idx !== currentIndex)
-				.length > 0
-		);
+	const isSnakeCase = (str: string): boolean => {
+		return /^[a-z][a-z0-9_]*$/.test(str);
 	};
 
 	const hasErrors = (): boolean => {
 		return customFields.some((field, index) => {
-			if (field.is_constant && field.type && !isSafeFieldName(field.type)) {
+			if (field.is_constant && field.type && !isSnakeCase(field.type)) {
 				return true;
 			}
 			if (isDuplicate(field.type, index)) {
@@ -462,6 +481,9 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 						position: "fixed",
 						top: 0,
 						bottom: 0,
+						boxShadow: boxShadow
+							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
+							: "none",
 						msOverflowStyle: "none",
 						scrollbarWidth: "none",
 						"&::-webkit-scrollbar": {
@@ -475,7 +497,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: "rgba(0, 0, 0, 0)",
+							backgroundColor: boxShadow ? boxShadow : "rgba(0, 0, 0, 0.01)",
 						},
 					},
 				}}
@@ -499,7 +521,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 						className="first-sub-title"
 						sx={{ textAlign: "center" }}
 					>
-						Connect to Customer.io
+						Connect to Hubspot
 					</Typography>
 					<Box
 						sx={{
@@ -508,6 +530,21 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 							"@media (max-width: 600px)": { gap: "8px" },
 						}}
 					>
+						<Link
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-hubspot"
+							className="main-text"
+							target="_blank"
+							rel="noopener referrer"
+							sx={{
+								fontSize: "14px",
+								fontWeight: "600",
+								lineHeight: "20px",
+								color: "rgba(56, 152, 252, 1)",
+								textDecorationColor: "rgba(56, 152, 252, 1)",
+							}}
+						>
+							Tutorial
+						</Link>
 						<IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
 							<CloseIcon sx={{ width: "20px", height: "20px" }} />
 						</IconButton>
@@ -522,8 +559,8 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 					}}
 				>
 					<UserTip
-						limit={50}
-						service="Customer.io"
+						limit={100}
+						service="Hubspot"
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
@@ -540,7 +577,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 							<Box sx={{ pb: 4 }}>
 								<TabList
 									centered
-									aria-label="Connect to Mailchimp Tabs"
+									aria-label="Connect to Hubspot Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
@@ -562,13 +599,14 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 										label="Sync Filter"
 										value="1"
 										className="tab-heading"
-										sx={customerIoStyles.tabHeading}
+										sx={hubspotStyles.tabHeading}
 									/>
+									{/* <Tab label="Contact Sync" value="2" className='tab-heading' sx={hubspotStyles.tabHeading} /> */}
 									<Tab
 										label="Map data"
 										value="2"
 										className="tab-heading"
-										sx={customerIoStyles.tabHeading}
+										sx={hubspotStyles.tabHeading}
 									/>
 								</TabList>
 							</Box>
@@ -811,6 +849,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 											Map list
 										</Typography>
 									</Box>
+
 									<Grid
 										container
 										alignItems="center"
@@ -830,24 +869,12 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 												},
 											}}
 										>
-											<Logo height={22} width={34} />
+											<LogoSmall alt="logo" height={22} width={34} />
 										</Grid>
 										<Grid
 											item
 											xs="auto"
-											sm={1}
-											sx={{
-												"@media (max-width:599px)": {
-													minWidth: "50px",
-												},
-											}}
-										>
-											&nbsp;
-										</Grid>
-										<Grid
-											item
-											xs="auto"
-											sm={5}
+											sm={7}
 											sx={{
 												textAlign: "center",
 												"@media (max-width:599px)": {
@@ -856,18 +883,17 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 											}}
 										>
 											<Image
-												src="/customer-io-icon.svg"
-												alt="customer_io"
+												src="/hubspot.svg"
+												alt="hubspot"
 												height={20}
 												width={24}
 											/>
 										</Grid>
-										<Grid item xs="auto" sm={1}>
-											&nbsp;
-										</Grid>
 									</Grid>
+
 									{defaultRows.map((row, index) => (
-										<Box key={index} sx={{ mb: 2 }}>
+										<Box key={row.id} sx={{ mb: 2 }}>
+											{" "}
 											{/* Add margin between rows */}
 											<Grid
 												container
@@ -884,7 +910,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 														value={row.value}
 														onChange={(e) =>
 															handleMapListChange(
-																index,
+																row.id,
 																"value",
 																e.target.value,
 															)
@@ -1174,11 +1200,11 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 															onChange={(e) =>
 																handleChangeField(index, "type", e.target.value)
 															}
-															placeholder={`Enter field name (${maxLengthFieldName} characters max)`}
+															placeholder="Enter field name"
 															error={
 																field.is_constant &&
 																!!field.type &&
-																!isSafeFieldName(field.type)
+																!isSnakeCase(field.type)
 															}
 															InputLabelProps={{
 																sx: {
@@ -1224,9 +1250,6 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 																		marginLeft: "0",
 																	},
 																},
-															}}
-															inputProps={{
-																maxLength: maxLengthFieldName,
 															}}
 														/>
 													) : (
@@ -1349,15 +1372,11 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 														onChange={(e) =>
 															handleChangeField(index, "value", e.target.value)
 														}
-														placeholder={
-															field.is_constant
-																? `Enter value (${maxLengthFieldValue} characters max)`
-																: "Enter value"
-														}
+														placeholder="Enter value"
 														InputLabelProps={{
 															sx: {
 																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
+																fontSize: "13px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
@@ -1372,12 +1391,12 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 														}}
 														InputProps={{
 															sx: {
-																height: "36px",
+																maxHeight: "36px",
 																"& .MuiOutlinedInput-input": {
 																	padding: "6.5px 8px",
 																	fontFamily: "var(--font-roboto)",
 																	color: "#202124",
-																	fontSize: "14px",
+																	fontSize: "12px",
 																	fontWeight: "400",
 																	lineHeight: "20px",
 																},
@@ -1393,11 +1412,6 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 																	},
 															},
 														}}
-														inputProps={
-															field.is_constant
-																? { maxLength: maxLengthFieldValue }
-																: {}
-														}
 													/>
 												</Grid>
 												<Grid
@@ -1417,7 +1431,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 														/>
 													</IconButton>
 												</Grid>
-												{field.type && !isSafeFieldName(field.type) && (
+												{field.type && !isSnakeCase(field.type) && (
 													<Box
 														sx={{ width: "100%", pl: 2.25, mt: "-6px", mb: 1 }}
 													>
@@ -1430,8 +1444,8 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 																fontFamily: "var(--font-roboto)",
 															}}
 														>
-															Field name must consist of letters, numbers and
-															underscores only.
+															Field name must be in snake_case: lowercase
+															letters and underscores only
 														</Typography>
 													</Box>
 												)}
@@ -1441,7 +1455,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 											sx={{
 												display: "flex",
 												justifyContent: "flex-end",
-												mb: 2,
+												mb: 6,
 												mr: 6,
 											}}
 										>
@@ -1452,7 +1466,7 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 													textTransform: "none",
 													border: "1px solid rgba(56, 152, 252, 1)",
 													borderRadius: "4px",
-													padding: "9px 16px",
+													padding: "6px 12px",
 													minWidth: "auto",
 													"@media (max-width: 900px)": {
 														display: "none",
@@ -1461,7 +1475,6 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 											>
 												<Typography
 													sx={{
-														marginRight: "0.5em",
 														fontFamily: "var(--font-nunito)",
 														lineHeight: "22.4px",
 														fontSize: "16px",
@@ -1478,15 +1491,21 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 								</Box>
 							</TabPanel>
 						</TabContext>
-						{/* Button based on selected tab */}
 					</Box>
 					<Box
 						sx={{
-							marginTop: "auto",
 							px: 2,
 							py: 2,
-							width: "100%",
-							border: "1px solid #e4e4e4",
+							borderTop: "1px solid #e4e4e4",
+							position: "fixed",
+							bottom: 0,
+							right: 0,
+							background: "#fff",
+							zIndex: "1",
+							width: "40%",
+							"@media (max-width: 600px)": {
+								width: "100%",
+							},
 						}}
 					>
 						<Box
@@ -1504,4 +1523,4 @@ const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 		</>
 	);
 };
-export default CustomerIoDataSync;
+export default HubspotDataSync;

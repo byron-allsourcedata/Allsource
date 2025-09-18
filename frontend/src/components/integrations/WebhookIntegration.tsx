@@ -11,7 +11,7 @@ import {
 import { useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import { CompressOutlined } from "@mui/icons-material";
 

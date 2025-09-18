@@ -13,9 +13,14 @@ import {
 	Button,
 	Link,
 	Tab,
+	Tooltip,
 	RadioGroup,
 	MenuItem,
 	Popover,
+	Menu,
+	ListItemText,
+	ClickAwayListener,
+	InputAdornment,
 	Grid,
 	LinearProgress,
 } from "@mui/material";
@@ -25,27 +30,33 @@ import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "../../../../components/ToastNotification";
+import {
+	showErrorToast,
+	showToast,
+} from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
-import { LogoSmall } from "@/components/ui/Logo";
+import { Logo } from "@/components/ui/Logo";
 
-interface OnmisendDataSyncProps {
+interface ConnectMailChimpPopupProps {
 	open: boolean;
 	onClose: () => void;
 	onCloseCreateSync?: () => void;
-	data?: any;
+	data: any;
 	isEdit?: boolean;
-	boxShadow?: string;
 }
 
-const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
+type KlaviyoList = {
+	id: string;
+	list_name: string;
+};
+
+const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 	open,
 	onClose,
 	onCloseCreateSync,
-	data = null,
+	data,
 	isEdit,
-	boxShadow,
 }) => {
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
@@ -53,6 +64,9 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 	const [checked, setChecked] = useState(false);
 	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(
+		null,
+	);
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
 	const [tagName, setTagName] = useState<string>("");
@@ -76,7 +90,9 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
 	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
 	const [maplistNameError, setMapListNameError] = useState(false);
+	const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([]);
 	const [customFieldsList, setCustomFieldsList] = useState([
+		{ type: "Gender", value: "gender" },
 		{ type: "Company Name", value: "company_name" },
 		{ type: "Company Domain", value: "company_domain" },
 		{ type: "Company SIC", value: "company_sic" },
@@ -108,6 +124,28 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		{ type: "Time on site", value: "time_on_site" },
 		{ type: "DPV Code", value: "dpv_code" },
 	]);
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (
+				textFieldRef.current &&
+				!textFieldRef.current.contains(event.target as Node)
+			) {
+				// If clicked outside, reset shrink only if there is no input value
+				if (selectedOption?.list_name === "") {
+					setIsShrunk(false);
+				}
+				if (isDropdownOpen) {
+					setIsDropdownOpen(false); // Close dropdown when clicking outside
+				}
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [selectedOption]);
+
 	const [customFields, setCustomFields] = useState<
 		{ type: string; value: string }[]
 	>([]);
@@ -140,12 +178,16 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 			),
 		);
 	};
-	const resetToDefaultValues = () => {
+	useEffect(() => {
+		if (open) {
+			return;
+		}
 		setLoading(false);
 		setValue("1");
 		setChecked(false);
 		setSelectedRadioValue("");
 		setAnchorEl(null);
+		setSelectedOption(null);
 		setShowCreateForm(false);
 		setNewListName("");
 		setTagName("");
@@ -163,58 +205,128 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		setNewMapListName("");
 		setShowCreateMapForm(false);
 		setMapListNameError(false);
-	};
-
-	useEffect(() => {
-		setLoading(false);
 	}, [open]);
+
+	const getKlaviyoList = async () => {
+		try {
+			setLoading(true);
+			const response = await axiosInstance.get("/integrations/sync/list/", {
+				params: {
+					service_name: "mailchimp",
+				},
+			});
+			setKlaviyoList(response.data);
+			const foundItem = response.data?.find(
+				(item: any) => item.list_name === data?.name,
+			);
+			if (foundItem) {
+				setUpdateKlaviuo(data.id);
+				setSelectedOption({
+					id: foundItem.id,
+					list_name: foundItem.list_name,
+				});
+			} else {
+				setSelectedOption(null);
+			}
+			setSelectedRadioValue(data?.type);
+			setLoading(false);
+		} catch (error) {}
+	};
+	useEffect(() => {
+		if (open) {
+			getKlaviyoList();
+		}
+	}, [open]);
+
+	const createNewList = async () => {
+		try {
+			const newListResponse = await axiosInstance.post(
+				"/integrations/sync/list/",
+				{
+					name: selectedOption?.list_name,
+				},
+				{
+					params: {
+						service_name: "mailchimp",
+					},
+				},
+			);
+			if (newListResponse.data.status === "CREATED_IS_FAILED") {
+				showErrorToast(
+					"You've hit your list limit. You already have the max amount of lists allowed in your plan.",
+				);
+			} else if (newListResponse.data.status === "CREDENTIALS_INVALID") {
+				showErrorToast("Credentials invalid, try updating the key.");
+				throw new Error("Credentials invalid, try updating the key.");
+			}
+
+			return newListResponse.data;
+		} catch (error) {}
+	};
 
 	const handleSaveSync = async () => {
 		setLoading(true);
+		let list: KlaviyoList | null = null;
+
 		try {
-			if (isEdit) {
-				const response = await axiosInstance.put(
-					`/data-sync/sync`,
-					{
-						integrations_users_sync_id: data.id,
-						leads_type: selectedRadioValue,
-						data_map: customFields,
-					},
-					{
-						params: {
-							service_name: "omnisend",
-						},
-					},
-				);
-				if (response.status === 201 || response.status === 200) {
-					resetToDefaultValues();
-					onClose();
-					showToast("Data sync updated successfully");
-				}
+			if (selectedOption && selectedOption.id === "-1") {
+				list = await createNewList();
+			} else if (selectedOption) {
+				list = selectedOption;
 			} else {
-				const response = await axiosInstance.post(
-					"/data-sync/sync",
-					{
-						leads_type: selectedRadioValue,
-						data_map: customFields,
-					},
-					{
-						params: {
-							service_name: "omnisend",
+				showToast("Please select a valid option.");
+				return;
+			}
+
+			if (list) {
+				if (isEdit) {
+					const response = await axiosInstance.put(
+						`/data-sync/sync`,
+						{
+							integrations_users_sync_id: data.id,
+							list_id: list?.id,
+							list_name: list?.list_name,
+							leads_type: selectedRadioValue,
+							data_map: customFields,
 						},
-					},
-				);
-				if (response.status === 201 || response.status === 200) {
-					resetToDefaultValues();
-					onClose();
-					showToast("Data sync created successfully");
-					triggerSync();
+						{
+							params: {
+								service_name: "mailchimp",
+							},
+						},
+					);
+					if (response.status === 201 || response.status === 200) {
+						triggerSync();
+						onClose();
+						showToast("Data sync updated successfully");
+					}
+				} else {
+					const response = await axiosInstance.post(
+						"/data-sync/sync",
+						{
+							list_id: list?.id,
+							list_name: list?.list_name,
+							leads_type: selectedRadioValue,
+							data_map: customFields,
+						},
+						{
+							params: {
+								service_name: "mailchimp",
+							},
+						},
+					);
+					if (response.status === 201 || response.status === 200) {
+						onClose();
+						showToast("Data sync created successfully");
+						triggerSync();
+					}
 				}
 			}
 			handlePopupClose();
 			if (onCloseCreateSync) {
 				onCloseCreateSync();
 			}
+			triggerSync();
 		} finally {
 			setLoading(false);
 		}
@@ -249,6 +361,35 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		setNewMapListName("");
 	};
 
+	const handleSelectOption = (value: KlaviyoList | string) => {
+		if (value === "createNew") {
+			setShowCreateForm((prev) => !prev);
+			if (!showCreateForm) {
+				setAnchorEl(textFieldRef.current);
+			}
+		} else if (isKlaviyoList(value)) {
+			// Проверка, является ли value объектом KlaviyoList
+			setSelectedOption({
+				id: value.id,
+				list_name: value.list_name,
+			});
+			setIsDropdownValid(true);
+			handleClose();
+		} else {
+			setIsDropdownValid(false);
+			setSelectedOption(null);
+		}
+	};
+
+	const isKlaviyoList = (value: any): value is KlaviyoList => {
+		return (
+			value !== null &&
+			typeof value === "object" &&
+			"id" in value &&
+			"list_name" in value
+		);
+	};
+
 	// Handle Save action for the create new list form
 	const handleSave = async () => {
 		let valid = true;
@@ -261,16 +402,13 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 			setListNameError(false);
 		}
 
-		// Validate Tag Name
-		if (tagName.trim() === "") {
-			setTagNameError(true);
-			valid = false;
-		} else {
-			setTagNameError(false);
-		}
-
 		// If valid, save and close
 		if (valid) {
+			const newKlaviyoList = { id: "-1", list_name: newListName };
+			setSelectedOption(newKlaviyoList);
+			if (isKlaviyoList(newKlaviyoList)) {
+				setIsDropdownValid(true);
+			}
 			handleClose();
 		}
 	};
@@ -320,13 +458,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 					lineHeight: "20px",
 					fontWeight: "400",
 				},
-				"& .MuiOutlinedInput-notchedOutline": {
-					borderColor: "#A3B0C2",
-				},
 				"&:hover .MuiOutlinedInput-notchedOutline": {
-					borderColor: "#A3B0C2",
-				},
-				"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
 					borderColor: "rgba(56, 152, 252, 1)",
 				},
 			},
@@ -373,6 +505,18 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 
 		return <>{parts}</>; // Return the array wrapped in a fragment.
 	};
+
+	const instructions: any[] = [
+		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
+		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
+		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
+		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
+		// { id: 'unique-id-5', text: 'Click Create.' },
+		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.' },
+		// { id: 'unique-id-7', text: 'Click Connect.' },
+		// { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Allsource.' },
+		// { id: 'unique-id-9', text: 'Click Export.' },
+	];
 
 	// Define the keywords and their styles
 	const highlightConfig: HighlightConfig = {
@@ -427,38 +571,12 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 						Next
 					</Button>
 				);
-			// case '2':
-			//     return (
-			//         <Button
-			//             variant="contained"
-			//             disabled={!isDropdownValid}
-			//             onClick={handleNextTab}
-			//             sx={{
-			//                 backgroundColor: 'rgba(56, 152, 252, 1)',
-			//                 fontFamily: "var(--font-nunito)",
-			//                 fontSize: '14px',
-			//                 fontWeight: '600',
-			//                 lineHeight: '20px',
-			//                 letterSpacing: 'normal',
-			//                 color: "#fff",
-			//                 textTransform: 'none',
-			//                 padding: '10px 24px',
-			//                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-			//                 '&:hover': {
-			//                     backgroundColor: 'rgba(56, 152, 252, 1)'
-			//                 },
-			//                 borderRadius: '4px',
-			//             }}
-			//         >
-			//             Next
-			//         </Button>
-			//     );
 			case "2":
 				return (
 					<Button
 						variant="contained"
+						disabled={!isDropdownValid}
 						onClick={handleSaveSync}
-						disabled={!selectedRadioValue}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -480,6 +598,32 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 								backgroundColor: "rgba(56, 152, 252, 1)",
 								color: "#fff",
 								opacity: 0.6,
+							},
+							borderRadius: "4px",
+						}}
+					>
+						Save
+					</Button>
+				);
+			case "3":
+				return (
+					<Button
+						variant="contained"
+						onClick={handleSaveSync}
+						disabled={!selectedOption || !selectedRadioValue.trim()}
+						sx={{
+							backgroundColor: "rgba(56, 152, 252, 1)",
+							fontFamily: "var(--font-nunito)",
+							fontSize: "14px",
+							fontWeight: "600",
+							lineHeight: "20px",
+							letterSpacing: "normal",
+							color: "#fff",
+							textTransform: "none",
+							padding: "10px 24px",
+							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+							"&:hover": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
 							},
 							borderRadius: "4px",
 						}}
@@ -506,11 +650,11 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 
 	const defaultRows: Row[] = [
 		{ id: 1, type: "Email", value: "Email" },
+		{ id: 2, type: "Phone number", value: "Phone number" },
 		{ id: 3, type: "First name", value: "First name" },
 		{ id: 4, type: "Second name", value: "Second name" },
 		{ id: 5, type: "Job Title", value: "Job Title" },
 		{ id: 6, type: "Location", value: "Location" },
-		{ id: 7, type: "Gender", value: "Gender" },
 	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -606,7 +750,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 	};
 
 	const handlePopupClose = () => {
-		resetToDefaultValues();
 		onClose();
 	};
 
@@ -643,9 +786,6 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 						position: "fixed",
 						top: 0,
 						bottom: 0,
-						boxShadow: boxShadow
-							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
-							: "none",
 						msOverflowStyle: "none",
 						scrollbarWidth: "none",
 						"&::-webkit-scrollbar": {
@@ -659,7 +799,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: boxShadow ? boxShadow : "rgba(0, 0, 0, 0.01)",
+							backgroundColor: "rgba(0, 0, 0, 0)",
 						},
 					},
 				}}
@@ -683,7 +823,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 						className="first-sub-title"
 						sx={{ textAlign: "center" }}
 					>
-						Connect to Omnisend
+						Connect to Mailchimp
 					</Typography>
 					<Box
 						sx={{
@@ -693,10 +833,9 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-omnisend"
-							className="main-text"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-mailchimp"
 							target="_blank"
-							rel="noopener referrer"
+							className="main-text"
 							sx={{
 								fontSize: "14px",
 								fontWeight: "600",
@@ -721,8 +860,8 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 					}}
 				>
 					<UserTip
-						limit={150}
-						service="Omnisend"
+						limit={500}
+						service="Mailchimps"
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
@@ -739,7 +878,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 							<Box sx={{ pb: 4 }}>
 								<TabList
 									centered
-									aria-label="Connect to Omnisend Tabs"
+									aria-label="Connect to Mailchimp Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
@@ -763,13 +902,13 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 										className="tab-heading"
 										sx={klaviyoStyles.tabHeading}
 									/>
-									{/* <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
 									<Tab
-										label="Map data"
+										label="Contact Sync"
 										value="2"
 										className="tab-heading"
 										sx={klaviyoStyles.tabHeading}
 									/>
+									{/* <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -996,6 +1135,328 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 							</TabPanel>
 							<TabPanel value="2" sx={{ p: 0 }}>
 								<Box
+									sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
+								>
+									<Box
+										sx={{
+											p: 2,
+											border: "1px solid #f0f0f0",
+											borderRadius: "4px",
+											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+										}}
+									>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												gap: "8px",
+												mb: 3,
+											}}
+										>
+											<Image
+												src="/mailchimp-icon.svg"
+												alt="mailchimp"
+												height={26}
+												width={32}
+											/>
+											<Typography variant="h6" className="first-sub-title">
+												Contact sync
+											</Typography>
+											<Tooltip title="Sync data with list" placement="right">
+												<Image
+													src="/baseline-info-icon.svg"
+													alt="baseline-info-icon"
+													height={16}
+													width={16}
+												/>
+											</Tooltip>
+										</Box>
+
+										<ClickAwayListener onClickAway={handleClose}>
+											<Box>
+												<TextField
+													ref={textFieldRef}
+													variant="outlined"
+													value={selectedOption?.list_name}
+													onClick={handleClick}
+													size="small"
+													fullWidth
+													label={
+														selectedOption ? "" : "Select or Create new list"
+													}
+													InputLabelProps={{
+														shrink: selectedOption ? false : isShrunk,
+														sx: {
+															fontFamily: "var(--font-nunito)",
+															fontSize: "12px",
+															lineHeight: "16px",
+															color: "rgba(17, 17, 19, 0.60)",
+															letterSpacing: "0.06px",
+															top: "5px",
+															"&.Mui-focused": {
+																color: "rgba(56, 152, 252, 1)",
+															},
+														},
+													}}
+													InputProps={{
+														endAdornment: (
+															<InputAdornment position="end">
+																<IconButton
+																	onClick={handleDropdownToggle}
+																	edge="end"
+																>
+																	{isDropdownOpen ? (
+																		<Image
+																			src="/chevron-drop-up.svg"
+																			alt="chevron-drop-up"
+																			height={24}
+																			width={24}
+																		/>
+																	) : (
+																		<Image
+																			src="/chevron-drop-down.svg"
+																			alt="chevron-drop-down"
+																			height={24}
+																			width={24}
+																		/>
+																	)}
+																</IconButton>
+															</InputAdornment>
+														),
+														sx: klaviyoStyles.formInput,
+													}}
+													sx={{
+														"& input": {
+															caretColor: "transparent", // Hide caret with transparent color
+															fontFamily: "var(--font-nunito)",
+															fontSize: "14px",
+															color: "rgba(0, 0, 0, 0.89)",
+															fontWeight: "600",
+															lineHeight: "normal",
+														},
+														"& .MuiOutlinedInput-input": {
+															cursor: "default", // Prevent showing caret on input field
+															top: "5px",
+														},
+													}}
+												/>
+
+												<Menu
+													anchorEl={anchorEl}
+													open={Boolean(anchorEl) && isDropdownOpen}
+													onClose={handleClose}
+													PaperProps={{
+														sx: {
+															width: anchorEl
+																? `${anchorEl.clientWidth}px`
+																: "538px",
+															borderRadius: "4px",
+															border: "1px solid #e4e4e4",
+														}, // Match dropdown width to input
+													}}
+													sx={{}}
+												>
+													{/* Show "Create New List" option */}
+													<MenuItem
+														onClick={() => handleSelectOption("createNew")}
+														sx={{
+															borderBottom: showCreateForm
+																? "none"
+																: "1px solid #cdcdcd",
+															"&:hover": {
+																background: "rgba(80, 82, 178, 0.10)",
+															},
+														}}
+													>
+														<ListItemText
+															primary={`+ Create new list`}
+															primaryTypographyProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	color: showCreateForm
+																		? "rgba(56, 152, 252, 1)"
+																		: "#202124",
+																	fontWeight: "500",
+																	lineHeight: "20px",
+																},
+															}}
+														/>
+													</MenuItem>
+
+													{/* Show Create New List form if 'showCreateForm' is true */}
+													{showCreateForm && (
+														<Box>
+															<Box
+																sx={{
+																	display: "flex",
+																	flexDirection: "column",
+																	gap: "24px",
+																	p: 2,
+																	width: anchorEl
+																		? `${anchorEl.clientWidth}px`
+																		: "538px",
+																	pt: 0,
+																}}
+															>
+																<Box
+																	sx={{
+																		mt: 1, // Margin-top to separate form from menu item
+																		display: "flex",
+																		justifyContent: "space-between",
+																		gap: "16px",
+																		"@media (max-width: 600px)": {
+																			flexDirection: "column",
+																		},
+																	}}
+																>
+																	<TextField
+																		label="List Name"
+																		variant="outlined"
+																		value={newListName}
+																		onChange={(e) =>
+																			setNewListName(e.target.value)
+																		}
+																		size="small"
+																		fullWidth
+																		onKeyDown={(e) => e.stopPropagation()}
+																		error={listNameError}
+																		helperText={
+																			listNameError
+																				? "List Name is required"
+																				: ""
+																		}
+																		InputLabelProps={{
+																			sx: {
+																				fontFamily: "var(--font-nunito)",
+																				fontSize: "12px",
+																				lineHeight: "16px",
+																				fontWeight: "400",
+																				color: "rgba(17, 17, 19, 0.60)",
+																				"&.Mui-focused": {
+																					color: "rgba(56, 152, 252, 1)",
+																				},
+																			},
+																		}}
+																		InputProps={{
+																			endAdornment: newListName && ( // Conditionally render close icon if input is not empty
+																				<InputAdornment position="end">
+																					<IconButton
+																						edge="end"
+																						onClick={() => setNewListName("")} // Clear the text field when clicked
+																					>
+																						<Image
+																							src="/close-circle.svg"
+																							alt="close-circle"
+																							height={18}
+																							width={18} // Adjust the size as needed
+																						/>
+																					</IconButton>
+																				</InputAdornment>
+																			),
+																			sx: {
+																				"&.MuiOutlinedInput-root": {
+																					height: "32px",
+																					"& .MuiOutlinedInput-input": {
+																						padding: "5px 16px 4px 16px",
+																						fontFamily: "var(--font-roboto)",
+																						color: "#202124",
+																						fontSize: "14px",
+																						fontWeight: "400",
+																						lineHeight: "20px",
+																					},
+																					"& .MuiOutlinedInput-notchedOutline":
+																						{
+																							borderColor: "#A3B0C2",
+																						},
+																					"&:hover .MuiOutlinedInput-notchedOutline":
+																						{
+																							borderColor: "#A3B0C2",
+																						},
+																					"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																						{
+																							borderColor:
+																								"rgba(56, 152, 252, 1)",
+																						},
+																				},
+																				"&+.MuiFormHelperText-root": {
+																					marginLeft: "0",
+																				},
+																			},
+																		}}
+																	/>
+																</Box>
+																<Box sx={{ textAlign: "right" }}>
+																	<Button
+																		variant="contained"
+																		onClick={handleSave}
+																		disabled={listNameError || !newListName}
+																		sx={{
+																			borderRadius: "4px",
+																			border: "1px solid rgba(56, 152, 252, 1)",
+																			background: "#fff",
+																			boxShadow:
+																				"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+																			fontFamily: "var(--font-nunito)",
+																			fontSize: "14px",
+																			fontWeight: "600",
+																			lineHeight: "20px",
+																			color: "rgba(56, 152, 252, 1)",
+																			textTransform: "none",
+																			padding: "4px 22px",
+																			"&:hover": {
+																				background: "transparent",
+																			},
+																			"&.Mui-disabled": {
+																				background: "transparent",
+																				color: "rgba(56, 152, 252, 1)",
+																			},
+																		}}
+																	>
+																		Save
+																	</Button>
+																</Box>
+															</Box>
+
+															{/* Add a Divider to separate form from options */}
+															<Divider sx={{ borderColor: "#cdcdcd" }} />
+														</Box>
+													)}
+
+													{/* Show static options */}
+													{klaviyoList &&
+														klaviyoList.map((klaviyo, option) => (
+															<MenuItem
+																key={klaviyo.id}
+																onClick={() => handleSelectOption(klaviyo)}
+																sx={{
+																	"&:hover": {
+																		background: "rgba(80, 82, 178, 0.10)",
+																	},
+																}}
+															>
+																<ListItemText
+																	primary={klaviyo.list_name}
+																	primaryTypographyProps={{
+																		sx: {
+																			fontFamily: "var(--font-nunito)",
+																			fontSize: "14px",
+																			color: "#202124",
+																			fontWeight: "500",
+																			lineHeight: "20px",
+																		},
+																	}}
+																/>
+															</MenuItem>
+														))}
+												</Menu>
+											</Box>
+										</ClickAwayListener>
+									</Box>
+								</Box>
+							</TabPanel>
+							<TabPanel value="3" sx={{ p: 0 }}>
+								<Box
 									sx={{
 										borderRadius: "4px",
 										border: "1px solid #f0f0f0",
@@ -1009,6 +1470,21 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 									>
 										<Typography variant="h6" className="first-sub-title">
 											Map list
+										</Typography>
+										<Typography
+											variant="h6"
+											sx={{
+												background: "#EDEDF7",
+												borderRadius: "3px",
+												fontFamily: "var(--font-roboto)",
+												fontSize: "12px",
+												fontWeight: "400",
+												color: "#5f6368",
+												padding: "2px 4px",
+												lineHeight: "16px",
+											}}
+										>
+											{selectedOption?.list_name}
 										</Typography>
 									</Box>
 
@@ -1031,7 +1507,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 												},
 											}}
 										>
-											<LogoSmall height={22} width={34} />
+											<Logo height={22} width={34} />
 										</Grid>
 										<Grid
 											item
@@ -1057,8 +1533,8 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 											}}
 										>
 											<Image
-												src="/omnisend_icon_black.svg"
-												alt="omnisend"
+												src="/mailchimp-icon.svg"
+												alt="mailchimp"
 												height={20}
 												width={24}
 											/>
@@ -1380,11 +1856,10 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 														InputLabelProps={{
 															sx: {
 																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
+																fontSize: "12px",
 																lineHeight: "16px",
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
-																left: "3px",
 																"&.Mui-focused": {
 																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
@@ -1402,7 +1877,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																		padding: "6.5px 8px",
 																		fontFamily: "var(--font-roboto)",
 																		color: "#202124",
-																		fontSize: "12px",
+																		fontSize: "14px",
 																		fontWeight: "400",
 																		lineHeight: "20px",
 																	},
@@ -1478,12 +1953,12 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 														}}
 														InputProps={{
 															sx: {
-																maxHeight: "36px",
+																height: "36px",
 																"& .MuiOutlinedInput-input": {
 																	padding: "6.5px 8px",
 																	fontFamily: "var(--font-roboto)",
 																	color: "#202124",
-																	fontSize: "12px",
+																	fontSize: "14px",
 																	fontWeight: "400",
 																	lineHeight: "20px",
 																},
@@ -1524,7 +1999,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 											sx={{
 												display: "flex",
 												justifyContent: "flex-end",
-												mb: 6,
+												mb: 2,
 												mr: 6,
 											}}
 										>
@@ -1535,7 +2010,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 													textTransform: "none",
 													border: "1px solid rgba(56, 152, 252, 1)",
 													borderRadius: "4px",
-													padding: "6px 12px",
+													padding: "9px 16px",
 													minWidth: "auto",
 													"@media (max-width: 900px)": {
 														display: "none",
@@ -1544,6 +2019,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 											>
 												<Typography
 													sx={{
+														marginRight: "0.5em",
 														fontFamily: "var(--font-nunito)",
 														lineHeight: "22.4px",
 														fontSize: "16px",
@@ -1563,20 +2039,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 						{/* Button based on selected tab */}
 					</Box>
 					<Box
-						sx={{
-							px: 2,
-							py: 2,
-							borderTop: "1px solid #e4e4e4",
-							position: "fixed",
-							bottom: 0,
-							right: 0,
-							background: "#fff",
-							zIndex: "1",
-							width: "40%",
-							"@media (max-width: 600px)": {
-								width: "100%",
-							},
-						}}
+						sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
 					>
 						<Box
 							sx={{
@@ -1593,4 +2056,4 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		</>
 	);
 };
-export default OnmisendDataSync;
+export default MailchimpDatasync;

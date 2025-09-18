@@ -26,39 +26,39 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ConnectKlaviyo from "./ConnectKlaviyo";
-import ConnectSalesForce from "./ConnectSalesForce";
-import ConnectMeta from "./ConnectMeta";
+import KlaviyoDataSync from "../../../../components/data-syncs/KlaviyoDataSync";
+import SalesForceDataSync from "../../../../components/data-syncs/SalesForceDataSync";
+import MetaDataSync from "../../../../components/data-syncs/MetaDataSync";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
-import MailchimpDatasync from "./MailchimpDatasync";
-import OmnisendDataSync from "./OmnisendDataSync";
-import SendlaneDatasync from "./SendlaneDatasync";
-import S3Datasync from "./S3Datasync";
-import WebhookDatasync from "./WebhookDatasync";
-import SlackDatasync from "./SlackDataSync";
-import GoogleADSDatasync from "./GoogleADSDataSync";
-import LinkedinDataSync from "./LinkedinDataSync";
+import MailchimpDatasync from "../../../../components/data-syncs/MailchimpDatasync";
+import OmnisendDataSync from "../../../../components/data-syncs/OmnisendDataSync";
+import SendlaneDatasync from "../../../../components/data-syncs/SendlaneDatasync";
+import S3Datasync from "../../../../components/data-syncs/S3Datasync";
+import WebhookDatasync from "../../../../components/data-syncs/WebhookDatasync";
+import SlackDatasync from "../../../../components/data-syncs/SlackDataSync";
+import GoogleADSDatasync from "../../../../components/data-syncs/GoogleADSDataSync";
+import LinkedinDataSync from "../../../../components/data-syncs/LinkedinDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
-import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import AttentiveIntegrationPopup from "@/components/integrations/AttentiveIntegration";
 import BCommerceConnect from "@/components/Bcommerce";
-import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
-import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
-import MailchimpConnect from "@/components/MailchimpConnect";
-import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
-import OmnisendConnect from "@/components/OmnisendConnect";
-import SendlaneConnect from "@/components/SendlaneConnect";
-import S3Connect from "@/components/S3Connect";
+import KlaviyoIntegrationPopup from "@/components/integrations/KlaviyoIntegration";
+import SalesForceIntegrationPopup from "@/components/integrations/SalesForceIntegration";
+import MailchimpConnect from "@/components/integrations/MailchimpIntegration";
+import LinkedinConnectPopup from "@/components/integrations/LinkedinIntegration";
+import OmnisendConnect from "@/components/integrations/OmnisendIntegration";
+import SendlaneConnect from "@/components/integrations/SendlaneIntegration";
+import S3Connect from "@/components/integrations/S3Integration";
 import ShopifySettings from "@/components/ShopifySettings";
-import ZapierConnectPopup from "@/components/ZapierConnectPopup";
-import SlackConnectPopup from "@/components/SlackConnectPopup";
-import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
-import WebhookConnectPopup from "@/components/WebhookConnectPopup";
+import ZapierConnectPopup from "@/components/integrations/ZapierIntegration";
+import SlackConnectPopup from "@/components/integrations/SlackIntegration";
+import GoogleADSConnectPopup from "@/components/integrations/GoogleADSIntegration";
+import WebhookConnectPopup from "@/components/integrations/WebhookIntegration";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import HubspotDataSync from "./HubspotDataSync";
+import HubspotDataSync from "../../../../components/data-syncs/HubspotDataSync";
 import HintCard from "../../components/HintCard";
 import { useDataSyncHints } from "../context/dataSyncHintsContext";
 import { useNotification } from "@/context/NotificationContext";
@@ -67,11 +67,11 @@ import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
-import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
-import GoHighLevelDataSync from "./GoHighLevelDataSync";
-import CustomerIoDataSync from "@/app/(client)/data-sync/components/CustomerIoDataSync";
-import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
-import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
+import GoHighLevelConnectPopup from "@/components/integrations/GoHighLevelIntegration";
+import GoHighLevelDataSync from "../../../../components/data-syncs/GoHighLevelDataSync";
+import CustomerIoDataSync from "@/components/data-syncs/CustomerIoDataSync";
+import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
+import CustomerIoConnect from "@/components/integrations/CustomerIoIntegration";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 interface DataSyncProps {
@@ -1423,7 +1423,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					</Popover>
 				</Box>
 				{klaviyoIconPopupOpen && isEdit === true && (
-					<ConnectKlaviyo
+					<KlaviyoDataSync
 						open={klaviyoIconPopupOpen}
 						onClose={handleKlaviyoIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}
@@ -1447,7 +1447,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					/>
 				)}
 				{salesForceIconPopupOpen && isEdit === true && (
-					<ConnectSalesForce
+					<SalesForceDataSync
 						open={salesForceIconPopupOpen}
 						onClose={handleSalesForceIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}
@@ -1455,7 +1455,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					/>
 				)}
 				{metaIconPopupOpen && isEdit === true && (
-					<ConnectMeta
+					<MetaDataSync
 						open={metaIconPopupOpen}
 						onClose={handleMetaIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}

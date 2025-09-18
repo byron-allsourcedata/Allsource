@@ -1,13 +1,26 @@
-import { Box, Drawer, IconButton, Link, Tab, Typography } from "@mui/material";
+import {
+	Box,
+	Button,
+	Divider,
+	Drawer,
+	IconButton,
+	InputAdornment,
+	Link,
+	Switch,
+	Tab,
+	TextField,
+	Typography,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
 import TabPanel from "@mui/lab/TabPanel";
 import TabList from "@mui/lab/TabList";
 import TabContext from "@mui/lab/TabContext";
 import { useState } from "react";
-import { CustomButton } from "./ui";
+import CustomizedProgressBar from "@/components/ProgressBar";
+import { CustomButton } from "@/components/ui";
 
-const GoHighLevelStyles = {
+const slackStyles = {
 	tabHeading: {
 		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
@@ -68,39 +81,42 @@ const GoHighLevelStyles = {
 	},
 };
 
-interface GoHighLevelConnectProps {
+interface GoogleADSConnectProps {
 	handlePopupClose: () => void;
-	onCloseCreateSync?: () => void;
+	onSave?: (new_integration: any) => void;
 	open: boolean;
+	initApiKey?: string;
 	boxShadow?: string;
+	invalid_api_key?: boolean;
 }
 
-const GoHighLevelConnectPopup = ({
+const GoogleADSConnectPopup = ({
 	open,
 	handlePopupClose,
 	boxShadow,
-}: GoHighLevelConnectProps) => {
+	invalid_api_key,
+}: GoogleADSConnectProps) => {
 	const [value, setValue] = useState("1");
+	const [loading, setLoading] = useState(false);
 
 	const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
 		setValue(newValue);
 	};
 
 	const handleLogin = async () => {
-		const clientId = process.env.NEXT_PUBLIC_GO_HIGH_LEVEL_CLIENT_ID;
-		const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL}/high-landing`;
-		const scopes = [
-			"contacts.readonly",
-			"contacts.write",
-			"locations/customFields.readonly",
-			"locations/customFields.write",
-		].join("%20");
-		const authUrl = `https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes}`;
-		window.open(authUrl, "_blank", "noopener,noreferrer");
+		const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+		const REDIRECT_URI = `${process.env.NEXT_PUBLIC_BASE_URL}/google-ads-landing`;
+		const scope = "https://www.googleapis.com/auth/adwords";
+		const authUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${googleClientId}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+		window.location.href = authUrl;
 	};
 
 	if (!open) {
 		return;
+	}
+
+	if (loading) {
+		return <CustomizedProgressBar />;
 	}
 
 	return (
@@ -160,7 +176,7 @@ const GoHighLevelConnectPopup = ({
 						lineHeight: "normal",
 					}}
 				>
-					Connect to Go High Level
+					Connect to GoogleAds
 				</Typography>
 				<Box
 					sx={{
@@ -170,7 +186,7 @@ const GoHighLevelConnectPopup = ({
 					}}
 				>
 					<Link
-						href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-gohighlevel"
+						href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads"
 						target="_blank"
 						rel="noopener noreferrer"
 						sx={{
@@ -209,7 +225,7 @@ const GoHighLevelConnectPopup = ({
 						<Box sx={{ pb: 4 }}>
 							<TabList
 								centered
-								aria-label="Connect to GoHighlevel Tabs"
+								aria-label="Connect to Slack Tabs"
 								TabIndicatorProps={{
 									sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 								}}
@@ -231,7 +247,7 @@ const GoHighLevelConnectPopup = ({
 									label="Connection"
 									value="1"
 									className="tab-heading"
-									sx={GoHighLevelStyles.tabHeading}
+									sx={slackStyles.tabHeading}
 									onClick={() => setValue("1")}
 								/>
 							</TabList>
@@ -251,8 +267,8 @@ const GoHighLevelConnectPopup = ({
 									mb={2}
 								>
 									<Image
-										src="/go-high-level-icon.svg"
-										alt="gohighlevel"
+										src="/google-ads.svg"
+										alt="googleAds"
 										height={24}
 										width={24}
 									/>
@@ -266,7 +282,7 @@ const GoHighLevelConnectPopup = ({
 											lineHeight: "normal",
 										}}
 									>
-										Login to your Go High Level account
+										Login to your GoogleAds
 									</Typography>
 								</Box>
 								<Box>
@@ -276,15 +292,156 @@ const GoHighLevelConnectPopup = ({
 										fullWidth
 										startIcon={
 											<Image
-												src="/go-high-level-icon.svg"
-												alt="gohighlevel"
+												src="/google-ads.svg"
+												alt="googleAds"
 												height={24}
 												width={24}
 											/>
 										}
 									>
-										Connect to Go High Level
+										Connect to GoogleAds
 									</CustomButton>
+									{invalid_api_key && (
+										<Typography
+											color="error"
+											sx={{
+												fontFamily: "var(--font-nunito)",
+												fontSize: "14px",
+												fontWeight: "600",
+												lineHeight: "21.82px",
+												marginTop: "10px",
+											}}
+										>
+											Invalid API Key detected. Please reconnect to GoogleAds
+											and try again
+										</Typography>
+									)}
+								</Box>
+							</Box>
+						</TabPanel>
+						<TabPanel value="2" sx={{ p: 0 }}>
+							<Box
+								sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
+							>
+								<Box
+									sx={{
+										p: 2,
+										border: "1px solid #f0f0f0",
+										borderRadius: "4px",
+										boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+										display: "flex",
+										flexDirection: "column",
+										gap: "16px",
+									}}
+								>
+									<Box
+										sx={{ display: "flex", alignItems: "center", gap: "8px" }}
+									>
+										<Image
+											src="/slack-icon.svg"
+											alt="Slack"
+											height={26}
+											width={32}
+										/>
+										<Typography
+											variant="h6"
+											sx={{
+												fontFamily: "var(--font-nunito)",
+												fontSize: "16px",
+												fontWeight: "600",
+												color: "#202124",
+												lineHeight: "normal",
+											}}
+										>
+											Eliminate Redundancy: Stop Paying for Contacts You Already
+											Own
+										</Typography>
+									</Box>
+									<Typography
+										variant="subtitle1"
+										sx={{
+											fontFamily: "var(--font-roboto)",
+											fontSize: "12px",
+											fontWeight: "400",
+											color: "#808080",
+											lineHeight: "20px",
+											letterSpacing: "0.06px",
+										}}
+									>
+										Sync your current list to avoid collecting contacts you
+										already possess. Newly added contacts in Slack will be
+										automatically suppressed each day.
+									</Typography>
+
+									<Box
+										sx={{ display: "flex", gap: "8px", alignItems: "center" }}
+									>
+										<Typography
+											variant="subtitle1"
+											sx={{
+												fontFamily: "var(--font-roboto)",
+												fontSize: "12px",
+												fontWeight: "400",
+												color: "#808080",
+												lineHeight: "normal",
+												letterSpacing: "0.06px",
+											}}
+										>
+											Enable Automatic Contact Suppression
+										</Typography>
+
+										{/* Switch Control with Yes/No Labels */}
+										<Box position="relative" display="inline-block">
+											<Link
+												variant="h6"
+												sx={{
+													fontFamily: "var(--font-nunito)",
+													fontSize: "14px",
+													fontWeight: "600",
+													lineHeight: "20px",
+													color: "rgba(56, 152, 252, 1)",
+													cursor: "pointer",
+													textDecorationColor: "rgba(56, 152, 252, 1)",
+												}}
+											>
+												Tutorial
+											</Link>
+										</Box>
+									</Box>
+								</Box>
+								<Box
+									sx={{
+										background: "#efefef",
+										borderRadius: "4px",
+										px: 1.5,
+										py: 1,
+									}}
+								>
+									<Box
+										sx={{ display: "flex", alignItems: "center", gap: "8px" }}
+									>
+										<Image
+											src="/info-circle.svg"
+											alt="info-circle"
+											height={20}
+											width={20}
+										/>
+										<Typography
+											variant="subtitle1"
+											sx={{
+												fontFamily: "var(--font-roboto)",
+												fontSize: "12px",
+												fontWeight: "400",
+												color: "#808080",
+												lineHeight: "20px",
+												letterSpacing: "0.06px",
+											}}
+										>
+											By performing this action, all your Slack contacts will be
+											added to your Grow suppression list, and new contacts will
+											be imported daily around 6pm EST.
+										</Typography>
+									</Box>
 								</Box>
 							</Box>
 						</TabPanel>
@@ -295,4 +452,4 @@ const GoHighLevelConnectPopup = ({
 	);
 };
 
-export default GoHighLevelConnectPopup;
+export default GoogleADSConnectPopup;
