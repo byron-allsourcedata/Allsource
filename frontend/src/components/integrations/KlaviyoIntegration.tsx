@@ -22,19 +22,22 @@ import {
 	Divider,
 	Tab,
 	Switch,
+	LinearProgress,
+	Tabs,
 } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import CustomizedProgressBar from "./CustomizedProgressBar";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
-interface CreateAttentiveProps {
+interface CreateKlaviyoProps {
 	handleClose: () => void;
-	onSave: (integration: any) => void;
+	onSave?: (integration: IntegrationsCredentials) => void;
 	open: boolean;
 	initApiKey?: string;
 	boxShadow?: string;
@@ -42,7 +45,17 @@ interface CreateAttentiveProps {
 	invalid_api_key?: boolean;
 }
 
-const attentiveStyles = {
+interface IntegrationsCredentials {
+	id?: number;
+	access_token: string;
+	ad_account_id?: string;
+	shop_domain?: string;
+	data_center?: string;
+	service_name: string;
+	is_with_suppression?: boolean;
+}
+
+const klaviyoStyles = {
 	tabHeading: {
 		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
@@ -53,7 +66,6 @@ const attentiveStyles = {
 		padding: 0,
 		minWidth: "auto",
 		px: 2,
-		pointerEvents: "none",
 		"@media (max-width: 600px)": {
 			alignItems: "flex-start",
 			p: 0,
@@ -65,8 +77,9 @@ const attentiveStyles = {
 	},
 	inputLabel: {
 		fontFamily: "var(--font-nunito)",
-		fontSize: "12px",
+		fontSize: "14px",
 		lineHeight: "16px",
+		left: "2px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
 			color: "rgba(56, 152, 252, 1)",
@@ -92,6 +105,9 @@ const attentiveStyles = {
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
 				borderColor: "rgba(56, 152, 252, 1)",
 			},
+			"&.Mui-error .MuiOutlinedInput-notchedOutline": {
+				borderColor: "rgba(224, 49, 48, 1)",
+			},
 		},
 		"&+.MuiFormHelperText-root": {
 			marginLeft: "0",
@@ -99,24 +115,29 @@ const attentiveStyles = {
 	},
 };
 
-const AttentiveIntegrationPopup = ({
+const KlaviyoIntegrationPopup = ({
 	handleClose,
 	open,
 	onSave,
 	initApiKey,
-	isEdit,
 	boxShadow,
 	invalid_api_key,
-}: CreateAttentiveProps) => {
-	const { triggerSync } = useIntegrationContext();
+}: CreateKlaviyoProps) => {
+	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [value, setValue] = useState<string>("1");
 	const [checked, setChecked] = useState(false);
+	const [tab2Error, setTab2Error] = useState(false);
+	const [disableButton, setDisableButton] = useState(false);
 	const label = { inputProps: { "aria-label": "Switch demo" } };
-
+	const { data, loading, error, sendRequest } = useAxiosHook();
 	const { whitelabel } = useWhitelabel();
+
+	const [value, setValue] = useState("1");
+
+	const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+		setValue(newValue);
+	};
 
 	useEffect(() => {
 		setApiKey(initApiKey || "");
@@ -129,17 +150,17 @@ const AttentiveIntegrationPopup = ({
 	const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = event.target.value;
 		setApiKey(value);
-		setApiKeyError(!value);
+		setApiKeyError(!value.trim());
 	};
 
 	const instructions = [
 		{
 			id: "unique-id-1",
-			text: "Go to the Attentive website and log into your account.",
+			text: "Go to the Klaviyo website and log into your account.",
 		},
 		{
 			id: "unique-id-2",
-			text: "Click on the Settings option located in your Attentive account options.",
+			text: "Click on the Settings option located in your Klaviyo account options.",
 		},
 		{
 			id: "unique-id-3",
@@ -147,12 +168,12 @@ const AttentiveIntegrationPopup = ({
 		},
 		{
 			id: "unique-id-4",
-			text: "Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Attentive key.",
+			text: "Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.",
 		},
 		{ id: "unique-id-5", text: "Click Create." },
 		{
 			id: "unique-id-6",
-			text: `Copy the API key in the next screen and paste to API Key field located in ${whitelabel.brand_name} Attentive section.`,
+			text: `Copy the API key in the next screen and paste to API Key field located in ${whitelabel.brand_name} Klaviyo section.`,
 		},
 		{ id: "unique-id-7", text: "Click Connect." },
 	];
@@ -193,30 +214,42 @@ const AttentiveIntegrationPopup = ({
 
 	const handleApiKeySave = async () => {
 		try {
-			const response = await axiosInstance.post(
-				"/integrations/",
-				{
-					attentive: {
+			setDisableButton(true);
+			const response = await sendRequest({
+				url: "/integrations/",
+				method: "POST",
+				data: {
+					klaviyo: {
 						api_key: apiKey,
 					},
 				},
-				{ params: { service_name: "attentive" } },
-			);
-			if (response.status === 200) {
-				showToast("Integration Attentive Successfully");
-				onSave({
-					service_name: "Attentive",
-					is_failed: false,
-					access_token: apiKey,
-				});
-				triggerSync();
-				handleNextTab();
+				params: { service_name: "klaviyo" },
+			});
+			if (response?.status === 200) {
+				if (onSave) {
+					onSave({
+						service_name: "klaviyo",
+						access_token: apiKey,
+					});
+				}
+				showToast("Integration Klaviyo Successfully");
+				await triggerSync();
+				setNeedsSync(false);
+				handleClose();
+			} else {
+				showErrorToast("Invalid API key or permissions");
+				setApiKeyError(true);
 			}
-		} catch (error) {}
+		} catch (error) {
+			showErrorToast("Invalid API key or permissions");
+			setApiKeyError(true);
+		} finally {
+			setDisableButton(false);
+		}
 	};
 
 	const highlightConfig: HighlightConfig = {
-		Attentive: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" },
+		Klaviyo: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" },
 		Settings: { color: "#707071", fontWeight: "500" },
 		"Create Private API Key": { color: "#707071", fontWeight: "500" },
 		Lists: { color: "#707071", fontWeight: "500" },
@@ -240,15 +273,17 @@ const AttentiveIntegrationPopup = ({
 	};
 
 	const handleSave = async () => {
-		onSave({
-			id: -1,
-			service_name: "Attentive",
-			data_center: "",
-			access_token: apiKey,
-			is_with_suppression: checked,
-			ad_account_id: "",
-			shop_domain: "",
-		});
+		if (onSave) {
+			onSave({
+				id: -1,
+				service_name: "klaviyo",
+				data_center: "",
+				access_token: apiKey,
+				is_with_suppression: checked,
+				ad_account_id: "",
+				shop_domain: "",
+			});
+		}
 		handleClose();
 	};
 
@@ -259,7 +294,7 @@ const AttentiveIntegrationPopup = ({
 					<Button
 						variant="contained"
 						onClick={handleApiKeySave}
-						disabled={!apiKey}
+						disabled={!apiKey || disableButton || apiKeyError}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -271,8 +306,16 @@ const AttentiveIntegrationPopup = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -312,16 +355,35 @@ const AttentiveIntegrationPopup = ({
 
 	return (
 		<>
-			{loading && <CustomizedProgressBar />}
+			{loading && (
+				<Box
+					sx={{
+						position: "fixed",
+						top: 0,
+						left: 0,
+						right: 0,
+						bottom: 0,
+						background: "rgba(0, 0, 0, 0.2)",
+						display: "flex",
+						justifyContent: "center",
+						alignItems: "center",
+						zIndex: 1400,
+						overflow: "hidden",
+					}}
+				>
+					<Box sx={{ width: "100%", top: 0, height: "100vh" }}>
+						<LinearProgress />
+					</Box>
+				</Box>
+			)}
 			<Drawer
 				anchor="right"
 				open={open}
 				onClose={handleClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						boxShadow: boxShadow
@@ -332,7 +394,7 @@ const AttentiveIntegrationPopup = ({
 						"&::-webkit-scrollbar": {
 							display: "none",
 						},
-						"@media (max-width: 600px)": {
+						"@media (max-width: 900px)": {
 							width: "100%",
 						},
 					},
@@ -340,7 +402,7 @@ const AttentiveIntegrationPopup = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: boxShadow ? boxShadow : "rgba(0,0,0,0.01)",
+							backgroundColor: boxShadow ? boxShadow : "rgba(0, 0, 0, 0.01)",
 						},
 					},
 				}}
@@ -366,7 +428,7 @@ const AttentiveIntegrationPopup = ({
 							lineHeight: "normal",
 						}}
 					>
-						Connect to Attentive
+						Connect to Klaviyo
 					</Typography>
 					<Box
 						sx={{
@@ -376,7 +438,9 @@ const AttentiveIntegrationPopup = ({
 						}}
 					>
 						<Link
-							href="#"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-klaviyo"
+							target="_blank"
+							rel="noopener noreferrer"
 							sx={{
 								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
@@ -411,13 +475,16 @@ const AttentiveIntegrationPopup = ({
 					>
 						<TabContext value={value}>
 							<Box sx={{ pb: 4 }}>
-								<TabList
+								<Tabs
+									value={value}
+									onChange={handleChange}
 									centered
-									aria-label="Connect to Attentive Tabs"
+									aria-label="Connect to Klaviyo Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
 									sx={{
+										cursor: "pointer",
 										"& .MuiTabs-scroller": {
 											overflowX: "auto !important",
 										},
@@ -433,14 +500,14 @@ const AttentiveIntegrationPopup = ({
 									<Tab
 										label="API Key"
 										value="1"
-										sx={{ ...attentiveStyles.tabHeading, cursor: "pointer" }}
+										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
 									/>
-									<Tab
+									{/* <Tab
 										label="Suppression Sync"
 										value="2"
-										sx={attentiveStyles.tabHeading}
-									/>
-								</TabList>
+										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
+									/> */}
+								</Tabs>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
 								<Box
@@ -455,8 +522,8 @@ const AttentiveIntegrationPopup = ({
 										sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 									>
 										<Image
-											src="/attentive.svg"
-											alt="Attentive"
+											src="/klaviyo.svg"
+											alt="klaviyo"
 											height={26}
 											width={32}
 										/>
@@ -472,7 +539,7 @@ const AttentiveIntegrationPopup = ({
 											API Key
 										</Typography>
 										<Tooltip
-											title="Enter the API key provided by Attentive"
+											title="Enter the API key provided by Klaviyo"
 											placement="right"
 										>
 											<Image
@@ -489,11 +556,18 @@ const AttentiveIntegrationPopup = ({
 										fullWidth
 										margin="normal"
 										error={invalid_api_key}
-										helperText={invalid_api_key ? "API Key is required" : ""}
+										helperText={invalid_api_key ? "Invalid API Key" : ""}
 										value={apiKey}
 										onChange={handleApiKeyChange}
-										InputLabelProps={{ sx: attentiveStyles.inputLabel }}
-										InputProps={{ sx: attentiveStyles.formInput }}
+										InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
+										InputProps={{
+											sx: {
+												...klaviyoStyles.formInput,
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
+											},
+										}}
 									/>
 								</Box>
 								<Box
@@ -528,7 +602,7 @@ const AttentiveIntegrationPopup = ({
 												lineHeight: "normal",
 											}}
 										>
-											How to integrate Attentive
+											How to integrate Klaviyo
 										</Typography>
 									</Box>
 									<List dense sx={{ p: 0 }}>
@@ -588,8 +662,8 @@ const AttentiveIntegrationPopup = ({
 											sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 										>
 											<Image
-												src="/attentive.svg"
-												alt="Attentive"
+												src="/klaviyo.svg"
+												alt="klaviyo"
 												height={26}
 												width={32}
 											/>
@@ -619,7 +693,7 @@ const AttentiveIntegrationPopup = ({
 											}}
 										>
 											Sync your current list to avoid collecting contacts you
-											already possess. Newly added contacts in Attentive will be
+											already possess. Newly added contacts in Klaviyo will be
 											automatically suppressed each day.
 										</Typography>
 
@@ -768,7 +842,7 @@ const AttentiveIntegrationPopup = ({
 													letterSpacing: "0.06px",
 												}}
 											>
-												By performing this action, all your Attentive contacts
+												By performing this action, all your Klaviyo contacts
 												will be added to your Grow suppression list, and new
 												contacts will be imported daily around 6pm EST.
 											</Typography>
@@ -778,9 +852,7 @@ const AttentiveIntegrationPopup = ({
 							</TabPanel>
 						</TabContext>
 					</Box>
-					<Box
-						sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
-					>
+					<Box sx={{ px: 2, py: 3.5, width: "100%" }}>
 						<Box
 							sx={{
 								width: "100%",
@@ -797,4 +869,4 @@ const AttentiveIntegrationPopup = ({
 	);
 };
 
-export default AttentiveIntegrationPopup;
+export default KlaviyoIntegrationPopup;

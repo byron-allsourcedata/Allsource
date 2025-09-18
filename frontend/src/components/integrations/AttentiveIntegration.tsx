@@ -22,36 +22,27 @@ import {
 	Divider,
 	Tab,
 	Switch,
-	LinearProgress,
 } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import CustomizedProgressBar from "./CustomizedProgressBar";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
-interface CreateOmnisendProps {
+interface CreateAttentiveProps {
 	handleClose: () => void;
-	onSave?: (new_integration: any) => void;
+	onSave: (integration: any) => void;
 	open: boolean;
 	initApiKey?: string;
 	boxShadow?: string;
+	isEdit?: boolean;
 	invalid_api_key?: boolean;
 }
 
-interface IntegrationsCredentials {
-	id: number;
-	access_token: string;
-	ad_account_id: string;
-	shop_domain: string;
-	data_center: string;
-	service_name: string;
-	is_with_suppression: boolean;
-}
-
-const klaviyoStyles = {
+const attentiveStyles = {
 	tabHeading: {
 		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
@@ -74,9 +65,8 @@ const klaviyoStyles = {
 	},
 	inputLabel: {
 		fontFamily: "var(--font-nunito)",
-		fontSize: "14px",
+		fontSize: "12px",
 		lineHeight: "16px",
-		left: "4px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
 			color: "rgba(56, 152, 252, 1)",
@@ -102,9 +92,6 @@ const klaviyoStyles = {
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
 				borderColor: "rgba(56, 152, 252, 1)",
 			},
-			"&.Mui-error .MuiOutlinedInput-notchedOutline": {
-				borderColor: "rgba(224, 49, 48, 1)",
-			},
 		},
 		"&+.MuiFormHelperText-root": {
 			marginLeft: "0",
@@ -112,55 +99,62 @@ const klaviyoStyles = {
 	},
 };
 
-const OmnisendConnect = ({
+const AttentiveIntegrationPopup = ({
 	handleClose,
 	open,
 	onSave,
 	initApiKey,
+	isEdit,
 	boxShadow,
 	invalid_api_key,
-}: CreateOmnisendProps) => {
-	const { triggerSync, setNeedsSync } = useIntegrationContext();
+}: CreateAttentiveProps) => {
+	const { triggerSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = useState<string>("1");
 	const [checked, setChecked] = useState(false);
-	const [tab2Error, setTab2Error] = useState(false);
 	const label = { inputProps: { "aria-label": "Switch demo" } };
-	const [disableButton, setDisableButton] = useState(false);
-	const [selectedRadioValue, setSelectedRadioValue] = useState("");
-	const [isDropdownValid, setIsDropdownValid] = useState(false);
+
+	const { whitelabel } = useWhitelabel();
 
 	useEffect(() => {
 		setApiKey(initApiKey || "");
 	}, [initApiKey]);
-
-	const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setSelectedRadioValue(event.target.value);
-	};
 
 	const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setChecked(event.target.checked);
 	};
 
 	const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		if (apiKeyError) {
-			setApiKeyError(false);
-		}
 		const value = event.target.value;
 		setApiKey(value);
-		setApiKeyError(!value.trim());
+		setApiKeyError(!value);
 	};
 
-	const instructions: any[] = [
-		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
-		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-		// { id: 'unique-id-5', text: 'Click Create.' },
-		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.' },
-		// { id: 'unique-id-7', text: 'Click Connect.' },
+	const instructions = [
+		{
+			id: "unique-id-1",
+			text: "Go to the Attentive website and log into your account.",
+		},
+		{
+			id: "unique-id-2",
+			text: "Click on the Settings option located in your Attentive account options.",
+		},
+		{
+			id: "unique-id-3",
+			text: `Click Create Private API Key Name to ${whitelabel.brand_name}.`,
+		},
+		{
+			id: "unique-id-4",
+			text: "Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Attentive key.",
+		},
+		{ id: "unique-id-5", text: "Click Create." },
+		{
+			id: "unique-id-6",
+			text: `Copy the API key in the next screen and paste to API Key field located in ${whitelabel.brand_name} Attentive section.`,
+		},
+		{ id: "unique-id-7", text: "Click Connect." },
 	];
 
 	type HighlightConfig = {
@@ -199,43 +193,30 @@ const OmnisendConnect = ({
 
 	const handleApiKeySave = async () => {
 		try {
-			setDisableButton(true);
-			setLoading(true);
 			const response = await axiosInstance.post(
 				"/integrations/",
 				{
-					omnisend: {
+					attentive: {
 						api_key: apiKey,
 					},
 				},
-				{ params: { service_name: "omnisend" } },
+				{ params: { service_name: "attentive" } },
 			);
-			if (response.status === 200 && response.data !== "CREDENTIALS_INVALID") {
-				showToast("Integration Omnisend Successfully");
-				if (onSave) {
-					onSave({
-						service_name: "omnisend",
-						is_failed: false,
-						access_token: apiKey,
-					});
-				}
-				await triggerSync();
-				setNeedsSync(false);
-				handleClose();
+			if (response.status === 200) {
+				showToast("Integration Attentive Successfully");
+				onSave({
+					service_name: "Attentive",
+					is_failed: false,
+					access_token: apiKey,
+				});
+				triggerSync();
+				handleNextTab();
 			}
-			if (response.data === "CREDENTIALS_INVALID") {
-				showErrorToast("Invalid API Key, please, try another");
-				setApiKeyError(true);
-			}
-		} catch (error) {
-		} finally {
-			setDisableButton(false);
-			setLoading(false);
-		}
+		} catch (error) {}
 	};
 
 	const highlightConfig: HighlightConfig = {
-		Klaviyo: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" },
+		Attentive: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" },
 		Settings: { color: "#707071", fontWeight: "500" },
 		"Create Private API Key": { color: "#707071", fontWeight: "500" },
 		Lists: { color: "#707071", fontWeight: "500" },
@@ -259,6 +240,15 @@ const OmnisendConnect = ({
 	};
 
 	const handleSave = async () => {
+		onSave({
+			id: -1,
+			service_name: "Attentive",
+			data_center: "",
+			access_token: apiKey,
+			is_with_suppression: checked,
+			ad_account_id: "",
+			shop_domain: "",
+		});
 		handleClose();
 	};
 
@@ -269,7 +259,7 @@ const OmnisendConnect = ({
 					<Button
 						variant="contained"
 						onClick={handleApiKeySave}
-						disabled={!apiKey || disableButton || apiKeyError}
+						disabled={!apiKey}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -281,16 +271,8 @@ const OmnisendConnect = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							":hover": {
-								backgroundColor: "rgba(30, 136, 229, 1)",
-							},
-							":active": {
+							"&:hover": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
-							},
-							":disabled": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-								color: "#fff",
-								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -330,46 +312,27 @@ const OmnisendConnect = ({
 
 	return (
 		<>
-			{loading && (
-				<Box
-					sx={{
-						position: "fixed",
-						top: 0,
-						left: 0,
-						right: 0,
-						bottom: 0,
-						background: "rgba(0, 0, 0, 0.2)",
-						display: "flex",
-						justifyContent: "center",
-						alignItems: "center",
-						zIndex: 1400,
-						overflow: "hidden",
-					}}
-				>
-					<Box sx={{ width: "100%", top: 0, height: "100vh" }}>
-						<LinearProgress />
-					</Box>
-				</Box>
-			)}
+			{loading && <CustomizedProgressBar />}
 			<Drawer
 				anchor="right"
 				open={open}
 				onClose={handleClose}
 				PaperProps={{
 					sx: {
-						width: "40%",
+						width: "620px",
 						position: "fixed",
+						zIndex: 1301,
 						top: 0,
+						bottom: 0,
 						boxShadow: boxShadow
 							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
 							: "none",
-						bottom: 0,
 						msOverflowStyle: "none",
 						scrollbarWidth: "none",
 						"&::-webkit-scrollbar": {
 							display: "none",
 						},
-						"@media (max-width: 900px)": {
+						"@media (max-width: 600px)": {
 							width: "100%",
 						},
 					},
@@ -377,7 +340,7 @@ const OmnisendConnect = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: boxShadow ? boxShadow : "rgba(0, 0, 0, 0.01)",
+							backgroundColor: boxShadow ? boxShadow : "rgba(0,0,0,0.01)",
 						},
 					},
 				}}
@@ -403,7 +366,7 @@ const OmnisendConnect = ({
 							lineHeight: "normal",
 						}}
 					>
-						Connect to Omnisend
+						Connect to Attentive
 					</Typography>
 					<Box
 						sx={{
@@ -413,9 +376,7 @@ const OmnisendConnect = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-omnisend"
-							target="_blank"
-							rel="noopener referrer"
+							href="#"
 							sx={{
 								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
@@ -452,7 +413,7 @@ const OmnisendConnect = ({
 							<Box sx={{ pb: 4 }}>
 								<TabList
 									centered
-									aria-label="Connect to Omnisend Tabs"
+									aria-label="Connect to Attentive Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
@@ -472,13 +433,13 @@ const OmnisendConnect = ({
 									<Tab
 										label="API Key"
 										value="1"
-										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
+										sx={{ ...attentiveStyles.tabHeading, cursor: "pointer" }}
 									/>
-									{/* <Tab
+									<Tab
 										label="Suppression Sync"
 										value="2"
-										sx={klaviyoStyles.tabHeading}
-									/> */}
+										sx={attentiveStyles.tabHeading}
+									/>
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -494,8 +455,8 @@ const OmnisendConnect = ({
 										sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 									>
 										<Image
-											src="/omnisend_icon_black.svg"
-											alt="omnisend"
+											src="/attentive.svg"
+											alt="Attentive"
 											height={26}
 											width={32}
 										/>
@@ -511,7 +472,7 @@ const OmnisendConnect = ({
 											API Key
 										</Typography>
 										<Tooltip
-											title="Enter the API key provided by Omnisend"
+											title="Enter the API key provided by Attentive"
 											placement="right"
 										>
 											<Image
@@ -528,94 +489,85 @@ const OmnisendConnect = ({
 										fullWidth
 										margin="normal"
 										error={invalid_api_key}
-										helperText={invalid_api_key ? "Invalid API Key" : ""}
+										helperText={invalid_api_key ? "API Key is required" : ""}
 										value={apiKey}
 										onChange={handleApiKeyChange}
-										InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-										InputProps={{
-											sx: {
-												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key
-													? "rgba(224, 49, 48, 1)"
-													: "inherit",
-											},
-										}}
+										InputLabelProps={{ sx: attentiveStyles.inputLabel }}
+										InputProps={{ sx: attentiveStyles.formInput }}
 									/>
 								</Box>
-								{instructions.length > 0 && (
+								<Box
+									sx={{
+										background: "#f0f0f0",
+										border: "1px solid #efefef",
+										borderRadius: "4px",
+										p: 2,
+									}}
+								>
 									<Box
 										sx={{
-											background: "#f0f0f0",
-											border: "1px solid #efefef",
-											borderRadius: "4px",
-											p: 2,
+											display: "flex",
+											alignItems: "center",
+											gap: "8px",
+											mb: 2,
 										}}
 									>
-										<Box
+										<Image
+											src="/info-circle.svg"
+											alt="info-circle"
+											height={20}
+											width={20}
+										/>
+										<Typography
+											variant="subtitle1"
 											sx={{
-												display: "flex",
-												alignItems: "center",
-												gap: "8px",
-												mb: 2,
+												fontFamily: "var(--font-nunito)",
+												fontSize: "16px",
+												fontWeight: "600",
+												color: "#202124",
+												lineHeight: "normal",
 											}}
 										>
-											<Image
-												src="/info-circle.svg"
-												alt="info-circle"
-												height={20}
-												width={20}
-											/>
-											<Typography
-												variant="subtitle1"
-												sx={{
-													fontFamily: "var(--font-nunito)",
-													fontSize: "16px",
-													fontWeight: "600",
-													color: "#202124",
-													lineHeight: "normal",
-												}}
-											>
-												How to integrate Omnisend
-											</Typography>
-										</Box>
-										<List dense sx={{ p: 0 }}>
-											{instructions.map((instruction, index) => (
-												<ListItem
-													key={instruction.id}
-													sx={{ p: 0, alignItems: "flex-start" }}
-												>
-													<Typography
-														variant="body1"
-														sx={{
-															display: "inline-block",
-															marginRight: "4px",
-															fontFamily: "var(--font-roboto)",
-															fontSize: "12px",
-															fontWeight: "400",
-															color: "#808080",
-															lineHeight: "24px",
-														}}
-													>
-														{index + 1}.
-													</Typography>
-													<Typography
-														variant="body1"
-														sx={{
-															display: "inline",
-															fontFamily: "var(--font-roboto)",
-															fontSize: "12px",
-															fontWeight: "400",
-															color: "#808080",
-															lineHeight: "24px",
-														}}
-													>
-														{highlightText(instruction.text, highlightConfig)}
-													</Typography>
-												</ListItem>
-											))}
-										</List>
+											How to integrate Attentive
+										</Typography>
 									</Box>
-								)}
+									<List dense sx={{ p: 0 }}>
+										{instructions.map((instruction, index) => (
+											<ListItem
+												key={instruction.id}
+												sx={{ p: 0, alignItems: "flex-start" }}
+											>
+												<Typography
+													variant="body1"
+													sx={{
+														display: "inline-block",
+														marginRight: "4px",
+														fontFamily: "var(--font-roboto)",
+														fontSize: "12px",
+														fontWeight: "400",
+														color: "#808080",
+														lineHeight: "24px",
+													}}
+												>
+													{index + 1}.
+												</Typography>
+												<Typography
+													variant="body1"
+													sx={{
+														display: "inline",
+														fontFamily: "var(--font-roboto)",
+														fontSize: "12px",
+														fontWeight: "400",
+														color: "#808080",
+														lineHeight: "24px",
+													}}
+												>
+													{highlightText(instruction.text, highlightConfig)}
+												</Typography>
+											</ListItem>
+										))}
+									</List>
+								</Box>
 							</TabPanel>
 							<TabPanel value="2" sx={{ p: 0 }}>
 								<Box
@@ -636,8 +588,8 @@ const OmnisendConnect = ({
 											sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 										>
 											<Image
-												src="/omnisend_icon_black.svg"
-												alt="omnisend"
+												src="/attentive.svg"
+												alt="Attentive"
 												height={26}
 												width={32}
 											/>
@@ -667,7 +619,7 @@ const OmnisendConnect = ({
 											}}
 										>
 											Sync your current list to avoid collecting contacts you
-											already possess. Newly added contacts in Omnisend will be
+											already possess. Newly added contacts in Attentive will be
 											automatically suppressed each day.
 										</Typography>
 
@@ -816,7 +768,7 @@ const OmnisendConnect = ({
 													letterSpacing: "0.06px",
 												}}
 											>
-												By performing this action, all your Omnisend contacts
+												By performing this action, all your Attentive contacts
 												will be added to your Grow suppression list, and new
 												contacts will be imported daily around 6pm EST.
 											</Typography>
@@ -845,4 +797,4 @@ const OmnisendConnect = ({
 	);
 };
 
-export default OmnisendConnect;
+export default AttentiveIntegrationPopup;

@@ -1,11 +1,10 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import {
 	Drawer,
 	Box,
 	Typography,
 	IconButton,
 	TextField,
-	Divider,
 	FormControlLabel,
 	FormControl,
 	FormLabel,
@@ -25,100 +24,140 @@ import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "../../../../components/ToastNotification";
+import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
-import { LogoSmall } from "@/components/ui/Logo";
+import { Logo } from "@/components/ui/Logo";
 
-interface SalesForceDataSyncProps {
+interface Data {
+	id: number;
+	type: string;
+	data_map: { type: string; value: string }[];
+}
+
+interface CustomerIoProps {
 	open: boolean;
 	onClose: () => void;
 	onCloseCreateSync?: () => void;
-	data?: any;
+	data?: Data;
 	isEdit?: boolean;
-	boxShadow?: string;
 }
 
-const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
+interface CustomRow {
+	type: string;
+	value: string;
+	is_constant?: boolean;
+}
+
+const CustomerIoDataSync: React.FC<CustomerIoProps> = ({
 	open,
 	onClose,
 	onCloseCreateSync,
-	data = null,
+	data,
 	isEdit,
-	boxShadow,
 }) => {
+	const maxLengthFieldName = 25;
+	const maxLengthFieldValue = 30;
+	const defaultRadioValue = "allContacts";
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = React.useState("1");
-	const [checked, setChecked] = useState(false);
-	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-	const [newListName, setNewListName] = useState<string>("");
-	const [tagName, setTagName] = useState<string>("");
-	const [isShrunk, setIsShrunk] = useState<boolean>(false);
-	const textFieldRef = useRef<HTMLDivElement>(null);
-	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-	const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
-		null,
+	const [selectedRadioValue, setSelectedRadioValue] = useState(
+		data?.type || defaultRadioValue,
 	);
-	const [apiKeyError, setApiKeyError] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
-	const [isDropdownValid, setIsDropdownValid] = useState(false);
-	const [listNameError, setListNameError] = useState(false);
-	const [tagNameError, setTagNameError] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [newMapListName, setNewMapListName] = useState<string>("");
-	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-	const [maplistNameError, setMapListNameError] = useState(false);
+	const customFieldsList = [
+		{ type: "Company Domain", value: "company_domain" },
+		{ type: "Company SIC", value: "company_sic" },
+		{ type: "Company LinkedIn URL", value: "company_linkedin_url" },
+		{ type: "Company Revenue", value: "company_revenue" },
+		{ type: "Company Employee Count", value: "company_employee_count" },
+		{ type: "Net Worth", value: "net_worth" },
+		{ type: "Personal Emails Last Seen", value: "personal_emails_last_seen" },
+		{ type: "Additional Personal Emails", value: "additional_personal_emails" },
+		{ type: "LinkedIn URL", value: "linkedin_url" },
+		{ type: "Married", value: "married" },
+		{ type: "Children", value: "children" },
+		{ type: "Income Range", value: "income_range" },
+		{ type: "Homeowner", value: "homeowner" },
+		{ type: "Seniority Level", value: "seniority_level" },
+		{ type: "Primary Industry", value: "primary_industry" },
+		{ type: "Related Domains", value: "related_domains" },
+		{ type: "Social Connections", value: "social_connections" },
+		{ type: "DPV Code", value: "dpv_code" },
+
+		// { type: "Last Updated", value: "last_updated" },
+		// { type: "Company Last Updated", value: "company_last_updated" },
+		// { type: "Job Title Last Updated", value: "job_title_last_updated" },
+		// { type: "Work History", value: "work_history" },
+		// { type: "Education History", value: "education_history" },
+		// { type: "Company Description", value: "company_description" },
+	];
+
+	const [customFields, setCustomFields] = useState<
+		{ type: string; value: string; is_constant?: boolean }[]
+	>(
+		data?.data_map ||
+			customFieldsList.map((field) => ({
+				type: field.value,
+				value: field.type,
+			})),
+	);
+	const extendedCustomFieldsList = [
+		{ value: "__constant__", type: "Constant field" },
+		...customFieldsList,
+	];
+
+	const handleAddField = () => {
+		setCustomFields([...customFields, { type: "", value: "" }]);
+	};
+
+	const handleDeleteField = (index: number) => {
+		setCustomFields(customFields.filter((_, i) => i !== index));
+	};
+
+	const handleChangeField = (
+		index: number,
+		key: keyof CustomRow,
+		value: string | boolean | undefined,
+	) => {
+		setCustomFields((prev) => {
+			const updated = [...prev];
+			updated[index] = {
+				...updated[index],
+				[key]: value,
+			};
+			return updated;
+		});
+	};
 
 	const resetToDefaultValues = () => {
 		setLoading(false);
 		setValue("1");
-		setChecked(false);
-		setSelectedRadioValue("");
-		setAnchorEl(null);
-		setShowCreateForm(false);
-		setNewListName("");
-		setTagName("");
-		setIsShrunk(false);
-		setIsDropdownOpen(false);
-		setOpenDropdown(null);
-		setOpenDropdownMaximiz(null);
-		setApiKeyError(false);
+		setSelectedRadioValue(defaultRadioValue);
 		setTab2Error(false);
-		setIsDropdownValid(false);
-		setListNameError(false);
-		setTagNameError(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
-		setNewMapListName("");
-		setShowCreateMapForm(false);
-		setMapListNameError(false);
 	};
-
-	useEffect(() => {
-		setLoading(false);
-	}, [open]);
 
 	const handleSaveSync = async () => {
 		setLoading(true);
 		try {
 			if (isEdit) {
 				const response = await axiosInstance.put(
-					`/data-sync/sync`,
+					"/data-sync/sync",
 					{
-						integrations_users_sync_id: data.id,
+						integrations_users_sync_id: data?.id,
 						leads_type: selectedRadioValue,
+						data_map: customFields,
 					},
 					{
 						params: {
-							service_name: "sales_force",
+							service_name: "customer_io",
 						},
 					},
 				);
@@ -133,10 +172,11 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					"/data-sync/sync",
 					{
 						leads_type: selectedRadioValue,
+						data_map: customFields,
 					},
 					{
 						params: {
-							service_name: "sales_force",
+							service_name: "customer_io",
 						},
 					},
 				);
@@ -144,19 +184,19 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					resetToDefaultValues();
 					onClose();
 					showToast("Data sync created successfully");
-					triggerSync();
 				}
 			}
 			handlePopupClose();
 			if (onCloseCreateSync) {
 				onCloseCreateSync();
 			}
+			triggerSync();
 		} finally {
 			setLoading(false);
 		}
 	};
 
-	const klaviyoStyles = {
+	const customerIoStyles = {
 		tabHeading: {
 			textTransform: "none",
 			padding: 0,
@@ -191,13 +231,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					lineHeight: "20px",
 					fontWeight: "400",
 				},
-				"& .MuiOutlinedInput-notchedOutline": {
-					borderColor: "#A3B0C2",
-				},
 				"&:hover .MuiOutlinedInput-notchedOutline": {
-					borderColor: "#A3B0C2",
-				},
-				"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
 					borderColor: "rgba(56, 152, 252, 1)",
 				},
 			},
@@ -207,7 +241,6 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 		},
 	};
 
-	// Define buttons for each tab
 	const getButton = (tabValue: string) => {
 		switch (tabValue) {
 			case "1":
@@ -249,7 +282,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					<Button
 						variant="contained"
 						onClick={handleSaveSync}
-						disabled={!selectedRadioValue}
+						disabled={!selectedRadioValue || hasErrors()}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -275,7 +308,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 							borderRadius: "4px",
 						}}
 					>
-						Export
+						Save
 					</Button>
 				);
 			default:
@@ -296,21 +329,16 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 	}
 
 	const defaultRows: Row[] = [
-		{ id: 1, type: "First Name", value: "First Name" },
-		{ id: 3, type: "Last Name", value: "Last Name" },
-		{ id: 4, type: "Email", value: "Email" },
-		{ id: 5, type: "Phone", value: "Phone" },
-		{ id: 6, type: "Company", value: "Company" },
-		{ id: 7, type: "Title", value: "Title" },
-		{ id: 8, type: "Industry", value: "Industry" },
-		{ id: 9, type: "LeadSource", value: "LeadSource" },
-		{ id: 10, type: "Street", value: "Street" },
-		{ id: 11, type: "City", value: "City" },
-		{ id: 12, type: "State", value: "State" },
-		{ id: 13, type: "Country", value: "Country" },
-		{ id: 14, type: "NumberOfEmployees", value: "NumberOfEmployees" },
-		{ id: 15, type: "AnnualRevenue", value: "AnnualRevenue" },
-		{ id: 16, type: "Description", value: "Description" },
+		{ id: 1, type: "email", value: "Email" },
+		{ id: 2, type: "firstName", value: "First Name" },
+		{ id: 3, type: "lastName", value: "Last Name" },
+		{ id: 4, type: "name", value: "Name" },
+		{ id: 5, type: "address", value: "Address" },
+		{ id: 6, type: "phone", value: "Phone" },
+		{ id: 7, type: "city", value: "City" },
+		{ id: 8, type: "state", value: "State" },
+		{ id: 9, type: "gender", value: "Gender" },
+		{ id: 10, type: "company", value: "Company Name" },
 	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -364,11 +392,6 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 			if (validateTab2()) {
 				setValue((prevValue) => String(Number(prevValue) + 1));
 			}
-		} else if (value === "3") {
-			if (isDropdownValid) {
-				// Proceed to next tab
-				setValue((prevValue) => String(Number(prevValue) + 1));
-			}
 		}
 	};
 
@@ -380,8 +403,30 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 	};
 
 	const handlePopupClose = () => {
-		resetToDefaultValues();
 		onClose();
+	};
+
+	const isSafeFieldName = (str: string): boolean => {
+		return /^[a-zA-Z][a-zA-Z0-9_]*$/.test(str);
+	};
+
+	const isDuplicate = (value: string, currentIndex: number) => {
+		return (
+			customFields.filter((f, idx) => f.type === value && idx !== currentIndex)
+				.length > 0
+		);
+	};
+
+	const hasErrors = (): boolean => {
+		return customFields.some((field, index) => {
+			if (field.is_constant && field.type && !isSafeFieldName(field.type)) {
+				return true;
+			}
+			if (isDuplicate(field.type, index)) {
+				return true;
+			}
+			return false;
+		});
 	};
 
 	return (
@@ -417,9 +462,6 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 						position: "fixed",
 						top: 0,
 						bottom: 0,
-						boxShadow: boxShadow
-							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
-							: "none",
 						msOverflowStyle: "none",
 						scrollbarWidth: "none",
 						"&::-webkit-scrollbar": {
@@ -433,7 +475,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: boxShadow ? boxShadow : "rgba(0, 0, 0, 0.01)",
+							backgroundColor: "rgba(0, 0, 0, 0)",
 						},
 					},
 				}}
@@ -457,7 +499,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 						className="first-sub-title"
 						sx={{ textAlign: "center" }}
 					>
-						Connect to SalesForce
+						Connect to Customer.io
 					</Typography>
 					<Box
 						sx={{
@@ -466,21 +508,6 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 							"@media (max-width: 600px)": { gap: "8px" },
 						}}
 					>
-						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce"
-							className="main-text"
-							target="_blank"
-							rel="noopener referrer"
-							sx={{
-								fontSize: "14px",
-								fontWeight: "600",
-								lineHeight: "20px",
-								color: "rgba(56, 152, 252, 1)",
-								textDecorationColor: "rgba(56, 152, 252, 1)",
-							}}
-						>
-							Tutorial
-						</Link>
 						<IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
 							<CloseIcon sx={{ width: "20px", height: "20px" }} />
 						</IconButton>
@@ -495,8 +522,8 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					}}
 				>
 					<UserTip
-						limit={500}
-						service="SalesForce"
+						limit={50}
+						service="Customer.io"
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
@@ -513,7 +540,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 							<Box sx={{ pb: 4 }}>
 								<TabList
 									centered
-									aria-label="Connect to SalesForce Tabs"
+									aria-label="Connect to Mailchimp Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
@@ -535,14 +562,13 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 										label="Sync Filter"
 										value="1"
 										className="tab-heading"
-										sx={klaviyoStyles.tabHeading}
+										sx={customerIoStyles.tabHeading}
 									/>
-									{/* <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
 									<Tab
 										label="Map data"
 										value="2"
 										className="tab-heading"
-										sx={klaviyoStyles.tabHeading}
+										sx={customerIoStyles.tabHeading}
 									/>
 								</TabList>
 							</Box>
@@ -785,7 +811,6 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 											Map list
 										</Typography>
 									</Box>
-
 									<Grid
 										container
 										alignItems="center"
@@ -805,7 +830,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 												},
 											}}
 										>
-											<LogoSmall height={22} width={34} />
+											<Logo height={22} width={34} />
 										</Grid>
 										<Grid
 											item
@@ -831,8 +856,8 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 											}}
 										>
 											<Image
-												src="/salesforce-icon.svg"
-												alt="omnisend"
+												src="/customer-io-icon.svg"
+												alt="customer_io"
 												height={20}
 												width={24}
 											/>
@@ -841,10 +866,8 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 											&nbsp;
 										</Grid>
 									</Grid>
-
 									{defaultRows.map((row, index) => (
-										<Box key={row.id} sx={{ mb: 2 }}>
-											{" "}
+										<Box key={index} sx={{ mb: 2 }}>
 											{/* Add margin between rows */}
 											<Grid
 												container
@@ -861,7 +884,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 														value={row.value}
 														onChange={(e) =>
 															handleMapListChange(
-																row.id,
+																index,
 																"value",
 																e.target.value,
 															)
@@ -1132,6 +1155,326 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 											</Grid>
 										</Box>
 									))}
+									<Box sx={{ mb: 2 }}>
+										{customFields.map((field, index) => (
+											<Grid
+												container
+												spacing={2}
+												alignItems="center"
+												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+												key={index}
+											>
+												<Grid item xs="auto" sm={5} mb={2}>
+													{field.is_constant ? (
+														<TextField
+															fullWidth
+															variant="outlined"
+															label="Constant Field Name"
+															value={field.type}
+															onChange={(e) =>
+																handleChangeField(index, "type", e.target.value)
+															}
+															placeholder={`Enter field name (${maxLengthFieldName} characters max)`}
+															error={
+																field.is_constant &&
+																!!field.type &&
+																!isSafeFieldName(field.type)
+															}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "13px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
+																},
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "var(--font-roboto)",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+															inputProps={{
+																maxLength: maxLengthFieldName,
+															}}
+														/>
+													) : (
+														<TextField
+															select
+															fullWidth
+															variant="outlined"
+															label="Custom Field"
+															value={field.type}
+															onChange={(e) => {
+																const selected = e.target.value;
+																if (selected === "__constant__") {
+																	setCustomFields((prev) => {
+																		const updated = [...prev];
+																		updated[index] = {
+																			...updated[index],
+																			type: "",
+																			is_constant: true,
+																		};
+																		return updated;
+																	});
+																} else {
+																	handleChangeField(index, "type", selected);
+																	handleChangeField(
+																		index,
+																		"is_constant",
+																		undefined,
+																	);
+																}
+															}}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "13px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
+																},
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "var(--font-roboto)",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+															error={isDuplicate(field.type, index)}
+															helperText={
+																isDuplicate(field.type, index)
+																	? "This field name already exists"
+																	: ""
+															}
+														>
+															{extendedCustomFieldsList.map((item) => (
+																<MenuItem
+																	key={item.value}
+																	value={item.value}
+																	disabled={
+																		item.value !== "__constant__" &&
+																		customFields.some(
+																			(f) => f.type === item.value,
+																		)
+																	}
+																>
+																	{item.type}
+																</MenuItem>
+															))}
+														</TextField>
+													)}
+												</Grid>
+												<Grid
+													item
+													xs="auto"
+													sm={1}
+													mb={2}
+													container
+													justifyContent="center"
+												>
+													<Image
+														src="/chevron-right-purple.svg"
+														alt="chevron-right-purple"
+														height={18}
+														width={18}
+													/>
+												</Grid>
+												<Grid item xs="auto" sm={5} mb={2}>
+													<TextField
+														fullWidth
+														variant="outlined"
+														value={field.value}
+														onChange={(e) =>
+															handleChangeField(index, "value", e.target.value)
+														}
+														placeholder={
+															field.is_constant
+																? `Enter value (${maxLengthFieldValue} characters max)`
+																: "Enter value"
+														}
+														InputLabelProps={{
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "12px",
+																lineHeight: "16px",
+																color: "rgba(17, 17, 19, 0.60)",
+																top: "-5px",
+																"&.Mui-focused": {
+																	color: "rgba(56, 152, 252, 1)",
+																	top: 0,
+																},
+																"&.MuiInputLabel-shrink": {
+																	top: 0,
+																},
+															},
+														}}
+														InputProps={{
+															sx: {
+																height: "36px",
+																"& .MuiOutlinedInput-input": {
+																	padding: "6.5px 8px",
+																	fontFamily: "var(--font-roboto)",
+																	color: "#202124",
+																	fontSize: "14px",
+																	fontWeight: "400",
+																	lineHeight: "20px",
+																},
+																"& .MuiOutlinedInput-notchedOutline": {
+																	borderColor: "#A3B0C2",
+																},
+																"&:hover .MuiOutlinedInput-notchedOutline": {
+																	borderColor: "#A3B0C2",
+																},
+																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																	{
+																		borderColor: "rgba(56, 152, 252, 1)",
+																	},
+															},
+														}}
+														inputProps={
+															field.is_constant
+																? { maxLength: maxLengthFieldValue }
+																: {}
+														}
+													/>
+												</Grid>
+												<Grid
+													item
+													xs="auto"
+													mb={2}
+													sm={1}
+													container
+													justifyContent="center"
+												>
+													<IconButton onClick={() => handleDeleteField(index)}>
+														<Image
+															src="/trash-icon-filled.svg"
+															alt="trash-icon-filled"
+															height={18}
+															width={18}
+														/>
+													</IconButton>
+												</Grid>
+												{field.type && !isSafeFieldName(field.type) && (
+													<Box
+														sx={{ width: "100%", pl: 2.25, mt: "-6px", mb: 1 }}
+													>
+														<Typography
+															sx={{
+																color: "#d32f2f",
+																fontSize: "12px",
+																marginTop: "4px",
+																marginLeft: "2px",
+																fontFamily: "var(--font-roboto)",
+															}}
+														>
+															Field name must consist of letters, numbers and
+															underscores only.
+														</Typography>
+													</Box>
+												)}
+											</Grid>
+										))}
+										<Box
+											sx={{
+												display: "flex",
+												justifyContent: "flex-end",
+												mb: 2,
+												mr: 6,
+											}}
+										>
+											<Button
+												onClick={handleAddField}
+												aria-haspopup="true"
+												sx={{
+													textTransform: "none",
+													border: "1px solid rgba(56, 152, 252, 1)",
+													borderRadius: "4px",
+													padding: "9px 16px",
+													minWidth: "auto",
+													"@media (max-width: 900px)": {
+														display: "none",
+													},
+												}}
+											>
+												<Typography
+													sx={{
+														marginRight: "0.5em",
+														fontFamily: "var(--font-nunito)",
+														lineHeight: "22.4px",
+														fontSize: "16px",
+														textAlign: "left",
+														fontWeight: "500",
+														color: "rgba(56, 152, 252, 1)",
+													}}
+												>
+													Add
+												</Typography>
+											</Button>
+										</Box>
+									</Box>
 								</Box>
 							</TabPanel>
 						</TabContext>
@@ -1139,18 +1482,11 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					</Box>
 					<Box
 						sx={{
+							marginTop: "auto",
 							px: 2,
 							py: 2,
-							borderTop: "1px solid #e4e4e4",
-							position: "fixed",
-							bottom: 0,
-							right: 0,
-							background: "#fff",
-							zIndex: "1",
-							width: "40%",
-							"@media (max-width: 600px)": {
-								width: "100%",
-							},
+							width: "100%",
+							border: "1px solid #e4e4e4",
 						}}
 					>
 						<Box
@@ -1168,4 +1504,4 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 		</>
 	);
 };
-export default SalesForceDataSync;
+export default CustomerIoDataSync;

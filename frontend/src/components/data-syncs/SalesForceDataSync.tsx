@@ -25,13 +25,12 @@ import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "../../../../components/ToastNotification";
+import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import { InfoIcon } from "@/icon";
 import UserTip from "@/components/UserTip";
 import { LogoSmall } from "@/components/ui/Logo";
 
-interface OnmisendDataSyncProps {
+interface SalesForceDataSyncProps {
 	open: boolean;
 	onClose: () => void;
 	onCloseCreateSync?: () => void;
@@ -40,13 +39,7 @@ interface OnmisendDataSyncProps {
 	boxShadow?: string;
 }
 
-interface CustomRow {
-	type: string;
-	value: string;
-	is_constant?: boolean;
-}
-
-const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
+const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 	open,
 	onClose,
 	onCloseCreateSync,
@@ -57,82 +50,56 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = React.useState("1");
+	const [checked, setChecked] = useState(false);
 	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
+	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
 	const [tagName, setTagName] = useState<string>("");
+	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
+	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+	const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
+		null,
+	);
+	const [apiKeyError, setApiKeyError] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
+	const [listNameError, setListNameError] = useState(false);
+	const [tagNameError, setTagNameError] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [customFieldsList, setCustomFieldsList] = useState([
-		{ type: "company", value: "company_name" },
-		{ type: "website", value: "company_domain" },
-		{ type: "lifecyclestage", value: "lifecyclestage" },
-		{ type: "jobtitle", value: "job_title" },
-		{ type: "industry", value: "primary_industry" },
-		{ type: "annualrevenue", value: "company_revenue" },
-		{ type: "hs_linkedin_url", value: "linkedin_url" },
-		{ type: "address", value: "personal_address" },
-		{ type: "state", value: "personal_state" },
-		{ type: "zip", value: "personal_zip" },
-	]);
-	const [customFields, setCustomFields] = useState<
-		{ type: string; value: string; is_constant?: boolean }[]
-	>([]);
-	const extendedCustomFieldsList = [
-		{ value: "__constant__", type: "Constant field" },
-		...customFieldsList,
-	];
-
-	useEffect(() => {
-		if (data?.data_map) {
-			setCustomFields(data?.data_map);
-		} else {
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-		}
-	}, [open]);
-
-	const handleAddField = () => {
-		setCustomFields([...customFields, { type: "", value: "" }]);
-	};
-
-	const handleDeleteField = (index: number) => {
-		setCustomFields(customFields.filter((_, i) => i !== index));
-	};
-
-	const handleChangeField = (
-		index: number,
-		key: keyof CustomRow,
-		value: string | boolean | undefined,
-	) => {
-		setCustomFields((prev) => {
-			const updated = [...prev];
-			updated[index] = {
-				...updated[index],
-				[key]: value,
-			};
-			return updated;
-		});
-	};
+	const [newMapListName, setNewMapListName] = useState<string>("");
+	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
+	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
+	const [maplistNameError, setMapListNameError] = useState(false);
 
 	const resetToDefaultValues = () => {
 		setLoading(false);
 		setValue("1");
+		setChecked(false);
 		setSelectedRadioValue("");
+		setAnchorEl(null);
+		setShowCreateForm(false);
 		setNewListName("");
 		setTagName("");
+		setIsShrunk(false);
+		setIsDropdownOpen(false);
+		setOpenDropdown(null);
+		setOpenDropdownMaximiz(null);
+		setApiKeyError(false);
 		setTab2Error(false);
 		setIsDropdownValid(false);
+		setListNameError(false);
+		setTagNameError(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
+		setNewMapListName("");
+		setShowCreateMapForm(false);
+		setMapListNameError(false);
 	};
 
 	useEffect(() => {
@@ -148,11 +115,10 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					{
 						integrations_users_sync_id: data.id,
 						leads_type: selectedRadioValue,
-						data_map: customFields,
 					},
 					{
 						params: {
-							service_name: "hubspot",
+							service_name: "sales_force",
 						},
 					},
 				);
@@ -167,11 +133,10 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					"/data-sync/sync",
 					{
 						leads_type: selectedRadioValue,
-						data_map: customFields,
 					},
 					{
 						params: {
-							service_name: "hubspot",
+							service_name: "sales_force",
 						},
 					},
 				);
@@ -191,14 +156,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		}
 	};
 
-	const isDuplicate = (value: string, currentIndex: number) => {
-		return (
-			customFields.filter((f, idx) => f.type === value && idx !== currentIndex)
-				.length > 0
-		);
-	};
-
-	const hubspotStyles = {
+	const klaviyoStyles = {
 		tabHeading: {
 			textTransform: "none",
 			padding: 0,
@@ -249,10 +207,6 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		},
 	};
 
-	type HighlightConfig = {
-		[keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
-	};
-
 	// Define buttons for each tab
 	const getButton = (tabValue: string) => {
 		switch (tabValue) {
@@ -295,7 +249,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					<Button
 						variant="contained"
 						onClick={handleSaveSync}
-						disabled={!selectedRadioValue || hasErrors()}
+						disabled={!selectedRadioValue}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -342,12 +296,21 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 	}
 
 	const defaultRows: Row[] = [
-		{ id: 1, type: "email", value: "email" },
-		{ id: 3, type: "firstname", value: "firstname" },
-		{ id: 4, type: "lastname", value: "lastname" },
-		{ id: 5, type: "phone", value: "phone" },
-		{ id: 6, type: "city", value: "city" },
-		{ id: 7, type: "gender", value: "gender" },
+		{ id: 1, type: "First Name", value: "First Name" },
+		{ id: 3, type: "Last Name", value: "Last Name" },
+		{ id: 4, type: "Email", value: "Email" },
+		{ id: 5, type: "Phone", value: "Phone" },
+		{ id: 6, type: "Company", value: "Company" },
+		{ id: 7, type: "Title", value: "Title" },
+		{ id: 8, type: "Industry", value: "Industry" },
+		{ id: 9, type: "LeadSource", value: "LeadSource" },
+		{ id: 10, type: "Street", value: "Street" },
+		{ id: 11, type: "City", value: "City" },
+		{ id: 12, type: "State", value: "State" },
+		{ id: 13, type: "Country", value: "Country" },
+		{ id: 14, type: "NumberOfEmployees", value: "NumberOfEmployees" },
+		{ id: 15, type: "AnnualRevenue", value: "AnnualRevenue" },
+		{ id: 16, type: "Description", value: "Description" },
 	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -380,17 +343,6 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 			setRows(rows.filter((row) => row.id !== selectedRowId));
 			handleDeleteClose();
 		}
-	};
-
-	// Add row function
-	const handleAddRow = () => {
-		const newRow: Row = {
-			id: Date.now(), // Unique ID for each new row
-			type: "",
-			value: "",
-			canDelete: true, // This new row can be deleted
-		};
-		setRows([...rows, newRow]);
 	};
 
 	const validateTab2 = () => {
@@ -430,22 +382,6 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 	const handlePopupClose = () => {
 		resetToDefaultValues();
 		onClose();
-	};
-
-	const isSnakeCase = (str: string): boolean => {
-		return /^[a-z][a-z0-9_]*$/.test(str);
-	};
-
-	const hasErrors = (): boolean => {
-		return customFields.some((field, index) => {
-			if (field.is_constant && field.type && !isSnakeCase(field.type)) {
-				return true;
-			}
-			if (isDuplicate(field.type, index)) {
-				return true;
-			}
-			return false;
-		});
 	};
 
 	return (
@@ -521,7 +457,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 						className="first-sub-title"
 						sx={{ textAlign: "center" }}
 					>
-						Connect to Hubspot
+						Connect to SalesForce
 					</Typography>
 					<Box
 						sx={{
@@ -531,7 +467,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-hubspot"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce"
 							className="main-text"
 							target="_blank"
 							rel="noopener referrer"
@@ -559,8 +495,8 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					}}
 				>
 					<UserTip
-						limit={100}
-						service="Hubspot"
+						limit={500}
+						service="SalesForce"
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
@@ -577,7 +513,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 							<Box sx={{ pb: 4 }}>
 								<TabList
 									centered
-									aria-label="Connect to Hubspot Tabs"
+									aria-label="Connect to SalesForce Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
@@ -599,14 +535,14 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 										label="Sync Filter"
 										value="1"
 										className="tab-heading"
-										sx={hubspotStyles.tabHeading}
+										sx={klaviyoStyles.tabHeading}
 									/>
-									{/* <Tab label="Contact Sync" value="2" className='tab-heading' sx={hubspotStyles.tabHeading} /> */}
+									{/* <Tab label="Contact Sync" value="2" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
 									<Tab
 										label="Map data"
 										value="2"
 										className="tab-heading"
-										sx={hubspotStyles.tabHeading}
+										sx={klaviyoStyles.tabHeading}
 									/>
 								</TabList>
 							</Box>
@@ -869,12 +805,24 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 												},
 											}}
 										>
-											<LogoSmall alt="logo" height={22} width={34} />
+											<LogoSmall height={22} width={34} />
 										</Grid>
 										<Grid
 											item
 											xs="auto"
-											sm={7}
+											sm={1}
+											sx={{
+												"@media (max-width:599px)": {
+													minWidth: "50px",
+												},
+											}}
+										>
+											&nbsp;
+										</Grid>
+										<Grid
+											item
+											xs="auto"
+											sm={5}
 											sx={{
 												textAlign: "center",
 												"@media (max-width:599px)": {
@@ -883,11 +831,14 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 											}}
 										>
 											<Image
-												src="/hubspot.svg"
-												alt="hubspot"
+												src="/salesforce-icon.svg"
+												alt="omnisend"
 												height={20}
 												width={24}
 											/>
+										</Grid>
+										<Grid item xs="auto" sm={1}>
+											&nbsp;
 										</Grid>
 									</Grid>
 
@@ -1181,316 +1132,10 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 											</Grid>
 										</Box>
 									))}
-									<Box sx={{ mb: 2 }}>
-										{customFields.map((field, index) => (
-											<Grid
-												container
-												spacing={2}
-												alignItems="center"
-												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-												key={index}
-											>
-												<Grid item xs="auto" sm={5} mb={2}>
-													{field.is_constant ? (
-														<TextField
-															fullWidth
-															variant="outlined"
-															label="Constant Field Name"
-															value={field.type}
-															onChange={(e) =>
-																handleChangeField(index, "type", e.target.value)
-															}
-															placeholder="Enter field name"
-															error={
-																field.is_constant &&
-																!!field.type &&
-																!isSnakeCase(field.type)
-															}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "13px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "14px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-														/>
-													) : (
-														<TextField
-															select
-															fullWidth
-															variant="outlined"
-															label="Custom Field"
-															value={field.type}
-															onChange={(e) => {
-																const selected = e.target.value;
-																if (selected === "__constant__") {
-																	setCustomFields((prev) => {
-																		const updated = [...prev];
-																		updated[index] = {
-																			...updated[index],
-																			type: "",
-																			is_constant: true,
-																		};
-																		return updated;
-																	});
-																} else {
-																	handleChangeField(index, "type", selected);
-																	handleChangeField(
-																		index,
-																		"is_constant",
-																		undefined,
-																	);
-																}
-															}}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "13px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "14px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-															error={isDuplicate(field.type, index)}
-															helperText={
-																isDuplicate(field.type, index)
-																	? "This field name already exists"
-																	: ""
-															}
-														>
-															{extendedCustomFieldsList.map((item) => (
-																<MenuItem
-																	key={item.value}
-																	value={item.value}
-																	disabled={
-																		item.value !== "__constant__" &&
-																		customFields.some(
-																			(f) => f.type === item.value,
-																		)
-																	}
-																>
-																	{item.type}
-																</MenuItem>
-															))}
-														</TextField>
-													)}
-												</Grid>
-												<Grid
-													item
-													xs="auto"
-													sm={1}
-													mb={2}
-													container
-													justifyContent="center"
-												>
-													<Image
-														src="/chevron-right-purple.svg"
-														alt="chevron-right-purple"
-														height={18}
-														width={18}
-													/>
-												</Grid>
-												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														fullWidth
-														variant="outlined"
-														value={field.value}
-														onChange={(e) =>
-															handleChangeField(index, "value", e.target.value)
-														}
-														placeholder="Enter value"
-														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "13px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
-														}}
-														InputProps={{
-															sx: {
-																maxHeight: "36px",
-																"& .MuiOutlinedInput-input": {
-																	padding: "6.5px 8px",
-																	fontFamily: "var(--font-roboto)",
-																	color: "#202124",
-																	fontSize: "12px",
-																	fontWeight: "400",
-																	lineHeight: "20px",
-																},
-																"& .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&:hover .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																	{
-																		borderColor: "rgba(56, 152, 252, 1)",
-																	},
-															},
-														}}
-													/>
-												</Grid>
-												<Grid
-													item
-													xs="auto"
-													mb={2}
-													sm={1}
-													container
-													justifyContent="center"
-												>
-													<IconButton onClick={() => handleDeleteField(index)}>
-														<Image
-															src="/trash-icon-filled.svg"
-															alt="trash-icon-filled"
-															height={18}
-															width={18}
-														/>
-													</IconButton>
-												</Grid>
-												{field.type && !isSnakeCase(field.type) && (
-													<Box
-														sx={{ width: "100%", pl: 2.25, mt: "-6px", mb: 1 }}
-													>
-														<Typography
-															sx={{
-																color: "#d32f2f",
-																fontSize: "12px",
-																marginTop: "4px",
-																marginLeft: "2px",
-																fontFamily: "var(--font-roboto)",
-															}}
-														>
-															Field name must be in snake_case: lowercase
-															letters and underscores only
-														</Typography>
-													</Box>
-												)}
-											</Grid>
-										))}
-										<Box
-											sx={{
-												display: "flex",
-												justifyContent: "flex-end",
-												mb: 6,
-												mr: 6,
-											}}
-										>
-											<Button
-												onClick={handleAddField}
-												aria-haspopup="true"
-												sx={{
-													textTransform: "none",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													borderRadius: "4px",
-													padding: "6px 12px",
-													minWidth: "auto",
-													"@media (max-width: 900px)": {
-														display: "none",
-													},
-												}}
-											>
-												<Typography
-													sx={{
-														fontFamily: "var(--font-nunito)",
-														lineHeight: "22.4px",
-														fontSize: "16px",
-														textAlign: "left",
-														fontWeight: "500",
-														color: "rgba(56, 152, 252, 1)",
-													}}
-												>
-													Add
-												</Typography>
-											</Button>
-										</Box>
-									</Box>
 								</Box>
 							</TabPanel>
 						</TabContext>
+						{/* Button based on selected tab */}
 					</Box>
 					<Box
 						sx={{
@@ -1523,4 +1168,4 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		</>
 	);
 };
-export default HubspotDataSync;
+export default SalesForceDataSync;

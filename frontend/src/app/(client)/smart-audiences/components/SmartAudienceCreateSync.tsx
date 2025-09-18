@@ -26,12 +26,12 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import Image from "next/image";
-import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
-import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
-import MetaConnectButton from "@/components/MetaConnectButton";
-import S3Connect from "@/components/S3Connect";
-import MailchimpConnect from "@/components/MailchimpConnect";
-import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
+import SalesForceIntegrationPopup from "@/components/integrations/SalesForceIntegration";
+import GoogleADSConnectPopup from "@/components/integrations/GoogleADSIntegration";
+import MetaConnectButton from "@/components/integrations/MetaIntegration";
+import S3Connect from "@/components/integrations/S3Integration";
+import MailchimpConnect from "@/components/integrations/MailchimpIntegration";
+import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
 import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
 import IntegrationBox from "./IntegrationBox";
 import GoogleAdsContactSyncTab from "./GoogleAdsContactSyncTab";
@@ -45,13 +45,11 @@ import {
 	LeftMenuProps,
 } from "@/app/(client)/components/BookACallPopup";
 import { AxiosError } from "axios";
-import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
+import GoHighLevelConnectPopup from "@/components/integrations/GoHighLevelIntegration";
 import { InfoIcon } from "@/icon";
 import UserTip from "@/components/UserTip";
-import { width } from "@mui/system";
 import CustomButton from "@/components/ui/CustomButton";
 import { Logo } from "@/components/ui/Logo";
-import { count } from "console";
 
 interface AudiencePopupProps {
 	open: boolean;

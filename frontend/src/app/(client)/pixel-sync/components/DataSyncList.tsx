@@ -24,32 +24,32 @@ import axios, { AxiosError } from "axios";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ConnectKlaviyo from "../../data-sync/components/ConnectKlaviyo";
-import ConnectSalesForce from "../../data-sync/components/ConnectSalesForce";
-import ConnectMeta from "../../data-sync/components/ConnectMeta";
+import KlaviyoDataSync from "@/components/data-syncs/KlaviyoDataSync";
+import SalesForceDataSync from "@/components/data-syncs/SalesForceDataSync";
+import MetaDataSync from "@/components/data-syncs/MetaDataSync";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
-import MailchimpDatasync from "../../data-sync/components/MailchimpDatasync";
-import OmnisendDataSync from "../../data-sync/components/OmnisendDataSync";
-import SendlaneDatasync from "../../data-sync/components/SendlaneDatasync";
-import S3Datasync from "../../data-sync/components/S3Datasync";
-import WebhookDatasync from "../../data-sync/components/WebhookDatasync";
-import SlackDatasync from "../../data-sync/components/SlackDataSync";
-import GoogleADSDatasync from "../../data-sync/components/GoogleADSDataSync";
-import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
-import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
-import MailchimpConnect from "@/components/MailchimpConnect";
-import OmnisendConnect from "@/components/OmnisendConnect";
-import SendlaneConnect from "@/components/SendlaneConnect";
-import S3Connect from "@/components/S3Connect";
-import ZapierConnectPopup from "@/components/ZapierConnectPopup";
-import SlackConnectPopup from "@/components/SlackConnectPopup";
-import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
-import WebhookConnectPopup from "@/components/WebhookConnectPopup";
+import MailchimpDatasync from "@/components/data-syncs/MailchimpDatasync";
+import OmnisendDataSync from "@/components/data-syncs/OmnisendDataSync";
+import SendlaneDatasync from "@/components/data-syncs/SendlaneDatasync";
+import S3Datasync from "@/components/data-syncs/S3Datasync";
+import WebhookDatasync from "@/components/data-syncs/WebhookDatasync";
+import SlackDatasync from "@/components/data-syncs/SlackDataSync";
+import GoogleADSDatasync from "@/components/data-syncs/GoogleADSDataSync";
+import KlaviyoIntegrationPopup from "@/components/integrations/KlaviyoIntegration";
+import SalesForceIntegrationPopup from "@/components/integrations/SalesForceIntegration";
+import MailchimpConnect from "@/components/integrations/MailchimpIntegration";
+import OmnisendConnect from "@/components/integrations/OmnisendIntegration";
+import SendlaneConnect from "@/components/integrations/SendlaneIntegration";
+import S3Connect from "@/components/integrations/S3Integration";
+import ZapierConnectPopup from "@/components/integrations/ZapierIntegration";
+import SlackConnectPopup from "@/components/integrations/SlackIntegration";
+import GoogleADSConnectPopup from "@/components/integrations/GoogleADSIntegration";
+import WebhookConnectPopup from "@/components/integrations/WebhookIntegration";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import HubspotDataSync from "../../data-sync/components/HubspotDataSync";
+import HubspotDataSync from "@/components/data-syncs/HubspotDataSync";
 import HintCard from "../../components/HintCard";
 import { useDataSyncHints } from "../context/dataSyncHintsContext";
 import { useNotification } from "@/context/NotificationContext";
@@ -61,11 +61,11 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { usePagination } from "@/hooks/usePagination";
 import { Paginator } from "@/components/PaginationComponent";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
-import GoHighLevelConnectPopup from "@/components/GoHighLevelConnectPopup";
-import GoHighLevelDataSync from "../../data-sync/components/GoHighLevelDataSync";
-import CustomerIoConnect from "@/components/CustomerIoIntegrationPopup";
-import CustomerIoDataSync from "@/app/(client)/data-sync/components/CustomerIoDataSync";
-import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
+import GoHighLevelConnectPopup from "@/components/integrations/GoHighLevelIntegration";
+import GoHighLevelDataSync from "@/components/data-syncs/GoHighLevelDataSync";
+import CustomerIoConnect from "@/components/integrations/CustomerIoIntegration";
+import CustomerIoDataSync from "@/components/data-syncs/CustomerIoDataSync";
+import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 import { filterDefaultPaginationOptions } from "@/utils/pagination";
 
@@ -1775,7 +1775,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					</Popover>
 				</Box>
 				{klaviyoIconPopupOpen && isEdit === true && (
-					<ConnectKlaviyo
+					<KlaviyoDataSync
 						open={klaviyoIconPopupOpen}
 						onClose={handleKlaviyoIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}
@@ -1783,7 +1783,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					/>
 				)}
 				{salesForceIconPopupOpen && isEdit === true && (
-					<ConnectSalesForce
+					<SalesForceDataSync
 						open={salesForceIconPopupOpen}
 						onClose={handleSalesForceIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}
@@ -1791,7 +1791,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					/>
 				)}
 				{metaIconPopupOpen && isEdit === true && (
-					<ConnectMeta
+					<MetaDataSync
 						open={metaIconPopupOpen}
 						onClose={handleMetaIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}

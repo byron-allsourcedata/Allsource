@@ -23,36 +23,32 @@ import {
 	Tab,
 	Switch,
 	LinearProgress,
-	Tabs,
 } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import CustomizedProgressBar from "./CustomizedProgressBar";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "./ToastNotification";
-import { useAxiosHook } from "@/hooks/AxiosHooks";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
-interface CreateKlaviyoProps {
+interface CreateOmnisendProps {
 	handleClose: () => void;
-	onSave?: (integration: IntegrationsCredentials) => void;
+	onSave?: (new_integration: any) => void;
 	open: boolean;
 	initApiKey?: string;
 	boxShadow?: string;
-	isEdit?: boolean;
 	invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
-	id?: number;
+	id: number;
 	access_token: string;
-	ad_account_id?: string;
-	shop_domain?: string;
-	data_center?: string;
+	ad_account_id: string;
+	shop_domain: string;
+	data_center: string;
 	service_name: string;
-	is_with_suppression?: boolean;
+	is_with_suppression: boolean;
 }
 
 const klaviyoStyles = {
@@ -66,6 +62,7 @@ const klaviyoStyles = {
 		padding: 0,
 		minWidth: "auto",
 		px: 2,
+		pointerEvents: "none",
 		"@media (max-width: 600px)": {
 			alignItems: "flex-start",
 			p: 0,
@@ -79,7 +76,7 @@ const klaviyoStyles = {
 		fontFamily: "var(--font-nunito)",
 		fontSize: "14px",
 		lineHeight: "16px",
-		left: "2px",
+		left: "4px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
 			color: "rgba(56, 152, 252, 1)",
@@ -115,67 +112,55 @@ const klaviyoStyles = {
 	},
 };
 
-const KlaviyoIntegrationPopup = ({
+const OmnisendConnect = ({
 	handleClose,
 	open,
 	onSave,
 	initApiKey,
 	boxShadow,
 	invalid_api_key,
-}: CreateKlaviyoProps) => {
+}: CreateOmnisendProps) => {
 	const { triggerSync, setNeedsSync } = useIntegrationContext();
 	const [apiKey, setApiKey] = useState("");
 	const [apiKeyError, setApiKeyError] = useState(false);
+	const [loading, setLoading] = useState(false);
+	const [value, setValue] = useState<string>("1");
 	const [checked, setChecked] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
-	const [disableButton, setDisableButton] = useState(false);
 	const label = { inputProps: { "aria-label": "Switch demo" } };
-	const { data, loading, error, sendRequest } = useAxiosHook();
-	const { whitelabel } = useWhitelabel();
-
-	const [value, setValue] = useState("1");
-
-	const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-		setValue(newValue);
-	};
+	const [disableButton, setDisableButton] = useState(false);
+	const [selectedRadioValue, setSelectedRadioValue] = useState("");
+	const [isDropdownValid, setIsDropdownValid] = useState(false);
 
 	useEffect(() => {
 		setApiKey(initApiKey || "");
 	}, [initApiKey]);
+
+	const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		setSelectedRadioValue(event.target.value);
+	};
 
 	const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setChecked(event.target.checked);
 	};
 
 	const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (apiKeyError) {
+			setApiKeyError(false);
+		}
 		const value = event.target.value;
 		setApiKey(value);
 		setApiKeyError(!value.trim());
 	};
 
-	const instructions = [
-		{
-			id: "unique-id-1",
-			text: "Go to the Klaviyo website and log into your account.",
-		},
-		{
-			id: "unique-id-2",
-			text: "Click on the Settings option located in your Klaviyo account options.",
-		},
-		{
-			id: "unique-id-3",
-			text: `Click Create Private API Key Name to ${whitelabel.brand_name}.`,
-		},
-		{
-			id: "unique-id-4",
-			text: "Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.",
-		},
-		{ id: "unique-id-5", text: "Click Create." },
-		{
-			id: "unique-id-6",
-			text: `Copy the API key in the next screen and paste to API Key field located in ${whitelabel.brand_name} Klaviyo section.`,
-		},
-		{ id: "unique-id-7", text: "Click Connect." },
+	const instructions: any[] = [
+		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
+		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
+		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
+		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
+		// { id: 'unique-id-5', text: 'Click Create.' },
+		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.' },
+		// { id: 'unique-id-7', text: 'Click Connect.' },
 	];
 
 	type HighlightConfig = {
@@ -215,36 +200,37 @@ const KlaviyoIntegrationPopup = ({
 	const handleApiKeySave = async () => {
 		try {
 			setDisableButton(true);
-			const response = await sendRequest({
-				url: "/integrations/",
-				method: "POST",
-				data: {
-					klaviyo: {
+			setLoading(true);
+			const response = await axiosInstance.post(
+				"/integrations/",
+				{
+					omnisend: {
 						api_key: apiKey,
 					},
 				},
-				params: { service_name: "klaviyo" },
-			});
-			if (response?.status === 200) {
+				{ params: { service_name: "omnisend" } },
+			);
+			if (response.status === 200 && response.data !== "CREDENTIALS_INVALID") {
+				showToast("Integration Omnisend Successfully");
 				if (onSave) {
 					onSave({
-						service_name: "klaviyo",
+						service_name: "omnisend",
+						is_failed: false,
 						access_token: apiKey,
 					});
 				}
-				showToast("Integration Klaviyo Successfully");
 				await triggerSync();
 				setNeedsSync(false);
 				handleClose();
-			} else {
-				showErrorToast("Invalid API key or permissions");
+			}
+			if (response.data === "CREDENTIALS_INVALID") {
+				showErrorToast("Invalid API Key, please, try another");
 				setApiKeyError(true);
 			}
 		} catch (error) {
-			showErrorToast("Invalid API key or permissions");
-			setApiKeyError(true);
 		} finally {
 			setDisableButton(false);
+			setLoading(false);
 		}
 	};
 
@@ -273,17 +259,6 @@ const KlaviyoIntegrationPopup = ({
 	};
 
 	const handleSave = async () => {
-		if (onSave) {
-			onSave({
-				id: -1,
-				service_name: "klaviyo",
-				data_center: "",
-				access_token: apiKey,
-				is_with_suppression: checked,
-				ad_account_id: "",
-				shop_domain: "",
-			});
-		}
 		handleClose();
 	};
 
@@ -385,10 +360,10 @@ const KlaviyoIntegrationPopup = ({
 						width: "40%",
 						position: "fixed",
 						top: 0,
-						bottom: 0,
 						boxShadow: boxShadow
 							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
 							: "none",
+						bottom: 0,
 						msOverflowStyle: "none",
 						scrollbarWidth: "none",
 						"&::-webkit-scrollbar": {
@@ -428,7 +403,7 @@ const KlaviyoIntegrationPopup = ({
 							lineHeight: "normal",
 						}}
 					>
-						Connect to Klaviyo
+						Connect to Omnisend
 					</Typography>
 					<Box
 						sx={{
@@ -438,9 +413,9 @@ const KlaviyoIntegrationPopup = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-klaviyo"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-omnisend"
 							target="_blank"
-							rel="noopener noreferrer"
+							rel="noopener referrer"
 							sx={{
 								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
@@ -475,16 +450,13 @@ const KlaviyoIntegrationPopup = ({
 					>
 						<TabContext value={value}>
 							<Box sx={{ pb: 4 }}>
-								<Tabs
-									value={value}
-									onChange={handleChange}
+								<TabList
 									centered
-									aria-label="Connect to Klaviyo Tabs"
+									aria-label="Connect to Omnisend Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
 									sx={{
-										cursor: "pointer",
 										"& .MuiTabs-scroller": {
 											overflowX: "auto !important",
 										},
@@ -505,9 +477,9 @@ const KlaviyoIntegrationPopup = ({
 									{/* <Tab
 										label="Suppression Sync"
 										value="2"
-										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
+										sx={klaviyoStyles.tabHeading}
 									/> */}
-								</Tabs>
+								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
 								<Box
@@ -522,8 +494,8 @@ const KlaviyoIntegrationPopup = ({
 										sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 									>
 										<Image
-											src="/klaviyo.svg"
-											alt="klaviyo"
+											src="/omnisend_icon_black.svg"
+											alt="omnisend"
 											height={26}
 											width={32}
 										/>
@@ -539,7 +511,7 @@ const KlaviyoIntegrationPopup = ({
 											API Key
 										</Typography>
 										<Tooltip
-											title="Enter the API key provided by Klaviyo"
+											title="Enter the API key provided by Omnisend"
 											placement="right"
 										>
 											<Image
@@ -570,78 +542,80 @@ const KlaviyoIntegrationPopup = ({
 										}}
 									/>
 								</Box>
-								<Box
-									sx={{
-										background: "#f0f0f0",
-										border: "1px solid #efefef",
-										borderRadius: "4px",
-										p: 2,
-									}}
-								>
+								{instructions.length > 0 && (
 									<Box
 										sx={{
-											display: "flex",
-											alignItems: "center",
-											gap: "8px",
-											mb: 2,
+											background: "#f0f0f0",
+											border: "1px solid #efefef",
+											borderRadius: "4px",
+											p: 2,
 										}}
 									>
-										<Image
-											src="/info-circle.svg"
-											alt="info-circle"
-											height={20}
-											width={20}
-										/>
-										<Typography
-											variant="subtitle1"
+										<Box
 											sx={{
-												fontFamily: "var(--font-nunito)",
-												fontSize: "16px",
-												fontWeight: "600",
-												color: "#202124",
-												lineHeight: "normal",
+												display: "flex",
+												alignItems: "center",
+												gap: "8px",
+												mb: 2,
 											}}
 										>
-											How to integrate Klaviyo
-										</Typography>
-									</Box>
-									<List dense sx={{ p: 0 }}>
-										{instructions.map((instruction, index) => (
-											<ListItem
-												key={instruction.id}
-												sx={{ p: 0, alignItems: "flex-start" }}
+											<Image
+												src="/info-circle.svg"
+												alt="info-circle"
+												height={20}
+												width={20}
+											/>
+											<Typography
+												variant="subtitle1"
+												sx={{
+													fontFamily: "var(--font-nunito)",
+													fontSize: "16px",
+													fontWeight: "600",
+													color: "#202124",
+													lineHeight: "normal",
+												}}
 											>
-												<Typography
-													variant="body1"
-													sx={{
-														display: "inline-block",
-														marginRight: "4px",
-														fontFamily: "var(--font-roboto)",
-														fontSize: "12px",
-														fontWeight: "400",
-														color: "#808080",
-														lineHeight: "24px",
-													}}
+												How to integrate Omnisend
+											</Typography>
+										</Box>
+										<List dense sx={{ p: 0 }}>
+											{instructions.map((instruction, index) => (
+												<ListItem
+													key={instruction.id}
+													sx={{ p: 0, alignItems: "flex-start" }}
 												>
-													{index + 1}.
-												</Typography>
-												<Typography
-													variant="body1"
-													sx={{
-														display: "inline",
-														fontFamily: "var(--font-roboto)",
-														fontSize: "12px",
-														fontWeight: "400",
-														color: "#808080",
-														lineHeight: "24px",
-													}}
-												>
-													{highlightText(instruction.text, highlightConfig)}
-												</Typography>
-											</ListItem>
-										))}
-									</List>
-								</Box>
+													<Typography
+														variant="body1"
+														sx={{
+															display: "inline-block",
+															marginRight: "4px",
+															fontFamily: "var(--font-roboto)",
+															fontSize: "12px",
+															fontWeight: "400",
+															color: "#808080",
+															lineHeight: "24px",
+														}}
+													>
+														{index + 1}.
+													</Typography>
+													<Typography
+														variant="body1"
+														sx={{
+															display: "inline",
+															fontFamily: "var(--font-roboto)",
+															fontSize: "12px",
+															fontWeight: "400",
+															color: "#808080",
+															lineHeight: "24px",
+														}}
+													>
+														{highlightText(instruction.text, highlightConfig)}
+													</Typography>
+												</ListItem>
+											))}
+										</List>
+									</Box>
+								)}
 							</TabPanel>
 							<TabPanel value="2" sx={{ p: 0 }}>
 								<Box
@@ -662,8 +636,8 @@ const KlaviyoIntegrationPopup = ({
 											sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 										>
 											<Image
-												src="/klaviyo.svg"
-												alt="klaviyo"
+												src="/omnisend_icon_black.svg"
+												alt="omnisend"
 												height={26}
 												width={32}
 											/>
@@ -693,7 +667,7 @@ const KlaviyoIntegrationPopup = ({
 											}}
 										>
 											Sync your current list to avoid collecting contacts you
-											already possess. Newly added contacts in Klaviyo will be
+											already possess. Newly added contacts in Omnisend will be
 											automatically suppressed each day.
 										</Typography>
 
@@ -842,7 +816,7 @@ const KlaviyoIntegrationPopup = ({
 													letterSpacing: "0.06px",
 												}}
 											>
-												By performing this action, all your Klaviyo contacts
+												By performing this action, all your Omnisend contacts
 												will be added to your Grow suppression list, and new
 												contacts will be imported daily around 6pm EST.
 											</Typography>
@@ -852,7 +826,9 @@ const KlaviyoIntegrationPopup = ({
 							</TabPanel>
 						</TabContext>
 					</Box>
-					<Box sx={{ px: 2, py: 3.5, width: "100%" }}>
+					<Box
+						sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
+					>
 						<Box
 							sx={{
 								width: "100%",
@@ -869,4 +845,4 @@ const KlaviyoIntegrationPopup = ({
 	);
 };
 
-export default KlaviyoIntegrationPopup;
+export default OmnisendConnect;

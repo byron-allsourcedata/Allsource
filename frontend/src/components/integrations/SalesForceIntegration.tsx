@@ -16,7 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import TabList from "@mui/lab/TabList";
-import { CustomButton } from "./ui";
+import { CustomButton } from "@/components/ui";
 
 interface CreateSalesForceProps {
 	handleClose: () => void;
