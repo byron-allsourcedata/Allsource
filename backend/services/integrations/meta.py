@@ -54,6 +54,11 @@ API_VERSION = "v23.0"
 
 logger = logging.getLogger(__name__)
 
+SUBCODE_MESSAGES = {
+    2446375: "Daily budget is too small. Increase the campaign daily budget.",
+    1870090: "Custom Audience Terms not accepted. Ask admin to accept Terms for this account.",
+}
+
 
 class MetaError(Exception):
     def __init__(self, user_message: str | None):
@@ -282,10 +287,48 @@ class MetaIntegrationsService:
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
 
+    def check_user_tasks_on_ad_account(
+        self, ad_account_id: str, access_token: str
+    ):
+        acct = self._ensure_act_prefix(ad_account_id).replace("act_", "")
+        url = f"https://graph.facebook.com/{API_VERSION}/act_{acct}/assigned_users"
+        params = {"access_token": access_token, "fields": "id,name,tasks"}
+        resp = self.__handle_request(method="GET", url=url, params=params)
+        if not resp or resp.status_code != 200:
+            return {"has_access": False, "tasks": [], "assigned_users": []}
+        try:
+            data = resp.json().get("data", [])
+        except Exception:
+            return {"has_access": False, "tasks": [], "assigned_users": []}
+
+        all_tasks = set()
+        for u in data:
+            tasks = u.get("tasks") or []
+            for t in tasks:
+                all_tasks.add(t)
+        has_required = bool({"MANAGE", "ADVERTISE"} & all_tasks) or any(
+            u.get("role") == "ADMIN" for u in data if u.get("role")
+        )
+        return {
+            "has_access": has_required,
+            "tasks": list(all_tasks),
+            "assigned_users": data,
+        }
+
     def get_list(self, ad_account_id: str, domain_id: int, user_id: int):
         credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return None
+
+        tasks_check = self.check_user_tasks_on_ad_account(
+            ad_account_id, credentials.access_token
+        )
+        print(tasks_check)
+        # if not tasks_check.get("has_access"):
+        #     raise HTTPException(
+        #         status_code=403,
+        #         detail="Insufficient ad account permissions (need MANAGE/ADVERTISE or ADMIN)."
+        #     )
 
         response_audience = self.__get_audience_list(
             ad_account_id, credentials.access_token
@@ -345,7 +388,6 @@ class MetaIntegrationsService:
             return self.check_custom_audience_terms(
                 ad_account_id, credential.access_token
             )
-
         return {"id": audience_id, "list_name": list_obj.name}
 
     def edit_sync(
@@ -453,20 +495,91 @@ class MetaIntegrationsService:
             "access_token": credentials.access_token,
             "special_ad_categories": [],
         }
-        response = self.__handle_request(
-            method="POST", url=url, json=campaign_data
-        )
-        response = response.json()
-        if response.get("error"):
-            logger.error("create_campaign error: %s", response["error"])
-            raise Exception(response["error"])
+        try:
+            response = self.__handle_request(
+                method="POST", url=url, json=campaign_data
+            )
 
-        campaign_id = response.get("id")
+            if response is None:
+                logger.error("create_campaign: empty response from Meta API")
+                raise HTTPException(
+                    status_code=502,
+                    detail={"message": "Empty response from Meta API"},
+                )
 
-        if not campaign_id:
-            logger.error("create_campaign: no id returned %s", response)
-            raise Exception("No campaign id returned")
-        return {"id": campaign_id, "list_name": campaign_name}
+            try:
+                body = response.json()
+            except Exception:
+                logger.exception("create_campaign: can't parse response JSON")
+                raise HTTPException(
+                    status_code=502,
+                    detail={"message": "Invalid response from Meta API"},
+                )
+
+            if body.get("error"):
+                err = body["error"]
+                subcode = err.get("error_subcode")
+                fbtrace = err.get("fbtrace_id")
+                logger.error(
+                    "create_campaign error from Meta: subcode=%s fbtrace=%s err=%s",
+                    subcode,
+                    fbtrace,
+                    err,
+                )
+
+                user_msg = (
+                    SUBCODE_MESSAGES.get(subcode)
+                    or err.get("error_user_msg")
+                    or err.get("message")
+                    or "Meta API error"
+                )
+                detail = {
+                    "message": user_msg,
+                    "meta": {
+                        "type": err.get("type"),
+                        "code": err.get("code"),
+                        "error_subcode": subcode,
+                        "fbtrace_id": fbtrace,
+                    },
+                }
+
+                raise HTTPException(status_code=400, detail=detail)
+
+            campaign_id = body.get("id")
+            if not campaign_id:
+                logger.error("create_campaign: no id returned %s", body)
+                raise HTTPException(
+                    status_code=502,
+                    detail={"message": "No campaign id returned"},
+                )
+
+            return {"id": campaign_id, "list_name": campaign_name}
+
+        except FacebookRequestError as fb_err:
+            info = self.parse_facebook_exception(fb_err)
+            logger.error(
+                "FacebookRequestError create_campaign: %s", info.get("raw")
+            )
+
+            sub = info.get("error_subcode")
+            msg = (
+                SUBCODE_MESSAGES.get(sub)
+                or info.get("error_user_msg")
+                or info.get("message")
+                or "Meta API error"
+            )
+
+            raise HTTPException(
+                status_code=400, detail={"message": msg, "meta": info}
+            )
+
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.exception("Unexpected error in create_campaign")
+            raise HTTPException(
+                status_code=500, detail={"message": "Internal server error"}
+            )
 
     async def create_sync(
         self,
@@ -848,3 +961,57 @@ class MetaIntegrationsService:
         return AdAccountScheme(
             id=ad_account.get("id"), name=ad_account.get("name")
         )
+
+    def parse_facebook_exception(self, exc) -> dict:
+        info = {
+            "message": None,
+            "error_user_msg": None,
+            "error_user_title": None,
+            "code": None,
+            "error_subcode": None,
+            "fbtrace_id": None,
+            "raw": None,
+        }
+        try:
+            if hasattr(exc, "api_error_message"):
+                info["message"] = exc.api_error_message()
+            if hasattr(exc, "api_error_code"):
+                info["code"] = exc.api_error_code()
+            if hasattr(exc, "api_error_subcode"):
+                info["error_subcode"] = exc.api_error_subcode()
+
+            body = (
+                getattr(exc, "body", None)
+                or getattr(exc, "message", None)
+                or str(exc)
+            )
+            info["raw"] = body
+
+            if isinstance(body, (dict,)):
+                err = body.get("error") if isinstance(body, dict) else None
+            else:
+                try:
+                    parsed = json.loads(body)
+                    err = (
+                        parsed.get("error")
+                        if isinstance(parsed, dict)
+                        else None
+                    )
+                except Exception:
+                    err = None
+
+            if isinstance(err, dict):
+                info["message"] = info["message"] or err.get("message")
+                info["error_user_msg"] = err.get("error_user_msg")
+                info["error_user_title"] = err.get("error_user_title")
+                info["code"] = info["code"] or err.get("code")
+                info["error_subcode"] = info["error_subcode"] or err.get(
+                    "error_subcode"
+                )
+                info["fbtrace_id"] = err.get("fbtrace_id")
+        except Exception:
+            logger.exception("Failed to parse FacebookRequestError")
+
+        if not info["message"]:
+            info["message"] = str(exc)
+        return info
