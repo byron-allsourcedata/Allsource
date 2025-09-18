@@ -6,18 +6,31 @@ import {
 	IconButton,
 	TextField,
 	Divider,
+	FormGroup,
 	FormControlLabel,
 	FormControl,
 	FormLabel,
 	Radio,
+	Collapse,
+	Checkbox,
 	Button,
+	List,
+	ListItem,
 	Link,
 	Tab,
 	Tooltip,
+	Switch,
 	RadioGroup,
+	InputLabel,
 	MenuItem,
+	Select,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogTitle,
 	Popover,
 	Menu,
+	SelectChangeEvent,
 	ListItemText,
 	ClickAwayListener,
 	InputAdornment,
@@ -30,13 +43,10 @@ import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import {
-	showErrorToast,
-	showToast,
-} from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
-import { Logo } from "@/components/ui/Logo";
+import { LogoSmall } from "@/components/ui/Logo";
 
 interface ConnectInstantlyPopupProps {
 	open: boolean;
@@ -46,12 +56,12 @@ interface ConnectInstantlyPopupProps {
 	isEdit?: boolean;
 }
 
-type KlaviyoList = {
+type InstantlyList = {
 	id: string;
 	list_name: string;
 };
 
-const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
+const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 	open,
 	onClose,
 	onCloseCreateSync,
@@ -64,16 +74,16 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 	const [checked, setChecked] = useState(false);
 	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(
+	const [selectedOption, setSelectedOption] = useState<InstantlyList | null>(
 		null,
 	);
+	const [listName, setlistName] = useState<string | null>(data?.name ?? "");
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
 	const [tagName, setTagName] = useState<string>("");
 	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
 	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-	const [openDropdown, setOpenDropdown] = useState<number | null>(null);
 	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
 		null,
 	);
@@ -90,7 +100,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
 	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
 	const [maplistNameError, setMapListNameError] = useState(false);
-	const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([]);
+	const [instantlyList, setInstantlyList] = useState<InstantlyList[]>([]);
 	const [customFieldsList, setCustomFieldsList] = useState([
 		{ type: "Gender", value: "gender" },
 		{ type: "Company Name", value: "company_name" },
@@ -178,22 +188,19 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 			),
 		);
 	};
-	useEffect(() => {
-		if (open) {
-			return;
-		}
+	const resetToDefaultValues = () => {
 		setLoading(false);
 		setValue("1");
 		setChecked(false);
 		setSelectedRadioValue("");
 		setAnchorEl(null);
 		setSelectedOption(null);
+		setlistName("");
 		setShowCreateForm(false);
 		setNewListName("");
 		setTagName("");
 		setIsShrunk(false);
 		setIsDropdownOpen(false);
-		setOpenDropdown(null);
 		setOpenDropdownMaximiz(null);
 		setApiKeyError(false);
 		setTab2Error(false);
@@ -205,9 +212,9 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 		setNewMapListName("");
 		setShowCreateMapForm(false);
 		setMapListNameError(false);
-	}, [open]);
+	};
 
-	const getKlaviyoList = async () => {
+	const getInstantlyList = async () => {
 		try {
 			setLoading(true);
 			const response = await axiosInstance.get("/integrations/sync/list/", {
@@ -215,9 +222,9 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 					service_name: "instantly",
 				},
 			});
-			setKlaviyoList(response.data);
+			setInstantlyList(response.data);
 			const foundItem = response.data?.find(
-				(item: any) => item.list_name === data?.name,
+				(item: any) => item.list_name === data?.list_name,
 			);
 			if (foundItem) {
 				setUpdateKlaviuo(data.id);
@@ -225,6 +232,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 					id: foundItem.id,
 					list_name: foundItem.list_name,
 				});
+				setlistName(foundItem.list_name);
 			} else {
 				setSelectedOption(null);
 			}
@@ -234,39 +242,33 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 	};
 	useEffect(() => {
 		if (open) {
-			getKlaviyoList();
+			getInstantlyList();
 		}
 	}, [open]);
 
 	const createNewList = async () => {
-		try {
-			const newListResponse = await axiosInstance.post(
-				"/integrations/sync/list/",
-				{
-					name: selectedOption?.list_name,
+		const newListResponse = await axiosInstance.post(
+			"/integrations/sync/list/",
+			{
+				name: selectedOption?.list_name,
+			},
+			{
+				params: {
+					service_name: "instantly",
 				},
-				{
-					params: {
-						service_name: "instantly",
-					},
-				},
-			);
-			if (newListResponse.data.status === "CREATED_IS_FAILED") {
-				showErrorToast(
-					"You've hit your list limit. You already have the max amount of lists allowed in your plan.",
-				);
-			} else if (newListResponse.data.status === "CREDENTIALS_INVALID") {
-				showErrorToast("Credentials invalid, try updating the key.");
-				throw new Error("Credentials invalid, try updating the key.");
-			}
+			},
+		);
 
-			return newListResponse.data;
-		} catch (error) {}
+		if (newListResponse.status !== 201) {
+			showErrorToast("Failed to create a new list");
+		}
+
+		return newListResponse.data;
 	};
 
 	const handleSaveSync = async () => {
 		setLoading(true);
-		let list: KlaviyoList | null = null;
+		let list: InstantlyList | null = null;
 
 		try {
 			if (selectedOption && selectedOption.id === "-1") {
@@ -274,59 +276,60 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 			} else if (selectedOption) {
 				list = selectedOption;
 			} else {
-				showToast("Please select a valid option.");
-				return;
+				if (!listName) {
+					showToast("Please select a valid option.");
+					return;
+				}
 			}
 
-			if (list) {
-				if (isEdit) {
-					const response = await axiosInstance.put(
-						`/data-sync/sync`,
-						{
-							integrations_users_sync_id: data.id,
-							list_id: list?.id,
-							list_name: list?.list_name,
-							leads_type: selectedRadioValue,
-							data_map: customFields,
+			if (isEdit) {
+				const response = await axiosInstance.put(
+					`/data-sync/sync`,
+					{
+						integrations_users_sync_id: data.id,
+						leads_type: selectedRadioValue,
+						data_map: customFields,
+						list_id: list?.id,
+						list_name: list?.list_name,
+					},
+					{
+						params: {
+							service_name: "instantly",
 						},
-						{
-							params: {
-								service_name: "instantly",
-							},
+					},
+				);
+				if (response.status === 201 || response.status === 200) {
+					resetToDefaultValues();
+					onClose();
+					showToast("Data sync updated successfully");
+					triggerSync();
+				}
+			} else {
+				const response = await axiosInstance.post(
+					"/data-sync/sync",
+					{
+						list_id: list?.id,
+						list_name: list?.list_name,
+						leads_type: selectedRadioValue,
+						data_map: customFields,
+					},
+					{
+						params: {
+							service_name: "instantly",
 						},
-					);
-					if (response.status === 201 || response.status === 200) {
-						triggerSync();
-						onClose();
-						showToast("Data sync updated successfully");
-					}
-				} else {
-					const response = await axiosInstance.post(
-						"/data-sync/sync",
-						{
-							list_id: list?.id,
-							list_name: list?.list_name,
-							leads_type: selectedRadioValue,
-							data_map: customFields,
-						},
-						{
-							params: {
-								service_name: "instantly",
-							},
-						},
-					);
-					if (response.status === 201 || response.status === 200) {
-						onClose();
-						showToast("Data sync created successfully");
-						triggerSync();
-					}
+					},
+				);
+				if (response.status === 201 || response.status === 200) {
+					resetToDefaultValues();
+					triggerSync();
+					onClose();
+					showToast("Data sync updated successfully");
 				}
 			}
 			handlePopupClose();
 			if (onCloseCreateSync) {
 				onCloseCreateSync();
 			}
-			triggerSync();
 		} finally {
 			setLoading(false);
 		}
@@ -355,24 +358,19 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 		setNewListName(""); // Clear new list name when closing
 	};
 
-	const handleMapClose = () => {
-		setValue("1");
-		setShowCreateMapForm(false);
-		setNewMapListName("");
-	};
-
-	const handleSelectOption = (value: KlaviyoList | string) => {
+	const handleSelectOption = (value: InstantlyList | string) => {
 		if (value === "createNew") {
 			setShowCreateForm((prev) => !prev);
 			if (!showCreateForm) {
 				setAnchorEl(textFieldRef.current);
 			}
-		} else if (isKlaviyoList(value)) {
-			// Проверка, является ли value объектом KlaviyoList
+		} else if (isInstantlyList(value)) {
+			// Проверка, является ли value объектом InstantlyList
 			setSelectedOption({
 				id: value.id,
 				list_name: value.list_name,
 			});
+			setlistName(value.list_name);
 			setIsDropdownValid(true);
 			handleClose();
 		} else {
@@ -381,7 +379,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 		}
 	};
 
-	const isKlaviyoList = (value: any): value is KlaviyoList => {
+	const isInstantlyList = (value: any): value is InstantlyList => {
 		return (
 			value !== null &&
 			typeof value === "object" &&
@@ -390,7 +388,6 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 		);
 	};
 
-	// Handle Save action for the create new list form
 	const handleSave = async () => {
 		let valid = true;
 
@@ -404,26 +401,17 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 
 		// If valid, save and close
 		if (valid) {
-			const newKlaviyoList = { id: "-1", list_name: newListName };
-			setSelectedOption(newKlaviyoList);
-			if (isKlaviyoList(newKlaviyoList)) {
+			const newInstantlyList = { id: "-1", list_name: newListName };
+			setSelectedOption(newInstantlyList);
+			setlistName(newInstantlyList.list_name);
+			if (isInstantlyList(newInstantlyList)) {
 				setIsDropdownValid(true);
 			}
 			handleClose();
 		}
 	};
 
-	const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setChecked(event.target.checked);
-	};
-
-	const label = { inputProps: { "aria-label": "Switch demo" } };
-
-	const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-		setValue(newValue);
-	};
-
-	const klaviyoStyles = {
+	const instantlyStyles = {
 		tabHeading: {
 			textTransform: "none",
 			padding: 0,
@@ -468,73 +456,6 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 		},
 	};
 
-	type HighlightConfig = {
-		[keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
-	};
-
-	const highlightText = (text: string, highlightConfig: HighlightConfig) => {
-		// Start with the whole text as a single part.
-		let parts: (string | JSX.Element)[] = [text];
-
-		// For each keyword, split the text and insert the highlighted part.
-		Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
-			const { color, fontWeight } = highlightConfig[keyword];
-			parts = parts.flatMap(
-				(part, partIndex) =>
-					// Only split if the part is a string and contains the keyword.
-					typeof part === "string" && part.includes(keyword)
-						? part.split(keyword).flatMap((segment, index, array) =>
-								index < array.length - 1
-									? [
-											segment,
-											<span
-												style={{
-													color: color || "inherit",
-													fontWeight: fontWeight || "normal",
-												}}
-												key={`highlight-${keywordIndex}-${partIndex}-${index}`}
-											>
-												{keyword}
-											</span>,
-										]
-									: [segment],
-							)
-						: [part], // Otherwise, just keep the part as is (could be JSX).
-			);
-		});
-
-		return <>{parts}</>; // Return the array wrapped in a fragment.
-	};
-
-	const instructions: any[] = [
-		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
-		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-		// { id: 'unique-id-5', text: 'Click Create.' },
-		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.' },
-		// { id: 'unique-id-7', text: 'Click Connect.' },
-		// { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Allsource.' },
-		// { id: 'unique-id-9', text: 'Click Export.' },
-	];
-
-	// Define the keywords and their styles
-	const highlightConfig: HighlightConfig = {
-		Klaviyo: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" }, // Blue and bold
-		Settings: { color: "#707071", fontWeight: "500" }, // Bold only
-		"Create Private API Key": { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Lists: { color: "#707071", fontWeight: "500" }, // Bold only
-		Profiles: { color: "#707071", fontWeight: "500" }, // Bold only
-		Metrics: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Events: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Templates: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Create: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		"API Key": { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Connect: { color: "#707071", fontWeight: "500" }, // Bold only
-		Export: { color: "#707071", fontWeight: "500" }, // Blue and bold
-	};
-
-	// Define buttons for each tab
 	const getButton = (tabValue: string) => {
 		switch (tabValue) {
 			case "1":
@@ -575,8 +496,8 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 				return (
 					<Button
 						variant="contained"
-						disabled={!isDropdownValid}
-						onClick={handleSaveSync}
+						disabled={!isDropdownValid && !listName}
+						onClick={handleNextTab}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -602,7 +523,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 							borderRadius: "4px",
 						}}
 					>
-						Save
+						Next
 					</Button>
 				);
 			case "3":
@@ -610,7 +531,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 					<Button
 						variant="contained"
 						onClick={handleSaveSync}
-						disabled={!selectedOption || !selectedRadioValue.trim()}
+						disabled={!listName || !selectedRadioValue}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -689,32 +610,6 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 		}
 	};
 
-	// Add row function
-	const handleAddRow = () => {
-		const newRow: Row = {
-			id: Date.now(), // Unique ID for each new row
-			type: "",
-			value: "",
-			canDelete: true, // This new row can be deleted
-		};
-		setRows([...rows, newRow]);
-	};
-	const handleDropdownOpen = (id: number) => {
-		setOpenDropdown(id); // Set the open state for the current dropdown
-	};
-
-	const handleDropdownMaximizOpen = (id: number) => {
-		setOpenDropdownMaximiz(id);
-	};
-
-	const handleDropdownClose = () => {
-		setOpenDropdown(null); // Reset when dropdown closes
-	};
-
-	const handleDropdownMaximizClose = () => {
-		setOpenDropdownMaximiz(null);
-	};
-
 	const validateTab2 = () => {
 		if (selectedRadioValue === null) {
 			setTab2Error(true);
@@ -750,6 +645,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 	};
 
 	const handlePopupClose = () => {
+		resetToDefaultValues();
 		onClose();
 	};
 
@@ -785,12 +681,10 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 						width: "40%",
 						position: "fixed",
 						top: 0,
+						boxShadow: isEdit
+							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
+							: "none",
 						bottom: 0,
-						msOverflowStyle: "none",
-						scrollbarWidth: "none",
-						"&::-webkit-scrollbar": {
-							display: "none",
-						},
 						"@media (max-width: 600px)": {
 							width: "100%",
 						},
@@ -799,7 +693,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: "rgba(0, 0, 0, 0)",
+							backgroundColor: "rgba(0, 0, 0, 0.1)",
 						},
 					},
 				}}
@@ -835,6 +729,7 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 						<Link
 							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-instantly"
 							target="_blank"
+							rel="noopener referrer"
 							className="main-text"
 							sx={{
 								fontSize: "14px",
@@ -855,367 +750,355 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 					sx={{
 						display: "flex",
 						flexDirection: "column",
-						justifyContent: "space-between",
+						alignItems: "center",
 						height: "100%",
 					}}
 				>
-					<Box>
-						<UserTip
-							limit={60}
-							service="Instantly"
-							sx={{
-								width: "100%",
-								padding: "16px 24px 0px 24px",
-							}}
-						/>
-						<Box
-							sx={{
-								width: "100%",
-								padding: "16px 24px 24px 24px",
-								position: "relative",
-							}}
-						>
-							<TabContext value={value}>
-								<Box sx={{ pb: 4 }}>
-									<TabList
-										centered
-										aria-label="Connect to Instantly Tabs"
-										TabIndicatorProps={{
-											sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
-										}}
-										sx={{
-											"& .MuiTabs-scroller": {
-												overflowX: "auto !important",
-											},
-											"& .MuiTabs-flexContainer": {
-												justifyContent: "center",
-												"@media (max-width: 600px)": {
-													gap: "16px",
-													justifyContent: "flex-start",
-												},
-											},
-										}}
-										onChange={handleChangeTab}
-									>
-										<Tab
-											label="Sync Filter"
-											value="1"
-											className="tab-heading"
-											sx={klaviyoStyles.tabHeading}
-										/>
-										<Tab
-											label="Contact Sync"
-											value="2"
-											className="tab-heading"
-											sx={klaviyoStyles.tabHeading}
-										/>
-										{/* <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
-									</TabList>
-								</Box>
-								<TabPanel value="1" sx={{ p: 0 }}>
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-											gap: "16px",
-										}}
-									>
-										<Box
-											sx={{
-												p: 2,
-												border: "1px solid #f0f0f0",
-												borderRadius: "4px",
-												boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-												display: "flex",
-												flexDirection: "column",
+					<UserTip
+						limit={100}
+						service="Instantly"
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
+					<Box
+						sx={{
+							width: "100%",
+							padding: "16px 24px 24px 24px",
+							position: "relative",
+						}}
+					>
+						<TabContext value={value}>
+							<Box sx={{ pb: 4 }}>
+								<TabList
+									centered
+									aria-label="Connect to Instantly Tabs"
+									TabIndicatorProps={{
+										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
+									}}
+									sx={{
+										"& .MuiTabs-scroller": {
+											overflowX: "auto !important",
+										},
+										"& .MuiTabs-flexContainer": {
+											justifyContent: "center",
+											"@media (max-width: 600px)": {
 												gap: "16px",
-											}}
-										>
-											<Typography variant="subtitle1" className="paragraph">
-												Synchronize all data in real-time from this moment
-												forward for seamless integration and continuous updates.
-											</Typography>
-											<FormControl sx={{ gap: "16px" }} error={tab2Error}>
-												<FormLabel
-													id="contact-type-radio-buttons-group-label"
-													className="first-sub-title"
-													sx={{
-														"&.Mui-focused": {
-															color: "#000",
-															transform: "none !important",
-														},
-													}}
-												>
-													Filter by Contact type
-												</FormLabel>
-												<RadioGroup
-													aria-labelledby="contact-type-radio-buttons-group-label"
-													name="contact-type-row-radio-buttons-group"
-													value={selectedRadioValue}
-													onChange={handleRadioChange}
-												>
-													<FormControlLabel
-														value="allContacts"
-														control={
-															<Radio
-																sx={{
-																	color: "#e4e4e4",
-																	"&.Mui-checked": {
-																		color: "rgba(56, 152, 252, 1)", // checked color
-																	},
-																}}
-															/>
-														}
-														label="All Contacts"
-														componentsProps={{
-															typography: {
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "14px",
-																	fontWeight: "500",
-																	color: "#000",
-																	lineHeight: "normal",
-																	opacity:
-																		selectedRadioValue === "allContacts"
-																			? 1
-																			: 0.43,
-																	"@media (max-width:440px)": {
-																		fontSize: "12px",
-																	},
-																},
-															},
-														}}
-														sx={{
-															"@media (max-width:600px)": {
-																flexBasis: "calc(50% - 8px)",
-															},
-														}}
-													/>
-													<FormControlLabel
-														value="visitor"
-														control={
-															<Radio
-																sx={{
-																	color: "#e4e4e4",
-																	"&.Mui-checked": {
-																		color: "rgba(56, 152, 252, 1)", // checked color
-																	},
-																}}
-															/>
-														}
-														label="Visitors"
-														componentsProps={{
-															typography: {
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "14px",
-																	fontWeight: "500",
-																	color: "#000",
-																	lineHeight: "normal",
-																	opacity:
-																		selectedRadioValue === "visitors"
-																			? 1
-																			: 0.43,
-																	"@media (max-width:440px)": {
-																		fontSize: "12px",
-																	},
-																},
-															},
-														}}
-														sx={{
-															"@media (max-width:600px)": {
-																flexBasis: "calc(50% - 8px)",
-															},
-														}}
-													/>
-													<FormControlLabel
-														value="viewed_product"
-														control={
-															<Radio
-																sx={{
-																	color: "#e4e4e4",
-																	"&.Mui-checked": {
-																		color: "rgba(56, 152, 252, 1)", // checked color
-																	},
-																}}
-															/>
-														}
-														label="View Product"
-														componentsProps={{
-															typography: {
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "14px",
-																	fontWeight: "500",
-																	color: "#000",
-																	lineHeight: "normal",
-																	opacity:
-																		selectedRadioValue === "viewProduct"
-																			? 1
-																			: 0.43,
-																	"@media (max-width:440px)": {
-																		fontSize: "12px",
-																	},
-																},
-															},
-														}}
-														sx={{
-															"@media (max-width:600px)": {
-																flexBasis: "calc(50% - 8px)",
-															},
-														}}
-													/>
-													<FormControlLabel
-														value="abandoned_cart"
-														control={
-															<Radio
-																sx={{
-																	color: "#e4e4e4",
-																	"&.Mui-checked": {
-																		color: "rgba(56, 152, 252, 1)", // checked color
-																	},
-																}}
-															/>
-														}
-														label="Abandoned cart"
-														componentsProps={{
-															typography: {
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "14px",
-																	fontWeight: "500",
-																	color: "#000",
-																	lineHeight: "normal",
-																	opacity:
-																		selectedRadioValue === "addToCart"
-																			? 1
-																			: 0.43,
-																	"@media (max-width:440px)": {
-																		fontSize: "12px",
-																	},
-																},
-															},
-														}}
-														sx={{
-															"@media (max-width:600px)": {
-																flexBasis: "calc(50% - 8px)",
-															},
-														}}
-													/>
-													<FormControlLabel
-														value="converted_sales"
-														control={
-															<Radio
-																sx={{
-																	color: "#e4e4e4",
-																	"&.Mui-checked": {
-																		color: "rgba(56, 152, 252, 1)", // checked color
-																	},
-																}}
-															/>
-														}
-														label="Converted Sales"
-														componentsProps={{
-															typography: {
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "14px",
-																	fontWeight: "500",
-																	color: "#000",
-																	lineHeight: "normal",
-																	opacity:
-																		selectedRadioValue === "addToCart"
-																			? 1
-																			: 0.43,
-																	"@media (max-width:440px)": {
-																		fontSize: "12px",
-																	},
-																},
-															},
-														}}
-														sx={{
-															"@media (max-width:600px)": {
-																flexBasis: "calc(50% - 8px)",
-															},
-														}}
-													/>
-												</RadioGroup>
-											</FormControl>
-										</Box>
-									</Box>
-								</TabPanel>
-								<TabPanel value="2" sx={{ p: 0 }}>
+												justifyContent: "flex-start",
+											},
+										},
+									}}
+									onChange={handleChangeTab}
+								>
+									<Tab
+										label="Sync Filter"
+										value="1"
+										className="tab-heading"
+										sx={instantlyStyles.tabHeading}
+									/>
+									<Tab
+										label="Contact Sync"
+										value="2"
+										className="tab-heading"
+										sx={instantlyStyles.tabHeading}
+									/>
+									<Tab
+										label="Map data"
+										value="3"
+										className="tab-heading"
+										sx={instantlyStyles.tabHeading}
+									/>
+								</TabList>
+							</Box>
+							<TabPanel value="1" sx={{ p: 0 }}>
+								<Box
+									sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
+								>
 									<Box
 										sx={{
+											p: 2,
+											border: "1px solid #f0f0f0",
+											borderRadius: "4px",
+											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 											display: "flex",
 											flexDirection: "column",
 											gap: "16px",
 										}}
 									>
-										<Box
-											sx={{
-												p: 2,
-												border: "1px solid #f0f0f0",
-												borderRadius: "4px",
-												boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-											}}
-										>
-											<Box
+										<Typography variant="subtitle1" className="paragraph">
+											Synchronize all data in real-time from this moment forward
+											for seamless integration and continuous updates.
+										</Typography>
+										<FormControl sx={{ gap: "16px" }} error={tab2Error}>
+											<FormLabel
+												id="contact-type-radio-buttons-group-label"
+												className="first-sub-title"
 												sx={{
-													display: "flex",
-													alignItems: "center",
-													gap: "8px",
-													mb: 3,
+													"&.Mui-focused": {
+														color: "#000",
+														transform: "none !important",
+													},
 												}}
 											>
-												<Image
-													src="/instantly-icon.svg"
-													alt="instantly"
-													height={26}
-													width={32}
-												/>
-												<Typography variant="h6" className="first-sub-title">
-													Contact sync
-												</Typography>
-												<Tooltip title="Sync data with list" placement="right">
-													<Image
-														src="/baseline-info-icon.svg"
-														alt="baseline-info-icon"
-														height={16}
-														width={16}
-													/>
-												</Tooltip>
-											</Box>
-
-											<ClickAwayListener onClickAway={handleClose}>
-												<Box>
-													<TextField
-														ref={textFieldRef}
-														variant="outlined"
-														value={selectedOption?.list_name}
-														onClick={handleClick}
-														size="small"
-														fullWidth
-														label={
-															selectedOption ? "" : "Select or Create new list"
-														}
-														InputLabelProps={{
-															shrink: selectedOption ? false : isShrunk,
+												Filter by Contact type
+											</FormLabel>
+											<RadioGroup
+												aria-labelledby="contact-type-radio-buttons-group-label"
+												name="contact-type-row-radio-buttons-group"
+												value={selectedRadioValue}
+												onChange={handleRadioChange}
+											>
+												<FormControlLabel
+													value="allContacts"
+													control={
+														<Radio
+															sx={{
+																color: "#e4e4e4",
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)", // checked color
+																},
+															}}
+														/>
+													}
+													label="All Contacts"
+													componentsProps={{
+														typography: {
 															sx: {
 																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																letterSpacing: "0.06px",
-																top: "5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
+																fontSize: "14px",
+																fontWeight: "500",
+																color: "#000",
+																lineHeight: "normal",
+																opacity:
+																	selectedRadioValue === "allContacts"
+																		? 1
+																		: 0.43,
+																"@media (max-width:440px)": {
+																	fontSize: "12px",
 																},
 															},
-														}}
-														InputProps={{
-															endAdornment: (
-																<InputAdornment position="end">
+														},
+													}}
+													sx={{
+														"@media (max-width:600px)": {
+															flexBasis: "calc(50% - 8px)",
+														},
+													}}
+												/>
+												<FormControlLabel
+													value="visitor"
+													control={
+														<Radio
+															sx={{
+																color: "#e4e4e4",
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)", // checked color
+																},
+															}}
+														/>
+													}
+													label="Visitors"
+													componentsProps={{
+														typography: {
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "14px",
+																fontWeight: "500",
+																color: "#000",
+																lineHeight: "normal",
+																opacity:
+																	selectedRadioValue === "visitors" ? 1 : 0.43,
+																"@media (max-width:440px)": {
+																	fontSize: "12px",
+																},
+															},
+														},
+													}}
+													sx={{
+														"@media (max-width:600px)": {
+															flexBasis: "calc(50% - 8px)",
+														},
+													}}
+												/>
+												<FormControlLabel
+													value="viewed_product"
+													control={
+														<Radio
+															sx={{
+																color: "#e4e4e4",
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)", // checked color
+																},
+															}}
+														/>
+													}
+													label="View Product"
+													componentsProps={{
+														typography: {
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "14px",
+																fontWeight: "500",
+																color: "#000",
+																lineHeight: "normal",
+																opacity:
+																	selectedRadioValue === "viewProduct"
+																		? 1
+																		: 0.43,
+																"@media (max-width:440px)": {
+																	fontSize: "12px",
+																},
+															},
+														},
+													}}
+													sx={{
+														"@media (max-width:600px)": {
+															flexBasis: "calc(50% - 8px)",
+														},
+													}}
+												/>
+												<FormControlLabel
+													value="abandoned_cart"
+													control={
+														<Radio
+															sx={{
+																color: "#e4e4e4",
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)", // checked color
+																},
+															}}
+														/>
+													}
+													label="Abandoned cart"
+													componentsProps={{
+														typography: {
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "14px",
+																fontWeight: "500",
+																color: "#000",
+																lineHeight: "normal",
+																opacity:
+																	selectedRadioValue === "addToCart" ? 1 : 0.43,
+																"@media (max-width:440px)": {
+																	fontSize: "12px",
+																},
+															},
+														},
+													}}
+													sx={{
+														"@media (max-width:600px)": {
+															flexBasis: "calc(50% - 8px)",
+														},
+													}}
+												/>
+												<FormControlLabel
+													value="converted_sales"
+													control={
+														<Radio
+															sx={{
+																color: "#e4e4e4",
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)", // checked color
+																},
+															}}
+														/>
+													}
+													label="Converted Sales"
+													componentsProps={{
+														typography: {
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "14px",
+																fontWeight: "500",
+																color: "#000",
+																lineHeight: "normal",
+																opacity:
+																	selectedRadioValue === "addToCart" ? 1 : 0.43,
+																"@media (max-width:440px)": {
+																	fontSize: "12px",
+																},
+															},
+														},
+													}}
+													sx={{
+														"@media (max-width:600px)": {
+															flexBasis: "calc(50% - 8px)",
+														},
+													}}
+												/>
+											</RadioGroup>
+										</FormControl>
+									</Box>
+								</Box>
+							</TabPanel>
+							<TabPanel value="2" sx={{ p: 0 }}>
+								<Box
+									sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
+								>
+									<Box
+										sx={{
+											p: 2,
+											border: "1px solid #f0f0f0",
+											borderRadius: "4px",
+											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+										}}
+									>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												gap: "8px",
+												mb: 3,
+											}}
+										>
+											<Image
+												src="/instantly-icon.svg"
+												alt="instantly"
+												height={26}
+												width={32}
+											/>
+											<Typography variant="h6" className="first-sub-title">
+												Contact sync
+											</Typography>
+											<Tooltip title="Sync data with list" placement="right">
+												<Image
+													src="/baseline-info-icon.svg"
+													alt="baseline-info-icon"
+													height={16}
+													width={16}
+												/>
+											</Tooltip>
+										</Box>
+										<ClickAwayListener
+											disabled={data}
+											onClickAway={handleClose}
+										>
+											<Box>
+												<TextField
+													ref={textFieldRef}
+													variant="outlined"
+													value={listName}
+													onClick={handleClick}
+													size="small"
+													disabled={data}
+													fullWidth
+													label={listName ? "" : "Select or Create new list"}
+													InputLabelProps={{
+														shrink: listName ? false : isShrunk,
+														sx: {
+															fontFamily: "var(--font-nunito)",
+															fontSize: "12px",
+															lineHeight: "16px",
+															letterSpacing: "0.06px",
+															top: "5px",
+														},
+													}}
+													InputProps={{
+														endAdornment: (
+															<InputAdornment position="end">
+																{!data ? (
 																	<IconButton
 																		onClick={handleDropdownToggle}
 																		edge="end"
@@ -1236,257 +1119,266 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 																			/>
 																		)}
 																	</IconButton>
-																</InputAdornment>
-															),
-															sx: klaviyoStyles.formInput,
-														}}
-														sx={{
-															"& input": {
-																caretColor: "transparent", // Hide caret with transparent color
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																color: "rgba(0, 0, 0, 0.89)",
-																fontWeight: "600",
-																lineHeight: "normal",
-															},
-															"& .MuiOutlinedInput-input": {
-																cursor: "default", // Prevent showing caret on input field
-																top: "5px",
-															},
-														}}
-													/>
+																) : (
+																	""
+																)}
+															</InputAdornment>
+														),
+														sx: instantlyStyles.formInput,
+													}}
+													sx={{
+														"& input": {
+															caretColor: "transparent", // Hide caret with transparent color
+															fontFamily: "var(--font-nunito)",
+															fontSize: "14px",
+															// color: "rgba(0, 0, 0, 0.89)",
+															fontWeight: "600",
+															lineHeight: "normal",
+														},
+														"& .MuiOutlinedInput-input": {
+															cursor: "default", // Prevent showing caret on input field
+															top: "5px",
+														},
+													}}
+												/>
 
-													<Menu
-														anchorEl={anchorEl}
-														open={Boolean(anchorEl) && isDropdownOpen}
-														onClose={handleClose}
-														PaperProps={{
-															sx: {
-																width: anchorEl
-																	? `${anchorEl.clientWidth}px`
-																	: "538px",
-																borderRadius: "4px",
-																border: "1px solid #e4e4e4",
-															}, // Match dropdown width to input
+												<Menu
+													anchorEl={anchorEl}
+													open={Boolean(anchorEl) && isDropdownOpen}
+													onClose={handleClose}
+													PaperProps={{
+														sx: {
+															width: anchorEl
+																? `${anchorEl.clientWidth}px`
+																: "538px",
+															borderRadius: "4px",
+															border: "1px solid #e4e4e4",
+														}, // Match dropdown width to input
+													}}
+													sx={{}}
+												>
+													{/* Show "Create New List" option */}
+													<MenuItem
+														disabled={data}
+														onClick={() => handleSelectOption("createNew")}
+														sx={{
+															borderBottom: showCreateForm
+																? "none"
+																: "1px solid #cdcdcd",
+															"&:hover": {
+																background: "rgba(80, 82, 178, 0.10)",
+															},
 														}}
-														sx={{}}
 													>
-														{/* Show "Create New List" option */}
-														<MenuItem
-															onClick={() => handleSelectOption("createNew")}
-															sx={{
-																borderBottom: showCreateForm
-																	? "none"
-																	: "1px solid #cdcdcd",
-																"&:hover": {
-																	background: "rgba(80, 82, 178, 0.10)",
+														<ListItemText
+															primary={`+ Create new list`}
+															primaryTypographyProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	color: showCreateForm
+																		? "rgba(56, 152, 252, 1)"
+																		: "#202124",
+																	fontWeight: "500",
+																	lineHeight: "20px",
 																},
 															}}
-														>
-															<ListItemText
-																primary={`+ Create new list`}
-																primaryTypographyProps={{
-																	sx: {
-																		fontFamily: "var(--font-nunito)",
-																		fontSize: "14px",
-																		color: showCreateForm
-																			? "rgba(56, 152, 252, 1)"
-																			: "#202124",
-																		fontWeight: "500",
-																		lineHeight: "20px",
-																	},
-																}}
-															/>
-														</MenuItem>
+														/>
+													</MenuItem>
 
-														{/* Show Create New List form if 'showCreateForm' is true */}
-														{showCreateForm && (
-															<Box>
+													{/* Show Create New List form if 'showCreateForm' is true */}
+													{showCreateForm && (
+														<Box>
+															<Box
+																sx={{
+																	display: "flex",
+																	flexDirection: "column",
+																	gap: "24px",
+																	p: 2,
+																	width: anchorEl
+																		? `${anchorEl.clientWidth}px`
+																		: "538px",
+																	pt: 0,
+																}}
+															>
 																<Box
 																	sx={{
+																		mt: 1, // Margin-top to separate form from menu item
 																		display: "flex",
-																		flexDirection: "column",
-																		gap: "24px",
-																		p: 2,
-																		width: anchorEl
-																			? `${anchorEl.clientWidth}px`
-																			: "538px",
-																		pt: 0,
-																	}}
-																>
-																	<Box
-																		sx={{
-																			mt: 1, // Margin-top to separate form from menu item
-																			display: "flex",
-																			justifyContent: "space-between",
-																			gap: "16px",
-																			"@media (max-width: 600px)": {
-																				flexDirection: "column",
-																			},
-																		}}
-																	>
-																		<TextField
-																			label="List Name"
-																			variant="outlined"
-																			value={newListName}
-																			onChange={(e) =>
-																				setNewListName(e.target.value)
-																			}
-																			size="small"
-																			fullWidth
-																			onKeyDown={(e) => e.stopPropagation()}
-																			error={listNameError}
-																			helperText={
-																				listNameError
-																					? "List Name is required"
-																					: ""
-																			}
-																			InputLabelProps={{
-																				sx: {
-																					fontFamily: "var(--font-nunito)",
-																					fontSize: "12px",
-																					lineHeight: "16px",
-																					fontWeight: "400",
-																					color: "rgba(17, 17, 19, 0.60)",
-																					"&.Mui-focused": {
-																						color: "rgba(56, 152, 252, 1)",
-																					},
-																				},
-																			}}
-																			InputProps={{
-																				endAdornment: newListName && ( // Conditionally render close icon if input is not empty
-																					<InputAdornment position="end">
-																						<IconButton
-																							edge="end"
-																							onClick={() => setNewListName("")} // Clear the text field when clicked
-																						>
-																							<Image
-																								src="/close-circle.svg"
-																								alt="close-circle"
-																								height={18}
-																								width={18} // Adjust the size as needed
-																							/>
-																						</IconButton>
-																					</InputAdornment>
-																				),
-																				sx: {
-																					"&.MuiOutlinedInput-root": {
-																						height: "32px",
-																						"& .MuiOutlinedInput-input": {
-																							padding: "5px 16px 4px 16px",
-																							fontFamily: "var(--font-roboto)",
-																							color: "#202124",
-																							fontSize: "14px",
-																							fontWeight: "400",
-																							lineHeight: "20px",
-																						},
-																						"& .MuiOutlinedInput-notchedOutline":
-																							{
-																								borderColor: "#A3B0C2",
-																							},
-																						"&:hover .MuiOutlinedInput-notchedOutline":
-																							{
-																								borderColor: "#A3B0C2",
-																							},
-																						"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																							{
-																								borderColor:
-																									"rgba(56, 152, 252, 1)",
-																							},
-																					},
-																					"&+.MuiFormHelperText-root": {
-																						marginLeft: "0",
-																					},
-																				},
-																			}}
-																		/>
-																	</Box>
-																	<Box sx={{ textAlign: "right" }}>
-																		<Button
-																			variant="contained"
-																			onClick={handleSave}
-																			disabled={listNameError || !newListName}
-																			sx={{
-																				borderRadius: "4px",
-																				border:
-																					"1px solid rgba(56, 152, 252, 1)",
-																				background: "#fff",
-																				boxShadow:
-																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																				fontFamily: "var(--font-nunito)",
-																				fontSize: "14px",
-																				fontWeight: "600",
-																				lineHeight: "20px",
-																				color: "rgba(56, 152, 252, 1)",
-																				textTransform: "none",
-																				padding: "4px 22px",
-																				"&:hover": {
-																					background: "transparent",
-																				},
-																				"&.Mui-disabled": {
-																					background: "transparent",
-																					color: "rgba(56, 152, 252, 1)",
-																				},
-																			}}
-																		>
-																			Save
-																		</Button>
-																	</Box>
-																</Box>
-
-																{/* Add a Divider to separate form from options */}
-																<Divider sx={{ borderColor: "#cdcdcd" }} />
-															</Box>
-														)}
-
-														{/* Show static options */}
-														{klaviyoList &&
-															klaviyoList.map((klaviyo, option) => (
-																<MenuItem
-																	key={klaviyo.id}
-																	onClick={() => handleSelectOption(klaviyo)}
-																	sx={{
-																		"&:hover": {
-																			background: "rgba(80, 82, 178, 0.10)",
+																		justifyContent: "space-between",
+																		gap: "16px",
+																		"@media (max-width: 600px)": {
+																			flexDirection: "column",
 																		},
 																	}}
 																>
-																	<ListItemText
-																		primary={klaviyo.list_name}
-																		primaryTypographyProps={{
+																	<TextField
+																		label="List Name"
+																		variant="outlined"
+																		value={newListName}
+																		disabled={data}
+																		onChange={(e) =>
+																			setNewListName(e.target.value)
+																		}
+																		size="small"
+																		fullWidth
+																		onKeyDown={(e) => e.stopPropagation()}
+																		error={listNameError}
+																		helperText={
+																			listNameError
+																				? "List Name is required"
+																				: ""
+																		}
+																		InputLabelProps={{
 																			sx: {
 																				fontFamily: "var(--font-nunito)",
-																				fontSize: "14px",
-																				color: "#202124",
-																				fontWeight: "500",
-																				lineHeight: "20px",
+																				fontSize: "12px",
+																				lineHeight: "16px",
+																				fontWeight: "400",
+																				color: "rgba(17, 17, 19, 0.60)",
+																				"&.Mui-focused": {
+																					color: "rgba(56, 152, 252, 1)",
+																				},
+																			},
+																		}}
+																		InputProps={{
+																			endAdornment: newListName && ( // Conditionally render close icon if input is not empty
+																				<InputAdornment position="end">
+																					<IconButton
+																						edge="end"
+																						onClick={() => setNewListName("")} // Clear the text field when clicked
+																					>
+																						<Image
+																							src="/close-circle.svg"
+																							alt="close-circle"
+																							height={18}
+																							width={18} // Adjust the size as needed
+																						/>
+																					</IconButton>
+																				</InputAdornment>
+																			),
+																			sx: {
+																				"&.MuiOutlinedInput-root": {
+																					height: "32px",
+																					"& .MuiOutlinedInput-input": {
+																						padding: "5px 16px 4px 16px",
+																						fontFamily: "var(--font-roboto)",
+																						color: "#202124",
+																						fontSize: "14px",
+																						fontWeight: "400",
+																						lineHeight: "20px",
+																					},
+																					"& .MuiOutlinedInput-notchedOutline":
+																						{
+																							borderColor: "#A3B0C2",
+																						},
+																					"&:hover .MuiOutlinedInput-notchedOutline":
+																						{
+																							borderColor: "#A3B0C2",
+																						},
+																					"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																						{
+																							borderColor:
+																								"rgba(56, 152, 252, 1)",
+																						},
+																				},
+																				"&+.MuiFormHelperText-root": {
+																					marginLeft: "0",
+																				},
 																			},
 																		}}
 																	/>
-																</MenuItem>
-															))}
-													</Menu>
-												</Box>
-											</ClickAwayListener>
-										</Box>
+																</Box>
+																<Box sx={{ textAlign: "right" }}>
+																	<Button
+																		variant="contained"
+																		onClick={handleSave}
+																		disabled={
+																			listNameError ||
+																			tagNameError ||
+																			!newListName
+																		}
+																		sx={{
+																			borderRadius: "4px",
+																			border: "1px solid rgba(56, 152, 252, 1)",
+																			background: "#fff",
+																			boxShadow:
+																				"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+																			fontFamily: "var(--font-nunito)",
+																			fontSize: "14px",
+																			fontWeight: "600",
+																			lineHeight: "20px",
+																			color: "rgba(56, 152, 252, 1)",
+																			textTransform: "none",
+																			padding: "4px 22px",
+																			"&:hover": {
+																				background: "transparent",
+																			},
+																			"&.Mui-disabled": {
+																				background: "transparent",
+																				color: "rgba(56, 152, 252, 1)",
+																			},
+																		}}
+																	>
+																		Save
+																	</Button>
+																</Box>
+															</Box>
+
+															{/* Add a Divider to separate form from options */}
+															<Divider sx={{ borderColor: "#cdcdcd" }} />
+														</Box>
+													)}
+
+													{/* Show static options */}
+													{instantlyList &&
+														instantlyList.map((instantly, option) => (
+															<MenuItem
+																key={instantly.id}
+																onClick={() => handleSelectOption(instantly)}
+																sx={{
+																	"&:hover": {
+																		background: "rgba(80, 82, 178, 0.10)",
+																	},
+																}}
+															>
+																<ListItemText
+																	primary={instantly.list_name}
+																	primaryTypographyProps={{
+																		sx: {
+																			fontFamily: "var(--font-nunito)",
+																			fontSize: "14px",
+																			color: "#202124",
+																			fontWeight: "500",
+																			lineHeight: "20px",
+																		},
+																	}}
+																/>
+															</MenuItem>
+														))}
+												</Menu>
+											</Box>
+										</ClickAwayListener>
 									</Box>
-								</TabPanel>
-								<TabPanel value="3" sx={{ p: 0 }}>
+								</Box>
+							</TabPanel>
+							<TabPanel value="3" sx={{ p: 0 }}>
+								<Box
+									sx={{
+										borderRadius: "4px",
+										border: "1px solid #f0f0f0",
+										boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+										padding: "16px 24px",
+										overflowX: "auto",
+									}}
+								>
 									<Box
-										sx={{
-											borderRadius: "4px",
-											border: "1px solid #f0f0f0",
-											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-											padding: "16px 24px",
-											overflowX: "auto",
-										}}
+										sx={{ display: "flex", gap: "8px", marginBottom: "20px" }}
 									>
-										<Box
-											sx={{ display: "flex", gap: "8px", marginBottom: "20px" }}
-										>
-											<Typography variant="h6" className="first-sub-title">
-												Map list
-											</Typography>
+										<Typography variant="h6" className="first-sub-title">
+											Map list
+										</Typography>
+										{selectedOption?.list_name && (
 											<Typography
 												variant="h6"
 												sx={{
@@ -1500,482 +1392,401 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 													lineHeight: "16px",
 												}}
 											>
-												{selectedOption?.list_name}
+												{selectedOption.list_name}
 											</Typography>
-										</Box>
+										)}
+									</Box>
 
+									<Grid
+										container
+										alignItems="center"
+										sx={{
+											flexWrap: { xs: "nowrap", sm: "wrap" },
+											marginBottom: "14px",
+										}}
+									>
 										<Grid
-											container
-											alignItems="center"
+											item
+											xs="auto"
+											sm={5}
 											sx={{
-												flexWrap: { xs: "nowrap", sm: "wrap" },
-												marginBottom: "14px",
+												textAlign: "center",
+												"@media (max-width:599px)": {
+													minWidth: "196px",
+												},
 											}}
 										>
-											<Grid
-												item
-												xs="auto"
-												sm={5}
-												sx={{
-													textAlign: "center",
-													"@media (max-width:599px)": {
-														minWidth: "196px",
-													},
-												}}
-											>
-												<Logo height={22} width={34} />
-											</Grid>
-											<Grid
-												item
-												xs="auto"
-												sm={1}
-												sx={{
-													"@media (max-width:599px)": {
-														minWidth: "50px",
-													},
-												}}
-											>
-												&nbsp;
-											</Grid>
-											<Grid
-												item
-												xs="auto"
-												sm={5}
-												sx={{
-													textAlign: "center",
-													"@media (max-width:599px)": {
-														minWidth: "196px",
-													},
-												}}
-											>
-												<Image
-													src="/instantly-icon.svg"
-													alt="instantly"
-													height={20}
-													width={24}
-												/>
-											</Grid>
-											<Grid item xs="auto" sm={1}>
-												&nbsp;
-											</Grid>
+											<LogoSmall height={22} width={34} />
 										</Grid>
+										<Grid
+											item
+											xs="auto"
+											sm={1}
+											sx={{
+												"@media (max-width:599px)": {
+													minWidth: "50px",
+												},
+											}}
+										>
+											&nbsp;
+										</Grid>
+										<Grid
+											item
+											xs="auto"
+											sm={5}
+											sx={{
+												textAlign: "center",
+												"@media (max-width:599px)": {
+													minWidth: "196px",
+												},
+											}}
+										>
+											<Image
+												src="/instantly-icon.svg"
+												alt="instantly"
+												height={20}
+												width={30}
+											/>
+										</Grid>
+										<Grid item xs="auto" sm={1}>
+											&nbsp;
+										</Grid>
+									</Grid>
 
-										{defaultRows.map((row, index) => (
-											<Box key={row.id} sx={{ mb: 2 }}>
-												{" "}
-												{/* Add margin between rows */}
-												<Grid
-													container
-													spacing={2}
-													alignItems="center"
-													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-												>
-													{/* Left Input Field */}
-													<Grid item xs="auto" sm={5}>
-														<TextField
-															fullWidth
-															variant="outlined"
-															disabled={true}
-															value={row.value}
-															onChange={(e) =>
-																handleMapListChange(
-																	row.id,
-																	"value",
-																	e.target.value,
-																)
-															}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "12px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-														/>
-													</Grid>
-													{/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-													<Grid
-														item
-														xs="auto"
-														sm={1}
-														container
-														justifyContent="center"
-													>
-														{row.selectValue !== undefined ? (
-															row.selectValue ? (
-																<Image
-																	src="/chevron-right-purple.svg"
-																	alt="chevron-right-purple"
-																	height={18}
-																	width={18} // Adjust the size as needed
-																/>
-															) : (
-																<Image
-																	src="/close-circle.svg"
-																	alt="close-circle"
-																	height={18}
-																	width={18} // Adjust the size as needed
-																/>
+									{defaultRows.map((row, index) => (
+										<Box key={row.id} sx={{ mb: 2 }}>
+											{" "}
+											{/* Add margin between rows */}
+											<Grid
+												container
+												spacing={2}
+												alignItems="center"
+												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+											>
+												{/* Left Input Field */}
+												<Grid item xs="auto" sm={5}>
+													<TextField
+														fullWidth
+														variant="outlined"
+														disabled={true}
+														value={row.value}
+														onChange={(e) =>
+															handleMapListChange(
+																row.id,
+																"value",
+																e.target.value,
 															)
-														) : (
+														}
+														InputLabelProps={{
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "12px",
+																lineHeight: "16px",
+																color: "rgba(17, 17, 19, 0.60)",
+																top: "-5px",
+																"&.Mui-focused": {
+																	color: "rgba(56, 152, 252, 1)",
+																	top: 0,
+																},
+																"&.MuiInputLabel-shrink": {
+																	top: 0,
+																},
+															},
+														}}
+														InputProps={{
+															sx: {
+																"&.MuiOutlinedInput-root": {
+																	height: "36px",
+																	"& .MuiOutlinedInput-input": {
+																		padding: "6.5px 8px",
+																		fontFamily: "var(--font-roboto)",
+																		color: "#202124",
+																		fontSize: "12px",
+																		fontWeight: "400",
+																		lineHeight: "20px",
+																	},
+																	"& .MuiOutlinedInput-notchedOutline": {
+																		borderColor: "#A3B0C2",
+																	},
+																	"&:hover .MuiOutlinedInput-notchedOutline": {
+																		borderColor: "#A3B0C2",
+																	},
+																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																		{
+																			borderColor: "rgba(56, 152, 252, 1)",
+																		},
+																},
+																"&+.MuiFormHelperText-root": {
+																	marginLeft: "0",
+																},
+															},
+														}}
+													/>
+												</Grid>
+												{/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+												<Grid
+													item
+													xs="auto"
+													sm={1}
+													container
+													justifyContent="center"
+												>
+													{row.selectValue !== undefined ? (
+														row.selectValue ? (
 															<Image
 																src="/chevron-right-purple.svg"
 																alt="chevron-right-purple"
 																height={18}
 																width={18} // Adjust the size as needed
-															/> // For the first two rows, always show the right arrow
-														)}
-													</Grid>
-
-													{/* Right Side Input or Dropdown */}
-													<Grid item xs="auto" sm={5}>
-														<TextField
-															fullWidth
-															variant="outlined"
-															disabled={true}
-															value={row.type}
-															onChange={(e) =>
-																handleMapListChange(
-																	row.id,
-																	"type",
-																	e.target.value,
-																)
-															}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "12px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-														/>
-													</Grid>
-
-													{/* Delete Icon */}
-													<Grid
-														item
-														xs="auto"
-														sm={1}
-														container
-														justifyContent="center"
-													>
-														{row.canDelete && (
-															<>
-																<IconButton
-																	onClick={(event) =>
-																		handleClickOpen(event, row.id)
-																	}
-																>
-																	<Image
-																		src="/trash-icon-filled.svg"
-																		alt="trash-icon-filled"
-																		height={18}
-																		width={18} // Adjust the size as needed
-																	/>
-																</IconButton>
-																<Popover
-																	id={deleteId}
-																	open={deleteOpen}
-																	anchorEl={deleteAnchorEl}
-																	onClose={handleDeleteClose}
-																	anchorOrigin={{
-																		vertical: "bottom",
-																		horizontal: "center",
-																	}}
-																	transformOrigin={{
-																		vertical: "top",
-																		horizontal: "right",
-																	}}
-																>
-																	<Box
-																		sx={{
-																			minWidth: "254px",
-																			borderRadius: "4px",
-																			border: "0.2px solid #afafaf",
-																			background: "#fff",
-																			boxShadow:
-																				"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-																			padding: "16px 21px 16px 16px",
-																		}}
-																	>
-																		<Typography
-																			variant="body1"
-																			className="first-sub-title"
-																			sx={{
-																				paddingBottom: "12px",
-																			}}
-																		>
-																			Confirm Deletion
-																		</Typography>
-																		<Typography
-																			variant="body2"
-																			sx={{
-																				color: "#5f6368",
-																				fontFamily: "var(--font-roboto)",
-																				fontSize: "12px",
-																				fontWeight: "400",
-																				lineHeight: "16px",
-																				paddingBottom: "26px",
-																			}}
-																		>
-																			Are you sure you want to delete this{" "}
-																			<br /> map data?
-																		</Typography>
-																		<Box
-																			display="flex"
-																			justifyContent="flex-end"
-																			mt={2}
-																		>
-																			<Button
-																				onClick={handleDeleteClose}
-																				sx={{
-																					borderRadius: "4px",
-																					border:
-																						"1px solid rgba(56, 152, 252, 1)",
-																					boxShadow:
-																						"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																					color: "rgba(56, 152, 252, 1)",
-																					fontFamily: "var(--font-nunito)",
-																					fontSize: "14px",
-																					fontWeight: "600",
-																					lineHeight: "20px",
-																					marginRight: "16px",
-																					textTransform: "none",
-																				}}
-																			>
-																				Clear
-																			</Button>
-																			<Button
-																				onClick={handleDelete}
-																				sx={{
-																					background: "rgba(56, 152, 252, 1)",
-																					borderRadius: "4px",
-																					border:
-																						"1px solid rgba(56, 152, 252, 1)",
-																					boxShadow:
-																						"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																					color: "#fff",
-																					fontFamily: "var(--font-nunito)",
-																					fontSize: "14px",
-																					fontWeight: "600",
-																					lineHeight: "20px",
-																					textTransform: "none",
-																					"&:hover": {
-																						color: "rgba(56, 152, 252, 1)",
-																					},
-																				}}
-																			>
-																				Delete
-																			</Button>
-																		</Box>
-																	</Box>
-																</Popover>
-															</>
-														)}
-													</Grid>
-												</Grid>
-											</Box>
-										))}
-										<Box sx={{ mb: 2 }}>
-											{customFields.map((field, index) => (
-												<Grid
-													container
-													spacing={2}
-													alignItems="center"
-													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-													key={index}
-												>
-													<Grid item xs="auto" sm={5} mb={2}>
-														<TextField
-															select
-															fullWidth
-															variant="outlined"
-															label="Custom Field"
-															value={field.type}
-															onChange={(e) =>
-																handleChangeField(index, "type", e.target.value)
-															}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "14px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-														>
-															{customFieldsList.map((item) => (
-																<MenuItem
-																	key={item.value}
-																	value={item.value}
-																	disabled={customFields.some(
-																		(f) => f.type === item.value,
-																	)} // Дизейблим выбранные
-																>
-																	{item.type}
-																</MenuItem>
-															))}
-														</TextField>
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														sm={1}
-														mb={2}
-														container
-														justifyContent="center"
-													>
+															/>
+														) : (
+															<Image
+																src="/close-circle.svg"
+																alt="close-circle"
+																height={18}
+																width={18} // Adjust the size as needed
+															/>
+														)
+													) : (
 														<Image
 															src="/chevron-right-purple.svg"
 															alt="chevron-right-purple"
 															height={18}
-															width={18}
-														/>
-													</Grid>
-													<Grid item xs="auto" sm={5} mb={2}>
-														<TextField
-															fullWidth
-															variant="outlined"
-															value={field.value}
-															onChange={(e) =>
-																handleChangeField(
-																	index,
-																	"value",
-																	e.target.value,
-																)
-															}
-															placeholder="Enter value"
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
+															width={18} // Adjust the size as needed
+														/> // For the first two rows, always show the right arrow
+													)}
+												</Grid>
+
+												{/* Right Side Input or Dropdown */}
+												<Grid item xs="auto" sm={5}>
+													<TextField
+														fullWidth
+														variant="outlined"
+														disabled={true}
+														value={row.type}
+														onChange={(e) =>
+															handleMapListChange(
+																row.id,
+																"type",
+																e.target.value,
+															)
+														}
+														InputLabelProps={{
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "12px",
+																lineHeight: "16px",
+																color: "rgba(17, 17, 19, 0.60)",
+																top: "-5px",
+																"&.Mui-focused": {
+																	color: "rgba(56, 152, 252, 1)",
+																	top: 0,
 																},
-															}}
-															InputProps={{
-																sx: {
+																"&.MuiInputLabel-shrink": {
+																	top: 0,
+																},
+															},
+														}}
+														InputProps={{
+															sx: {
+																"&.MuiOutlinedInput-root": {
+																	height: "36px",
+
+																	"& .MuiOutlinedInput-input": {
+																		padding: "6.5px 8px",
+																		fontFamily: "var(--font-roboto)",
+																		color: "#202124",
+																		fontSize: "12px",
+																		fontWeight: "400",
+																		lineHeight: "20px",
+																	},
+																	"& .MuiOutlinedInput-notchedOutline": {
+																		borderColor: "#A3B0C2",
+																	},
+																	"&:hover .MuiOutlinedInput-notchedOutline": {
+																		borderColor: "#A3B0C2",
+																	},
+																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																		{
+																			borderColor: "rgba(56, 152, 252, 1)",
+																		},
+																},
+																"&+.MuiFormHelperText-root": {
+																	marginLeft: "0",
+																},
+															},
+														}}
+													/>
+												</Grid>
+
+												{/* Delete Icon */}
+												<Grid
+													item
+													xs="auto"
+													sm={1}
+													container
+													justifyContent="center"
+												>
+													{row.canDelete && (
+														<>
+															<IconButton
+																onClick={(event) =>
+																	handleClickOpen(event, row.id)
+																}
+															>
+																<Image
+																	src="/trash-icon-filled.svg"
+																	alt="trash-icon-filled"
+																	height={18}
+																	width={18} // Adjust the size as needed
+																/>
+															</IconButton>
+															<Popover
+																id={deleteId}
+																open={deleteOpen}
+																anchorEl={deleteAnchorEl}
+																onClose={handleDeleteClose}
+																anchorOrigin={{
+																	vertical: "bottom",
+																	horizontal: "center",
+																}}
+																transformOrigin={{
+																	vertical: "top",
+																	horizontal: "right",
+																}}
+															>
+																<Box
+																	sx={{
+																		minWidth: "254px",
+																		borderRadius: "4px",
+																		border: "0.2px solid #afafaf",
+																		background: "#fff",
+																		boxShadow:
+																			"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																		padding: "16px 21px 16px 16px",
+																	}}
+																>
+																	<Typography
+																		variant="body1"
+																		className="first-sub-title"
+																		sx={{
+																			paddingBottom: "12px",
+																		}}
+																	>
+																		Confirm Deletion
+																	</Typography>
+																	<Typography
+																		variant="body2"
+																		sx={{
+																			color: "#5f6368",
+																			fontFamily: "var(--font-roboto)",
+																			fontSize: "12px",
+																			fontWeight: "400",
+																			lineHeight: "16px",
+																			paddingBottom: "26px",
+																		}}
+																	>
+																		Are you sure you want to delete this <br />{" "}
+																		map data?
+																	</Typography>
+																	<Box
+																		display="flex"
+																		justifyContent="flex-end"
+																		mt={2}
+																	>
+																		<Button
+																			onClick={handleDeleteClose}
+																			sx={{
+																				borderRadius: "4px",
+																				border:
+																					"1px solid rgba(56, 152, 252, 1)",
+																				boxShadow:
+																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+																				color: "rgba(56, 152, 252, 1)",
+																				fontFamily: "var(--font-nunito)",
+																				fontSize: "14px",
+																				fontWeight: "600",
+																				lineHeight: "20px",
+																				marginRight: "16px",
+																				textTransform: "none",
+																			}}
+																		>
+																			Clear
+																		</Button>
+																		<Button
+																			onClick={handleDelete}
+																			sx={{
+																				background: "rgba(56, 152, 252, 1)",
+																				borderRadius: "4px",
+																				border:
+																					"1px solid rgba(56, 152, 252, 1)",
+																				boxShadow:
+																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+																				color: "#fff",
+																				fontFamily: "var(--font-nunito)",
+																				fontSize: "14px",
+																				fontWeight: "600",
+																				lineHeight: "20px",
+																				textTransform: "none",
+																				"&:hover": {
+																					color: "rgba(56, 152, 252, 1)",
+																				},
+																			}}
+																		>
+																			Delete
+																		</Button>
+																	</Box>
+																</Box>
+															</Popover>
+														</>
+													)}
+												</Grid>
+											</Grid>
+										</Box>
+									))}
+									<Box sx={{ mb: 2 }}>
+										{customFields.map((field, index) => (
+											<Grid
+												container
+												spacing={2}
+												alignItems="center"
+												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+												key={index}
+											>
+												<Grid item xs="auto" sm={5} mb={2}>
+													<TextField
+														select
+														fullWidth
+														variant="outlined"
+														label="Custom Field"
+														value={field.type}
+														onChange={(e) =>
+															handleChangeField(index, "type", e.target.value)
+														}
+														InputLabelProps={{
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "14px",
+																lineHeight: "16px",
+																color: "rgba(17, 17, 19, 0.60)",
+																top: "-5px",
+																left: "2px",
+																flexShrink: 0,
+																"&.Mui-focused": {
+																	color: "rgba(56, 152, 252, 1)",
+																	top: 0,
+																},
+																"&.MuiInputLabel-shrink": {
+																	top: 0,
+																	padding: 0,
+																	margin: 0,
+																	flexShrink: 0,
+																},
+															},
+														}}
+														InputProps={{
+															sx: {
+																"&.MuiOutlinedInput-root": {
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
@@ -1996,76 +1807,167 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
-															}}
-														/>
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														mb={2}
-														sm={1}
-														container
-														justifyContent="center"
-													>
-														<IconButton
-															onClick={() => handleDeleteField(index)}
-														>
-															<Image
-																src="/trash-icon-filled.svg"
-																alt="trash-icon-filled"
-																height={18}
-																width={18}
-															/>
-														</IconButton>
-													</Grid>
-												</Grid>
-											))}
-											<Box
-												sx={{
-													display: "flex",
-													justifyContent: "flex-end",
-													mb: 2,
-													mr: 6,
-												}}
-											>
-												<Button
-													onClick={handleAddField}
-													aria-haspopup="true"
-													sx={{
-														textTransform: "none",
-														border: "1px solid rgba(56, 152, 252, 1)",
-														borderRadius: "4px",
-														padding: "9px 16px",
-														minWidth: "auto",
-														"@media (max-width: 900px)": {
-															display: "none",
-														},
-													}}
-												>
-													<Typography
-														sx={{
-															marginRight: "0.5em",
-															fontFamily: "var(--font-nunito)",
-															lineHeight: "22.4px",
-															fontSize: "16px",
-															textAlign: "left",
-															fontWeight: "500",
-															color: "rgba(56, 152, 252, 1)",
+																"&+.MuiFormHelperText-root": {
+																	marginLeft: "0",
+																},
+															},
 														}}
 													>
-														Add
-													</Typography>
-												</Button>
-											</Box>
+														{customFieldsList.map((item) => (
+															<MenuItem
+																key={item.value}
+																value={item.value}
+																disabled={customFields.some(
+																	(f) => f.type === item.value,
+																)} // Дизейблим выбранные
+															>
+																{item.type}
+															</MenuItem>
+														))}
+													</TextField>
+												</Grid>
+												<Grid
+													item
+													xs="auto"
+													sm={1}
+													mb={2}
+													container
+													justifyContent="center"
+												>
+													<Image
+														src="/chevron-right-purple.svg"
+														alt="chevron-right-purple"
+														height={18}
+														width={18}
+													/>
+												</Grid>
+												<Grid item xs="auto" sm={5} mb={2}>
+													<TextField
+														fullWidth
+														variant="outlined"
+														value={field.value}
+														onChange={(e) =>
+															handleChangeField(index, "value", e.target.value)
+														}
+														placeholder="Enter value"
+														InputLabelProps={{
+															sx: {
+																fontFamily: "var(--font-nunito)",
+																fontSize: "12px",
+																lineHeight: "16px",
+																color: "rgba(17, 17, 19, 0.60)",
+																top: "-5px",
+																"&.Mui-focused": {
+																	color: "rgba(56, 152, 252, 1)",
+																	top: 0,
+																},
+																"&.MuiInputLabel-shrink": {
+																	top: 0,
+																},
+															},
+														}}
+														InputProps={{
+															sx: {
+																height: "36px",
+																"& .MuiOutlinedInput-input": {
+																	padding: "6.5px 8px",
+																	fontFamily: "var(--font-roboto)",
+																	color: "#202124",
+																	fontSize: "14px",
+																	fontWeight: "400",
+																	lineHeight: "20px",
+																},
+																"& .MuiOutlinedInput-notchedOutline": {
+																	borderColor: "#A3B0C2",
+																},
+																"&:hover .MuiOutlinedInput-notchedOutline": {
+																	borderColor: "#A3B0C2",
+																},
+																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																	{
+																		borderColor: "rgba(56, 152, 252, 1)",
+																	},
+															},
+														}}
+													/>
+												</Grid>
+												<Grid
+													item
+													xs="auto"
+													mb={2}
+													sm={1}
+													container
+													justifyContent="center"
+												>
+													<IconButton onClick={() => handleDeleteField(index)}>
+														<Image
+															src="/trash-icon-filled.svg"
+															alt="trash-icon-filled"
+															height={18}
+															width={18}
+														/>
+													</IconButton>
+												</Grid>
+											</Grid>
+										))}
+										<Box
+											sx={{
+												display: "flex",
+												justifyContent: "flex-end",
+												mb: 6,
+												mr: 6,
+											}}
+										>
+											<Button
+												onClick={handleAddField}
+												aria-haspopup="true"
+												sx={{
+													textTransform: "none",
+													border: "1px solid rgba(56, 152, 252, 1)",
+													borderRadius: "4px",
+													padding: "9px 16px",
+													minWidth: "auto",
+													"@media (max-width: 900px)": {
+														display: "none",
+													},
+												}}
+											>
+												<Typography
+													sx={{
+														marginRight: "0.5em",
+														fontFamily: "var(--font-nunito)",
+														lineHeight: "22.4px",
+														fontSize: "16px",
+														textAlign: "left",
+														fontWeight: "500",
+														color: "rgba(56, 152, 252, 1)",
+													}}
+												>
+													Add
+												</Typography>
+											</Button>
 										</Box>
 									</Box>
-								</TabPanel>
-							</TabContext>
-							{/* Button based on selected tab */}
-						</Box>
+								</Box>
+							</TabPanel>
+						</TabContext>
+						{/* Button based on selected tab */}
 					</Box>
 					<Box
-						sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
+						sx={{
+							px: 2,
+							py: 2,
+							border: "1px solid #e4e4e4",
+							position: "fixed",
+							bottom: 0,
+							right: 0,
+							background: "#fff",
+							zIndex: "1",
+							width: "40%",
+							"@media (max-width: 600px)": {
+								width: "100%",
+							},
+						}}
 					>
 						<Box
 							sx={{
@@ -2082,4 +1984,4 @@ const InstantlyDatasync: React.FC<ConnectInstantlyPopupProps> = ({
 		</>
 	);
 };
-export default InstantlyDatasync;
+export default ConnectInstantly;
