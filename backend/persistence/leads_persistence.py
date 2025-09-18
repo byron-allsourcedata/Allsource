@@ -243,7 +243,10 @@ class LeadsPersistence:
             "personal_email": FiveXFiveUser.personal_emails,
             "mobile_phone": FiveXFiveUser.mobile_phone,
             "gender": FiveXFiveUser.gender,
-            "first_visited_date": LeadsVisits.start_date,
+            "first_visited_date": (
+                LeadsVisits.start_date,
+                LeadsVisits.start_time,
+            ),
             "state": FiveXFiveLocations.state_id,
             "city": FiveXFiveLocations.city,
             "age": FiveXFiveUser.age_min,
@@ -252,13 +255,28 @@ class LeadsPersistence:
             "time_spent": LeadsVisits.full_time_sec,
         }
         if sort_by:
-            sort_column = sort_options[sort_by]
-            if sort_order == "asc":
-                query = query.order_by(asc(sort_column))
-            elif sort_order == "desc":
-                query = query.order_by(desc(sort_column))
+            if sort_by == "first_visited_date":
+                if sort_order == "asc":
+                    query = query.order_by(
+                        asc(LeadsVisits.start_date),
+                        asc(LeadsVisits.start_time),
+                    )
+                else:
+                    query = query.order_by(
+                        desc(LeadsVisits.start_date),
+                        desc(LeadsVisits.start_time),
+                    )
+            else:
+                sort_column = sort_options[sort_by]
+                if sort_order == "asc":
+                    query = query.order_by(asc(sort_column))
+                elif sort_order == "desc":
+                    query = query.order_by(desc(sort_column))
         else:
-            query = query.order_by(desc(LeadsVisits.start_date))
+            query = query.order_by(
+                desc(LeadsVisits.start_date),
+                desc(LeadsVisits.start_time),
+            )
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
