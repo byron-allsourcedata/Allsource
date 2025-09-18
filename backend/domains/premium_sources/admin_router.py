@@ -35,7 +35,6 @@ def premium_sources(
 @router.post("/")
 async def upload_premium_source(
     _admin: Admin,
-    _: MaxUploadSize1GB,
     db: Db,
     serv: PremiumSourceService,
     aws: AwsService,

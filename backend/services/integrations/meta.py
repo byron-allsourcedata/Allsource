@@ -698,6 +698,11 @@ class MetaIntegrationsService:
 
         result = response.json()
 
+        logger.info(
+            f"Meta API response for list {custom_audience_id}: "
+            f"sent {len(profiles)} contacts, result={result}"
+        )
+
         if result.get("error", {}).get("type") == "OAuthException":
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 

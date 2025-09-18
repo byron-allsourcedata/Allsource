@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from uuid import UUID
 from sqlalchemy import select, update
@@ -16,6 +17,11 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.premium_source import PremiumSource
 from models.premium_source_sync import PremiumSourceSync
 from resolver import injectable
+from domains.premium_sources.sync.config import (
+    FILLER_CONCURRENCY,
+    META_BATCH_SIZE,
+    GOOGLE_BATCH_SIZE,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -43,11 +49,13 @@ class PremiumSourceSyncFiller:
         self.queue = queue
         self.sync_log = sync_log
 
-    async def fill_processing_queue(self):
-        await self.queue.init()
+    async def fill_processing_queue(self) -> bool:
         unprocessed_syncs = self.get_unprocessed_syncs()
+        if not unprocessed_syncs:
+            return False
+
         await self.handle_batches_for_syncs(unprocessed_syncs)
-        logger.info("queue was closed")
+        return True
 
     def get_unprocessed_syncs(self):
         """
@@ -73,32 +81,68 @@ class PremiumSourceSyncFiller:
     async def handle_batches_for_syncs(
         self, unprocessed_syncs: list[tuple[UUID, UUID, int]]
     ):
+        sem = asyncio.Semaphore(FILLER_CONCURRENCY)
+        tasks = []
         for (
             sync_id,
             premium_source_id,
             user_integration_id,
         ) in unprocessed_syncs:
+            tasks.append(
+                asyncio.create_task(
+                    self._handle_one_sync(
+                        sem, sync_id, premium_source_id, user_integration_id
+                    )
+                )
+            )
+        await asyncio.gather(*tasks)
+
+    async def _handle_one_sync(
+        self, sem, sync_id, premium_source_id, user_integration_id
+    ):
+        async with sem:
             logger.info(
                 f"Checking for unprocessed rows for sync {sync_id} in source {premium_source_id}."
             )
-            unprocessed_rows = self.sync_log.get_unprocessed_batch(
+
+            in_progress_rows = self.sync_log.get_unprocessed_batch(
+                premium_source_id, sync_id
+            )
+            if len(in_progress_rows) > 0:
+                logger.info(
+                    f"sync {sync_id} already has in-progress rows: {len(in_progress_rows)}"
+                )
+                return
+
+            integration = self.db.execute(
+                select(UserIntegration).where(
+                    UserIntegration.id == user_integration_id
+                )
+            ).scalar_one_or_none()
+            if integration and integration.service_name == "google_ads":
+                batch_size = GOOGLE_BATCH_SIZE
+            else:
+                batch_size = META_BATCH_SIZE
+
+            self.sync_log.mark_unprocessed_batch(
+                premium_source_id, sync_id, batch_size
+            )
+
+            rows = self.sync_log.get_unprocessed_batch(
                 premium_source_id, sync_id
             )
 
-            if len(unprocessed_rows) > 0:
-                logger.info(
-                    f"sync {sync_id} has unprocessed rows {len(unprocessed_rows)}"
-                )
-                continue
+            if not rows:
+                self.mark_source_as_done(sync_id)
+                self.db.commit()
+                return
 
-            unprocessed_rows = self.claim_unprocessed_batch(
-                sync_id, premium_source_id, user_integration_id, 100
+            batch = UnprocessedPremiumSourceBatch(
+                premium_source_id=premium_source_id,
+                premium_source_sync_id=sync_id,
+                rows=rows,
             )
-
-            if not unprocessed_rows:
-                self.mark_source_as_done(premium_source_id)
-            else:
-                await self.send_batch_for_processing(unprocessed_rows)
+            await self.send_batch_for_processing(batch)
 
     def claim_unprocessed_batch(
         self,
@@ -136,17 +180,16 @@ class PremiumSourceSyncFiller:
 
         await self.queue.publish(batch)
 
-    def mark_source_as_done(self, premium_source_id: UUID) -> None:
+    def mark_source_as_done(self, sync_id: UUID) -> None:
         """
-        Updates the status of a PremiumSource to 'done' in the primary database.
+        Updates the status of a PremiumSourceSync to 'done' in the primary database.
         """
         logger.info(
-            f"Premium source sync ({premium_source_id}) is complete. Marking it as 'done'."
+            f"Premium source sync ({sync_id}) is complete. Marking it as 'done'."
         )
         stmt = (
-            update(PremiumSource)
-            .where(PremiumSource.id == premium_source_id)
+            update(PremiumSourceSync)
+            .where(PremiumSourceSync.id == sync_id)
             .values(status="done")
         )
-
-        _ = self.db.execute(stmt)
+        self.db.execute(stmt)

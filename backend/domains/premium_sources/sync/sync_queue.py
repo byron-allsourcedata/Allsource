@@ -1,6 +1,7 @@
 from collections.abc import Awaitable, Callable
 import logging
 from typing import Generic, TypeVar
+import asyncio
 from aio_pika import Message
 from aio_pika.abc import AbstractIncomingMessage, AbstractQueue
 from pydantic import BaseModel
@@ -8,6 +9,8 @@ from config.rmq_connection import RabbitMQConnection
 from db_dependencies import Rmq
 from domains.premium_sources.sync.schemas import UnprocessedPremiumSourceBatch
 from resolver import injectable
+from domains.premium_sources.sync.config import QUEUE_PREFETCH
+
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +63,7 @@ class QueueService(Generic[T]):
         rmq_connection = RabbitMQConnection()
         connection = await rmq_connection.connect()
         channel = await connection.channel()
-        await channel.set_qos(prefetch_count=1)
+        await channel.set_qos(prefetch_count=QUEUE_PREFETCH)
 
         queue = await channel.declare_queue(
             name=self.queue_name,
@@ -86,15 +89,31 @@ class QueueService(Generic[T]):
             )
 
     async def consume(
-        self, handler: Callable[[AbstractIncomingMessage], Awaitable[None]]
+        self,
+        handler: Callable[[AbstractIncomingMessage], Awaitable[None]],
+        concurrency: int = 8,
     ):
         queue = self._get_queue()
-        queue_iter = queue.iterator()
-        async for message in queue_iter:
+        sem = asyncio.Semaphore(concurrency)
+        active_tasks: set[asyncio.Task] = set()
+
+        async def _run_handler(message: AbstractIncomingMessage):
+            await sem.acquire()
             try:
                 await handler(message)
             except Exception:
-                await handler(message)
+                logger.exception("Handler raised an exception")
+            finally:
+                sem.release()
+
+        async with queue.iterator() as queue_iter:
+            async for message in queue_iter:
+                task = asyncio.create_task(_run_handler(message))
+                active_tasks.add(task)
+                task.add_done_callback(lambda t: active_tasks.discard(t))
+
+        if active_tasks:
+            await asyncio.wait(active_tasks)
 
     async def fetch(self, timeout: int = 60) -> AbstractIncomingMessage:
         """
