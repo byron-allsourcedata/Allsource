@@ -300,6 +300,29 @@ const Popup: React.FC<PopupProps> = ({
 		window.location.href = response.data.url;
 	};
 
+	function formatShopifyError(detail: any): string {
+		if (!detail) return "An unexpected error occurred";
+
+		switch (detail.status) {
+			case "CREDENTIALS_INVALID": {
+				if (
+					Array.isArray(detail.missing_scopes) &&
+					detail.missing_scopes.length > 0
+				) {
+					const scopesList = detail.missing_scopes
+						.map((s: string) => `• ${s}`)
+						.join("\n");
+					return `${detail.message}\n\nMissing scopes:\n${scopesList}`;
+				}
+				return detail.message ?? "Access token is invalid";
+			}
+			case "STORE_DOMAIN":
+				return "Store domain does not match the one you specified earlier";
+			default:
+				return `An unexpected error occurred: ${detail.status ?? "unknown"}`;
+		}
+	}
+
 	const handleSubmit = async () => {
 		const shop_domain_raw = sessionStorage.getItem("current_domain");
 		const shop_domain = shop_domain_raw ?? "";
@@ -340,16 +363,14 @@ const Popup: React.FC<PopupProps> = ({
 			}
 		} catch (error: unknown) {
 			const axiosError = error as AxiosError;
-			const data = axiosError?.response?.data as { status?: string };
-			if (data?.status === "CREDENTIALS_INVALID") {
-				showErrorToast("Access token is invalid");
-			} else if (data?.status === "STORE_DOMAIN") {
-				showErrorToast(
-					"Store Domain does not match the one you specified earlier",
-				);
-			} else {
-				showErrorToast(`An unexpected error occurred ${data?.status}`);
-			}
+			const data = axiosError?.response?.data as {
+				detail?: any;
+				status?: string;
+			};
+
+			const detail = data?.detail ?? data;
+
+			showErrorToast(formatShopifyError(detail));
 		} finally {
 			setLoading(false);
 		}
