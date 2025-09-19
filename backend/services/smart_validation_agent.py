@@ -32,6 +32,8 @@ class SmartValidationAgent:
         "personal_email_last_seen": "personal_email",
         "business_email_last_seen_date": "business_email",
         "mobile_phone_dnc": "phone",
+        "personal_email": "personal_email",
+        "business_email": "business_email",
     }
 
     def __init__(

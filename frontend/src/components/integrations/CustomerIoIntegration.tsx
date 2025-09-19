@@ -4,34 +4,35 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import {
 	Box,
+	List,
+	ListItem,
 	TextField,
 	Tooltip,
 	Typography,
 	Drawer,
+	Link,
 	IconButton,
 	Button,
 	Tab,
 	Switch,
 	LinearProgress,
-	Link,
 } from "@mui/material";
 import Image from "next/image";
-import { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "./ToastNotification";
-import { useAxiosHook } from "@/hooks/AxiosHooks";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 
-interface CreateS3Props {
+interface CreateCustomerIoProps {
+	fromAudience?: boolean;
 	handleClose: () => void;
 	onSave?: (new_integration: any) => void;
 	open: boolean;
-	initApiKey?: any;
+	initApiKey?: string;
 	boxShadow?: string;
 	invalid_api_key?: boolean;
-	fromAudience?: boolean;
 }
 
 const klaviyoStyles = {
@@ -57,8 +58,9 @@ const klaviyoStyles = {
 	},
 	inputLabel: {
 		fontFamily: "var(--font-nunito)",
-		fontSize: "14.5px",
+		fontSize: "14px",
 		lineHeight: "16px",
+		left: "2px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
 			color: "rgba(56, 152, 252, 1)",
@@ -94,7 +96,7 @@ const klaviyoStyles = {
 	},
 };
 
-const S3Connect = ({
+const CustomerIoConnect = ({
 	fromAudience,
 	handleClose,
 	open,
@@ -102,26 +104,20 @@ const S3Connect = ({
 	initApiKey,
 	boxShadow,
 	invalid_api_key,
-}: CreateS3Props) => {
+}: CreateCustomerIoProps) => {
 	const { triggerSync, setNeedsSync } = useIntegrationContext();
-	const [apiIdKey, setApiIdKey] = useState("");
 	const [apiKey, setApiKey] = useState("");
+	const [apiKeyError, setApiKeyError] = useState(false);
+	const [loading, setLoading] = useState(false);
 	const [value, setValue] = useState<string>("1");
 	const [checked, setChecked] = useState(false);
 	const label = { inputProps: { "aria-label": "Switch demo" } };
 	const [disableButton, setDisableButton] = useState(false);
-	const { loading } = useAxiosHook();
+
+	const { whitelabel } = useWhitelabel();
 
 	useEffect(() => {
-		if (initApiKey) {
-			try {
-				const parsedKey = JSON.parse(initApiKey);
-				setApiKey(parsedKey.secret_key || "");
-				setApiIdKey(parsedKey.secret_id || "");
-			} catch (error) {
-				console.error("error parsing JSON:", error);
-			}
-		}
+		setApiKey(initApiKey || "");
 	}, [initApiKey]);
 
 	const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,140 +127,124 @@ const S3Connect = ({
 	const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = event.target.value;
 		setApiKey(value);
+		setApiKeyError(!value.trim());
 	};
 
-	const handleApiIdKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const value = event.target.value;
-		setApiIdKey(value);
+	interface Instruction {
+		text: string;
+	}
+
+	const instructions: Instruction[] = [
+		{ text: "Go to your Customer.io account → People → Customer.io API" },
+		{ text: "Copy the API token provided in Customer.io API" },
+		{ text: `Go to ${whitelabel.brand_name}` },
+		{
+			text: `Paste it into the API field in the ${whitelabel.brand_name} integration popup`,
+		},
+		{ text: "Click the Test connection button" },
+		{ text: "Go back to the Customer.io connection page" },
+		{
+			text: "Click the Complete Setup button if the source was connected successfully; otherwise, check that you pasted the correct token",
+		},
+		{ text: `Go to ${whitelabel.brand_name} and click the Connect button` },
+		{ text: "You're good to go!" },
+	];
+
+	type HighlightConfig = {
+		[keyword: string]: { color?: string; fontWeight?: string };
+	};
+
+	const highlightText = (text: string, highlightConfig: HighlightConfig) => {
+		let parts: (string | JSX.Element)[] = [text];
+
+		Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
+			const { color, fontWeight } = highlightConfig[keyword];
+			parts = parts.flatMap((part, partIndex) =>
+				typeof part === "string" && part.includes(keyword)
+					? part.split(keyword).flatMap((segment, index, array) =>
+							index < array.length - 1
+								? [
+										segment,
+										<span
+											style={{
+												color: color || "inherit",
+												fontWeight: fontWeight || "normal",
+											}}
+											key={`highlight-${keywordIndex}-${partIndex}-${index}`}
+										>
+											{keyword}
+										</span>,
+									]
+								: [segment],
+						)
+					: [part],
+			);
+		});
+
+		return <>{parts}</>;
+	};
+
+	const handleTestApiKey = async () => {
+		// Send test api request to Customer.io
+		showToast("Test lead sent to Customer.io Successfully");
+		axiosInstance.get(`/integrations/customer-io?api_token=${apiKey}`);
 	};
 
 	const handleApiKeySave = async () => {
 		try {
 			setDisableButton(true);
+			setLoading(true);
+
 			const response = await axiosInstance.post(
 				"/integrations/",
 				{
-					s3: {
-						secret_id: apiIdKey,
-						secret_key: apiKey,
+					customer_io: {
+						api_key: apiKey,
 					},
 				},
-				{ params: { service_name: "s3" } },
+				{ params: { service_name: "customer_io" } },
 			);
-			if (response.status === 200) {
-				if (response.data.status !== "SUCCESS") {
-					showErrorToast(response.data.message);
-					return;
-				}
-				showToast("Integration S3 Successfully");
+			if (
+				response.status === 200 &&
+				response.data.status !== "CREDENTIALS_INVALID"
+			) {
+				showToast("Integration Customer.io Successfully");
 				if (onSave) {
-					const access_token = JSON.stringify({
-						secret_id: apiIdKey,
-						secret_key: apiKey,
-					});
 					onSave({
-						service_name: "s3",
+						service_name: "customer_io",
 						is_failed: false,
-						access_token: access_token,
-						apiIdKey,
+						access_token: apiKey,
 					});
 				}
 				await triggerSync();
 				setNeedsSync(false);
-				if (fromAudience) {
-					handleClose();
-				} else {
-					handleNextTab();
-				}
+				handleClose();
+			} else {
+				showErrorToast("Invalid API Key");
 			}
 		} catch (error) {
-			if (error instanceof AxiosError) {
-				if (error.response?.status === 400) {
-					showErrorToast(error.response.data.message);
-				}
-			}
 		} finally {
 			setDisableButton(false);
+			setLoading(false);
 		}
 	};
 
-	const handleNextTab = async () => {
-		if (value === "1") {
-			setValue((prevValue) => {
-				const nextValue = String(Number(prevValue) + 1);
-				return nextValue;
-			});
-		}
-	};
-
-	const handleSave = async () => {
-		handleClose();
-	};
-
-	const getButton = (tabValue: string) => {
-		switch (tabValue) {
-			case "1":
-				return (
-					<Button
-						variant="contained"
-						onClick={handleApiKeySave}
-						disabled={!apiKey || disableButton || !apiIdKey}
-						sx={{
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "var(--font-nunito)",
-							fontSize: "14px",
-							fontWeight: "600",
-							lineHeight: "20px",
-							letterSpacing: "normal",
-							color: "#fff",
-							textTransform: "none",
-							padding: "10px 24px",
-							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							":hover": {
-								backgroundColor: "rgba(30, 136, 229, 1)",
-							},
-							":active": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-							},
-							":disabled": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-								color: "#fff",
-								opacity: 0.6,
-							},
-							borderRadius: "4px",
-						}}
-					>
-						Connect
-					</Button>
-				);
-			case "2":
-				return (
-					<Button
-						variant="contained"
-						onClick={handleSave}
-						sx={{
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "var(--font-nunito)",
-							fontSize: "14px",
-							fontWeight: "600",
-							lineHeight: "20px",
-							letterSpacing: "normal",
-							color: "#fff",
-							textTransform: "none",
-							padding: "10px 24px",
-							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-							},
-							borderRadius: "4px",
-						}}
-					>
-						Save
-					</Button>
-				);
-			default:
-				return null;
-		}
+	const highlightConfig: HighlightConfig = {
+		"Customer.io": { color: "rgba(56, 152, 252, 1)", fontWeight: "500" },
+		Allsource: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" },
+		Settings: { color: "#707071", fontWeight: "500" },
+		"Create Private API Key": { color: "#707071", fontWeight: "500" },
+		Lists: { color: "#707071", fontWeight: "500" },
+		Profiles: { color: "#707071", fontWeight: "500" },
+		Metrics: { color: "#707071", fontWeight: "500" },
+		Events: { color: "#707071", fontWeight: "500" },
+		Templates: { color: "#707071", fontWeight: "500" },
+		Create: { color: "#707071", fontWeight: "500" },
+		"API token": { color: "#707071", fontWeight: "500" },
+		Connect: { color: "#707071", fontWeight: "500" },
+		"Test connection": { color: "#707071", fontWeight: "500" },
+		"Complete Setup": { color: "#707071", fontWeight: "500" },
+		Export: { color: "#707071", fontWeight: "500" },
 	};
 
 	return (
@@ -316,7 +296,7 @@ const S3Connect = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: boxShadow ? boxShadow : "transparent",
+							backgroundColor: boxShadow ? boxShadow : "rgba(0, 0, 0, 0.01)",
 						},
 					},
 				}}
@@ -342,7 +322,7 @@ const S3Connect = ({
 							lineHeight: "normal",
 						}}
 					>
-						Connect to S3
+						Connect to Customer.io
 					</Typography>
 					<Box
 						sx={{
@@ -352,9 +332,9 @@ const S3Connect = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-customer-io"
 							target="_blank"
-							rel="noopener noreferrer"
+							rel="noopener refferer"
 							sx={{
 								fontFamily: "var(--font-nunito)",
 								fontSize: "14px",
@@ -366,13 +346,11 @@ const S3Connect = ({
 						>
 							Tutorial
 						</Link>
-
 						<IconButton onClick={handleClose} sx={{ p: 0 }}>
 							<CloseIcon sx={{ width: "20px", height: "20px" }} />
 						</IconButton>
 					</Box>
 				</Box>
-
 				<Box
 					sx={{
 						display: "flex",
@@ -393,7 +371,7 @@ const S3Connect = ({
 							<Box sx={{ pb: 4 }}>
 								<TabList
 									centered
-									aria-label="Connect to Sendlaene Tabs"
+									aria-label="Connect to Customer.io Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
@@ -415,13 +393,6 @@ const S3Connect = ({
 										value="1"
 										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
 									/>
-									{!fromAudience && (
-										<Tab
-											label="Suppression Sync"
-											value="2"
-											sx={klaviyoStyles.tabHeading}
-										/>
-									)}
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -436,7 +407,13 @@ const S3Connect = ({
 									<Box
 										sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 									>
-										<Image src="/s3.svg" alt="s3" height={26} width={32} />
+										<Image
+											color="black"
+											src="/customer-io-icon.svg"
+											alt="customer_io"
+											height={26}
+											width={32}
+										/>
 										<Typography
 											variant="h6"
 											sx={{
@@ -446,10 +423,10 @@ const S3Connect = ({
 												color: "#202124",
 											}}
 										>
-											Enter the AWS keys for integration
+											API Key
 										</Typography>
 										<Tooltip
-											title="Enter the AWS keys for integration"
+											title="Enter the API key provided by Customer.io"
 											placement="right"
 										>
 											<Image
@@ -461,44 +438,93 @@ const S3Connect = ({
 										</Tooltip>
 									</Box>
 									<TextField
-										label="Secret ID (Access Key ID)"
+										label="Enter API Key"
 										variant="outlined"
 										fullWidth
 										margin="normal"
-										error={invalid_api_key}
-										helperText={invalid_api_key ? "Invalid Secret ID" : ""}
-										value={apiIdKey}
-										onChange={handleApiIdKeyChange}
-										InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-										InputProps={{
-											sx: {
-												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key
-													? "rgba(224, 49, 48, 1)"
-													: "inherit",
-											},
-										}}
-									/>
-									<TextField
-										label="Secret Key"
-										variant="outlined"
-										fullWidth
-										margin="normal"
-										error={invalid_api_key}
-										helperText={invalid_api_key ? "Invalid Secret Key" : ""}
+										error={apiKeyError || invalid_api_key}
+										helperText={apiKeyError ? "API Key is required" : ""}
 										value={apiKey}
 										onChange={handleApiKeyChange}
 										InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-										InputProps={{
-											sx: {
-												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key
-													? "rgba(224, 49, 48, 1)"
-													: "inherit",
-											},
-										}}
+										InputProps={{ sx: klaviyoStyles.formInput }}
 									/>
 								</Box>
+								{instructions.length > 0 && (
+									<Box
+										sx={{
+											mt: 2,
+											background: "#f0f0f0",
+											border: "1px solid #efefef",
+											borderRadius: "4px",
+											p: 2,
+										}}
+									>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												gap: "8px",
+												mb: 2,
+											}}
+										>
+											<Image
+												src="/info-circle.svg"
+												alt="info-circle"
+												height={20}
+												width={20}
+											/>
+											<Typography
+												variant="subtitle1"
+												sx={{
+													fontFamily: "var(--font-nunito)",
+													fontSize: "16px",
+													fontWeight: "600",
+													color: "#202124",
+													lineHeight: "normal",
+												}}
+											>
+												How to integrate Customer.io
+											</Typography>
+										</Box>
+										<List dense sx={{ p: 0 }}>
+											{instructions.map((instruction, index) => (
+												<ListItem
+													key={index}
+													sx={{ p: 0, alignItems: "flex-start" }}
+												>
+													<Typography
+														variant="body1"
+														sx={{
+															display: "inline-block",
+															marginRight: "4px",
+															fontFamily: "var(--font-roboto)",
+															fontSize: "12px",
+															fontWeight: "400",
+															color: "#808080",
+															lineHeight: "24px",
+														}}
+													>
+														{index + 1}.
+													</Typography>
+													<Typography
+														variant="body1"
+														sx={{
+															display: "inline",
+															fontFamily: "var(--font-roboto)",
+															fontSize: "12px",
+															fontWeight: "400",
+															color: "#808080",
+															lineHeight: "24px",
+														}}
+													>
+														{highlightText(instruction.text, highlightConfig)}
+													</Typography>
+												</ListItem>
+											))}
+										</List>
+									</Box>
+								)}
 							</TabPanel>
 							<TabPanel value="2" sx={{ p: 0 }}>
 								<Box
@@ -518,7 +544,12 @@ const S3Connect = ({
 										<Box
 											sx={{ display: "flex", alignItems: "center", gap: "8px" }}
 										>
-											<Image src="/s3.svg" alt="s3" height={26} width={32} />
+											<Image
+												src="/mailchimp-icon.svg"
+												alt="mailchimp"
+												height={26}
+												width={32}
+											/>
 											<Typography
 												variant="h6"
 												sx={{
@@ -545,7 +576,7 @@ const S3Connect = ({
 											}}
 										>
 											Sync your current list to avoid collecting contacts you
-											already possess. Newly added contacts in Sendlane will be
+											already possess. Newly added contacts in Mailchimp will be
 											automatically suppressed each day.
 										</Typography>
 
@@ -694,7 +725,7 @@ const S3Connect = ({
 													letterSpacing: "0.06px",
 												}}
 											>
-												By performing this action, all your Sendlane contacts
+												By performing this action, all your Customer.io contacts
 												will be added to your Grow suppression list, and new
 												contacts will be imported daily around 6pm EST.
 											</Typography>
@@ -705,16 +736,88 @@ const S3Connect = ({
 						</TabContext>
 					</Box>
 					<Box
-						sx={{ px: 2, py: 2, width: "100%", borderTop: "1px solid #e4e4e4" }}
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "right",
+							px: 2,
+							py: 2,
+							width: "100%",
+							borderTop: "1px solid #e4e4e4",
+						}}
 					>
 						<Box
 							sx={{
-								width: "100%",
-								display: "flex",
-								justifyContent: "flex-end",
+								mr: 2,
 							}}
 						>
-							{getButton(value)}
+							<Button
+								variant="outlined"
+								onClick={handleTestApiKey}
+								disabled={!apiKey}
+								sx={{
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									fontWeight: "600",
+									lineHeight: "20px",
+									letterSpacing: "normal",
+									textTransform: "none",
+									padding: "10px 24px",
+									borderRadius: "4px",
+									border: "1px solid rgba(56, 152, 252, 1)",
+									boxShadow: "0px 0px 0px 0px rgba(0, 0, 0, 0.25)",
+									":hover": {
+										backgroundColor: "rgba(250, 250, 250, 1)",
+									},
+									":active": {
+										backgroundColor: "rgba(56, 152, 252, 1)",
+									},
+									":disabled": {
+										border: "1px solid rgba(56, 152, 252, 1)",
+										backgroundColor: "#fff",
+										color: "rgba(30, 136, 229, 1)",
+										opacity: 0.6,
+									},
+								}}
+							>
+								Test connection
+							</Button>
+						</Box>
+
+						<Box>
+							<Button
+								variant="contained"
+								onClick={handleApiKeySave}
+								disabled={!apiKey || disableButton || apiKeyError}
+								sx={{
+									backgroundColor: "rgba(56, 152, 252, 1)",
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									fontWeight: "600",
+									lineHeight: "20px",
+									letterSpacing: "normal",
+									color: "#fff",
+									textTransform: "none",
+									padding: "10px 24px",
+									boxShadow: "0px 0px 0px 0px rgba(0, 0, 0, 0.25)",
+									":hover": {
+										backgroundColor: "rgba(30, 136, 229, 1)",
+										boxShadow: "0px 0px 0px 0px rgba(0, 0, 0, 0.25)",
+									},
+									":active": {
+										backgroundColor: "rgba(56, 152, 252, 1)",
+									},
+									":disabled": {
+										backgroundColor: "rgba(56, 152, 252, 1)",
+										color: "#fff",
+										opacity: 0.6,
+									},
+									borderRadius: "4px",
+									border: "1px solid rgba(56, 152, 252, 1)",
+								}}
+							>
+								Connect
+							</Button>
 						</Box>
 					</Box>
 				</Box>
@@ -723,4 +826,4 @@ const S3Connect = ({
 	);
 };
 
-export default S3Connect;
+export default CustomerIoConnect;

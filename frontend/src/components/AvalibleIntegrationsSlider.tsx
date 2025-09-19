@@ -13,27 +13,27 @@ import {
 	Typography,
 } from "@mui/material";
 import Image from "next/image";
-import MetaConnectButton from "./MetaConnectButton";
-import KlaviyoIntegrationPopup from "./KlaviyoIntegrationPopup";
-import SalesForceIntegrationPopup from "./SalesForceIntegrationPopup";
-import BingAdsIntegrationPopup from "./BingAdsIntegrationPopup";
-import AttentiveIntegrationPopup from "./AttentiveIntegrationPopup";
+import MetaConnectButton from "@/components/integrations/MetaIntegration";
+import KlaviyoIntegrationPopup from "@/components/integrations/KlaviyoIntegration";
+import SalesForceIntegrationPopup from "@/components/integrations/SalesForceIntegration";
+import BingAdsIntegrationPopup from "./integrations/BingAdsIntegration";
+import AttentiveIntegrationPopup from "@/components/integrations/AttentiveIntegration";
 import { useState } from "react";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import ShopifySettings from "./ShopifySettings";
 import BCommerceConnect from "./Bcommerce";
-import LinkedinConnectPopup from "./LinkedinConnectPopup";
-import OmnisendConnect from "./OmnisendConnect";
-import MailchimpConnect from "./MailchimpConnect";
-import SendlaneConnect from "./SendlaneConnect";
-import S3Connect from "./S3Connect";
-import SlackConnectPopup from "./SlackConnectPopup";
-import WebhookConnectPopup from "./WebhookConnectPopup";
-import ZapierConnectPopup from "./ZapierConnectPopup";
-import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
-import GoogleADSConnectPopup from "./GoogleADSConnectPopup";
-import GoHighLevelConnectPopup from "./GoHighLevelConnectPopup";
+import LinkedinConnectPopup from "./integrations/LinkedinIntegration";
+import OmnisendConnect from "@/components/integrations/OmnisendIntegration";
+import MailchimpConnect from "@/components/integrations/MailchimpIntegration";
+import SendlaneConnect from "@/components/integrations/SendlaneIntegration";
+import S3Connect from "@/components/integrations/S3Integration";
+import SlackConnectPopup from "./integrations/SlackIntegration";
+import WebhookConnectPopup from "@/components/integrations/WebhookIntegration";
+import ZapierConnectPopup from "@/components/integrations/ZapierIntegration";
+import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
+import GoogleADSConnectPopup from "./integrations/GoogleADSIntegration";
+import GoHighLevelConnectPopup from "@/components/integrations/GoHighLevelIntegration";
 
 interface AvailableIntegrationsSliderProps {
 	isContactSync: boolean;

@@ -12,13 +12,13 @@ import {
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useState } from "react";
-import { showErrorToast, showToast } from "./ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import TabPanel from "@mui/lab/TabPanel";
 import TabList from "@mui/lab/TabList";
 import TabContext from "@mui/lab/TabContext";
-import { CustomButton } from "./ui";
+import { CustomButton } from "@/components/ui";
 
 interface MetaConnectPopupProps {
 	open: boolean;

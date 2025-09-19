@@ -36,7 +36,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	showErrorToast,
 	showToast,
-} from "../../../../components/ToastNotification";
+} from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/UserTip";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";

@@ -60,6 +60,12 @@ class ShopifyIntegrationService:
         self.client = client
         self.db = db
         self.AWS = aws_service
+        self.REQUIRED_SCOPES: set[str] = {
+            "read_customer_events",
+            "read_products",
+            "read_script_tags",
+            "write_script_tags",
+        }
 
     def get_shopify_token(self, shopify_data: ShopifyPayloadModel):
         try:
@@ -343,9 +349,51 @@ class ShopifyIntegrationService:
         ):
             shopify.GraphQL().execute(query)
 
+    def __check_scopes(self, credentials: IntegrationCredentials) -> None:
+        """
+        Verifies that the credentials passed to Shopify have all the required API scopes.
+
+        Args:
+        credentials (IntegrationCredentials): Shopify connection data,
+        containing the shop_domain and access_token.
+
+        Raises:
+        HTTPException: If permissions cannot be verified or the required scopes are missing.
+        """
+        url_scopes = (
+            f"{credentials.shopify.shop_domain}/admin/oauth/access_scopes.json"
+        )
+        headers = {
+            "X-Shopify-Access-Token": credentials.shopify.access_token,
+            "Content-Type": "application/json",
+        }
+
+        resp = self.__handle_request("GET", url_scopes, headers=headers)
+        if not resp or resp.status_code != 200:
+            raise HTTPException(
+                status_code=403,
+                detail="Unable to verify Shopify access scopes",
+            )
+
+        granted_scopes: set[str] = {
+            s["handle"] for s in resp.json().get("access_scopes", [])
+        }
+        missing: set[str] = self.REQUIRED_SCOPES - granted_scopes
+
+        if missing:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
+                    "missing_scopes": sorted(list(missing)),
+                    "message": "Your Shopify access token is missing required permissions.",
+                },
+            )
+
     def __set_pixel(
         self, user_id: int, domain: int, credentials: IntegrationCredentials
     ):
+        self.__check_scopes(credentials)
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256(

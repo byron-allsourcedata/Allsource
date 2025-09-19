@@ -2,8 +2,11 @@ import asyncio
 import io
 import logging
 import os
+import traceback
+from typing import Any
 import httpcore
 import httpx
+from aiolimiter import AsyncLimiter
 
 from persistence.million_verifier import MillionVerifierPersistence
 from resolver import injectable
@@ -26,6 +29,17 @@ class MillionVerifierIntegrationsService:
         self.api_key = os.getenv("MILLION_VERIFIER_KEY")
         self.api_url = "https://api.millionverifier.com/api/v3/"
         self.bulk_api_url = "https://bulkapi.millionverifier.com/bulkapi/v2/"
+
+        rate_per_sec = 300
+        max_connections = 300
+        limits = httpx.Limits(
+            max_connections=max_connections,
+            max_keepalive_connections=max_connections,
+        )
+        timeout = httpx.Timeout(connect=5.0, read=10.0, write=5.0, pool=10.0)
+
+        self._client = httpx.AsyncClient(timeout=timeout, limits=limits)
+        self.global_limiter = AsyncLimiter(rate_per_sec, 1)
 
     async def __async_handle_request(
         self,
@@ -136,7 +150,6 @@ class MillionVerifierIntegrationsService:
         self.million_verifier_persistence.save_checked_email(
             email=email, is_verify=is_verify, verify_result=subresult_value
         )
-        return is_verify
 
     async def __check_verify_email(self, email: str) -> dict:
         params = {"email": email, "api": self.api_key}
@@ -146,6 +159,102 @@ class MillionVerifierIntegrationsService:
         )
 
         return response
+
+    # ---------- DDOS SINGLE API ----------
+
+    async def _fetch_email_verify_wrapper(self, email: str) -> tuple[bool, str]:
+        checked_email = self.million_verifier_persistence.find_checked_email(
+            email=email
+        )
+        if checked_email:
+            return checked_email.is_verify, checked_email.verify_result
+
+        result = await self._fetch_email_verification(email, max_retries=2)
+        if result.get("error"):
+            raise MillionVerifierError(result.get("error"))
+
+        if result.get("credits", 1) <= 0:
+            raise InsufficientCreditsError(
+                "Insufficient credits for million_verifier"
+            )
+
+        subresult_value = result.get("subresult")
+        is_verify = bool(subresult_value == "ok")
+
+        if result.get("resultcode") in (3, 4, 5, 6):
+            err = result.get("error") or result.get("result")
+            if err:
+                logger.debug(f"millionverifier error: {err}")
+
+        return is_verify, subresult_value
+
+    async def _fetch_email_verification(
+        self, email: str, max_retries: int = 1
+    ) -> dict[str, Any]:
+        params = {"email": email, "api": self.api_key}
+        attempt = 0
+        retry_delay = 1.0
+
+        while attempt <= max_retries:
+            try:
+                async with self.global_limiter:
+                    response = await self._client.get(
+                        self.api_url, params=params
+                    )
+
+                if response.status_code == 429:
+                    retry_after = int(
+                        response.headers.get("Retry-After") or retry_delay
+                    )
+                    logger.warning(
+                        f"MillionVerifier rate limited, retry after {retry_after}s (attempt {attempt})"
+                    )
+                    await asyncio.sleep(retry_after)
+                    attempt += 1
+                    continue
+
+                if 500 <= response.status_code < 600 and attempt < max_retries:
+                    logger.warning(
+                        f"Server error {response.status_code}, retrying (attempt {attempt})"
+                    )
+                    await asyncio.sleep(retry_delay)
+                    attempt += 1
+                    continue
+
+                try:
+                    return response.json()
+                except Exception as e:
+                    logger.error(
+                        f"Failed to parse MillionVerifier response json: {e}"
+                    )
+                    return {"error": "invalid_json_response"}
+
+            except (
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+                httpx.RemoteProtocolError,
+                httpx.NetworkError,
+            ) as e:
+                logger.warning(
+                    f"Temporary network error: {type(e).__name__} for email={email} attempt={attempt} - {e}"
+                )
+                logger.debug("".join(traceback.format_exc()))
+                if attempt < max_retries:
+                    logger.info(
+                        f"Retrying email={email} in {retry_delay:.2f}s (attempt {attempt})"
+                    )
+                    await asyncio.sleep(retry_delay)
+                    attempt += 1
+                    continue
+                return {"error": str(e)}
+            except httpx.RequestError as e:
+                logger.error(f"Request failed: {e} (URL: {self.api_url})")
+                return {"error": "Request failed"}
+            except Exception as e:
+                logger.exception("Unexpected error while checking email")
+                return {"error": str(e)}
+
+        return {"error": "Max retries exceeded"}
 
     # ---------- BULK API ----------
 
