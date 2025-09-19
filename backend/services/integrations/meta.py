@@ -180,7 +180,7 @@ class MetaIntegrationsService:
         integration_data = {
             "ad_account_id": ad_account_info.get("id"),
             "access_token": access_token.get("access_token"),
-            "meta_user_access_token": credentials.meta.access_token,
+            "meta_user_access_token": access_token.get("access_token"),
             "full_name": user.get("full_name"),
             "expire_access_token": access_token.get("expires_in"),
             "last_access_token_update": datetime.now(),
