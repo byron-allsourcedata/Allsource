@@ -276,9 +276,7 @@ async def process_rmq_message(
                 for pid, email in chunk
             ]
 
-            chunk_results = await asyncio.gather(
-                *tasks, return_exceptions=False
-            )
+            chunk_results = await asyncio.gather(*tasks)
             results.extend(chunk_results)
 
         checked_to_save = []
@@ -315,6 +313,7 @@ async def process_rmq_message(
 
         attempted_count = len(to_check)
         write_off_funds = validation_cost * Decimal(attempted_count)
+        count_subtracted = Decimal(0)
 
         if write_off_funds:
             count_subtracted = user_persistence.deduct_validation_funds(
