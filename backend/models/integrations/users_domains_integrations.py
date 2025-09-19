@@ -62,9 +62,6 @@ class UserIntegration(Base):
     is_slack_first_message_sent = Column(
         Boolean, nullable=False, server_default=text("false")
     )
-    meta_user_access_token: Mapped[str | None] = mapped_column(
-        VARCHAR, nullable=True
-    )
     limit = Column(BigInteger, nullable=False, server_default=text("100"))
 
     __table_args__ = (
