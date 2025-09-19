@@ -48,6 +48,7 @@ MAPPING = {
     "personal_email": ("personal_email", "verified_personal_email"),
     "business_email": ("business_email", "verified_business_email"),
 }
+CHUNK_SIZE = 300
 
 
 def setup_logging(level):
@@ -265,17 +266,18 @@ async def process_rmq_message(
             else:
                 to_check.append((person_id, email))
 
-        tasks = [
-            asyncio.create_task(
-                _generate_one_task(million_verifier_service, pid, email)
-            )
-            for pid, email in to_check
-        ]
+        results = []
+        for i in range(0, len(to_check), CHUNK_SIZE):
+            chunk = to_check[i : i + CHUNK_SIZE]
+            tasks = [
+                asyncio.create_task(
+                    _generate_one_task(million_verifier_service, pid, email)
+                )
+                for pid, email in chunk
+            ]
 
-        if tasks:
-            results = await asyncio.gather(*tasks)
-        else:
-            results = []
+            chunk_results = await asyncio.gather(*tasks)
+            results.extend(chunk_results)
 
         checked_to_save = []
         for status, person_id, email, subresult in results:
@@ -311,6 +313,7 @@ async def process_rmq_message(
 
         attempted_count = len(to_check)
         write_off_funds = validation_cost * Decimal(attempted_count)
+        count_subtracted = Decimal(0)
 
         if write_off_funds:
             count_subtracted = user_persistence.deduct_validation_funds(
