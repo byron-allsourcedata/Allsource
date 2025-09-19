@@ -41,6 +41,7 @@ import { LogoSmall } from "@/components/ui/Logo";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 interface ConnectMetaPopupProps {
 	open: boolean;
@@ -252,7 +253,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 			} catch (error) {
 				if (axios.isAxiosError(error) && error.response) {
 					setIsPermissionDenied(true);
-					showErrorToast(error.response.data);
+					showErrorToast(error.response.data, { infinite: true });
 				}
 			} finally {
 				setLoading(false);
@@ -433,8 +434,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		}
 
 		if (valid) {
-			const listId = await createNewList(newListName);
-			const newKlaviyoList = { id: listId, list_name: newListName };
+			const listData = await createNewList(newListName);
+			const newKlaviyoList = { id: listData.id, list_name: newListName };
 			setSelectedOption(newKlaviyoList);
 			if (isKlaviyoList(newKlaviyoList)) {
 				setIsDropdownValid(true);
@@ -821,6 +822,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		setIsDropdownOpenCampaign(false);
 		setIsDropdownValid(false);
 		setListNameError(false);
+		setIsPermissionDenied(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
 		setLoading(false);
@@ -838,6 +840,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 	const handlePopupClose = () => {
 		resetToDefaultValues();
 		onClose();
+		toast.dismiss();
 	};
 
 	return (
@@ -1402,7 +1405,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 														variant="outlined"
 														disabled={data?.customer_id || isPermissionDenied}
 														value={inputValue}
-														onClick={handleClick}
+														onClick={
+															isPermissionDenied ? undefined : handleClick
+														}
 														size="medium"
 														fullWidth
 														label={
@@ -1427,7 +1432,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 															endAdornment: (
 																<InputAdornment position="end">
 																	<IconButton
-																		onClick={handleDropdownToggle}
+																		onClick={
+																			isPermissionDenied
+																				? undefined
+																				: handleDropdownToggle
+																		}
 																		edge="end"
 																	>
 																		{isDropdownOpen ? (
@@ -1448,7 +1457,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	</IconButton>
 																</InputAdornment>
 															),
-															sx: metaStyles.formInput,
+															sx: { ...metaStyles.formInput },
 														}}
 														sx={{
 															"& input": {

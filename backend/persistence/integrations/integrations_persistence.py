@@ -42,6 +42,16 @@ class IntegrationsPersistence:
 
         return service_name
 
+    def get_meta_user_access_token(self, user_id: int) -> str | None:
+        meta_user_access_token = self.db.execute(
+            select(UserIntegration.meta_user_access_token).where(
+                UserIntegration.user_id == user_id,
+                UserIntegration.service_name == "meta",
+            )
+        ).scalar()
+
+        return meta_user_access_token
+
     def get_integration_by_shop_id(self, shop_id: str) -> UserIntegration:
         user_integration = (
             self.db.query(UserIntegration)

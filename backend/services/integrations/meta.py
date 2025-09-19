@@ -35,7 +35,14 @@ from schemas.integrations.integrations import (
     IntegrationCredentials,
     ListFromIntegration,
 )
-from schemas.integrations.meta import AdAccountScheme
+from schemas.integrations.meta import (
+    AdAccountScheme,
+    TosStatus,
+    TosAccepted,
+    AssignedUsersResult,
+    AssignedUser,
+    CanAcceptResult,
+)
 from services.integrations.commonIntegration import resolve_main_email_and_phone
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
@@ -173,6 +180,7 @@ class MetaIntegrationsService:
         integration_data = {
             "ad_account_id": ad_account_info.get("id"),
             "access_token": access_token.get("access_token"),
+            "meta_user_access_token": credential.access_token,
             "full_name": user.get("full_name"),
             "expire_access_token": access_token.get("expires_in"),
             "last_access_token_update": datetime.now(),
@@ -287,48 +295,341 @@ class MetaIntegrationsService:
         response = self.__handle_request(url=url, params=params, method="GET")
         return response
 
-    def check_user_tasks_on_ad_account(
+    def get_tos_status(
         self, ad_account_id: str, access_token: str
-    ):
+    ) -> TosStatus:
         acct = self._ensure_act_prefix(ad_account_id).replace("act_", "")
-        url = f"https://graph.facebook.com/{API_VERSION}/act_{acct}/assigned_users"
-        params = {"access_token": access_token, "fields": "id,name,tasks"}
+        url = f"https://graph.facebook.com/{API_VERSION}/act_{acct}"
+        params = {"fields": "tos_accepted", "access_token": access_token}
         resp = self.__handle_request(method="GET", url=url, params=params)
-        if not resp or resp.status_code != 200:
-            return {"has_access": False, "tasks": [], "assigned_users": []}
-        try:
-            data = resp.json().get("data", [])
-        except Exception:
-            return {"has_access": False, "tasks": [], "assigned_users": []}
 
-        all_tasks = set()
-        for u in data:
-            tasks = u.get("tasks") or []
-            for t in tasks:
-                all_tasks.add(t)
-        has_required = bool({"MANAGE", "ADVERTISE"} & all_tasks) or any(
-            u.get("role") == "ADMIN" for u in data if u.get("role")
+        if not resp or resp.status_code != 200:
+            return TosStatus(
+                ok=False,
+                error="no_response",
+                status_code=getattr(resp, "status_code", None),
+            )
+
+        try:
+            data = resp.json()
+        except Exception:
+            return TosStatus(ok=False, error="bad_json")
+
+        tos_obj = data.get("tos_accepted")
+        tos_accepted = (
+            TosAccepted(**tos_obj) if isinstance(tos_obj, dict) else None
         )
-        return {
-            "has_access": has_required,
-            "tasks": list(all_tasks),
-            "assigned_users": data,
-        }
+        return TosStatus(ok=True, tos_accepted=tos_accepted, raw=data)
+
+    def get_assigned_users(
+        self, ad_account_id: str, access_token: str
+    ) -> AssignedUsersResult:
+        acct = self._ensure_act_prefix(ad_account_id).replace("act_", "")
+        status_code = None
+        raw = None
+        business_id = None
+
+        # 1) Try to get business id for this ad account (user token first)
+        try:
+            info_url = f"https://graph.facebook.com/{API_VERSION}/act_{acct}"
+            info_resp = self.__handle_request(
+                method="GET",
+                url=info_url,
+                params={"fields": "business", "access_token": access_token},
+            )
+            if info_resp and getattr(info_resp, "status_code", None) == 200:
+                info_body = info_resp.json()
+                biz = info_body.get("business")
+                if isinstance(biz, dict):
+                    business_id = biz.get("id")
+                elif isinstance(biz, str):
+                    business_id = biz
+        except Exception:
+            business_id = None
+
+        # fallback: try with app token if we couldn't get business with user token
+        if not business_id:
+            try:
+                app_token = f"{APP_ID}|{APP_SECRET}"
+                info_resp = self.__handle_request(
+                    method="GET",
+                    url=f"https://graph.facebook.com/{API_VERSION}/act_{acct}",
+                    params={"fields": "business", "access_token": app_token},
+                )
+                if info_resp and getattr(info_resp, "status_code", None) == 200:
+                    info_body = info_resp.json()
+                    biz = info_body.get("business")
+                    if isinstance(biz, dict):
+                        business_id = biz.get("id")
+                    elif isinstance(biz, str):
+                        business_id = biz
+            except Exception:
+                business_id = None
+
+        # 2) Correct call: act_{id}/assigned_users, optionally with business param
+        try:
+            assigned_url = f"https://graph.facebook.com/{API_VERSION}/act_{acct}/assigned_users"
+            params = {"fields": "id,name,tasks", "access_token": access_token}
+            if business_id:
+                params["business"] = business_id
+
+            resp = self.__handle_request(
+                method="GET", url=assigned_url, params=params
+            )
+            status_code = getattr(resp, "status_code", None) if resp else None
+            if not resp:
+                return AssignedUsersResult(
+                    ok=False,
+                    error="no_response",
+                    assigned_users=[],
+                    raw=None,
+                    status_code=None,
+                )
+
+            raw = resp.json()
+            # if API returned an error — return it in debug to help diagnose
+            if raw.get("error"):
+                return AssignedUsersResult(
+                    ok=False,
+                    error="api_error",
+                    assigned_users=[],
+                    raw=raw,
+                    status_code=status_code,
+                )
+
+            users = self._parse_assigned_users_raw(raw)
+            return AssignedUsersResult(
+                ok=True, assigned_users=users, raw=raw, status_code=status_code
+            )
+        except Exception as exc:
+            logger.exception("get_assigned_users failed: %s", exc)
+            # final fallback: return failure with debug
+            return AssignedUsersResult(
+                ok=False,
+                error="exception",
+                assigned_users=[],
+                raw=str(exc),
+                status_code=status_code,
+            )
+
+    def _parse_assigned_users_raw(
+        self, raw_response: dict
+    ) -> list[AssignedUser]:
+        out = []
+        data = raw_response.get("data", []) or []
+
+        for item in data:
+            # Case A: item has top-level 'user' object
+            if isinstance(item, dict) and item.get("user"):
+                user_obj = item.get("user", {})
+                uid = user_obj.get("id") or item.get("id")
+                name = user_obj.get("name") or item.get("name")
+                tasks = item.get("tasks") or user_obj.get("tasks") or []
+                role = item.get("role") or user_obj.get("role")
+                out.append(
+                    AssignedUser(id=uid, name=name, role=role, tasks=tasks)
+                )
+
+            # Case B: item directly contains id/name/tasks
+            elif isinstance(item, dict) and ("id" in item or "name" in item):
+                uid = item.get("id")
+                name = item.get("name")
+                tasks = item.get("tasks") or []
+                role = item.get("role") or None
+                out.append(
+                    AssignedUser(id=uid, name=name, role=role, tasks=tasks)
+                )
+
+            # Case C: nested shapes e.g. assigned_ad_account_edge
+            else:
+                # try to find any plausible id/name/tasks in nested dict
+                uid = None
+                name = None
+                role = None
+                tasks = []
+                # shallow search
+                for k, v in item.items() if isinstance(item, dict) else []:
+                    if isinstance(v, dict):
+                        if v.get("id") and not uid:
+                            uid = v.get("id")
+                        if v.get("name") and not name:
+                            name = v.get("name")
+                        if v.get("tasks") and not tasks:
+                            tasks = v.get("tasks")
+                if uid or name:
+                    out.append(
+                        AssignedUser(
+                            id=uid or name, name=name, role=role, tasks=tasks
+                        )
+                    )
+
+        return out
+
+    def can_current_user_accept_tos(
+        self,
+        ad_account_id: str,
+        access_token: str,
+        user_id,
+        current_user_id: str | None = None,
+    ) -> CanAcceptResult:
+        # 1) who is this token owner?
+        token_owner_id = None
+        token_owner_name = None
+        try:
+            me_resp = self.__handle_request(
+                method="GET",
+                url=f"https://graph.facebook.com/{API_VERSION}/me",
+                params={"fields": "id,name", "access_token": access_token},
+            )
+            if me_resp and getattr(me_resp, "status_code", None) == 200:
+                me_json = me_resp.json()
+                token_owner_id = (
+                    str(me_json.get("id")) if me_json.get("id") else None
+                )
+                token_owner_name = me_json.get("name")
+        except Exception:
+            return CanAcceptResult(
+                can_accept=False, reason="no_user_in_token", tos_accepted=False
+            )
+
+        if not token_owner_id:
+            return CanAcceptResult(
+                can_accept=False, reason="no_user_in_token", tos_accepted=False
+            )
+
+        # 2) check TOS status
+        tos_status = self.get_tos_status(ad_account_id, access_token)
+        if not tos_status.ok:
+            return CanAcceptResult(
+                can_accept=False,
+                reason="cannot_check_tos",
+                tos_accepted=False,
+                debug={"tos_raw": tos_status.raw},
+            )
+
+        if (tos_status.tos_accepted or TosAccepted()).custom_audience_tos in (
+            1,
+            True,
+        ):
+            return CanAcceptResult(
+                can_accept=False, reason="already_accepted", tos_accepted=True
+            )
+
+        # 3) get meta/system token to read assigned users
+        meta_user_access_token = (
+            self.integrations_persisntece.get_meta_user_access_token(user_id)
+        )
+        if not meta_user_access_token:
+            return CanAcceptResult(
+                can_accept=False, reason="no_meta_token", tos_accepted=False
+            )
+
+        au = self.get_assigned_users(ad_account_id, meta_user_access_token)
+        print(au)
+        if not au.ok:
+            return CanAcceptResult(
+                can_accept=False,
+                reason="no_assigned_users_access",
+                tos_accepted=False,
+                debug={"assigned_raw": au.raw},
+            )
+
+        assigned = au.assigned_users or []
+        if not assigned:
+            return CanAcceptResult(
+                can_accept=False,
+                reason="empty_assigned_users",
+                tos_accepted=False,
+                debug={"assigned_raw": au.raw},
+            )
+
+        # 4) find current user in assigned_users (match by id, fallback by name)
+        matched_user = None
+        for u in assigned:
+            uid = str(u.id) if getattr(u, "id", None) is not None else None
+            if uid and uid == token_owner_id:
+                matched_user = u
+                break
+
+        if not matched_user and token_owner_name:
+            for u in assigned:
+                uname = (
+                    (u.name or "").strip() if getattr(u, "name", None) else None
+                )
+                if (
+                    uname
+                    and uname.strip().lower()
+                    == token_owner_name.strip().lower()
+                ):
+                    matched_user = u
+                    break
+
+        if not matched_user:
+            return CanAcceptResult(
+                can_accept=False,
+                reason="user_not_in_assigned_users",
+                tos_accepted=False,
+                assigned_users=assigned,
+                debug={"assigned_raw": au.raw},
+            )
+
+        # 5) verify tasks/role
+        tasks_set = set(getattr(matched_user, "tasks", []) or [])
+        role = getattr(matched_user, "role", None)
+        if role == "ADMIN" or bool(tasks_set & {"MANAGE", "ADVERTISE"}):
+            terms_link = f"https://business.facebook.com/ads/manage/customaudiences/tos/?act={self._ensure_act_prefix(ad_account_id).replace('act_', '')}"
+            return CanAcceptResult(
+                can_accept=True,
+                reason="has_tasks",
+                tos_accepted=False,
+                terms_link=terms_link,
+                debug={"matched_user": matched_user},
+            )
+
+        return CanAcceptResult(
+            can_accept=False,
+            reason="insufficient_tasks",
+            tos_accepted=False,
+            assigned_tasks=list(tasks_set),
+            assigned_users=assigned,
+            debug={"matched_user": matched_user, "assigned_raw": au.raw},
+        )
+
+    def get_scope_by_access_token(self, access_token: str):
+        app_token = f"{APP_ID}|{APP_SECRET}"
+        url = "https://graph.facebook.com/debug_token"
+        params = {"input_token": access_token, "access_token": app_token}
+        response = self.__handle_request("GET", url=url, params=params)
+        if not response or response.status_code != 200:
+            return None
+        return response.json().get("data", {})
 
     def get_list(self, ad_account_id: str, domain_id: int, user_id: int):
         credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return None
 
-        tasks_check = self.check_user_tasks_on_ad_account(
-            ad_account_id, credentials.access_token
+        # token_data = self.get_scope_by_access_token(credentials.access_token)
+        # current_user_id = token_data.get("user_id") if token_data else None
+
+        # logger.debug("debug_token user_id=%s scopes=%s", current_user_id, token_data.get("scopes") if token_data else None)
+
+        can_manage = self.can_current_user_accept_tos(
+            ad_account_id=ad_account_id,
+            access_token=credentials.access_token,
+            user_id=user_id,
+            current_user_id=current_user_id,
         )
-        print(tasks_check)
-        # if not tasks_check.get("has_access"):
-        #     raise HTTPException(
-        #         status_code=403,
-        #         detail="Insufficient ad account permissions (need MANAGE/ADVERTISE or ADMIN)."
-        #     )
+        print(can_manage)
+        if not can_manage.tos_accepted and not can_manage.can_accept:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "message": "You don’t have the required permissions to create a list. Please add your account here:",
+                    "link": f"https://business.facebook.com/settings/ad-accounts",
+                    "link_text": "Ad Account Settings",
+                },
+            )
 
         response_audience = self.__get_audience_list(
             ad_account_id, credentials.access_token
