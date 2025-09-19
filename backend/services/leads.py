@@ -218,7 +218,10 @@ class LeadsService:
                         "city": lead[58].title() if lead[58] else None,
                         "first_visited_date": adjusted_date,
                         "first_visited_time": adjusted_time,
-                        "time_spent": lead[61],
+                        "time_spent": sum(
+                            pv.get("spent_time_sec", 0)
+                            for pv in leads_requests.get(lead[67], [])
+                        ),
                         "recurring_visits": lead[62],
                         "visitor_type": lead[63],
                         "is_active": lead[66],
