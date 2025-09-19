@@ -618,7 +618,6 @@ class MetaIntegrationsService:
             ad_account_id=ad_account_id,
             access_token=credentials.access_token,
             user_id=user_id,
-            current_user_id=current_user_id,
         )
         print(can_manage)
         if not can_manage.tos_accepted and not can_manage.can_accept:
