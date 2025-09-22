@@ -36,15 +36,26 @@ export const CustomInfoToast = ({ message }: { message: string }) => (
 	</div>
 );
 
-export const CustomErrorToast = ({ message }: { message: string }) => {
-	const formattedMessage = message.replace(
-		"Support team",
-		`<a href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" 
-        style="color: inherit" 
-        target="_blank" rel="noopener noreferrer">
-      Support team
-    </a>`,
-	);
+export interface ToastErrorDetail {
+	message: string;
+	link?: string;
+	link_text?: string;
+}
+
+export const CustomErrorToast = ({
+	message,
+	link,
+	link_text,
+}: ToastErrorDetail) => {
+	// const formattedMessage = message.replace(
+	// 	"Support team",
+	// 	`<a href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+	//     style="color: inherit"
+	//     target="_blank" rel="noopener noreferrer">
+	//   Support team
+	// </a>`,
+	// );
+	const safeMessage = String(message || "");
 
 	return (
 		<div style={{ color: "rgba(255, 245, 245, 1)" }}>
@@ -66,8 +77,19 @@ export const CustomErrorToast = ({ message }: { message: string }) => {
 					fontFamily: "var(--font-nunito)",
 					fontSize: "12px",
 				}}
-				dangerouslySetInnerHTML={{ __html: formattedMessage }}
-			/>
+			>
+				{safeMessage}{" "}
+				{link && (
+					<a
+						href={link}
+						target="_blank"
+						rel="noopener noreferrer"
+						style={{ color: "inherit" }}
+					>
+						{link_text ?? "click here"}
+					</a>
+				)}
+			</Typography>
 		</div>
 	);
 };
@@ -95,10 +117,28 @@ export const showToast = (message: string, options: ToastOptions = {}) => {
 	});
 };
 
-export const showErrorToast = (message: string, options: ToastOptions = {}) => {
-	toast.error(<CustomErrorToast message={message} />, {
+interface ErrorToastOptions extends ToastOptions {
+	infinite?: boolean;
+}
+
+export const showErrorToast = (
+	messageRaw: string | ToastErrorDetail,
+	options: ErrorToastOptions = {},
+) => {
+	const { infinite, ...toastOptions } = options;
+
+	const payload: ToastErrorDetail =
+		typeof messageRaw === "string"
+			? { message: messageRaw }
+			: {
+					message: String(messageRaw?.message ?? "Unknown error"),
+					link: messageRaw?.link,
+					link_text: messageRaw?.link_text,
+				};
+
+	toast.error(<CustomErrorToast {...payload} />, {
 		position: "top-right",
-		autoClose: 4000,
+		autoClose: infinite ? false : (toastOptions.autoClose ?? 4000),
 		hideProgressBar: false,
 		closeOnClick: true,
 		draggable: true,
@@ -114,8 +154,8 @@ export const showErrorToast = (message: string, options: ToastOptions = {}) => {
 		theme: "light",
 		transition: Bounce,
 		icon: false,
-		...options,
-	});
+		...toastOptions,
+	} as ToastOptions);
 };
 
 export const showInfoToast = (message: string, options: ToastOptions = {}) => {

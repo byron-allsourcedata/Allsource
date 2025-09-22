@@ -89,7 +89,6 @@ axiosInterceptorInstance.interceptors.response.use(
 					navigateTo("/signin");
 					break;
 				case 403:
-					console.log(error.response.data);
 					switch (error.response.data.status) {
 						case "DOMAIN_NOT_FOUND":
 							navigateTo("dashboard");
@@ -145,7 +144,8 @@ axiosInterceptorInstance.interceptors.response.use(
 				// Handle other statuses if needed
 				default:
 					showErrorToast(
-						`An error occurred: ${error.response.data.status || "Unknown error"
+						`An error occurred: ${
+							error.response.data.status || "Unknown error"
 						}`,
 					);
 			}
@@ -160,8 +160,8 @@ axiosInterceptorInstance.interceptors.response.use(
 export const useAxios = makeUseAxios({
 	axios: axiosInterceptorInstance,
 	defaultOptions: {
-		manual: true
-	}
+		manual: true,
+	},
 });
 
 export default axiosInterceptorInstance;
