@@ -598,23 +598,23 @@ const SourcesImport: React.FC = () => {
 			newSource.domain_id = selectedDomainId;
 		}
 
-		// try {
-		// 	const response = await axiosInstance.post(
-		// 		`/audience-sources/create`,
-		// 		newSource,
-		// 		{
-		// 			headers: { "Content-Type": "application/json" },
-		// 		},
-		// 	);
-		// 	if (response.status === 200) {
-		// 		await fetchUserData(setIsGetStartedPage, setInstalledResources);
-		// 		const dataString = encodeURIComponent(JSON.stringify(response.data));
-		// 		router.push(`/sources/created-source?data=${dataString}`);
-		// 	}
-		// } catch {
-		// } finally {
-		// 	setLoading(false);
-		// }
+		try {
+			const response = await axiosInstance.post(
+				`/audience-sources/create`,
+				newSource,
+				{
+					headers: { "Content-Type": "application/json" },
+				},
+			);
+			if (response.status === 200) {
+				await fetchUserData(setIsGetStartedPage, setInstalledResources);
+				const dataString = encodeURIComponent(JSON.stringify(response.data));
+				router.push(`/sources/created-source?data=${dataString}`);
+			}
+		} catch {
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	// Sample
