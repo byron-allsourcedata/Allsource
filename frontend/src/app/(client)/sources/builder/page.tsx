@@ -571,7 +571,12 @@ const SourcesImport: React.FC = () => {
 		setLoading(true);
 
 		const rowsToSubmit = mappingRows
-			.filter((el: Row) => !el.isHidden)
+			.filter((row) => !row.isHidden)
+			.filter(
+				(row) =>
+					headingsNotSubstitution.hasOwnProperty(row.type) &&
+					!headingsNotSubstitution[row.type],
+			)
 			.map(({ id, canDelete, isHidden, ...rest }) => rest);
 
 		const newSource: NewSource = {
@@ -593,23 +598,23 @@ const SourcesImport: React.FC = () => {
 			newSource.domain_id = selectedDomainId;
 		}
 
-		try {
-			const response = await axiosInstance.post(
-				`/audience-sources/create`,
-				newSource,
-				{
-					headers: { "Content-Type": "application/json" },
-				},
-			);
-			if (response.status === 200) {
-				await fetchUserData(setIsGetStartedPage, setInstalledResources);
-				const dataString = encodeURIComponent(JSON.stringify(response.data));
-				router.push(`/sources/created-source?data=${dataString}`);
-			}
-		} catch {
-		} finally {
-			setLoading(false);
-		}
+		// try {
+		// 	const response = await axiosInstance.post(
+		// 		`/audience-sources/create`,
+		// 		newSource,
+		// 		{
+		// 			headers: { "Content-Type": "application/json" },
+		// 		},
+		// 	);
+		// 	if (response.status === 200) {
+		// 		await fetchUserData(setIsGetStartedPage, setInstalledResources);
+		// 		const dataString = encodeURIComponent(JSON.stringify(response.data));
+		// 		router.push(`/sources/created-source?data=${dataString}`);
+		// 	}
+		// } catch {
+		// } finally {
+		// 	setLoading(false);
+		// }
 	};
 
 	// Sample
@@ -729,28 +734,18 @@ const SourcesImport: React.FC = () => {
 
 			const updatedHeadingSubstitution: Record<string, boolean> = {};
 			headingKeys.forEach((key) => {
-				updatedHeadingSubstitution[key] = newHeadingsMap[key] === "None";
+				updatedHeadingSubstitution[key] = newHeadingsMap[key] == "None";
 			});
 
 			headingKeys.forEach((key, index) => {
-				updatedHeadingSubstitution[key] = newHeadings[index] === "None";
+				updatedHeadingSubstitution[key] = newHeadings[index] == "None";
 			});
 
 			headingKeys.forEach((key, i) => {
 				newHeadingsMap[key] = newHeadings[i]; // тут индекс совпадает
 			});
 
-			setHeadingsNotSubstitution({
-				Email: updatedHeadingSubstitution.Email || false,
-				"Last Name": updatedHeadingSubstitution["Last Name"] || false,
-				"First Name": updatedHeadingSubstitution["First Name"] || false,
-				"Phone number": updatedHeadingSubstitution["Phone number"] || false,
-				"Transaction Date":
-					updatedHeadingSubstitution["Transaction Date"] || false,
-				"Lead Date": updatedHeadingSubstitution["Lead Date"] || false,
-				"Order Amount": updatedHeadingSubstitution["Order Amount"] || false,
-				"Interest Date": updatedHeadingSubstitution["Interest Date"] || false,
-			});
+			setHeadingsNotSubstitution(updatedHeadingSubstitution);
 
 			const updatedRows = mappingRows.map((row) => {
 				const mapped = newHeadingsMap[row.type];
@@ -917,8 +912,11 @@ const SourcesImport: React.FC = () => {
 	const hasUnsubstitutedHeadings = () => {
 		const mappingRows =
 			sourceType in mappingRowsSourceType
-				? mappingRowsSourceType[
-						sourceType as keyof InterfaceMappingRowsSourceType
+				? [
+						...defaultMapping,
+						...mappingRowsSourceType[
+							sourceType as keyof InterfaceMappingRowsSourceType
+						],
 					]
 				: defaultMapping;
 
@@ -1559,7 +1557,8 @@ const SourcesImport: React.FC = () => {
 																		),
 																	)}
 																</Select>
-																{row.type !== "Phone number" &&
+																{!row.canDelete &&
+																	headingsNotSubstitution[row.type] &&
 																	headingsNotSubstitution[row.type] && (
 																		<Typography
 																			sx={{
