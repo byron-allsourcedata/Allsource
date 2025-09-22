@@ -235,6 +235,7 @@ async def process_email_leads(
         reference_date = datetime.now()
         matched_persons_to_update = []
         matched_persons_to_add = []
+        count_matched_persons = 0
 
         for email, data in matched_persons.items():
             last_transaction = data["start_date"]
@@ -295,7 +296,8 @@ async def process_email_leads(
             stmt = stmt.on_conflict_do_nothing(
                 index_elements=["source_id", "enrichment_user_asid"]
             )
-            db_session.execute(stmt)
+            result = db_session.execute(stmt)
+            count_matched_persons = result.rowcount
             logging.info(f"Adding {len(matched_persons_to_add)} new persons")
 
         if matched_persons_to_update:
@@ -304,7 +306,7 @@ async def process_email_leads(
                 AudienceSourcesMatchedPerson, matched_persons_to_update
             )
 
-    return len(matched_persons_to_add)
+    return count_matched_persons
 
 
 async def process_email_customer_conversion(

@@ -63,6 +63,7 @@ import {
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { LogoSmall } from "@/components/ui/Logo";
 import { T } from "@/components/ui/T";
+import scrollToBlock from "@/utils/autoscroll";
 
 interface Row {
 	id: number;
@@ -105,6 +106,13 @@ export interface DomainsLeads {
 	total_count: number;
 }
 
+type SourceType =
+	| "Customer Conversions"
+	| "Failed Leads"
+	| "Interest"
+	| "Website - Pixel"
+	| "";
+
 const SourcesImport: React.FC = () => {
 	const {
 		changeSourcesBuilderHint,
@@ -119,7 +127,7 @@ const SourcesImport: React.FC = () => {
 	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [isContinuePressed, setIsContinuePressed] = useState(false);
-	const [sourceType, setSourceType] = useState<string>("");
+	const [sourceType, setSourceType] = useState<SourceType>("");
 	const [selectedDomain, setSelectedDomain] = useState<string>("");
 	const [sourceName, setSourceName] = useState<string>("");
 	const [fileSizeStr, setFileSizeStr] = useState<string>("");
@@ -254,7 +262,7 @@ const SourcesImport: React.FC = () => {
 			id: 6,
 			type: "Transaction Date",
 			value: "",
-			canDelete: true,
+			canDelete: false,
 			isHidden: false,
 		},
 		{
@@ -271,7 +279,7 @@ const SourcesImport: React.FC = () => {
 			id: 5,
 			type: "Lead Date",
 			value: "",
-			canDelete: true,
+			canDelete: false,
 			isHidden: false,
 		},
 	];
@@ -281,7 +289,7 @@ const SourcesImport: React.FC = () => {
 			id: 5,
 			type: "Interest Date",
 			value: "",
-			canDelete: true,
+			canDelete: false,
 			isHidden: false,
 		},
 	];
@@ -293,12 +301,6 @@ const SourcesImport: React.FC = () => {
 	};
 
 	const [mappingRows, setMappingRows] = useState<Row[]>([]);
-
-	const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
-		if (blockRef.current) {
-			blockRef.current.scrollIntoView({ behavior: "smooth" });
-		}
-	};
 
 	// Mapping
 
@@ -384,7 +386,7 @@ const SourcesImport: React.FC = () => {
 				// closeSkeleton("sourceFile")
 			}
 
-			setSourceType(newType);
+			setSourceType(newType as SourceType);
 		}
 	}, [typeFromSearchParams]);
 
@@ -462,7 +464,7 @@ const SourcesImport: React.FC = () => {
 		}
 
 		setSelectedDomain("");
-		setSourceType(newSourceType);
+		setSourceType(newSourceType as SourceType);
 	};
 
 	const handleTargetAudienceChange = (value: string) => {
@@ -568,9 +570,14 @@ const SourcesImport: React.FC = () => {
 	const handleSumbit = async () => {
 		setLoading(true);
 
-		const rowsToSubmit = mappingRows.map(
-			({ id, canDelete, isHidden, ...rest }) => rest,
-		);
+		const rowsToSubmit = mappingRows
+			.filter((row) => !row.isHidden)
+			.filter(
+				(row) =>
+					headingsNotSubstitution.hasOwnProperty(row.type) &&
+					!headingsNotSubstitution[row.type],
+			)
+			.map(({ id, canDelete, isHidden, ...rest }) => rest);
 
 		const newSource: NewSource = {
 			target_schema: toSnakeCase(targetAudience),
@@ -738,17 +745,7 @@ const SourcesImport: React.FC = () => {
 				newHeadingsMap[key] = newHeadings[i]; // тут индекс совпадает
 			});
 
-			setHeadingsNotSubstitution({
-				Email: updatedHeadingSubstitution.Email || false,
-				"Last Name": updatedHeadingSubstitution["Last Name"] || false,
-				"First Name": updatedHeadingSubstitution["First Name"] || false,
-				"Phone number": updatedHeadingSubstitution["Phone number"] || false,
-				"Transaction Date":
-					updatedHeadingSubstitution["Transaction Date"] || false,
-				"Lead Date": updatedHeadingSubstitution["Lead Date"] || false,
-				"Order Amount": updatedHeadingSubstitution["Order Amount"] || false,
-				"Interest Date": updatedHeadingSubstitution["Interest Date"] || false,
-			});
+			setHeadingsNotSubstitution(updatedHeadingSubstitution);
 
 			const updatedRows = mappingRows.map((row) => {
 				const mapped = newHeadingsMap[row.type];
@@ -913,8 +910,22 @@ const SourcesImport: React.FC = () => {
 	};
 
 	const hasUnsubstitutedHeadings = () => {
+		const mappingRows =
+			sourceType in mappingRowsSourceType
+				? [
+						...defaultMapping,
+						...mappingRowsSourceType[
+							sourceType as keyof InterfaceMappingRowsSourceType
+						],
+					]
+				: defaultMapping;
+
+		const deletableKeys = new Set(
+			mappingRows.filter((row) => row.canDelete).map((row) => row.type),
+		);
+
 		return Object.entries(headingsNotSubstitution).some(
-			([key, value]) => key !== "Phone number" && value,
+			([key, value]) => !deletableKeys.has(key) && value,
 		);
 	};
 
@@ -1215,7 +1226,7 @@ const SourcesImport: React.FC = () => {
 													}}
 												/>
 											</Box>
-											{sourceType !== "" && file && (
+											{sourceType && file && (
 												<Box
 													sx={{
 														display: "flex",
@@ -1264,7 +1275,7 @@ const SourcesImport: React.FC = () => {
 												</Box>
 											)}
 
-											{sourceType !== "" && (
+											{sourceType && (
 												<Typography
 													className="main-text"
 													component="div"
@@ -1546,7 +1557,8 @@ const SourcesImport: React.FC = () => {
 																		),
 																	)}
 																</Select>
-																{row.type !== "Phone number" &&
+																{!row.canDelete &&
+																	headingsNotSubstitution[row.type] &&
 																	headingsNotSubstitution[row.type] && (
 																		<Typography
 																			sx={{

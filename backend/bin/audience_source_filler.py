@@ -169,7 +169,7 @@ def check_existing_csv_source(
     db_session: Session, body: Union[bytes, bytearray], source: AudienceSource
 ):
     hash_csv_file = hashlib.md5(
-        body + source.target_schema.encode("utf-8")
+        body + source.target_schema.encode("utf-8"), usedforsecurity=False
     ).hexdigest()
 
     existing_source = (

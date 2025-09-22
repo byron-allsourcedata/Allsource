@@ -40,6 +40,8 @@ import UserTip from "@/components/UserTip";
 import { LogoSmall } from "@/components/ui/Logo";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 interface ConnectMetaPopupProps {
 	open: boolean;
@@ -111,6 +113,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		useState<boolean>(false);
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
 	const [listNameError, setListNameError] = useState(false);
+	const [isPermissionDenied, setIsPermissionDenied] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
@@ -222,64 +225,78 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 	useEffect(() => {
 		const getList = async () => {
 			setLoading(true);
-			const response = await axiosInstance.get("/integrations/sync/list/", {
-				params: {
-					service_name: "meta",
-					ad_account_id: optionAdAccount?.id,
-				},
-			});
-			if (response.status === 200) {
-				setMetaAudience(response.data.audience_lists);
-				setMetaCampaign(response.data.campaign_lists);
-				const foundItem = response.data.audience_lists?.find(
-					(item: any) => item.list_name === data?.name,
-				);
-				if (foundItem) {
-					setUpdateKlaviuo(data.id);
-					setSelectedOption({
-						id: foundItem.id,
-						list_name: foundItem.list_name,
-					});
-					setInputValue(foundItem.list_name);
-					setIsDropdownValid(true);
-				} else {
-					setSelectedOption(null);
+			try {
+				const response = await axiosInstance.get("/integrations/sync/list/", {
+					params: {
+						service_name: "meta",
+						ad_account_id: optionAdAccount?.id,
+					},
+				});
+				if (response.status === 200) {
+					setMetaAudience(response.data.audience_lists);
+					setMetaCampaign(response.data.campaign_lists);
+					const foundItem = response.data.audience_lists?.find(
+						(item: any) => item.list_name === data?.name,
+					);
+					if (foundItem) {
+						setUpdateKlaviuo(data.id);
+						setSelectedOption({
+							id: foundItem.id,
+							list_name: foundItem.list_name,
+						});
+						setInputValue(foundItem.list_name);
+						setIsDropdownValid(true);
+					} else {
+						setSelectedOption(null);
+					}
 				}
+			} catch (error) {
+				if (axios.isAxiosError(error) && error.response) {
+					setIsPermissionDenied(true);
+					showErrorToast(error.response.data, { infinite: true });
+				}
+			} finally {
+				setLoading(false);
 			}
-			setLoading(false);
 		};
 		if (optionAdAccount) {
 			getList();
 		}
 	}, [optionAdAccount]);
 
-	const createNewList = async () => {
-		const newListResponse = await axiosInstance.post(
-			"/integrations/sync/list/",
-			{
-				name: selectedOption?.list_name,
-				ad_account_id: optionAdAccount?.id,
-			},
-			{
-				params: {
-					service_name: "meta",
+	const createNewList = async (newListName: string) => {
+		setLoading(true);
+		try {
+			const newListResponse = await axiosInstance.post(
+				"/integrations/sync/list/",
+				{
+					name: newListName,
+					ad_account_id: optionAdAccount?.id,
 				},
-			},
-		);
-		if (
-			newListResponse.status == 201 &&
-			newListResponse.data.terms_link &&
-			newListResponse.data.terms_accepted == false
-		) {
-			showErrorToast("User has not accepted the Custom Audience Terms.");
-			window.open(newListResponse.data.terms_link, "_blank");
-			return;
-		}
-		if (newListResponse.status !== 201) {
-			throw new Error("Failed to create a new tags");
-		}
+				{
+					params: {
+						service_name: "meta",
+					},
+				},
+			);
+			if (
+				newListResponse.status == 201 &&
+				newListResponse.data.terms_link &&
+				newListResponse.data.terms_accepted == false
+			) {
+				showErrorToast("User has not accepted the Custom Audience Terms.");
+				window.open(newListResponse.data.terms_link, "_blank");
+				return;
+			}
+			if (newListResponse.status !== 201) {
+				throw new Error("Failed to create a new tags");
+			}
 
-		return newListResponse.data;
+			return newListResponse.data;
+		} catch {
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	// Handle click outside to unshrink the label if input is empty
@@ -417,7 +434,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		}
 
 		if (valid) {
-			const newKlaviyoList = { id: "-1", list_name: newListName };
+			const listData = await createNewList(newListName);
+			const newKlaviyoList = { id: listData.id, list_name: newListName };
 			setSelectedOption(newKlaviyoList);
 			if (isKlaviyoList(newKlaviyoList)) {
 				setIsDropdownValid(true);
@@ -648,7 +666,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 
 	const createNewCampaign = async () => {
 		try {
-			setLoading(false);
+			setLoading(true);
 			const newListResponse = await axiosInstance.post(
 				"/integrations/sync/campaign/",
 				{
@@ -673,6 +691,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 				window.open(newListResponse.data.terms_link, "_blank");
 				return;
 			}
+
 			if (newListResponse.status !== 201) {
 				showErrorToast("Failed to create a new tags");
 			} else {
@@ -682,7 +701,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 				setMetaCampaign((prev) => [...prev, data]);
 				setIsDropdownValid(true);
 			}
-		} catch {
+		} catch (error) {
+			if (axios.isAxiosError(error) && error.response) {
+				const userMsg = error.response?.data?.message ?? "Something went wrong";
+				showErrorToast(userMsg);
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -695,9 +718,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		setLoading(true);
 		let list: MetaAuidece | null = null;
 		try {
-			if (selectedOption && selectedOption.id === "-1") {
-				list = await createNewList();
-			} else if (selectedOption) {
+			if (selectedOption) {
 				list = selectedOption;
 			} else {
 				showToast("Please select a valid option.");
@@ -801,6 +822,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 		setIsDropdownOpenCampaign(false);
 		setIsDropdownValid(false);
 		setListNameError(false);
+		setIsPermissionDenied(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
 		setLoading(false);
@@ -818,6 +840,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 	const handlePopupClose = () => {
 		resetToDefaultValues();
 		onClose();
+		toast.dismiss();
 	};
 
 	return (
@@ -1380,9 +1403,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 													<TextField
 														ref={textFieldRef}
 														variant="outlined"
-														disabled={data?.customer_id}
+														disabled={data?.customer_id || isPermissionDenied}
 														value={inputValue}
-														onClick={handleClick}
+														onClick={
+															isPermissionDenied ? undefined : handleClick
+														}
 														size="medium"
 														fullWidth
 														label={
@@ -1407,7 +1432,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 															endAdornment: (
 																<InputAdornment position="end">
 																	<IconButton
-																		onClick={handleDropdownToggle}
+																		onClick={
+																			isPermissionDenied
+																				? undefined
+																				: handleDropdownToggle
+																		}
 																		edge="end"
 																	>
 																		{isDropdownOpen ? (
@@ -1428,7 +1457,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																	</IconButton>
 																</InputAdornment>
 															),
-															sx: metaStyles.formInput,
+															sx: { ...metaStyles.formInput },
 														}}
 														sx={{
 															"& input": {
