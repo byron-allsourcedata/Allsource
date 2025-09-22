@@ -261,12 +261,12 @@ const OneDollarPopup = () => {
 									icon={
 										<Image
 											src="/premium_source_funds.png"
-											alt="premium source funds icon"
+											alt="premium data funds icon"
 											width={24}
 											height={24}
 										/>
 									}
-									label="Premium Source funds:"
+									label="Premium Data funds:"
 									value="$500"
 								/>
 							</Stack>

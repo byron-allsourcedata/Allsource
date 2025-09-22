@@ -1,5 +1,5 @@
 import { Column } from "@/components/Column";
-import { FileDnd } from "@/components/premium-sources/hooks/useFileDragAndDrop";
+import { FileDnd } from "@/components/premium-data/hooks/useFileDragAndDrop";
 import { Row } from "@/components/Row";
 import { T } from "@/components/ui/T";
 import { FileUploadOutlined, UploadFileOutlined } from "@mui/icons-material";

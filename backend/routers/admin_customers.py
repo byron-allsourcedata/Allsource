@@ -20,7 +20,7 @@ from domains.premium_sources.admin_router import (
 router = APIRouter()
 
 router.include_router(whitelabel_admin_router, prefix="/whitelabel")
-router.include_router(premium_sources_admin_router, prefix="/premium-sources")
+router.include_router(premium_sources_admin_router, prefix="/premium-data")
 
 
 @router.get("/confirm_customer")
