@@ -486,7 +486,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			case "premium_sources":
 				return (
 					<Row>
-						<Link href={`/admin/premium-sources/${row.id}`}>
+						<Link href={`/admin/premium-data/${row.id}`}>
 							{row.premium_sources}
 						</Link>
 					</Row>
@@ -675,7 +675,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "join_date", label: "Join date", sortable: true },
 				{ key: "last_login_date", label: "Last Login", sortable: true },
 				{ key: "has_credit_card", label: "Has CC", sortable: true },
-				{ key: "premium_sources", label: "Premium Sources", sortable: false },
+				{ key: "premium_sources", label: "Premium Data", sortable: false },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
 				{ key: "contacts_count", label: "Contacts", sortable: true },
 				{ key: "sources_count", label: "Sources", sortable: false },

@@ -26,7 +26,7 @@
 // } from "@/app/(client)/settings/components/Billing/types";
 // import { billingStyles } from "@/app/(client)/settings/components/Billing/billingStyles";
 // import AddCardPopup from "@/app/(client)/settings/components/Billing/AddCard";
-// import { useGetAddedCards } from "../premium-sources/requests";
+// import { useGetAddedCards } from "../premium-data/requests";
 
 // interface AddFundsPopupProps {
 // 	cardDetails: CardDetails[];

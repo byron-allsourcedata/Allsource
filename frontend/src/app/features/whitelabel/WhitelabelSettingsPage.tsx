@@ -8,13 +8,13 @@ import { whitelabelTheme } from "./theme";
 import {
 	useFieldValue,
 	useOptionalFieldValue,
-} from "@/components/premium-sources/hooks/useFieldValue";
+} from "@/components/premium-data/hooks/useFieldValue";
 import { WhitelabelExample } from "./components/example/WhitelabelExample";
 import { Row } from "@/components/Row";
 import { useElementViewportPosition } from "./hooks/useViewportPosition";
 import { LogoUploader } from "./components/upload/LogoUploader";
 import { useBlobUrl } from "./hooks/useBlobUrl";
-import { usePageDragging } from "@/components/premium-sources/hooks/useFileDragAndDrop";
+import { usePageDragging } from "@/components/premium-data/hooks/useFileDragAndDrop";
 import { CustomButton } from "@/components/ui";
 
 import { showErrorToast, showToast } from "@/components/ToastNotification";

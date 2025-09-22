@@ -721,10 +721,10 @@ const Sidebar: React.FC<SidebarProps> = ({
 						</Box>
 					)}
 				</Box>
-				<PremiumSources
-					active={isActive("/premium-sources")}
+				<PremiumData
+					active={isActive("/premium-data")}
 					onClick={() => {
-						handleNavigation("/premium-sources");
+						handleNavigation("/premium-data");
 					}}
 				/>
 				{/* Integrations */}
@@ -790,12 +790,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 	);
 };
 
-type PremiumSourcesProps = {
+type PremiumDataProps = {
 	active?: boolean;
 	onClick: () => void;
 };
 
-const PremiumSources: FC<PremiumSourcesProps> = ({ active, onClick }) => {
+const PremiumData: FC<PremiumDataProps> = ({ active, onClick }) => {
 	const listItemSx = active ? sidebarStyles.activeItem : sidebarStyles.ListItem;
 
 	const iconColor = active ? "rgba(56, 152, 252, 1)" : undefined;
@@ -834,7 +834,7 @@ const PremiumSources: FC<PremiumSourcesProps> = ({ active, onClick }) => {
 					/>
 				</ListItemIcon>
 				<ListItemText
-					primary="Premium Sources"
+					primary="Premium Data"
 					sx={{ whiteSpace: "nowrap", color: textColor }}
 				/>
 			</Row>

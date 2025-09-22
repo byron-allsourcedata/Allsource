@@ -55,7 +55,7 @@ export const freeTrialPlan: Plan = {
 		},
 		{
 			good: true,
-			name: "Premium Source funds:",
+			name: "Premium Data funds:",
 			value: "$250",
 		},
 	],

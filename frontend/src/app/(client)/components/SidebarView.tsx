@@ -730,7 +730,7 @@ const PremiumSources = () => {
 					>
 						<Image src="/crown-flat.svg" alt="" width={18} height={18} />
 					</ListItemIcon>
-					<ListItemText primary="Premium Sources" sx={{ color: "#A8A8A8" }} />
+					<ListItemText primary="Premium Data" sx={{ color: "#A8A8A8" }} />
 				</Row>
 			</Tooltip>
 		</ListItem>
