@@ -734,11 +734,11 @@ const SourcesImport: React.FC = () => {
 
 			const updatedHeadingSubstitution: Record<string, boolean> = {};
 			headingKeys.forEach((key) => {
-				updatedHeadingSubstitution[key] = newHeadingsMap[key] == "None";
+				updatedHeadingSubstitution[key] = newHeadingsMap[key] === "None";
 			});
 
 			headingKeys.forEach((key, index) => {
-				updatedHeadingSubstitution[key] = newHeadings[index] == "None";
+				updatedHeadingSubstitution[key] = newHeadings[index] === "None";
 			});
 
 			headingKeys.forEach((key, i) => {
