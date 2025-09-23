@@ -82,7 +82,7 @@ export const AdminPremiumData: FC = () => {
 		deleteSource(sourceId)
 			.then(() => {
 				refetch();
-				showToast("Premium source deleted successfully");
+				showToast("Premium data deleted successfully");
 			})
 			.catch((e) => {
 				showErrorToast("Error while deleting Premium Data");

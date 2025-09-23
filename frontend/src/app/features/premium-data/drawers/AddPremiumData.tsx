@@ -70,7 +70,7 @@ export const AddPremiumSource: FC<Props> = ({ userId, onClose, onDone }) => {
 
 		upload({ data })
 			.then((response) => {
-				showToast("Premium source uploaded successfully");
+				showToast("Premium data uploaded successfully");
 				onDone();
 			})
 			.catch((err: AxiosError) => {
