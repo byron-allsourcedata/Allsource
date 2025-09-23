@@ -262,7 +262,7 @@ export const UserPremiumDataPage: FC = () => {
 				onPay={(sourceId, amountCents, paymentMethod) => {
 					buySource(sourceId, amountCents, paymentMethod)
 						.then(() => {
-							showToast("Premium source unlocked successfully");
+							showToast("Premium data unlocked successfully");
 							closePayment();
 							refetchSources().catch(() => {});
 						})
