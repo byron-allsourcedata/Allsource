@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import type { FC } from "react";
 import Image from "next/image";
-import { SmartHintCard } from "./SmartHintCard";
-import type { HintsProps } from "./PixelDomainSelector";
+import { SmartHintCard } from "../../../../(client)/sources/builder/components/SmartHintCard";
+import type { HintsProps } from "../../../../(client)/sources/builder/components/PixelDomainSelector";
 import type { MappingRow } from "../schemas";
 import {
 	builderHintCards,

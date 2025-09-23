@@ -49,12 +49,14 @@ import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinear
 import {
 	PixelDomainSelector,
 	type SkeletonState,
-} from "@/app/features/sources/builder/components/PixelDomainSelector";
+} from "@/app/(client)/sources/builder/components/PixelDomainSelector";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { LogoSmall } from "@/components/ui/Logo";
 import { T } from "@/components/ui/T";
 import scrollToBlock from "@/utils/autoscroll";
 import { CustomButton, CustomToggle } from "@/components/ui";
+import ChooseDomainContactType from "./components/ChooseDomainContactType";
+import { DomainsLeads } from "./components/types";
 
 interface Row {
 	id: number;
@@ -84,17 +86,6 @@ interface NewSource {
 	file_url?: string;
 	rows?: { type: string; value: string }[];
 	domain_id?: number;
-}
-
-export interface DomainsLeads {
-	id: number;
-	name: string;
-	pixel_installed: boolean;
-	converted_sales_count: number;
-	viewed_product_count: number;
-	visitor_count: number;
-	abandoned_cart_count: number;
-	total_count: number;
 }
 
 type SourceType =
@@ -800,34 +791,34 @@ const SourcesImport: React.FC = () => {
 	};
 
 	// Pixel
-	const toggleEventType = (id: number) => {
-		if (isAllSelected) {
-			setIsAllSelected(false);
-			setMatchedLeads(0);
-		}
+	// const toggleEventType = (id: number) => {
+	// 	if (isAllSelected) {
+	// 		setIsAllSelected(false);
+	// 		setMatchedLeads(0);
+	// 	}
 
-		const isActive = eventType.includes(id);
-		const newEventTypes = isActive
-			? eventType.filter((e) => e !== id)
-			: [...eventType, id];
+	// 	const isActive = eventType.includes(id);
+	// 	const newEventTypes = isActive
+	// 		? eventType.filter((e) => e !== id)
+	// 		: [...eventType, id];
 
-		if (newEventTypes.length === 0) {
-			setIsAllSelected(true);
-			setEventType([]);
-			setMatchedLeads(totalLeads);
-			return;
-		}
+	// 	if (newEventTypes.length === 0) {
+	// 		setIsAllSelected(true);
+	// 		setEventType([]);
+	// 		setMatchedLeads(totalLeads);
+	// 		return;
+	// 	}
 
-		setEventType(newEventTypes);
+	// 	setEventType(newEventTypes);
 
-		const sum = newEventTypes.reduce((acc, evId) => {
-			const field = eventTypes.find((e) => e.id === evId)!
-				.name as keyof DomainsLeads;
-			const cnt = domains.find((d) => d.name === selectedDomain)?.[field] || 0;
-			return acc + Number(cnt);
-		}, 0);
-		setMatchedLeads(sum);
-	};
+	// 	const sum = newEventTypes.reduce((acc, evId) => {
+	// 		const field = eventTypes.find((e) => e.id === evId)!
+	// 			.name as keyof DomainsLeads;
+	// 		const cnt = domains.find((d) => d.name === selectedDomain)?.[field] || 0;
+	// 		return acc + Number(cnt);
+	// 	}, 0);
+	// 	setMatchedLeads(sum);
+	// };
 
 	const handleChangeDomain = (event: SelectChangeEvent<string>) => {
 		const domainName = event.target.value;
@@ -878,13 +869,13 @@ const SourcesImport: React.FC = () => {
 		}
 	};
 
-	const [isAllSelected, setIsAllSelected] = useState(true);
-	const allSelected = isAllSelected;
-	const handleToggleAll = () => {
-		setIsAllSelected(true);
-		setEventType([]);
-		setMatchedLeads(totalLeads);
-	};
+	// const [isAllSelected, setIsAllSelected] = useState(true);
+	// const allSelected = isAllSelected;
+	// const handleToggleAll = () => {
+	// 	setIsAllSelected(true);
+	// 	setEventType([]);
+	// 	setMatchedLeads(totalLeads);
+	// };
 
 	const renderSkeleton = (arg: BuilderKey, height: string = "20vh") => {
 		if (!skeletons[arg]) return null;
@@ -1682,201 +1673,25 @@ const SourcesImport: React.FC = () => {
 							)}
 
 							{sourceMethod === 2 && selectedDomainId ? (
-								<>
-									<Box
-										ref={block5Ref}
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-										}}
-									>
-										{!skeletons["dataSource"] && (
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "column",
-													position: "relative",
-													gap: 2,
-													flexWrap: "wrap",
-													border: "1px solid rgba(228, 228, 228, 1)",
-													borderRadius: "6px",
-													padding: "20px",
-												}}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														flexDirection: "column",
-														gap: 1,
-													}}
-												>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-nunito)",
-															fontSize: "16px",
-															fontWeight: 500,
-														}}
-													>
-														Choose your data source
-													</Typography>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-roboto)",
-															fontSize: "12px",
-															color: "rgba(95, 99, 104, 1)",
-														}}
-													>
-														Please select your event type.
-													</Typography>
-												</Box>
-												<Box
-													sx={{
-														display: "flex",
-														gap: 2,
-														"@media (max-width: 420px)": {
-															display: "grid",
-															gridTemplateColumns: "1fr",
-														},
-													}}
-												>
-													<CustomButton
-														variant="outlined"
-														onClick={handleToggleAll}
-														sx={{
-															boxShadow: "none !important",
-															fontWeight: 500,
-															backgroundColor: allSelected
-																? "rgba(246, 248, 250, 1)"
-																: "rgba(255, 255, 255, 1)",
-															borderColor: allSelected
-																? "rgba(117, 168, 218, 1)"
-																: "rgba(208, 213, 221, 1)",
-															color: allSelected
-																? "rgba(32, 33, 36, 1)"
-																: "rgba(32, 33, 36, 1)",
-															":hover": {
-																borderColor: "rgba(208, 213, 221, 1)",
-																backgroundColor: "rgba(236, 238, 241, 1)",
-															},
-														}}
-													>
-														All
-													</CustomButton>
-													{eventTypes.map((ev) => {
-														const active =
-															!isAllSelected && eventType.includes(ev.id);
-														return (
-															<CustomButton
-																key={ev.id}
-																variant="outlined"
-																onClick={() => toggleEventType(ev.id)}
-																sx={{
-																	color: "rgba(32, 33, 36, 1)",
-																	border: "1px solid rgba(208, 213, 221, 1)",
-																	boxShadow: "none !important",
-																	fontWeight: 500,
-																	backgroundColor: active
-																		? "rgba(246, 248, 250, 1)"
-																		: "rgba(255, 255, 255, 1)",
-																	borderColor: active
-																		? "rgba(117, 168, 218, 1)"
-																		: "rgba(208, 213, 221, 1)",
-																	":hover": {
-																		borderColor: "rgba(208, 213, 221, 1)",
-																		backgroundColor: "rgba(236, 238, 241, 1)",
-																	},
-																}}
-															>
-																{ev.title.charAt(0).toUpperCase() +
-																	ev.title.slice(1).replace("_", " ")}
-															</CustomButton>
-														);
-													})}
-													{sourcesBuilderHints["dataSource"].show && (
-														<HintCard
-															card={builderHintCards["dataSource"]}
-															positionLeft={650}
-															positionTop={100}
-															isOpenBody={
-																sourcesBuilderHints["dataSource"].showBody
-															}
-															toggleClick={() =>
-																changeSourcesBuilderHint(
-																	"dataSource",
-																	"showBody",
-																	"toggle",
-																)
-															}
-															closeClick={() =>
-																changeSourcesBuilderHint(
-																	"dataSource",
-																	"showBody",
-																	"close",
-																)
-															}
-														/>
-													)}
-												</Box>
-												<Box
-													sx={{
-														display: "flex",
-														flexDirection: "column",
-														gap: 1,
-													}}
-												>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-roboto)",
-															fontSize: "14px",
-															color: "rgba(32, 33, 36, 1)",
-														}}
-													>
-														Total Leads
-													</Typography>
-													<Typography
-														className="second-sub-title"
-														sx={{
-															fontFamily: "Nunino Sans",
-															fontWeight: 600,
-															fontSize: "16px",
-															color: "rgba(32, 33, 36, 1)",
-														}}
-													>
-														{eventType.some((id) => [1, 2, 3, 4].includes(id))
-															? matchedLeads
-															: totalLeads}
-													</Typography>
-												</Box>
-
-												{!showTargetStep && (
-													<Box
-														sx={{ display: "flex", justifyContent: "right" }}
-													>
-														<CustomButton
-															variant="contained"
-															onClick={() => {
-																setShowTargetStep(true);
-																closeDotHintClick("dataSource");
-																openDotHintClick("targetType");
-																closeSkeleton("targetType");
-																setTimeout(() => {
-																	scrollToBlock(block4Ref);
-																}, 0);
-															}}
-															sx={{
-																width: "120px",
-																height: "40px",
-															}}
-														>
-															Continue
-														</CustomButton>
-													</Box>
-												)}
-											</Box>
-										)}
-										{renderSkeleton("dataSource")}
-									</Box>
-								</>
+								<ChooseDomainContactType
+									block5Ref={block5Ref}
+									block4Ref={block4Ref}
+									showTargetStep={showTargetStep}
+									setMatchedLeads={setMatchedLeads}
+									matchedLeads={matchedLeads}
+									totalLeads={totalLeads}
+									selectedDomain={selectedDomain}
+									setEventType={setEventType}
+									eventType={eventType}
+									domains={domains}
+									skeletons={skeletons}
+									setShowTargetStep={setShowTargetStep}
+									renderSkeleton={renderSkeleton}
+									eventTypes={eventTypes}
+									closeDotHintClick={closeDotHintClick}
+									openDotHintClick={openDotHintClick}
+									closeSkeleton={closeSkeleton}
+								/>
 							) : null}
 
 							{showTargetStep &&
