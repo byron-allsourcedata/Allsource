@@ -1,4 +1,4 @@
-import type { DomainsLeads } from "@/app/(client)/sources/builder/page";
+import { DomainsLeads } from "@/app/(client)/sources/builder/components/types";
 
 import { SmartHintCard } from "./SmartHintCard";
 import {
