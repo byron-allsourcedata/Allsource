@@ -10,16 +10,14 @@ type Props = {
 	onBeginClick: () => void;
 };
 
-export const UserPremiumDataSyncsZeroScreen: FC<Props> = ({
-	onBeginClick,
-}) => {
+export const UserPremiumDataSyncsZeroScreen: FC<Props> = ({ onBeginClick }) => {
 	return (
 		<Column alignItems={"center"}>
 			<Column gap="1rem">
 				<Header>Sync Your Premium Data</Header>
 				<Subheader>Create a Sync to a platform of your choice</Subheader>
 				<BannerContainer justifyContent={"start"} textAlign={"left"}>
-					<BannerHeader>Sync Premium Data Any Platform</BannerHeader>
+					<BannerHeader>Sync Premium Data to Any Platform</BannerHeader>
 					<Image
 						alt="Premium Data Sync"
 						src={"/premium_sources_syncs_zero_logo.svg"}
@@ -27,8 +25,8 @@ export const UserPremiumDataSyncsZeroScreen: FC<Props> = ({
 						height={300}
 					/>
 					<Explanation>
-						Send your Premium Data to connected platforms like Meta Ads,
-						Google Ads, and Mailchimp with one click.
+						Send your Premium Data to connected platforms like Meta Ads, Google
+						Ads, and Mailchimp with one click.
 					</Explanation>
 					<Row width={"100%"} justifyContent={"end"}>
 						<CustomButton onClick={onBeginClick}>Begin</CustomButton>

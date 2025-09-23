@@ -43,18 +43,22 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 		contained: {
 			backgroundColor: "rgba(56, 152, 252, 1)",
 			boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+			transition:
+				"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
 			color: "rgba(255, 255, 255, 1)",
+			borderRadius: "4px",
 			"&:hover": {
 				backgroundColor: "rgba(30, 136, 229, 1)",
-				boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+				boxShadow:
+					"0 1px 2px 0 rgba(0, 0, 0, 0.25), 0 2px 8.6px 0 rgba(0, 0, 0, 0.18)",
 			},
 			"&:active": {
 				backgroundColor: "rgba(116, 183, 253, 1)",
-				boxShadow: "none",
+				boxShadow:
+					"0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 2px 4px -1px rgba(0, 0, 0, 0.20)",
 			},
 			"&:disabled": {
 				color: "rgba(255, 255, 255, 1)",
-
 				backgroundColor: "rgba(56, 152, 252, 1)",
 				opacity: 0.6,
 				boxShadow: "none",
@@ -65,6 +69,9 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 			color: "rgba(56, 152, 252, 1)",
 			boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 			backgroundColor: "transparent",
+			transition:
+				"background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
+			borderRadius: "4px",
 			"&:hover": {
 				boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 				border: "1px solid rgba(30, 136, 229, 1)",

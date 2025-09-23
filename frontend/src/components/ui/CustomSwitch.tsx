@@ -1,13 +1,13 @@
 import React from "react";
 import { Switch, SxProps, Theme } from "@mui/material";
 
-interface CustomButtonProps {
+interface CustomSwitchProps {
 	stateSwitch: boolean;
 	changeState: (state: React.ChangeEvent<HTMLInputElement>) => void;
 	sx?: SxProps<Theme>;
 }
 
-const CustomButton: React.FC<CustomButtonProps> = ({
+const CustomSwitch: React.FC<CustomSwitchProps> = ({
 	changeState,
 	stateSwitch,
 	sx,
@@ -38,4 +38,4 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 	);
 };
 
-export default CustomButton;
+export default CustomSwitch;

@@ -569,7 +569,7 @@ class SettingsService:
                 limit_value=validation_funds_limit,
                 current_value=validation_funds,
             ),
-            premium_sources_funds=FundsDetail(
+            premium_data_funds=FundsDetail(
                 detail_type="funds",
                 limit_value=gifted_premium_source_funds,
                 current_value=premium_source_credits,
@@ -988,9 +988,7 @@ class SettingsService:
             ],
             gifted_funds=[
                 Advantage(good=True, name="Validation funds:", value="$250"),
-                Advantage(
-                    good=True, name="Premium Source funds:", value="$250"
-                ),
+                Advantage(good=True, name="Premium Data funds:", value="$250"),
             ],
         )
 
@@ -1011,9 +1009,7 @@ class SettingsService:
             ],
             gifted_funds=[
                 Advantage(good=True, name="Validation funds:", value="$500"),
-                Advantage(
-                    good=True, name="Premium Source funds:", value="$500"
-                ),
+                Advantage(good=True, name="Premium Data funds:", value="$500"),
             ],
         )
 
@@ -1055,7 +1051,7 @@ class SettingsService:
             gifted_funds=[
                 Advantage(good=True, name="Validation funds:", value="$2,500"),
                 Advantage(
-                    good=True, name="Premium Source funds:", value="$2,500"
+                    good=True, name="Premium Data funds:", value="$2,500"
                 ),
             ],
         )
@@ -1082,7 +1078,7 @@ class SettingsService:
             gifted_funds=[
                 Advantage(good=True, name="Validation funds:", value="$5,000"),
                 Advantage(
-                    good=True, name="Premium Source funds:", value="$5,000"
+                    good=True, name="Premium Data funds:", value="$5,000"
                 ),
             ],
         )
