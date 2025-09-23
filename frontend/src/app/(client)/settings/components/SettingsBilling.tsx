@@ -230,7 +230,7 @@ export const SettingsBilling: React.FC<{}> = ({}) => {
 											loading={isLoading}
 											handleCheckoutSuccess={handleCheckoutSuccess}
 											cardDetails={cardDetails}
-											title="Premium Source funds"
+											title="Premium Data funds"
 											limitValue={
 												premiumSourceCollected > planPremiumSourceCollected
 													? premiumSourceCollected

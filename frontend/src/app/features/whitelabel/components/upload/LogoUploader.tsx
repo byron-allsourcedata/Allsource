@@ -4,7 +4,7 @@ import { UploadLogo } from "./UploadLogo";
 import { useInitialHeight } from "../../hooks/useInitialHeight";
 import { FileCard } from "./BadUpload";
 import { formatBytes } from "@/utils/format";
-import { useFileDragAndDrop } from "@/components/premium-sources/hooks/useFileDragAndDrop";
+import { useFileDragAndDrop } from "@/components/premium-data/hooks/useFileDragAndDrop";
 import { Column } from "@/components/Column";
 import { Skeleton } from "@mui/material";
 

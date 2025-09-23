@@ -45,6 +45,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckIcon from "@mui/icons-material/Check";
 import LeadsIcon from "@mui/icons-material/People";
 import LegendToggleIcon from "@mui/icons-material/LegendToggle";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import InsightsIcon from "@mui/icons-material/Insights";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -639,16 +640,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						}}
 					>
 						<ListItemIcon>
-							<Image
-								src={
-									isActive(`/smart-audiences`)
-										? "./magic-stick_active.svg"
-										: "./magic-stick.svg"
-								}
-								alt="Smart Audiences"
-								width={22}
-								height={22}
-							/>
+							<AutoFixHighIcon sx={{ rotate: "275deg", mb: 1 }} />
 						</ListItemIcon>
 						<ListItemText primary="Smart Audiences" />
 					</ListItem>
@@ -665,7 +657,28 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						<ListItemIcon>
 							<CategoryIcon />
 						</ListItemIcon>
-						<ListItemText primary="Pixel Sync" />
+						<ListItemText primary="Data Sync" />
+					</ListItem>
+					<ListItem
+						button
+						onClick={() => handleNavigation("/premium-data")}
+						sx={{
+							...(isActive("/premium-data")
+								? navigationmenuStyles.activeItem
+								: {}),
+							...navigationmenuStyles.mobileDrawerList,
+						}}
+					>
+						<ListItemIcon>
+							<Image
+								src="/crown-flat.svg"
+								alt=""
+								color="red"
+								width={18}
+								height={18}
+							/>
+						</ListItemIcon>
+						<ListItemText primary="Premium Data" />
 					</ListItem>
 					{/* <ListItem button onClick={() => handleNavigation('/prospect')}
           sx={{
