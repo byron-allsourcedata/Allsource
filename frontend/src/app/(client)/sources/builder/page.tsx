@@ -5,37 +5,27 @@ import React, {
 	useEffect,
 	useRef,
 	Suspense,
-	FC,
-	RefObject,
-	ReactNode,
 } from "react";
 import {
 	Box,
 	Grid,
 	Typography,
 	TextField,
-	Button,
 	FormControl,
 	MenuItem,
 	Select,
 	LinearProgress,
 	SelectChangeEvent,
 	IconButton,
-	ToggleButton,
 	Skeleton,
-	CardContent,
-	Card,
-	CardMedia,
-	CardActionArea,
 } from "@mui/material";
+import { FileUploadOutlinedIcon, DeleteOutlinedIcon } from "@/icon";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { sourcesStyles } from "../sourcesStyles";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
-import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import { showErrorToast } from "@/components/ToastNotification";
 import { styled } from "@mui/material/styles";
 import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
@@ -59,11 +49,14 @@ import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinear
 import {
 	PixelDomainSelector,
 	type SkeletonState,
-} from "@/app/features/sources/builder/components/PixelDomainSelector";
+} from "@/app/(client)/sources/builder/components/PixelDomainSelector";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { LogoSmall } from "@/components/ui/Logo";
 import { T } from "@/components/ui/T";
 import scrollToBlock from "@/utils/autoscroll";
+import { CustomButton, CustomToggle } from "@/components/ui";
+import ChooseDomainContactType from "./components/ChooseDomainContactType";
+import { DomainsLeads } from "./components/types";
 
 interface Row {
 	id: number;
@@ -93,17 +86,6 @@ interface NewSource {
 	file_url?: string;
 	rows?: { type: string; value: string }[];
 	domain_id?: number;
-}
-
-export interface DomainsLeads {
-	id: number;
-	name: string;
-	pixel_installed: boolean;
-	converted_sales_count: number;
-	viewed_product_count: number;
-	visitor_count: number;
-	abandoned_cart_count: number;
-	total_count: number;
 }
 
 type SourceType =
@@ -809,34 +791,34 @@ const SourcesImport: React.FC = () => {
 	};
 
 	// Pixel
-	const toggleEventType = (id: number) => {
-		if (isAllSelected) {
-			setIsAllSelected(false);
-			setMatchedLeads(0);
-		}
+	// const toggleEventType = (id: number) => {
+	// 	if (isAllSelected) {
+	// 		setIsAllSelected(false);
+	// 		setMatchedLeads(0);
+	// 	}
 
-		const isActive = eventType.includes(id);
-		const newEventTypes = isActive
-			? eventType.filter((e) => e !== id)
-			: [...eventType, id];
+	// 	const isActive = eventType.includes(id);
+	// 	const newEventTypes = isActive
+	// 		? eventType.filter((e) => e !== id)
+	// 		: [...eventType, id];
 
-		if (newEventTypes.length === 0) {
-			setIsAllSelected(true);
-			setEventType([]);
-			setMatchedLeads(totalLeads);
-			return;
-		}
+	// 	if (newEventTypes.length === 0) {
+	// 		setIsAllSelected(true);
+	// 		setEventType([]);
+	// 		setMatchedLeads(totalLeads);
+	// 		return;
+	// 	}
 
-		setEventType(newEventTypes);
+	// 	setEventType(newEventTypes);
 
-		const sum = newEventTypes.reduce((acc, evId) => {
-			const field = eventTypes.find((e) => e.id === evId)!
-				.name as keyof DomainsLeads;
-			const cnt = domains.find((d) => d.name === selectedDomain)?.[field] || 0;
-			return acc + Number(cnt);
-		}, 0);
-		setMatchedLeads(sum);
-	};
+	// 	const sum = newEventTypes.reduce((acc, evId) => {
+	// 		const field = eventTypes.find((e) => e.id === evId)!
+	// 			.name as keyof DomainsLeads;
+	// 		const cnt = domains.find((d) => d.name === selectedDomain)?.[field] || 0;
+	// 		return acc + Number(cnt);
+	// 	}, 0);
+	// 	setMatchedLeads(sum);
+	// };
 
 	const handleChangeDomain = (event: SelectChangeEvent<string>) => {
 		const domainName = event.target.value;
@@ -887,13 +869,13 @@ const SourcesImport: React.FC = () => {
 		}
 	};
 
-	const [isAllSelected, setIsAllSelected] = useState(true);
-	const allSelected = isAllSelected;
-	const handleToggleAll = () => {
-		setIsAllSelected(true);
-		setEventType([]);
-		setMatchedLeads(totalLeads);
-	};
+	// const [isAllSelected, setIsAllSelected] = useState(true);
+	// const allSelected = isAllSelected;
+	// const handleToggleAll = () => {
+	// 	setIsAllSelected(true);
+	// 	setEventType([]);
+	// 	setMatchedLeads(totalLeads);
+	// };
 
 	const renderSkeleton = (arg: BuilderKey, height: string = "20vh") => {
 		if (!skeletons[arg]) return null;
@@ -1643,7 +1625,7 @@ const SourcesImport: React.FC = () => {
 
 									{!showTargetStep && (
 										<Box sx={{ display: "flex", justifyContent: "right" }}>
-											<Button
+											<CustomButton
 												disabled={
 													isChatGPTProcessing || hasUnsubstitutedHeadings()
 												}
@@ -1659,35 +1641,12 @@ const SourcesImport: React.FC = () => {
 													setIsContinuePressed(true);
 												}}
 												sx={{
-													backgroundColor: "rgba(56, 152, 252, 1)",
 													width: "120px",
 													height: "40px",
-													":hover": {
-														backgroundColor: "rgba(30, 136, 229, 1)",
-													},
-													":active": {
-														backgroundColor: "rgba(56, 152, 252, 1)",
-													},
-													":disabled": {
-														backgroundColor: "rgba(56, 152, 252, 1)",
-														opacity: 0.6,
-													},
 												}}
 											>
-												<Typography
-													sx={{
-														textAlign: "center",
-														color: "rgba(255, 255, 255, 1)",
-														fontFamily: "var(--font-nunito)",
-														textTransform: "none",
-														fontWeight: "600",
-														fontSize: "14px",
-														lineHeight: "19.6px",
-													}}
-												>
-													Continue
-												</Typography>
-											</Button>
+												Continue
+											</CustomButton>
 										</Box>
 									)}
 								</Box>
@@ -1696,6 +1655,7 @@ const SourcesImport: React.FC = () => {
 							{sourceMethod === 2 && (
 								<PixelDomainSelector
 									block4Ref={block4Ref}
+									totalLeads={totalLeads}
 									pixelInstalled={!pixelNotInstalled}
 									isDomainSearchProcessing={isDomainSearchProcessing}
 									selectedDomain={selectedDomain}
@@ -1713,231 +1673,25 @@ const SourcesImport: React.FC = () => {
 							)}
 
 							{sourceMethod === 2 && selectedDomainId ? (
-								<>
-									<Box
-										ref={block5Ref}
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-										}}
-									>
-										{!skeletons["dataSource"] && (
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "column",
-													position: "relative",
-													gap: 2,
-													flexWrap: "wrap",
-													border: "1px solid rgba(228, 228, 228, 1)",
-													borderRadius: "6px",
-													padding: "20px",
-												}}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														flexDirection: "column",
-														gap: 1,
-													}}
-												>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-nunito)",
-															fontSize: "16px",
-															fontWeight: 500,
-														}}
-													>
-														Choose your data source
-													</Typography>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-roboto)",
-															fontSize: "12px",
-															color: "rgba(95, 99, 104, 1)",
-														}}
-													>
-														Please select your event type.
-													</Typography>
-												</Box>
-												<Box
-													sx={{
-														display: "flex",
-														gap: 2,
-														"@media (max-width: 420px)": {
-															display: "grid",
-															gridTemplateColumns: "1fr",
-														},
-													}}
-												>
-													<Button
-														variant="outlined"
-														onClick={handleToggleAll}
-														sx={{
-															fontFamily: "var(--font-nunito)",
-															border: "1px solid rgba(208, 213, 221, 1)",
-															borderRadius: "4px",
-															textTransform: "none",
-															fontSize: "14px",
-															padding: "8px 12px",
-															backgroundColor: allSelected
-																? "rgba(246, 248, 250, 1)"
-																: "rgba(255, 255, 255, 1)",
-															borderColor: allSelected
-																? "rgba(117, 168, 218, 1)"
-																: "rgba(208, 213, 221, 1)",
-															color: allSelected
-																? "rgba(32, 33, 36, 1)"
-																: "rgba(32, 33, 36, 1)",
-															":hover": {
-																borderColor: "rgba(208, 213, 221, 1)",
-																backgroundColor: "rgba(236, 238, 241, 1)",
-															},
-														}}
-													>
-														All
-													</Button>
-													{eventTypes.map((ev) => {
-														const active =
-															!isAllSelected && eventType.includes(ev.id);
-														return (
-															<Button
-																key={ev.id}
-																variant="outlined"
-																onClick={() => toggleEventType(ev.id)}
-																sx={{
-																	fontFamily: "var(--font-nunito)",
-																	border: "1px solid rgba(208, 213, 221, 1)",
-																	borderRadius: "4px",
-																	color: "rgba(32, 33, 36, 1)",
-																	textTransform: "none",
-																	fontSize: "14px",
-																	padding: "8px 12px",
-																	backgroundColor: active
-																		? "rgba(246, 248, 250, 1)"
-																		: "rgba(255, 255, 255, 1)",
-																	borderColor: active
-																		? "rgba(117, 168, 218, 1)"
-																		: "rgba(208, 213, 221, 1)",
-																	":hover": {
-																		borderColor: "rgba(208, 213, 221, 1)",
-																		backgroundColor: "rgba(236, 238, 241, 1)",
-																	},
-																}}
-															>
-																{ev.title.charAt(0).toUpperCase() +
-																	ev.title.slice(1).replace("_", " ")}
-															</Button>
-														);
-													})}
-													{sourcesBuilderHints["dataSource"].show && (
-														<HintCard
-															card={builderHintCards["dataSource"]}
-															positionLeft={650}
-															positionTop={100}
-															isOpenBody={
-																sourcesBuilderHints["dataSource"].showBody
-															}
-															toggleClick={() =>
-																changeSourcesBuilderHint(
-																	"dataSource",
-																	"showBody",
-																	"toggle",
-																)
-															}
-															closeClick={() =>
-																changeSourcesBuilderHint(
-																	"dataSource",
-																	"showBody",
-																	"close",
-																)
-															}
-														/>
-													)}
-												</Box>
-												<Box
-													sx={{
-														display: "flex",
-														flexDirection: "column",
-														gap: 1,
-													}}
-												>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-roboto)",
-															fontSize: "14px",
-															color: "rgba(32, 33, 36, 1)",
-														}}
-													>
-														Total Leads
-													</Typography>
-													<Typography
-														className="second-sub-title"
-														sx={{
-															fontFamily: "Nunino Sans",
-															fontWeight: 600,
-															fontSize: "16px",
-															color: "rgba(32, 33, 36, 1)",
-														}}
-													>
-														{eventType.some((id) => [1, 2, 3, 4].includes(id))
-															? matchedLeads
-															: totalLeads}
-													</Typography>
-												</Box>
-
-												{!showTargetStep && (
-													<Box
-														sx={{ display: "flex", justifyContent: "right" }}
-													>
-														<Button
-															variant="contained"
-															onClick={() => {
-																setShowTargetStep(true);
-																closeDotHintClick("dataSource");
-																openDotHintClick("targetType");
-																closeSkeleton("targetType");
-																setTimeout(() => {
-																	scrollToBlock(block4Ref);
-																}, 0);
-															}}
-															sx={{
-																backgroundColor: "rgba(56, 152, 252, 1)",
-																width: "120px",
-																height: "40px",
-																":hover": {
-																	backgroundColor: "rgba(30, 136, 229, 1)",
-																},
-																":active": {
-																	backgroundColor: "rgba(56, 152, 252, 1)",
-																},
-																":disabled": {
-																	backgroundColor: "rgba(56, 152, 252, 1)",
-																	opacity: 0.6,
-																},
-															}}
-														>
-															<Typography
-																sx={{
-																	textAlign: "center",
-																	color: "rgba(255, 255, 255, 1)",
-																	fontFamily: "var(--font-nunito)",
-																	textTransform: "none",
-																	fontWeight: "600",
-																	fontSize: "14px",
-																	lineHeight: "19.6px",
-																}}
-															>
-																Continue
-															</Typography>
-														</Button>
-													</Box>
-												)}
-											</Box>
-										)}
-										{renderSkeleton("dataSource")}
-									</Box>
-								</>
+								<ChooseDomainContactType
+									block5Ref={block5Ref}
+									block4Ref={block4Ref}
+									showTargetStep={showTargetStep}
+									setMatchedLeads={setMatchedLeads}
+									matchedLeads={matchedLeads}
+									totalLeads={totalLeads}
+									selectedDomain={selectedDomain}
+									setEventType={setEventType}
+									eventType={eventType}
+									domains={domains}
+									skeletons={skeletons}
+									setShowTargetStep={setShowTargetStep}
+									renderSkeleton={renderSkeleton}
+									eventTypes={eventTypes}
+									closeDotHintClick={closeDotHintClick}
+									openDotHintClick={openDotHintClick}
+									closeSkeleton={closeSkeleton}
+								/>
 							) : null}
 
 							{showTargetStep &&
@@ -2010,38 +1764,13 @@ const SourcesImport: React.FC = () => {
 													}}
 												>
 													{["B2B", "B2C"].map((option) => (
-														<ToggleButton
+														<CustomToggle
 															key={option}
 															value={option}
-															selected={targetAudience === option}
-															className="form-input-label"
+															isActive={targetAudience === option}
 															onClick={() => handleTargetAudienceChange(option)}
-															sx={{
-																"&.MuiToggleButton-root.Mui-selected": {
-																	backgroundColor: "rgba(246, 248, 250, 1)",
-																	":hover": {
-																		borderColor: "rgba(208, 213, 221, 1)",
-																		backgroundColor: "rgba(236, 238, 241, 1)",
-																	},
-																},
-																"&.MuiToggleButton-root": {
-																	":hover": {
-																		borderColor: "rgba(208, 213, 221, 1)",
-																		backgroundColor: "rgba(236, 238, 241, 1)",
-																	},
-																},
-																textTransform: "none",
-																border:
-																	targetAudience === option
-																		? "1px solid rgba(117, 168, 218, 1)"
-																		: "1px solid #ccc",
-																color: "rgba(32, 33, 36, 1)",
-																borderRadius: "4px",
-																padding: "8px 12px",
-															}}
-														>
-															{option}
-														</ToggleButton>
+															name={option}
+														/>
 													))}
 													{sourcesBuilderHints["targetType"].show && (
 														<HintCard
@@ -2191,7 +1920,7 @@ const SourcesImport: React.FC = () => {
 										}}
 									>
 										<Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-											<Button
+											<CustomButton
 												variant="outlined"
 												onClick={() => {
 													setSourceMethod(0);
@@ -2201,36 +1930,13 @@ const SourcesImport: React.FC = () => {
 													router.push("/sources");
 												}}
 												sx={{
-													borderColor: "rgba(56, 152, 252, 1)",
 													width: "92px",
 													height: "40px",
-													":hover": {
-														borderColor: "rgba(30, 136, 229, 1)",
-													},
-													":active": {
-														borderColor: "rgba(56, 152, 252, 1)",
-													},
-													":disabled": {
-														borderColor: "rgba(56, 152, 252, 1)",
-														opacity: 0.4,
-													},
 												}}
 											>
-												<Typography
-													sx={{
-														textAlign: "center",
-														color: "rgba(56, 152, 252, 1)",
-														textTransform: "none",
-														fontFamily: "var(--font-nunito)",
-														fontWeight: "600",
-														fontSize: "14px",
-														lineHeight: "19.6px",
-													}}
-												>
-													Cancel
-												</Typography>
-											</Button>
-											<Button
+												Cancel
+											</CustomButton>
+											<CustomButton
 												variant="contained"
 												onClick={handleSumbit}
 												disabled={
@@ -2239,35 +1945,12 @@ const SourcesImport: React.FC = () => {
 													pixelNotInstalled
 												}
 												sx={{
-													backgroundColor: "rgba(56, 152, 252, 1)",
 													width: "120px",
 													height: "40px",
-													":hover": {
-														backgroundColor: "rgba(30, 136, 229, 1)",
-													},
-													":active": {
-														backgroundColor: "rgba(116, 183, 253, 1)",
-													},
-													":disabled": {
-														backgroundColor: "rgba(56, 152, 252, 1)",
-														opacity: 0.6,
-													},
 												}}
 											>
-												<Typography
-													sx={{
-														textAlign: "center",
-														color: "rgba(255, 255, 255, 1)",
-														fontFamily: "var(--font-nunito)",
-														textTransform: "none",
-														fontWeight: "600",
-														fontSize: "14px",
-														lineHeight: "19.6px",
-													}}
-												>
-													Create
-												</Typography>
-											</Button>
+												Create
+											</CustomButton>
 										</Box>
 									</Box>
 								</>

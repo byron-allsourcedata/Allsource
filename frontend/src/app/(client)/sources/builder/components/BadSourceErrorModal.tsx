@@ -18,7 +18,7 @@ import {
 	WarningAmberRoundedIcon,
 	LaunchRoundedIcon,
 } from "@/icon";
-import FixCard from "./components/FixCard";
+import FixCard from "./FixCard";
 import { useRouter } from "next/navigation";
 
 interface ModalProps {
