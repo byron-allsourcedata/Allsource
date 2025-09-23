@@ -5,37 +5,27 @@ import React, {
 	useEffect,
 	useRef,
 	Suspense,
-	FC,
-	RefObject,
-	ReactNode,
 } from "react";
 import {
 	Box,
 	Grid,
 	Typography,
 	TextField,
-	Button,
 	FormControl,
 	MenuItem,
 	Select,
 	LinearProgress,
 	SelectChangeEvent,
 	IconButton,
-	ToggleButton,
 	Skeleton,
-	CardContent,
-	Card,
-	CardMedia,
-	CardActionArea,
 } from "@mui/material";
+import { FileUploadOutlinedIcon, DeleteOutlinedIcon } from "@/icon";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { sourcesStyles } from "../sourcesStyles";
-import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
-import FileUploadOutlinedIcon from "@mui/icons-material/FileUploadOutlined";
+import { showErrorToast } from "@/components/ToastNotification";
 import { styled } from "@mui/material/styles";
 import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
@@ -64,6 +54,7 @@ import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelCont
 import { LogoSmall } from "@/components/ui/Logo";
 import { T } from "@/components/ui/T";
 import scrollToBlock from "@/utils/autoscroll";
+import { CustomButton, CustomToggle } from "@/components/ui";
 
 interface Row {
 	id: number;
@@ -1643,7 +1634,7 @@ const SourcesImport: React.FC = () => {
 
 									{!showTargetStep && (
 										<Box sx={{ display: "flex", justifyContent: "right" }}>
-											<Button
+											<CustomButton
 												disabled={
 													isChatGPTProcessing || hasUnsubstitutedHeadings()
 												}
@@ -1659,35 +1650,12 @@ const SourcesImport: React.FC = () => {
 													setIsContinuePressed(true);
 												}}
 												sx={{
-													backgroundColor: "rgba(56, 152, 252, 1)",
 													width: "120px",
 													height: "40px",
-													":hover": {
-														backgroundColor: "rgba(30, 136, 229, 1)",
-													},
-													":active": {
-														backgroundColor: "rgba(56, 152, 252, 1)",
-													},
-													":disabled": {
-														backgroundColor: "rgba(56, 152, 252, 1)",
-														opacity: 0.6,
-													},
 												}}
 											>
-												<Typography
-													sx={{
-														textAlign: "center",
-														color: "rgba(255, 255, 255, 1)",
-														fontFamily: "var(--font-nunito)",
-														textTransform: "none",
-														fontWeight: "600",
-														fontSize: "14px",
-														lineHeight: "19.6px",
-													}}
-												>
-													Continue
-												</Typography>
-											</Button>
+												Continue
+											</CustomButton>
 										</Box>
 									)}
 								</Box>
@@ -1696,6 +1664,7 @@ const SourcesImport: React.FC = () => {
 							{sourceMethod === 2 && (
 								<PixelDomainSelector
 									block4Ref={block4Ref}
+									totalLeads={totalLeads}
 									pixelInstalled={!pixelNotInstalled}
 									isDomainSearchProcessing={isDomainSearchProcessing}
 									selectedDomain={selectedDomain}
@@ -1770,16 +1739,12 @@ const SourcesImport: React.FC = () => {
 														},
 													}}
 												>
-													<Button
+													<CustomButton
 														variant="outlined"
 														onClick={handleToggleAll}
 														sx={{
-															fontFamily: "var(--font-nunito)",
-															border: "1px solid rgba(208, 213, 221, 1)",
-															borderRadius: "4px",
-															textTransform: "none",
-															fontSize: "14px",
-															padding: "8px 12px",
+															boxShadow: "none !important",
+															fontWeight: 500,
 															backgroundColor: allSelected
 																? "rgba(246, 248, 250, 1)"
 																: "rgba(255, 255, 255, 1)",
@@ -1796,23 +1761,20 @@ const SourcesImport: React.FC = () => {
 														}}
 													>
 														All
-													</Button>
+													</CustomButton>
 													{eventTypes.map((ev) => {
 														const active =
 															!isAllSelected && eventType.includes(ev.id);
 														return (
-															<Button
+															<CustomButton
 																key={ev.id}
 																variant="outlined"
 																onClick={() => toggleEventType(ev.id)}
 																sx={{
-																	fontFamily: "var(--font-nunito)",
-																	border: "1px solid rgba(208, 213, 221, 1)",
-																	borderRadius: "4px",
 																	color: "rgba(32, 33, 36, 1)",
-																	textTransform: "none",
-																	fontSize: "14px",
-																	padding: "8px 12px",
+																	border: "1px solid rgba(208, 213, 221, 1)",
+																	boxShadow: "none !important",
+																	fontWeight: 500,
 																	backgroundColor: active
 																		? "rgba(246, 248, 250, 1)"
 																		: "rgba(255, 255, 255, 1)",
@@ -1827,7 +1789,7 @@ const SourcesImport: React.FC = () => {
 															>
 																{ev.title.charAt(0).toUpperCase() +
 																	ev.title.slice(1).replace("_", " ")}
-															</Button>
+															</CustomButton>
 														);
 													})}
 													{sourcesBuilderHints["dataSource"].show && (
@@ -1890,7 +1852,7 @@ const SourcesImport: React.FC = () => {
 													<Box
 														sx={{ display: "flex", justifyContent: "right" }}
 													>
-														<Button
+														<CustomButton
 															variant="contained"
 															onClick={() => {
 																setShowTargetStep(true);
@@ -1902,35 +1864,12 @@ const SourcesImport: React.FC = () => {
 																}, 0);
 															}}
 															sx={{
-																backgroundColor: "rgba(56, 152, 252, 1)",
 																width: "120px",
 																height: "40px",
-																":hover": {
-																	backgroundColor: "rgba(30, 136, 229, 1)",
-																},
-																":active": {
-																	backgroundColor: "rgba(56, 152, 252, 1)",
-																},
-																":disabled": {
-																	backgroundColor: "rgba(56, 152, 252, 1)",
-																	opacity: 0.6,
-																},
 															}}
 														>
-															<Typography
-																sx={{
-																	textAlign: "center",
-																	color: "rgba(255, 255, 255, 1)",
-																	fontFamily: "var(--font-nunito)",
-																	textTransform: "none",
-																	fontWeight: "600",
-																	fontSize: "14px",
-																	lineHeight: "19.6px",
-																}}
-															>
-																Continue
-															</Typography>
-														</Button>
+															Continue
+														</CustomButton>
 													</Box>
 												)}
 											</Box>
@@ -2010,38 +1949,13 @@ const SourcesImport: React.FC = () => {
 													}}
 												>
 													{["B2B", "B2C"].map((option) => (
-														<ToggleButton
+														<CustomToggle
 															key={option}
 															value={option}
-															selected={targetAudience === option}
-															className="form-input-label"
+															isActive={targetAudience === option}
 															onClick={() => handleTargetAudienceChange(option)}
-															sx={{
-																"&.MuiToggleButton-root.Mui-selected": {
-																	backgroundColor: "rgba(246, 248, 250, 1)",
-																	":hover": {
-																		borderColor: "rgba(208, 213, 221, 1)",
-																		backgroundColor: "rgba(236, 238, 241, 1)",
-																	},
-																},
-																"&.MuiToggleButton-root": {
-																	":hover": {
-																		borderColor: "rgba(208, 213, 221, 1)",
-																		backgroundColor: "rgba(236, 238, 241, 1)",
-																	},
-																},
-																textTransform: "none",
-																border:
-																	targetAudience === option
-																		? "1px solid rgba(117, 168, 218, 1)"
-																		: "1px solid #ccc",
-																color: "rgba(32, 33, 36, 1)",
-																borderRadius: "4px",
-																padding: "8px 12px",
-															}}
-														>
-															{option}
-														</ToggleButton>
+															name={option}
+														/>
 													))}
 													{sourcesBuilderHints["targetType"].show && (
 														<HintCard
@@ -2191,7 +2105,7 @@ const SourcesImport: React.FC = () => {
 										}}
 									>
 										<Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-											<Button
+											<CustomButton
 												variant="outlined"
 												onClick={() => {
 													setSourceMethod(0);
@@ -2201,36 +2115,13 @@ const SourcesImport: React.FC = () => {
 													router.push("/sources");
 												}}
 												sx={{
-													borderColor: "rgba(56, 152, 252, 1)",
 													width: "92px",
 													height: "40px",
-													":hover": {
-														borderColor: "rgba(30, 136, 229, 1)",
-													},
-													":active": {
-														borderColor: "rgba(56, 152, 252, 1)",
-													},
-													":disabled": {
-														borderColor: "rgba(56, 152, 252, 1)",
-														opacity: 0.4,
-													},
 												}}
 											>
-												<Typography
-													sx={{
-														textAlign: "center",
-														color: "rgba(56, 152, 252, 1)",
-														textTransform: "none",
-														fontFamily: "var(--font-nunito)",
-														fontWeight: "600",
-														fontSize: "14px",
-														lineHeight: "19.6px",
-													}}
-												>
-													Cancel
-												</Typography>
-											</Button>
-											<Button
+												Cancel
+											</CustomButton>
+											<CustomButton
 												variant="contained"
 												onClick={handleSumbit}
 												disabled={
@@ -2239,35 +2130,12 @@ const SourcesImport: React.FC = () => {
 													pixelNotInstalled
 												}
 												sx={{
-													backgroundColor: "rgba(56, 152, 252, 1)",
 													width: "120px",
 													height: "40px",
-													":hover": {
-														backgroundColor: "rgba(30, 136, 229, 1)",
-													},
-													":active": {
-														backgroundColor: "rgba(116, 183, 253, 1)",
-													},
-													":disabled": {
-														backgroundColor: "rgba(56, 152, 252, 1)",
-														opacity: 0.6,
-													},
 												}}
 											>
-												<Typography
-													sx={{
-														textAlign: "center",
-														color: "rgba(255, 255, 255, 1)",
-														fontFamily: "var(--font-nunito)",
-														textTransform: "none",
-														fontWeight: "600",
-														fontSize: "14px",
-														lineHeight: "19.6px",
-													}}
-												>
-													Create
-												</Typography>
-											</Button>
+												Create
+											</CustomButton>
 										</Box>
 									</Box>
 								</>

@@ -35,6 +35,4 @@ export { default as ExpandLessIcon } from "@mui/icons-material/ExpandLess";
 export { default as WarningRoundedIcon } from "@mui/icons-material/WarningRounded";
 export { default as WarningAmberRoundedIcon } from "@mui/icons-material/WarningAmberRounded";
 export { default as LaunchRoundedIcon } from "@mui/icons-material/LaunchRounded";
-import { default as WarningAmberRoundedIcon } from "@mui/icons-material/WarningAmberRounded";
-
-// export const DownloadIcon
+export { default as FileUploadOutlinedIcon } from "@mui/icons-material/FileUploadOutlined";
