@@ -49,6 +49,87 @@ class EnrichmentUsersPersistence:
         logger.info(f"enrichment user ids rows: {len(found)}")
         return found
 
+    def get_user_ids_by_asids(self, asids: list[str]) -> List[EmailAsid]:
+        """
+        Найти записи enrichment_users по списку asid.
+        Возвращает список EmailAsid(email: Optional[str], asid: str).
+        Если email найден (business / personal / other) — возвращаем его (normalized), иначе email = None.
+        """
+        asids_clean = [str(a).strip() for a in asids if a]
+        if not asids_clean:
+            logger.debug("get_user_ids_by_asids: empty input")
+            return []
+
+        matched: dict[str, EmailAsid] = {}
+        start_time = time.perf_counter()
+
+        # Берём asid + разные поля email (в одной выборке) — чтобы минимизировать round-trips
+        sql = """
+            SELECT asid, business_email, personal_email, other_emails
+            FROM enrichment_users
+            WHERE asid IN %(ids)s
+        """
+        rows = self._run_query(sql, {"ids": asids_clean})
+        elapsed = time.perf_counter() - start_time
+        logger.info(
+            "ASID query returned %d rows in %.4f seconds", len(rows), elapsed
+        )
+
+        for row in rows:
+            # row может быть tuple (asid, business_email, personal_email, other_emails)
+            # либо dict, в зависимости от клиента
+            if isinstance(row, dict):
+                asid = row.get("asid")
+                biz = row.get("business_email")
+                pers = row.get("personal_email")
+                other = row.get("other_emails")
+            else:
+                asid, biz, pers, other = row
+
+            if asid is None:
+                continue
+            asid_s = str(asid)
+
+            # Найдём предпочитаемый email: business > personal > first(other_emails)
+            preferred = None
+            for candidate in (biz, pers):
+                if (
+                    candidate
+                    and isinstance(candidate, str)
+                    and "@" in candidate
+                ):
+                    preferred = candidate.strip().lower()
+                    break
+
+            # other_emails может быть массив/список
+            if not preferred and other:
+                # если other_emails возвращён как список/tuple
+                if isinstance(other, (list, tuple)) and len(other) > 0:
+                    c = other[0]
+                    if c and isinstance(c, str) and "@" in c:
+                        preferred = c.strip().lower()
+                else:
+                    # если other_emails хранится как строка или CSV, попробуем безопасно взять её
+                    if isinstance(other, str) and "@" in other:
+                        preferred = other.strip().lower()
+
+            try:
+                matched[asid_s] = EmailAsid(email=preferred, asid=asid_s)
+            except Exception as e:
+                logger.error(
+                    "Error creating EmailAsid for asid %s: %s", asid_s, e
+                )
+                # всё равно положим без email
+                matched[asid_s] = EmailAsid(email=None, asid=asid_s)
+
+        result = list(matched.values())
+        logger.info(
+            "Finished ASID matching: %d matches (from %d input).",
+            len(result),
+            len(asids_clean),
+        )
+        return result
+
     def get_user_ids_by_emails(
         self,
         emails: list[str],

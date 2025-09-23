@@ -8,7 +8,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Union, Optional, Tuple
+from typing import List, Literal, Union, Optional, Tuple
 from uuid import UUID
 
 import aiormq
@@ -110,6 +110,356 @@ async def process_email_leads(
     source_id: str,
     include_amount: bool = False,
     date_range: Optional[int] = None,
+    match_mode: Literal["email", "asid"] = "email",
+) -> int:
+    """
+    match_mode: "email"  - матчим входные строки по email (исходная логика)
+                "asid"   - матчим входные строки по asid (важная бизнес-логика)
+    Возвращает число добавленных новых matched persons (rowcount вставки).
+    """
+
+    logging.info(
+        f"Start processing {len(persons)} persons for source_id={source_id}, match_mode={match_mode}"
+    )
+
+    if match_mode not in ("email", "asid"):
+        raise ValueError("match_mode must be 'email' or 'asid'")
+
+    # Структура для агрегирования. Ключ — либо email, либо "asid:{asid}"
+    matched_persons = defaultdict(
+        lambda: {
+            "orders_amount": Decimal("0.0") if include_amount else None,
+            "orders_count": 0,
+            "start_date": None,
+            "enrichment_user_asid": None,
+            "email": None,  # реальный email, если есть
+        }
+    )
+
+    # --- Получение соответствий из ClickHouse в зависимости от режима ---
+    email_to_asid = {}  # email -> asid (используется в email-mode)
+    asid_to_email = {}  # asid -> email (используется в asid-mode; email может быть None)
+
+    if match_mode == "email":
+        emails = {
+            p.email.strip().lower()
+            for p in persons
+            if getattr(p, "email", None)
+        }
+        if not emails:
+            logging.info("No valid emails found in input data (email-mode).")
+            return 0
+
+        matches = source_agent_service.get_user_ids_by_emails(list(emails))
+        if not matches:
+            logging.info("No matching emails found in ClickHouse.")
+            return 0
+
+        seen_asids = set()
+        for m in matches:
+            # m.email может быть уже нормализован в сервисе; на всякий случай нормализуем
+            if (
+                not m
+                or not getattr(m, "email", None)
+                or not getattr(m, "asid", None)
+            ):
+                continue
+            em = m.email.strip().lower()
+            a = str(m.asid)
+            # если у нескольких email один asid — допустим, берем первый встретившийся mapping
+            if a not in seen_asids and em not in email_to_asid:
+                email_to_asid[em] = a
+                seen_asids.add(a)
+
+        # Фильтрация входных persons — оставляем только те, чей email найден в email_to_asid
+        filtered_persons = [
+            p
+            for p in persons
+            if getattr(p, "email", None)
+            and p.email.strip().lower() in email_to_asid
+        ]
+        if not filtered_persons:
+            logging.info(
+                "No valid persons left after filtering by enrichment_emails."
+            )
+            return 0
+
+        # Агрегация: ключ — email
+        for person in filtered_persons:
+            email_norm = person.email.strip().lower()
+            transaction_date = (person.date or "").strip()
+            transaction_date_obj = None
+            if transaction_date:
+                try:
+                    transaction_date_obj = dateparser.parse(transaction_date)
+                    if transaction_date_obj is not None:
+                        transaction_date_obj = transaction_date_obj.replace(
+                            tzinfo=None
+                        )
+                except Exception as e:
+                    logging.warning(
+                        f"Error parsing date '{transaction_date}': {e}"
+                    )
+                    transaction_date_obj = None
+
+            if (
+                date_range
+                and transaction_date_obj
+                and transaction_date_obj
+                < (datetime.now() - timedelta(days=date_range))
+            ):
+                continue
+
+            sale_amount = (
+                person.get_sale_amount() if include_amount else Decimal("0.0")
+            )
+
+            # основной asid для этого email
+            enrichment_asid = email_to_asid[email_norm]
+
+            if email_norm in matched_persons:
+                matched_persons[email_norm]["orders_count"] += 1
+                if include_amount:
+                    matched_persons[email_norm]["orders_amount"] += sale_amount
+                if transaction_date_obj:
+                    existing_date = matched_persons[email_norm]["start_date"]
+                    if (
+                        existing_date is None
+                        or transaction_date_obj > existing_date
+                    ):
+                        matched_persons[email_norm]["start_date"] = (
+                            transaction_date_obj
+                        )
+            else:
+                matched_persons[email_norm] = {
+                    "orders_count": 1,
+                    "start_date": transaction_date_obj,
+                    "enrichment_user_asid": enrichment_asid,
+                    "email": email_norm,
+                    "orders_amount": sale_amount if include_amount else None,
+                }
+
+    else:  # match_mode == "asid"
+        # Собираем asid из входных данных
+        asids = {
+            str(getattr(p, "asid")).strip()
+            for p in persons
+            if getattr(p, "asid", None)
+        }
+        if not asids:
+            logging.info("No valid asids found in input data (asid-mode).")
+            return 0
+
+        # Метод get_user_ids_by_asids должен вернуть EmailAsid(email|None, asid)
+        matches = source_agent_service.get_user_ids_by_asids(list(asids))
+        if not matches:
+            logging.info("No matching asids found in ClickHouse.")
+            return 0
+
+        for m in matches:
+            if not m or not getattr(m, "asid", None):
+                continue
+            a = str(m.asid).strip()
+            email_candidate = (
+                m.email.strip().lower() if getattr(m, "email", None) else None
+            )
+            # сохраняем ассоциацию asid->email (может быть None)
+            asid_to_email[a] = email_candidate
+
+        # Фильтруем persons — только те, у которых asid есть в asid_to_email (т.е. найден в CH)
+        filtered_persons = [
+            p
+            for p in persons
+            if getattr(p, "asid", None) and str(p.asid).strip() in asid_to_email
+        ]
+        if not filtered_persons:
+            logging.info(
+                "No valid persons left after filtering by enrichment_asids."
+            )
+            return 0
+
+        # Агрегация: ключ — "asid:{asid}"
+        for person in filtered_persons:
+            p_asid = str(getattr(person, "asid")).strip()
+            match_key = f"asid:{p_asid}"
+            transaction_date = (person.date or "").strip()
+            transaction_date_obj = None
+            if transaction_date:
+                try:
+                    transaction_date_obj = dateparser.parse(transaction_date)
+                    if transaction_date_obj is not None:
+                        transaction_date_obj = transaction_date_obj.replace(
+                            tzinfo=None
+                        )
+                except Exception as e:
+                    logging.warning(
+                        f"Error parsing date '{transaction_date}': {e}"
+                    )
+                    transaction_date_obj = None
+
+            if (
+                date_range
+                and transaction_date_obj
+                and transaction_date_obj
+                < (datetime.now() - timedelta(days=date_range))
+            ):
+                continue
+
+            sale_amount = (
+                person.get_sale_amount() if include_amount else Decimal("0.0")
+            )
+
+            enrichment_asid = p_asid
+            email_for_asid = asid_to_email.get(p_asid)  # может быть None
+
+            if match_key in matched_persons:
+                matched_persons[match_key]["orders_count"] += 1
+                if include_amount:
+                    matched_persons[match_key]["orders_amount"] += sale_amount
+                if transaction_date_obj:
+                    existing_date = matched_persons[match_key]["start_date"]
+                    if (
+                        existing_date is None
+                        or transaction_date_obj > existing_date
+                    ):
+                        matched_persons[match_key]["start_date"] = (
+                            transaction_date_obj
+                        )
+            else:
+                matched_persons[match_key] = {
+                    "orders_count": 1,
+                    "start_date": transaction_date_obj,
+                    "enrichment_user_asid": enrichment_asid,
+                    "email": email_for_asid,
+                    "orders_amount": sale_amount if include_amount else None,
+                }
+
+    # --- Сохраняем в БД: сначала commit, затем начальная транзакция с блокировкой for update ---
+    db_session.commit()
+    with db_session.begin():
+        # формируем фильтры для поиска существующих записей
+        keys = list(matched_persons.keys())
+        emails_to_query = [k for k in keys if not k.startswith("asid:")]
+        asids_to_query = [
+            k.split("asid:")[1] for k in keys if k.startswith("asid:")
+        ]
+
+        query = db_session.query(AudienceSourcesMatchedPerson).filter(
+            AudienceSourcesMatchedPerson.source_id == source_id
+        )
+        filters = []
+        if emails_to_query:
+            filters.append(
+                AudienceSourcesMatchedPerson.email.in_(emails_to_query)
+            )
+        if asids_to_query:
+            filters.append(
+                AudienceSourcesMatchedPerson.enrichment_user_asid.in_(
+                    asids_to_query
+                )
+            )
+
+        if filters:
+            query = query.filter(or_(*filters))
+
+        existing_persons = {
+            # ключируем так же, как в matched_persons: email или "asid:{asid}"
+            (p.email if p.email else f"asid:{p.enrichment_user_asid}"): p
+            for p in query.with_for_update().all()
+        }
+
+        logging.info(
+            f"Found {len(existing_persons)} existing persons to update (match_mode={match_mode})"
+        )
+
+        reference_date = datetime.now()
+        matched_persons_to_update = []
+        matched_persons_to_add = []
+        count_matched_persons = 0
+
+        for key, data in matched_persons.items():
+            last_transaction = data["start_date"]
+            recency = (
+                (reference_date - last_transaction).days
+                if last_transaction
+                else None
+            )
+
+            if key in existing_persons:
+                p = existing_persons[key]
+                p.count += data["orders_count"]
+                if include_amount:
+                    p.amount += data["orders_amount"]
+                if last_transaction and (
+                    p.start_date is None or last_transaction > p.start_date
+                ):
+                    p.start_date = last_transaction
+                    p.recency = recency
+
+                matched_persons_to_update.append(
+                    {
+                        "id": p.id,
+                        "count": p.count,
+                        "amount": p.amount if include_amount else None,
+                        "start_date": p.start_date,
+                        "recency": p.recency,
+                    }
+                )
+            else:
+                # Для новых записей: email может быть None (если asid-only и нет email)
+                new_p = AudienceSourcesMatchedPerson(
+                    source_id=source_id,
+                    email=data.get("email"),
+                    count=data["orders_count"],
+                    start_date=last_transaction,
+                    recency=recency,
+                    enrichment_user_asid=data["enrichment_user_asid"],
+                )
+                if include_amount:
+                    new_p.amount = data["orders_amount"]
+
+                matched_persons_to_add.append(new_p)
+
+        if matched_persons_to_add:
+            values_to_insert = [
+                {
+                    "source_id": p.source_id,
+                    "email": p.email,
+                    "count": p.count,
+                    "amount": p.amount if include_amount else None,
+                    "start_date": p.start_date,
+                    "recency": p.recency,
+                    "enrichment_user_asid": p.enrichment_user_asid,
+                }
+                for p in matched_persons_to_add
+            ]
+            stmt = insert(AudienceSourcesMatchedPerson).values(values_to_insert)
+            # Не вставляем дубли по (source_id, enrichment_user_asid)
+            stmt = stmt.on_conflict_do_nothing(
+                index_elements=["source_id", "enrichment_user_asid"]
+            )
+            result = db_session.execute(stmt)
+            # rowcount для insert может быть None в зависимости от драйвера; guard:
+            count_matched_persons = getattr(result, "rowcount", 0) or 0
+            logging.info(f"Adding {len(matched_persons_to_add)} new persons")
+
+        if matched_persons_to_update:
+            logging.info(f"Updating {len(matched_persons_to_update)} persons")
+            db_session.bulk_update_mappings(
+                AudienceSourcesMatchedPerson, matched_persons_to_update
+            )
+
+    return count_matched_persons
+
+
+async def process_email_leads(
+    persons: List[PersonRow],
+    db_session: Session,
+    source_agent_service: SourceAgentService,
+    source_id: str,
+    include_amount: bool = False,
+    date_range: Optional[int] = None,
+    match_mode: Literal["email", "asid"] = "email",
 ) -> int:
     matched_persons = defaultdict(
         lambda: {
@@ -121,8 +471,11 @@ async def process_email_leads(
     )
 
     logging.info(
-        f"Start processing {len(persons)} persons for source_id {source_id}"
+        f"Start processing {len(persons)} persons for source_id={source_id}, match_mode={match_mode}"
     )
+
+    if match_mode not in ("email", "asid"):
+        raise ValueError("match_mode must be 'email' or 'asid'")
 
     emails = {p.email.strip().lower() for p in persons if p.email}
     if not emails:

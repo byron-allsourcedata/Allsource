@@ -138,6 +138,7 @@ const SourcesImport: React.FC = () => {
 		"Phone number": false,
 		"Last Name": false,
 		"First Name": false,
+		Asid: false,
 	};
 
 	const customerConversionHeadingSubstitution = {
@@ -230,25 +231,26 @@ const SourcesImport: React.FC = () => {
 		},
 		{ id: 3, type: "Last Name", value: "", canDelete: false, isHidden: false },
 		{ id: 4, type: "First Name", value: "", canDelete: false, isHidden: false },
+		{ id: 5, type: "Asid", value: "", canDelete: false, isHidden: false },
 	];
 
 	const customerConversionsMapping: Row[] = [
 		{
-			id: 5,
+			id: 6,
 			type: "Order Amount",
 			value: "",
 			canDelete: false,
 			isHidden: false,
 		},
 		{
-			id: 6,
+			id: 7,
 			type: "Transaction Date",
 			value: "",
 			canDelete: false,
 			isHidden: false,
 		},
 		{
-			id: 7,
+			id: 8,
 			type: "Order Count",
 			value: "",
 			canDelete: true,
@@ -258,7 +260,7 @@ const SourcesImport: React.FC = () => {
 
 	const failedLeadsMapping: Row[] = [
 		{
-			id: 5,
+			id: 6,
 			type: "Lead Date",
 			value: "",
 			canDelete: false,
@@ -268,7 +270,7 @@ const SourcesImport: React.FC = () => {
 
 	const interestMapping: Row[] = [
 		{
-			id: 5,
+			id: 6,
 			type: "Interest Date",
 			value: "",
 			canDelete: false,
