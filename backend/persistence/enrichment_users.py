@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import List
+from typing import Iterable, List
 from uuid import UUID
 
 
@@ -36,6 +36,27 @@ class EnrichmentUsersPersistence:
         (count,) = result.first_row
         return count
 
+    def __normalize_and_filter_asids(self, asids: Iterable) -> List[str]:
+        seen = set()
+        out = []
+        for a in asids:
+            if a is None:
+                continue
+            s = str(a).strip()
+            if not s:
+                continue
+            try:
+                # Попытка распарсить как UUID. Если строка валидна — приведёт к canonical form
+                u = UUID(s)
+                canon = str(u)  # canonical lower-case hyphenated form
+            except (ValueError, TypeError):
+                continue
+
+            if canon not in seen:
+                seen.add(canon)
+                out.append(canon)
+        return out
+
     def fetch_enrichment_user_ids(self, asids: List[UUID]) -> List[UUID]:
         if not asids:
             return []
@@ -50,12 +71,7 @@ class EnrichmentUsersPersistence:
         return found
 
     def get_user_ids_by_asids(self, asids: list[str]) -> List[EmailAsid]:
-        """
-        Найти записи enrichment_users по списку asid.
-        Возвращает список EmailAsid(email: Optional[str], asid: str).
-        Если email найден (business / personal / other) — возвращаем его (normalized), иначе email = None.
-        """
-        asids_clean = [str(a).strip() for a in asids if a]
+        asids_clean = self.__normalize_and_filter_asids(asids)
         if not asids_clean:
             logger.debug("get_user_ids_by_asids: empty input")
             return []
@@ -63,7 +79,6 @@ class EnrichmentUsersPersistence:
         matched: dict[str, EmailAsid] = {}
         start_time = time.perf_counter()
 
-        # Берём asid + разные поля email (в одной выборке) — чтобы минимизировать round-trips
         sql = """
             SELECT asid, business_email, personal_email, other_emails
             FROM enrichment_users
@@ -76,8 +91,6 @@ class EnrichmentUsersPersistence:
         )
 
         for row in rows:
-            # row может быть tuple (asid, business_email, personal_email, other_emails)
-            # либо dict, в зависимости от клиента
             if isinstance(row, dict):
                 asid = row.get("asid")
                 biz = row.get("business_email")
@@ -90,7 +103,6 @@ class EnrichmentUsersPersistence:
                 continue
             asid_s = str(asid)
 
-            # Найдём предпочитаемый email: business > personal > first(other_emails)
             preferred = None
             for candidate in (biz, pers):
                 if (
@@ -101,15 +113,12 @@ class EnrichmentUsersPersistence:
                     preferred = candidate.strip().lower()
                     break
 
-            # other_emails может быть массив/список
             if not preferred and other:
-                # если other_emails возвращён как список/tuple
                 if isinstance(other, (list, tuple)) and len(other) > 0:
                     c = other[0]
                     if c and isinstance(c, str) and "@" in c:
                         preferred = c.strip().lower()
                 else:
-                    # если other_emails хранится как строка или CSV, попробуем безопасно взять её
                     if isinstance(other, str) and "@" in other:
                         preferred = other.strip().lower()
 
@@ -119,7 +128,6 @@ class EnrichmentUsersPersistence:
                 logger.error(
                     "Error creating EmailAsid for asid %s: %s", asid_s, e
                 )
-                # всё равно положим без email
                 matched[asid_s] = EmailAsid(email=None, asid=asid_s)
 
         result = list(matched.values())

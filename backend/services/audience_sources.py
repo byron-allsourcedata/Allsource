@@ -113,6 +113,7 @@ class AudienceSourceService:
                 "Last Name",
                 "First Name",
                 "Transaction Date",
+                "Asid",
                 "Order Amount",
                 "Order Count",
             ],
@@ -121,6 +122,7 @@ class AudienceSourceService:
                 "Phone number",
                 "Last Name",
                 "First Name",
+                "Asid",
                 "Lead Date",
             ],
             "Interest": [
@@ -128,6 +130,7 @@ class AudienceSourceService:
                 "Phone number",
                 "Last Name",
                 "First Name",
+                "Asid",
                 "Interest Date",
             ],
         }
