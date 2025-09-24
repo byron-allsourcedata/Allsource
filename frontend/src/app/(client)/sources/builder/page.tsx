@@ -135,10 +135,10 @@ const SourcesImport: React.FC = () => {
 
 	const defautlHeadingSubstitution = {
 		Email: false,
+		ASID: false,
 		"Phone number": false,
 		"Last Name": false,
 		"First Name": false,
-		Asid: false,
 	};
 
 	const customerConversionHeadingSubstitution = {
@@ -222,16 +222,16 @@ const SourcesImport: React.FC = () => {
 
 	const defaultMapping: Row[] = [
 		{ id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
+		{ id: 2, type: "ASID", value: "", canDelete: true, isHidden: false },
 		{
-			id: 2,
+			id: 3,
 			type: "Phone number",
 			value: "",
 			canDelete: true,
 			isHidden: false,
 		},
-		{ id: 3, type: "Last Name", value: "", canDelete: false, isHidden: false },
-		{ id: 4, type: "First Name", value: "", canDelete: false, isHidden: false },
-		{ id: 5, type: "Asid", value: "", canDelete: false, isHidden: false },
+		{ id: 4, type: "Last Name", value: "", canDelete: false, isHidden: false },
+		{ id: 5, type: "First Name", value: "", canDelete: false, isHidden: false },
 	];
 
 	const customerConversionsMapping: Row[] = [
