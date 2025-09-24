@@ -3,8 +3,8 @@ import React, {
 	ChangeEvent,
 	useState,
 	useEffect,
-	useRef,
 	Suspense,
+	RefObject,
 } from "react";
 import {
 	Box,
@@ -15,13 +15,12 @@ import {
 	MenuItem,
 	Select,
 	LinearProgress,
-	SelectChangeEvent,
 	IconButton,
 	Skeleton,
 } from "@mui/material";
 import { FileUploadOutlinedIcon, DeleteOutlinedIcon } from "@/icon";
 import Image from "next/image";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { sourcesStyles } from "../sourcesStyles";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -34,8 +33,7 @@ import ProgressBar from "@/components/ProgressBar";
 import HintCard from "../../components/HintCard";
 import { useSourcesHints } from "../context/SourcesHintsContext";
 import { builderHintCards } from "../context/hintsCardsContent";
-import { fetchUserData } from "@/services/meService";
-import { useSidebar } from "@/context/SidebarContext";
+import { useSourcesBuilder } from "../context/SourceBuilderContext";
 import { BuilderKey } from "../context/hintsCardsContent";
 import HintBanner from "./components/HintBanner";
 import { SourceTypeCard } from "@/app/features/sources/builder/SourceTypeCard";
@@ -46,54 +44,21 @@ import {
 	HintStateMap,
 } from "@/utils/hintsUtils";
 import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinearProgress";
-import {
-	PixelDomainSelector,
-	type SkeletonState,
-} from "@/app/(client)/sources/builder/components/PixelDomainSelector";
+import { PixelDomainSelector } from "@/app/(client)/sources/builder/components/PixelDomainSelector";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { LogoSmall } from "@/components/ui/Logo";
 import { T } from "@/components/ui/T";
 import scrollToBlock from "@/utils/autoscroll";
-import { CustomButton, CustomToggle } from "@/components/ui";
+import { CustomButton } from "@/components/ui";
 import ChooseDomainContactType from "./components/ChooseDomainContactType";
-import { DomainsLeads } from "./components/types";
-
-interface Row {
-	id: number;
-	type: string;
-	value: string;
-	canDelete: boolean;
-	isHidden: boolean;
-}
-
-interface EventTypeInterface {
-	id: number;
-	name: string;
-	title: string;
-}
-
-interface InterfaceMappingRowsSourceType {
-	"Failed Leads": Row[];
-	Interest: Row[];
-	"Customer Conversions": Row[];
-}
-
-interface NewSource {
-	target_schema: string;
-	source_type: string;
-	source_origin: string;
-	source_name: string;
-	file_url?: string;
-	rows?: { type: string; value: string }[];
-	domain_id?: number;
-}
-
-type SourceType =
-	| "Customer Conversions"
-	| "Failed Leads"
-	| "Interest"
-	| "Website - Pixel"
-	| "";
+import SelectTargetType from "./components/SelectTargetType";
+import CreateSourceForm from "./components/CreateSourceForm";
+import {
+	DomainsLeads,
+	SourceType,
+	InterfaceMappingRowsSourceType,
+	Row,
+} from "./components/types";
 
 const SourcesImport: React.FC = () => {
 	const {
@@ -101,45 +66,18 @@ const SourcesImport: React.FC = () => {
 		sourcesBuilderHints,
 		resetSourcesBuilderHints,
 	} = useSourcesHints();
-	const { setIsGetStartedPage, setInstalledResources } = useSidebar();
-	const router = useRouter();
 	const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
 	const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
 		useState(false);
-	const [file, setFile] = useState<File | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [isContinuePressed, setIsContinuePressed] = useState(false);
-	const [sourceType, setSourceType] = useState<SourceType>("");
-	const [selectedDomain, setSelectedDomain] = useState<string>("");
-	const [sourceName, setSourceName] = useState<string>("");
 	const [fileSizeStr, setFileSizeStr] = useState<string>("");
-	const [fileName, setFileName] = useState<string>("");
-	const [fileUrl, setFileUrl] = useState<string>("");
-	const [sourceMethod, setSourceMethod] = useState<number>(0);
-	const [selectedDomainId, setSelectedDomainId] = useState<number>(0);
 	const [dragActive, setDragActive] = useState(false);
-	const [pixelNotInstalled, setPixelNotInstalled] = useState(false);
 	const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 	const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
 	const { hasNotification } = useNotification();
-	const [targetAudience, setTargetAudience] = useState<string>("");
-
-	const [eventType, setEventType] = useState<number[]>([]);
-	const [domains, setDomains] = useState<DomainsLeads[]>([]);
-	const [domainsWithoutPixel, setDomainsWithoutPixel] = useState<
-		DomainsLeads[]
-	>([]);
-	const [showTargetStep, setShowTargetStep] = useState(false);
 
 	const { whitelabel } = useWhitelabel();
-
-	const defautlHeadingSubstitution = {
-		Email: false,
-		ASID: false,
-		"Phone number": false,
-		"Last Name": false,
-		"First Name": false,
-	};
 
 	const customerConversionHeadingSubstitution = {
 		"Transaction Date": false,
@@ -165,43 +103,51 @@ const SourcesImport: React.FC = () => {
 		"Customer Conversions": customerConversionHeadingSubstitution,
 	};
 
-	const [headingsNotSubstitution, setHeadingsNotSubstitution] = useState<
-		Record<string, boolean>
-	>(defautlHeadingSubstitution);
-
-	const initialSkeletons: SkeletonState = {
-		sourceType: false,
-		pixelDomain: true,
-		dataSource: true,
-		sourceFile: true,
-		dataMaping: true,
-		targetType: true,
-		name: true,
-	};
-
-	const [skeletons, setSkeletons] = useState<SkeletonState>(initialSkeletons);
-
-	const [totalLeads, setTotalLeads] = useState(0);
-	const [matchedLeads, setMatchedLeads] = useState(0);
-
 	const searchParams = useSearchParams();
 	const typeFromSearchParams = searchParams.get("type");
 	const pathname = usePathname();
 	const isGetStartedPage = pathname.includes("get-started");
 
-	const block1Ref = useRef<HTMLDivElement | null>(null);
-	const block2Ref = useRef<HTMLDivElement | null>(null);
-	const block3Ref = useRef<HTMLDivElement | null>(null);
-	const block4Ref = useRef<HTMLDivElement | null>(null);
-	const block5Ref = useRef<HTMLDivElement | null>(null);
-	const block6Ref = useRef<HTMLDivElement | null>(null);
-
-	const eventTypes: EventTypeInterface[] = [
-		{ id: 1, name: "visitor_count", title: "visitor" },
-		{ id: 2, name: "viewed_product_count", title: "viewed_product" },
-		{ id: 3, name: "abandoned_cart_count", title: "abandoned_cart" },
-		{ id: 4, name: "converted_sales_count", title: "converted_sales" },
-	];
+	const {
+		block1Ref,
+		block2Ref,
+		block3Ref,
+		block4Ref,
+		skeletons,
+		setDomains,
+		showTargetStep,
+		selectedDomain,
+		setSelectedDomain,
+		setShowTargetStep,
+		setDomainsWithoutPixel,
+		pixelNotInstalled,
+		setPixelNotInstalled,
+		selectedDomainId,
+		setSelectedDomainId,
+		closeSkeleton,
+		openDotHintClick,
+		closeDotHintClick,
+		setTargetAudience,
+		targetAudience,
+		sourceMethod,
+		setSourceMethod,
+		sourceType,
+		setSourceType,
+		setHeadingsNotSubstitution,
+		defautlHeadingSubstitution,
+		defaultMapping,
+		headingsNotSubstitution,
+		mappingRowsSourceType,
+		hasUnsubstitutedHeadings,
+		setFileUrl,
+		handleDeleteFile,
+		mappingRows,
+		setMappingRows,
+		file,
+		setFile,
+		fileName,
+		setFileName,
+	} = useSourcesBuilder();
 
 	const sourceTypeDescriptions: Record<string, string> = {
 		"Customer Conversions":
@@ -211,80 +157,6 @@ const SourcesImport: React.FC = () => {
 		Interest:
 			"Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
 	};
-
-	const closeDotHintClick = (key: BuilderKey) => {
-		changeSourcesBuilderHint(key, "show", "close");
-	};
-
-	const openDotHintClick = (key: BuilderKey) => {
-		changeSourcesBuilderHint(key, "show", "open");
-	};
-
-	const defaultMapping: Row[] = [
-		{ id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
-		{ id: 2, type: "ASID", value: "", canDelete: true, isHidden: false },
-		{
-			id: 3,
-			type: "Phone number",
-			value: "",
-			canDelete: true,
-			isHidden: false,
-		},
-		{ id: 4, type: "Last Name", value: "", canDelete: false, isHidden: false },
-		{ id: 5, type: "First Name", value: "", canDelete: false, isHidden: false },
-	];
-
-	const customerConversionsMapping: Row[] = [
-		{
-			id: 6,
-			type: "Order Amount",
-			value: "",
-			canDelete: false,
-			isHidden: false,
-		},
-		{
-			id: 7,
-			type: "Transaction Date",
-			value: "",
-			canDelete: false,
-			isHidden: false,
-		},
-		{
-			id: 8,
-			type: "Order Count",
-			value: "",
-			canDelete: true,
-			isHidden: false,
-		},
-	];
-
-	const failedLeadsMapping: Row[] = [
-		{
-			id: 6,
-			type: "Lead Date",
-			value: "",
-			canDelete: false,
-			isHidden: false,
-		},
-	];
-
-	const interestMapping: Row[] = [
-		{
-			id: 6,
-			type: "Interest Date",
-			value: "",
-			canDelete: false,
-			isHidden: false,
-		},
-	];
-
-	const mappingRowsSourceType: InterfaceMappingRowsSourceType = {
-		Interest: interestMapping,
-		"Failed Leads": failedLeadsMapping,
-		"Customer Conversions": customerConversionsMapping,
-	};
-
-	const [mappingRows, setMappingRows] = useState<Row[]>([]);
 
 	// Mapping
 
@@ -305,32 +177,6 @@ const SourcesImport: React.FC = () => {
 				row.id === id ? { ...row, isHidden: true } : row,
 			),
 		);
-	};
-
-	const handlePixelInstall = () => {
-		const meRaw = sessionStorage.getItem("me");
-
-		if (!meRaw) {
-			router.push("/dashboard");
-			return;
-		}
-
-		try {
-			const me = JSON.parse(meRaw);
-			const isPixelInstalled = me?.get_started?.is_pixel_installed;
-
-			if (domainsWithoutPixel.length > 0) {
-				sessionStorage.setItem("current_domain", domainsWithoutPixel[0].name);
-			}
-
-			if (isPixelInstalled === false) {
-				router.push("/get-started?pixel=true");
-			} else {
-				router.push("/management/");
-			}
-		} catch (err) {
-			console.error("Error parsing `me` from sessionStorage:", err);
-		}
 	};
 
 	const handleAdd = () => {
@@ -354,7 +200,7 @@ const SourcesImport: React.FC = () => {
 			if (typeFromSearchParams === "pixel") {
 				newType = "Website - Pixel";
 				setTimeout(() => {
-					scrollToBlock(block4Ref);
+					scrollToBlock(block4Ref as RefObject<HTMLDivElement>);
 				}, 0);
 				fetchDomainsAndLeads();
 				closeSkeleton("pixelDomain");
@@ -394,15 +240,6 @@ const SourcesImport: React.FC = () => {
 		}
 	};
 
-	const closeSkeleton = (key: BuilderKey) => {
-		setTimeout(() => {
-			setSkeletons((prev) => ({
-				...prev,
-				[key]: false,
-			}));
-		}, 1000);
-	};
-
 	// Switching
 
 	const handleChangeSourceType = (newSourceType: string) => {
@@ -420,7 +257,7 @@ const SourcesImport: React.FC = () => {
 				openDotHintClick("pixelDomain");
 			}
 			setTimeout(() => {
-				scrollToBlock(block4Ref);
+				scrollToBlock(block4Ref as RefObject<HTMLDivElement>);
 			}, 0);
 			fetchDomainsAndLeads();
 		} else {
@@ -443,7 +280,7 @@ const SourcesImport: React.FC = () => {
 			}
 			setPixelNotInstalled(false);
 			setTimeout(() => {
-				scrollToBlock(block2Ref);
+				scrollToBlock(block2Ref as RefObject<HTMLDivElement>);
 			}, 0);
 		}
 
@@ -451,27 +288,7 @@ const SourcesImport: React.FC = () => {
 		setSourceType(newSourceType as SourceType);
 	};
 
-	const handleTargetAudienceChange = (value: string) => {
-		setTargetAudience(value);
-		setTimeout(() => {
-			scrollToBlock(block6Ref);
-		}, 0);
-		closeSkeleton("name");
-		closeDotHintClick("dataSource");
-		closeDotHintClick("targetType");
-		if (targetAudience === "") {
-			openDotHintClick("name");
-		}
-	};
-
 	// Uploading
-
-	const handleDeleteFile = () => {
-		setFile(null);
-		setFileName("");
-		setHeadingsNotSubstitution(defautlHeadingSubstitution);
-		setMappingRows(defaultMapping);
-	};
 
 	const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
 		event.preventDefault();
@@ -532,73 +349,6 @@ const SourcesImport: React.FC = () => {
 
 	const convertToDBFormat = (sourceType: string) => {
 		return sourceType.split(" ").join("_").toLowerCase();
-	};
-
-	const convertToDBFormat2 = (eventTypesArr: number[]) => {
-		return eventTypesArr
-			.map((id) => {
-				const eventType = eventTypes.find((event) => event.id === id);
-				return eventType?.title;
-			})
-			.filter((name) => name)
-			.join(",");
-	};
-
-	const toSnakeCase = (str: string) => {
-		return str
-			.replace(/\s+/g, "_")
-			.replace(/([a-z])([A-Z])/g, "$1_$2")
-			.toLowerCase();
-	};
-
-	const handleSumbit = async () => {
-		setLoading(true);
-
-		const rowsToSubmit = mappingRows
-			.filter((row) => !row.isHidden)
-			.filter(
-				(row) =>
-					headingsNotSubstitution.hasOwnProperty(row.type) &&
-					!headingsNotSubstitution[row.type],
-			)
-			.map(({ id, canDelete, isHidden, ...rest }) => rest);
-
-		const newSource: NewSource = {
-			target_schema: toSnakeCase(targetAudience),
-			source_type:
-				sourceMethod === 1
-					? convertToDBFormat(sourceType)
-					: convertToDBFormat2(eventType),
-			source_origin: sourceMethod === 1 ? "csv" : "pixel",
-			source_name: sourceName,
-		};
-
-		if (sourceMethod === 1) {
-			newSource.file_url = fileUrl;
-			newSource.rows = rowsToSubmit;
-		}
-
-		if (sourceMethod === 2) {
-			newSource.domain_id = selectedDomainId;
-		}
-
-		try {
-			const response = await axiosInstance.post(
-				`/audience-sources/create`,
-				newSource,
-				{
-					headers: { "Content-Type": "application/json" },
-				},
-			);
-			if (response.status === 200) {
-				await fetchUserData(setIsGetStartedPage, setInstalledResources);
-				const dataString = encodeURIComponent(JSON.stringify(response.data));
-				router.push(`/sources/created-source?data=${dataString}`);
-			}
-		} catch {
-		} finally {
-			setLoading(false);
-		}
 	};
 
 	// Sample
@@ -793,58 +543,6 @@ const SourcesImport: React.FC = () => {
 	};
 
 	// Pixel
-	// const toggleEventType = (id: number) => {
-	// 	if (isAllSelected) {
-	// 		setIsAllSelected(false);
-	// 		setMatchedLeads(0);
-	// 	}
-
-	// 	const isActive = eventType.includes(id);
-	// 	const newEventTypes = isActive
-	// 		? eventType.filter((e) => e !== id)
-	// 		: [...eventType, id];
-
-	// 	if (newEventTypes.length === 0) {
-	// 		setIsAllSelected(true);
-	// 		setEventType([]);
-	// 		setMatchedLeads(totalLeads);
-	// 		return;
-	// 	}
-
-	// 	setEventType(newEventTypes);
-
-	// 	const sum = newEventTypes.reduce((acc, evId) => {
-	// 		const field = eventTypes.find((e) => e.id === evId)!
-	// 			.name as keyof DomainsLeads;
-	// 		const cnt = domains.find((d) => d.name === selectedDomain)?.[field] || 0;
-	// 		return acc + Number(cnt);
-	// 	}, 0);
-	// 	setMatchedLeads(sum);
-	// };
-
-	const handleChangeDomain = (event: SelectChangeEvent<string>) => {
-		const domainName = event.target.value;
-		closeDotHintClick("pixelDomain");
-		closeSkeleton("dataSource");
-		if (selectedDomain === "") {
-			openDotHintClick("dataSource");
-		}
-		setSelectedDomain(domainName);
-
-		const selectedDomainData = domains.find(
-			(domain: DomainsLeads) => domain.name === domainName,
-		);
-		if (selectedDomainData) {
-			setTotalLeads(selectedDomainData.total_count || 0);
-			setSelectedDomainId(selectedDomainData.id);
-			setPixelNotInstalled(!selectedDomainData.pixel_installed);
-			setMatchedLeads(0);
-			setEventType([]);
-		}
-		setTimeout(() => {
-			scrollToBlock(block5Ref);
-		}, 0);
-	};
 
 	const fetchDomainsAndLeads = async () => {
 		setIsDomainSearchProcessing(true);
@@ -871,14 +569,6 @@ const SourcesImport: React.FC = () => {
 		}
 	};
 
-	// const [isAllSelected, setIsAllSelected] = useState(true);
-	// const allSelected = isAllSelected;
-	// const handleToggleAll = () => {
-	// 	setIsAllSelected(true);
-	// 	setEventType([]);
-	// 	setMatchedLeads(totalLeads);
-	// };
-
 	const renderSkeleton = (arg: BuilderKey, height: string = "20vh") => {
 		if (!skeletons[arg]) return null;
 		return (
@@ -890,26 +580,6 @@ const SourcesImport: React.FC = () => {
 				height={height}
 				sx={{ borderRadius: "4px" }}
 			/>
-		);
-	};
-
-	const hasUnsubstitutedHeadings = () => {
-		const mappingRows =
-			sourceType in mappingRowsSourceType
-				? [
-						...defaultMapping,
-						...mappingRowsSourceType[
-							sourceType as keyof InterfaceMappingRowsSourceType
-						],
-					]
-				: defaultMapping;
-
-		const deletableKeys = new Set(
-			mappingRows.filter((row) => row.canDelete).map((row) => row.type),
-		);
-
-		return Object.entries(headingsNotSubstitution).some(
-			([key, value]) => !deletableKeys.has(key) && value,
 		);
 	};
 
@@ -1635,7 +1305,9 @@ const SourcesImport: React.FC = () => {
 												onClick={() => {
 													setShowTargetStep(true);
 													setTimeout(() => {
-														scrollToBlock(block4Ref);
+														scrollToBlock(
+															block4Ref as RefObject<HTMLDivElement>,
+														);
 													}, 0);
 													closeDotHintClick("sourceFile");
 													openDotHintClick("targetType");
@@ -1656,16 +1328,9 @@ const SourcesImport: React.FC = () => {
 
 							{sourceMethod === 2 && (
 								<PixelDomainSelector
-									block4Ref={block4Ref}
-									totalLeads={totalLeads}
 									pixelInstalled={!pixelNotInstalled}
 									isDomainSearchProcessing={isDomainSearchProcessing}
-									selectedDomain={selectedDomain}
-									skeletons={skeletons}
-									domains={domains}
 									renderSkeleton={renderSkeleton}
-									handleChangeDomain={handleChangeDomain}
-									handlePixelInstall={handlePixelInstall}
 									hintProps={{
 										changeHint: changeSourcesBuilderHint,
 										hints: sourcesBuilderHints,
@@ -1676,20 +1341,7 @@ const SourcesImport: React.FC = () => {
 
 							{sourceMethod === 2 && selectedDomainId ? (
 								<ChooseDomainContactType
-									block5Ref={block5Ref}
-									block4Ref={block4Ref}
-									showTargetStep={showTargetStep}
-									setMatchedLeads={setMatchedLeads}
-									matchedLeads={matchedLeads}
-									totalLeads={totalLeads}
-									selectedDomain={selectedDomain}
-									setEventType={setEventType}
-									eventType={eventType}
-									domains={domains}
-									skeletons={skeletons}
-									setShowTargetStep={setShowTargetStep}
 									renderSkeleton={renderSkeleton}
-									eventTypes={eventTypes}
 									closeDotHintClick={closeDotHintClick}
 									openDotHintClick={openDotHintClick}
 									closeSkeleton={closeSkeleton}
@@ -1699,262 +1351,23 @@ const SourcesImport: React.FC = () => {
 							{showTargetStep &&
 								sourceMethod !== 0 &&
 								(selectedDomainId || file) && (
-									<Box
-										ref={block4Ref}
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-										}}
-									>
-										{!skeletons["targetType"] && (
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "column",
-													gap: 2,
-													minWidth: "100%",
-													flexGrow: 1,
-													position: "relative",
-													flexWrap: "wrap",
-													border: "1px solid rgba(228, 228, 228, 1)",
-													borderRadius: "6px",
-													padding: "20px",
-												}}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														width: "100%",
-														flexDirection: "row",
-														justifyContent: "space-between",
-														gap: 1,
-													}}
-												>
-													<Box
-														sx={{
-															display: "flex",
-															flexDirection: "column",
-															gap: 1,
-														}}
-													>
-														<Typography
-															sx={{
-																fontFamily: "var(--font-nunito)",
-																fontSize: "16px",
-																fontWeight: 500,
-															}}
-														>
-															Select your target type
-														</Typography>
-														<Typography
-															sx={{
-																fontFamily: "var(--font-roboto)",
-																fontSize: "12px",
-																color: "rgba(95, 99, 104, 1)",
-															}}
-														>
-															Choose what you would like to use it for.
-														</Typography>
-													</Box>
-												</Box>
-												<Box
-													sx={{
-														display: "flex",
-														position: "relative",
-														flexDirection: "row",
-														gap: 2,
-													}}
-												>
-													{["B2B", "B2C"].map((option) => (
-														<CustomToggle
-															key={option}
-															value={option}
-															isActive={targetAudience === option}
-															onClick={() => handleTargetAudienceChange(option)}
-															name={option}
-														/>
-													))}
-													{sourcesBuilderHints["targetType"].show && (
-														<HintCard
-															card={builderHintCards["targetType"]}
-															positionLeft={140}
-															isOpenBody={
-																sourcesBuilderHints["targetType"].showBody
-															}
-															toggleClick={() =>
-																changeSourcesBuilderHint(
-																	"targetType",
-																	"showBody",
-																	"toggle",
-																)
-															}
-															closeClick={() =>
-																changeSourcesBuilderHint(
-																	"targetType",
-																	"showBody",
-																	"close",
-																)
-															}
-														/>
-													)}
-												</Box>
-											</Box>
-										)}
-										{renderSkeleton("targetType", "146px")}
-									</Box>
+									<SelectTargetType
+										renderSkeleton={renderSkeleton}
+										closeDotHintClick={closeDotHintClick}
+										openDotHintClick={openDotHintClick}
+										closeSkeleton={closeSkeleton}
+									/>
 								)}
 
 							{sourceMethod !== 0 &&
 							targetAudience !== "" &&
 							(file || selectedDomainId) ? (
 								<>
-									<Box
-										ref={block6Ref}
-										sx={{
-											display: "flex",
-											flexDirection: "column",
-										}}
-									>
-										{!skeletons["name"] && (
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "column",
-													gap: 2,
-													flexWrap: "wrap",
-													border: "1px solid rgba(228, 228, 228, 1)",
-													borderRadius: "6px",
-													padding: "20px",
-												}}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														alignItems: "center",
-														position: "relative",
-														gap: 2,
-														"@media (max-width: 400px)": {
-															justifyContent: "space-between",
-														},
-													}}
-												>
-													<Typography
-														sx={{
-															fontFamily: "var(--font-nunito)",
-															fontSize: "16px",
-															fontWeight: 500,
-														}}
-													>
-														Create Name
-													</Typography>
-													<TextField
-														id="outlined"
-														label="Name"
-														InputLabelProps={{
-															sx: {
-																color: "rgba(17, 17, 19, 0.6)",
-																fontFamily: "var(--font-nunito)",
-																fontWeight: 400,
-																fontSize: "15px",
-																padding: 0,
-																top: "-1px",
-																margin: 0,
-															},
-														}}
-														sx={{
-															width: "250px",
-															"@media (max-width: 400px)": { width: "150px" },
-															"& .MuiInputLabel-root.Mui-focused": {
-																color: "rgba(17, 17, 19, 0.6)",
-															},
-															"& .MuiInputLabel-root[data-shrink='false']": {
-																transform: "translate(16px, 50%) scale(1)",
-															},
-															"& .MuiOutlinedInput-root": {
-																maxHeight: "40px",
-															},
-														}}
-														InputProps={{
-															className: "form-input",
-														}}
-														value={sourceName}
-														onChange={(e) => {
-															if (e.target.value.length < 128) {
-																setSourceName(e.target.value);
-															} else {
-																showErrorToast("Your name is too long!");
-															}
-														}}
-													/>
-													{sourcesBuilderHints["name"].show && (
-														<HintCard
-															card={builderHintCards["name"]}
-															positionLeft={380}
-															isOpenBody={sourcesBuilderHints["name"].showBody}
-															toggleClick={() =>
-																changeSourcesBuilderHint(
-																	"name",
-																	"showBody",
-																	"toggle",
-																)
-															}
-															closeClick={() =>
-																changeSourcesBuilderHint(
-																	"name",
-																	"showBody",
-																	"close",
-																)
-															}
-														/>
-													)}
-												</Box>
-											</Box>
-										)}
-										{renderSkeleton("name", "82px")}
-									</Box>
-									<Box
-										sx={{
-											display: "flex",
-											gap: 2,
-											flexWrap: "wrap",
-											justifyContent: "flex-end",
-											borderRadius: "6px",
-										}}
-									>
-										<Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-											<CustomButton
-												variant="outlined"
-												onClick={() => {
-													setSourceMethod(0);
-													handleDeleteFile();
-													setSourceName("");
-													setSourceType("");
-													router.push("/sources");
-												}}
-												sx={{
-													width: "92px",
-													height: "40px",
-												}}
-											>
-												Cancel
-											</CustomButton>
-											<CustomButton
-												variant="contained"
-												onClick={handleSumbit}
-												disabled={
-													sourceName.trim() === "" ||
-													hasUnsubstitutedHeadings() ||
-													pixelNotInstalled
-												}
-												sx={{
-													width: "120px",
-													height: "40px",
-												}}
-											>
-												Create
-											</CustomButton>
-										</Box>
-									</Box>
+									<CreateSourceForm
+										renderSkeleton={renderSkeleton}
+										setLoading={setLoading}
+										convertToDBFormat={convertToDBFormat}
+									/>
 								</>
 							) : null}
 						</Box>
