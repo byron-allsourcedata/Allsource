@@ -132,7 +132,7 @@ async def process_email_leads(
     email_to_asid = {}
     asid_to_email = {}
 
-    if match_mode == "email":
+    if match_mode == "emails":
         emails = {
             p.email.strip().lower()
             for p in persons
