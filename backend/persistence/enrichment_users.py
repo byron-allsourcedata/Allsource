@@ -46,9 +46,8 @@ class EnrichmentUsersPersistence:
             if not s:
                 continue
             try:
-                # Попытка распарсить как UUID. Если строка валидна — приведёт к canonical form
                 u = UUID(s)
-                canon = str(u)  # canonical lower-case hyphenated form
+                canon = str(u)
             except (ValueError, TypeError):
                 continue
 
