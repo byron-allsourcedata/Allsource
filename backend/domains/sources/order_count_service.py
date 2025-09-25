@@ -23,7 +23,6 @@ class SourcesOrderCountService:
     def get_duplicated_person_rows(
         self,
         email: str,
-        asid: str,
         date: str | None,
         order_amount: float,
         order_count: int,
@@ -36,7 +35,6 @@ class SourcesOrderCountService:
         return [
             PersonRow(
                 email=email,
-                asid=asid,
                 date=date,
                 sale_amount=str(splitted_amount),
             )

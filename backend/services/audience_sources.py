@@ -109,7 +109,6 @@ class AudienceSourceService:
         self.headings_map = {
             "Customer Conversions": [
                 "Email",
-                "ASID",
                 "Phone number",
                 "Last Name",
                 "First Name",
@@ -119,7 +118,6 @@ class AudienceSourceService:
             ],
             "Failed Leads": [
                 "Email",
-                "ASID",
                 "Phone number",
                 "Last Name",
                 "First Name",
@@ -127,7 +125,6 @@ class AudienceSourceService:
             ],
             "Interest": [
                 "Email",
-                "ASID",
                 "Phone number",
                 "Last Name",
                 "First Name",

@@ -69,7 +69,7 @@ const HintBanner: React.FC<NotificationBannerProps> = ({
 						className="table-data"
 						style={{ fontWeight: "500" }}
 					>
-						Email and Phone or ASID:
+						Email and Phone:
 					</Typography>{" "}
 					we use it to match the information we have about contacts in our 250M+
 					contact database.

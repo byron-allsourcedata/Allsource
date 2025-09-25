@@ -8,8 +8,6 @@ import {
 import { sourcesStyles } from "@/app/(client)/sources/sourcesStyles";
 import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinearProgress";
 import type { HintAction, HintStateMap } from "@/utils/hintsUtils";
-import { useRouter } from "next/navigation";
-import scrollToBlock from "@/utils/autoscroll";
 import {
 	Box,
 	FormControl,
@@ -19,14 +17,20 @@ import {
 	Typography,
 } from "@mui/material";
 import type { FC, ReactNode, RefObject } from "react";
-import { useSourcesBuilder } from "../../context/SourceBuilderContext";
 
 export type SkeletonState = Record<BuilderKey, boolean>;
 
 type PixelDomainSelectBlockProps = {
+	block4Ref: RefObject<HTMLDivElement | null>;
+	totalLeads?: number;
 	pixelInstalled: boolean;
 	isDomainSearchProcessing: boolean;
+	selectedDomain: string;
+	skeletons: SkeletonState;
+	domains: DomainsLeads[];
 	renderSkeleton: (key: BuilderKey) => ReactNode;
+	handleChangeDomain: (e: SelectChangeEvent<string>) => void;
+	handlePixelInstall: () => void;
 	hintProps: HintsProps<BuilderKey>;
 };
 
@@ -37,82 +41,19 @@ export type HintsProps<T extends string> = {
 };
 
 export const PixelDomainSelector: FC<PixelDomainSelectBlockProps> = ({
+	block4Ref,
 	pixelInstalled,
 	isDomainSearchProcessing,
+	selectedDomain,
+	skeletons,
+	domains,
+	totalLeads,
 	renderSkeleton,
+	handleChangeDomain,
+	handlePixelInstall,
 	hintProps,
 }) => {
 	const { changeHint, hints, resetHints } = hintProps;
-	const router = useRouter();
-
-	const {
-		block4Ref,
-		block5Ref,
-		skeletons,
-		domains,
-		selectedDomain,
-		totalLeads,
-		domainsWithoutPixel,
-		setEventType,
-		setTotalLeads,
-		setMatchedLeads,
-		setSelectedDomain,
-		setSelectedDomainId,
-		setPixelNotInstalled,
-		closeSkeleton,
-		openDotHintClick,
-		closeDotHintClick,
-	} = useSourcesBuilder();
-
-	const handleChangeDomain = (event: SelectChangeEvent<string>) => {
-		const domainName = event.target.value;
-		closeDotHintClick("pixelDomain");
-		closeSkeleton("dataSource");
-		if (selectedDomain === "") {
-			openDotHintClick("dataSource");
-		}
-		setSelectedDomain(domainName);
-
-		const selectedDomainData = domains.find(
-			(domain: DomainsLeads) => domain.name === domainName,
-		);
-		if (selectedDomainData) {
-			setTotalLeads(selectedDomainData.total_count || 0);
-			setSelectedDomainId(selectedDomainData.id);
-			setPixelNotInstalled(!selectedDomainData.pixel_installed);
-			setMatchedLeads(0);
-			setEventType([]);
-		}
-		setTimeout(() => {
-			scrollToBlock(block5Ref as RefObject<HTMLDivElement>);
-		}, 0);
-	};
-
-	const handlePixelInstall = () => {
-		const meRaw = sessionStorage.getItem("me");
-
-		if (!meRaw) {
-			router.push("/dashboard");
-			return;
-		}
-
-		try {
-			const me = JSON.parse(meRaw);
-			const isPixelInstalled = me?.get_started?.is_pixel_installed;
-
-			if (domainsWithoutPixel.length > 0) {
-				sessionStorage.setItem("current_domain", domainsWithoutPixel[0].name);
-			}
-
-			if (isPixelInstalled === false) {
-				router.push("/get-started?pixel=true");
-			} else {
-				router.push("/management/");
-			}
-		} catch (err) {
-			console.error("Error parsing `me` from sessionStorage:", err);
-		}
-	};
 
 	return (
 		<Box
