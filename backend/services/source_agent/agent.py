@@ -57,12 +57,6 @@ class SourceAgentService:
     ) -> List[EmailAsid]:
         return self.enrichment_users.get_user_ids_by_emails(emails)
 
-    def get_user_ids_by_asids(
-        self,
-        asids: Iterable[str],
-    ) -> List[EmailAsid]:
-        return self.enrichment_users.get_user_ids_by_asids(asids)
-
     def get_details_by_asids(
         self,
         asids: Iterable[UUID | str],

@@ -3,21 +3,53 @@ import { Box, Typography } from "@mui/material";
 import { CustomButton } from "@/components/ui";
 import HintCard from "../../../components/HintCard";
 import { useSourcesHints } from "../../context/SourcesHintsContext";
-import { useSourcesBuilder } from "../../context/SourceBuilderContext";
 import { DomainsLeads } from "./types";
 import { builderHintCards } from "../../context/hintsCardsContent";
+import { type SkeletonState } from "@/app/(client)/sources/builder/components/PixelDomainSelector";
 import scrollToBlock from "@/utils/autoscroll";
 import { BuilderKey } from "../../context/hintsCardsContent";
 
 interface ChooseDomainContactTypeProps {
+	block5Ref: RefObject<HTMLDivElement | null>;
+	block4Ref: RefObject<HTMLDivElement | null>;
+	showTargetStep: boolean;
+	setMatchedLeads: (count: number) => void;
+	matchedLeads: number;
+	totalLeads: number;
+	selectedDomain: string;
+	setEventType: (count: number[]) => void;
+	eventType: number[];
+	domains: DomainsLeads[];
+	skeletons: SkeletonState;
+	setShowTargetStep: (state: boolean) => void;
 	renderSkeleton: (key: BuilderKey) => ReactNode;
+	eventTypes: EventTypeInterface[];
 	closeDotHintClick: (key: BuilderKey) => void;
 	openDotHintClick: (key: BuilderKey) => void;
 	closeSkeleton: (key: BuilderKey) => void;
 }
 
+interface EventTypeInterface {
+	id: number;
+	name: string;
+	title: string;
+}
+
 const ChooseDomainContactType: React.FC<ChooseDomainContactTypeProps> = ({
+	block5Ref,
+	block4Ref,
+	showTargetStep,
+	setMatchedLeads,
+	matchedLeads,
+	selectedDomain,
+	totalLeads,
+	setEventType,
+	eventType,
+	domains,
+	skeletons,
+	setShowTargetStep,
 	renderSkeleton,
+	eventTypes,
 	closeDotHintClick,
 	openDotHintClick,
 	closeSkeleton,
@@ -27,22 +59,6 @@ const ChooseDomainContactType: React.FC<ChooseDomainContactTypeProps> = ({
 		sourcesBuilderHints,
 		resetSourcesBuilderHints,
 	} = useSourcesHints();
-
-	const {
-		block4Ref,
-		block5Ref,
-		skeletons,
-		domains,
-		eventTypes,
-		eventType,
-		setEventType,
-		showTargetStep,
-		setMatchedLeads,
-		matchedLeads,
-		selectedDomain,
-		totalLeads,
-		setShowTargetStep,
-	} = useSourcesBuilder();
 
 	const [isAllSelected, setIsAllSelected] = useState(true);
 	const allSelected = isAllSelected;
