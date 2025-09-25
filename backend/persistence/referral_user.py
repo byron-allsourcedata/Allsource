@@ -1,7 +1,7 @@
-
 from db_dependencies import Db
+from enums import UserStatusInAdmin
 from models.referral_payouts import ReferralPayouts
-from sqlalchemy import func, case, or_, desc, asc
+from sqlalchemy import func, case, or_, desc, asc, literal
 from models.users import Users
 from models.partner import Partner
 from models.subscriptions import UserSubscriptions
@@ -15,6 +15,19 @@ from resolver import injectable
 class ReferralUserPersistence:
     def __init__(self, db: Db):
         self.db = db
+
+    def calculate_user_status(self):
+        return case(
+            (
+                func.coalesce(Users.is_email_confirmed, False) == False,
+                literal("Need confirm email"),
+            ),
+            (
+                func.coalesce(Users.has_credit_card, False) == True,
+                literal("Card on"),
+            ),
+            else_=literal("Signed up"),
+        )
 
     def get_referral_users(
         self,
@@ -34,24 +47,30 @@ class ReferralUserPersistence:
 
         query = (
             self.db.query(
-                Users.id,
-                Users.full_name,
-                Users.email,
-                ReferralUser.created_at.label("join_date"),
-                func.max(ReferralPayouts.paid_at).label("last_payment_date"),
+                Users.id,  # 0
+                Users.full_name,  # 1
+                Users.email,  # 2
+                Users.last_login,  # 3
+                ReferralUser.created_at.label("join_date"),  # 4
+                func.max(ReferralPayouts.paid_at).label(
+                    "last_payment_date"
+                ),  # 5
                 func.max(ReferralPayouts.created_at).label(
                     "reward_payout_date"
-                ),
+                ),  # 6
                 func.max(
                     case(
                         (ReferralPayouts.status == "pending", "pending"),
                         (ReferralPayouts.status == None, "pending"),
                         else_="paid",
                     )
-                ).label("reward_status"),
-                Users.overage_leads_count.label("overage_leads_count"),
-                func.max(ReferralPayouts.plan_amount).label("plan_amount"),
-                func.max(UserSubscriptions.status).label("subscription_status"),
+                ).label("reward_status"),  # 7
+                Users.overage_leads_count.label("overage_leads_count"),  # 8
+                func.max(ReferralPayouts.plan_amount).label("plan_amount"),  # 9
+                func.max(UserSubscriptions.status).label(
+                    "subscription_status"
+                ),  # 10
+                self.calculate_user_status().label("status"),  # 11
             )
             .outerjoin(ReferralUser, ReferralUser.user_id == Users.id)
             .outerjoin(Partner, Partner.user_id == Users.id)
@@ -67,6 +86,8 @@ class ReferralUserPersistence:
                 Users.email,
                 ReferralUser.created_at,
                 UserSubscriptions.status,
+                Users.is_email_confirmed,
+                Users.has_credit_card,
             )
         )
 
@@ -93,16 +114,15 @@ class ReferralUserPersistence:
                 "id": account[0],
                 "account_name": account[1],
                 "email": account[2],
-                "join_date": account[3],
-                "last_payment_date": account[4],
-                "reward_payout_date": account[5],
-                "reward_status": account[6].capitalize()
-                if account[6]
+                "last_login": account[3],
+                "join_date": account[4],
+                "last_payment_date": account[5],
+                "reward_payout_date": account[6],
+                "reward_status": account[7].capitalize()
+                if account[7]
                 else "Inactive",
-                "monthly_spends": account[7] * 0.08 if account[7] else "--",
-                "status": str(account[8]).capitalize()
-                if account[8]
-                else "Inactive",
+                "monthly_spends": account[8] * 0.08 if account[8] else "--",
+                "status": account[11],
             }
             for account in accounts
         ], query.count()
@@ -116,7 +136,6 @@ class ReferralUserPersistence:
             .first()
             is not None
         )
-
 
     def verify_user_relationship(self, parent_id: int, user_id: int) -> bool:
         return (

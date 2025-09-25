@@ -36,6 +36,7 @@ const tableHeaders = [
 	{ key: "account_name", label: "Account name", sortable: false },
 	{ key: "email", label: "Email", sortable: false },
 	{ key: "join_date", label: "Join date", sortable: true },
+	{ key: "last_login", label: "Last login", sortable: false },
 	{ key: "monthly_spends", label: "Monthly Spends", sortable: false },
 	{ key: "reward_status", label: "Reward status", sortable: false },
 	{ key: "reward_payout_date", label: "Reward Payout date", sortable: true },
@@ -65,10 +66,15 @@ const getStatusStyle = (status: string) => {
 				background: "rgba(236, 236, 236, 1)",
 				color: "rgba(74, 74, 74, 1)",
 			};
-		case "Signup":
+		case "Signed up":
 			return {
 				background: "rgba(241, 241, 249, 1)",
 				color: "rgba(56, 152, 252, 1)",
+			};
+		case "Card on":
+			return {
+				background: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1)",
 			};
 		case "Free trial":
 			return {
@@ -121,6 +127,7 @@ interface AccountData {
 	account_name: string;
 	email: string;
 	join_date: Date | string;
+	last_login: Date | string;
 	monthly_spends: string;
 	reward_status: string;
 	reward_amount: string;
@@ -798,6 +805,18 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 											>
 												{dayjs(data.join_date).isValid()
 													? dayjs(data.join_date).format("MMM D, YYYY")
+													: "--"}
+											</TableCell>
+
+											<TableCell
+												className="table-data"
+												sx={{
+													...suppressionsStyles.tableBodyColumn,
+													paddingLeft: "16px",
+												}}
+											>
+												{dayjs(data.last_login).isValid()
+													? dayjs(data.last_login).format("MMM D, YYYY")
 													: "--"}
 											</TableCell>
 
