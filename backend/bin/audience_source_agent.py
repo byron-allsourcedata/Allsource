@@ -8,7 +8,7 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Union, Optional, Tuple
+from typing import List, Literal, Union, Optional, Tuple
 from uuid import UUID
 
 import aiormq
@@ -17,7 +17,7 @@ import dateparser
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
-from sqlalchemy import update, func
+from sqlalchemy import or_, update, func
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, aliased
 
@@ -110,126 +110,245 @@ async def process_email_leads(
     source_id: str,
     include_amount: bool = False,
     date_range: Optional[int] = None,
+    match_mode: Literal["emails", "asids"] = "emails",
 ) -> int:
+    logging.info(
+        f"Start processing {len(persons)} persons for source_id={source_id}, match_mode={match_mode}"
+    )
+
+    if match_mode not in ("emails", "asids"):
+        raise ValueError("match_mode must be 'email' or 'asid'")
+
     matched_persons = defaultdict(
         lambda: {
-            "orders_amount": 0.0 if include_amount else None,
+            "orders_amount": Decimal("0.0") if include_amount else None,
             "orders_count": 0,
             "start_date": None,
             "enrichment_user_asid": None,
+            "email": None,
         }
     )
 
-    logging.info(
-        f"Start processing {len(persons)} persons for source_id {source_id}"
-    )
+    email_to_asid = {}
+    asid_to_email = {}
 
-    emails = {p.email.strip().lower() for p in persons if p.email}
-    if not emails:
-        logging.info("No valid emails found in input data.")
-        return 0
+    if match_mode == "emails":
+        emails = {
+            p.email.strip().lower()
+            for p in persons
+            if getattr(p, "email", None)
+        }
+        if not emails:
+            logging.info("No valid emails found in input data (email-mode).")
+            return 0
 
-    matches: List[EmailAsid] = source_agent_service.get_user_ids_by_emails(
-        emails
-    )
-    if not matches:
-        logging.info("No matching emails found in ClickHouse.")
-        return 0
+        matches = source_agent_service.get_user_ids_by_emails(list(emails))
+        if not matches:
+            logging.info("No matching emails found in ClickHouse.")
+            return 0
 
-    seen_asids = set()
-    email_to_user_id = {}
+        seen_asids = set()
+        for m in matches:
+            if (
+                not m
+                or not getattr(m, "email", None)
+                or not getattr(m, "asid", None)
+            ):
+                continue
+            em = m.email.strip().lower()
+            a = str(m.asid)
+            if a not in seen_asids and em not in email_to_asid:
+                email_to_asid[em] = a
+                seen_asids.add(a)
 
-    for m in matches:
-        if m.asid not in seen_asids:
-            email_to_user_id[m.email] = m.asid
-            seen_asids.add(m.asid)
-
-    filtered_persons = [
-        p
-        for p in persons
-        if p.email and p.email.strip().lower() in email_to_user_id
-    ]
-    if not filtered_persons:
-        logging.info(
-            "No valid persons left after filtering by enrichment_emails."
-        )
-        return 0
-
-    for person in filtered_persons:
-        email = (person.email or "").strip().lower()
-        transaction_date = (person.date or "").strip()
-
-        transaction_date_obj = None
-        if transaction_date:
-            try:
-                transaction_date_obj = dateparser.parse(transaction_date)
-
-                if transaction_date_obj is not None:
-                    transaction_date_obj = transaction_date_obj.replace(
-                        tzinfo=None
-                    )
-            except Exception as date_error:
-                logging.warning(
-                    f"Error parsing date '{transaction_date}': {date_error}"
-                )
-
-        if (
-            date_range
-            and transaction_date_obj
-            and transaction_date_obj
-            < (datetime.now() - timedelta(days=date_range))
-        ):
-            continue
-
-        sale_amount = (
-            person.get_sale_amount() if include_amount else Decimal("0.0")
-        )
-
-        if email in matched_persons:
-            matched_persons[email]["orders_count"] += 1
-            if include_amount:
-                matched_persons[email]["orders_amount"] += sale_amount
-            if transaction_date_obj:
-                existing_date = matched_persons[email]["start_date"]
-                if (
-                    existing_date is None
-                    or transaction_date_obj > existing_date
-                ):
-                    matched_persons[email]["start_date"] = transaction_date_obj
-                    logging.debug(
-                        f"Updated start_date for {email}: {transaction_date_obj}"
-                    )
-        else:
-            matched_persons[email] = {
-                "orders_count": 1,
-                "start_date": transaction_date_obj,
-                "enrichment_user_asid": email_to_user_id[email],
-            }
-            if include_amount:
-                matched_persons[email]["orders_amount"] = sale_amount
-            logging.debug(
-                f"Added new person {email} with sale amount {sale_amount} and transaction date {transaction_date_obj}"
+        filtered_persons = [
+            p
+            for p in persons
+            if getattr(p, "email", None)
+            and p.email.strip().lower() in email_to_asid
+        ]
+        if not filtered_persons:
+            logging.info(
+                "No valid persons left after filtering by enrichment_emails."
             )
+            return 0
+
+        for person in filtered_persons:
+            email_norm = person.email.strip().lower()
+            transaction_date = (person.date or "").strip()
+            transaction_date_obj = None
+            if transaction_date:
+                try:
+                    transaction_date_obj = dateparser.parse(transaction_date)
+                    if transaction_date_obj is not None:
+                        transaction_date_obj = transaction_date_obj.replace(
+                            tzinfo=None
+                        )
+                except Exception as e:
+                    logging.warning(
+                        f"Error parsing date '{transaction_date}': {e}"
+                    )
+                    transaction_date_obj = None
+
+            if (
+                date_range
+                and transaction_date_obj
+                and transaction_date_obj
+                < (datetime.now() - timedelta(days=date_range))
+            ):
+                continue
+
+            sale_amount = (
+                person.get_sale_amount() if include_amount else Decimal("0.0")
+            )
+
+            enrichment_asid = email_to_asid[email_norm]
+
+            if email_norm in matched_persons:
+                matched_persons[email_norm]["orders_count"] += 1
+                if include_amount:
+                    matched_persons[email_norm]["orders_amount"] += sale_amount
+                if transaction_date_obj:
+                    existing_date = matched_persons[email_norm]["start_date"]
+                    if (
+                        existing_date is None
+                        or transaction_date_obj > existing_date
+                    ):
+                        matched_persons[email_norm]["start_date"] = (
+                            transaction_date_obj
+                        )
+            else:
+                matched_persons[email_norm] = {
+                    "orders_count": 1,
+                    "start_date": transaction_date_obj,
+                    "enrichment_user_asid": enrichment_asid,
+                    "email": email_norm,
+                    "orders_amount": sale_amount if include_amount else None,
+                }
+
+    else:
+        asids = {
+            str(getattr(p, "asid")).strip()
+            for p in persons
+            if getattr(p, "asid", None)
+        }
+        if not asids:
+            logging.info("No valid asids found in input data (asid-mode).")
+            return 0
+
+        matches = source_agent_service.get_user_ids_by_asids(list(asids))
+        if not matches:
+            logging.info("No matching asids found in ClickHouse.")
+            return 0
+
+        for m in matches:
+            if not m or not getattr(m, "asid", None):
+                continue
+            a = str(m.asid).strip()
+            email_candidate = (
+                m.email.strip().lower() if getattr(m, "email", None) else None
+            )
+            asid_to_email[a] = email_candidate
+
+        filtered_persons = [
+            p
+            for p in persons
+            if getattr(p, "asid", None) and str(p.asid).strip() in asid_to_email
+        ]
+        if not filtered_persons:
+            logging.info(
+                "No valid persons left after filtering by enrichment_asids."
+            )
+            return 0
+
+        for person in filtered_persons:
+            p_asid = str(getattr(person, "asid")).strip()
+            match_key = f"asid:{p_asid}"
+            transaction_date = (person.date or "").strip()
+            transaction_date_obj = None
+            if transaction_date:
+                try:
+                    transaction_date_obj = dateparser.parse(transaction_date)
+                    if transaction_date_obj is not None:
+                        transaction_date_obj = transaction_date_obj.replace(
+                            tzinfo=None
+                        )
+                except Exception as e:
+                    logging.warning(
+                        f"Error parsing date '{transaction_date}': {e}"
+                    )
+                    transaction_date_obj = None
+
+            if (
+                date_range
+                and transaction_date_obj
+                and transaction_date_obj
+                < (datetime.now() - timedelta(days=date_range))
+            ):
+                continue
+
+            sale_amount = (
+                person.get_sale_amount() if include_amount else Decimal("0.0")
+            )
+
+            enrichment_asid = p_asid
+            email_for_asid = asid_to_email.get(p_asid)
+
+            if match_key in matched_persons:
+                matched_persons[match_key]["orders_count"] += 1
+                if include_amount:
+                    matched_persons[match_key]["orders_amount"] += sale_amount
+                if transaction_date_obj:
+                    existing_date = matched_persons[match_key]["start_date"]
+                    if (
+                        existing_date is None
+                        or transaction_date_obj > existing_date
+                    ):
+                        matched_persons[match_key]["start_date"] = (
+                            transaction_date_obj
+                        )
+            else:
+                matched_persons[match_key] = {
+                    "orders_count": 1,
+                    "start_date": transaction_date_obj,
+                    "enrichment_user_asid": enrichment_asid,
+                    "email": email_for_asid,
+                    "orders_amount": sale_amount if include_amount else None,
+                }
 
     db_session.commit()
     with db_session.begin():
-        existing_persons = {
-            p.email: p
-            for p in (
-                db_session.query(AudienceSourcesMatchedPerson)
-                .filter(
-                    AudienceSourcesMatchedPerson.source_id == source_id,
-                    AudienceSourcesMatchedPerson.email.in_(
-                        matched_persons.keys()
-                    ),
-                )
-                .with_for_update()
-                .all()
+        keys = list(matched_persons.keys())
+        emails_to_query = [k for k in keys if not k.startswith("asid:")]
+        asids_to_query = [
+            k.split("asid:")[1] for k in keys if k.startswith("asid:")
+        ]
+
+        query = db_session.query(AudienceSourcesMatchedPerson).filter(
+            AudienceSourcesMatchedPerson.source_id == source_id
+        )
+        filters = []
+        if emails_to_query:
+            filters.append(
+                AudienceSourcesMatchedPerson.email.in_(emails_to_query)
             )
+        if asids_to_query:
+            filters.append(
+                AudienceSourcesMatchedPerson.enrichment_user_asid.in_(
+                    asids_to_query
+                )
+            )
+
+        if filters:
+            query = query.filter(or_(*filters))
+
+        existing_persons = {
+            (p.email if p.email else f"asid:{p.enrichment_user_asid}"): p
+            for p in query.with_for_update().all()
         }
 
         logging.info(
-            f"Found {len(existing_persons)} existing persons to update"
+            f"Found {len(existing_persons)} existing persons to update (match_mode={match_mode})"
         )
 
         reference_date = datetime.now()
@@ -237,7 +356,7 @@ async def process_email_leads(
         matched_persons_to_add = []
         count_matched_persons = 0
 
-        for email, data in matched_persons.items():
+        for key, data in matched_persons.items():
             last_transaction = data["start_date"]
             recency = (
                 (reference_date - last_transaction).days
@@ -245,8 +364,8 @@ async def process_email_leads(
                 else None
             )
 
-            if email in existing_persons:
-                p = existing_persons[email]
+            if key in existing_persons:
+                p = existing_persons[key]
                 p.count += data["orders_count"]
                 if include_amount:
                     p.amount += data["orders_amount"]
@@ -268,7 +387,7 @@ async def process_email_leads(
             else:
                 new_p = AudienceSourcesMatchedPerson(
                     source_id=source_id,
-                    email=email,
+                    email=data.get("email"),
                     count=data["orders_count"],
                     start_date=last_transaction,
                     recency=recency,
@@ -297,7 +416,7 @@ async def process_email_leads(
                 index_elements=["source_id", "enrichment_user_asid"]
             )
             result = db_session.execute(stmt)
-            count_matched_persons = result.rowcount
+            count_matched_persons = getattr(result, "rowcount", 0) or 0
             logging.info(f"Adding {len(matched_persons_to_add)} new persons")
 
         if matched_persons_to_update:
@@ -314,6 +433,7 @@ async def process_email_customer_conversion(
     db_session: Session,
     source_id: str,
     source_agent_service: SourceAgentService,
+    match_mode: Literal["emails", "asids"] = "emails",
 ) -> int:
     return await process_email_leads(
         persons=persons,
@@ -321,6 +441,7 @@ async def process_email_customer_conversion(
         source_id=source_id,
         include_amount=True,
         source_agent_service=source_agent_service,
+        match_mode=match_mode,
     )
 
 
@@ -329,6 +450,7 @@ async def process_email_failed_leads(
     db_session: Session,
     source_id: str,
     source_agent_service: SourceAgentService,
+    match_mode: Literal["emails", "asids"] = "emails",
 ) -> int:
     return await process_email_leads(
         persons=persons,
@@ -336,6 +458,7 @@ async def process_email_failed_leads(
         source_id=source_id,
         include_amount=False,
         source_agent_service=source_agent_service,
+        match_mode=match_mode,
     )
 
 
@@ -405,6 +528,7 @@ async def process_email_interest_leads(
     db_session: Session,
     source_id: str,
     source_agent_service: SourceAgentService,
+    match_mode: Literal["emails", "asids"] = "emails",
 ) -> int:
     return await process_email_leads(
         persons=persons,
@@ -412,6 +536,7 @@ async def process_email_interest_leads(
         source_id=source_id,
         include_amount=False,
         source_agent_service=source_agent_service,
+        match_mode=match_mode,
     )
 
 
@@ -675,6 +800,7 @@ async def process_and_send_chunks(
     queue_name: str,
     connection,
     status: str,
+    match_mode: Literal["emails", "asids"] = "emails",
 ):
     outgoing: List[Tuple[str, MessageBody]] = []
     db_session.commit()
@@ -733,6 +859,7 @@ async def process_and_send_chunks(
                 PersonEntry(
                     id=str(p.id),
                     email=str(p.email),
+                    asid=str(p.enrichment_user_asid),
                     sum_amount=float(p.amount or 0),
                     count=int(p.count),
                     recency=float(p.recency or 0.0),
@@ -740,7 +867,7 @@ async def process_and_send_chunks(
                 for p in batch
             ]
             msg = MessageBody(
-                type="emails",
+                type=match_mode,
                 data=DataBodyNormalize(
                     persons=rows,
                     source_id=source_id,
@@ -911,6 +1038,7 @@ async def normalize_persons_customer_conversion(
                     "id": person.id,
                     "source_id": source_id,
                     "email": person.email,
+                    "asid": person.asid,
                     "recency_min": min_recency,
                     "recency_max": max_recency,
                     "inverted_recency": inv,
@@ -1153,6 +1281,7 @@ async def normalize_persons_interest_leads(
             {
                 "id": person.id,
                 "source_id": source_id,
+                "asid": person.asid,
                 "email": person.email,
                 "count_min": min_count,
                 "count_max": max_count,
@@ -1231,6 +1360,7 @@ async def normalize_persons_failed_leads(
                 "id": person.id,
                 "source_id": source_id,
                 "email": person.email,
+                "asid": person.asid,
                 "recency_min": min_recency,
                 "recency_max": max_recency,
                 "inverted_recency": inverted_recency,
@@ -1355,7 +1485,7 @@ async def aud_sources_matching(
 
         db_session.commit()
         with db_session.begin():
-            if type == "emails" and data_for_normalize:
+            if type in ("emails", "asids") and data_for_normalize:
                 if (
                     message_body.status
                     == TypeOfCustomer.CUSTOMER_CONVERSIONS.value
@@ -1412,7 +1542,7 @@ async def aud_sources_matching(
                 source_agent_service=source_agent_service,
             )
 
-        if type == "emails":
+        if type in ("emails", "asids"):
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 logging.info(f"Processing {len(persons)} customer conversions.")
                 count = await process_email_customer_conversion(
@@ -1420,6 +1550,7 @@ async def aud_sources_matching(
                     db_session=db_session,
                     source_id=source_id,
                     source_agent_service=source_agent_service,
+                    match_mode=type,
                 )
 
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
@@ -1429,6 +1560,7 @@ async def aud_sources_matching(
                     db_session=db_session,
                     source_id=source_id,
                     source_agent_service=source_agent_service,
+                    match_mode=type,
                 )
 
             if message_body.status == TypeOfCustomer.INTEREST.value:
@@ -1440,6 +1572,7 @@ async def aud_sources_matching(
                     db_session=db_session,
                     source_id=source_id,
                     source_agent_service=source_agent_service,
+                    match_mode=type,
                 )
 
         logging.info(
@@ -1489,7 +1622,7 @@ async def aud_sources_matching(
                 .values(matched_records_status="complete")
             )
 
-        if type == "emails" and processed_records >= total_records:
+        if type in ("emails", "asids") and processed_records >= total_records:
             await process_and_send_chunks(
                 channel=channel,
                 db_session=db_session,
@@ -1498,6 +1631,7 @@ async def aud_sources_matching(
                 queue_name=AUDIENCE_SOURCES_MATCHING,
                 connection=connection,
                 status=message_body.status,
+                match_mode=type,
             )
 
         db_session.commit()
