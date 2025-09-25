@@ -38,6 +38,7 @@ export interface Row {
 	value: string;
 	canDelete: boolean;
 	isHidden: boolean;
+	isRequiredForAsidMatching: boolean;
 }
 
 export interface InterfaceMappingRowsSourceType {

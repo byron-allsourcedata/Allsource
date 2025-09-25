@@ -184,17 +184,46 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 	};
 
 	const defaultMapping: Row[] = [
-		{ id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
-		{ id: 2, type: "ASID", value: "", canDelete: true, isHidden: false },
+		{
+			id: 1,
+			type: "Email",
+			value: "",
+			canDelete: false,
+			isHidden: false,
+			isRequiredForAsidMatching: false,
+		},
+		{
+			id: 2,
+			type: "ASID",
+			value: "",
+			canDelete: true,
+			isHidden: false,
+			isRequiredForAsidMatching: true,
+		},
 		{
 			id: 3,
 			type: "Phone number",
 			value: "",
 			canDelete: true,
 			isHidden: false,
+			isRequiredForAsidMatching: false,
 		},
-		{ id: 4, type: "Last Name", value: "", canDelete: false, isHidden: false },
-		{ id: 5, type: "First Name", value: "", canDelete: false, isHidden: false },
+		{
+			id: 4,
+			type: "Last Name",
+			value: "",
+			canDelete: false,
+			isHidden: false,
+			isRequiredForAsidMatching: false,
+		},
+		{
+			id: 5,
+			type: "First Name",
+			value: "",
+			canDelete: false,
+			isHidden: false,
+			isRequiredForAsidMatching: false,
+		},
 	];
 
 	const customerConversionsMapping: Row[] = [
@@ -204,6 +233,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			value: "",
 			canDelete: false,
 			isHidden: false,
+			isRequiredForAsidMatching: true,
 		},
 		{
 			id: 7,
@@ -211,6 +241,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			value: "",
 			canDelete: false,
 			isHidden: false,
+			isRequiredForAsidMatching: true,
 		},
 		{
 			id: 8,
@@ -218,6 +249,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			value: "",
 			canDelete: true,
 			isHidden: false,
+			isRequiredForAsidMatching: true,
 		},
 	];
 
@@ -228,6 +260,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			value: "",
 			canDelete: false,
 			isHidden: false,
+			isRequiredForAsidMatching: true,
 		},
 	];
 
@@ -238,6 +271,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			value: "",
 			canDelete: false,
 			isHidden: false,
+			isRequiredForAsidMatching: true,
 		},
 	];
 

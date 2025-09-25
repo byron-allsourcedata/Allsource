@@ -59,6 +59,7 @@ import {
 	InterfaceMappingRowsSourceType,
 	Row,
 } from "./components/types";
+import { SourceBuilderProvider } from "../context/SourceBuilderContext";
 
 const SourcesImport: React.FC = () => {
 	const {
@@ -160,14 +161,33 @@ const SourcesImport: React.FC = () => {
 
 	// Mapping
 
-	const handleMapListChange = (id: number, value: string, rowValue: string) => {
-		setMappingRows(
-			mappingRows.map((row) => (row.id === id ? { ...row, value } : row)),
-		);
+	const handleMapListChange = (
+		id: number,
+		csvValue: string,
+		ourValue: string,
+	) => {
+		setMappingRows((prev) => {
+			let rows = prev;
+			if (ourValue === "ASID") {
+				rows = rows
+					.filter((row) => row.isRequiredForAsidMatching)
+					.map((row) => {
+						if (row.type === "ASID") {
+							return { ...row, canDelete: false };
+						} else {
+							return { ...row };
+						}
+					});
+			}
+
+			return rows.map((row) =>
+				row.id === id ? { ...row, value: csvValue } : row,
+			);
+		});
 
 		setHeadingsNotSubstitution((prev) => ({
 			...prev,
-			[rowValue]: false,
+			[ourValue]: false,
 		}));
 	};
 
@@ -481,15 +501,29 @@ const SourcesImport: React.FC = () => {
 
 			setHeadingsNotSubstitution(updatedHeadingSubstitution);
 
-			const updatedRows = mappingRows.map((row) => {
-				const mapped = newHeadingsMap[row.type];
-				return {
-					...row,
-					value: mapped === "None" ? "" : mapped,
-				};
-			});
+			setMappingRows((prev) => {
+				const updated = prev.map((row) => {
+					const mapped = newHeadingsMap[row.type];
+					return {
+						...row,
+						value: mapped === "None" ? "" : mapped,
+					};
+				});
 
-			setMappingRows(updatedRows);
+				if (newHeadingsMap["ASID"] !== "None") {
+					return updated
+						.filter((row) => row.isRequiredForAsidMatching)
+						.map((row) => {
+							if (row.type === "ASID") {
+								return { ...row, canDelete: false };
+							} else {
+								return { ...row };
+							}
+						});
+				} else {
+					return updated.filter((row) => row.type !== "ASID");
+				}
+			});
 		} catch (error: unknown) {
 			throw error;
 		}
@@ -1083,7 +1117,11 @@ const SourcesImport: React.FC = () => {
 												<Box
 													key={index}
 													sx={{
-														mb: headingsNotSubstitution[row.type] ? "10px" : 0,
+														mb:
+															!row.canDelete &&
+															headingsNotSubstitution[row.type]
+																? "10px"
+																: 0,
 													}}
 												>
 													<Grid
@@ -1381,7 +1419,9 @@ const SourcesImport: React.FC = () => {
 const SourceBuilder: React.FC = () => {
 	return (
 		<Suspense fallback={<ProgressBar />}>
-			<SourcesImport />
+			<SourceBuilderProvider>
+				<SourcesImport />
+			</SourceBuilderProvider>
 		</Suspense>
 	);
 };
