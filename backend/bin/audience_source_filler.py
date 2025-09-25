@@ -285,7 +285,7 @@ async def parse_csv_file(
             extracted_data = map_csv_row(row, mapped_fields)
 
             email = extracted_data.get("Email", "")
-            asid = extracted_data.get("Asid", "")
+            asid = extracted_data.get("ASID", "")
             sale_amount_raw = extracted_data.get("Order Amount", "")
             raw_order_count = extracted_data.get("Order Count", "")
 
