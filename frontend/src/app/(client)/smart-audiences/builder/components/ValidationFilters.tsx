@@ -28,6 +28,7 @@ import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
 import { BuilderKey } from "../../context/hintsCardsContent";
+import { CustomRadioButton } from "@/components/ui";
 
 interface ExpandableFilterProps {
 	block8Ref: React.RefObject<HTMLDivElement>;
@@ -94,6 +95,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 	const [isLoading, setIsLoading] = useState(true);
 	const [peronalRecencySelected, setPersonalRecencySelected] = useState(false);
 	const [businessRecencySelected, setBusinessRecencySelected] = useState(false);
+
+	const [mode, setMode] = React.useState<"all" | "any">("all");
 
 	const [selectedOptionsPersonalEmail, setSelectedOptionsPersonalEmail] =
 		useState<string[]>([]);
@@ -502,6 +505,9 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 					>
 						Choose parameters that you want to validate.
 					</Typography>
+
+					<CustomRadioButton value={mode} onChange={setMode} />
+
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 						{/* Personal Email Filter */}
 						<Box sx={ValidationStyle.main_filter_form}>
