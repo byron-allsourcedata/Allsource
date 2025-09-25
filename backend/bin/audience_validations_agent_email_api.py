@@ -358,13 +358,13 @@ async def process_rmq_message(
 
         db_session.commit()
         logging.info(f"Success ids len: {len(success_ids)}")
-        total_validated = db_session.scalar(
+        total_valid = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                 AudienceSmartPerson.is_valid.is_(True),
             )
         )
-        validation_count = db_session.scalar(
+        count_processed = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                 AudienceSmartPerson.is_validation_processed.is_(False),
@@ -379,9 +379,9 @@ async def process_rmq_message(
         smart_validation_agent_service.update_validations_json(
             aud_smart_id=aud_smart_id,
             validation_type=validation_type,
-            total_validated=total_validated,
+            total_valid=total_valid,
             total_count=total_count,
-            validation_count=validation_count,
+            count_processed=count_processed,
             count_persons_before_validation=count_persons_before_validation,
             count_subtracted=count_subtracted,
         )
@@ -389,16 +389,16 @@ async def process_rmq_message(
         smart_validation_agent_service.update_step_processed(
             aud_smart_id=aud_smart_id,
             validation_type=f"{validation_type}-delivery",
-            batch_size=validation_count,
+            batch_size=count_processed,
         )
 
         db_session.commit()
 
-        if validation_count == total_count:
+        if count_processed == total_count:
             audience_smarts_service.update_stats_validations(
                 validation_type=f"{validation_type}-delivery",
                 count_persons_before_validation=count_persons_before_validation,
-                count_valid_persons=total_validated,
+                count_valid_persons=total_valid,
             )
             db_session.commit()
             await publish_rabbitmq_message_with_channel(

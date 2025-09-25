@@ -173,15 +173,15 @@ async def aud_validation_agent(
         )
 
         total_count = counts.total_count
-        total_validated = counts.total_validated
-        validation_count = counts.validation_count
+        total_valid = counts.total_valid
+        count_processed = counts.count_processed
 
         smart_validation_agent_service.update_validations_json(
             aud_smart_id=aud_smart_id,
             validation_type=validation_type,
-            total_validated=total_validated,
+            total_valid=total_valid,
             total_count=total_count,
-            validation_count=validation_count,
+            count_processed=count_processed,
             count_persons_before_validation=count_persons_before_validation,
             count_subtracted=count_subtracted,
         )
@@ -194,14 +194,14 @@ async def aud_validation_agent(
 
         db_session.commit()
 
-        if validation_count == total_count:
+        if count_processed == total_count:
             target_category = CATEGORY_BY_COLUMN.get(validation_type)
             key = COLUMN_MAPPING.get(validation_type)
 
             audience_smarts_service.update_stats_validations(
                 validation_type=f"{target_category}-{key}",
                 count_persons_before_validation=count_persons_before_validation,
-                count_valid_persons=total_validated,
+                count_valid_persons=total_valid,
             )
             db_session.commit()
             await publish_rabbitmq_message_with_channel(

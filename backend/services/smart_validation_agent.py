@@ -62,14 +62,14 @@ class SmartValidationAgent:
     def _update_rule(
         self,
         rule,
-        total_validated,
+        total_valid,
         count_persons_before_validation,
         count_subtracted,
-        validation_count,
+        count_processed,
         total_count,
     ):
         rule.setdefault("count_cost", "0.00")
-        rule["count_validated"] = total_validated
+        rule["count_validated"] = total_valid
         rule["count_submited"] = count_persons_before_validation
 
         previous_cost = Decimal(rule["count_cost"])
@@ -77,7 +77,7 @@ class SmartValidationAgent:
             (previous_cost + count_subtracted).quantize(Decimal("0.01"))
         )
 
-        if validation_count == total_count:
+        if count_processed == total_count:
             rule["processed"] = True
 
     def update_step_processed(
@@ -91,9 +91,9 @@ class SmartValidationAgent:
         self,
         aud_smart_id: UUID,
         validation_type: str,
-        total_validated: int,
+        total_valid: int,
         total_count: int,
-        validation_count: int,
+        count_processed: int,
         count_persons_before_validation: int,
         count_subtracted: Decimal,
     ):
@@ -111,10 +111,10 @@ class SmartValidationAgent:
                 if key in rule:
                     self._update_rule(
                         rule[key],
-                        total_validated,
+                        total_valid,
                         count_persons_before_validation,
                         count_subtracted,
-                        validation_count,
+                        count_processed,
                         total_count,
                     )
                     updated = True
