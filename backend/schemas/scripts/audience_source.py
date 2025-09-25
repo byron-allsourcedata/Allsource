@@ -8,6 +8,7 @@ from pydantic import BaseModel
 class PersonEntry(BaseModel):
     id: str
     email: str
+    asid: str
     sum_amount: float
     count: int
     recency: float
@@ -35,6 +36,7 @@ class DataBodyNormalize(BaseModel):
 class PersonRow(BaseModel):
     email: Optional[str] = ""
     date: Optional[str] = ""
+    asid: Optional[str] = ""
     sale_amount: Optional[str] = "0.0"
     user_id: Optional[int] = None
     lead_id: Optional[int] = None
