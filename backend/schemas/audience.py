@@ -1,7 +1,7 @@
-from typing import List, Optional, Dict
+from typing import List, Literal, Optional, Dict
 from pydantic import BaseModel, RootModel
 from datetime import datetime
-from enums import LeadStatus
+from enums import LeadStatus, AudienceValidationMode
 from uuid import UUID
 
 
@@ -232,3 +232,4 @@ class CreateSmartAudienceRequest(BaseModel):
     total_records: int
     active_segment_records: int
     target_schema: Optional[str] = None
+    validation_mode: AudienceValidationMode

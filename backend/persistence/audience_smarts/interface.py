@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy.orm.query import RowReturningQuery
 
+from enums import AudienceValidationMode
 from models import AudienceSmart
 from persistence.audience_smarts.dto import SyncedPersonRecord, PersonRecord
 from schemas.audience import DataSourcesFormat
@@ -75,6 +76,7 @@ class AudienceSmartsPersistenceInterface(ABC):
         target_schema: str,
         validation_params: Optional[Dict],
         active_segment_records: int,
+        validation_mode: AudienceValidationMode,
     ) -> AudienceSmart:
         pass
 

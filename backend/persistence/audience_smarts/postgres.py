@@ -7,6 +7,7 @@ import pytz
 from sqlalchemy import desc, asc, or_, func, select, case
 from sqlalchemy.orm.query import RowReturningQuery
 
+from enums import AudienceValidationMode
 from db_dependencies import Db
 from models import SubscriptionPlan, UserSubscriptions
 from models.audience_smarts import AudienceSmart
@@ -262,6 +263,7 @@ class AudienceSmartsPostgresPersistence:
         target_schema: str,
         validation_params: Optional[dict],
         active_segment_records: int,
+        validation_mode: AudienceValidationMode,
         need_validate: bool = False,
     ) -> AudienceSmartDTO:
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
@@ -281,6 +283,7 @@ class AudienceSmartsPostgresPersistence:
             validated_records=0,
             active_segment_records=active_segment_records,
             status=status,
+            validation_mode=validation_mode.value,
         )
 
         self.db.add(new_audience)

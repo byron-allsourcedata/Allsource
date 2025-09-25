@@ -125,6 +125,7 @@ async def create_smart_audience(
         is_validate_skip=request.is_validate_skip,
         total_records=request.total_records,
         target_schema=request.target_schema,
+        validation_mode=request.validation_mode,
     )
 
 

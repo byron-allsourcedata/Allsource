@@ -40,7 +40,7 @@ const StyledRadio = styled(Radio)(({ theme }) => {
 });
 
 const CustomRadioButton: React.FC<MatchToggleProps> = ({
-	value = "all",
+	value,
 	onChange,
 	className,
 }) => {

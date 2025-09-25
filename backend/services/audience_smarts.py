@@ -13,7 +13,7 @@ from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
 )
-from enums import AudienceSmartDataSource, QueueName
+from enums import AudienceSmartDataSource, QueueName, AudienceValidationMode
 from enums import AudienceSmartStatuses
 from models.users import User
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
@@ -429,6 +429,7 @@ class AudienceSmartsService:
         active_segment_records: int,
         total_records: int,
         target_schema: str,
+        validation_mode: AudienceValidationMode,
         is_validate_skip: Optional[bool] = None,
         contacts_to_validate: Optional[int] = None,
     ) -> SmartsResponse:
@@ -463,6 +464,7 @@ class AudienceSmartsService:
             target_schema=target_schema,
             status=status,
             need_validate=need_validate,
+            validation_mode=validation_mode,
         )
         await self.start_scripts_for_matching(
             created_data.id,

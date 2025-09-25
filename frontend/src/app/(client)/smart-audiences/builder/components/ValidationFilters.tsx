@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
 	Box,
 	Typography,
@@ -40,6 +40,8 @@ interface ExpandableFilterProps {
 	onValidate: (data: FilterData) => void;
 	onEdit: () => void;
 	setPersentsData: (value: number) => void;
+	mode: "all" | "any";
+	setMode: Dispatch<SetStateAction<"all" | "any">>;
 }
 
 interface Recency {
@@ -84,6 +86,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 	onValidate,
 	onEdit,
 	setPersentsData,
+	mode,
+	setMode,
 }) => {
 	const router = useRouter();
 	const { changeSmartsBuilderHint, smartsBuilderHints } = useSmartsHints();
@@ -95,8 +99,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 	const [isLoading, setIsLoading] = useState(true);
 	const [peronalRecencySelected, setPersonalRecencySelected] = useState(false);
 	const [businessRecencySelected, setBusinessRecencySelected] = useState(false);
-
-	const [mode, setMode] = React.useState<"all" | "any">("all");
 
 	const [selectedOptionsPersonalEmail, setSelectedOptionsPersonalEmail] =
 		useState<string[]>([]);
