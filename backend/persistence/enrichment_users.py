@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import List
+from typing import Iterable, List
 from uuid import UUID
 
 
@@ -36,6 +36,26 @@ class EnrichmentUsersPersistence:
         (count,) = result.first_row
         return count
 
+    def __normalize_and_filter_asids(self, asids: Iterable) -> List[str]:
+        seen = set()
+        out = []
+        for a in asids:
+            if a is None:
+                continue
+            s = str(a).strip()
+            if not s:
+                continue
+            try:
+                u = UUID(s)
+                canon = str(u)
+            except (ValueError, TypeError):
+                continue
+
+            if canon not in seen:
+                seen.add(canon)
+                out.append(canon)
+        return out
+
     def fetch_enrichment_user_ids(self, asids: List[UUID]) -> List[UUID]:
         if not asids:
             return []
@@ -48,6 +68,74 @@ class EnrichmentUsersPersistence:
         found = [row[0] for row in result.result_rows]
         logger.info(f"enrichment user ids rows: {len(found)}")
         return found
+
+    def get_user_ids_by_asids(self, asids: list[str]) -> List[EmailAsid]:
+        asids_clean = self.__normalize_and_filter_asids(asids)
+        if not asids_clean:
+            logger.debug("get_user_ids_by_asids: empty input")
+            return []
+
+        matched: dict[str, EmailAsid] = {}
+        start_time = time.perf_counter()
+
+        sql = """
+            SELECT asid, business_email, personal_email, other_emails
+            FROM enrichment_users
+            WHERE asid IN %(ids)s
+        """
+        rows = self._run_query(sql, {"ids": asids_clean})
+        elapsed = time.perf_counter() - start_time
+        logger.info(
+            "ASID query returned %d rows in %.4f seconds", len(rows), elapsed
+        )
+
+        for row in rows:
+            if isinstance(row, dict):
+                asid = row.get("asid")
+                biz = row.get("business_email")
+                pers = row.get("personal_email")
+                other = row.get("other_emails")
+            else:
+                asid, biz, pers, other = row
+
+            if asid is None:
+                continue
+            asid_s = str(asid)
+
+            preferred = None
+            for candidate in (biz, pers):
+                if (
+                    candidate
+                    and isinstance(candidate, str)
+                    and "@" in candidate
+                ):
+                    preferred = candidate.strip().lower()
+                    break
+
+            if not preferred and other:
+                if isinstance(other, (list, tuple)) and len(other) > 0:
+                    c = other[0]
+                    if c and isinstance(c, str) and "@" in c:
+                        preferred = c.strip().lower()
+                else:
+                    if isinstance(other, str) and "@" in other:
+                        preferred = other.strip().lower()
+
+            try:
+                matched[asid_s] = EmailAsid(email=preferred, asid=asid_s)
+            except Exception as e:
+                logger.error(
+                    "Error creating EmailAsid for asid %s: %s", asid_s, e
+                )
+                matched[asid_s] = EmailAsid(email=None, asid=asid_s)
+
+        result = list(matched.values())
+        logger.info(
+            "Finished ASID matching: %d matches (from %d input).",
+            len(result),
+            len(asids_clean),
+        )
+        return result
 
     def get_user_ids_by_emails(
         self,
