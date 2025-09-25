@@ -17,6 +17,7 @@ interface DetailsPopupProps {
 	onClose: () => void;
 	id?: string;
 	smartAudience?: SmartAudience[];
+	validationMode?: "all" | "any";
 }
 
 interface ValidationHistoryResponse {
@@ -192,6 +193,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 	onClose,
 	id,
 	smartAudience,
+	validationMode,
 }) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [validations, setValidations] = useState<ValidationHistoryResponse[]>(
@@ -302,7 +304,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 							textAlign: "center",
 						}}
 					>
-						Validation Package History
+						Validation Package History, {validationMode} mode
 					</Typography>
 					<Box sx={{ display: "flex", flexDirection: "row" }}>
 						<IconButton onClick={onClose}>

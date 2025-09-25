@@ -112,6 +112,7 @@ class AudienceSmartsService:
                     "processed_active_segment_records": item[10],
                     "n_a": item[11] == "{}",
                     "target_schema": item[12],
+                    "validation_mode": item[16],
                     "progress_info": progress_dict,
                 }
             )
@@ -544,9 +545,14 @@ class AudienceSmartsService:
     def get_validations_by_aud_smart_id(
         self, id: UUID
     ) -> List[Dict[str, ValidationHistory]]:
-        raw_validations_obj = (
+        result = (
             self.audience_smarts_persistence.get_validations_by_aud_smart_id(id)
         )
+        if not result:
+            raise ValueError(f"Invalid audience smart id")
+
+        raw_validations = result
+
         validation_priority = (
             self.audience_settings_persistence.get_validation_priority()
         )
@@ -555,7 +561,7 @@ class AudienceSmartsService:
             validation_priority.split(",") if validation_priority else []
         )
 
-        parsed_validations = json.loads(raw_validations_obj.validations)
+        parsed_validations = json.loads(raw_validations.validations)
 
         result = []
 

@@ -180,6 +180,7 @@ class SmartsResponse(BaseModel):
     n_a: bool
     target_schema: str | None = None
     progress_info: SmartsProgress | None = None
+    validation_mode: AudienceValidationMode
 
 
 class SmartsCreateResponse(BaseModel):

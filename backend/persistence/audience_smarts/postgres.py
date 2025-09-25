@@ -344,6 +344,7 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmart.validations_step_size,
                 AudienceSmart.validations_step_processed,
                 AudienceSmart.validations_step_start_time,
+                AudienceSmart.validation_mode,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
