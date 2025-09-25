@@ -888,8 +888,12 @@ async def process_and_send_chunks(
                             if result.max_start_date
                             else None
                         ),
-                        min_recency=float(result.min_recency or 0.0),
-                        max_recency=float(result.max_recency or 1.0),
+                        min_recency=float(result.min_recency)
+                        if result.min_recency is not None
+                        else None,
+                        max_recency=float(result.max_recency)
+                        if result.max_recency is not None
+                        else None,
                     ),
                 ),
                 status=status,
@@ -979,8 +983,9 @@ async def normalize_persons_customer_conversion(
 
     updates = []
 
-    min_inv = AudienceSourceMath.inverted_decimal(Decimal(min_recency))
-    max_inv = AudienceSourceMath.inverted_decimal(Decimal(max_recency))
+    # inverted bounds
+    min_inv = AudienceSourceMath.inverted_decimal(min_recency)
+    max_inv = AudienceSourceMath.inverted_decimal(max_recency)
     if min_orders_amount > max_orders_amount:
         min_orders_amount, max_orders_amount = (
             max_orders_amount,
@@ -990,55 +995,82 @@ async def normalize_persons_customer_conversion(
     if min_inv > max_inv:
         min_inv, max_inv = max_inv, min_inv
 
-    w1, w2 = Decimal("0.6"), Decimal("0.4")
-
-    has_recency_data = any(p.recency is not None for p in persons)
+    # флаг: есть ли у кого-то валидная recency (>0)
+    has_recency_data = any(
+        (p.recency is not None) and (Decimal(str(p.recency)) > 0)
+        for p in persons
+    )
 
     if source_schema.lower() == BusinessType.B2C.value:
-        # B2C Algorithm:
-        # For B2C, the LeadValueScore is based on recency and order amount.
+        # диапазон для amount
         denom_amt = (
             max_orders_amount - min_orders_amount
             if max_orders_amount != min_orders_amount
             else Decimal("0")
         )
 
-        # sentinel for missing recency: use dataset max_recency so missing dates map to lowest score (0)
-        sentinel_recency = max_recency
+        # sentinel для тех, у кого нет даты (в случае, если потребовалось)
+        sentinel_recency = (
+            (max_recency + Decimal("1"))
+            if max_recency is not None
+            else Decimal("999999")
+        )
 
         for person in persons:
+            # --- amount score (use normalize_decimal to handle min==max safely) ---
             amt = Decimal(str(getattr(person, "sum_amount", 0) or 0))
             if denom_amt == 0:
-                amt_score = Decimal("0")
+                # если все суммы одинаковы — даём нейтральный скор (чтобы не было нулей)
+                amt_score = Decimal("0.5")
             else:
-                amt_score = (amt - min_orders_amount) / denom_amt
+                # normalized amount in [0..1]
+                amt_score = AudienceSourceMath.normalize_decimal(
+                    value=amt,
+                    min_val=min_orders_amount,
+                    max_val=max_orders_amount,
+                )
 
+            # --- recency handling ---
             if has_recency_data:
-                current_recency = (
-                    Decimal(str(person.recency))
-                    if person.recency is not None
-                    else sentinel_recency
-                )
-                inv = AudienceSourceMath.inverted_decimal(
-                    Decimal(current_recency)
-                )
-                rec_score = AudienceSourceMath.normalize_decimal(
-                    value=inv, min_val=min_inv, max_val=max_inv
-                )
+                if person.recency is None or Decimal(str(person.recency)) <= 0:
+                    # нет даты -> худший случай
+                    rec_score = Decimal("0")
+                    inv = min_inv
+                else:
+                    # есть дата
+                    current_recency = Decimal(str(person.recency))
+                    inv = AudienceSourceMath.inverted_decimal(current_recency)
+
+                    # clamp
+                    if inv < min_inv:
+                        inv = min_inv
+                    if inv > max_inv:
+                        inv = max_inv
+
+                    rec_score = AudienceSourceMath.normalize_decimal(
+                        value=inv, min_val=min_inv, max_val=max_inv
+                    )
+
                 w1, w2 = Decimal("0.6"), Decimal("0.4")
             else:
+                # если вообще у всех нет дат — recency выкидываем из формулы
                 rec_score = Decimal("0")
                 inv = Decimal("0")
                 w1, w2 = Decimal("0.0"), Decimal("1.0")
 
+            # итоговый скор и clamp
             lead_value = w1 * rec_score + w2 * amt_score
+            if lead_value < Decimal("0.0"):
+                lead_value = Decimal("0.0")
+            if lead_value > Decimal("1.0"):
+                lead_value = Decimal("1.0")
 
             updates.append(
                 {
                     "id": person.id,
                     "source_id": source_id,
                     "email": person.email,
-                    "asid": person.asid,
+                    "asid": getattr(person, "asid", None),
                     "recency_min": min_recency,
                     "recency_max": max_recency,
                     "inverted_recency": inv,
@@ -1217,12 +1249,12 @@ async def normalize_persons_interest_leads(
     min_recency = (
         Decimal(str(data_for_normalize.min_recency))
         if data_for_normalize.min_recency is not None
-        else Decimal("0.0")
+        else None
     )
     max_recency = (
         Decimal(str(data_for_normalize.max_recency))
         if data_for_normalize.max_recency is not None
-        else Decimal("1.0")
+        else None
     )
     inverted_min_recency = AudienceSourceMath.inverted_decimal(
         value=min_recency
