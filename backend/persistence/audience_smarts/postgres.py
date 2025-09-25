@@ -4,7 +4,8 @@ import logging
 from datetime import datetime, timezone
 
 import pytz
-from sqlalchemy import desc, asc, or_, func, select, case
+from sqlalchemy import desc, asc, or_, func, select, case, not_, cast
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm.query import RowReturningQuery
 
 from enums import AudienceValidationMode
@@ -600,6 +601,36 @@ class AudienceSmartsPostgresPersistence:
             )
         ]
 
+    def get_person_id_asids_by_smart_aud_id(
+        self, smart_audience_id: UUID
+    ) -> List[dict]:
+        processed_exists = func.jsonb_path_exists(
+            cast(AudienceSmart.validations, JSONB),
+            "$.** ? (@.processed == true)",
+        )
+
+        valid_condition = or_(
+            AudienceSmart.validation_mode != "any", not_(processed_exists)
+        )
+
+        rows = (
+            self.db.query(
+                AudienceSmartPerson.id,
+                AudienceSmartPerson.enrichment_user_asid,
+            )
+            .join(
+                AudienceSmart,
+                AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
+            )
+            .filter(
+                AudienceSmartPerson.smart_audience_id == smart_audience_id,
+                AudienceSmartPerson.is_valid == valid_condition,
+            )
+            .order_by(AudienceSmartPerson.sort_order)
+            .all()
+        )
+        return [{"id": row[0], "asid": row[1]} for row in rows]
+
     def get_synced_person_asids(self, data_sync_id: int) -> List[UUID]:
         return [
             row[0]
@@ -641,7 +672,7 @@ class AudienceSmartsPostgresPersistence:
                 func.count(AudienceSmartPerson.id).label("total_count"),
                 func.count(
                     case((AudienceSmartPerson.is_valid.is_(True), 1))
-                ).label("total_validated"),
+                ).label("total_valid"),
                 func.count(
                     case(
                         (
@@ -651,7 +682,7 @@ class AudienceSmartsPostgresPersistence:
                             1,
                         )
                     )
-                ).label("validation_count"),
+                ).label("count_processed"),
             ).where(AudienceSmartPerson.smart_audience_id == smart_audience_id)
         ).one()
 
