@@ -222,6 +222,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 			{
 				count_active_segment: value,
 				validations: selectedValidations,
+				validation_mode: mode,
 			},
 		);
 

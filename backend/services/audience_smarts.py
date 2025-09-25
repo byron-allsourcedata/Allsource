@@ -310,7 +310,10 @@ class AudienceSmartsService:
     #     return round(costs, 2)
 
     def calculate_validation_cost(
-        self, count_active_segment: int, validations: List[str]
+        self,
+        count_active_segment: int,
+        validations: List[str],
+        validation_mode: AudienceValidationMode,
     ) -> float:
         costs_raw = self.audience_settings_persistence.get_cost_validations()
         cost_map = costs_raw or {}
@@ -333,13 +336,23 @@ class AudienceSmartsService:
         current_cnt = float(count_active_segment)
         total_cost = 0.0
 
-        for key in validations_sorted:
-            total_cost += current_cnt * cost_map.get(key, 1.0)
+        if validation_mode == AudienceValidationMode.ANY.value:
+            for key in validations_sorted:
+                total_cost += current_cnt * cost_map.get(key, 1.0)
 
-            vstat = stats.get(key, {})
-            valid = vstat.get("valid_count", 1.0)
-            total = vstat.get("total_count", 1.0)
-            current_cnt *= valid / total
+                vstat = stats.get(key, {})
+                valid = vstat.get("valid_count", 1.0)
+                total = vstat.get("total_count", 1.0)
+                current_cnt *= 1 - valid / total
+
+        else:
+            for key in validations_sorted:
+                total_cost += current_cnt * cost_map.get(key, 1.0)
+
+                vstat = stats.get(key, {})
+                valid = vstat.get("valid_count", 1.0)
+                total = vstat.get("total_count", 1.0)
+                current_cnt *= valid / total
 
         return round(total_cost, 2)
 
@@ -486,6 +499,7 @@ class AudienceSmartsService:
             validated_records=created_data.validated_records,
             active_segment_records=created_data.active_segment_records,
             processed_active_segment_records=created_data.processed_active_segment_records,
+            validation_mode=created_data.validation_mode,
             status=created_data.status,
             integrations=None,
             n_a=created_data.n_a,
@@ -713,6 +727,7 @@ class AudienceSmartsService:
             step_size,
             step_processed,
             step_start_time,
+            validation_mode,
         ) = smart_source
 
         progress_dict = self.compute_eta(
@@ -736,6 +751,7 @@ class AudienceSmartsService:
             n_a=validations == "{}",
             target_schema=target_schema,
             progress_info=progress_dict,
+            validation_mode=validation_mode,
         )
 
     def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID):

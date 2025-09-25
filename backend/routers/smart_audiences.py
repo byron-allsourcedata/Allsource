@@ -73,6 +73,7 @@ def calculate_validation_cost(
     return audience_smarts_service.calculate_validation_cost(
         count_active_segment=request["count_active_segment"],
         validations=request["validations"],
+        validation_mode=request["validation_mode"],
     )
 
 

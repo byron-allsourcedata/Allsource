@@ -311,6 +311,7 @@ class AudienceSmartsPostgresPersistence:
             validations=json.loads(new_audience.validations),
             target_schema=new_audience.target_schema,
             n_a=new_audience.validations == {},
+            validation_mode=new_audience.validation_mode,
         )
 
     def get_audience_smarts(
@@ -487,6 +488,7 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmart.validations_step_size,
                 AudienceSmart.validations_step_processed,
                 AudienceSmart.validations_step_start_time,
+                AudienceSmart.validation_mode,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
@@ -610,6 +612,8 @@ class AudienceSmartsPostgresPersistence:
             "$.** ? (@.processed == true)",
         )
 
+        print(processed_exists)
+
         valid_condition = or_(
             AudienceSmart.validation_mode != "any", not_(processed_exists)
         )
@@ -625,7 +629,7 @@ class AudienceSmartsPostgresPersistence:
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == smart_audience_id,
-                AudienceSmartPerson.is_valid == valid_condition,
+                valid_condition,
             )
             .order_by(AudienceSmartPerson.sort_order)
             .all()
