@@ -1002,25 +1002,19 @@ async def normalize_persons_customer_conversion(
     )
 
     if source_schema.lower() == BusinessType.B2C.value:
-        # диапазон для amount
+        # B2C Algorithm:
+        # For B2C, the LeadValueScore is based solely on the recency of failed lead attempts.
+        # We use the "start_date" field as LastFailedDate.
         denom_amt = (
             max_orders_amount - min_orders_amount
             if max_orders_amount != min_orders_amount
             else Decimal("0")
         )
 
-        # sentinel для тех, у кого нет даты (в случае, если потребовалось)
-        sentinel_recency = (
-            (max_recency + Decimal("1"))
-            if max_recency is not None
-            else Decimal("999999")
-        )
-
         for person in persons:
             # --- amount score (use normalize_decimal to handle min==max safely) ---
             amt = Decimal(str(getattr(person, "sum_amount", 0) or 0))
             if denom_amt == 0:
-                # если все суммы одинаковы — даём нейтральный скор (чтобы не было нулей)
                 amt_score = Decimal("0.5")
             else:
                 # normalized amount in [0..1]
