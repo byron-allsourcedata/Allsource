@@ -7,12 +7,16 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Typography from "@mui/material/Typography";
 import { SxProps } from "@mui/system";
 
-type MatchValue = "all" | "any";
-
-interface MatchToggleProps {
-	value?: MatchValue;
-	onChange?: (value: MatchValue) => void;
+interface RadioButtonProps<T extends string> {
+	value?: T;
+	onChange?: (value: React.SetStateAction<T>) => void;
 	className?: SxProps;
+	values: RadioValues<T>[];
+}
+
+interface RadioValues<T extends string> {
+	value: T;
+	name: string;
 }
 
 const StyledRadio = styled(Radio)(({ theme }) => {
@@ -39,13 +43,14 @@ const StyledRadio = styled(Radio)(({ theme }) => {
 	};
 });
 
-const CustomRadioButton: React.FC<MatchToggleProps> = ({
+const CustomRadioButton = <T extends string>({
 	value,
 	onChange,
 	className,
-}) => {
+	values,
+}: RadioButtonProps<T>) => {
 	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const val = event.target.value as MatchValue;
+		const val = event.target.value as T;
 		onChange?.(val);
 	};
 
@@ -64,46 +69,30 @@ const CustomRadioButton: React.FC<MatchToggleProps> = ({
 				row
 				value={value}
 				onChange={handleChange}
-				aria-label="match-mode"
-				name="match-mode"
+				aria-label="radio-group"
+				name="radio-group"
 			>
-				<FormControlLabel
-					value="all"
-					control={<StyledRadio />}
-					label={
-						<Typography
-							variant="subtitle1"
-							sx={{
-								color: value === "all" ? "#3b82f6" : "#6f6f6f",
-								display: "inline-flex",
-								alignItems: "center",
-								ml: 0.75,
-								fontSize: "12px",
-							}}
-						>
-							Match All
-						</Typography>
-					}
-				/>
-
-				<FormControlLabel
-					value="any"
-					control={<StyledRadio />}
-					label={
-						<Typography
-							variant="subtitle1"
-							sx={{
-								color: value === "any" ? "#3b82f6" : "#6f6f6f",
-								display: "inline-flex",
-								alignItems: "center",
-								ml: 0.75,
-								fontSize: "12px",
-							}}
-						>
-							Match Any
-						</Typography>
-					}
-				/>
+				{values.map((val, ind) => (
+					<FormControlLabel
+						key={ind}
+						value={val.value}
+						control={<StyledRadio />}
+						label={
+							<Typography
+								variant="subtitle1"
+								sx={{
+									color: value === val.value ? "#3b82f6" : "#6f6f6f",
+									display: "inline-flex",
+									alignItems: "center",
+									ml: 0.75,
+									fontSize: "12px",
+								}}
+							>
+								{val.name}
+							</Typography>
+						}
+					/>
+				))}
 			</RadioGroup>
 		</FormControl>
 	);

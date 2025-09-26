@@ -508,7 +508,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 						Choose parameters that you want to validate.
 					</Typography>
 
-					<CustomRadioButton value={mode} onChange={setMode} />
+					<CustomRadioButton
+						value={mode}
+						onChange={setMode}
+						values={[
+							{ name: "Match All", value: "all" },
+							{ name: "Match any", value: "any" },
+						]}
+					/>
 
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 						{/* Personal Email Filter */}
