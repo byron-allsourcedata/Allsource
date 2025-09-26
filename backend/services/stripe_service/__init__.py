@@ -72,7 +72,7 @@ class StripeService:
     @staticmethod
     def record_usage(customer_id: str, quantity: int):
         resp = stripe.billing.MeterEvent.create(
-            event_name="records",
+            event_name="contacts_resolutions",
             identifier=str(uuid.uuid4()),
             payload={
                 "stripe_customer_id": customer_id,
