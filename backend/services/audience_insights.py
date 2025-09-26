@@ -57,15 +57,16 @@ class AudienceInsightsService:
         return self._combine_limit_20(sources, lookalikes)
 
     def _fill_gapped_financial_info(self, financial_profile: dict) -> dict:
-        # Fill skipped number of credit lines
-        number_of_credit_lines = [str(i) for i in range(1, 9 + 1)]
+        if "number_of_credit_lines" not in financial_profile:
+            financial_profile["number_of_credit_lines"] = {}
+
+        number_of_credit_lines = [str(i) for i in range(1, 10)]
 
         for credit_line in number_of_credit_lines:
             if credit_line not in financial_profile["number_of_credit_lines"]:
                 financial_profile["number_of_credit_lines"][credit_line] = 0
 
         return financial_profile
-
 
     def _build_response(self, data: dict, is_debug: bool) -> dict:
         # B2B
@@ -132,7 +133,9 @@ class AudienceInsightsService:
         # because it needs to be calculate in real time
         if not is_debug:
             education_history_ = parsed.b2b.education_history
-            new_education_history = education_history_.calculate_percentages_without_unknown()
+            new_education_history = (
+                education_history_.calculate_percentages_without_unknown()
+            )
             parsed.b2b.education_history = new_education_history
 
         parsed = parsed.model_dump()
