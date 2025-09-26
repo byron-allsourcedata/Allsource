@@ -239,9 +239,9 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			id: 7,
 			type: "Transaction Date",
 			value: "",
-			canDelete: false,
+			canDelete: true,
 			isHidden: false,
-			isRequiredForAsidMatching: true,
+			isRequiredForAsidMatching: false,
 		},
 		{
 			id: 8,
