@@ -224,6 +224,7 @@ class AudienceSmartsService:
             processed = int(step_processed.get(key, 0) or 0)
             if size == 0 or processed >= size:
                 completed_steps += 1
+                current_step_key = key
             else:
                 current_step_key = key
                 break
@@ -705,10 +706,8 @@ class AudienceSmartsService:
         return output
 
     def get_processing_smarts(self, id: str) -> Optional[SmartsResponse]:
-        smart_source = self.audience_smarts_persistence.get_processing_smarts(
-            id
-        )
-        if not smart_source:
+        smart_aud = self.audience_smarts_persistence.get_processing_smarts(id)
+        if not smart_aud:
             return None
 
         (
@@ -728,7 +727,7 @@ class AudienceSmartsService:
             step_processed,
             step_start_time,
             validation_mode,
-        ) = smart_source
+        ) = smart_aud
 
         progress_dict = self.compute_eta(
             step_size_json=step_size,

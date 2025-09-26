@@ -210,9 +210,7 @@ def download_persons(
     return BaseEnum.FAILURE
 
 
-@router.get(
-    "/get-processing-smart-source", response_model=Optional[SmartsResponse]
-)
+@router.get("/get-processing-smart", response_model=Optional[SmartsResponse])
 def get_processing_smarts(
     audience_smarts_service: AudienceSmartsService,
     id: str = Query(...),

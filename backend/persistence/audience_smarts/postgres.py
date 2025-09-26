@@ -480,9 +480,7 @@ class AudienceSmartsPostgresPersistence:
         self.db.commit()
         return updated_count
 
-    def get_processing_smarts(
-        self, id
-    ):  #############################################################
+    def get_processing_smarts(self, id):
         query = (
             self.db.query(
                 AudienceSmart.id,

@@ -118,7 +118,7 @@ const SourcesList: React.FC = () => {
 		try {
 			if (createdData) {
 				const response = await axiosInstance.get(
-					`/audience-smarts/get-processing-smart-source?&id=${createdData.id}`,
+					`/audience-smarts/get-processing-smart?&id=${createdData.id}`,
 				);
 				const updatedItem = response.data;
 				if (updatedItem === null) {
