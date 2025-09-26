@@ -201,6 +201,14 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 		[],
 	);
 
+	const getEntry = (entry: ValidationHistoryResponse) => {
+		const key = Object.keys(entry)[0];
+		return {
+			key,
+			value: (entry as ValidationHistoryResponse)[key] as ValidationHistory,
+		};
+	};
+
 	const fetchValidationHistory = async () => {
 		setIsLoading(true);
 		try {
@@ -216,6 +224,23 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 					},
 					0,
 				);
+
+				const adjustedValidations = validationsResponse.map(
+					(entry: any, idx: number) => {
+						const { key, value } = getEntry(entry);
+						const cloned = { ...value };
+
+						if (validationMode === "any" && idx > 0) {
+							const prev = getEntry(validationsResponse[idx - 1]);
+							const prevCount = (prev.value?.count_validated as number) || 0;
+							const currCount = (cloned.count_validated as number) || 0;
+							cloned.count_validated = Math.max(0, currCount - prevCount);
+						}
+
+						return { [key]: cloned };
+					},
+				);
+
 				const lastValidation = validationsResponse.at(-1);
 				const lastValidationKey = lastValidation
 					? Object.keys(lastValidation)[0]
@@ -225,7 +250,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 					: 0;
 
 				setValidations([
-					...validationsResponse,
+					...adjustedValidations,
 					{
 						total: {
 							count_submited: smartAudience[2].value,
