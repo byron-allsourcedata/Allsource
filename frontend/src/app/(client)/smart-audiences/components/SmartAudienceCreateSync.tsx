@@ -47,7 +47,7 @@ import {
 import { AxiosError } from "axios";
 import GoHighLevelConnectPopup from "@/components/integrations/GoHighLevelIntegration";
 import { InfoIcon } from "@/icon";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import CustomButton from "@/components/ui/CustomButton";
 import { Logo } from "@/components/ui/Logo";
 

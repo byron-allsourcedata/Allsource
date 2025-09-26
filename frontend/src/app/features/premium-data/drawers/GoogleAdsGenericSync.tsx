@@ -22,7 +22,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 import { SyncFilter } from "./sync/SyncFilter";
 import { GoogleAdsListPicker } from "./sync/GoogleAdsListPicker";
@@ -741,6 +741,7 @@ export const GoogleAdsGenericSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 					}}
 				>
 					<UserTip
+						title="Data Sync Speed"
 						limit={500}
 						service="GoogleAds"
 						sx={{

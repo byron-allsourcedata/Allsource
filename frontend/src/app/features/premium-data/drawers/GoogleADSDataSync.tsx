@@ -35,7 +35,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 
 type GoogleAdsPopupData = {
@@ -790,8 +790,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 					}}
 				>
 					<UserTip
-						limit={500}
-						service="GoogleAds"
+						title="Data Sync Speed"
+						content="GoogleAds standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

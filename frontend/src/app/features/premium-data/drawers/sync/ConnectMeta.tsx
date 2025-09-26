@@ -25,7 +25,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LinearProgress from "@mui/material/LinearProgress";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { MetaDeletePopover } from "./meta/MetaDeletePopover";
 import { MetaDisabledTextField } from "./meta/MetaTextField";
@@ -906,8 +906,8 @@ export const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 					}}
 				>
 					<UserTip
-						limit={500}
-						service="Meta"
+						title="Data Sync Speed"
+						content="Meta standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

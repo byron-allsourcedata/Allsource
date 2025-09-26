@@ -11,6 +11,7 @@ import { styled } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import dayjs from "dayjs";
+import TipInsideDrawer from "@/components/ui/tips/TipInsideDrawer";
 
 interface DetailsPopupProps {
 	open: boolean;
@@ -304,7 +305,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 							textAlign: "center",
 						}}
 					>
-						Validation Package History, {validationMode} mode
+						Validation Package History
 					</Typography>
 					<Box sx={{ display: "flex", flexDirection: "row" }}>
 						<IconButton onClick={onClose}>
@@ -324,6 +325,23 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 						width: "100%",
 					}}
 				>
+					<TipInsideDrawer
+						title={
+							validationMode === "any"
+								? "Any Validation mode"
+								: "All Validation mode"
+						}
+						content={
+							validationMode === "any"
+								? "Users who meet at least one of the selected criteria are included. This allows for a broader set of results, matching any of the conditions you select."
+								: "Only users who meet all of the selected criteria are included. This ensures that the results strictly follow every condition you set."
+						}
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
+
 					<Box sx={{ width: "100%", pt: 3, pb: 2, px: 3 }}>
 						<Box
 							sx={{

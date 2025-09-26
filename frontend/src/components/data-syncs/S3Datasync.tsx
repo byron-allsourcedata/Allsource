@@ -33,7 +33,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 
 interface ConnectS3PopupProps {
@@ -649,8 +649,8 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 					}}
 				>
 					<UserTip
-						limit={500}
-						service="S3"
+						title="Data Sync Speed"
+						content="S3 standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

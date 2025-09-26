@@ -26,7 +26,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { Logo } from "@/components/ui/Logo";
 
 interface Data {
@@ -532,8 +532,8 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 					}}
 				>
 					<UserTip
-						limit={50}
-						service="GoHighLevel"
+						title="Data Sync Speed"
+						content="GoHighLevel standard sync speed is 50 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
