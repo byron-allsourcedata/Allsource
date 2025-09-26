@@ -995,7 +995,6 @@ async def normalize_persons_customer_conversion(
     if min_inv > max_inv:
         min_inv, max_inv = max_inv, min_inv
 
-    # флаг: есть ли у кого-то валидная recency (>0)
     has_recency_data = any(
         (p.recency is not None) and (Decimal(str(p.recency)) > 0)
         for p in persons
@@ -1027,11 +1026,11 @@ async def normalize_persons_customer_conversion(
             # --- recency handling ---
             if has_recency_data:
                 if person.recency is None or Decimal(str(person.recency)) <= 0:
-                    # нет даты -> худший случай
+                    # without date -> worst case
                     rec_score = Decimal("0")
                     inv = min_inv
                 else:
-                    # есть дата
+                    # if date
                     current_recency = Decimal(str(person.recency))
                     inv = AudienceSourceMath.inverted_decimal(current_recency)
 
@@ -1047,12 +1046,12 @@ async def normalize_persons_customer_conversion(
 
                 w1, w2 = Decimal("0.6"), Decimal("0.4")
             else:
-                # если вообще у всех нет дат — recency выкидываем из формулы
+                # if no one has dates at all — exclude recency from the formula
                 rec_score = Decimal("0")
                 inv = Decimal("0")
                 w1, w2 = Decimal("0.0"), Decimal("1.0")
 
-            # итоговый скор и clamp
+            # final score and clamp
             lead_value = w1 * rec_score + w2 * amt_score
             if lead_value < Decimal("0.0"):
                 lead_value = Decimal("0.0")
