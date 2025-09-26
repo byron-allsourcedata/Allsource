@@ -4,7 +4,19 @@ import logging
 from datetime import datetime, timezone
 
 import pytz
-from sqlalchemy import desc, asc, or_, func, select, case, not_, cast
+from sqlalchemy import (
+    Boolean,
+    desc,
+    asc,
+    cast as sql_cast,
+    literal,
+    or_,
+    func,
+    select,
+    case,
+    not_,
+    cast,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm.query import RowReturningQuery
 
@@ -588,52 +600,53 @@ class AudienceSmartsPostgresPersistence:
     def get_person_id_asids_by_smart_aud_id(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        return [
-            {"id": row[0], "asid": row[1]}
-            for row in (
-                self.db.query(
-                    AudienceSmartPerson.id,
-                    AudienceSmartPerson.enrichment_user_asid,
-                )
-                .filter(
-                    AudienceSmartPerson.smart_audience_id == smart_audience_id,
-                    AudienceSmartPerson.is_valid == True,
-                )
-                .order_by(AudienceSmartPerson.sort_order)
-                .all()
-            )
-        ]
-
-    def get_person_id_asids_by_smart_aud_id(
-        self, smart_audience_id: UUID
-    ) -> List[dict]:
-        processed_exists = func.jsonb_path_exists(
-            cast(AudienceSmart.validations, JSONB),
-            "$.** ? (@.processed == true)",
+        aud = (
+            self.db.query(AudienceSmart)
+            .filter(AudienceSmart.id == smart_audience_id)
+            .one_or_none()
         )
 
-        print(processed_exists)
+        raw_validations = aud.validations
 
-        valid_condition = or_(
-            AudienceSmart.validation_mode != "any", not_(processed_exists)
-        )
+        if raw_validations is None:
+            validations = {}
+        elif isinstance(raw_validations, str):
+            validations = json.loads(raw_validations)
+        else:
+            validations = raw_validations
 
-        rows = (
+        def has_processed_true(obj) -> bool:
+            if isinstance(obj, dict):
+                if "processed" in obj and obj["processed"] is True:
+                    return True
+                for v in obj.values():
+                    if has_processed_true(v):
+                        return True
+            elif isinstance(obj, list):
+                for item in obj:
+                    if has_processed_true(item):
+                        return True
+            return False
+
+        processed_exists = has_processed_true(validations)
+
+        if getattr(aud, "validation_mode", None) == "any":
+            expected_is_valid = not processed_exists
+        else:
+            expected_is_valid = True
+
+        query = (
             self.db.query(
                 AudienceSmartPerson.id,
                 AudienceSmartPerson.enrichment_user_asid,
             )
-            .join(
-                AudienceSmart,
-                AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
-            )
-            .filter(
-                AudienceSmartPerson.smart_audience_id == smart_audience_id,
-                valid_condition,
-            )
+            .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
+            .filter(AudienceSmartPerson.is_valid == expected_is_valid)
             .order_by(AudienceSmartPerson.sort_order)
-            .all()
         )
+
+        rows = query.all()
+
         return [{"id": row[0], "asid": row[1]} for row in rows]
 
     def get_synced_person_asids(self, data_sync_id: int) -> List[UUID]:

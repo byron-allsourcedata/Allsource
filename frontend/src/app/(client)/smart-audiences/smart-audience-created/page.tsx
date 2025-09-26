@@ -50,6 +50,7 @@ interface SmartAudienceSource {
 	integrations: string[] | null;
 	n_a: boolean;
 	progress_info: SmartsProgress | null;
+	validation_mode: "all" | "any";
 }
 
 const SourcesList: React.FC = () => {
@@ -771,6 +772,7 @@ const SourcesList: React.FC = () => {
 				open={validationHistoryPopupOpen}
 				onClose={handleValidationsHistoryPopupClose}
 				id={selectedRowData?.id}
+				validationMode={createdData?.validation_mode}
 				smartAudience={[
 					{
 						title: selectedRowData?.name,

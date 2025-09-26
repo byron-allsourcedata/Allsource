@@ -176,7 +176,11 @@ async def process_rmq_message(
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [
-                    {"id": pid, "is_validation_processed": False}
+                    {
+                        "id": pid,
+                        "is_validation_processed": False,
+                        "is_valid": True,
+                    }
                     for pid in success_ids
                 ],
             )

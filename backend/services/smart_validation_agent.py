@@ -126,10 +126,10 @@ class SmartValidationAgent:
                     if key in rule:
                         self._update_rule(
                             rule[key],
-                            total_validated,
+                            total_valid,
                             count_persons_before_validation,
                             count_subtracted,
-                            validation_count,
+                            count_processed,
                             total_count,
                         )
                         updated = True

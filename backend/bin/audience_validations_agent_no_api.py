@@ -160,7 +160,8 @@ async def aud_validation_agent(
             db_session.query(AudienceSmartPerson).filter(
                 AudienceSmartPerson.id.in_(success_ids)
             ).update(
-                {"is_validation_processed": False}, synchronize_session=False
+                {"is_validation_processed": False, "is_valid": True},
+                synchronize_session=False,
             )
 
             # smart_validation_agent_service.update_success_persons(failed_ids)
