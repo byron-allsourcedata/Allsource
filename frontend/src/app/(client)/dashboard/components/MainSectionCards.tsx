@@ -1,8 +1,9 @@
 import React from "react";
-import { Card, CardContent, Typography, Box } from "@mui/material";
+import { Card, CardContent, Typography, Box, Link } from "@mui/material";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PlaylistRemoveIcon from "@mui/icons-material/PlaylistRemove";
 import HeadsetMicOutlinedIcon from "@mui/icons-material/HeadsetMicOutlined";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
 import Image from "next/image";
 
@@ -243,7 +244,6 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
 					? `1.5px solid rgba(5, 105, 226, 1)`
 					: "1.5px solid rgba(255, 255, 255, 0.25)",
 				transition: "border 0.2s ease",
-				cursor: "pointer",
 				"&:hover": {
 					border: `1.5px solid rgba(5, 105, 226, 1)`,
 					transition: "none",
@@ -311,6 +311,28 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
 						{renderSection(event_info)}
 					</Box>
 				</Box>
+				{(tabType === "Sources" || tabType === "Lookalikes") && (
+					<Box sx={{ mt: 1, textAlign: "right" }}>
+						<Link
+							href={`/insights/${tabType.toLowerCase()}/${data.id}`}
+							onClick={(e) => e.stopPropagation()}
+							sx={{
+								fontFamily: "var(--font-nunito)",
+								fontWeight: 600,
+								fontStyle: "SemiBold",
+								fontSize: "14px",
+								leadingTrim: "NONE",
+								lineHeight: "22px",
+								textDecoration: "underline",
+								alignItems: "center",
+								display: "inline-flex",
+								"&:hover": { textDecoration: "none" },
+							}}
+						>
+							See Insights <ChevronRightIcon fontSize="small" />
+						</Link>
+					</Box>
+				)}
 			</CardContent>
 		</Card>
 	);
