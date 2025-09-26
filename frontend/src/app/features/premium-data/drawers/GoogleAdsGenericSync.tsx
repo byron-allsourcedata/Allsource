@@ -742,8 +742,7 @@ export const GoogleAdsGenericSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 				>
 					<UserTip
 						title="Data Sync Speed"
-						limit={500}
-						service="GoogleAds"
+						content="GoogleAds standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
