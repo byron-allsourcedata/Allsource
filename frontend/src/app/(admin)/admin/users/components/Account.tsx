@@ -495,29 +495,48 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				return formatCreditsCount(row.credits_count || 0);
 			case "status":
 				return (
-					<Typography
-						className="paragraph"
-						sx={{
-							display: "flex",
-							padding: "2px 8px",
-							borderRadius: "2px",
-							fontFamily: "var(--font-roboto)",
-							fontSize: "12px",
-							fontWeight: "400",
-							lineHeight: "normal",
-							backgroundColor: row.is_another_domain_resolved
-								? "rgba(253, 221, 218, 1)"
-								: getStatusStyle(row.status ?? "").background,
-							color: "#4A4A4A",
-							justifyContent: "center",
-							minWidth: "130px",
-							textTransform: "capitalize",
-						}}
-					>
-						{row.is_another_domain_resolved
-							? "Multiple Domain"
-							: formatFunnelText(row.status ?? "") || "--"}
-					</Typography>
+					<Box sx={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+						{row.is_another_domain_resolved && (
+							<Typography
+								className="paragraph"
+								sx={{
+									display: "flex",
+									padding: "2px 8px",
+									borderRadius: "2px",
+									fontFamily: "var(--font-roboto)",
+									fontSize: "12px",
+									fontWeight: "400",
+									lineHeight: "normal",
+									backgroundColor: "rgba(253, 221, 218, 1)",
+									color: "#4A4A4A",
+									justifyContent: "center",
+									minWidth: "130px",
+									textTransform: "capitalize",
+								}}
+							>
+								Multiple Domain
+							</Typography>
+						)}
+						<Typography
+							className="paragraph"
+							sx={{
+								display: "flex",
+								padding: "2px 8px",
+								borderRadius: "2px",
+								fontFamily: "var(--font-roboto)",
+								fontSize: "12px",
+								fontWeight: "400",
+								lineHeight: "normal",
+								backgroundColor: getStatusStyle(row.status ?? "").background,
+								color: "#4A4A4A",
+								justifyContent: "center",
+								minWidth: "130px",
+								textTransform: "capitalize",
+							}}
+						>
+							{formatFunnelText(row.status ?? "") || "--"}
+						</Typography>
+					</Box>
 				);
 			case "subscription_plan":
 				return (
