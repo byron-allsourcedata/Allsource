@@ -1,5 +1,6 @@
 from uuid import UUID
 from collections.abc import Sequence
+from enums import AudienceValidationMode
 from resolver import injectable
 from .interface import AudienceSmartsPersistenceInterface
 from .postgres import AudienceSmartsPostgresPersistence
@@ -63,6 +64,7 @@ class AudienceSmartsUnifiedPersistence(AudienceSmartsPersistenceInterface):
         validation_params: dict | None,
         active_segment_records: int,
         need_validate: bool,
+        validation_mode: AudienceValidationMode,
     ) -> AudienceSmart:
         return self.postgres.create_audience_smart(
             name=name,
@@ -76,6 +78,7 @@ class AudienceSmartsUnifiedPersistence(AudienceSmartsPersistenceInterface):
             validation_params=validation_params,
             active_segment_records=active_segment_records,
             need_validate=need_validate,
+            validation_mode=validation_mode,
         )
 
     def get_audience_smarts(

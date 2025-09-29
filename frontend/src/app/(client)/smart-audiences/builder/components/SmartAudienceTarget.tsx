@@ -158,6 +158,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
 	// Generate Active Segments
 	const [value, setValue] = useState<number | null>(0);
+	const [mode, setMode] = useState<"all" | "any">("all");
 	// const [maxValue, setMaxValue] = useState<number | null>(100000);
 	const [numberToValidate, setNumberToValidate] = useState<number | null>(null);
 	const [estimatedContacts, setEstimatedContacts] = useState<number>(0);
@@ -221,6 +222,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 			{
 				count_active_segment: value,
 				validations: selectedValidations,
+				validation_mode: mode,
 			},
 		);
 
@@ -417,6 +419,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 				smart_audience_name: audienceName,
 				active_segment_records: isValidateSkip ? AudienceSize : value,
 				total_records: AudienceSize,
+				validation_mode: mode,
 			};
 
 			const filteredRequestData = Object.fromEntries(
@@ -1133,6 +1136,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 					onValidate={handleFilterValidation}
 					onEdit={handleOnEditValidation}
 					setPersentsData={setPersentsData}
+					mode={mode}
+					setMode={setMode}
 				/>
 			)}
 

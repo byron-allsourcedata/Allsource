@@ -13,7 +13,7 @@ from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
 )
-from enums import AudienceSmartDataSource, QueueName
+from enums import AudienceSmartDataSource, QueueName, AudienceValidationMode
 from enums import AudienceSmartStatuses
 from models.users import User
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
@@ -112,6 +112,7 @@ class AudienceSmartsService:
                     "processed_active_segment_records": item[10],
                     "n_a": item[11] == "{}",
                     "target_schema": item[12],
+                    "validation_mode": item[16],
                     "progress_info": progress_dict,
                 }
             )
@@ -223,6 +224,7 @@ class AudienceSmartsService:
             processed = int(step_processed.get(key, 0) or 0)
             if size == 0 or processed >= size:
                 completed_steps += 1
+                current_step_key = key
             else:
                 current_step_key = key
                 break
@@ -309,7 +311,10 @@ class AudienceSmartsService:
     #     return round(costs, 2)
 
     def calculate_validation_cost(
-        self, count_active_segment: int, validations: List[str]
+        self,
+        count_active_segment: int,
+        validations: List[str],
+        validation_mode: AudienceValidationMode,
     ) -> float:
         costs_raw = self.audience_settings_persistence.get_cost_validations()
         cost_map = costs_raw or {}
@@ -332,13 +337,23 @@ class AudienceSmartsService:
         current_cnt = float(count_active_segment)
         total_cost = 0.0
 
-        for key in validations_sorted:
-            total_cost += current_cnt * cost_map.get(key, 1.0)
+        if validation_mode == AudienceValidationMode.ANY.value:
+            for key in validations_sorted:
+                total_cost += current_cnt * cost_map.get(key, 1.0)
 
-            vstat = stats.get(key, {})
-            valid = vstat.get("valid_count", 1.0)
-            total = vstat.get("total_count", 1.0)
-            current_cnt *= valid / total
+                vstat = stats.get(key, {})
+                valid = vstat.get("valid_count", 1.0)
+                total = vstat.get("total_count", 1.0)
+                current_cnt *= 1 - valid / total
+
+        else:
+            for key in validations_sorted:
+                total_cost += current_cnt * cost_map.get(key, 1.0)
+
+                vstat = stats.get(key, {})
+                valid = vstat.get("valid_count", 1.0)
+                total = vstat.get("total_count", 1.0)
+                current_cnt *= valid / total
 
         return round(total_cost, 2)
 
@@ -429,6 +444,7 @@ class AudienceSmartsService:
         active_segment_records: int,
         total_records: int,
         target_schema: str,
+        validation_mode: AudienceValidationMode,
         is_validate_skip: Optional[bool] = None,
         contacts_to_validate: Optional[int] = None,
     ) -> SmartsResponse:
@@ -463,6 +479,7 @@ class AudienceSmartsService:
             target_schema=target_schema,
             status=status,
             need_validate=need_validate,
+            validation_mode=validation_mode,
         )
         await self.start_scripts_for_matching(
             created_data.id,
@@ -483,6 +500,7 @@ class AudienceSmartsService:
             validated_records=created_data.validated_records,
             active_segment_records=created_data.active_segment_records,
             processed_active_segment_records=created_data.processed_active_segment_records,
+            validation_mode=created_data.validation_mode,
             status=created_data.status,
             integrations=None,
             n_a=created_data.n_a,
@@ -542,9 +560,14 @@ class AudienceSmartsService:
     def get_validations_by_aud_smart_id(
         self, id: UUID
     ) -> List[Dict[str, ValidationHistory]]:
-        raw_validations_obj = (
+        result = (
             self.audience_smarts_persistence.get_validations_by_aud_smart_id(id)
         )
+        if not result:
+            raise ValueError(f"Invalid audience smart id")
+
+        raw_validations = result
+
         validation_priority = (
             self.audience_settings_persistence.get_validation_priority()
         )
@@ -553,7 +576,7 @@ class AudienceSmartsService:
             validation_priority.split(",") if validation_priority else []
         )
 
-        parsed_validations = json.loads(raw_validations_obj.validations)
+        parsed_validations = json.loads(raw_validations.validations)
 
         result = []
 
@@ -683,10 +706,8 @@ class AudienceSmartsService:
         return output
 
     def get_processing_smarts(self, id: str) -> Optional[SmartsResponse]:
-        smart_source = self.audience_smarts_persistence.get_processing_smarts(
-            id
-        )
-        if not smart_source:
+        smart_aud = self.audience_smarts_persistence.get_processing_smarts(id)
+        if not smart_aud:
             return None
 
         (
@@ -705,7 +726,8 @@ class AudienceSmartsService:
             step_size,
             step_processed,
             step_start_time,
-        ) = smart_source
+            validation_mode,
+        ) = smart_aud
 
         progress_dict = self.compute_eta(
             step_size_json=step_size,
@@ -728,6 +750,7 @@ class AudienceSmartsService:
             n_a=validations == "{}",
             target_schema=target_schema,
             progress_info=progress_dict,
+            validation_mode=validation_mode,
         )
 
     def get_enrichment_users_for_job_validation(self, smart_audience_id: UUID):

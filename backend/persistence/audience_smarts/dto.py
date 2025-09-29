@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, Dict
 from uuid import UUID
+from enums import AudienceValidationMode
 
 from pydantic import BaseModel
 
@@ -21,6 +22,7 @@ class AudienceSmartDTO(BaseModel):
     validations: Optional[Dict]
     target_schema: Optional[str]
     n_a: bool
+    validation_mode: AudienceValidationMode
 
     model_config = {
         "from_attributes": True,

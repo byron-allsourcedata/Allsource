@@ -3,21 +3,17 @@
 import { InfoIcon } from "@/icon";
 import { Box, SxProps, Typography } from "@mui/material";
 
-interface UserHintProps {
+interface TipInsideProps {
 	title?: string;
 	content?: string;
-	service?: string;
-	limit?: number;
 	sx?: SxProps;
 }
 
-const UserTip = ({
-	title = "Data Sync Speed",
-	service,
-	limit,
+const TipInsideDrawer = ({
+	title,
 	content,
 	sx,
-}: UserHintProps) => {
+}: TipInsideProps) => {
 	return (
 		<Box
 			sx={{
@@ -73,12 +69,11 @@ const UserTip = ({
 						color: "rgba(95, 99, 104, 1)",
 					}}
 				>
-					{content ??
-						`${service}'s standard sync speed is ${limit} contacts per minute.`}
+					{content}
 				</Typography>
 			</Box>
 		</Box>
 	);
 };
 
-export default UserTip;
+export default TipInsideDrawer;

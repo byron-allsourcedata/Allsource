@@ -27,7 +27,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 
 interface OnmisendDataSyncProps {
@@ -721,8 +721,8 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 					}}
 				>
 					<UserTip
-						limit={150}
-						service="Omnisend"
+						title="Data Sync Speed"
+						content="Omnisend standard sync speed is 150 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

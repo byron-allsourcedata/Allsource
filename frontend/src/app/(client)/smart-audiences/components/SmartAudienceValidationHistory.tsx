@@ -11,12 +11,14 @@ import { styled } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import dayjs from "dayjs";
+import TipInsideDrawer from "@/components/ui/tips/TipInsideDrawer";
 
 interface DetailsPopupProps {
 	open: boolean;
 	onClose: () => void;
 	id?: string;
 	smartAudience?: SmartAudience[];
+	validationMode?: "all" | "any";
 }
 
 interface ValidationHistoryResponse {
@@ -192,11 +194,20 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 	onClose,
 	id,
 	smartAudience,
+	validationMode,
 }) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [validations, setValidations] = useState<ValidationHistoryResponse[]>(
 		[],
 	);
+
+	const getEntry = (entry: ValidationHistoryResponse) => {
+		const key = Object.keys(entry)[0];
+		return {
+			key,
+			value: (entry as ValidationHistoryResponse)[key] as ValidationHistory,
+		};
+	};
 
 	const fetchValidationHistory = async () => {
 		setIsLoading(true);
@@ -213,6 +224,23 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 					},
 					0,
 				);
+
+				const adjustedValidations = validationsResponse.map(
+					(entry: any, idx: number) => {
+						const { key, value } = getEntry(entry);
+						const cloned = { ...value };
+
+						if (validationMode === "any" && idx > 0) {
+							const prev = getEntry(validationsResponse[idx - 1]);
+							const prevCount = (prev.value?.count_validated as number) || 0;
+							const currCount = (cloned.count_validated as number) || 0;
+							cloned.count_validated = Math.max(0, currCount - prevCount);
+						}
+
+						return { [key]: cloned };
+					},
+				);
+
 				const lastValidation = validationsResponse.at(-1);
 				const lastValidationKey = lastValidation
 					? Object.keys(lastValidation)[0]
@@ -222,7 +250,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 					: 0;
 
 				setValidations([
-					...validationsResponse,
+					...adjustedValidations,
 					{
 						total: {
 							count_submited: smartAudience[2].value,
@@ -322,6 +350,23 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({
 						width: "100%",
 					}}
 				>
+					<TipInsideDrawer
+						title={
+							validationMode === "any"
+								? "Any Validation mode"
+								: "All Validation mode"
+						}
+						content={
+							validationMode === "any"
+								? "Users who meet at least one of the selected criteria are included. This allows for a broader set of results, matching any of the conditions you select."
+								: "Only users who meet all of the selected criteria are included. This ensures that the results strictly follow every condition you set."
+						}
+						sx={{
+							width: "100%",
+							padding: "16px 24px 0px 24px",
+						}}
+					/>
+
 					<Box sx={{ width: "100%", pt: 3, pb: 2, px: 3 }}>
 						<Box
 							sx={{

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import {
 	Box,
 	Typography,
@@ -28,6 +28,7 @@ import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
 import { BuilderKey } from "../../context/hintsCardsContent";
+import { CustomRadioButton } from "@/components/ui";
 
 interface ExpandableFilterProps {
 	block8Ref: React.RefObject<HTMLDivElement>;
@@ -39,6 +40,8 @@ interface ExpandableFilterProps {
 	onValidate: (data: FilterData) => void;
 	onEdit: () => void;
 	setPersentsData: (value: number) => void;
+	mode: "all" | "any";
+	setMode: Dispatch<SetStateAction<"all" | "any">>;
 }
 
 interface Recency {
@@ -83,6 +86,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 	onValidate,
 	onEdit,
 	setPersentsData,
+	mode,
+	setMode,
 }) => {
 	const router = useRouter();
 	const { changeSmartsBuilderHint, smartsBuilderHints } = useSmartsHints();
@@ -502,6 +507,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 					>
 						Choose parameters that you want to validate.
 					</Typography>
+
+					<CustomRadioButton
+						value={mode}
+						onChange={setMode}
+						values={[
+							{ name: "Match All", value: "all" },
+							{ name: "Match any", value: "any" },
+						]}
+					/>
+
 					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
 						{/* Personal Email Filter */}
 						<Box sx={ValidationStyle.main_filter_form}>

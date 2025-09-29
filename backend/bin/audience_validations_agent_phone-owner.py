@@ -243,20 +243,24 @@ async def process_rmq_message(
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [
-                    {"id": pid, "is_validation_processed": False}
+                    {
+                        "id": pid,
+                        "is_validation_processed": False,
+                        "is_valid": True,
+                    }
                     for pid in success_ids
                 ],
             )
             db_session.flush()
 
         db_session.commit()
-        total_validated = db_session.scalar(
+        total_valid = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                 AudienceSmartPerson.is_valid.is_(True),
             )
         )
-        validation_count = db_session.scalar(
+        count_processed = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                 AudienceSmartPerson.is_validation_processed.is_(False),
@@ -281,7 +285,7 @@ async def process_rmq_message(
                     if key in rule:
                         rule[key].setdefault("count_cost", "0.00")
 
-                        rule[key]["count_validated"] = total_validated
+                        rule[key]["count_validated"] = total_valid
                         rule[key]["count_submited"] = (
                             count_persons_before_validation
                         )
@@ -293,7 +297,7 @@ async def process_rmq_message(
                             )
                         )
 
-                        if validation_count == total_count:
+                        if count_processed == total_count:
                             rule[key]["processed"] = True
 
             aud_smart.validations = json.dumps(validations)
@@ -301,16 +305,16 @@ async def process_rmq_message(
         smart_validation_agent_service.update_step_processed(
             aud_smart_id=aud_smart_id,
             validation_type=f"phone-{validation_type}",
-            batch_size=validation_count,
+            batch_size=count_processed,
         )
 
         db_session.commit()
 
-        if validation_count == total_count:
+        if count_processed == total_count:
             audience_smarts_service.update_stats_validations(
                 validation_type=f"phone-{validation_type}",
                 count_persons_before_validation=count_persons_before_validation,
-                count_valid_persons=total_validated,
+                count_valid_persons=total_valid,
             )
             db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -328,7 +332,7 @@ async def process_rmq_message(
             user_id=user_id,
             data={
                 "smart_audience_id": aud_smart_id,
-                "total_validated": total_validated,
+                "total_validated": total_valid,
             },
         )
         logging.info("sent sse with total count")
