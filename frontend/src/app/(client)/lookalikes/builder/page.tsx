@@ -40,7 +40,7 @@ import { useLookalikesHints } from "../context/LookalikesHintsContext";
 import { ExpandLessIcon, ExpandMoreIcon, SearchIcon } from "@/icon";
 import scrollToBlock from "@/utils/autoscroll";
 import CustomButton from "@/components/ui/CustomButton";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 
 export const dynamic = "force-dynamic";
 

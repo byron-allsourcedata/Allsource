@@ -105,6 +105,7 @@ interface Smarts {
 	target_schema: string;
 	n_a: boolean;
 	progress_info: SmartsProgress | null;
+	validation_mode: "all" | "any";
 }
 
 export interface SmartsProgress {
@@ -2291,6 +2292,7 @@ const SmartAudiences: React.FC = () => {
 										open={validationHistoryPopupOpen}
 										onClose={handleValidationsHistoryPopupClose}
 										id={selectedRowData?.id}
+										validationMode={selectedRowData?.validation_mode}
 										smartAudience={[
 											{
 												title: selectedRowData?.name,

@@ -85,6 +85,9 @@ class AudienceSmart(Base):
     validations_step_processed: Mapped[dict[str, int] | None] = mapped_column(
         JSON, nullable=True
     )
+    validation_mode: Mapped[str] = mapped_column(
+        VARCHAR(8), nullable=False, server_default="all"
+    )
 
     __table_args__ = (
         Index(

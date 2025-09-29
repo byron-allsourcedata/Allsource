@@ -73,6 +73,7 @@ def calculate_validation_cost(
     return audience_smarts_service.calculate_validation_cost(
         count_active_segment=request["count_active_segment"],
         validations=request["validations"],
+        validation_mode=request["validation_mode"],
     )
 
 
@@ -125,6 +126,7 @@ async def create_smart_audience(
         is_validate_skip=request.is_validate_skip,
         total_records=request.total_records,
         target_schema=request.target_schema,
+        validation_mode=request.validation_mode,
     )
 
 
@@ -208,9 +210,7 @@ def download_persons(
     return BaseEnum.FAILURE
 
 
-@router.get(
-    "/get-processing-smart-source", response_model=Optional[SmartsResponse]
-)
+@router.get("/get-processing-smart", response_model=Optional[SmartsResponse])
 def get_processing_smarts(
     audience_smarts_service: AudienceSmartsService,
     id: str = Query(...),

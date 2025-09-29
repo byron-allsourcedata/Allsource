@@ -36,7 +36,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 import LinearProgress from "@mui/material/LinearProgress";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
@@ -950,8 +950,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 					}}
 				>
 					<UserTip
-						limit={500}
-						service="Meta"
+						title="Data Sync Speed"
+						content="Meta standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

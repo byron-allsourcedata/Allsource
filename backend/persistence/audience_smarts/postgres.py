@@ -4,9 +4,23 @@ import logging
 from datetime import datetime, timezone
 
 import pytz
-from sqlalchemy import desc, asc, or_, func, select, case
+from sqlalchemy import (
+    Boolean,
+    desc,
+    asc,
+    cast as sql_cast,
+    literal,
+    or_,
+    func,
+    select,
+    case,
+    not_,
+    cast,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm.query import RowReturningQuery
 
+from enums import AudienceValidationMode
 from db_dependencies import Db
 from models import SubscriptionPlan, UserSubscriptions
 from models.audience_smarts import AudienceSmart
@@ -262,6 +276,7 @@ class AudienceSmartsPostgresPersistence:
         target_schema: str,
         validation_params: Optional[dict],
         active_segment_records: int,
+        validation_mode: AudienceValidationMode,
         need_validate: bool = False,
     ) -> AudienceSmartDTO:
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
@@ -281,6 +296,7 @@ class AudienceSmartsPostgresPersistence:
             validated_records=0,
             active_segment_records=active_segment_records,
             status=status,
+            validation_mode=validation_mode.value,
         )
 
         self.db.add(new_audience)
@@ -307,6 +323,7 @@ class AudienceSmartsPostgresPersistence:
             validations=json.loads(new_audience.validations),
             target_schema=new_audience.target_schema,
             n_a=new_audience.validations == {},
+            validation_mode=new_audience.validation_mode,
         )
 
     def get_audience_smarts(
@@ -340,6 +357,7 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmart.validations_step_size,
                 AudienceSmart.validations_step_processed,
                 AudienceSmart.validations_step_start_time,
+                AudienceSmart.validation_mode,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
@@ -462,9 +480,7 @@ class AudienceSmartsPostgresPersistence:
         self.db.commit()
         return updated_count
 
-    def get_processing_smarts(
-        self, id
-    ):  #############################################################
+    def get_processing_smarts(self, id):
         query = (
             self.db.query(
                 AudienceSmart.id,
@@ -482,6 +498,7 @@ class AudienceSmartsPostgresPersistence:
                 AudienceSmart.validations_step_size,
                 AudienceSmart.validations_step_processed,
                 AudienceSmart.validations_step_start_time,
+                AudienceSmart.validation_mode,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
             .join(
@@ -581,21 +598,54 @@ class AudienceSmartsPostgresPersistence:
     def get_person_id_asids_by_smart_aud_id(
         self, smart_audience_id: UUID
     ) -> List[dict]:
-        return [
-            {"id": row[0], "asid": row[1]}
-            for row in (
-                self.db.query(
-                    AudienceSmartPerson.id,
-                    AudienceSmartPerson.enrichment_user_asid,
-                )
-                .filter(
-                    AudienceSmartPerson.smart_audience_id == smart_audience_id,
-                    AudienceSmartPerson.is_valid == True,
-                )
-                .order_by(AudienceSmartPerson.sort_order)
-                .all()
+        aud = (
+            self.db.query(AudienceSmart)
+            .filter(AudienceSmart.id == smart_audience_id)
+            .one_or_none()
+        )
+
+        raw_validations = aud.validations
+
+        if raw_validations is None:
+            validations = {}
+        elif isinstance(raw_validations, str):
+            validations = json.loads(raw_validations)
+        else:
+            validations = raw_validations
+
+        def has_processed_true(obj) -> bool:
+            if isinstance(obj, dict):
+                if "processed" in obj and obj["processed"] is True:
+                    return True
+                for v in obj.values():
+                    if has_processed_true(v):
+                        return True
+            elif isinstance(obj, list):
+                for item in obj:
+                    if has_processed_true(item):
+                        return True
+            return False
+
+        processed_exists = has_processed_true(validations)
+
+        if getattr(aud, "validation_mode", None) == "any":
+            expected_is_valid = not processed_exists
+        else:
+            expected_is_valid = True
+
+        query = (
+            self.db.query(
+                AudienceSmartPerson.id,
+                AudienceSmartPerson.enrichment_user_asid,
             )
-        ]
+            .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
+            .filter(AudienceSmartPerson.is_valid == expected_is_valid)
+            .order_by(AudienceSmartPerson.sort_order)
+        )
+
+        rows = query.all()
+
+        return [{"id": row[0], "asid": row[1]} for row in rows]
 
     def get_synced_person_asids(self, data_sync_id: int) -> List[UUID]:
         return [
@@ -638,7 +688,7 @@ class AudienceSmartsPostgresPersistence:
                 func.count(AudienceSmartPerson.id).label("total_count"),
                 func.count(
                     case((AudienceSmartPerson.is_valid.is_(True), 1))
-                ).label("total_validated"),
+                ).label("total_valid"),
                 func.count(
                     case(
                         (
@@ -648,7 +698,7 @@ class AudienceSmartsPostgresPersistence:
                             1,
                         )
                     )
-                ).label("validation_count"),
+                ).label("count_processed"),
             ).where(AudienceSmartPerson.smart_audience_id == smart_audience_id)
         ).one()
 

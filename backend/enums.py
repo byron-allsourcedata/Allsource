@@ -109,6 +109,11 @@ class AudienceSmartDataSource(Enum):
     EXCLUDE = "exclude"
 
 
+class AudienceValidationMode(Enum):
+    ALL = "all"
+    ANY = "any"
+
+
 class AudienceSmartStatuses(Enum):
     UNVALIDATED = "unvalidated"
     VALIDATING = "validating"

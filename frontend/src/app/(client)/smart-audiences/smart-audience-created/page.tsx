@@ -50,6 +50,7 @@ interface SmartAudienceSource {
 	integrations: string[] | null;
 	n_a: boolean;
 	progress_info: SmartsProgress | null;
+	validation_mode: "all" | "any";
 }
 
 const SourcesList: React.FC = () => {
@@ -117,7 +118,7 @@ const SourcesList: React.FC = () => {
 		try {
 			if (createdData) {
 				const response = await axiosInstance.get(
-					`/audience-smarts/get-processing-smart-source?&id=${createdData.id}`,
+					`/audience-smarts/get-processing-smart?&id=${createdData.id}`,
 				);
 				const updatedItem = response.data;
 				if (updatedItem === null) {
@@ -771,6 +772,7 @@ const SourcesList: React.FC = () => {
 				open={validationHistoryPopupOpen}
 				onClose={handleValidationsHistoryPopupClose}
 				id={selectedRowData?.id}
+				validationMode={createdData?.validation_mode}
 				smartAudience={[
 					{
 						title: selectedRowData?.name,

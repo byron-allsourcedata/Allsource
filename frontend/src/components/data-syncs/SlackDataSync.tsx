@@ -31,12 +31,9 @@ import TabPanel from "@mui/lab/TabPanel";
 import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import {
-	showErrorToast,
-	showToast,
-} from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { Logo } from "@/components/ui/Logo";
 
 interface ConnectSlackPopupProps {
@@ -740,8 +737,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 					}}
 				>
 					<UserTip
-						limit={150}
-						service="Slack"
+						title="Data Sync Speed"
+						content="Slack standard sync speed is 150 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

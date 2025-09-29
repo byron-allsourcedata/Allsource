@@ -28,7 +28,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import { InfoIcon } from "@/icon";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 
 interface OnmisendDataSyncProps {
@@ -559,8 +559,8 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					}}
 				>
 					<UserTip
-						limit={100}
-						service="Hubspot"
+						title="Data Sync Speed"
+						content="Hubspot standard sync speed is 100 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

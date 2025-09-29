@@ -34,7 +34,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import UserTip from "@/components/UserTip";
+import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 
 interface ConnectWebhookPopupProps {
@@ -713,8 +713,8 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 					}}
 				>
 					<UserTip
-						limit={150}
-						service="Webhook"
+						title="Data Sync Speed"
+						content="Webhook standard sync speed is 150 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
