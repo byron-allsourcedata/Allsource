@@ -71,32 +71,25 @@ class UsersService:
         return {"is_trial_pending": True}
 
     def get_my_info(self):
-        if self.user.get("team_member"):
-            team_member = self.user.get("team_member")
-            return {
-                "email": team_member.get("email"),
-                "full_name": team_member.get("full_name"),
-                "is_partner": team_member.get("is_partner"),
-                "business_type": team_member.get("business_type"),
-                "source": team_member.get("source_platform"),
-                "leads_credits": team_member.get("leads_credits"),
-                "validation_funds": team_member.get("validation_funds"),
-                "has_active_plan": True
-                if team_member.get("current_subscription_id", None)
-                else False,
-            }
-        return {
-            "email": self.user.get("email"),
-            "full_name": self.user.get("full_name"),
+        team_member = self.user.get("team_member")
+
+        info = {
             "is_partner": self.user.get("is_partner"),
             "business_type": self.user.get("business_type"),
             "source_platform": self.user.get("source_platform"),
             "leads_credits": self.user.get("leads_credits"),
             "validation_funds": self.user.get("validation_funds"),
-            "has_active_plan": True
-            if self.user.get("current_subscription_id", None)
-            else False,
+            "has_active_plan": bool(self.user.get("current_subscription_id")),
         }
+
+        if team_member:
+            info["email"] = team_member.get("email")
+            info["full_name"] = team_member.get("full_name")
+        else:
+            info["email"] = self.user.get("email")
+            info["full_name"] = self.user.get("full_name")
+
+        return info
 
     def get_domain_with_stats(
         self,
