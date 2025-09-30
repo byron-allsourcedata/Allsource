@@ -76,6 +76,7 @@ class IntegrationLimit(Enum):
     GO_HIGH_LEVEL = 50
     CUSTOMER_IO = 200
     INSTANTLY = 100
+    GREEN_ARROW = 100
 
 
 class BusinessType(Enum):
@@ -152,6 +153,7 @@ class SourcePlatformEnum(Enum):
     GO_HIGH_LEVEL = "go_high_level"
     CUSTOMER_IO = "customer_io"
     INSTANTLY = "instantly"
+    GREEN_ARROW = "green_arrow"
 
 
 class UserStatusInAdmin(Enum):
