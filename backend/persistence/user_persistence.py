@@ -492,16 +492,7 @@ class UserPersistence:
             ),
         )
 
-    def get_base_customers(
-        self,
-        search_query,
-        page,
-        per_page,
-        sort_by: str,
-        sort_order,
-        exclude_test_users,
-        filters,
-    ):
+    def _base_customer_query(self):
         status_case = self.calculate_user_status()
 
         subq_domain_resolved = (
@@ -534,6 +525,7 @@ class UserPersistence:
                 Users.created_at,
                 Users.last_login,
                 Users.role,
+                Users.team_owner_id,
                 Users.leads_credits.label("credits_count"),
                 Users.total_leads,
                 Users.is_email_validation_enabled.label(
@@ -542,7 +534,6 @@ class UserPersistence:
                 Users.overage_leads_count,
                 Users.has_credit_card,
                 subscription_plan_case,
-                # SubscriptionPlan.title.label("subscription_plan"),
                 status_case.label("user_status"),
                 case((subq_domain_resolved, True), else_=False).label(
                     "is_another_domain_resolved"
@@ -550,10 +541,9 @@ class UserPersistence:
                 Users.whitelabel_settings_enabled,
                 Users.is_partner,
                 Partner.is_master.label("is_master"),
-                func.coalesce(
-                    premium_source_count.c.count,
-                    0,
-                ).label("premium_sources"),
+                func.coalesce(premium_source_count.c.count, 0).label(
+                    "premium_sources"
+                ),
             )
             .outerjoin(
                 UserSubscriptions,
@@ -564,33 +554,41 @@ class UserPersistence:
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
             .outerjoin(
-                premium_source_count,
-                premium_source_count.c.id == Users.id,
+                premium_source_count, premium_source_count.c.id == Users.id
             )
             .outerjoin(Partner, Partner.user_id == Users.id)
             .filter(Users.role.any("customer"))
         )
+
+        return query, status_case
+
+    def get_base_customers(
+        self,
+        search_query,
+        page,
+        per_page,
+        sort_by: str,
+        sort_order,
+        exclude_test_users,
+        filters,
+    ):
+        query, status_case = self._base_customer_query()
 
         if exclude_test_users:
             query = query.filter(~Users.full_name.like("#test%"))
 
         if filters.get("statuses"):
             statuses = [
-                status.strip().lower()
-                for status in filters["statuses"].split(",")
+                s.strip().lower() for s in filters["statuses"].split(",")
             ]
-
             filter_conditions = []
-
             if "multiple_domains" in statuses:
                 filter_conditions.append(
-                    case((subq_domain_resolved, True), else_=False).is_(True)
-                )
+                    query.column_descriptions[13]["expr"]
+                )  # is_another_domain_resolved
                 statuses.remove("multiple_domains")
-
             if statuses:
                 filter_conditions.append(func.lower(status_case).in_(statuses))
-
             if filter_conditions:
                 query = query.filter(or_(*filter_conditions))
 
@@ -601,6 +599,7 @@ class UserPersistence:
             query = query.filter(
                 func.DATE(Users.last_login) >= last_login_date_start
             )
+
         if filters.get("last_login_date_end"):
             last_login_date_end = datetime.fromtimestamp(
                 filters["last_login_date_end"], tz=pytz.UTC
@@ -608,16 +607,19 @@ class UserPersistence:
             query = query.filter(
                 func.DATE(Users.last_login) <= last_login_date_end
             )
+
         if filters.get("join_date_start"):
             join_date_start = datetime.fromtimestamp(
                 filters["join_date_start"], tz=pytz.UTC
             ).date()
             query = query.filter(func.DATE(Users.created_at) >= join_date_start)
+
         if filters.get("join_date_end"):
             join_date_end = datetime.fromtimestamp(
                 filters["join_date_end"], tz=pytz.UTC
             ).date()
             query = query.filter(func.DATE(Users.created_at) <= join_date_end)
+
         if search_query:
             query = query.filter(
                 or_(
@@ -642,6 +644,12 @@ class UserPersistence:
         total_count = query.count()
         users = query.offset((page - 1) * per_page).limit(per_page).all()
         return users, total_count
+
+    def get_customers_by_ids(self, ids: list[int]) -> list:
+        if not ids:
+            return []
+        query, _ = self._base_customer_query()
+        return query.filter(Users.id.in_(ids)).all()
 
     def get_customer_aggregates(self, user_ids: list[int]):
         pixel_counts = dict(

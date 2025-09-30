@@ -152,13 +152,19 @@ class AdminCustomersService:
         return {"users": paginated, "count": len(combined)}
 
     def generate_access_token(self, user: dict, user_account_id: int):
-        if self.user_persistence.get_user_by_id(user_account_id):
-            token_info = {
-                "id": user_account_id,
-                "requester_access_user_id": user.get("id"),
-            }
-            return create_access_token(token_info)
-        return None
+        user_info = self.user_persistence.get_user_by_id(user_account_id)
+        if not user_info:
+            return None
+
+        token_info = {
+            "id": user_info.get("team_owner_id") or user_account_id,
+            "requester_access_user_id": user.get("id"),
+        }
+
+        if user_info.get("team_owner_id"):
+            token_info["team_member_id"] = user_account_id
+
+        return create_access_token(token_info)
 
     def invite_user(self, user: dict, email: str, name: str):
         exists_user = self.user_persistence.get_user_by_email(email=email)
@@ -195,6 +201,25 @@ class AdminCustomersService:
             md5_hash=md5_hash,
         )
         return {"status": AdminStatus.SUCCESS}
+
+    def _resolve_base_user(self, user, owners_map):
+        """Возвращает tuple: (base_user, email, full_name, created_at, last_login)."""
+        if user.team_owner_id and user.team_owner_id in owners_map:
+            owner = owners_map[user.team_owner_id]
+            return (
+                owner,
+                user.email,
+                user.full_name,
+                user.created_at,
+                user.last_login,
+            )
+        return (
+            user,
+            user.email,
+            user.full_name,
+            user.created_at,
+            user.last_login,
+        )
 
     def get_customer_users(
         self,
@@ -233,48 +258,53 @@ class AdminCustomersService:
             filters=filters,
         )
 
-        user_ids = [user.id for user in users]
+        owner_ids = [u.team_owner_id for u in users if u.team_owner_id]
+        owners_map = {}
+        if owner_ids:
+            owners = self.user_persistence.get_customers_by_ids(owner_ids)
+            owners_map = {o.id: o for o in owners}
 
+        user_ids = [u.id for u in users]
         aggregates = self.user_persistence.get_customer_aggregates(user_ids)
 
         result = []
-
         for user in users:
-            user_id = user.id
-            cost_leads_overage = user.overage_leads_count * 0.08
-            agg = aggregates.get(user_id, {})
+            base_user, email, full_name, created_at, last_login = (
+                self._resolve_base_user(user, owners_map)
+            )
 
-            pixel_installed_count = agg.get("pixel_installed_count", 0)
-            sources_count = agg.get("sources_count", 0)
-            lookalikes_count = agg.get("lookalikes_count", 0)
+            cost_leads_overage = base_user.overage_leads_count * 0.08
+            agg = aggregates.get(user.id, {})
 
             result.append(
                 {
-                    "id": user_id,
-                    "email": user.email,
-                    "full_name": user.full_name,
-                    "created_at": user.created_at,
-                    "status": user.user_status,
+                    "id": user.id,
+                    "email": email,
+                    "full_name": full_name,
+                    "created_at": created_at,
+                    "last_login": last_login,
+                    "status": base_user.user_status,
                     "is_trial": self.plans_persistence.get_trial_status_by_user_id(
-                        user_id
+                        base_user.id
                     ),
-                    "last_login": user.last_login,
-                    "role": user.role,
-                    "is_email_validation_enabled": user.is_email_validation_enabled,
-                    "is_partner": user.is_partner,
-                    "is_master": user.is_master,
-                    "pixel_installed_count": pixel_installed_count,
-                    "sources_count": sources_count,
-                    "contacts_count": user.total_leads,
-                    "subscription_plan": user.subscription_plan,
-                    "lookalikes_count": lookalikes_count,
+                    "role": base_user.role,
+                    "is_email_validation_enabled": base_user.is_email_validation_enabled,
+                    "is_partner": base_user.is_partner,
+                    "is_master": base_user.is_master,
+                    "pixel_installed_count": agg.get(
+                        "pixel_installed_count", 0
+                    ),
+                    "sources_count": agg.get("sources_count", 0),
+                    "contacts_count": base_user.total_leads,
+                    "subscription_plan": base_user.subscription_plan,
+                    "lookalikes_count": agg.get("lookalikes_count", 0),
                     "type": "user",
-                    "credits_count": user.credits_count,
-                    "is_another_domain_resolved": user.is_another_domain_resolved,
-                    "has_credit_card": user.has_credit_card,
+                    "credits_count": base_user.credits_count,
+                    "is_another_domain_resolved": base_user.is_another_domain_resolved,
+                    "has_credit_card": base_user.has_credit_card,
                     "cost_leads_overage": cost_leads_overage,
-                    "whitelabel_settings_enabled": user.whitelabel_settings_enabled,
-                    "premium_sources": user.premium_sources,
+                    "whitelabel_settings_enabled": base_user.whitelabel_settings_enabled,
+                    "premium_sources": base_user.premium_sources,
                 }
             )
 
