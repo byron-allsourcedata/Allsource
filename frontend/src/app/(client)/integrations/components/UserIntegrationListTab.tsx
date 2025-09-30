@@ -31,6 +31,7 @@ import CustomerIoConnect from "@/components/integrations/CustomerIoIntegration";
 import MetaConnectButton from "@/components/integrations/MetaIntegration";
 import KlaviyoIntegrationPopup from "@/components/integrations/KlaviyoIntegration";
 import SalesForceIntegrationPopup from "@/components/integrations/SalesForceIntegration";
+import GreenArrowIntegrationDrawer from "@/components/integrations/GreenArrowIntegration";
 import HintCard from "../../components/HintCard";
 import { DeleteIntegrationPopup } from "./DeleteIntegrationPopup";
 import { IntegrationBox } from "@/components/ui/integrations/IntegrationBox";
@@ -478,6 +479,25 @@ export const UserIntegrationListTab = ({
 					invalid_api_key={
 						integrationsCredentials.find(
 							(integration) => integration.service_name === "instantly",
+						)?.is_failed === true
+					}
+					boxShadow="rgba(0, 0, 0, 0.1)"
+				/>
+			)}
+
+			{openModal === "green_arrow" && (
+				<GreenArrowIntegrationDrawer
+					open={true}
+					handleClose={handleClose}
+					onSave={handleSaveSettings}
+					initApiKey={
+						integrationsCredentials.find(
+							(integration) => integration.service_name === "green_arrow",
+						)?.access_token
+					}
+					invalid_api_key={
+						integrationsCredentials.find(
+							(integration) => integration.service_name === "green_arrow",
 						)?.is_failed === true
 					}
 					boxShadow="rgba(0, 0, 0, 0.1)"

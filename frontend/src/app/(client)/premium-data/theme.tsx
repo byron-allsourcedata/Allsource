@@ -1,8 +1,4 @@
-import {
-	nunitoTypographyTheme,
-	squareIconButtonsTheme,
-	tabsTheme,
-} from "@/components/themes";
+import { tabsTheme } from "@/themes";
 import { createTheme } from "@mui/material";
 
 export const premiumDataTheme = createTheme(
@@ -65,7 +61,9 @@ export const premiumDataTheme = createTheme(
 				},
 			},
 		},
+		typography: {
+			fontFamily: "var(--font-nunito)",
+		},
 	},
 	tabsTheme,
-	nunitoTypographyTheme,
 );

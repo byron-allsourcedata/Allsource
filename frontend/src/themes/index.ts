@@ -7,6 +7,4 @@
  * Merge needed theme modules into signle theme before use.
  */
 
-export { squareIconButtonsTheme } from "./squareIconButtonsTheme";
 export { tabsTheme } from "./tabsTheme";
-export { nunitoTypographyTheme } from "./nunitoTypographyTheme";

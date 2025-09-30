@@ -11,7 +11,14 @@ import type { PremiumSourceData } from "@/app/features/premium-data/schemas";
 import { useCardMenu, type CardMenuProps } from "../hooks/useCardMenu";
 import { StatusLabel } from "@/app/(client)/premium-data/components/status";
 import { formatMoney } from "@/components/PartnersAccounts";
-import { squareIconButtonSx } from "@/components/themes/squareIconButtonsTheme";
+
+export const squareIconButtonSx = {
+	borderRadius: "4px",
+	color: "#3898FC",
+	"&:hover": {
+		background: "#EBF5FF",
+	},
+};
 
 const Header = styled(Typography)`
 	color: #202124;
