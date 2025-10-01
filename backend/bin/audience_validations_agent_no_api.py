@@ -121,7 +121,7 @@ async def aud_validation_agent(
                 ).days
                 <= recency_business_days
             ),
-            "mobile_phone_dnc": lambda v: v is False,
+            "mobile_phone_dnc": lambda v: v is False or v is None,
         }
 
         failed_ids = []
