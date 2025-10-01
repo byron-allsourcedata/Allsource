@@ -21,11 +21,11 @@ from services.utils_constants.location_constants import (
     US_STATE_ABBR,
     CITY_TO_STATE,
 )
-from services.source_agent.agent import EmploymentEntry
+from services.sources.agent import EmploymentEntry
 
 
 from schemas.insights import InsightsByCategory
-from services.source_agent.agent import SourceAgentService
+from services.sources.agent import SourceAgentService
 
 logger = logging.getLogger(__name__)
 
