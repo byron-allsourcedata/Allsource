@@ -5,7 +5,7 @@ from dependencies import (
     get_domain_service,
     check_user_authorization_without_pixel,
 )
-from services.audience_sources import AudienceSourceService
+from services.sources.service import AudienceSourceService
 from services.domains import UserDomainsService
 from starlette.responses import StreamingResponse
 from enums import BaseEnum

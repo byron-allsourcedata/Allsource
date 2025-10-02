@@ -14,6 +14,14 @@ class PersonEntry(BaseModel):
     recency: float
 
 
+class MatchedPerson(BaseModel):
+    orders_amount: Decimal | None
+    orders_count: int
+    start_date: str | None
+    enrichment_user_asid: str | None
+    email: str | None
+
+
 class DataForNormalize(BaseModel):
     matched_size: int
     all_size: int

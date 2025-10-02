@@ -21,14 +21,16 @@ from enums import LookalikeStatus
 from services.lookalikes.service import AudienceLookalikesService
 
 from services.lookalikes.lookalike_agent.agent import LookalikeAgentService
-from services.lookalikes.lookalike_filler.rabbitmq import LookalikesMatchingMessage
+from services.lookalikes.lookalike_filler.rabbitmq import (
+    LookalikesMatchingMessage,
+)
 from config.sentry import SentryConfig
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
 
 from db_dependencies import Db
 from resolver import Resolver
-from services.source_agent.agent import SourceAgentService
+from services.sources.agent import SourceAgentService
 
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from config.rmq_connection import (
