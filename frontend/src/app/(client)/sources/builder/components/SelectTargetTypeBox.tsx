@@ -15,7 +15,7 @@ interface SelectTargetTypeProps {
 	closeSkeleton: (key: BuilderKey) => void;
 }
 
-const SelectTargetType: React.FC<SelectTargetTypeProps> = ({
+const SelectTargetTypeBox: React.FC<SelectTargetTypeProps> = ({
 	renderSkeleton,
 	closeDotHintClick,
 	openDotHintClick,
@@ -140,4 +140,4 @@ const SelectTargetType: React.FC<SelectTargetTypeProps> = ({
 	);
 };
 
-export default SelectTargetType;
+export default SelectTargetTypeBox;
