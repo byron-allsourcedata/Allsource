@@ -99,13 +99,8 @@ class GoHighLevelIntegrationsService:
 
         tokens = response.json()
         if not tokens.get("refresh_token"):
-            raise HTTPException(
-                status_code=409,
-                detail={
-                    "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
-                    "response": tokens,
-                },
-            )
+            logger.error(f"GHL refresh token missing: {tokens}")
+            return None
         self.integrations_persistence.update_refresh_token(
             integration_id=integration_id, refresh_token=tokens["refresh_token"]
         )
