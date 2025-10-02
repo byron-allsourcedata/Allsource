@@ -19,7 +19,7 @@ interface SelectTargetTypeProps {
 	convertToDBFormat: (sourceType: string) => string;
 }
 
-const CreateSourceForm: React.FC<SelectTargetTypeProps> = ({
+const CreateSourceFormBox: React.FC<SelectTargetTypeProps> = ({
 	renderSkeleton,
 	setLoading,
 	convertToDBFormat,
@@ -267,4 +267,4 @@ const CreateSourceForm: React.FC<SelectTargetTypeProps> = ({
 	);
 };
 
-export default CreateSourceForm;
+export default CreateSourceFormBox;

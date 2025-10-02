@@ -10,7 +10,7 @@ from pydantic import BaseModel, EmailStr
 
 
 class EmailAsid(BaseModel):
-    email: EmailStr
+    email: EmailStr | None
     asid: str
 
 
@@ -42,7 +42,7 @@ class EnrichmentUsersPersistence:
         for a in asids:
             if a is None:
                 continue
-            s = str(a).strip()
+            s = str(a).strip().lower()
             if not s:
                 continue
             try:
@@ -128,7 +128,6 @@ class EnrichmentUsersPersistence:
                     "Error creating EmailAsid for asid %s: %s", asid_s, e
                 )
                 matched[asid_s] = EmailAsid(email=None, asid=asid_s)
-
         result = list(matched.values())
         logger.info(
             "Finished ASID matching: %d matches (from %d input).",

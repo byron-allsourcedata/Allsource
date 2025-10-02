@@ -314,26 +314,27 @@ async def parse_csv_file(
             parsed_order_count = sources_order_count.parse_order_count(
                 raw_order_count
             )
-            if parsed_order_count:
-                duplicated_rows = (
-                    sources_order_count.get_duplicated_person_rows(
-                        email=email,
-                        asid=asid,
-                        date=date,
-                        order_amount=sale_amount,
-                        order_count=parsed_order_count,
-                    )
+            # if parsed_order_count:
+            #     duplicated_rows = (
+            #         sources_order_count.get_duplicated_person_rows(
+            #             email=email,
+            #             asid=asid,
+            #             date=date,
+            #             order_amount=sale_amount,
+            #             order_count=parsed_order_count,
+            #         )
+            #     )
+            #     batch_rows.extend(duplicated_rows)
+            # else:
+            batch_rows.append(
+                PersonRow(
+                    email=email,
+                    asid=asid,
+                    date=date,
+                    sale_amount=str(sale_amount),
+                    order_count=parsed_order_count,
                 )
-                batch_rows.extend(duplicated_rows)
-            else:
-                batch_rows.append(
-                    PersonRow(
-                        email=email,
-                        asid=asid,
-                        date=date,
-                        sale_amount=str(sale_amount),
-                    )
-                )
+            )
 
         if batch_rows:
             message_body = MessageBody(

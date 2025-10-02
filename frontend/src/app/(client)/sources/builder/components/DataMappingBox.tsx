@@ -1,5 +1,4 @@
-import HintBanner from "@/app/(client)/sources/builder/components/HintBanner";
-import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinearProgress";
+import React, { ReactNode, RefObject } from "react";
 import {
 	Box,
 	FormControl,
@@ -10,47 +9,102 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
-import type { FC } from "react";
+import { CustomButton } from "@/components/ui";
+import HintCard from "../../../components/HintCard";
+import { useSourcesHints } from "../../context/SourcesHintsContext";
+import { useSourcesBuilder } from "../../context/SourceBuilderContext";
+import { builderHintCards } from "../../context/hintsCardsContent";
+import scrollToBlock from "@/utils/autoscroll";
+import { BuilderKey } from "../../context/hintsCardsContent";
 import Image from "next/image";
-import { SmartHintCard } from "../../../../(client)/sources/builder/components/SmartHintCard";
-import type { HintsProps } from "../../../../(client)/sources/builder/components/PixelDomainSelectorBox";
-import type { MappingRow } from "../schemas";
-import {
-	builderHintCards,
-	type BuilderKey,
-} from "@/app/(client)/sources/context/hintsCardsContent";
+import { LogoSmall } from "@/components/ui/Logo";
+import HintBanner from "./HintBanner";
+import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinearProgress";
 
-type Props = {
-	block3Ref: React.RefObject<HTMLDivElement | null>;
-	smallLogoSrc: string;
-	file: File | null;
-	isChatGPTProcessing: boolean;
-	hintsProps: HintsProps<BuilderKey>;
-	isContinuePressed: boolean;
-	sourceType: string;
-	csvHeaders: string[];
-	headingsNotSubstitution: Record<string, boolean>;
-	mappingRows: MappingRow[];
-	handleDelete: (id: number) => void;
-	handleAdd: () => void;
-	handleMapListChange: (id: number, value: string, type: string) => void;
-};
+interface ChooseDomainContactTypeProps {
+	renderSkeleton: (key: BuilderKey) => ReactNode;
+	closeDotHintClick: (key: BuilderKey) => void;
+	openDotHintClick: (key: BuilderKey) => void;
+	closeSkeleton: (key: BuilderKey) => void;
+}
 
-export const CsvFieldMapperBlock: FC<Props> = ({
-	block3Ref,
-	file,
-	isChatGPTProcessing,
-	hintsProps,
-	isContinuePressed,
-	sourceType,
-	csvHeaders,
-	mappingRows,
-	smallLogoSrc,
-	headingsNotSubstitution,
-	handleDelete,
-	handleAdd,
-	handleMapListChange,
+const ChooseDomainContactType: React.FC<ChooseDomainContactTypeProps> = ({
+	renderSkeleton,
+	closeDotHintClick,
+	openDotHintClick,
+	closeSkeleton,
 }) => {
+	const {
+		changeSourcesBuilderHint,
+		sourcesBuilderHints,
+		resetSourcesBuilderHints,
+	} = useSourcesHints();
+
+	const {
+		block4Ref,
+		block3Ref,
+		file,
+		sourceType,
+		setHeadingsNotSubstitution,
+		headingsNotSubstitution,
+		isContinuePressed,
+		showTargetStep,
+		mappingRows,
+		setMappingRows,
+		isChatGPTProcessing,
+		headersinCSV,
+		setShowTargetStep,
+		hasUnsubstitutedHeadings,
+		setIsContinuePressed,
+	} = useSourcesBuilder();
+
+	const handleMapListChange = (
+		id: number,
+		csvValue: string,
+		ourValue: string,
+	) => {
+		setMappingRows((prev) => {
+			let rows = prev;
+			if (ourValue === "ASID") {
+				rows = rows
+					.filter((row) => row.isRequiredForAsidMatching)
+					.map((row) => {
+						if (row.type === "ASID") {
+							return { ...row, canDelete: false };
+						} else {
+							return { ...row };
+						}
+					});
+			}
+
+			return rows.map((row) =>
+				row.id === id ? { ...row, value: csvValue } : row,
+			);
+		});
+
+		setHeadingsNotSubstitution((prev) => ({
+			...prev,
+			[ourValue]: false,
+		}));
+	};
+
+	const handleDelete = (id: number) => {
+		setMappingRows(
+			mappingRows.map((row) =>
+				row.id === id ? { ...row, isHidden: true } : row,
+			),
+		);
+	};
+
+	const handleAdd = () => {
+		const hiddenRowIndex = mappingRows.findIndex((row) => row.isHidden);
+		if (hiddenRowIndex !== -1) {
+			const updatedRows = [...mappingRows];
+			updatedRows[hiddenRowIndex].isHidden = false;
+			setMappingRows(updatedRows);
+		}
+	};
+
 	return (
 		<Box
 			ref={block3Ref}
@@ -117,7 +171,7 @@ export const CsvFieldMapperBlock: FC<Props> = ({
 					sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
 				>
 					<Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-						<Image src={smallLogoSrc} alt="logo" height={22} width={34} />
+						<LogoSmall alt="logo" height={22} width={34} />
 					</Grid>
 					<Grid item xs={1} sm={0.5}>
 						&nbsp;
@@ -135,9 +189,12 @@ export const CsvFieldMapperBlock: FC<Props> = ({
 					})
 					.map((row, index) => (
 						<Box
-							key={row.id}
+							key={index}
 							sx={{
-								mb: headingsNotSubstitution[row.type] ? "10px" : 0,
+								mb:
+									!row.canDelete && headingsNotSubstitution[row.type]
+										? "10px"
+										: 0,
 							}}
 						>
 							<Grid
@@ -243,13 +300,14 @@ export const CsvFieldMapperBlock: FC<Props> = ({
 												},
 											}}
 										>
-											{csvHeaders.map((item: string, index: number) => (
-												<MenuItem key={index + item} value={item}>
+											{headersinCSV.map((item: string, index: number) => (
+												<MenuItem key={index} value={item}>
 													{item}
 												</MenuItem>
 											))}
 										</Select>
-										{row.type !== "Phone number" &&
+										{!row.canDelete &&
+											headingsNotSubstitution[row.type] &&
 											headingsNotSubstitution[row.type] && (
 												<Typography
 													sx={{
@@ -267,14 +325,16 @@ export const CsvFieldMapperBlock: FC<Props> = ({
 								{/* Delete Icon */}
 								<Grid item xs={1} sm={0.5} container justifyContent="center">
 									{row.canDelete && (
-										<IconButton onClick={() => handleDelete(row.id)}>
-											<Image
-												src="/trash-icon-filled.svg"
-												alt="trash-icon-filled"
-												height={18}
-												width={18}
-											/>
-										</IconButton>
+										<>
+											<IconButton onClick={() => handleDelete(row.id)}>
+												<Image
+													src="/trash-icon-filled.svg"
+													alt="trash-icon-filled"
+													height={18}
+													width={18}
+												/>
+											</IconButton>
+										</>
 									)}
 								</Grid>
 							</Grid>
@@ -299,16 +359,47 @@ export const CsvFieldMapperBlock: FC<Props> = ({
 						</Typography>
 					</Box>
 				)}
-				<SmartHintCard
-					hints={hintsProps.hints}
-					hintKey={"dataMaping"}
-					hintCards={builderHintCards}
-					position={{
-						left: 460,
-					}}
-					changeHint={hintsProps.changeHint}
-				/>
+				{sourcesBuilderHints["dataMaping"].show && (
+					<HintCard
+						card={builderHintCards["dataMaping"]}
+						positionLeft={460}
+						isOpenBody={sourcesBuilderHints["dataMaping"].showBody}
+						toggleClick={() =>
+							changeSourcesBuilderHint("dataMaping", "showBody", "toggle")
+						}
+						closeClick={() =>
+							changeSourcesBuilderHint("dataMaping", "showBody", "close")
+						}
+					/>
+				)}
 			</Box>
+
+			{!showTargetStep && (
+				<Box sx={{ display: "flex", justifyContent: "right" }}>
+					<CustomButton
+						disabled={isChatGPTProcessing || hasUnsubstitutedHeadings()}
+						variant="contained"
+						onClick={() => {
+							setShowTargetStep(true);
+							setTimeout(() => {
+								scrollToBlock(block4Ref as RefObject<HTMLDivElement>);
+							}, 0);
+							closeDotHintClick("sourceFile");
+							openDotHintClick("targetType");
+							closeSkeleton("targetType");
+							setIsContinuePressed(true);
+						}}
+						sx={{
+							width: "120px",
+							height: "40px",
+						}}
+					>
+						Continue
+					</CustomButton>
+				</Box>
+			)}
 		</Box>
 	);
 };
+
+export default ChooseDomainContactType;
