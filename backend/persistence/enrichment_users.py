@@ -71,6 +71,8 @@ class EnrichmentUsersPersistence:
 
     def get_user_ids_by_asids(self, asids: list[str]) -> List[EmailAsid]:
         asids_clean = self.__normalize_and_filter_asids(asids)
+        print("asids", len(asids))
+        print("asids_clean", len(asids_clean))
         if not asids_clean:
             logger.debug("get_user_ids_by_asids: empty input")
             return []

@@ -5,15 +5,13 @@ import logging
 import os
 import sys
 import time
-from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import List, Literal, Union, Optional, Tuple
 from uuid import UUID
 
 import aiormq
 import boto3
-import dateparser
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
@@ -44,6 +42,7 @@ from utils import get_utc_aware_date, parse_log_level, setup_logging
 from models.leads_visits import LeadsVisits
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import (
+    MatchedPerson,
     PersonEntry,
     MessageBody,
     DataBodyNormalize,
@@ -120,14 +119,14 @@ async def process_matching(
         raise ValueError("match_mode must be 'email' or 'asid'")
 
     if match_mode == "emails":
-        matched_persons = source_agent_service.processing_email_mode_mathcing(
+        matched_persons = source_agent_service.processing_email_mode_matching(
             persons=persons,
             date_range=date_range,
             include_amount=include_amount,
         )
 
     else:
-        matched_persons = source_agent_service.processing_asid_mode_mathcing(
+        matched_persons = source_agent_service.processing_asid_mode_matching(
             persons=persons,
             date_range=date_range,
             include_amount=include_amount,
@@ -159,13 +158,18 @@ async def process_matching(
         if filters:
             query = query.filter(or_(*filters))
 
-        existing_persons = {
-            (p.email if p.email else f"asid:{p.enrichment_user_asid}"): p
-            for p in query.with_for_update().all()
-        }
+        rows = query.with_for_update().all()
+
+        existing_by_email = {}
+        existing_by_asid = {}
+        for p in rows:
+            if p.email:
+                existing_by_email[p.email] = p
+            if p.enrichment_user_asid:
+                existing_by_asid[str(p.enrichment_user_asid)] = p
 
         logging.info(
-            f"Found {len(existing_persons)} existing persons to update (match_mode={match_mode})"
+            f"Found {len(rows)} existing persons to update (match_mode={match_mode})"
         )
 
         reference_date = datetime.now()
@@ -181,39 +185,63 @@ async def process_matching(
                 else None
             )
 
-            if key in existing_persons:
-                p = existing_persons[key]
-                p.count += data["orders_count"]
+            candidate_email = data.get("email")
+            candidate_asid = data.get("enrichment_user_asid")
+
+            existing = None
+            if candidate_email and candidate_email in existing_by_email:
+                existing = existing_by_email[candidate_email]
+            elif candidate_asid and str(candidate_asid) in existing_by_asid:
+                existing = existing_by_asid[str(candidate_asid)]
+
+            if existing:
+                existing.count += data["orders_count"]
                 if include_amount:
-                    p.amount += data["orders_amount"]
+                    existing.amount = (existing.amount or 0) + (
+                        data["orders_amount"] or 0
+                    )
+
                 if last_transaction and (
-                    p.start_date is None or last_transaction > p.start_date
+                    existing.start_date is None
+                    or last_transaction > existing.start_date
                 ):
-                    p.start_date = last_transaction
-                    p.recency = recency
+                    existing.start_date = last_transaction
+                    existing.recency = recency
+
+                if not existing.enrichment_user_asid and candidate_asid:
+                    existing.enrichment_user_asid = candidate_asid
+                    existing_by_asid[str(candidate_asid)] = existing
+                if not existing.email and candidate_email:
+                    existing.email = candidate_email
+                    existing_by_email[candidate_email] = existing
 
                 matched_persons_to_update.append(
                     {
-                        "id": p.id,
-                        "count": p.count,
-                        "amount": p.amount if include_amount else None,
-                        "start_date": p.start_date,
-                        "recency": p.recency,
+                        "id": existing.id,
+                        "count": existing.count,
+                        "amount": existing.amount if include_amount else None,
+                        "start_date": existing.start_date,
+                        "recency": existing.recency,
                     }
                 )
             else:
                 new_p = AudienceSourcesMatchedPerson(
                     source_id=source_id,
-                    email=data.get("email"),
+                    email=candidate_email,
                     count=data["orders_count"],
                     start_date=last_transaction,
                     recency=recency,
-                    enrichment_user_asid=data["enrichment_user_asid"],
+                    enrichment_user_asid=candidate_asid,
                 )
                 if include_amount:
                     new_p.amount = data["orders_amount"]
 
                 matched_persons_to_add.append(new_p)
+
+                if candidate_email:
+                    existing_by_email[candidate_email] = new_p
+                if candidate_asid:
+                    existing_by_asid[str(candidate_asid)] = new_p
 
         if matched_persons_to_add:
             values_to_insert = [
@@ -1416,10 +1444,6 @@ async def process_rmq_message(
                     source_agent_service=source_agent_service,
                     match_mode=type,
                 )
-
-        logging.info(
-            f"Updated processed and matched records for source_id {count}."
-        )
 
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)

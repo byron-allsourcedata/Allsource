@@ -2,12 +2,12 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
-from typing import Iterable, List, Dict
+from typing import Callable, Iterable, List, Dict
 from uuid import UUID
 
 import dateparser
 from pydantic import BaseModel
-from backend.services.sources.math import AudienceSourceMath
+from services.sources.math import AudienceSourceMath
 from db_dependencies import Db, Clickhouse
 from persistence.enrichment_users import EnrichmentUsersPersistence, EmailAsid
 from resolver import injectable
@@ -268,12 +268,15 @@ class SourceAgentService:
             updates.append(update_data)
         return updates
 
-    def processing_asid_mode_mathcing(
+    def _aggregate_matched_persons(
         self,
-        persons: List[PersonRow],
+        filtered_persons: List[PersonRow],
         date_range: int | None,
         include_amount: bool,
-    ):
+        get_key: Callable[[object], str],
+        get_enrichment_asid: Callable[[object], str | None],
+        get_email_for_person: Callable[[object], str | None],
+    ) -> dict:
         matched_persons = defaultdict(
             lambda: {
                 "orders_amount": Decimal("0.0") if include_amount else None,
@@ -283,22 +286,91 @@ class SourceAgentService:
                 "email": None,
             }
         )
-        asid_to_email = {}
 
+        for person in filtered_persons:
+            key = get_key(person)
+            if not key:
+                continue
+
+            transaction_date = (person.date or "").strip()
+            transaction_date_without_timezone = None
+            if transaction_date:
+                try:
+                    transaction_date_without_timezone = dateparser.parse(
+                        transaction_date
+                    )
+                    if transaction_date_without_timezone is not None:
+                        transaction_date_without_timezone = (
+                            transaction_date_without_timezone.replace(
+                                tzinfo=None
+                            )
+                        )
+                except Exception as e:
+                    logger.warning(
+                        f"Error parsing date '{transaction_date}': {e}"
+                    )
+                    transaction_date_without_timezone = None
+
+            if (
+                date_range
+                and transaction_date_without_timezone
+                and transaction_date_without_timezone
+                < (datetime.now() - timedelta(days=date_range))
+            ):
+                continue
+
+            sale_amount = (
+                person.get_sale_amount() if include_amount else Decimal("0.0")
+            )
+
+            enrichment_asid = get_enrichment_asid(person)
+            email_val = get_email_for_person(person)
+
+            if key in matched_persons:
+                matched_persons[key]["orders_count"] += 1
+                if include_amount:
+                    matched_persons[key]["orders_amount"] += sale_amount
+                if transaction_date_without_timezone:
+                    existing_date = matched_persons[key]["start_date"]
+                    if (
+                        existing_date is None
+                        or transaction_date_without_timezone > existing_date
+                    ):
+                        matched_persons[key]["start_date"] = (
+                            transaction_date_without_timezone
+                        )
+            else:
+                matched_persons[key] = {
+                    "orders_count": 1,
+                    "start_date": transaction_date_without_timezone,
+                    "enrichment_user_asid": enrichment_asid,
+                    "email": email_val,
+                    "orders_amount": sale_amount if include_amount else None,
+                }
+
+        return matched_persons
+
+    def processing_asid_mode_matching(
+        self,
+        persons: List[PersonRow],
+        date_range: int | None,
+        include_amount: bool,
+    ):
         asids = {
             str(getattr(p, "asid")).strip()
             for p in persons
             if getattr(p, "asid", None)
         }
         if not asids:
-            logging.info("No valid asids found in input data (asid-mode).")
-            return 0
+            logger.info("No valid asids found in input data (asid-mode).")
+            return {}
 
         raw_matched_persons = self.get_user_ids_by_asids(list(asids))
         if not raw_matched_persons:
-            logging.info("No matching asids found in ClickHouse.")
-            return 0
+            logger.info("No matching asids found in ClickHouse.")
+            return {}
 
+        asid_to_email: Dict[str, str | None] = {}
         for raw_matched_person in raw_matched_persons:
             if not raw_matched_person or not getattr(
                 raw_matched_person, "asid", None
@@ -313,109 +385,50 @@ class SourceAgentService:
             asid_to_email[asid_value] = email_matched_person
 
         filtered_persons = [
-            person
-            for person in persons
-            if getattr(person, "asid", None)
-            and str(person.asid).strip().lower() in asid_to_email
+            p
+            for p in persons
+            if getattr(p, "asid", None)
+            and str(p.asid).strip().lower() in asid_to_email
         ]
 
         if not filtered_persons:
-            logging.info(
+            logger.info(
                 "No valid persons left after filtering by enrichment_asids."
             )
-            return 0
+            return {}
 
-        for person in filtered_persons:
-            person_asid = str(getattr(person, "asid")).strip()
-            match_key = f"asid:{person_asid}"
-            transaction_date = (person.date or "").strip()
-            transaction_date_without_timezone = None
-            if transaction_date:
-                try:
-                    transaction_date_without_timezone = dateparser.parse(
-                        transaction_date
-                    )
-                    if transaction_date_without_timezone is not None:
-                        transaction_date_without_timezone = (
-                            transaction_date_without_timezone.replace(
-                                tzinfo=None
-                            )
-                        )
-                except Exception as e:
-                    logging.warning(
-                        f"Error parsing date '{transaction_date}': {e}"
-                    )
-                    transaction_date_without_timezone = None
+        return self._aggregate_matched_persons(
+            filtered_persons=filtered_persons,
+            date_range=date_range,
+            include_amount=include_amount,
+            get_key=lambda p: f"asid:{str(getattr(p, 'asid')).strip()}",
+            get_enrichment_asid=lambda p: str(getattr(p, "asid")).strip(),
+            get_email_for_person=lambda p: asid_to_email.get(
+                str(getattr(p, "asid")).strip()
+            ),
+        )
 
-            if (
-                date_range
-                and transaction_date_without_timezone
-                and transaction_date_without_timezone
-                < (datetime.now() - timedelta(days=date_range))
-            ):
-                continue
-
-            sale_amount = (
-                person.get_sale_amount() if include_amount else Decimal("0.0")
-            )
-
-            email_for_asid = asid_to_email.get(person_asid)
-
-            if match_key in matched_persons:
-                matched_persons[match_key]["orders_count"] += 1
-                if include_amount:
-                    matched_persons[match_key]["orders_amount"] += sale_amount
-                if transaction_date_without_timezone:
-                    existing_date = matched_persons[match_key]["start_date"]
-                    if (
-                        existing_date is None
-                        or transaction_date_without_timezone > existing_date
-                    ):
-                        matched_persons[match_key]["start_date"] = (
-                            transaction_date_without_timezone
-                        )
-            else:
-                matched_persons[match_key] = {
-                    "orders_count": 1,
-                    "start_date": transaction_date_without_timezone,
-                    "enrichment_user_asid": person_asid,
-                    "email": email_for_asid,
-                    "orders_amount": sale_amount if include_amount else None,
-                }
-
-        return matched_persons
-
-    def processing_email_mode_mathcing(
+    def processing_email_mode_matching(
         self,
         persons: List[PersonRow],
         date_range: int | None,
         include_amount: bool,
     ):
-        matched_persons = defaultdict(
-            lambda: {
-                "orders_amount": Decimal("0.0") if include_amount else None,
-                "orders_count": 0,
-                "start_date": None,
-                "enrichment_user_asid": None,
-                "email": None,
-            }
-        )
-        email_to_asid = {}
-
         emails = {
-            person.email.strip().lower()
-            for person in persons
-            if getattr(person, "email", None)
+            p.email.strip().lower()
+            for p in persons
+            if getattr(p, "email", None)
         }
         if not emails:
-            logging.info("No valid emails found in input data (email-mode).")
-            return 0
+            logger.info("No valid emails found in input data (email-mode).")
+            return {}
 
         raw_matched_persons = self.get_user_ids_by_emails(list(emails))
         if not raw_matched_persons:
-            logging.info("No matching emails found in ClickHouse.")
-            return 0
+            logger.info("No matching emails found in ClickHouse.")
+            return {}
 
+        email_to_asid: Dict[str, str] = {}
         seen_asids = set()
         for raw_matched_person in raw_matched_persons:
             if (
@@ -425,7 +438,7 @@ class SourceAgentService:
             ):
                 continue
             email_value = raw_matched_person.email.strip().lower()
-            asid_value = str(raw_matched_person.asid)
+            asid_value = str(raw_matched_person.asid).strip()
             if (
                 asid_value not in seen_asids
                 and email_value not in email_to_asid
@@ -434,73 +447,24 @@ class SourceAgentService:
                 seen_asids.add(asid_value)
 
         filtered_persons = [
-            person
-            for person in persons
-            if getattr(person, "email", None)
-            and person.email.strip().lower() in email_to_asid
+            p
+            for p in persons
+            if getattr(p, "email", None)
+            and p.email.strip().lower() in email_to_asid
         ]
         if not filtered_persons:
-            logging.info(
+            logger.info(
                 "No valid persons left after filtering by enrichment_emails."
             )
-            return 0
+            return {}
 
-        for person in filtered_persons:
-            person_email = person.email.strip().lower()
-            transaction_date = (person.date or "").strip()
-            transaction_date_without_timezone = None
-            if transaction_date:
-                try:
-                    transaction_date_without_timezone = dateparser.parse(
-                        transaction_date
-                    )
-                    if transaction_date_without_timezone is not None:
-                        transaction_date_without_timezone = (
-                            transaction_date_without_timezone.replace(
-                                tzinfo=None
-                            )
-                        )
-                except Exception as e:
-                    logging.warning(
-                        f"Error parsing date '{transaction_date}': {e}"
-                    )
-                    transaction_date_without_timezone = None
-
-            if (
-                date_range
-                and transaction_date_without_timezone
-                and transaction_date_without_timezone
-                < (datetime.now() - timedelta(days=date_range))
-            ):
-                continue
-
-            sale_amount = (
-                person.get_sale_amount() if include_amount else Decimal("0.0")
-            )
-
-            enrichment_asid = email_to_asid[person_email]
-
-            if person_email in matched_persons:
-                matched_persons[person_email]["orders_count"] += 1
-                if include_amount:
-                    matched_persons[person_email]["orders_amount"] += (
-                        sale_amount
-                    )
-                if transaction_date_without_timezone:
-                    existing_date = matched_persons[person_email]["start_date"]
-                    if (
-                        existing_date is None
-                        or transaction_date_without_timezone > existing_date
-                    ):
-                        matched_persons[person_email]["start_date"] = (
-                            transaction_date_without_timezone
-                        )
-            else:
-                matched_persons[person_email] = {
-                    "orders_count": 1,
-                    "start_date": transaction_date_without_timezone,
-                    "enrichment_user_asid": enrichment_asid,
-                    "email": person_email,
-                    "orders_amount": sale_amount if include_amount else None,
-                }
-        return matched_persons
+        return self._aggregate_matched_persons(
+            filtered_persons=filtered_persons,
+            date_range=date_range,
+            include_amount=include_amount,
+            get_key=lambda p: p.email.strip().lower(),
+            get_enrichment_asid=lambda p: email_to_asid.get(
+                p.email.strip().lower()
+            ),
+            get_email_for_person=lambda p: p.email.strip().lower(),
+        )
