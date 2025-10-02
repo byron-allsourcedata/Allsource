@@ -12,12 +12,16 @@ import {
 	ListItem,
 	ListItemIcon,
 	ListItemText,
+	Link,
+	Stack,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomTooltip from "@/components/customToolTip";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import { AxiosError } from "axios";
 
 const accontDetailsStyles = {
 	formField: {
@@ -201,6 +205,8 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 
 		return `${differenceInDays} days ago`;
 	};
+
+	useZohoChatToggle(changePasswordPopupOpen);
 
 	// useEffect(() => {
 	//     // Проверка на мобильное устройство по ширине экрана
@@ -456,6 +462,28 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 			width={16}
 		/>
 	);
+
+	const handleResetPassword = async (event: React.FormEvent) => {
+		event.preventDefault();
+		try {
+			const response = await axiosInterceptorInstance.post("reset-password", {
+				email: emailAddress,
+			});
+
+			if (response.status === 200) {
+				sessionStorage.setItem("me", JSON.stringify({ email: emailAddress }));
+				showToast("Verification link sent to your email successfully");
+			}
+		} catch (err) {
+			const error = err as AxiosError;
+			if (error.response && error.response.data) {
+				const errorData = error.response.data as { [key: string]: string };
+				setErrors(errorData);
+			} else {
+				console.error("Error:", error);
+			}
+		}
+	};
 
 	return (
 		<Box
@@ -962,7 +990,8 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 							gap: 2,
 							justifyContent: "space-between",
 							alignItems: "center",
-							maxWidth: "78%",
+							maxWidth: "79%",
+							pb: 2,
 						}}
 					>
 						<Button
@@ -985,6 +1014,25 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 							}}
 						>
 							Change password
+						</Button>
+						<Button
+							className="hyperlink-red"
+							variant="text"
+							onClick={handleResetPassword}
+							sx={{
+								borderRadius: "4px",
+								background: "#fff",
+
+								color: "rgba(211, 47, 47, 1) !important",
+								textTransform: "none",
+								padding: "10px 24px",
+								height: "40px",
+								"&:hover": {
+									background: "rgba(241, 192, 192, 1)",
+								},
+							}}
+						>
+							Reset password
 						</Button>
 						<Typography
 							variant="body2"
@@ -1067,56 +1115,68 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 									access control.
 								</Typography>
 
-								<TextField
-									sx={{
-										...accontDetailsStyles.formField,
-										maxWidth: "100%",
-										display: accountDetails.is_pass_exists ? "block" : "none",
-									}}
-									InputLabelProps={{
-										className: "form-input-label",
-										focused: false,
-									}}
-									label="Current Password"
-									type={showCurrentPassword ? "text" : "password"}
-									value={currentPassword}
-									autoComplete="new-password"
-									onChange={(e) => setCurrentPassword(e.target.value)}
-									fullWidth
-									margin="normal"
-									InputProps={{
-										className: "form-input",
-										sx: accontDetailsStyles.formInput,
-										endAdornment: (
-											<InputAdornment position="end">
-												<IconButton
-													onClick={toggleCurrentPasswordVisibility}
-													edge="end"
-												>
-													<Image
-														src={
-															showCurrentPassword
-																? "/custom-visibility-icon-off.svg"
-																: "/custom-visibility-icon.svg"
-														}
-														alt={
-															showCurrentPassword
-																? "Show password"
-																: "Hide password"
-														}
-														height={18}
-														width={18}
-														title={
-															showCurrentPassword
-																? "Hide password"
-																: "Show password"
-														}
-													/>
-												</IconButton>
-											</InputAdornment>
-										),
-									}}
-								/>
+								<Stack spacing={0.5}>
+									<TextField
+										sx={{
+											...accontDetailsStyles.formField,
+											maxWidth: "100%",
+											display: accountDetails.is_pass_exists ? "block" : "none",
+										}}
+										InputLabelProps={{
+											className: "form-input-label",
+											focused: false,
+										}}
+										label="Current Password"
+										type={showCurrentPassword ? "text" : "password"}
+										value={currentPassword}
+										autoComplete="new-password"
+										onChange={(e) => setCurrentPassword(e.target.value)}
+										fullWidth
+										margin="normal"
+										InputProps={{
+											className: "form-input",
+											sx: accontDetailsStyles.formInput,
+											endAdornment: (
+												<InputAdornment position="end">
+													<IconButton
+														onClick={toggleCurrentPasswordVisibility}
+														edge="end"
+													>
+														<Image
+															src={
+																showCurrentPassword
+																	? "/custom-visibility-icon-off.svg"
+																	: "/custom-visibility-icon.svg"
+															}
+															alt={
+																showCurrentPassword
+																	? "Show password"
+																	: "Hide password"
+															}
+															height={18}
+															width={18}
+															title={
+																showCurrentPassword
+																	? "Hide password"
+																	: "Show password"
+															}
+														/>
+													</IconButton>
+												</InputAdornment>
+											),
+										}}
+									/>
+									<Box>
+										<Link
+											href="reset-password"
+											variant="body2"
+											underline="hover"
+											color={"rgba(56, 152, 252, 1)"}
+										>
+											Forgot Password?
+										</Link>
+									</Box>
+								</Stack>
 								<TextField
 									sx={{
 										...accontDetailsStyles.formField,
