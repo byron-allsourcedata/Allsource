@@ -1,7 +1,7 @@
 "use client";
 import React, { Suspense, useState, useEffect } from "react";
 import { Box, InputAdornment, TextField, Typography } from "@mui/material";
-import { styles } from "./accountStyles";
+import { styles } from "./companySetupStyles";
 import { useRouter } from "next/navigation";
 import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -17,7 +17,6 @@ const AccountSetup = () => {
 	const [stripeUrl, setStripeUrl] = useState("");
 	const [domainName, setDomainName] = useState("");
 	const [editingName, setEditingName] = useState(true);
-	// const [hasPotentialTeam, setHasPotentialTeam] = useState(true);
 	const [errors, setErrors] = useState({
 		websiteLink: "",
 		organizationName: "",
@@ -34,13 +33,10 @@ const AccountSetup = () => {
 
 				switch (status) {
 					case "SUCCESS":
-						const domainUrl = response.data.domain_url;
-						const organizationName = response.data.company_name;
-						if (domainUrl) {
-							setWebsiteLink(domainUrl);
-						}
-						if (organizationName) {
-							setOrganizationName(organizationName);
+						const domain_url = response.data.domain_url;
+						if (domain_url) {
+							setDomainLink(response.data.domain_url);
+							setWebsiteLink(response.data.domain_url);
 						}
 						break;
 					case "NEED_EMAIL_VERIFIED":
@@ -104,15 +100,13 @@ const AccountSetup = () => {
 		}
 	};
 
-	const endSetup = (hasPotentialTeam: boolean) => {
+	const endSetup = () => {
 		if (stripeUrl) {
 			router.push(stripeUrl);
 		} else {
-			if (hasPotentialTeam) {
-				router.push("/company-setup");
-			} else {
-				router.push("/get-started");
-			}
+			// router.push("/dashboard");
+			router.push("/get-started");
+			localStorage.setItem("welcome_popup", "true");
 		}
 	};
 
@@ -130,14 +124,11 @@ const AccountSetup = () => {
 		try {
 			const response = await axiosInterceptorInstance.post("/company-info", {
 				company_website: websiteLink,
-				organization_name: organizationName,
 			});
 
 			switch (response.data.status) {
 				case "SUCCESS":
 					const domain = websiteLink.replace(/^https?:\/\//, "");
-					const hasPotentialTeam = response.data.has_potential_team;
-					console.log("hasPotentialTeam", response.data);
 					sessionStorage.setItem("current_domain", domain);
 					setDomainName(domain);
 					setEditingName(false);
@@ -145,7 +136,7 @@ const AccountSetup = () => {
 					if (response.data.stripe_payment_url) {
 						setStripeUrl(`${response.data.stripe_payment_url}`);
 					}
-					return hasPotentialTeam;
+					break;
 				case "NEED_EMAIL_VERIFIED":
 					router.push("/email-verificate");
 					break;
@@ -243,7 +234,7 @@ const AccountSetup = () => {
 									className="heading-text"
 									sx={styles.title}
 								>
-									Transform your marketing with AI-powered data
+									Email Domain Already Registered
 								</Typography>
 								<Typography
 									variant="body1"
@@ -251,7 +242,8 @@ const AccountSetup = () => {
 									className="first-sub-title"
 									sx={styles.subtitle}
 								>
-									Free trial, fast setup
+									The email domain @yourcompany.com is already associated with
+									one or more accounts.
 								</Typography>
 							</Box>
 							{
@@ -334,9 +326,9 @@ const AccountSetup = () => {
 
 									<CustomButton
 										variant="contained"
-										onClick={async () => {
-											const hasPotentialTeam = await handleSubmit();
-											endSetup(hasPotentialTeam);
+										onClick={() => {
+											handleSubmit();
+											endSetup();
 										}}
 										disabled={!isFormValidFirst()}
 										sx={{

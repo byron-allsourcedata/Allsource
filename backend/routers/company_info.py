@@ -18,6 +18,7 @@ async def set_company_info(
     return CompanyInfoResponse(
         status=result_status.get("status"),
         stripe_payment_url=result_status.get("stripe_payment_url"),
+        has_potential_team=result_status.get("has_potential_team"),
     )
 
 

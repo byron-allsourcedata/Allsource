@@ -46,6 +46,7 @@ from persistence.referral_user import ReferralUserPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
+from persistence.account_setup import AccountSetupPersistence
 from persistence.user_persistence import UserDict, UserPersistence
 from schemas.auth_token import Token
 from services.accounts import AccountsService
@@ -152,6 +153,10 @@ def get_million_verifier_service(
 
 def get_company_persistence(db: Session = Depends(get_db)):
     return CompanyPersistence(db=db)
+
+
+def get_account_setup_persistence(db: Session = Depends(get_db)):
+    return AccountSetupPersistence(db=db)
 
 
 def get_suppression_persistence(
@@ -730,6 +735,7 @@ def get_payments_service(
 def get_company_info_service(
     subscription_service: SubscriptionService,
     partners_persistence: PartnersPersistence,
+    account_setup_persistence: AccountSetupPersistence,
     db: Session = Depends(get_db),
     user=Depends(check_user_authentication),
 ):
@@ -738,6 +744,7 @@ def get_company_info_service(
         user=user,
         subscription_service=subscription_service,
         partners_persistence=partners_persistence,
+        account_setup_persistence=account_setup_persistence,
     )
 
 

@@ -8,7 +8,9 @@ from enums import SourcePlatformEnum, BusinessType
 from schemas.users import CompanyInfo
 from services.subscriptions import SubscriptionService
 from persistence.partners_persistence import PartnersPersistence
+from persistence.account_setup import AccountSetupPersistence
 from services.stripe_service import get_stripe_payment_url
+from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
@@ -20,10 +22,12 @@ class CompanyInfoService:
         user,
         subscription_service: SubscriptionService,
         partners_persistence: PartnersPersistence,
+        account_setup_persistence: AccountSetupPersistence,
     ):
         self.user = user
         self.db = db
         self.subscription_service = subscription_service
+        self.account_setup_persistence = account_setup_persistence
         self.partners_persistence = partners_persistence
 
     def set_company_info(self, company_info: CompanyInfo):
@@ -39,7 +43,14 @@ class CompanyInfoService:
                 .filter(Users.id == self.user.get("id"))
                 .first()
             )
+            has_potential_team = (
+                self.account_setup_persistence.has_potential_team_members(
+                    company_name=company_info.organization_name
+                )
+            )
+            print("has_potential_team", has_potential_team)
             user.company_website = company_info.company_website
+            user.company_name = company_info.organization_name
             user.is_company_details_filled = True
             self.db.flush()
             if self.user.get("source_platform") not in (
@@ -62,6 +73,7 @@ class CompanyInfoService:
                 )
             return {
                 "status": CompanyInfoEnum.SUCCESS,
+                "has_potential_team": has_potential_team,
                 "stripe_payment_url": stripe_payment_url,
             }
         else:
@@ -78,6 +90,7 @@ class CompanyInfoService:
                 .filter_by(user_id=self.user.get("id"))
                 .scalar()
             )
+            result["company_name"] = self.user.get("company_name")
         result["status"] = self.check_company_info_authorization()
         return result
 
@@ -94,8 +107,8 @@ class CompanyInfoService:
                 return CompanyInfoEnum.SUCCESS
         else:
             if self.user.get("is_email_confirmed"):
-                if self.user.get("company_website"):
-                    return CompanyInfoEnum.DASHBOARD_ALLOWED
+                # if self.user.get("company_website"):
+                #     return CompanyInfoEnum.DASHBOARD_ALLOWED
                 return CompanyInfoEnum.SUCCESS
             else:
                 return CompanyInfoEnum.NEED_EMAIL_VERIFIED
