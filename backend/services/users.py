@@ -85,6 +85,7 @@ class UsersService:
         if team_member:
             info["email"] = team_member.get("email")
             info["full_name"] = team_member.get("full_name")
+            info["access_level"] = team_member.get("team_access_level")
         else:
             info["email"] = self.user.get("email")
             info["full_name"] = self.user.get("full_name")
