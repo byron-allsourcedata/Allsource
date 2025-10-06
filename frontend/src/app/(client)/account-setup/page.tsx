@@ -109,7 +109,8 @@ const AccountSetup = () => {
 			router.push(stripeUrl);
 		} else {
 			if (hasPotentialTeam) {
-				router.push("/company-setup");
+				const dataString = encodeURIComponent(organizationName);
+				router.push(`/company-setup?company_name=${dataString}`);
 			} else {
 				router.push("/get-started");
 			}

@@ -1,8 +1,18 @@
 "use client";
 import React, { Suspense, useState, useEffect } from "react";
-import { Box, InputAdornment, TextField, Typography } from "@mui/material";
+import {
+	Avatar,
+	Box,
+	Button,
+	InputAdornment,
+	Paper,
+	TextField,
+	Typography,
+	useTheme,
+} from "@mui/material";
 import { styles } from "./companySetupStyles";
-import { useRouter } from "next/navigation";
+import { signupStyles } from "../signup/signupStyles";
+import { useRouter, useSearchParams } from "next/navigation";
 import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { fetchUserData } from "@/services/meService";
@@ -10,46 +20,28 @@ import UserMenuOnboarding from "../privacy-policy/components/UserMenuOnboarding"
 import FirstLevelLoader from "@/components/FirstLevelLoader";
 import { CustomButton } from "@/components/ui";
 
-const AccountSetup = () => {
-	const [organizationName, setOrganizationName] = useState("");
-	const [websiteLink, setWebsiteLink] = useState("");
-	const [domainLink, setDomainLink] = useState("");
-	const [stripeUrl, setStripeUrl] = useState("");
-	const [domainName, setDomainName] = useState("");
-	const [editingName, setEditingName] = useState(true);
-	const [errors, setErrors] = useState({
-		websiteLink: "",
-		organizationName: "",
-	});
-	const router = useRouter();
+interface PotentialTeamMember {
+	email: string;
+	full_name: string;
+}
+
+const CompanySetup = () => {
+	const [potentialTeamMembers, setPotentialTeamMembers] = useState<
+		PotentialTeamMember[]
+	>([]);
 	const [loading, setLoading] = useState(false);
+	const searchParams = useSearchParams();
+	const companyName = searchParams.get("company_name");
 
 	useEffect(() => {
 		const fetchCompanyInfo = async () => {
 			try {
 				setLoading(true);
-				const response = await axiosInterceptorInstance.get("/company-info");
-				const status = response.data.status;
-
-				switch (status) {
-					case "SUCCESS":
-						const domain_url = response.data.domain_url;
-						if (domain_url) {
-							setDomainLink(response.data.domain_url);
-							setWebsiteLink(response.data.domain_url);
-						}
-						break;
-					case "NEED_EMAIL_VERIFIED":
-						router.push("/email-verificate");
-						break;
-					case "NEED_CHOOSE_PLAN":
-						router.push("/settings?section=subscription");
-						break;
-					case "DASHBOARD_ALLOWED":
-						router.push("/get-started");
-						break;
-					default:
-						console.error("Unknown status:", status);
+				const response = await axiosInterceptorInstance.get(
+					`/potential-team-members?company_name=${companyName}`,
+				);
+				if (response.status === 200 && response.data.length > 0) {
+					setPotentialTeamMembers(response.data);
 				}
 			} catch (error) {
 				console.error("Error fetching company info:", error);
@@ -60,130 +52,14 @@ const AccountSetup = () => {
 		fetchCompanyInfo();
 	}, []);
 
-	const [isFocused, setIsFocused] = useState(false);
+	const theme = useTheme();
 
-	const handleFocus = () => {
-		setIsFocused(true);
+	const handleJoin = (member: PotentialTeamMember) => {
+		console.log("Join clicked for", member);
 	};
 
-	const handleBlur = () => {
-		setIsFocused(false);
-	};
-
-	const validateField = (
-		value: string,
-		type: "email" | "website" | "organizationName",
-	): string => {
-		switch (type) {
-			case "email":
-				const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-				return emailRe.test(value) ? "" : "Invalid email address";
-			case "website":
-				const sanitizedValue = value?.replace(/^www\./, "");
-				const websiteRe =
-					/^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
-				return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
-			case "organizationName":
-				const orgName = value.trim();
-
-				const hasLetter = /[a-zA-Zа-яА-Я0-9]/.test(orgName);
-
-				if (!orgName) {
-					return "Organization name is required";
-				} else if (!hasLetter) {
-					return "Organization name must contain at least one letter";
-				}
-
-				return "";
-			default:
-				return "";
-		}
-	};
-
-	const endSetup = () => {
-		if (stripeUrl) {
-			router.push(stripeUrl);
-		} else {
-			// router.push("/dashboard");
-			router.push("/get-started");
-			localStorage.setItem("welcome_popup", "true");
-		}
-	};
-
-	const handleSubmit = async () => {
-		const newErrors = {
-			websiteLink: validateField(websiteLink, "website"),
-			organizationName: validateField(organizationName, "organizationName"),
-		};
-		setErrors(newErrors);
-
-		if (newErrors.websiteLink) {
-			return;
-		}
-
-		try {
-			const response = await axiosInterceptorInstance.post("/company-info", {
-				company_website: websiteLink,
-			});
-
-			switch (response.data.status) {
-				case "SUCCESS":
-					const domain = websiteLink.replace(/^https?:\/\//, "");
-					sessionStorage.setItem("current_domain", domain);
-					setDomainName(domain);
-					setEditingName(false);
-					await fetchUserData();
-					if (response.data.stripe_payment_url) {
-						setStripeUrl(`${response.data.stripe_payment_url}`);
-					}
-					break;
-				case "NEED_EMAIL_VERIFIED":
-					router.push("/email-verificate");
-					break;
-				case "NEED_CHOOSE_PLAN":
-					router.push("/settings?section=subscription");
-					break;
-				default:
-					break;
-			}
-		} catch (error) {
-			console.error("An error occurred:", error);
-		}
-	};
-
-	const handleWebsiteLink = (event: { target: { value: string } }) => {
-		let input = event.target.value.trim();
-
-		if (!input.startsWith("http://") && !input.startsWith("https://")) {
-			input = `https://${input}`;
-		}
-
-		try {
-			const url = new URL(input);
-
-			const sanitizedInput = url.origin;
-
-			setWebsiteLink(sanitizedInput);
-
-			const websiteError = validateField(sanitizedInput, "website");
-			setErrors((prevErrors) => ({
-				...prevErrors,
-				websiteLink: websiteError,
-			}));
-		} catch (error) {
-			setWebsiteLink(input);
-			setErrors((prevErrors) => ({
-				...prevErrors,
-				websiteLink: "Invalid website URL",
-			}));
-		}
-	};
-
-	const isFormValidFirst = () => {
-		const errors = {
-			websiteLink: validateField(websiteLink, "website"),
-		};
-		return errors.websiteLink === "";
+	const handleCreateSeparate = () => {
+		console.log("Create a separate account clicked");
 	};
 
 	return (
@@ -245,100 +121,69 @@ const AccountSetup = () => {
 									The email domain @yourcompany.com is already associated with
 									one or more accounts.
 								</Typography>
+
+								{potentialTeamMembers.map((member, index) => (
+									<Paper
+										key={index}
+										elevation={0}
+										sx={signupStyles.memberCard as any}
+									>
+										<Box sx={signupStyles.memberInfo as any}>
+											<Avatar sx={{ width: 44, height: 44 }}>
+												{/* первые буквы имени */}
+												{member.full_name
+													.split(" ")
+													.map((s) => s[0])
+													.slice(0, 2)
+													.join("")
+													.toUpperCase()}
+											</Avatar>
+											<Box sx={signupStyles.memberText as any}>
+												<Typography sx={signupStyles.memberName as any}>
+													{member.full_name}
+												</Typography>
+												<Typography sx={signupStyles.memberEmail as any}>
+													{member.email}
+												</Typography>
+											</Box>
+										</Box>
+
+										<Button
+											variant="contained"
+											size="medium"
+											onClick={() => handleJoin(member)}
+											sx={{
+												...styles.joinBtn,
+												background: (theme) =>
+													theme.palette.mode === "light"
+														? "#2E7DFF"
+														: undefined,
+												"&:hover": {
+													filter: "brightness(0.95)",
+												},
+											}}
+										>
+											Join
+										</Button>
+									</Paper>
+								))}
+
+								<Box sx={signupStyles.orDivider}>
+									<Box
+										sx={{ borderBottom: "1px solid #DCE1E8", flexGrow: 1 }}
+									/>
+									<Typography
+										variant="body1"
+										className="third-sub-title"
+										sx={signupStyles.orText}
+									>
+										OR
+									</Typography>
+									<Box
+										sx={{ borderBottom: "1px solid #DCE1E8", flexGrow: 1 }}
+									/>
+								</Box>
 							</Box>
-							{
-								<>
-									<Typography
-										variant="body1"
-										component="h3"
-										className="first-sub-title"
-										sx={styles.text}
-									>
-										What is your organization&apos;s name
-									</Typography>
-									<TextField
-										InputProps={{ className: "form-input" }}
-										fullWidth
-										label="Organization name"
-										variant="outlined"
-										margin="normal"
-										sx={styles.formField}
-										value={organizationName}
-										onChange={(e) => setOrganizationName(e.target.value)}
-										error={!!errors.organizationName}
-										helperText={errors.organizationName}
-										InputLabelProps={{
-											className: "form-input-label",
-											focused: false,
-										}}
-									/>
-
-									<Typography
-										variant="body1"
-										component="h3"
-										className="first-sub-title"
-										sx={styles.text}
-									>
-										Share your primary company website
-									</Typography>
-
-									<TextField
-										fullWidth
-										label="Enter website link"
-										variant="outlined"
-										placeholder={isFocused ? "example.com" : ""}
-										sx={styles.formField}
-										InputLabelProps={{
-											className: "form-input-label",
-											focused: false,
-										}}
-										value={
-											websiteLink
-												? websiteLink.replace(/^https?:\/\//, "")
-												: isFocused
-													? websiteLink.replace(/^https?:\/\//, "")
-													: `https://${websiteLink.replace(/^https?:\/\//, "")}`
-										}
-										onChange={domainLink ? undefined : handleWebsiteLink}
-										onFocus={domainLink ? undefined : handleFocus}
-										onBlur={domainLink ? undefined : handleBlur}
-										disabled={!!domainLink}
-										error={!!errors.websiteLink}
-										helperText={errors.websiteLink}
-										InputProps={{
-											className: "form-input",
-											startAdornment: isFocused && !websiteLink && (
-												<InputAdornment position="start">
-													https://
-												</InputAdornment>
-											),
-										}}
-									/>
-
-									<Typography
-										variant="body1"
-										component="h2"
-										className="first-sub-title"
-										sx={styles.subtitle}
-									>
-										You can add more domains later
-									</Typography>
-
-									<CustomButton
-										variant="contained"
-										onClick={() => {
-											handleSubmit();
-											endSetup();
-										}}
-										disabled={!isFormValidFirst()}
-										sx={{
-											padding: "14px",
-										}}
-									>
-										Get Started
-									</CustomButton>
-								</>
-							}
 						</Box>
 					</Box>
 				</Box>
@@ -347,12 +192,12 @@ const AccountSetup = () => {
 	);
 };
 
-const AccountSetupPage = () => {
+const CompanySetupPage = () => {
 	return (
 		<Suspense fallback={<CustomizedProgressBar />}>
-			<AccountSetup />
+			<CompanySetup />
 		</Suspense>
 	);
 };
 
-export default AccountSetupPage;
+export default CompanySetupPage;

@@ -1,5 +1,6 @@
 import logging
 from models.users import Users
+from schemas.account_setup import PotentialTeamMembers
 from db_dependencies import Db
 from resolver import injectable
 from sqlalchemy import exists, func, case, or_
@@ -40,10 +41,10 @@ class AccountSetupPersistence:
 
     def get_potential_team_members(
         self, company_name: str
-    ) -> list[dict[str, str]]:
+    ) -> list[PotentialTeamMembers]:
         pattern = f"%{company_name}%"
 
-        priority = case([(Users.team_access_level == "owner", 1)], else_=2)
+        priority = case(((Users.team_access_level == "owner", 1)), else_=2)
 
         # row_number partitioned by company_name, сортировка по приоритету, затем по id как tie-breaker
         rn = (
@@ -76,7 +77,10 @@ class AccountSetupPersistence:
             .all()
         )
 
-        return [{"full_name": r.full_name, "email": r.email} for r in rows]
+        return [
+            PotentialTeamMembers(full_name=r.full_name, email=r.email)
+            for r in rows
+        ]
 
     def has_potential_team_members(self, company_name: str) -> bool:
         pattern = f"%{company_name}%"

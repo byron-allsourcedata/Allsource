@@ -250,4 +250,18 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 			fontWeight: "400",
 		},
 	},
+	memberEmail: {
+		fontSize: "0.95rem",
+		color: "#707071",
+		whiteSpace: "nowrap",
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+	},
+	joinBtn: {
+		ml: 2,
+		borderRadius: "8px",
+		textTransform: "none",
+		minWidth: "72px",
+		px: 2,
+	},
 };

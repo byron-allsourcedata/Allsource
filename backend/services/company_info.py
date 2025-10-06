@@ -2,9 +2,8 @@ import logging
 
 from enums import CompanyInfoEnum
 from models.users import Users
-from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
-from enums import SourcePlatformEnum, BusinessType
+from enums import SourcePlatformEnum
 from schemas.users import CompanyInfo
 from services.subscriptions import SubscriptionService
 from persistence.partners_persistence import PartnersPersistence
@@ -52,19 +51,6 @@ class CompanyInfoService:
             user.company_website = company_info.company_website
             user.company_name = company_info.organization_name
             user.is_company_details_filled = True
-            self.db.flush()
-            if self.user.get("source_platform") not in (
-                SourcePlatformEnum.SHOPIFY.value,
-                SourcePlatformEnum.BIG_COMMERCE.value,
-            ):
-                self.db.add(
-                    UserDomains(
-                        user_id=self.user.get("id"),
-                        domain=company_info.company_website.replace(
-                            "https://", ""
-                        ).replace("http://", ""),
-                    )
-                )
             self.db.commit()
             stripe_payment_url = None
             if user.stripe_payment_url:
@@ -86,13 +72,18 @@ class CompanyInfoService:
             SourcePlatformEnum.BIG_COMMERCE.value,
         ):
             result["domain_url"] = (
-                self.db.query(UserDomains.domain)
-                .filter_by(user_id=self.user.get("id"))
-                .scalar()
+                self.user.get("company_website")
+                .replace("https://", "")
+                .replace("http://", "")
             )
             result["company_name"] = self.user.get("company_name")
         result["status"] = self.check_company_info_authorization()
         return result
+
+    def get_potential_team_members(self, company_name):
+        return self.account_setup_persistence.get_potential_team_members(
+            company_name
+        )
 
     def check_company_info_authorization(self):
         if self.user.get("is_with_card"):
