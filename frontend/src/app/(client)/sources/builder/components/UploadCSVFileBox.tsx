@@ -53,6 +53,7 @@ const UploadCSVFileBox: React.FC<ChooseDomainContactTypeProps> = ({
 		file,
 		sourceType,
 		fileName,
+		mappingRows,
 		handleDeleteFile,
 		setHeadingsNotSubstitution,
 		setFile,
@@ -251,7 +252,7 @@ const UploadCSVFileBox: React.FC<ChooseDomainContactTypeProps> = ({
 				...Object.keys(mappingHeadingSubstitution[sourceType]),
 			];
 
-			const updatedHeadingSubstitution: Record<string, boolean> = {};
+			let updatedHeadingSubstitution: Record<string, boolean> = {};
 			headingKeys.forEach((key) => {
 				updatedHeadingSubstitution[key] = newHeadingsMap[key] === "None";
 			});
@@ -263,6 +264,17 @@ const UploadCSVFileBox: React.FC<ChooseDomainContactTypeProps> = ({
 			headingKeys.forEach((key, i) => {
 				newHeadingsMap[key] = newHeadings[i]; // тут индекс совпадает
 			});
+
+			if (updatedHeadingSubstitution["ASID"] === false) {
+				updatedHeadingSubstitution = Object.fromEntries(
+					Object.entries(updatedHeadingSubstitution).filter(([heading]) => {
+						const row = mappingRows.find(
+							(r) => r.type === heading || r.value === heading,
+						);
+						return row && row.isRequiredForAsidMatching;
+					}),
+				) as Record<string, boolean>;
+			}
 
 			setHeadingsNotSubstitution(updatedHeadingSubstitution);
 

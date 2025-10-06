@@ -174,7 +174,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 	const [fileName, setFileName] = useState<string>("");
 
 	const hasUnsubstitutedHeadings = () => {
-		const mappingRows =
+		let mappingRowsSelectType =
 			sourceType in mappingRowsSourceType
 				? [
 						...defaultMapping,
@@ -183,6 +183,12 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 						],
 					]
 				: defaultMapping;
+
+		if (!headingsNotSubstitution["ASID"]) {
+			mappingRowsSelectType = mappingRowsSelectType.filter(
+				(el) => el.isRequiredForAsidMatching,
+			);
+		}
 
 		const deletableKeys = new Set(
 			mappingRows.filter((row) => row.canDelete).map((row) => row.type),
@@ -259,7 +265,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			value: "",
 			canDelete: true,
 			isHidden: false,
-			isRequiredForAsidMatching: true,
+			isRequiredForAsidMatching: false,
 		},
 	];
 
