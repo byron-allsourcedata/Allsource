@@ -249,6 +249,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 				smart_audience_name: audienceName,
 				total_records: AudienceSize,
 				active_segment_records: AudienceSize,
+				validation_mode: "none",
 			};
 
 			const filteredRequestData = Object.fromEntries(
