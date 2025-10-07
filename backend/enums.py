@@ -112,6 +112,7 @@ class AudienceSmartDataSource(Enum):
 class AudienceValidationMode(Enum):
     ALL = "all"
     ANY = "any"
+    NONE = "none"
 
 
 class AudienceSmartStatuses(Enum):
