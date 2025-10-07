@@ -315,7 +315,7 @@ async def parse_csv_file(
                 raw_order_count
             )
             if parsed_order_count:
-                sale_amount = (str(sale_amount * parsed_order_count),)
+                sale_amount = str(sale_amount * parsed_order_count)
 
             batch_rows.append(
                 PersonRow(
