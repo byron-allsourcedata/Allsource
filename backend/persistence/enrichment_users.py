@@ -42,7 +42,7 @@ class EnrichmentUsersPersistence:
         for a in asids:
             if a is None:
                 continue
-            s = str(a).strip().lower()
+            s = str(a).strip("{}").strip().lower()
             if not s:
                 continue
             try:

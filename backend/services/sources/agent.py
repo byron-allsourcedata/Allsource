@@ -388,7 +388,7 @@ class SourceAgentService:
             p
             for p in persons
             if getattr(p, "asid", None)
-            and str(p.asid).strip().lower() in asid_to_email
+            and str(p.asid).strip().strip("{}").lower() in asid_to_email
         ]
 
         if not filtered_persons:
