@@ -23,6 +23,7 @@ import { CustomButton } from "@/components/ui";
 interface PotentialTeamMember {
 	email: string;
 	full_name: string;
+	company_name: string;
 }
 
 const CompanySetup = () => {
@@ -96,75 +97,58 @@ const CompanySetup = () => {
 						>
 							<Box
 								sx={{
-									"@media (max-width: 600px)": {
-										display: "flex",
-										flexDirection: "column",
-										justifyContent: "center",
-										pb: 1,
-									},
+									display: "flex",
+									flexDirection: "column",
+									justifyContent: "center",
+									gap: 2,
 								}}
 							>
-								<Typography
-									variant="h5"
-									component="h1"
-									className="heading-text"
-									sx={styles.title}
-								>
-									Email Domain Already Registered
-								</Typography>
-								<Typography
-									variant="body1"
-									component="h2"
-									className="first-sub-title"
-									sx={styles.subtitle}
-								>
-									The email domain @yourcompany.com is already associated with
-									one or more accounts.
-								</Typography>
+								<Box display={"flex"} flexDirection={"column"} gap={3}>
+									<Box display={"flex"} flexDirection={"column"} gap={1}>
+										<Typography
+											variant="h5"
+											component="h1"
+											className="heading-text"
+											sx={{ m: "0 !important" }}
+										>
+											Similar Companies Found
+										</Typography>
+										<Typography
+											variant="body1"
+											component="h2"
+											className="first-sub-title"
+										>
+											{`We found several companies with names similar to ${companyName}`}
+										</Typography>
+									</Box>
+
+									<Box display={"flex"} flexDirection={"column"} gap={0.5}>
+										<Typography className="first-sub-title">
+											Join an existing team
+										</Typography>
+										<Typography className="seventh-sub-title">
+											{`We found several companies with names similar to ${companyName}`}
+										</Typography>
+									</Box>
+								</Box>
 
 								{potentialTeamMembers.map((member, index) => (
-									<Paper
-										key={index}
-										elevation={0}
-										sx={signupStyles.memberCard as any}
-									>
-										<Box sx={signupStyles.memberInfo as any}>
-											<Avatar sx={{ width: 44, height: 44 }}>
-												{/* первые буквы имени */}
-												{member.full_name
-													.split(" ")
-													.map((s) => s[0])
-													.slice(0, 2)
-													.join("")
-													.toUpperCase()}
-											</Avatar>
-											<Box sx={signupStyles.memberText as any}>
-												<Typography sx={signupStyles.memberName as any}>
-													{member.full_name}
-												</Typography>
-												<Typography sx={signupStyles.memberEmail as any}>
-													{member.email}
+									<Paper key={index} elevation={0} sx={styles.memberCard}>
+										<Box sx={styles.memberInfo}>
+											<Box sx={styles.memberText}>
+												<Typography sx={styles.memberName}>
+													{member.company_name}
 												</Typography>
 											</Box>
 										</Box>
 
-										<Button
+										<CustomButton
 											variant="contained"
 											size="medium"
 											onClick={() => handleJoin(member)}
-											sx={{
-												...styles.joinBtn,
-												background: (theme) =>
-													theme.palette.mode === "light"
-														? "#2E7DFF"
-														: undefined,
-												"&:hover": {
-													filter: "brightness(0.95)",
-												},
-											}}
 										>
 											Join
-										</Button>
+										</CustomButton>
 									</Paper>
 								))}
 
@@ -182,6 +166,22 @@ const CompanySetup = () => {
 									<Box
 										sx={{ borderBottom: "1px solid #DCE1E8", flexGrow: 1 }}
 									/>
+								</Box>
+
+								<Box>
+									<Typography className="first-sub-title">
+										Create a new company
+									</Typography>
+									<Typography className="seventh-sub-title">
+										Your account will not be linked to existing accounts.
+									</Typography>
+
+									<CustomButton
+										variant="outlined"
+										onClick={handleCreateSeparate}
+									>
+										Create a separate account
+									</CustomButton>
 								</Box>
 							</Box>
 						</Box>

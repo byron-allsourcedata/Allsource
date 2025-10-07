@@ -264,4 +264,13 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 		minWidth: "72px",
 		px: 2,
 	},
+	memberCard: {
+		display: "flex",
+		justifyContent: "space-between",
+		borderRadius: "6px",
+		border: "1px solid #EDEDED",
+		background: "#FFF",
+		boxShadow: "0 2px 10px 0 rgba(0, 0, 0, 0.08)",
+		padding: "14px 8px 14px 16px",
+	},
 };
