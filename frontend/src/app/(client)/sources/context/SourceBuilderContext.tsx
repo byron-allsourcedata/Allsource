@@ -265,7 +265,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 			value: "",
 			canDelete: true,
 			isHidden: false,
-			isRequiredForAsidMatching: false,
+			isRequiredForAsidMatching: true,
 		},
 	];
 
