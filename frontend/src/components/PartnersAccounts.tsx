@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
 import { format } from "path";
+import { useSidebar } from "@/context/SidebarContext";
 
 const tableHeaders = [
 	{ key: "account_name", label: "Account name", sortable: false },
@@ -151,6 +152,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 	handleTabChange,
 }) => {
 	const [accounts, setAccounts] = useState<AccountData[]>([]);
+	const { setIsGetStartedPage, setInstalledResources } = useSidebar();
 	const router = useRouter();
 	const [page, setPage] = useState(0);
 	const { setBackButton, triggerBackButton } = useUser();
@@ -353,9 +355,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 				sessionStorage.removeItem("current_domain");
 				sessionStorage.removeItem("me");
 
-				await fetchUserData();
+				await fetchUserData(setIsGetStartedPage, setInstalledResources);
 				router.push("/dashboard");
-				router.refresh();
 				setBackButton(true);
 				triggerBackButton();
 			}

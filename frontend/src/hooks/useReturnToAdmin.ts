@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { fetchUserData } from "@/services/meService";
+import { useSidebar } from "@/context/SidebarContext";
 
 type ReturnToAdminOptions = {
 	onBeforeRedirect?: () => void;
@@ -10,6 +11,7 @@ type ReturnToAdminOptions = {
 
 export const useReturnToAdmin = () => {
 	const router = useRouter();
+	const { setIsGetStartedPage, setInstalledResources } = useSidebar();
 
 	const returnToAdmin = useCallback(
 		async (options?: ReturnToAdminOptions) => {
@@ -34,7 +36,7 @@ export const useReturnToAdmin = () => {
 					sessionStorage.setItem("current_domain", previousLevel.domain);
 				}
 
-				await fetchUserData();
+				await fetchUserData(setIsGetStartedPage, setInstalledResources);
 				options?.onAfterUserData?.();
 				setTimeout(() => resolve(), 0);
 			});
