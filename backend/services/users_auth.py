@@ -147,11 +147,6 @@ class UsersAuth:
                     )
                 )
 
-                if not user.get("company_name") or not user.get(
-                    "company_website"
-                ):
-                    return UserAuthorizationStatus.FILL_COMPANY_DETAILS
-
                 if subscription_plan_is_active:
                     return UserAuthorizationStatus.SUCCESS
 
