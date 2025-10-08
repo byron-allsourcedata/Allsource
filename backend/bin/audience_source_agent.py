@@ -163,7 +163,6 @@ async def process_matching(
         existing_by_email = {}
         existing_by_asid = {}
         for p in rows:
-            print("LGKFODSJKGPSDKFGIOFDJGFKDSOPGFSDJKFKSDOPO", p)
             if p.email:
                 existing_by_email[p.email] = p
             if p.enrichment_user_asid:
@@ -215,8 +214,6 @@ async def process_matching(
                 if not existing.email and candidate_email:
                     existing.email = candidate_email
                     existing_by_email[candidate_email] = existing
-
-                print("efergwef", existing.id)
 
                 matched_persons_to_update.append(
                     {
