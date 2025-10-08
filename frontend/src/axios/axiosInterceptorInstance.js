@@ -109,7 +109,7 @@ axiosInterceptorInstance.interceptors.response.use(
 						case "PIXEL_INSTALLATION_NEEDED":
 							break;
 						case "FILL_COMPANY_DETAILS":
-							// navigateTo("/account-setup");
+							navigateTo("/account-setup");
 							break;
 						case "TEAM_TOKEN_EXPIRED":
 							localStorage.clear();

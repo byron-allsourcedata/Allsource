@@ -34,6 +34,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 		"/signup",
 		"/email-verificate",
 		"/account-setup",
+		"/company-setup",
 		"/reset-password",
 		"/reset-password/confirm-send",
 		"/choose-plan",
