@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from domains import premium_sources
 from routers import (
+    account_setup,
     subscriptions,
     users,
-    company_info,
     pixel_installation,
     admin_customers,
     dashboard,
@@ -39,7 +39,7 @@ from domains import whitelabel
 main_router = APIRouter()
 
 main_router.include_router(subscriptions.router, prefix="/subscriptions")
-main_router.include_router(company_info.router)
+main_router.include_router(account_setup.router)
 main_router.include_router(users.router)
 main_router.include_router(sources.router, prefix="/audience-sources")
 main_router.include_router(smart_audiences.router, prefix="/audience-smarts")

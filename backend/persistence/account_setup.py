@@ -59,6 +59,7 @@ class AccountSetupPersistence:
             self.db.query(
                 Users.full_name.label("full_name"),
                 Users.email.label("email"),
+                Users.company_name.label("company_name"),
                 rn,
             )
             .filter(
@@ -72,13 +73,17 @@ class AccountSetupPersistence:
         )
 
         rows = (
-            self.db.query(subq.c.full_name, subq.c.email)
+            self.db.query(subq.c.full_name, subq.c.email, subq.c.company_name)
             .filter(subq.c.rn == 1)
             .all()
         )
 
         return [
-            PotentialTeamMembers(full_name=r.full_name, email=r.email)
+            PotentialTeamMembers(
+                full_name=r.full_name,
+                email=r.email,
+                company_name=r.company_name,
+            )
             for r in rows
         ]
 

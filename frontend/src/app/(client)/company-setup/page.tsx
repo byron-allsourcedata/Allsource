@@ -1,21 +1,11 @@
 "use client";
 import React, { Suspense, useState, useEffect } from "react";
-import {
-	Avatar,
-	Box,
-	Button,
-	InputAdornment,
-	Paper,
-	TextField,
-	Typography,
-	useTheme,
-} from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import { styles } from "./companySetupStyles";
 import { signupStyles } from "../signup/signupStyles";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { fetchUserData } from "@/services/meService";
 import UserMenuOnboarding from "../privacy-policy/components/UserMenuOnboarding";
 import FirstLevelLoader from "@/components/FirstLevelLoader";
 import { CustomButton } from "@/components/ui";
@@ -33,6 +23,7 @@ const CompanySetup = () => {
 	const [loading, setLoading] = useState(false);
 	const searchParams = useSearchParams();
 	const companyName = searchParams.get("company_name");
+	const router = useRouter();
 
 	useEffect(() => {
 		const fetchCompanyInfo = async () => {
@@ -53,14 +44,24 @@ const CompanySetup = () => {
 		fetchCompanyInfo();
 	}, []);
 
-	const theme = useTheme();
-
-	const handleJoin = (member: PotentialTeamMember) => {
-		console.log("Join clicked for", member);
+	const handleJoin = async (member: PotentialTeamMember) => {
+		try {
+			setLoading(true);
+			const response = await axiosInterceptorInstance.get(
+				`/potential-team-members?company_name=${companyName}`,
+			);
+			if (response.status === 200 && response.data.length > 0) {
+				setPotentialTeamMembers(response.data);
+			}
+		} catch (error) {
+			console.error("Error fetching company info:", error);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handleCreateSeparate = () => {
-		console.log("Create a separate account clicked");
+		router.push("/get-started");
 	};
 
 	return (
@@ -100,66 +101,70 @@ const CompanySetup = () => {
 									display: "flex",
 									flexDirection: "column",
 									justifyContent: "center",
-									gap: 2,
+									gap: 3,
 								}}
 							>
-								<Box display={"flex"} flexDirection={"column"} gap={3}>
-									<Box display={"flex"} flexDirection={"column"} gap={1}>
-										<Typography
-											variant="h5"
-											component="h1"
-											className="heading-text"
-											sx={{ m: "0 !important" }}
-										>
-											Similar Companies Found
-										</Typography>
-										<Typography
-											variant="body1"
-											component="h2"
-											className="first-sub-title"
-										>
-											{`We found several companies with names similar to ${companyName}`}
-										</Typography>
-									</Box>
+								<Box display={"flex"} flexDirection={"column"} gap={1}>
+									<Typography
+										variant="h5"
+										component="h1"
+										className="heading-text"
+										sx={{ m: "0 !important" }}
+									>
+										Similar Companies Found
+									</Typography>
+									<Typography
+										variant="body1"
+										component="h2"
+										className="first-sub-title"
+									>
+										{`We found several companies with names similar to ${companyName}`}
+									</Typography>
+								</Box>
 
+								<Box display={"flex"} flexDirection={"column"} gap={2}>
 									<Box display={"flex"} flexDirection={"column"} gap={0.5}>
 										<Typography className="first-sub-title">
 											Join an existing team
 										</Typography>
 										<Typography className="seventh-sub-title">
-											{`We found several companies with names similar to ${companyName}`}
+											If one of these is your company, join it to collaborate
+											with your colleagues.
 										</Typography>
 									</Box>
+
+									{potentialTeamMembers.map((member, index) => (
+										<Paper key={index} elevation={0} sx={styles.memberCard}>
+											<Box sx={styles.memberInfo}>
+												<Box sx={styles.memberText}>
+													<Typography className="black-table-header">
+														{member.company_name}
+													</Typography>
+												</Box>
+											</Box>
+
+											<CustomButton
+												variant="contained"
+												size="medium"
+												onClick={() => handleJoin(member)}
+												sx={{
+													p: "8px 16px",
+												}}
+											>
+												Join
+											</CustomButton>
+										</Paper>
+									))}
 								</Box>
 
-								{potentialTeamMembers.map((member, index) => (
-									<Paper key={index} elevation={0} sx={styles.memberCard}>
-										<Box sx={styles.memberInfo}>
-											<Box sx={styles.memberText}>
-												<Typography sx={styles.memberName}>
-													{member.company_name}
-												</Typography>
-											</Box>
-										</Box>
-
-										<CustomButton
-											variant="contained"
-											size="medium"
-											onClick={() => handleJoin(member)}
-										>
-											Join
-										</CustomButton>
-									</Paper>
-								))}
-
-								<Box sx={signupStyles.orDivider}>
+								<Box sx={{ ...signupStyles.orDivider, m: "0 !important" }}>
 									<Box
 										sx={{ borderBottom: "1px solid #DCE1E8", flexGrow: 1 }}
 									/>
 									<Typography
 										variant="body1"
 										className="third-sub-title"
-										sx={signupStyles.orText}
+										sx={{ ...signupStyles.orText }}
 									>
 										OR
 									</Typography>
@@ -168,17 +173,22 @@ const CompanySetup = () => {
 									/>
 								</Box>
 
-								<Box>
-									<Typography className="first-sub-title">
-										Create a new company
-									</Typography>
-									<Typography className="seventh-sub-title">
-										Your account will not be linked to existing accounts.
-									</Typography>
+								<Box display={"flex"} flexDirection={"column"} gap={2}>
+									<Box display={"flex"} flexDirection={"column"} gap={1}>
+										<Typography className="first-sub-title">
+											Create a new company
+										</Typography>
+										<Typography className="seventh-sub-title">
+											Your account will not be linked to existing accounts.
+										</Typography>
+									</Box>
 
 									<CustomButton
 										variant="outlined"
 										onClick={handleCreateSeparate}
+										sx={{
+											p: "10px 24px",
+										}}
 									>
 										Create a separate account
 									</CustomButton>

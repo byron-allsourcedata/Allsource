@@ -267,10 +267,11 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 	memberCard: {
 		display: "flex",
 		justifyContent: "space-between",
+		alignItems: "center",
 		borderRadius: "6px",
 		border: "1px solid #EDEDED",
 		background: "#FFF",
 		boxShadow: "0 2px 10px 0 rgba(0, 0, 0, 0.08)",
-		padding: "14px 8px 14px 16px",
+		padding: "8px 16px",
 	},
 };

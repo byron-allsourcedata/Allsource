@@ -57,7 +57,7 @@ from services.audience_smarts import AudienceSmartsService
 from services.audience_sources import AudienceSourceService
 from services.aws import AWSService
 from services.companies import CompanyService
-from services.company_info import CompanyInfoService
+from services.account_setup import CompanyInfoService
 from services.crm.service import CrmService
 from services.dashboard import DashboardService
 from services.domains import UserDomainsService
