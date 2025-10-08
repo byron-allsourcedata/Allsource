@@ -9,11 +9,13 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import UserMenuOnboarding from "../privacy-policy/components/UserMenuOnboarding";
 import FirstLevelLoader from "@/components/FirstLevelLoader";
 import { CustomButton } from "@/components/ui";
+import { showToast } from "@/components/ToastNotification";
 
 interface PotentialTeamMember {
 	email: string;
 	full_name: string;
 	company_name: string;
+	id: number;
 }
 
 const CompanySetup = () => {
@@ -47,14 +49,17 @@ const CompanySetup = () => {
 	const handleJoin = async (member: PotentialTeamMember) => {
 		try {
 			setLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				`/potential-team-members?company_name=${companyName}`,
+			const response = await axiosInterceptorInstance.post(
+				"teams/set-team-member",
+				{
+					id: member.id,
+				},
 			);
-			if (response.status === 200 && response.data.length > 0) {
-				setPotentialTeamMembers(response.data);
+			if (response.status === 200 && response.data) {
+				showToast(`You have successfully joined the ${companyName} team.`);
+				router.push("/get-started");
 			}
-		} catch (error) {
-			console.error("Error fetching company info:", error);
+		} catch {
 		} finally {
 			setLoading(false);
 		}
@@ -127,7 +132,7 @@ const CompanySetup = () => {
 										<Typography className="first-sub-title">
 											Join an existing team
 										</Typography>
-										<Typography className="seventh-sub-title">
+										<Typography className="eighth-sub-title">
 											If one of these is your company, join it to collaborate
 											with your colleagues.
 										</Typography>
@@ -178,7 +183,7 @@ const CompanySetup = () => {
 										<Typography className="first-sub-title">
 											Create a new company
 										</Typography>
-										<Typography className="seventh-sub-title">
+										<Typography className="eighth-sub-title">
 											Your account will not be linked to existing accounts.
 										</Typography>
 									</Box>

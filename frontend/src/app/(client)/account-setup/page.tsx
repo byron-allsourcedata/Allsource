@@ -138,7 +138,6 @@ const AccountSetup = () => {
 				case "SUCCESS":
 					const domain = websiteLink.replace(/^https?:\/\//, "");
 					const hasPotentialTeam = response.data.has_potential_team;
-					console.log("hasPotentialTeam", response.data);
 					sessionStorage.setItem("current_domain", domain);
 					setDomainName(domain);
 					setEditingName(false);

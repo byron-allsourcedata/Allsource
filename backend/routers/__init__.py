@@ -32,6 +32,7 @@ from routers import (
     pixel_management,
     opt_out,
     privacy_policy,
+    teams,
 )
 
 from domains import whitelabel
@@ -79,6 +80,7 @@ main_router.include_router(
 main_router.include_router(insights.router, prefix="/audience-insights")
 main_router.include_router(opt_out.router, prefix="/opt-out")
 main_router.include_router(privacy_policy.router, prefix="/privacy-policy")
+main_router.include_router(teams.router, prefix="/teams")
 main_router.include_router(whitelabel.router, prefix="/whitelabel")
 main_router.include_router(premium_sources.router, prefix="/premium-data")
 # NEED TO REMOVE AFTER WEEK

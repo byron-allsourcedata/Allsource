@@ -4,6 +4,7 @@ from schemas.account_setup import PotentialTeamMembers
 from db_dependencies import Db
 from resolver import injectable
 from sqlalchemy import exists, func, case, or_
+from enums import TeamAccessLevel
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ class AccountSetupPersistence:
             )
             .filter(
                 Users.company_name.ilike(pattern),
-                Users.team_access_level in ("owner", None),
+                Users.team_access_level in (TeamAccessLevel.OWNER.value, None),
             )
             .subquery()
         )
@@ -44,9 +45,11 @@ class AccountSetupPersistence:
     ) -> list[PotentialTeamMembers]:
         pattern = f"%{company_name}%"
 
-        priority = case(((Users.team_access_level == "owner", 1)), else_=2)
+        priority = case(
+            ((Users.team_access_level == TeamAccessLevel.OWNER.value, 1)),
+            else_=2,
+        )
 
-        # row_number partitioned by company_name, сортировка по приоритету, затем по id как tie-breaker
         rn = (
             func.row_number()
             .over(
@@ -60,12 +63,13 @@ class AccountSetupPersistence:
                 Users.full_name.label("full_name"),
                 Users.email.label("email"),
                 Users.company_name.label("company_name"),
+                Users.id.label("id"),
                 rn,
             )
             .filter(
                 Users.company_name.ilike(pattern),
                 or_(
-                    Users.team_access_level == "owner",
+                    Users.team_access_level == TeamAccessLevel.OWNER.value,
                     Users.team_access_level.is_(None),
                 ),
             )
@@ -73,7 +77,9 @@ class AccountSetupPersistence:
         )
 
         rows = (
-            self.db.query(subq.c.full_name, subq.c.email, subq.c.company_name)
+            self.db.query(
+                subq.c.full_name, subq.c.email, subq.c.company_name, subq.c.id
+            )
             .filter(subq.c.rn == 1)
             .all()
         )
@@ -83,6 +89,7 @@ class AccountSetupPersistence:
                 full_name=r.full_name,
                 email=r.email,
                 company_name=r.company_name,
+                id=r.id,
             )
             for r in rows
         ]
