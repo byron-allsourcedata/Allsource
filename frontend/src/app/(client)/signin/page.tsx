@@ -251,14 +251,13 @@ const Signin: React.FC = () => {
 							let data = await fetchUserData();
 							await checkPrivacyPolicy();
 							await checkOneDollarSubscription();
-							router.push("/account-setup");
-							// const { is_pixel_installed, is_source_imported } =
-							// 	data?.get_started;
-							// if (is_pixel_installed && is_source_imported) {
-							// 	router.push(data?.partner ? "/partners" : "/dashboard");
-							// } else {
-							// 	router.push(data?.partner ? "/partners" : "/get-started");
-							// }
+							const { is_pixel_installed, is_source_imported } =
+								data?.get_started;
+							if (is_pixel_installed && is_source_imported) {
+								router.push(data?.partner ? "/partners" : "/dashboard");
+							} else {
+								router.push(data?.partner ? "/partners" : "/get-started");
+							}
 							break;
 
 						default:
@@ -371,14 +370,13 @@ const Signin: React.FC = () => {
 										let data = await fetchUserData();
 										await checkPrivacyPolicy();
 										await checkOneDollarSubscription();
-										router.push("/account-setup");
-										// const { is_pixel_installed, is_source_imported } =
-										// 	data?.get_started;
-										// if (is_pixel_installed && is_source_imported) {
-										// 	router.push(data?.partner ? "/partners" : "/dashboard");
-										// } else {
-										// 	router.push(data?.partner ? "/partners" : "/get-started");
-										// }
+										const { is_pixel_installed, is_source_imported } =
+											data?.get_started;
+										if (is_pixel_installed && is_source_imported) {
+											router.push(data?.partner ? "/partners" : "/dashboard");
+										} else {
+											router.push(data?.partner ? "/partners" : "/get-started");
+										}
 										break;
 									default:
 										router.push("/dashboard");
