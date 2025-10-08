@@ -778,7 +778,7 @@ export const SettingsTeams: React.FC = () => {
 						>
 							Team members
 						</Typography>
-						<Typography
+						{/* <Typography
 							variant="h6"
 							className="table-data"
 							sx={{
@@ -791,7 +791,7 @@ export const SettingsTeams: React.FC = () => {
 							{memberLimit === -1
 								? "unlimited"
 								: `${memberCount}/${memberLimit} Member limit`}
-						</Typography>
+						</Typography> */}
 						<CustomTooltip
 							title={
 								"Invite team members for shared access and teamwork on projects."
