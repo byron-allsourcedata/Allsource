@@ -184,17 +184,22 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 					]
 				: defaultMapping;
 
+		let headingsNot = headingsNotSubstitution;
+
 		if (!headingsNotSubstitution["ASID"]) {
 			mappingRowsSelectType = mappingRowsSelectType.filter(
 				(el) => el.isRequiredForAsidMatching,
 			);
+		} else {
+			const { ASID, ...rest } = headingsNotSubstitution;
+			headingsNot = rest as Record<string, boolean>;
 		}
 
 		const deletableKeys = new Set(
 			mappingRows.filter((row) => row.canDelete).map((row) => row.type),
 		);
 
-		return Object.entries(headingsNotSubstitution).some(
+		return Object.entries(headingsNot).some(
 			([key, value]) => !deletableKeys.has(key) && value,
 		);
 	};
