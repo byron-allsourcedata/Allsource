@@ -184,6 +184,30 @@ async def get_partners(
     return admin_customers_service.get_partners_users(query_params)
 
 
+@router.get("/domains")
+async def get_domains(
+    admin_domains_service: AdminCustomersService,
+    user: dict = Depends(check_user_admin),
+    sort_by: str | None = Query(None, description="Field to sort by"),
+    sort_order: str | None = Query(None, description="'asc' or 'desc'"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(10, ge=1, le=500, description="Items per page"),
+    search_query: str | None = Query(
+        None, description="Search for domain or user/company name"
+    ),
+):
+    """
+    Admin route to fetch paginated domain list with search and sorting.
+    """
+    return admin_domains_service.get_domains(
+        page=page,
+        per_page=per_page,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        search_query=search_query,
+    )
+
+
 @router.put("/change-email-validation", response_model=bool)
 def change_email_validation(
     admin_customers_service: AdminCustomersService,

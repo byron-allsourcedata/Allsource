@@ -23,6 +23,7 @@ import CustomizedProgressBar from "@/app/(admin)/components/AdminProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
 import CustomSwitch from "@/components/ui/CustomSwitch";
+import PixelTab, { DomainData } from "./components/PixelTab";
 
 interface CustomCardsProps {
 	users: number;
@@ -85,6 +86,7 @@ const Users: React.FC = () => {
 		{ label: string; value: string }[]
 	>([]);
 	const [userData, setUserData] = useState<UserData[]>([]);
+	const [domainData, setDomainData] = useState<DomainData[]>([]);
 	const [valuesMetrics, setValueMetrics] = useState<CustomCardsProps>({
 		users: 0,
 		pixel_contacts: 0,
@@ -209,12 +211,18 @@ const Users: React.FC = () => {
 					endpoint = "/users";
 					break;
 				case 1:
-					endpoint = "/admins";
+					endpoint = "/accounts"; // Switch with 1 and 0
 					break;
 				case 2:
-					endpoint = "/partners?is_master=true";
+					endpoint = "/domains";
 					break;
 				case 3:
+					endpoint = "/admins";
+					break;
+				case 4:
+					endpoint = "/partners?is_master=true";
+					break;
+				case 5:
 					endpoint = "/partners";
 					break;
 				default:
@@ -248,6 +256,10 @@ const Users: React.FC = () => {
 
 			const response = await axiosInstance.get(url);
 			if (response.status === 200) {
+				if (tabIndex === 2) {
+					setDomainData(response.data.domains);
+					setTotalCount(response.data.count);
+				}
 				setUserData(response.data.users);
 				setTotalCount(response.data.count);
 				const options = [50, 100, 300, 500];
@@ -274,10 +286,12 @@ const Users: React.FC = () => {
 	};
 
 	const tabs = [
-		{ label: "Accounts", visible: true },
-		{ label: "Admins", visible: true },
-		{ label: "Master Partners", visible: true },
-		{ label: "Partners", visible: true },
+		{ id: 0, label: "Users", visible: true },
+		{ id: 1, label: "Account", visible: true },
+		{ id: 2, label: "Pixels", visible: true },
+		{ id: 3, label: "Admins", visible: true },
+		{ id: 4, label: "Master Partners", visible: true },
+		{ id: 5, label: "Partners", visible: true },
 	];
 
 	const handleFilterPopupOpen = () => {
@@ -730,25 +744,44 @@ const Users: React.FC = () => {
 							/>
 						</Box>
 					</Box>
-					<Account
-						is_admin={tabIndex === 1}
-						rowsPerPageOptions={rowsPerPageOptions}
-						totalCount={totalCount}
-						userData={userData}
-						setPage={setPage}
-						page={page}
-						setRowsPerPage={setRowsPerPage}
-						rowsPerPage={rowsPerPage}
-						order={order}
-						orderBy={orderBy}
-						setOrder={setOrder}
-						setOrderBy={setOrderBy}
-						setLoading={setLoading}
-						changeUserIsEmailValidation={changeUserIsEmailValidation}
-						onPlanChanged={fetchUserData}
-						isPartnerTab={tabIndex === 2 || tabIndex === 3}
-						isMaster={tabIndex === 2}
-					/>
+					{tabIndex !== 2 && (
+						<>
+							<Account
+								is_admin={tabIndex === 3}
+								rowsPerPageOptions={rowsPerPageOptions}
+								totalCount={totalCount}
+								userData={userData}
+								setPage={setPage}
+								page={page}
+								setRowsPerPage={setRowsPerPage}
+								rowsPerPage={rowsPerPage}
+								order={order}
+								orderBy={orderBy}
+								setOrder={setOrder}
+								setOrderBy={setOrderBy}
+								setLoading={setLoading}
+								changeUserIsEmailValidation={changeUserIsEmailValidation}
+								onPlanChanged={fetchUserData}
+								isPartnerTab={tabIndex === 4 || tabIndex === 5}
+								isMaster={tabIndex === 4}
+							/>
+						</>
+					)}
+					{tabIndex === 2 && (
+						<PixelTab
+							domains={domainData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							totalCount={totalCount}
+						/>
+					)}
 				</Box>
 			</Box>
 		</>

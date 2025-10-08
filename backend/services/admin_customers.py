@@ -310,6 +310,41 @@ class AdminCustomersService:
 
         return {"users": result, "count": total_count}
 
+    def get_domains(
+        self,
+        *,
+        page: int,
+        per_page: int,
+        sort_by: str | None,
+        sort_order: str | None,
+        search_query: str | None,
+    ):
+        domains, total_count = self.user_persistence.get_domains_with_users(
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            search_query=search_query,
+        )
+
+        result = []
+        for d, user_name in domains:
+            result.append(
+                {
+                    "id": d.id,
+                    "domain": d.domain,
+                    "user_name": user_name,
+                    "is_pixel_installed": d.is_pixel_installed,
+                    "is_enable": d.is_enable,
+                    "total_leads": d.total_leads,
+                    "created_at": d.created_at.isoformat()
+                    if d.created_at
+                    else None,
+                }
+            )
+
+        return {"domains": result, "count": total_count}
+
     def get_partners_users(self, query_params: PartnersQueryParams):
         filters = {}
         if query_params.last_login_date_start is not None:

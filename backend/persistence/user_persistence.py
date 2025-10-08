@@ -1123,3 +1123,44 @@ class UserPersistence:
         total_count = query.count()
         users = query.offset((page - 1) * per_page).limit(per_page).all()
         return users, total_count
+
+    def get_domains_with_users(
+        self,
+        page: int,
+        per_page: int,
+        sort_by: str | None,
+        sort_order: str | None,
+        search_query: str | None,
+    ):
+        query = self.db.query(UserDomains, Users.full_name).join(
+            Users, Users.id == UserDomains.user_id
+        )
+
+        if search_query:
+            pattern = f"%{search_query.lower()}%"
+            query = query.filter(
+                or_(
+                    UserDomains.domain.ilike(pattern),
+                    Users.full_name.ilike(pattern),
+                )
+            )
+
+        sort_map = {
+            "domain": UserDomains.domain,
+            "user_name": Users.full_name,
+            "is_pixel_installed": UserDomains.is_pixel_installed,
+            "is_enable": UserDomains.is_enable,
+            "total_leads": UserDomains.total_leads,
+            "created_at": UserDomains.created_at,
+        }
+
+        sort_col = sort_map.get(sort_by, UserDomains.created_at)
+        if sort_order == "asc":
+            query = query.order_by(asc(sort_col))
+        else:
+            query = query.order_by(desc(sort_col))
+
+        total_count = query.count()
+        records = query.offset((page - 1) * per_page).limit(per_page).all()
+
+        return records, total_count
