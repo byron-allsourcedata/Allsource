@@ -47,7 +47,6 @@ class CompanyInfoService:
                     company_name=company_info.organization_name
                 )
             )
-            print("has_potential_team", has_potential_team)
             user.company_website = company_info.company_website
             user.company_name = company_info.organization_name
             user.is_company_details_filled = True
