@@ -89,7 +89,6 @@ axiosInterceptorInstance.interceptors.response.use(
 					navigateTo("/signin");
 					break;
 				case 403:
-					console.log(error.response.data.status);
 					switch (error.response.data.status) {
 						case "DOMAIN_NOT_FOUND":
 							navigateTo("dashboard");
