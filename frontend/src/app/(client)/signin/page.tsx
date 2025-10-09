@@ -251,7 +251,7 @@ const Signin: React.FC = () => {
 							let data = await fetchUserData();
 							await checkPrivacyPolicy();
 							await checkOneDollarSubscription();
-							router.push("/account-setup");
+							router.push("/company-setup");
 							// const { is_pixel_installed, is_source_imported } =
 							// 	data?.get_started;
 							// if (is_pixel_installed && is_source_imported) {
@@ -371,7 +371,7 @@ const Signin: React.FC = () => {
 										let data = await fetchUserData();
 										await checkPrivacyPolicy();
 										await checkOneDollarSubscription();
-										router.push("/account-setup");
+										router.push("/company-setup");
 										// const { is_pixel_installed, is_source_imported } =
 										// 	data?.get_started;
 										// if (is_pixel_installed && is_source_imported) {

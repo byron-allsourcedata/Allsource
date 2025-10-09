@@ -10,6 +10,7 @@ import UserMenuOnboarding from "../privacy-policy/components/UserMenuOnboarding"
 import FirstLevelLoader from "@/components/FirstLevelLoader";
 import { CustomButton } from "@/components/ui";
 import { showToast } from "@/components/ToastNotification";
+import { useUser } from "@/context/UserContext";
 
 interface PotentialTeamMember {
 	email: string;
@@ -23,19 +24,22 @@ const CompanySetup = () => {
 		PotentialTeamMember[]
 	>([]);
 	const [loading, setLoading] = useState(false);
-	const searchParams = useSearchParams();
-	const companyName = searchParams.get("company_name");
 	const router = useRouter();
+	const { email: userEmail } = useUser();
 
 	useEffect(() => {
 		const fetchCompanyInfo = async () => {
 			try {
 				setLoading(true);
 				const response = await axiosInterceptorInstance.get(
-					`/potential-team-members?company_name=${companyName}`,
+					`/potential-team-members`,
 				);
-				if (response.status === 200 && response.data.length > 0) {
-					setPotentialTeamMembers(response.data);
+				if (response.status === 200) {
+					if (response.data.length > 0) {
+						setPotentialTeamMembers(response.data);
+					} else {
+						router.push("/account-setup");
+					}
 				}
 			} catch (error) {
 				console.error("Error fetching company info:", error);
@@ -56,7 +60,9 @@ const CompanySetup = () => {
 				},
 			);
 			if (response.status === 200 && response.data) {
-				showToast(`You have successfully joined the ${companyName} team.`);
+				showToast(
+					`You have successfully joined the ${member.company_name} team.`,
+				);
 				router.push("/get-started");
 			}
 		} catch {
@@ -66,7 +72,7 @@ const CompanySetup = () => {
 	};
 
 	const handleCreateSeparate = () => {
-		router.push("/get-started");
+		router.push("/account-setup");
 	};
 
 	return (
@@ -116,14 +122,14 @@ const CompanySetup = () => {
 										className="heading-text"
 										sx={{ m: "0 !important" }}
 									>
-										Similar Companies Found
+										Email Domain Already Registered
 									</Typography>
 									<Typography
 										variant="body1"
 										component="h2"
 										className="first-sub-title"
 									>
-										{`We found several companies with names similar to ${companyName}`}
+										{`The email domain @${userEmail?.split("@")[1]} is already associated with one or more accounts.`}
 									</Typography>
 								</Box>
 
@@ -133,8 +139,7 @@ const CompanySetup = () => {
 											Join an existing team
 										</Typography>
 										<Typography className="eighth-sub-title">
-											If one of these is your company, join it to collaborate
-											with your colleagues.
+											Collaborate with colleagues under the same organization.
 										</Typography>
 									</Box>
 
@@ -143,7 +148,7 @@ const CompanySetup = () => {
 											<Box sx={styles.memberInfo}>
 												<Box sx={styles.memberText}>
 													<Typography className="black-table-header">
-														{member.company_name}
+														{`${member.full_name} (${member.email})`}
 													</Typography>
 												</Box>
 											</Box>
@@ -181,7 +186,7 @@ const CompanySetup = () => {
 								<Box display={"flex"} flexDirection={"column"} gap={2}>
 									<Box display={"flex"} flexDirection={"column"} gap={1}>
 										<Typography className="first-sub-title">
-											Create a new company
+											Create a separate account
 										</Typography>
 										<Typography className="eighth-sub-title">
 											Your account will not be linked to existing accounts.

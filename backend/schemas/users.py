@@ -141,9 +141,9 @@ class UpdatePasswordResponse(BaseModel):
 
 class CompanyInfoResponse(BaseModel):
     status: CompanyInfoEnum
-    stripe_payment_url: Optional[str] = None
-    domain_url: Optional[str] = None
-    has_potential_team: bool = False
+    stripe_payment_url: str | None = None
+    domain_url: str | None = None
+    error: str | None = None
 
 
 class CheckVerificationStatusResponse(BaseModel):

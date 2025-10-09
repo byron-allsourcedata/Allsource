@@ -143,7 +143,7 @@ const EmailVerificate: React.FC = () => {
 						await checkOneDollarSubscription();
 						showToast("Verification done successfully");
 						clearInterval(interval);
-						router.push("/account-setup");
+						router.push("/company-setup");
 					}
 				} catch (error) {
 					console.error("Error:", error);
