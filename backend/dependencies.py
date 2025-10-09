@@ -53,8 +53,6 @@ from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
 from services.audience_dashboard import DashboardAudienceService
 from services.audience_insights import AudienceInsightsService
-from services.audience_smarts import AudienceSmartsService
-from services.audience_sources import AudienceSourceService
 from services.aws import AWSService
 from services.companies import CompanyService
 from services.account_setup import CompanyInfoService

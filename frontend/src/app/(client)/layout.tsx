@@ -78,7 +78,11 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							setInstalledResources,
 						);
 
-						if (userData && userData.has_active_plan === false) {
+						if (
+							userData &&
+							userData.has_active_plan === false &&
+							userData.access_level !== "read_only"
+						) {
 							flagStore.set(true);
 						}
 						const notifications = response.data;

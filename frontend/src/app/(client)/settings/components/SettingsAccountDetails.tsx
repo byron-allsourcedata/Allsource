@@ -12,12 +12,16 @@ import {
 	ListItem,
 	ListItemIcon,
 	ListItemText,
+	Link,
+	Stack,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomTooltip from "@/components/customToolTip";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import { AxiosError } from "axios";
 
 const accontDetailsStyles = {
 	formField: {
@@ -110,6 +114,7 @@ interface SettingsAccountDetailsProps {
 		company_website_visits: string;
 		is_email_confirmed: string;
 		reset_password_sent_at: string;
+		without_password: boolean;
 	};
 	teamAccessLevel: "read_only" | "standart" | "owner";
 }
@@ -203,6 +208,8 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 
 		return `${differenceInDays} days ago`;
 	};
+
+	useZohoChatToggle(changePasswordPopupOpen);
 
 	// useEffect(() => {
 	//     // Проверка на мобильное устройство по ширине экрана
@@ -458,6 +465,28 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 			width={16}
 		/>
 	);
+
+	const handleResetPassword = async (event: React.FormEvent) => {
+		event.preventDefault();
+		try {
+			const response = await axiosInterceptorInstance.post("reset-password", {
+				email: emailAddress,
+			});
+
+			if (response.status === 200) {
+				sessionStorage.setItem("me", JSON.stringify({ email: emailAddress }));
+				showToast("Verification link sent to your email successfully");
+			}
+		} catch (err) {
+			const error = err as AxiosError;
+			if (error.response && error.response.data) {
+				const errorData = error.response.data as { [key: string]: string };
+				setErrors(errorData);
+			} else {
+				console.error("Error:", error);
+			}
+		}
+	};
 
 	return (
 		<Box
@@ -936,403 +965,456 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 							<strong>{calculateDaysAgo(resetPasswordDate)}</strong>
 						</Typography>
 					</Box>
-					<Typography
-						variant="h6"
-						className="first-sub-title"
-						sx={{
-							color: "#4a4a4a !important",
-							lineHeight: "22px !important",
-							display: "flex",
-							flexDirection: "row",
-							alignItems: "center",
-							gap: 1,
-							"@media (max-width: 600px)": {
-								display: "none",
-							},
-						}}
-					>
-						Password{" "}
-						<CustomTooltip
-							title="Set a new password to better protect your account."
-							linkText="Learn more"
-							linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-						/>
-					</Typography>
-					<Box
-						sx={{
-							display: "flex",
-							gap: 2,
-							justifyContent: "space-between",
-							alignItems: "center",
-							maxWidth: "78%",
-						}}
-					>
-						<Button
-							className="hyperlink-red"
-							variant="contained"
-							color="secondary"
-							onClick={handleChangePasswordPopupOpen}
-							sx={{
-								borderRadius: "4px",
-								border: "1px solid rgba(56, 152, 252, 1)",
-								background: "#fff",
-								boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-								color: "rgba(56, 152, 252, 1) !important",
-								textTransform: "none",
-								padding: "10px 24px",
-								height: "40px",
-								"&:hover": {
-									background: "transparent",
-								},
-							}}
-						>
-							Change password
-						</Button>
-						<Typography
-							variant="body2"
-							className="third-sub-title"
-							sx={{
-								lineHeight: "16px !important",
-								color: "rgba(17, 17, 19, 0.60) !important",
-								"@media (max-width: 600px)": {
-									display: "none",
-								},
-							}}
-						>
-							Last changed:{" "}
-							<strong>{calculateDaysAgo(resetPasswordDate)}</strong>
-						</Typography>
-					</Box>
-					<Drawer
-						anchor="right"
-						open={changePasswordPopupOpen}
-						onClose={handleChangePasswordPopupClose}
-						PaperProps={{
-							sx: {
-								width: "620px",
-								position: "fixed",
-								zIndex: 1301,
-								top: 0,
-								bottom: 0,
-								"@media (max-width: 600px)": {
-									width: "100%",
-								},
-							},
-						}}
-					>
-						<Box
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-								padding: "24px 32px 21.5px",
-								borderBottom: "1px solid #e4e4e4",
-							}}
-						>
+					{!accountDetails.without_password && (
+						<>
 							<Typography
 								variant="h6"
 								className="first-sub-title"
 								sx={{
-									textAlign: "center",
+									color: "#4a4a4a !important",
+									lineHeight: "22px !important",
+									display: "flex",
+									flexDirection: "row",
+									alignItems: "center",
+									gap: 1,
+									"@media (max-width: 600px)": {
+										display: "none",
+									},
 								}}
 							>
-								Change password
+								Password{" "}
+								<CustomTooltip
+									title="Set a new password to better protect your account."
+									linkText="Learn more"
+									linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+								/>
 							</Typography>
-							<IconButton
-								onClick={handleChangePasswordPopupClose}
-								sx={{ p: 0 }}
-							>
-								<CloseIcon sx={{ width: "20px", height: "20px" }} />
-							</IconButton>
-						</Box>
-						<Box
-							sx={{
-								display: "flex",
-								flexDirection: "column",
-								justifyContent: "space-between",
-								alignItems: "center",
-								height: "100%",
-							}}
-						>
 							<Box
 								sx={{
-									px: 4,
-									py: 3,
-									width: "100%",
 									display: "flex",
-									flexDirection: "column",
-									gap: 4,
-								}}
-							>
-								<Typography variant="h6" className="first-sub-title">
-									Update your password to enhance account security and maintain
-									access control.
-								</Typography>
-
-								<TextField
-									sx={{
-										...accontDetailsStyles.formField,
-										maxWidth: "100%",
-										display: accountDetails.is_pass_exists ? "block" : "none",
-									}}
-									InputLabelProps={{
-										className: "form-input-label",
-										focused: false,
-									}}
-									label="Current Password"
-									type={showCurrentPassword ? "text" : "password"}
-									value={currentPassword}
-									autoComplete="new-password"
-									onChange={(e) => setCurrentPassword(e.target.value)}
-									fullWidth
-									margin="normal"
-									InputProps={{
-										className: "form-input",
-										sx: accontDetailsStyles.formInput,
-										endAdornment: (
-											<InputAdornment position="end">
-												<IconButton
-													onClick={toggleCurrentPasswordVisibility}
-													edge="end"
-												>
-													<Image
-														src={
-															showCurrentPassword
-																? "/custom-visibility-icon-off.svg"
-																: "/custom-visibility-icon.svg"
-														}
-														alt={
-															showCurrentPassword
-																? "Show password"
-																: "Hide password"
-														}
-														height={18}
-														width={18}
-														title={
-															showCurrentPassword
-																? "Hide password"
-																: "Show password"
-														}
-													/>
-												</IconButton>
-											</InputAdornment>
-										),
-									}}
-								/>
-								<TextField
-									sx={{
-										...accontDetailsStyles.formField,
-										maxWidth: "100%",
-									}}
-									InputLabelProps={{
-										className: "form-input-label",
-										focused: false,
-									}}
-									label="New Password"
-									type={showPassword ? "text" : "password"}
-									value={newPassword}
-									onChange={(e) => setNewPassword(e.target.value)}
-									error={Boolean(errors.newPassword)}
-									helperText={errors.newPassword}
-									fullWidth
-									margin="normal"
-									InputProps={{
-										className: "form-input",
-										sx: accontDetailsStyles.formInput,
-										endAdornment: (
-											<InputAdornment position="end">
-												<IconButton
-													onClick={togglePasswordVisibility}
-													edge="end"
-												>
-													<Image
-														src={
-															showPassword
-																? "/custom-visibility-icon-off.svg"
-																: "/custom-visibility-icon.svg"
-														}
-														alt={
-															showPassword ? "Show password" : "Hide password"
-														}
-														height={18}
-														width={18}
-														title={
-															showPassword ? "Hide password" : "Show password"
-														}
-													/>
-												</IconButton>
-											</InputAdornment>
-										),
-									}}
-								/>
-								<List sx={accontDetailsStyles.passwordContentList}>
-									<ListItem sx={accontDetailsStyles.passwordContentListItem}>
-										<ListItemIcon
-											sx={accontDetailsStyles.passwordContentListItemIcon}
-										>
-											<CustomCheckCircleIcon
-												isSuccess={passwordValidation.length}
-											/>
-										</ListItemIcon>
-										<ListItemText
-											sx={
-												passwordValidation.length
-													? accontDetailsStyles.passwordValidationTextSuccess
-													: accontDetailsStyles.passwordValidationText
-											}
-											primary="8 characters min."
-										/>
-									</ListItem>
-									<ListItem sx={accontDetailsStyles.passwordContentListItem}>
-										<ListItemIcon
-											sx={accontDetailsStyles.passwordContentListItemIcon}
-										>
-											<CustomCheckCircleIcon
-												isSuccess={passwordValidation.upperCase}
-											/>
-										</ListItemIcon>
-										<ListItemText
-											sx={
-												passwordValidation.upperCase
-													? accontDetailsStyles.passwordValidationTextSuccess
-													: accontDetailsStyles.passwordValidationText
-											}
-											primary="1 uppercase"
-										/>
-									</ListItem>
-									<ListItem sx={accontDetailsStyles.passwordContentListItem}>
-										<ListItemIcon
-											sx={accontDetailsStyles.passwordContentListItemIcon}
-										>
-											<CustomCheckCircleIcon
-												isSuccess={passwordValidation.lowerCase}
-											/>
-										</ListItemIcon>
-										<ListItemText
-											sx={
-												passwordValidation.lowerCase
-													? accontDetailsStyles.passwordValidationTextSuccess
-													: accontDetailsStyles.passwordValidationText
-											}
-											primary="1 lowercase"
-										/>
-									</ListItem>
-								</List>
-								<TextField
-									sx={{
-										...accontDetailsStyles.formField,
-										maxWidth: "100%",
-									}}
-									InputLabelProps={{
-										className: "form-input-label",
-										focused: false,
-									}}
-									label="Confirm New Password"
-									type={showConfirmPassword ? "text" : "password"}
-									value={confirmNewPassword}
-									onChange={(e) => setConfirmNewPassword(e.target.value)}
-									fullWidth
-									margin="normal"
-									error={Boolean(errors.confirmNewPassword)}
-									helperText={errors.confirmNewPassword}
-									InputProps={{
-										className: "form-input",
-										sx: accontDetailsStyles.formInput,
-										endAdornment: (
-											<InputAdornment position="end">
-												{Boolean(errors.confirmNewPassword) && (
-													<IconButton edge="end">
-														{/* Add your danger icon here */}
-														<Image
-															src="/danger-icon.svg"
-															alt="Danger icon"
-															height={20}
-															width={20}
-															title="Invalid password"
-														/>
-													</IconButton>
-												)}
-												<IconButton
-													onClick={toggleConfirmPasswordVisibility}
-													edge="end"
-												>
-													<Image
-														src={
-															showConfirmPassword
-																? "/custom-visibility-icon-off.svg"
-																: "/custom-visibility-icon.svg"
-														}
-														alt={
-															showConfirmPassword
-																? "Show password"
-																: "Hide password"
-														}
-														height={18}
-														width={18}
-														title={
-															showConfirmPassword
-																? "Hide password"
-																: "Show password"
-														}
-													/>
-												</IconButton>
-											</InputAdornment>
-										),
-									}}
-								/>
-							</Box>
-						</Box>
-						<Box
-							sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
-						>
-							<Box
-								sx={{
-									width: "100%",
-									display: "flex",
-									justifyContent: "flex-end",
 									gap: 2,
+									justifyContent: "space-between",
+									alignItems: "center",
+									maxWidth: "79%",
+									pb: 2,
 								}}
 							>
 								<Button
 									className="hyperlink-red"
-									onClick={handleChangePasswordPopupClose}
+									variant="contained"
+									color="secondary"
+									onClick={handleChangePasswordPopupOpen}
 									sx={{
-										backgroundColor: "#fff",
-										letterSpacing: "normal",
+										borderRadius: "4px",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										background: "#fff",
+										boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
 										color: "rgba(56, 152, 252, 1) !important",
 										textTransform: "none",
 										padding: "10px 24px",
-										border: "1px solid rgba(56, 152, 252, 1)",
-										boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.25)",
+										height: "40px",
 										"&:hover": {
-											backgroundColor: "#fff",
+											background: "transparent",
 										},
-										borderRadius: "4px",
 									}}
 								>
-									Cancel
+									Change password
 								</Button>
 								<Button
 									className="hyperlink-red"
-									onClick={handleChangePassword}
+									variant="text"
+									onClick={handleResetPassword}
 									sx={{
-										backgroundColor: "rgba(56, 152, 252, 1)",
-										letterSpacing: "normal",
-										color: "#fff !important",
+										borderRadius: "4px",
+										background: "#fff",
+
+										color: "rgba(211, 47, 47, 1) !important",
 										textTransform: "none",
 										padding: "10px 24px",
+										height: "40px",
 										"&:hover": {
-											backgroundColor: "rgba(56, 152, 252, 1)",
+											background: "rgba(241, 192, 192, 1)",
 										},
-										borderRadius: "4px",
-										boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.25)",
 									}}
 								>
-									Change
+									Reset password
 								</Button>
+								<Typography
+									variant="body2"
+									className="third-sub-title"
+									sx={{
+										lineHeight: "16px !important",
+										color: "rgba(17, 17, 19, 0.60) !important",
+										"@media (max-width: 600px)": {
+											display: "none",
+										},
+									}}
+								>
+									Last changed:{" "}
+									<strong>{calculateDaysAgo(resetPasswordDate)}</strong>
+								</Typography>
 							</Box>
-						</Box>
-					</Drawer>
+							<Drawer
+								anchor="right"
+								open={changePasswordPopupOpen}
+								onClose={handleChangePasswordPopupClose}
+								PaperProps={{
+									sx: {
+										width: "620px",
+										position: "fixed",
+										zIndex: 1301,
+										top: 0,
+										bottom: 0,
+										"@media (max-width: 600px)": {
+											width: "100%",
+										},
+									},
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "center",
+										padding: "24px 32px 21.5px",
+										borderBottom: "1px solid #e4e4e4",
+									}}
+								>
+									<Typography
+										variant="h6"
+										className="first-sub-title"
+										sx={{
+											textAlign: "center",
+										}}
+									>
+										Change password
+									</Typography>
+									<IconButton
+										onClick={handleChangePasswordPopupClose}
+										sx={{ p: 0 }}
+									>
+										<CloseIcon sx={{ width: "20px", height: "20px" }} />
+									</IconButton>
+								</Box>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										justifyContent: "space-between",
+										alignItems: "center",
+										height: "100%",
+									}}
+								>
+									<Box
+										sx={{
+											px: 4,
+											py: 3,
+											width: "100%",
+											display: "flex",
+											flexDirection: "column",
+											gap: 4,
+										}}
+									>
+										<Typography variant="h6" className="first-sub-title">
+											Update your password to enhance account security and
+											maintain access control.
+										</Typography>
+
+										<Stack spacing={0.5}>
+											<TextField
+												sx={{
+													...accontDetailsStyles.formField,
+													maxWidth: "100%",
+													display: accountDetails.is_pass_exists
+														? "block"
+														: "none",
+												}}
+												InputLabelProps={{
+													className: "form-input-label",
+													focused: false,
+												}}
+												label="Current Password"
+												type={showCurrentPassword ? "text" : "password"}
+												value={currentPassword}
+												autoComplete="new-password"
+												onChange={(e) => setCurrentPassword(e.target.value)}
+												fullWidth
+												margin="normal"
+												InputProps={{
+													className: "form-input",
+													sx: accontDetailsStyles.formInput,
+													endAdornment: (
+														<InputAdornment position="end">
+															<IconButton
+																onClick={toggleCurrentPasswordVisibility}
+																edge="end"
+															>
+																<Image
+																	src={
+																		showCurrentPassword
+																			? "/custom-visibility-icon-off.svg"
+																			: "/custom-visibility-icon.svg"
+																	}
+																	alt={
+																		showCurrentPassword
+																			? "Show password"
+																			: "Hide password"
+																	}
+																	height={18}
+																	width={18}
+																	title={
+																		showCurrentPassword
+																			? "Hide password"
+																			: "Show password"
+																	}
+																/>
+															</IconButton>
+														</InputAdornment>
+													),
+												}}
+											/>
+											<Box>
+												<Link
+													href="reset-password"
+													variant="body2"
+													underline="hover"
+													color={"rgba(56, 152, 252, 1)"}
+												>
+													Forgot Password?
+												</Link>
+											</Box>
+										</Stack>
+										<TextField
+											sx={{
+												...accontDetailsStyles.formField,
+												maxWidth: "100%",
+											}}
+											InputLabelProps={{
+												className: "form-input-label",
+												focused: false,
+											}}
+											label="New Password"
+											type={showPassword ? "text" : "password"}
+											value={newPassword}
+											onChange={(e) => setNewPassword(e.target.value)}
+											error={Boolean(errors.newPassword)}
+											helperText={errors.newPassword}
+											fullWidth
+											margin="normal"
+											InputProps={{
+												className: "form-input",
+												sx: accontDetailsStyles.formInput,
+												endAdornment: (
+													<InputAdornment position="end">
+														<IconButton
+															onClick={togglePasswordVisibility}
+															edge="end"
+														>
+															<Image
+																src={
+																	showPassword
+																		? "/custom-visibility-icon-off.svg"
+																		: "/custom-visibility-icon.svg"
+																}
+																alt={
+																	showPassword
+																		? "Show password"
+																		: "Hide password"
+																}
+																height={18}
+																width={18}
+																title={
+																	showPassword
+																		? "Hide password"
+																		: "Show password"
+																}
+															/>
+														</IconButton>
+													</InputAdornment>
+												),
+											}}
+										/>
+										<List sx={accontDetailsStyles.passwordContentList}>
+											<ListItem
+												sx={accontDetailsStyles.passwordContentListItem}
+											>
+												<ListItemIcon
+													sx={accontDetailsStyles.passwordContentListItemIcon}
+												>
+													<CustomCheckCircleIcon
+														isSuccess={passwordValidation.length}
+													/>
+												</ListItemIcon>
+												<ListItemText
+													sx={
+														passwordValidation.length
+															? accontDetailsStyles.passwordValidationTextSuccess
+															: accontDetailsStyles.passwordValidationText
+													}
+													primary="8 characters min."
+												/>
+											</ListItem>
+											<ListItem
+												sx={accontDetailsStyles.passwordContentListItem}
+											>
+												<ListItemIcon
+													sx={accontDetailsStyles.passwordContentListItemIcon}
+												>
+													<CustomCheckCircleIcon
+														isSuccess={passwordValidation.upperCase}
+													/>
+												</ListItemIcon>
+												<ListItemText
+													sx={
+														passwordValidation.upperCase
+															? accontDetailsStyles.passwordValidationTextSuccess
+															: accontDetailsStyles.passwordValidationText
+													}
+													primary="1 uppercase"
+												/>
+											</ListItem>
+											<ListItem
+												sx={accontDetailsStyles.passwordContentListItem}
+											>
+												<ListItemIcon
+													sx={accontDetailsStyles.passwordContentListItemIcon}
+												>
+													<CustomCheckCircleIcon
+														isSuccess={passwordValidation.lowerCase}
+													/>
+												</ListItemIcon>
+												<ListItemText
+													sx={
+														passwordValidation.lowerCase
+															? accontDetailsStyles.passwordValidationTextSuccess
+															: accontDetailsStyles.passwordValidationText
+													}
+													primary="1 lowercase"
+												/>
+											</ListItem>
+										</List>
+										<TextField
+											sx={{
+												...accontDetailsStyles.formField,
+												maxWidth: "100%",
+											}}
+											InputLabelProps={{
+												className: "form-input-label",
+												focused: false,
+											}}
+											label="Confirm New Password"
+											type={showConfirmPassword ? "text" : "password"}
+											value={confirmNewPassword}
+											onChange={(e) => setConfirmNewPassword(e.target.value)}
+											fullWidth
+											margin="normal"
+											error={Boolean(errors.confirmNewPassword)}
+											helperText={errors.confirmNewPassword}
+											InputProps={{
+												className: "form-input",
+												sx: accontDetailsStyles.formInput,
+												endAdornment: (
+													<InputAdornment position="end">
+														{Boolean(errors.confirmNewPassword) && (
+															<IconButton edge="end">
+																{/* Add your danger icon here */}
+																<Image
+																	src="/danger-icon.svg"
+																	alt="Danger icon"
+																	height={20}
+																	width={20}
+																	title="Invalid password"
+																/>
+															</IconButton>
+														)}
+														<IconButton
+															onClick={toggleConfirmPasswordVisibility}
+															edge="end"
+														>
+															<Image
+																src={
+																	showConfirmPassword
+																		? "/custom-visibility-icon-off.svg"
+																		: "/custom-visibility-icon.svg"
+																}
+																alt={
+																	showConfirmPassword
+																		? "Show password"
+																		: "Hide password"
+																}
+																height={18}
+																width={18}
+																title={
+																	showConfirmPassword
+																		? "Hide password"
+																		: "Show password"
+																}
+															/>
+														</IconButton>
+													</InputAdornment>
+												),
+											}}
+										/>
+									</Box>
+								</Box>
+								<Box
+									sx={{
+										px: 2,
+										py: 2,
+										width: "100%",
+										border: "1px solid #e4e4e4",
+									}}
+								>
+									<Box
+										sx={{
+											width: "100%",
+											display: "flex",
+											justifyContent: "flex-end",
+											gap: 2,
+										}}
+									>
+										<Button
+											className="hyperlink-red"
+											onClick={handleChangePasswordPopupClose}
+											sx={{
+												backgroundColor: "#fff",
+												letterSpacing: "normal",
+												color: "rgba(56, 152, 252, 1) !important",
+												textTransform: "none",
+												padding: "10px 24px",
+												border: "1px solid rgba(56, 152, 252, 1)",
+												boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.25)",
+												"&:hover": {
+													backgroundColor: "#fff",
+												},
+												borderRadius: "4px",
+											}}
+										>
+											Cancel
+										</Button>
+										<Button
+											className="hyperlink-red"
+											onClick={handleChangePassword}
+											sx={{
+												backgroundColor: "rgba(56, 152, 252, 1)",
+												letterSpacing: "normal",
+												color: "#fff !important",
+												textTransform: "none",
+												padding: "10px 24px",
+												"&:hover": {
+													backgroundColor: "rgba(56, 152, 252, 1)",
+												},
+												borderRadius: "4px",
+												boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.25)",
+											}}
+										>
+											Change
+										</Button>
+									</Box>
+								</Box>
+							</Drawer>
+						</>
+					)}
 
 					{teamAccessLevel === "owner" && (
 						<>

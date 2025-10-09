@@ -104,6 +104,7 @@ class SettingsService:
                 "is_email_confirmed": user_info.is_email_confirmed,
                 "has_subscription": user.get("current_subscription_id")
                 is not None,
+                "without_password": False if user.get("password") else True,
             }
 
     def change_account_details(

@@ -42,6 +42,7 @@ import {
 } from "../accounts/requests";
 import { formatMoney } from "@/components/PartnersAccounts";
 import { Row } from "@/components/Row";
+import { useSidebar } from "@/context/SidebarContext";
 
 interface tableHeaders {
 	key: string;
@@ -162,6 +163,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 }) => {
 	const router = useRouter();
 	const { setBackButton, triggerBackButton } = useUser();
+	const { setIsGetStartedPage, setInstalledResources } = useSidebar();
 
 	const meItem =
 		typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
@@ -201,11 +203,11 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				localStorage.setItem("token", response.data.token);
 				sessionStorage.removeItem("current_domain");
 				sessionStorage.removeItem("me");
+				sessionStorage.removeItem("admin");
 
-				await fetchUserData();
+				await fetchUserData(setIsGetStartedPage, setInstalledResources);
 
 				router.push("/dashboard");
-				router.refresh();
 
 				setBackButton(true);
 				triggerBackButton();
