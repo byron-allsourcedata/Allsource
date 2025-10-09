@@ -272,14 +272,6 @@ const SettingTab: FC<Props> = ({
 			sx={planStyles.buttonHeading}
 			variant={activeTab === tabName ? "contained" : "outlined"}
 			onClick={() => {
-				if (
-					!userHasSubscription &&
-					tabName !== "accountDetails" &&
-					tabName !== "teams"
-				) {
-					flagStore.set(true);
-					return;
-				}
 				handleTabChange(tabName);
 			}}
 		>

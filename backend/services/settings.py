@@ -507,13 +507,13 @@ class SettingsService:
             )
 
         else:
-            plan_limit_domain = -1
+            plan_limit_domain = 0
             validation_funds_limit = 0
-            leads_credits_limit = -1
+            leads_credits_limit = 0
             smart_audience_quota_limit = 0
             gifted_premium_source_funds = Decimal(0)
             plan_interval = "month"
-            plan_title = "Basic"
+            plan_title = "N/A"
         money_contacts_overage = self.calculate_money_contacts_overage(
             overage_leads_count=user.get("overage_leads_count")
         )
@@ -669,9 +669,9 @@ class SettingsService:
             "is_leads_auto_charging"
         )
         result["usages_credits"] = {
-            "leads_credits": user.get("leads_credits"),
-            "validation_funds": user.get("validation_funds"),
-            "premium_source_credits": user.get("premium_source_credits"),
+            "leads_credits": user.get("leads_credits", 0),
+            "validation_funds": user.get("validation_funds", 0),
+            "premium_source_credits": user.get("premium_source_credits", 0),
             "money_because_of_overage": money_contacts_overage,
             "smart_audience_quota": {
                 "available": user.get("smart_audience_quota") != 0
@@ -1013,6 +1013,30 @@ class SettingsService:
                 Advantage(good=True, name="Premium Data funds:", value="$500"),
             ],
         )
+        STANDARD_YEARLY = Plan(
+            title="Standard",
+            alias="standard",
+            price=Price(value="$300", y="month"),
+            permanent_limits=[
+                Advantage(
+                    good=True, name="Domains monitored:", value="Unlimited"
+                )
+            ],
+            monthly_limits=[
+                Advantage(
+                    good=True, name="Contact Downloads:", value="Unlimited"
+                ),
+                Advantage(good=False, name="Smart Audience:", value="0"),
+            ],
+            gifted_funds=[
+                Advantage(good=True, name="Validation funds:", value="$1000"),
+                Advantage(good=True, name="Premium Data funds:", value="$1000"),
+            ],
+        )
+
+        STANDARD_MONTHLY = STANDARD_YEARLY.model_copy(
+            update={"price": Price(value="$499", y="month")}
+        )
 
         PARTNER_PROGRAM = Plan(
             title="Partner Program",
@@ -1037,7 +1061,7 @@ class SettingsService:
             title="Smart Audience",
             alias="smart_audience",
             is_recommended=True,
-            price=Price(value="$5,000", y="month"),
+            price=Price(value="$700", y="month"),
             permanent_limits=[
                 Advantage(
                     good=True, name="Domains monitored:", value="Unlimited"
@@ -1050,21 +1074,21 @@ class SettingsService:
                 Advantage(good=True, name="Smart Audience:", value="200,000"),
             ],
             gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$2,500"),
+                Advantage(good=True, name="Validation funds:", value="$1,500"),
                 Advantage(
-                    good=True, name="Premium Data funds:", value="$2,500"
+                    good=True, name="Premium Data funds:", value="$1,500"
                 ),
             ],
         )
 
         SMART_AUDIENCE_MONTHLY = SMART_AUDIENCE_YEARLY.model_copy(
-            update={"price": Price(value="$7,500", y="month")}
+            update={"price": Price(value="$999", y="month")}
         )
 
         PRO_YEARLY = Plan(
             title="Pro",
             alias="pro",
-            price=Price(value="$10,000", y="month"),
+            price=Price(value="$2,900", y="month"),
             permanent_limits=[
                 Advantage(
                     good=True, name="Domains monitored:", value="Unlimited"
@@ -1077,24 +1101,24 @@ class SettingsService:
                 Advantage(good=True, name="Smart Audience:", value="Unlimited"),
             ],
             gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$5,000"),
+                Advantage(good=True, name="Validation funds:", value="$2,500"),
                 Advantage(
-                    good=True, name="Premium Data funds:", value="$5,000"
+                    good=True, name="Premium Data funds:", value="$2,500"
                 ),
             ],
         )
 
         PRO_MONTHLY = PRO_YEARLY.model_copy(
-            update={"price": Price(value="$15,000", y="month")}
+            update={"price": Price(value="$4,900", y="month")}
         )
 
         NORMAL_YEARLY_PLANS = [
-            BASIC,
+            STANDARD_YEARLY,
             SMART_AUDIENCE_YEARLY,
             PRO_YEARLY,
         ]
         NORMAL_MONTHLY_PLANS = [
-            BASIC,
+            STANDARD_MONTHLY,
             SMART_AUDIENCE_MONTHLY,
             PRO_MONTHLY,
         ]
