@@ -44,14 +44,21 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 	const valueLinearProgress = () => {
 		if (limitValue === -1) {
 			return 100;
-		} else if (!available || moneyContactsOverage !== "0") {
-			return 0;
-		} else {
-			if (usage === null) {
-				return 100;
-			}
-			return 100 - usage;
 		}
+
+		if (!limitValue || limitValue <= 0) {
+			return 0;
+		}
+
+		if (!available || moneyContactsOverage !== "0") {
+			return 0;
+		}
+
+		if (usage === null) {
+			return 0;
+		}
+
+		return 100 - usage;
 	};
 
 	const valueText =
@@ -212,6 +219,11 @@ export const UsageItem: React.FC<UsageItemProps> = ({
 /**
  * Returns the limit of the usage item or null if no limit is set
  */
-function getUsage(used: number, limit: number): number | null {
-	return percentage(used, limit);
+function getUsage(remaining: number, limit: number): number | null {
+	if (!limit || limit <= 0) return null;
+	const used = limit - remaining;
+	const value = (used / limit) * 100;
+	return isNaN(value) || !isFinite(value)
+		? 0
+		: Math.min(100, Math.max(0, Math.round(value)));
 }

@@ -1,5 +1,4 @@
 import { SxProps, Theme } from "@mui/system";
-import { red } from "@mui/material/colors";
 
 export const styles: { [key: string]: SxProps<Theme> } = {
 	pageContainer: {
@@ -251,5 +250,29 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 			fontSize: "14px",
 			fontWeight: "400",
 		},
+	},
+	memberEmail: {
+		fontSize: "0.95rem",
+		color: "#707071",
+		whiteSpace: "nowrap",
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+	},
+	joinBtn: {
+		ml: 2,
+		borderRadius: "8px",
+		textTransform: "none",
+		minWidth: "72px",
+		px: 2,
+	},
+	memberCard: {
+		display: "flex",
+		justifyContent: "space-between",
+		alignItems: "center",
+		borderRadius: "6px",
+		border: "1px solid #EDEDED",
+		background: "#FFF",
+		boxShadow: "0 2px 10px 0 rgba(0, 0, 0, 0.08)",
+		padding: "8px 16px",
 	},
 };

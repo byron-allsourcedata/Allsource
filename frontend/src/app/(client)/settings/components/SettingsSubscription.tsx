@@ -220,7 +220,7 @@ export const SettingsSubscription: React.FC = () => {
 		const loadUser = async () => {
 			const userData = await fetchUserData();
 			if (userData) {
-				setIsTrial(!!userData.trial);
+				setIsTrial(!!userData.is_trial_pending);
 			}
 		};
 
@@ -234,6 +234,24 @@ export const SettingsSubscription: React.FC = () => {
 
 			const response = await axiosInstance.get(
 				"/subscriptions/basic-plan-upgrade",
+			);
+
+			if (response.status === 200) {
+				if (response.data != null) {
+					window.location.href = response.data;
+				}
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const handleStandardUpgrade = async () => {
+		try {
+			setIsLoading(true);
+
+			const response = await axiosInstance.get(
+				"/subscriptions/standard-plan-upgrade",
 			);
 
 			if (response.status === 200) {
@@ -429,6 +447,7 @@ export const SettingsSubscription: React.FC = () => {
 			return plans.map((plan, index) => {
 				let buttonText = "Speak to Us";
 				let disabled = false;
+				console.log(plan);
 
 				let handle = handleOpenPopup;
 				if (isTrial === true) {
@@ -439,6 +458,10 @@ export const SettingsSubscription: React.FC = () => {
 						buttonText = "Instant Upgrade";
 						disabled = false;
 						handle = handleInstantUpgrade;
+					} else if (plan.title === "Standard") {
+						buttonText = "Instant Upgrade";
+						disabled = false;
+						handle = handleStandardUpgrade;
 					} else {
 						buttonText = "Speak to Us";
 						disabled = false;

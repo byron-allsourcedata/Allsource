@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 from domains import premium_sources
 from routers import (
+    account_setup,
     subscriptions,
     users,
-    company_info,
     pixel_installation,
     admin_customers,
     dashboard,
@@ -32,6 +32,7 @@ from routers import (
     pixel_management,
     opt_out,
     privacy_policy,
+    teams,
 )
 
 from domains import whitelabel
@@ -39,7 +40,7 @@ from domains import whitelabel
 main_router = APIRouter()
 
 main_router.include_router(subscriptions.router, prefix="/subscriptions")
-main_router.include_router(company_info.router)
+main_router.include_router(account_setup.router)
 main_router.include_router(users.router)
 main_router.include_router(sources.router, prefix="/audience-sources")
 main_router.include_router(smart_audiences.router, prefix="/audience-smarts")
@@ -79,6 +80,7 @@ main_router.include_router(
 main_router.include_router(insights.router, prefix="/audience-insights")
 main_router.include_router(opt_out.router, prefix="/opt-out")
 main_router.include_router(privacy_policy.router, prefix="/privacy-policy")
+main_router.include_router(teams.router, prefix="/teams")
 main_router.include_router(whitelabel.router, prefix="/whitelabel")
 main_router.include_router(premium_sources.router, prefix="/premium-data")
 # NEED TO REMOVE AFTER WEEK

@@ -173,7 +173,7 @@ export const PlanCard: React.FC<{
 								alignItems: "center",
 							}}
 						>
-							<Title>Your current plan limits</Title>
+							<Title>Smart Audience plan limits</Title>
 							<AddRounded
 								sx={{
 									width: "20px",

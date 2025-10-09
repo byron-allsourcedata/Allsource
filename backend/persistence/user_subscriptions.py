@@ -28,6 +28,26 @@ class UserSubscriptionsPersistence:
         self.db.add(user_subscription)
         return user_subscription
 
+    def add_subscription_with_dates(
+        self,
+        user_id: int,
+        plan: SubscriptionPlan,
+        plan_start: datetime,
+        plan_end: datetime,
+    ):
+        user_subscription = UserSubscriptions(
+            user_id=user_id,
+            plan_id=plan.id,
+            plan_start=plan_start,
+            plan_end=plan_end,
+            price_id=plan.stripe_price_id,
+            contact_credit_plan_id=plan.contact_credit_plan_id,
+        )
+
+        self.db.add(user_subscription)
+        self.db.flush()
+        return user_subscription
+
     def set_current_subscription(
         self, user_id: int, subscription_id: int, plan: SubscriptionPlan
     ):
