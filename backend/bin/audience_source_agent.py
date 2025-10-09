@@ -195,6 +195,7 @@ async def process_matching(
                 existing = existing_by_asid[str(candidate_asid)]
 
             if existing:
+                is_persisted = getattr(existing, "id", None) is not None
                 existing.count += data["orders_count"]
                 if include_amount:
                     existing.amount = (existing.amount or 0) + (
@@ -215,15 +216,21 @@ async def process_matching(
                     existing.email = candidate_email
                     existing_by_email[candidate_email] = existing
 
-                matched_persons_to_update.append(
-                    {
-                        "id": existing.id,
-                        "count": existing.count,
-                        "amount": existing.amount if include_amount else None,
-                        "start_date": existing.start_date,
-                        "recency": existing.recency,
-                    }
-                )
+                if is_persisted:
+                    matched_persons_to_update.append(
+                        {
+                            "id": existing.id,
+                            "count": existing.count,
+                            "amount": existing.amount
+                            if include_amount
+                            else None,
+                            "start_date": existing.start_date,
+                            "recency": existing.recency,
+                        }
+                    )
+                else:
+                    if existing not in matched_persons_to_add:
+                        matched_persons_to_add.append(existing)
             else:
                 new_p = AudienceSourcesMatchedPerson(
                     source_id=source_id,
