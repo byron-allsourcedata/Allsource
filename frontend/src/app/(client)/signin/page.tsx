@@ -195,7 +195,6 @@ const Signin: React.FC = () => {
 							showErrorToast("User not found");
 							break;
 					}
-					console.log(responseData);
 					switch (responseData.status) {
 						case "SUCCESS":
 							user = await fetchUserData();
