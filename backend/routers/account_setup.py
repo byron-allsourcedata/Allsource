@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query
+from models.users import Users
 from schemas.account_setup import PotentialTeamMembers
-from dependencies import get_company_info_service
+from dependencies import check_user_authentication, get_company_info_service
 from schemas.users import CompanyInfo, CompanyInfoResponse
 from services.account_setup import CompanyInfoService
 
@@ -18,7 +19,7 @@ async def set_company_info(
     return CompanyInfoResponse(
         status=result_status.get("status"),
         stripe_payment_url=result_status.get("stripe_payment_url"),
-        has_potential_team=result_status.get("has_potential_team"),
+        error=result_status.get("error"),
     )
 
 
@@ -38,11 +39,11 @@ async def get_company_info(
     "/potential-team-members", response_model=list[PotentialTeamMembers]
 )
 def get_company_info(
-    company_name: str = Query(...),
+    user=Depends(check_user_authentication),
     company_info_service: CompanyInfoService = Depends(
         get_company_info_service
     ),
 ):
     return company_info_service.get_potential_team_members(
-        company_name=company_name
+        user_email=user.get("email"), user_id=user.get("id")
     )

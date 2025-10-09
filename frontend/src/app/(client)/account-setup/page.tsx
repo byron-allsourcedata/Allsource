@@ -9,6 +9,7 @@ import { fetchUserData } from "@/services/meService";
 import UserMenuOnboarding from "../privacy-policy/components/UserMenuOnboarding";
 import FirstLevelLoader from "@/components/FirstLevelLoader";
 import { CustomButton } from "@/components/ui";
+import { showErrorToast } from "@/components/ToastNotification";
 
 const AccountSetup = () => {
 	const [organizationName, setOrganizationName] = useState("");
@@ -17,7 +18,6 @@ const AccountSetup = () => {
 	const [stripeUrl, setStripeUrl] = useState("");
 	const [domainName, setDomainName] = useState("");
 	const [editingName, setEditingName] = useState(true);
-	// const [hasPotentialTeam, setHasPotentialTeam] = useState(true);
 	const [errors, setErrors] = useState({
 		websiteLink: "",
 		organizationName: "",
@@ -104,16 +104,11 @@ const AccountSetup = () => {
 		}
 	};
 
-	const endSetup = (hasPotentialTeam: boolean) => {
+	const endSetup = () => {
 		if (stripeUrl) {
 			router.push(stripeUrl);
 		} else {
-			if (hasPotentialTeam) {
-				const dataString = encodeURIComponent(organizationName);
-				router.push(`/company-setup?company_name=${dataString}`);
-			} else {
-				router.push("/get-started");
-			}
+			router.push("/get-started");
 		}
 	};
 
@@ -137,7 +132,6 @@ const AccountSetup = () => {
 			switch (response.data.status) {
 				case "SUCCESS":
 					const domain = websiteLink.replace(/^https?:\/\//, "");
-					const hasPotentialTeam = response.data.has_potential_team;
 					sessionStorage.setItem("current_domain", domain);
 					setDomainName(domain);
 					setEditingName(false);
@@ -145,7 +139,11 @@ const AccountSetup = () => {
 					if (response.data.stripe_payment_url) {
 						setStripeUrl(`${response.data.stripe_payment_url}`);
 					}
-					return hasPotentialTeam;
+					endSetup();
+					break;
+				case "COMPANY_NAME_ALREADY_EXIST":
+					showErrorToast("This company name is already registered");
+					break;
 				case "NEED_EMAIL_VERIFIED":
 					router.push("/email-verificate");
 					break;
@@ -335,8 +333,7 @@ const AccountSetup = () => {
 									<CustomButton
 										variant="contained"
 										onClick={async () => {
-											const hasPotentialTeam = await handleSubmit();
-											endSetup(hasPotentialTeam);
+											handleSubmit();
 										}}
 										disabled={!isFormValidFirst()}
 										sx={{
