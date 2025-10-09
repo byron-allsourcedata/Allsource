@@ -258,7 +258,7 @@ const OneDollarPopup = () => {
 										/>
 									}
 									label="Validation funds:"
-									value="$1000"
+									value="$1,000"
 								/>
 								<GiftRow
 									icon={
@@ -270,7 +270,7 @@ const OneDollarPopup = () => {
 										/>
 									}
 									label="Premium Data funds:"
-									value="$1000"
+									value="$1,000"
 								/>
 							</Stack>
 						</CardContent>

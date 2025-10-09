@@ -1029,8 +1029,10 @@ class SettingsService:
                 Advantage(good=False, name="Smart Audience:", value="0"),
             ],
             gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$1000"),
-                Advantage(good=True, name="Premium Data funds:", value="$1000"),
+                Advantage(good=True, name="Validation funds:", value="$1,000"),
+                Advantage(
+                    good=True, name="Premium Data funds:", value="$1,000"
+                ),
             ],
         )
 
