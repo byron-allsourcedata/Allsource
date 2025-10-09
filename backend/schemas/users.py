@@ -120,6 +120,7 @@ class CalendlyUUID(BaseModel):
 
 class CompanyInfo(BaseModel):
     company_website: str = Field(...)
+    organization_name: str = Field(...)
 
 
 class BaseFormResponse(BaseModel):
@@ -142,6 +143,7 @@ class CompanyInfoResponse(BaseModel):
     status: CompanyInfoEnum
     stripe_payment_url: Optional[str] = None
     domain_url: Optional[str] = None
+    has_potential_team: bool = False
 
 
 class CheckVerificationStatusResponse(BaseModel):
