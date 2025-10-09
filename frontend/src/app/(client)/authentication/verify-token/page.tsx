@@ -96,13 +96,15 @@ const VerifyToken = () => {
 								localStorage.removeItem("token");
 								localStorage.setItem("token", newToken);
 
-								router.push("/get-started");
+								// router.push("/get-started");
+								router.push("/account-setup");
 							}
 						} else if (response.data.status === "INCORRECT_TOKEN") {
 							showErrorToast("The link is incorrect or outdated");
 							const localtoken = localStorage.getItem("token");
 							if (localtoken) {
-								router.push("/get-started");
+								// router.push("/get-started");
+								router.push("/account-setup");
 							} else {
 								router.push("/signin");
 							}
