@@ -1,6 +1,27 @@
 import logging
 import sys
 from types import ModuleType
+from resolver import Resolver
+from entity_logging import EntityBufferHandler
+from config import ClickhouseInsertConfig
+
+resolver = Resolver()
+
+client_clickhouse = ClickhouseInsertConfig.get_client()
+
+
+# создаём один глобальный handler (singleton)
+CH_HANDLER = EntityBufferHandler(ch_client=client_clickhouse, table="bin_logs")
+formatter = logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
+CH_HANDLER.setFormatter(formatter)
+CH_HANDLER.setLevel(logging.INFO)
+
+# добавляем к root (если ещё не добавлен)
+root = logging.getLogger()
+if CH_HANDLER not in root.handlers:
+    root.addHandler(CH_HANDLER)
 
 
 def setup_global_logger(level: int):

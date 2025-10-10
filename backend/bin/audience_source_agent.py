@@ -23,6 +23,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from utils.logs import CH_HANDLER
 from services.sources.agent import (
     SourceAgentService,
     EmailAsid,
@@ -1087,8 +1088,6 @@ async def normalize_persons_interest_leads(
     data_for_normalize: DataForNormalize,
     db_session: Session,
 ):
-    import logging
-
     logging.info(f"Processing normalization data for source_id {source_id}")
 
     min_recency = (
@@ -1335,7 +1334,13 @@ async def process_rmq_message(
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
         data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
+        user_id = data.user_id
         source_id: str = data.source_id
+        CH_HANDLER.start_entity(
+            entity_id=source_id,
+            script_name="audience_source_agent",
+            user_id=user_id,
+        )
         with db_session.begin():
             audience_source = (
                 db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -1409,7 +1414,6 @@ async def process_rmq_message(
                 return
 
         count = 0
-        user_id = data.user_id
         if type == "user_ids":
             logging.info(f"Processing {len(persons)} user_id records.")
             count = await process_user_id(
@@ -1521,12 +1525,14 @@ async def process_rmq_message(
 
         await message.ack()
         logging.info(f"Processing completed for source_id {source_id}.")
+        CH_HANDLER.end_entity(entity_id=source_id, status="complete")
 
     except BaseException as e:
         logging.warning(
             f"Message for source_id failed and will be reprocessed. {e}"
         )
         logging.exception("Unhandled error for source %s", source_id)
+        # CH_HANDLER.abort_entity(entity_id=source_id)
         db_session.rollback()
         await message.ack()
 
