@@ -1,27 +1,43 @@
 import logging
 import sys
 from types import ModuleType
-from resolver import Resolver
-from entity_logging import EntityBufferHandler
+from entity_logging import EntityBufferHandler, get_current_entity_id
 from config import ClickhouseInsertConfig
-
-resolver = Resolver()
 
 client_clickhouse = ClickhouseInsertConfig.get_client()
 
-
-# создаём один глобальный handler (singleton)
 CH_HANDLER = EntityBufferHandler(ch_client=client_clickhouse, table="bin_logs")
 formatter = logging.Formatter(
     "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
 CH_HANDLER.setFormatter(formatter)
-CH_HANDLER.setLevel(logging.INFO)
+CH_HANDLER.setLevel(logging.NOTSET)
 
-# добавляем к root (если ещё не добавлен)
 root = logging.getLogger()
 if CH_HANDLER not in root.handlers:
     root.addHandler(CH_HANDLER)
+    print("[logging_setup] CH_HANDLER added to root.handlers")
+else:
+    print("[logging_setup] CH_HANDLER already present in root.handlers")
+
+
+def setup_local_logger(logger: logging.Logger, level: int):
+    handler = logging.StreamHandler()
+    handler.setLevel(level)
+    formatter = logging.Formatter(
+        fmt="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    handler.setFormatter(formatter)
+    logger.setLevel(level)
+    # keep CH_HANDLER if present
+    preserved = [
+        h for h in logger.handlers if isinstance(h, EntityBufferHandler)
+    ]
+    preserved_names = [type(h).__name__ for h in preserved]
+    print(f"[setup_local_logger] preserving handlers: {preserved_names}")
+    new_handlers = preserved + [handler]
+    logger.handlers = new_handlers
 
 
 def setup_global_logger(level: int):
@@ -33,22 +49,6 @@ def setup_global_logger(level: int):
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-
-
-def setup_local_logger(logger: logging.Logger, level: int):
-    """
-    Use setup_logger instead
-    """
-    handler = logging.StreamHandler()
-    handler.setLevel(level)
-    formatter = logging.Formatter(
-        fmt="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    handler.setFormatter(formatter)
-    logger.setLevel(level)
-    logger.handlers.clear()
-    logger.addHandler(handler)
 
 
 def setup_logging(

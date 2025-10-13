@@ -1525,6 +1525,12 @@ async def process_rmq_message(
 
         await message.ack()
         logging.info(f"Processing completed for source_id {source_id}.")
+        print(
+            f"[process_rmq_message] about to call CH_HANDLER.end_entity for {source_id}"
+        )
+        logging.getLogger(__name__).debug(
+            "about to call CH_HANDLER.end_entity for %s", source_id
+        )
         CH_HANDLER.end_entity(entity_id=source_id, status="complete")
 
     except BaseException as e:
@@ -1532,7 +1538,10 @@ async def process_rmq_message(
             f"Message for source_id failed and will be reprocessed. {e}"
         )
         logging.exception("Unhandled error for source %s", source_id)
-        # CH_HANDLER.abort_entity(entity_id=source_id)
+        try:
+            CH_HANDLER.abort_entity(entity_id=source_id)
+        except Exception:
+            logging.exception("Failed to abort_entity for %s", source_id)
         db_session.rollback()
         await message.ack()
 
