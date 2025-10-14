@@ -29,7 +29,8 @@ export type FrontendPlan = {
 	href: string;
 	highlight?: boolean;
 	features: string[];
-	is_active: boolean;
+	is_active_year: boolean;
+	is_active_month: boolean;
 };
 
 export type PlanPeriod = "month" | "year";

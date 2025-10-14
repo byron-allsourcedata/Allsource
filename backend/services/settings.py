@@ -985,7 +985,8 @@ class SettingsService:
                 "cta": "Get Started Now",
                 "href": "https://app.allsourcedata.io/signup",
                 "highlight": False,
-                "is_active": False,
+                "is_active_month": False,
+                "is_active_year": False,
                 "features": [
                     "15+",
                     "Included",
@@ -1007,7 +1008,8 @@ class SettingsService:
                 "cta": "Speak to Us",
                 "href": "https://meetings-na2.hubspot.com/mark-lombardi/mark-byron-call-link-",
                 "highlight": True,
-                "is_active": False,
+                "is_active_month": False,
+                "is_active_year": False,
                 "features": [
                     "15+",
                     "Included",
@@ -1029,7 +1031,8 @@ class SettingsService:
                 "cta": "Speak to Us",
                 "href": "https://meetings-na2.hubspot.com/mark-lombardi/mark-byron-call-link-",
                 "highlight": False,
-                "is_active": False,
+                "is_active_month": False,
+                "is_active_year": False,
                 "features": [
                     "15+",
                     "Included",
@@ -1044,15 +1047,20 @@ class SettingsService:
             },
         ]
 
-        if current_subscription and current_subscription.plan_id:
+        if current_subscription and current_subscription.id:
             current_plan_obj = (
                 self.plan_persistence.get_subscription_plan_by_id(
-                    current_subscription.plan_id
+                    current_subscription.id
                 )
             )
 
-            if current_plan_obj and hasattr(current_plan_obj, "alias"):
+            if (
+                current_plan_obj
+                and hasattr(current_plan_obj, "alias")
+                and current_plan_obj.interval
+            ):
                 current_alias = current_plan_obj.alias
+                interval = current_plan_obj.interval
 
                 alias_to_key = {
                     "standard": "standard",
@@ -1060,12 +1068,18 @@ class SettingsService:
                     "pro": "pro",
                 }
 
-                current_key = alias_to_key.get(current_alias)
-                if current_key:
+                current_key = None
+
+                for alias_prefix, key in alias_to_key.items():
                     for plan in plans_data:
-                        if plan["key"] == current_key:
-                            plan["is_active"] = True
-                            break
+                        if current_alias.startswith(alias_prefix):
+                            current_key = key
+                            if plan["key"] == current_key:
+                                if interval == "month":
+                                    plan["is_active_month"] = True
+                                if interval == "year":
+                                    plan["is_active_year"] = True
+                                break
 
         plans = [Plan(**plan_data) for plan_data in plans_data]
 

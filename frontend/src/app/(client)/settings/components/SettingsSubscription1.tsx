@@ -6,7 +6,7 @@ import { PlanCard } from "./PlanCard";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
-import { usePlans, type Plan } from "./plans";
+import { usePlans, type FrontendPlan } from "./plans";
 import { fetchUserData } from "@/services/meService";
 import { BookACallPopup } from "../../components/BookACallPopup";
 
@@ -89,9 +89,9 @@ const subscriptionStyles = {
 
 export const SettingsSubscription1: React.FC = () => {
 	const [tabValue, setTabValue] = useState(0);
-	const [plans, setPlans] = useState<Plan[]>([]);
-	const [plansMonthly, setPlansMonthly] = useState<Plan[]>([]);
-	const [plansYearly, setPlansYearly] = useState<Plan[]>([]);
+	const [plans, setPlans] = useState<FrontendPlan[]>([]);
+	const [plansMonthly, setPlansMonthly] = useState<FrontendPlan[]>([]);
+	const [plansYearly, setPlansYearly] = useState<FrontendPlan[]>([]);
 
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
@@ -103,9 +103,9 @@ export const SettingsSubscription1: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
-	const [normalPlans, partnerPlans] = usePlans(
-		tabValue === 0 ? "month" : "year",
-	);
+	// const [normalPlans, partnerPlans] = usePlans(
+	// 	tabValue === 0 ? "month" : "year",
+	// );
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
@@ -153,10 +153,10 @@ export const SettingsSubscription1: React.FC = () => {
 				const response = await axiosInterceptorInstance.get("/settings/plans");
 				setPlansMonthly(response.data.monthly);
 				setPlansYearly(response.data.yearly);
-				if (tabValue === 0) {
-					setPlans(response.data.monthly);
+				if (response.data.length > 0) {
+					setPlans(response.data?.plans);
 				} else {
-					setPlans(response.data.yearly);
+					setPlans(response.data?.plans);
 				}
 			} catch (error) {
 			} finally {
@@ -193,104 +193,9 @@ export const SettingsSubscription1: React.FC = () => {
 		}
 	};
 
-	const handleStandardUpgrade = async () => {
-		try {
-			setIsLoading(true);
-
-			const response = await axiosInstance.get(
-				"/subscriptions/standard-plan-upgrade",
-			);
-
-			if (response.status === 200) {
-				if (response.data != null) {
-					window.location.href = response.data;
-				}
-			}
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
 	if (isLoading) {
 		return <CustomizedProgressBar />;
 	}
-
-	const getVisiblePlans = (plans: Plan[], isPartner = false) => {
-		if (plans?.length > 0) {
-			return plans.map((plan, index) => {
-				let buttonText = "Speak to Us";
-				let disabled = false;
-
-				let handle = handleOpenPopup;
-				if (isTrial === true) {
-					if (plan.title === "Free Trial") {
-						buttonText = "Current Plan";
-						disabled = true;
-					} else if (plan.title === "Basic") {
-						buttonText = "Instant Upgrade";
-						disabled = false;
-						handle = handleInstantUpgrade;
-					} else if (plan.title === "Standard") {
-						buttonText = "Instant Upgrade";
-						disabled = false;
-						handle = handleStandardUpgrade;
-					} else {
-						buttonText = "Speak to Us";
-						disabled = false;
-					}
-				}
-
-				if (isPartner) {
-					buttonText = "Become partner";
-				}
-
-				if (plan.is_active) {
-					buttonText = "Current Plan";
-					disabled = true;
-				}
-
-				return (
-					<Box
-						key={plan.title}
-						sx={{
-							...subscriptionStyles.formWrapper,
-						}}
-					>
-						<PlanCard
-							plan={plan}
-							isRecommended={plan.is_recommended}
-							isActive={plan.is_active}
-							buttonProps={{
-								onChoose: handle,
-								text: buttonText,
-								disabled: disabled,
-							}}
-							isPartner={isPartner}
-						/>
-					</Box>
-				);
-			});
-		}
-
-		return null;
-	};
-
-	// const visibleNormalPlans = getVisiblePlans(normalPlans);
-	// const visiblePartnerPlans = getVisiblePlans(partnerPlans, true);
-
-	// const visiblePlans = [
-	// 	...(visibleNormalPlans ?? []),
-	// 	...(visiblePartnerPlans
-	// 		? [
-	// 				<Box key="add-icon">
-	// 					<AddRounded
-	// 						sx={{ width: "56px", height: "56px", color: "#E4E4E4" }}
-	// 					/>
-	// 				</Box>,
-	// 				...visiblePartnerPlans,
-	// 			]
-	// 		: []),
-	// ];
 
 	const viisiblePlans: PlanNew[] = [
 		// {
@@ -385,7 +290,7 @@ export const SettingsSubscription1: React.FC = () => {
 				"@media (max-width: 600px)": { pr: "16px" },
 			}}
 		>
-			<PricingTable plans={viisiblePlans} handleOpenPopup={handleOpenPopup} />
+			<PricingTable plans={plans} handleOpenPopup={handleOpenPopup} />
 
 			{sourcePlatform !== "shopify" && (
 				<Button

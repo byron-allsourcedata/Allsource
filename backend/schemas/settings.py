@@ -140,7 +140,8 @@ class Plan(BaseModel):
     href: str
     highlight: Optional[bool] = False
     features: list[str]
-    is_active: bool = False
+    is_active_year: bool = False
+    is_active_month: bool = False
 
 
 class SubscriptionPlans(BaseModel):

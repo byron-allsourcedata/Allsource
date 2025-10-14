@@ -4,34 +4,16 @@ import {
 	Box,
 	Container,
 	Typography,
-	Button,
 	Grid,
 	Paper,
 	ToggleButton,
 	ToggleButtonGroup,
-	Divider,
 	Tabs,
 	Tab,
 } from "@mui/material";
-import { CustomButton, CustomToggle } from "@/components/ui";
+import { CustomButton } from "@/components/ui";
 import { useRouter } from "next/navigation";
-
-export type PlanNew = {
-	key: string;
-	title: string;
-	monthly: string;
-	href: string;
-	yearly?: string;
-	note?: string;
-	cta: string;
-	highlight?: boolean; // для центрального/второго плана
-	features: Array<string>;
-};
-
-interface PricingTableProps {
-	plans: PlanNew[];
-	handleOpenPopup: () => void;
-}
+import { type FrontendPlan } from "../plans";
 
 const subscriptionStyles = {
 	title: {
@@ -104,8 +86,25 @@ const subscriptionStyles = {
 	},
 };
 
+export type PlanNew = {
+	key: string;
+	title: string;
+	monthly: string;
+	href: string;
+	yearly?: string;
+	note?: string;
+	cta: string;
+	highlight?: boolean; // для центрального/второго плана
+	features: Array<string>;
+};
+
+interface PricingTableProps {
+	plans?: FrontendPlan[];
+	handleOpenPopup: () => void;
+}
+
 export const PricingTable: React.FC<PricingTableProps> = ({
-	plans,
+	plans = [],
 	handleOpenPopup,
 }) => {
 	const [billing, setBilling] = useState<number>(0);
@@ -138,8 +137,6 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 					borderRadius: 3,
 					p: { xs: 2, md: 0 },
 					pt: { md: 2 },
-					background:
-						"url('background_table.png') 0px 0px / 100% 105.966% no-repeat",
 					color: "#fff",
 					overflow: "visible", // важно — чтобы выделенный блок мог выступать
 				}}
@@ -270,7 +267,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 								position: "relative",
 							}}
 						>
-							{plans.map((p, idx) => {
+							{plans.map((p: FrontendPlan, idx) => {
 								const isCenter = !!p.highlight;
 								// для визуала цены (yearly/monthly)
 								const displayPrice =
@@ -374,8 +371,15 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 												sx={{
 													textWrap: "nowrap",
 												}}
+												disabled={
+													(billing === 0 && p.is_active_month) ||
+													(billing === 1 && p.is_active_year)
+												}
 											>
-												{p.cta}
+												{(billing === 0 && p.is_active_month) ||
+												(billing === 1 && p.is_active_year)
+													? "Current Plan"
+													: p.cta}
 											</CustomButton>
 										</Paper>
 
@@ -710,6 +714,9 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 								border: "2px solid transparent", // нужно чтобы border-box градиент был виден
 								boxShadow: "none",
 							},
+							"& .MuiToggleButton-root.Mui-selected:hover": {
+								background: "var(--main-blue)",
+							},
 							// hover для выбранной (как в спецификации)
 						}}
 					>
@@ -761,7 +768,9 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 								fontFamily: "var(--font-nunito)",
 							}}
 						>
-							{plans[selectedPlan].title}
+							{billing === 1 && plans[selectedPlan]?.yearly
+								? plans[selectedPlan]?.yearly
+								: plans[selectedPlan]?.monthly}
 						</Typography>
 
 						<Box
@@ -780,9 +789,9 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 									fontFamily: "var(--font-nunito)",
 								}}
 							>
-								{billing === 1 && plans[selectedPlan].yearly
-									? plans[selectedPlan].yearly
-									: plans[selectedPlan].monthly}
+								{billing === 1 && plans[selectedPlan]?.yearly
+									? plans[selectedPlan]?.yearly
+									: plans[selectedPlan]?.monthly}
 							</Typography>
 						</Box>
 
@@ -794,10 +803,20 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 								fontFamily: "var(--font-nunito)",
 							}}
 						>
-							{plans[selectedPlan].note}
+							{plans[selectedPlan]?.note}
 						</Typography>
-						<CustomButton variant="contained" onClick={handleOpenPopup}>
-							Speak to Us
+						<CustomButton
+							variant="contained"
+							onClick={handleOpenPopup}
+							disabled={
+								(billing === 0 && plans[selectedPlan].is_active_month) ||
+								(billing === 1 && plans[selectedPlan].is_active_year)
+							}
+						>
+							{(billing === 0 && plans[selectedPlan].is_active_month) ||
+							(billing === 1 && plans[selectedPlan].is_active_year)
+								? "Current Plan"
+								: plans[selectedPlan].cta}
 						</CustomButton>
 					</Paper>
 
@@ -837,11 +856,11 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 									sx={{
 										fontSize: 14,
 										color:
-											typeof plans[selectedPlan].features[rowIndex] ===
+											typeof plans[selectedPlan]?.features[rowIndex] ===
 												"string" &&
 											plans[selectedPlan].features[rowIndex].includes("$")
 												? "#111827"
-												: plans[selectedPlan].features[rowIndex] === "✖"
+												: plans[selectedPlan]?.features[rowIndex] === "✖"
 													? "#ef4444"
 													: "#000000",
 										fontWeight: 400,
@@ -849,7 +868,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 										textAlign: "right",
 									}}
 								>
-									{plans[selectedPlan].features[rowIndex]}
+									{plans[selectedPlan]?.features[rowIndex]}
 								</Typography>
 							</Box>
 						))}
