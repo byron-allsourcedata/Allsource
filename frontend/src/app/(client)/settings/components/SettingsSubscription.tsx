@@ -447,7 +447,6 @@ export const SettingsSubscription: React.FC = () => {
 			return plans.map((plan, index) => {
 				let buttonText = "Speak to Us";
 				let disabled = false;
-				console.log(plan);
 
 				let handle = handleOpenPopup;
 				if (isTrial === true) {

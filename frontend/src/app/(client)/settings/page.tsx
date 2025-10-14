@@ -8,6 +8,7 @@ import { SettingsAccountDetails } from "./components/SettingsAccountDetails";
 import { SettingsTeams } from "./components/SettingsTeams";
 import { SettingsBilling } from "./components/SettingsBilling";
 import { SettingsSubscription } from "./components/SettingsSubscription";
+import { SettingsSubscription1 } from "./components/SettingsSubscription1";
 import { SettingsApiDetails } from "./components/SettingsApiDetails";
 import axiosInterceptorInstance, {
 	useAxios,
@@ -183,6 +184,12 @@ const Settings: React.FC = () => {
 							userHasSubscription={userHasSubscription}
 							{...tabProps}
 						/>
+						{/* <SettingTab
+							tabName="subscription1"
+							label="Subscription1"
+							userHasSubscription={userHasSubscription}
+							{...tabProps}
+						/> */}
 						<SettingTab
 							tabName="subscription"
 							label="Subscription"
@@ -223,7 +230,9 @@ const Settings: React.FC = () => {
 
 				{activeSection === "billing" && <SettingsBilling />}
 
-				{activeSection === "subscription" && <SettingsSubscription />}
+				{/* {activeSection === "subscription1" && <SettingsSubscription />} */}
+
+				{activeSection === "subscription" && <SettingsSubscription1 />}
 
 				{activeSection === "apiDetails" && <SettingsApiDetails />}
 			</Box>
