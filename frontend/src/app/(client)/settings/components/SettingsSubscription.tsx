@@ -30,7 +30,7 @@ import { BookACallPopup } from "../../components/BookACallPopup";
 
 import { useBookingUrl } from "@/services/booking";
 import { AddRounded } from "@mui/icons-material";
-import PricingTable from "./PlanCard/PricingTable";
+// import PricingTable from "./PlanCard/PricingTable";
 
 const subscriptionStyles = {
 	title: {
