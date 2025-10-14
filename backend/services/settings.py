@@ -28,7 +28,6 @@ from schemas.settings import (
     TotalKey,
     ActivePlan,
     DowngradePlan,
-    PlansResponse,
     Plan,
     Price,
     Advantage,
@@ -971,180 +970,103 @@ class SettingsService:
 
         return result
 
-    def get_all_plans(self, user: UserDict) -> PlansResponse:
-        FREE_TRAIL_PLAN = Plan(
-            title="Free Trial",
-            alias="free_trial",
-            price=Price(value="$0", y="month"),
-            permanent_limits=[
-                Advantage(
-                    good=True, name="Domains monitored:", value="Unlimited"
-                )
-            ],
-            monthly_limits=[
-                Advantage(
-                    good=True, name="Contact Downloads:", value="Up to 1,000"
-                ),
-                Advantage(good=False, name="Smart Audience:", value="0"),
-            ],
-            gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$250"),
-                Advantage(good=True, name="Premium Data funds:", value="$250"),
-            ],
+    def get_all_plans(self, user: UserDict) -> SubscriptionPlans:
+        current_subscription = self.plan_persistence.get_current_plan(
+            user_id=user["id"]
         )
 
-        BASIC = Plan(
-            title="Basic",
-            alias="basic",
-            price=Price(value="$0,08", y="record"),
-            permanent_limits=[
-                Advantage(
-                    good=True, name="Domains monitored:", value="Unlimited"
-                )
-            ],
-            monthly_limits=[
-                Advantage(
-                    good=True, name="Contact Downloads:", value="500 – 65,000"
-                ),
-                Advantage(good=False, name="Smart Audience:", value="0"),
-            ],
-            gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$500"),
-                Advantage(good=True, name="Premium Data funds:", value="$500"),
-            ],
-        )
-        STANDARD_YEARLY = Plan(
-            title="Standard",
-            alias="standard",
-            price=Price(value="$300", y="month"),
-            permanent_limits=[
-                Advantage(
-                    good=True, name="Domains monitored:", value="Unlimited"
-                )
-            ],
-            monthly_limits=[
-                Advantage(
-                    good=True, name="Contact Downloads:", value="Unlimited"
-                ),
-                Advantage(good=False, name="Smart Audience:", value="0"),
-            ],
-            gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$1,000"),
-                Advantage(
-                    good=True, name="Premium Data funds:", value="$1,000"
-                ),
-            ],
-        )
-
-        STANDARD_MONTHLY = STANDARD_YEARLY.model_copy(
-            update={"price": Price(value="$499", y="month")}
-        )
-
-        PARTNER_PROGRAM = Plan(
-            title="Partner Program",
-            alias="partner_program",
-            price=Price(value="$500", y="month"),
-            referrals=[
-                Advantage(good=True, name="Sub-customers:", value="Unlimited"),
-                Advantage(good=True, name="Sub-customers:", value="50%"),
-                Advantage(
-                    good=True, name="All other platform Revenue:", value="30%"
-                ),
-            ],
-            gifts=[
-                Advantage(good=True, name="White label access"),
-                Advantage(good=True, name="Onboarding and Support"),
-                Advantage(good=True, name="Customer Client Invitation Links"),
-                Advantage(good=True, name="Automated Payments via Stripe"),
-            ],
-        )
-
-        SMART_AUDIENCE_YEARLY = Plan(
-            title="Smart Audience",
-            alias="smart_audience",
-            is_recommended=True,
-            price=Price(value="$700", y="month"),
-            permanent_limits=[
-                Advantage(
-                    good=True, name="Domains monitored:", value="Unlimited"
-                )
-            ],
-            monthly_limits=[
-                Advantage(
-                    good=True, name="Contact Downloads:", value="Unlimited"
-                ),
-                Advantage(good=True, name="Smart Audience:", value="200,000"),
-            ],
-            gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$1,500"),
-                Advantage(
-                    good=True, name="Premium Data funds:", value="$1,500"
-                ),
-            ],
-        )
-
-        SMART_AUDIENCE_MONTHLY = SMART_AUDIENCE_YEARLY.model_copy(
-            update={"price": Price(value="$999", y="month")}
-        )
-
-        PRO_YEARLY = Plan(
-            title="Pro",
-            alias="pro",
-            price=Price(value="$2,900", y="month"),
-            permanent_limits=[
-                Advantage(
-                    good=True, name="Domains monitored:", value="Unlimited"
-                )
-            ],
-            monthly_limits=[
-                Advantage(
-                    good=True, name="Contact Downloads:", value="Unlimited"
-                ),
-                Advantage(good=True, name="Smart Audience:", value="Unlimited"),
-            ],
-            gifted_funds=[
-                Advantage(good=True, name="Validation funds:", value="$2,500"),
-                Advantage(
-                    good=True, name="Premium Data funds:", value="$2,500"
-                ),
-            ],
-        )
-
-        PRO_MONTHLY = PRO_YEARLY.model_copy(
-            update={"price": Price(value="$4,900", y="month")}
-        )
-
-        NORMAL_YEARLY_PLANS = [
-            STANDARD_YEARLY,
-            SMART_AUDIENCE_YEARLY,
-            PRO_YEARLY,
-        ]
-        NORMAL_MONTHLY_PLANS = [
-            STANDARD_MONTHLY,
-            SMART_AUDIENCE_MONTHLY,
-            PRO_MONTHLY,
+        plans_data = [
+            {
+                "key": "standard",
+                "title": "Standard",
+                "monthly": "$499",
+                "yearly": "$300",
+                "note": "Per Month",
+                "cta": "Get Started Now",
+                "href": "https://app.allsourcedata.io/signup",
+                "highlight": False,
+                "is_active": False,
+                "features": [
+                    "15+",
+                    "Included",
+                    "Unlimited",
+                    "Included",
+                    "Unlimited",
+                    "Included",
+                    "✖",
+                    "$1000",
+                    "$1000",
+                ],
+            },
+            {
+                "key": "smart",
+                "title": "Smart Audience",
+                "monthly": "$999",
+                "yearly": "$700",
+                "note": "Per Month",
+                "cta": "Speak to Us",
+                "href": "https://meetings-na2.hubspot.com/mark-lombardi/mark-byron-call-link-",
+                "highlight": True,
+                "is_active": False,
+                "features": [
+                    "15+",
+                    "Included",
+                    "Unlimited",
+                    "Included",
+                    "Unlimited",
+                    "Included",
+                    "200,000",
+                    "$1,500",
+                    "$1,500",
+                ],
+            },
+            {
+                "key": "pro",
+                "title": "Pro",
+                "monthly": "$4,999",
+                "yearly": "$2,999",
+                "note": "Per Month",
+                "cta": "Speak to Us",
+                "href": "https://meetings-na2.hubspot.com/mark-lombardi/mark-byron-call-link-",
+                "highlight": False,
+                "is_active": False,
+                "features": [
+                    "15+",
+                    "Included",
+                    "Unlimited",
+                    "Included",
+                    "Unlimited",
+                    "Included",
+                    "Unlimited",
+                    "$2,500",
+                    "$2,500",
+                ],
+            },
         ]
 
-        PARTNER_YEARLY_PLANS = []
-        PARTNER_MONTHLY_PLANS = []
+        if current_subscription and current_subscription.plan_id:
+            current_plan_obj = (
+                self.plan_persistence.get_subscription_plan_by_id(
+                    current_subscription.plan_id
+                )
+            )
 
-        is_referral = self.referral_user_persistence.is_user_referral(
-            user["id"]
-        )
-        is_partner = self.partners_persistence.is_user_partner(user["id"])
-        is_become_partner_enabled = (
-            os.getenv("BECOME_PARTNER_ENABLED") == "True"
-        )
+            if current_plan_obj and hasattr(current_plan_obj, "alias"):
+                current_alias = current_plan_obj.alias
 
-        if is_become_partner_enabled and not is_referral and not is_partner:
-            PARTNER_YEARLY_PLANS.extend([PARTNER_PROGRAM])
-            PARTNER_MONTHLY_PLANS.extend([PARTNER_PROGRAM])
+                alias_to_key = {
+                    "standard": "standard",
+                    "smart_audience": "smart",
+                    "pro": "pro",
+                }
 
-        return PlansResponse(
-            normal_plans=SubscriptionPlans(
-                monthly=NORMAL_MONTHLY_PLANS, yearly=NORMAL_YEARLY_PLANS
-            ),
-            partner_plans=SubscriptionPlans(
-                monthly=PARTNER_MONTHLY_PLANS, yearly=PARTNER_YEARLY_PLANS
-            ),
-        )
+                current_key = alias_to_key.get(current_alias)
+                if current_key:
+                    for plan in plans_data:
+                        if plan["key"] == current_key:
+                            plan["is_active"] = True
+                            break
+
+        plans = [Plan(**plan_data) for plan_data in plans_data]
+
+        return SubscriptionPlans(plans=plans)
