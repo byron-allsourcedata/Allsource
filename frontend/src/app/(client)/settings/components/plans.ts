@@ -19,106 +19,59 @@ export type Plan = {
 	gifts?: Advantage[];
 };
 
-export const freeTrialPlan: Plan = {
-	title: "Free Trial",
-	alias: "free_trial",
-	is_active: false,
-	price: {
-		value: "$0",
-		y: "month",
-	},
-	is_recommended: false,
-	permanent_limits: [
-		{
-			good: true,
-			name: "Domains monitored:",
-			value: "1",
-		},
-	],
-	monthly_limits: [
-		{
-			good: true,
-			name: "Contact Downloads:",
-			value: "Up to 1,000",
-		},
-		{
-			good: false,
-			name: "Smart Audience:",
-			value: "0",
-		},
-	],
-	gifted_funds: [
-		{
-			good: true,
-			name: "Validation funds:",
-			value: "$250",
-		},
-		{
-			good: true,
-			name: "Premium Data funds:",
-			value: "$250",
-		},
-	],
+export type FrontendPlan = {
+	key: string;
+	title: string;
+	monthly: string;
+	yearly: string;
+	note?: string;
+	cta: string;
+	href: string;
+	highlight?: boolean;
+	features: string[];
+	is_active: boolean;
 };
 
 export type PlanPeriod = "month" | "year";
 
-type SubscriptionPlans = {
-	monthly: Plan[];
-	yearly: Plan[];
+type FrontendPlansResponse = {
+	plans: FrontendPlan[];
 };
 
-type PlanResponse = {
-	normal_plans: SubscriptionPlans;
-	partner_plans: SubscriptionPlans;
-};
-
-export function usePlans(period: PlanPeriod): [Plan[], Plan[], string | null] {
-	const [normalPlans, setNormalPlans] = useState<Plan[]>([]);
-	const [partnerPlans, setPartnerPlans] = useState<Plan[]>([]);
-
+export function usePlans(): [FrontendPlan[], FrontendPlan[], string | null] {
+	const [normalPlans, setNormalPlans] = useState<FrontendPlan[]>([]);
+	const [partnerPlans, setPartnerPlans] = useState<FrontendPlan[]>([]);
 	const currentPlanAlias = usePlanAlias();
-	const freeTrial = useIsFreeTrial();
 
 	const getPlans = async () => {
-		const response = await axiosInstance.get<PlanResponse>("/settings/plans");
-		if (response.status === 200) {
-			const { normal_plans, partner_plans } = response.data;
+		try {
+			const response =
+				await axiosInstance.get<FrontendPlansResponse>("/settings/plans");
+			if (response.status === 200) {
+				const { plans } = response.data;
 
-			setPartnerPlans(
-				period === "month" ? partner_plans.monthly : partner_plans.yearly,
-			);
+				// Для партнерских планов - если у вас их нет, можно оставить пустой массив
+				// или адаптировать под вашу логику
+				setPartnerPlans([]);
 
-			let plans =
-				period === "month" ? normal_plans.monthly : normal_plans.yearly;
+				// Обрабатываем normal планы
+				let processedPlans = [...plans];
 
-			if (freeTrial) {
-				plans = [...plans];
+				// Если нужна дополнительная обработка по периоду, можно добавить здесь
+				// Например, фильтрация или сортировка
+
+				setNormalPlans(processedPlans);
 			}
-
-			const planIndex = plans.findIndex(
-				(plan: Plan) => plan.alias === currentPlanAlias,
-			);
-
-			if (planIndex === -1) {
-				return setNormalPlans(plans);
-			}
-
-			const newPlans = [
-				{
-					...plans[planIndex],
-					is_active: true,
-				},
-				...plans.slice(planIndex + 1),
-			];
-
-			setNormalPlans(newPlans);
+		} catch (error) {
+			console.error("Error fetching plans:", error);
+			setNormalPlans([]);
+			setPartnerPlans([]);
 		}
 	};
 
 	useEffect(() => {
 		getPlans();
-	}, [currentPlanAlias, freeTrial, period]);
+	}, []);
 
 	return [normalPlans, partnerPlans, currentPlanAlias];
 }
