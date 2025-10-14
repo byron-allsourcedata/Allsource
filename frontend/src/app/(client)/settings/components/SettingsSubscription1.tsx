@@ -330,8 +330,8 @@ export const SettingsSubscription1: React.FC = () => {
 				"Unlimited",
 				"Included",
 				"✖",
-				"$1000",
-				"$1000",
+				"$1,000",
+				"$1,000",
 			],
 		},
 		{
@@ -385,112 +385,6 @@ export const SettingsSubscription1: React.FC = () => {
 				"@media (max-width: 600px)": { pr: "16px" },
 			}}
 		>
-			{/* Plans Section */}
-			{/* <Box
-				sx={{
-					marginBottom: 4,
-					display: "flex",
-					flexDirection: "column",
-					width: "100%",
-					justifyContent: "center",
-				}}
-			>
-				<Box
-					sx={{
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						gap: 2,
-						marginTop: 4,
-						marginBottom: 1,
-						position: "relative",
-						"@media (max-width: 600px)": {
-							justifyContent: "start",
-						},
-					}}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-							width: "100%",
-						}}
-					>
-						<Tabs
-							value={tabValue}
-							onChange={handleTabChange}
-							sx={{
-								border: "1px solid rgba(237, 237, 237, 1)",
-								borderRadius: "4px",
-								"& .MuiTabs-indicator": {
-									background: "none",
-								},
-								"@media (max-width: 600px)": { width: "100%" },
-							}}
-						>
-							<Tab
-								className="first-sub-title"
-								sx={subscriptionStyles.plantabHeading}
-								label="Monthly"
-							/>
-							<Tab
-								className="first-sub-title"
-								sx={subscriptionStyles.plantabHeading}
-								label={
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "row",
-											gap: "12px",
-											alignItems: "center",
-										}}
-									>
-										<Typography
-											className="first-sub-title active-text-color"
-											sx={{
-												fontWeight: "400 !important",
-												"@media (max-width: 600px)": {
-													fontSize: "18px !important",
-												},
-											}}
-										>
-											Yearly
-										</Typography>
-										<Typography
-											variant="body2"
-											sx={subscriptionStyles.saveHeading}
-											className="paragraph"
-											color="primary"
-										>
-											Save 33%
-										</Typography>
-									</Box>
-								}
-							/>
-						</Tabs>
-					</Box>
-				</Box>
-
-				<Box
-					sx={{
-						...subscriptionStyles.formContainer,
-						overflowX: "auto",
-						overflowY: "none",
-						justifyContent:
-							true
-								? subscriptionStyles.formContainer.justifyContent
-								: "center",
-					}}
-				>
-					{visiblePlans.length > 0 ? (
-						visiblePlans
-					) : (
-						<Typography>No plans available</Typography>
-					)}
-				</Box>
-			</Box> */}
-
 			<PricingTable plans={viisiblePlans} handleOpenPopup={handleOpenPopup} />
 
 			{sourcePlatform !== "shopify" && (
@@ -509,7 +403,7 @@ export const SettingsSubscription1: React.FC = () => {
 						"&:hover": {
 							background: "transparent",
 						},
-						"@media (min-width: 601px)": {
+						"@media (min-width: 1px)": {
 							display: "none",
 						},
 					}}

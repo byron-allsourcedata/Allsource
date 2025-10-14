@@ -16,13 +16,6 @@ import {
 import { CustomButton, CustomToggle } from "@/components/ui";
 import { useRouter } from "next/navigation";
 
-/**
- * PricingTable — адаптивный компонент "прайс-лист" под твой макет.
- * Положи картинки:
- *  - /pricing-top.png  (вверху)
- *  - /pricing-glow-left.png  (опционально фоновые глоу)
- */
-
 export type PlanNew = {
 	key: string;
 	title: string;
@@ -181,6 +174,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											fontWeight: 700,
 											mb: 1,
 											fontFamily: "var(--font-nunito)",
+											textWrap: "nowrap",
 										}}
 										component="h3"
 									>
@@ -192,6 +186,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											color: "#6b7280",
 											mb: 2,
 											fontFamily: "var(--font-nunito)",
+											textWrap: "nowrap",
 										}}
 									>
 										Select your plan and start now
@@ -251,6 +246,9 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 												py: 2,
 												borderBottom:
 													idx < rows.length - 1 ? "1px solid #fff" : "none",
+												whiteSpace: "nowrap",
+												overflow: "hidden",
+												textOverflow: "ellipsis",
 											}}
 										>
 											{r}
@@ -289,7 +287,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											alignItems: "stretch",
 											// center column выдвигаем чуть вверх и делаем выступ вниз
 											transform: isCenter ? "translateY(-18px)" : "none",
-											zIndex: isCenter ? 5 : 1,
+											zIndex: isCenter ? 4 : 1,
 											// чтобы выделенный блок визуально выступал за нижнюю границу общего контейнера
 											mb: isCenter ? "-22px" : 0,
 											border: isCenter ? "2px solid #3898FC" : "none",
@@ -373,6 +371,9 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											<CustomButton
 												variant="contained"
 												onClick={handleOpenPopup}
+												sx={{
+													textWrap: "nowrap",
+												}}
 											>
 												{p.cta}
 											</CustomButton>
@@ -457,8 +458,8 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 				</Grid>
 			</Box>
 			{/* Плюсик между таблицей и партнеркой */}
-			<Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
-				<Box sx={{ display: "flex", justifyContent: "center", mt: -2 }}>
+			<Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+				<Box sx={{ display: "flex", justifyContent: "center", mt: 0 }}>
 					<Plus />
 				</Box>
 
@@ -705,7 +706,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 							// стили для состояния selected (точно как ты прислал)
 							"& .MuiToggleButton-root.Mui-selected": {
 								color: "#fff !important",
-								background: "rgba(232, 241, 252, 1)rgba(232, 241, 252, 1)",
+								background: "var(--main-blue)",
 								border: "2px solid transparent", // нужно чтобы border-box градиент был виден
 								boxShadow: "none",
 							},
@@ -795,14 +796,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 						>
 							{plans[selectedPlan].note}
 						</Typography>
-						<CustomButton
-							variant="contained"
-							onClick={() => {
-								router.push(
-									"https://meetings-na2.hubspot.com/mark-lombardi/mark-byron-call-link-",
-								);
-							}}
-						>
+						<CustomButton variant="contained" onClick={handleOpenPopup}>
 							Speak to Us
 						</CustomButton>
 					</Paper>
@@ -864,16 +858,16 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 
 				{/* Partner Program для мобильной версии */}
 				<Box sx={{ mt: 0 }}>
-					<Grid
-						container
-						spacing={3}
+					<Box
 						sx={{
 							background: "rgba(232, 241, 252, 1)",
 							alignItems: "stretch",
+							borderRadius: 3,
+							boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
 						}}
 					>
 						{/* Left partner card (xs stacked full-width, md=3) */}
-						<Grid item xs={12} md={3}>
+						<Box>
 							<Paper
 								sx={{
 									p: { xs: 2, md: 3 },
@@ -930,10 +924,10 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 									Speak to Us
 								</CustomButton>
 							</Paper>
-						</Grid>
+						</Box>
 
 						{/* Right big card (xs stacked under left, md=9) */}
-						<Grid item xs={12} md={9}>
+						<Box>
 							<Paper
 								sx={{
 									p: { xs: 2, md: 3 },
@@ -1092,8 +1086,8 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 									))}
 								</Box>
 							</Paper>
-						</Grid>
-					</Grid>
+						</Box>
+					</Box>
 				</Box>
 			</Box>
 		);
