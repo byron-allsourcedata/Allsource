@@ -33,9 +33,11 @@ class SubscriptionWebhookService:
         self.basic_plan_service.move_to_basic_plan(customer_id)
         save_payment_details_in_stripe(customer_id=customer_id)
 
-    def move_to_standard_plan(self, customer_id: str, subscription_id: str):
+    def move_to_standard_plan(
+        self, customer_id: str, subscription_id: str, plan_period: str
+    ):
         self.standard_plan_service.move_to_standard_plan(
-            customer_id, subscription_id
+            customer_id, subscription_id, plan_period
         )
         save_payment_details_in_stripe(customer_id=customer_id)
 

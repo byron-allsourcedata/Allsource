@@ -1084,6 +1084,7 @@ class SettingsService:
                     plans_data[idx]["is_active_month"] = True
                 elif interval == "year":
                     plans_data[idx]["is_active_year"] = True
+                    plans_data[idx]["is_active_month"] = True
 
                 plans_data = plans_data[idx:]
 
