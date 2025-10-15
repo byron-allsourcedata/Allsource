@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone
 from typing import Optional, Dict, List, Any
 from contextvars import ContextVar
+from db_dependencies import Clickhouse
 
 _current_entity: ContextVar[Optional[str]] = ContextVar(
     "_current_entity", default=None
@@ -20,7 +21,7 @@ class EntityBufferHandler(logging.Handler):
     Flush выполняется вручную через .start_entity() / .end_entity().
     """
 
-    def __init__(self, ch_client, table: str):
+    def __init__(self, ch_client: Clickhouse, table: str):
         super().__init__()
         self.ch = ch_client
         self.table = table
@@ -78,23 +79,29 @@ class EntityBufferHandler(logging.Handler):
                 },
             }
 
-            with self.lock:
-                buf = self.buffers.setdefault(str(entity_id), [])
-                buf.append(entry)
-                buf_len = len(buf)
-                if buf_len % 50 == 0 or buf_len < 5:
-                    # печатаем каждые 50 сообщений и первые пару сообщений
-                    print(
-                        f"[EntityBufferHandler.emit] buffered {buf_len} messages for entity={entity_id}"
-                    )
-                    logging.getLogger(__name__).debug(
-                        "Buffered %d messages for entity=%s", buf_len, entity_id
-                    )
-                if len(buf) > 10000:
-                    self.buffers[entity_id] = buf[-5000:]
-                    print(
-                        f"[EntityBufferHandler.emit] buffer truncated for entity={entity_id}, now {len(self.buffers[entity_id])}"
-                    )
+            print("before lock")
+
+            # with self.lock:
+            # print("start")
+            buf = self.buffers.setdefault(str(entity_id), [])
+            # print("in lock", buf)
+            buf.append(entry)
+            buf_len = len(buf)
+
+            # print("in lock before", buf_len, buf_len % 50)
+            if buf_len % 50 == 0 or buf_len < 5:
+                # печатаем каждые 50 сообщений и первые пару сообщений
+                print(
+                    f"[EntityBufferHandler.emit] buffered {buf_len} messages for entity={entity_id}"
+                )
+                logging.getLogger(__name__).debug(
+                    "Buffered %d messages for entity=%s", buf_len, entity_id
+                )
+            if len(buf) > 10000:
+                self.buffers[entity_id] = buf[-5000:]
+                print(
+                    f"[EntityBufferHandler.emit] buffer truncated for entity={entity_id}, now {len(self.buffers[entity_id])}"
+                )
         except Exception as exc:
             print(f"[EntityBufferHandler.emit] exception: {exc}")
             try:
@@ -175,9 +182,22 @@ class EntityBufferHandler(logging.Handler):
             print(
                 f"[EntityBufferHandler.end_entity] inserting into ClickHouse table={self.table} for entity={entity_id}"
             )
-            self.ch.execute(
-                f"INSERT INTO {self.table} (ts, script_name, entity_id, user_id, start_ts, end_ts, duration_ms, status, messages) VALUES",
-                [row_tuple],
+            (
+                self.ch.insert(
+                    self.table,
+                    [row_tuple],
+                    [
+                        "ts",
+                        "script_name",
+                        "entity_id",
+                        "user_id",
+                        "start_ts",
+                        "end_ts",
+                        "duration_ms",
+                        "status",
+                        "messages",
+                    ],
+                ),
             )
             print(
                 f"[EntityBufferHandler.end_entity] insert succeeded for entity={entity_id}"
