@@ -4,10 +4,12 @@ import logging
 from fastapi import (
     APIRouter,
     Depends,
+    Query,
     Request as fastRequest,
     HTTPException,
     status,
 )
+from typing import Literal
 
 from config.rmq_connection import (
     RabbitMQConnection,
@@ -92,10 +94,11 @@ async def upgrade_to_standard(
     user: AuthUser,
     standard_plan_service: StandardPlanService,
     plans_service: PlansService,
+    interval: Literal["month", "year"] = Query(...),
 ):
     customer_id = plans_service.get_customer_id(user)
     session_url = standard_plan_service.get_standard_plan_payment_url(
-        customer_id=customer_id
+        customer_id=customer_id, interval=interval
     )
     return session_url
 
@@ -232,6 +235,7 @@ async def checkout_completed(
         metadata = event_session.get("metadata", {})
 
         checkout_type = metadata.get("type")
+        plan_period = metadata.get("plan_period")
 
         if checkout_type == "upgrade_basic":
             subscription_webhooks.move_to_basic_plan(customer_id)
@@ -239,7 +243,7 @@ async def checkout_completed(
             return "SUCCESS"
         elif checkout_type == "upgrade_standard":
             subscription_webhooks.move_to_standard_plan(
-                customer_id, subscription_id
+                customer_id, subscription_id, plan_period
             )
             db.commit()
             return "SUCCESS"
