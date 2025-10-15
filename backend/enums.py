@@ -28,6 +28,12 @@ class LookalikeStatus(Enum):
     FAILED = "failed"
 
 
+class LookalikeGenerationType(Enum):
+    ML = "ml"
+    SIMPLE_ALL = "simple_all"
+    SIMPLE_ANY = "simple_any"
+
+
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = "aud_sources_matching"
     AUDIENCE_SOURCES_READER = "aud_sources_files"

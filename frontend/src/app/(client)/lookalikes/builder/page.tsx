@@ -195,6 +195,7 @@ const CreateLookalikePage: React.FC = () => {
 				uuid_of_source: selectedSourceId,
 				lookalike_size: toSnakeCase(selectedLabel),
 				lookalike_name: sourceName,
+				generation_type: "simple_all",
 				audience_feature_importance: featureImportanceMap,
 			};
 			if (

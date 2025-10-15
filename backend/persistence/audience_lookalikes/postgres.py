@@ -252,7 +252,9 @@ class AudienceLookalikesPostgresPersistence(
         )
 
     @override
-    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
+    def update_processed_dataset_size(
+        self, lookalike_id: UUID, processed_dataset_size: int
+    ):
         """
         Update processed dataset size
 
@@ -288,6 +290,7 @@ class AudienceLookalikesPostgresPersistence(
         lookalike_size,
         lookalike_name,
         created_by_user_id,
+        generation_type,
         audience_feature_importance: AudienceFeatureImportance,
     ):
         source_info = self.get_source_info(uuid_of_source, user_id)
@@ -328,6 +331,7 @@ class AudienceLookalikesPostgresPersistence(
             source_uuid=uuid_of_source,
             significant_fields=sorted_dict,
             size=self.get_max_size(lookalike_size),
+            generation_type=generation_type.value,
         )
         self.db.add(lookalike)
         self.db.commit()
@@ -344,6 +348,7 @@ class AudienceLookalikesPostgresPersistence(
             "lookalike_size": lookalike.lookalike_size,
             "created_date": lookalike.created_date,
             "created_by": created_by,
+            "generation_type": generation_type,
         }
 
     def delete_lookalike(self, uuid_of_lookalike, user_id):

@@ -1,7 +1,16 @@
 import logging
 import statistics
 import time
-from typing import TypedDict
+import csv
+import os
+import heapq
+import tempfile
+import traceback
+from typing import Tuple, List, Dict, Any, TypedDict
+from urllib3.exceptions import ProtocolError
+from http.client import IncompleteRead
+
+from sentry_sdk.metrics import distribution
 from typing_extensions import deprecated
 
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
@@ -29,7 +38,10 @@ from persistence.enrichment_lookalike_scores import (
 )
 from persistence.enrichment_users import EnrichmentUsersPersistence
 from schemas.similar_audiences import NormalizationConfig
-from services.lookalikes.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
+from services.audience_insights import AudienceInsightsService
+from services.lookalikes.lookalike_filler.rabbitmq import (
+    RabbitLookalikesMatchingService,
+)
 from services.lookalikes.lookalike_filler.worker import filler_worker
 from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences.similar_audiences import SimilarAudienceService
@@ -72,6 +84,7 @@ class LookalikeFillerServiceBase:
         audience_lookalikes: AudienceLookalikesPersistence,
         matched_sources: AudienceSourcesMatchedPersonsPersistence,
         rabbit: RabbitLookalikesMatchingService,
+        insights_service: AudienceInsightsService,
     ):
         self.db = db
         self.clickhouse = clickhouse
@@ -86,6 +99,7 @@ class LookalikeFillerServiceBase:
         self.audience_lookalikes = audience_lookalikes
         self.matched_sources = matched_sources
         self.rabbit = rabbit
+        self.insights_service = insights_service
 
     def get_buckets(self, num_workers: int):
         buckets_per_worker = 100 // num_workers
@@ -149,6 +163,136 @@ class LookalikeFillerServiceBase:
 
         return rows_stream, column_names
 
+    def simple_partition_worker(
+        self,
+        column_names: List[str],
+        bucket: List[int],
+        limit: int | None,
+        importance_pct: Dict[str, int],
+        field_dist_map: Dict[str, Dict[str, int]],
+        lookalike_id: str,
+        top_n_per_worker: int,
+        tmp_dir: str,
+    ) -> Tuple[List[Dict[str, Any]], str, int]:
+        """
+        Worker runs in separate process.
+        - Reads one partition using Clickhouse client.
+        - Computes integer contribution per field and total_score.
+        - Writes detailed CSV lines for this worker into tmp file.
+        - Maintains top-N in min-heap and returns top_scores list (dicts with asid, score),
+          path to tmp csv, and processed count.
+        """
+        client = ClickhouseConfig.get_client()
+        in_clause = ",".join(str(x) for x in bucket)
+        limit_clause = f" LIMIT {limit}" if limit else ""
+        columns = ", ".join(["asid"] + column_names)
+        query = f"SELECT {columns} FROM enrichment_users WHERE cityHash64(asid) % 100 IN ({in_clause}){limit_clause}"
+
+        tmp_fd, tmp_path = tempfile.mkstemp(
+            prefix=f"simple_{lookalike_id}_part_", dir=tmp_dir, suffix=".csv"
+        )
+        os.close(tmp_fd)  # we'll open by name
+        csv_file = open(tmp_path, "w", newline="", encoding="utf-8")
+        # prepare header
+        fields = list(importance_pct.keys())
+        csv_fieldnames = ["asid"]
+        for f in fields:
+            csv_fieldnames += [
+                f"{f}_value",
+                f"{f}_valpct",
+                f"{f}_imp",
+                f"{f}_contrib",
+            ]
+        csv_fieldnames.append("total_score")
+        writer = csv.DictWriter(csv_file, fieldnames=csv_fieldnames)
+        writer.writeheader()
+
+        # local top-n heap
+        min_heap: List[tuple[int, str]] = []
+
+        def heap_push_local(asid: str, score: int):
+            if len(min_heap) < top_n_per_worker:
+                heapq.heappush(min_heap, (score, asid))
+            else:
+                if score > min_heap[0][0]:
+                    heapq.heapreplace(min_heap, (score, asid))
+
+        def get_value_pct_for_field(field: str, raw_value: str) -> int:
+            if not raw_value:
+                return 0
+            v = str(raw_value).strip().lower()
+            fd = field_dist_map.get(field, {})
+            if not fd:
+                return 0
+            val_pct = fd.get(v)
+            if val_pct is not None:
+                return int(val_pct)
+            simple = v.split(",")[0].split("/")[0].split("-")[0].strip()
+            val_pct = fd.get(simple)
+            if val_pct is not None:
+                return int(val_pct)
+            return int(fd.get("other", 0))
+
+        processed = 0
+        try:
+            rows_stream = client.query_row_block_stream(
+                query, settings={"max_block_size": 1000000}
+            )
+            column_names_from_stream = rows_stream.source.column_names
+            with rows_stream:
+                for block in rows_stream:
+                    for row in block:
+                        user = dict(zip(column_names_from_stream, row))
+                        asid = user.get("asid")
+                        if asid is None:
+                            continue
+                        total_score = 0
+                        csv_row = {"asid": asid}
+                        for f in fields:
+                            # alias resolution similar to main code
+                            raw_value = None
+                            if f in user:
+                                raw_value = user.get(f)
+                            else:
+                                if f.endswith("_name") and f[:-5] in user:
+                                    raw_value = user.get(f[:-5])
+                                elif f + "_name" in user:
+                                    raw_value = user.get(f + "_name")
+                                else:
+                                    raw_value = user.get(f)
+                            value_str = (
+                                ""
+                                if raw_value is None
+                                else str(raw_value).strip()
+                            )
+                            val_pct = get_value_pct_for_field(f, value_str)
+                            contrib = int(importance_pct[f]) * int(val_pct)
+                            total_score += contrib
+                            csv_row[f"{f}_value"] = value_str
+                            csv_row[f"{f}_valpct"] = val_pct
+                            csv_row[f"{f}_imp"] = importance_pct[f]
+                            csv_row[f"{f}_contrib"] = contrib
+                        csv_row["total_score"] = total_score
+                        writer.writerow(csv_row)
+                        heap_push_local(asid=str(asid), score=int(total_score))
+                        processed += 1
+        except (ProtocolError, IncompleteRead) as e:
+            # return partial results but keep csv flushed
+            writer.writerow({"asid": "STREAM_INTERRUPTED", "total_score": 0})
+        except Exception:
+            # log stack in worker stdout (captured by process logs)
+            traceback.print_exc()
+        finally:
+            csv_file.flush()
+            csv_file.close()
+
+        # build top list from heap (largest first)
+        top_scores_heap = sorted(min_heap, key=lambda x: x[0], reverse=True)
+        top_scores = [
+            {"asid": item[1], "score": int(item[0])} for item in top_scores_heap
+        ]
+        return top_scores, tmp_path, processed
+
     def get_lookalike(self, lookalike_id: UUID) -> AudienceLookalikes | None:
         return self.lookalikes.get_lookalike(lookalike_id)
 
@@ -175,6 +319,13 @@ class LookalikeFillerServiceBase:
 
         Use that trained model on each user in IDGraph and save users with top scores
         """
+        logger.info(
+            f"Processing lookalike {audience_lookalike.id} with type={audience_lookalike.generation_type}"
+        )
+
+        if audience_lookalike.generation_type in ("simple_all", "simple_any"):
+            logger.info("Using SIMPLE pipeline (no ML model)")
+            return self.process_simple_pipeline(audience_lookalike)
         sig = audience_lookalike.significant_fields or {}
         config = self.audiences_scores.get_config(sig)
         profiles = self.profile_fetcher.fetch_profiles_from_lookalike(
@@ -222,14 +373,329 @@ class LookalikeFillerServiceBase:
         )
         return model
 
+    def process_simple_pipeline(self, audience_lookalike: AudienceLookalikes):
+        """
+        Parallel partitioned simple pipeline:
+        - creates per-partition CSVs
+        - collects top-N per partition and merges top-N global
+        - concatenates partition CSVs into final /tmp/simple_lookalike_<id>.csv
+        """
+        logger.info(f"Simple pipeline for lookalike {audience_lookalike.id}")
+
+        distribution = (
+            self.insights_service.get_source_insights_for_lookalike(
+                audience_lookalike.source_uuid
+            )
+            or {}
+        )
+        sig = audience_lookalike.significant_fields or {}
+        if not sig:
+            logger.warning("No significant_fields found, nothing to score.")
+            return []
+
+        # convert importances -> integer percents
+        importance_pct: dict[str, int] = {}
+        for f, v in sig.items():
+            try:
+                if isinstance(v, (float, int)) and float(v) <= 1.0:
+                    pct = int(round(float(v) * 100))
+                else:
+                    pct = int(round(float(v)))
+            except Exception:
+                pct = 0
+            importance_pct[f] = max(0, pct)
+        importance_pct = {k: v for k, v in importance_pct.items() if v > 0}
+        if not importance_pct:
+            logger.warning(
+                "All significant fields have zero importance after conversion."
+            )
+            return []
+
+        logger.info(f"Field importance percents: {importance_pct}")
+
+        # build field distribution map (same as worker expects)
+        field_dist_map: dict[str, dict[str, int]] = {}
+        for section_key in ("b2c", "b2b"):
+            section = distribution.get(section_key, {}) or {}
+            for group_name, group in section.items():
+                if not isinstance(group, dict):
+                    continue
+                for field_name, field_values in group.items():
+                    if not isinstance(field_values, dict):
+                        continue
+                    fd = field_dist_map.setdefault(field_name, {})
+                    for val_k, val_v in field_values.items():
+                        try:
+                            pct_int = int(round(float(val_v)))
+                        except Exception:
+                            continue
+                        fd[val_k.strip().lower()] = pct_int
+
+        logger.debug(
+            f"Built field distribution map for {len(field_dist_map)} fields"
+        )
+
+        # prepare column names once (use column_selector)
+        column_names = self.column_selector.clickhouse_columns(
+            list(importance_pct.keys())
+        )
+
+        # prepare parallel execution parameters
+        THREAD_COUNT = LookalikesConfig.THREAD_COUNT
+        buckets = self.get_buckets(THREAD_COUNT)
+        LOOKALIKE_MAX_SIZE = LookalikesConfig.LOOKALIKE_MAX_SIZE
+        limit = self.get_lookalike_limit(
+            thread_count=THREAD_COUNT, total_limit=LOOKALIKE_MAX_SIZE
+        )
+
+        # compute top_n per worker (a bit larger to be safe)
+        top_n_global = audience_lookalike.size or 1000
+        top_n_per_worker = max(
+            1000, (top_n_global // max(1, len(buckets))) + 100
+        )
+
+        tmp_dir = "/tmp"
+        futures = []
+        top_scores_combined: list[dict] = []
+
+        with ProcessPoolExecutor(max_workers=len(buckets)) as executor:
+            for bucket in buckets:
+                fut = executor.submit(
+                    self.simple_partition_worker,
+                    column_names,
+                    bucket,
+                    limit,
+                    importance_pct,
+                    field_dist_map,
+                    str(audience_lookalike.id),
+                    top_n_per_worker,
+                    tmp_dir,
+                )
+                futures.append(fut)
+
+            # collect results
+            tmp_files = []
+            total_processed = 0
+            for fut in as_completed(futures):
+                try:
+                    worker_top, tmp_path, processed = fut.result()
+                    logger.info(
+                        f"Worker done: {tmp_path}, processed={processed}, top_count={len(worker_top)}"
+                    )
+                    total_processed += processed
+                    tmp_files.append(tmp_path)
+                    # merge top lists into combined top (use audiences_scores.top_scores if available)
+                    top_scores_combined = self.audiences_scores.top_scores(
+                        old_scores=top_scores_combined,
+                        new_scores=worker_top,
+                        top_n=top_n_global,
+                    )
+                except Exception as e:
+                    logger.exception("Worker failed: %s", e)
+
+        logger.info(
+            f"All workers finished. total_processed ~ {total_processed}"
+        )
+
+        # top_scores_combined is final top list (list of {"asid":..., "score":...})
+        # persist top scores
+        try:
+            if top_scores_combined:
+                self.enrichment_scores.bulk_insert(
+                    lookalike_id=audience_lookalike.id,
+                    scores=top_scores_combined,
+                )
+                logger.info(f"Inserted {len(top_scores_combined)} top scores")
+            else:
+                logger.warning("No top scores to insert")
+        except Exception as e:
+            logger.exception("Failed to bulk_insert simple scores: %s", e)
+            raise
+
+        # merge per-worker CSVs into final CSV (concatenate, keeping header once)
+        output_path = f"/tmp/simple_lookalike_{audience_lookalike.id}.csv"
+        try:
+            with open(output_path, "w", newline="", encoding="utf-8") as out_f:
+                header_written = False
+                for tmp_path in tmp_files:
+                    with open(tmp_path, "r", encoding="utf-8") as in_f:
+                        for i, line in enumerate(in_f):
+                            if i == 0 and header_written:
+                                continue  # skip header line
+                            out_f.write(line)
+                    try:
+                        os.remove(tmp_path)
+                    except Exception:
+                        logger.debug(f"Failed to remove temp file {tmp_path}")
+            logger.info(f"Simple lookalike CSV merged to {output_path}")
+        except Exception as e:
+            logger.exception("Failed to merge CSV parts: %s", e)
+
+        asids = [s["asid"] for s in top_scores_combined]
+        logger.info(f"Simple lookalike done: {len(asids)} users scored")
+        return self.enrichment_users.fetch_enrichment_user_ids(asids)
+
+    # def process_simple_pipeline(self, audience_lookalike: AudienceLookalikes):
+    #     """
+    #     Simple Lookalike generation with integer scoring:
+    #     score(user) = sum_over_fields( importance_pct(field) * value_pct_from_distribution(field, user_value) )
+    #     Example: job:30, state:70; job.staff:60% -> contribution = 30 * 60 = 1800
+    #     """
+    #     logger.info(f"Simple pipeline for lookalike {audience_lookalike.id}")
+    #
+    #     # --- Get the source distribution (insights) ---
+    #     distribution = self.insights_service.get_source_insights_for_lookalike(audience_lookalike.source_uuid) or {}
+    #
+    #     sig = audience_lookalike.significant_fields or {}
+    #     if not sig:
+    #         logger.warning("No significant_fields found, nothing to score.")
+    #         return []
+    #
+    #     importance_pct: dict[str, int] = {}
+    #     for f, v in sig.items():
+    #         try:
+    #             if isinstance(v, (float, int)) and float(v) <= 1.0:
+    #                 pct = int(round(float(v) * 100))
+    #             else:
+    #                 pct = int(round(float(v)))
+    #         except Exception:
+    #             pct = 0
+    #         importance_pct[f] = max(0, pct)
+    #
+    #     # remove zero-importance fields (no influence)
+    #     importance_pct = {k: v for k, v in importance_pct.items() if v > 0}
+    #     if not importance_pct:
+    #         logger.warning("All significant fields have zero importance after conversion.")
+    #         return []
+    #
+    #     logger.info(f"Field importance percents: {importance_pct}")
+    #
+    #     # field_dist_map[field] = { value_lower: int_percent, ..., "other": int_percent_if_exists }
+    #     field_dist_map: dict[str, dict[str, int]] = {}
+    #
+    #     # distribution has structure { "b2c": { "personal_info": {...}, ... }, "b2b": { ... } }
+    #     for section_key in ("b2c", "b2b"):
+    #         section = distribution.get(section_key, {}) or {}
+    #         for group_name, group in section.items():
+    #             # group is dict of fields -> {value: percent}
+    #             if not isinstance(group, dict):
+    #                 continue
+    #             for field_name, field_values in group.items():
+    #                 if not isinstance(field_values, dict):
+    #                     continue
+    #                 # ensure map exists
+    #                 fd = field_dist_map.setdefault(field_name, {})
+    #                 for val_k, val_v in field_values.items():
+    #                     try:
+    #                         pct_int = int(round(float(val_v)))
+    #                     except Exception:
+    #                         continue
+    #                     fd[val_k.strip().lower()] = pct_int
+    #                 # keep any explicit "other" if exists (lowercased)
+    #                 if "other" in fd and fd["other"] is not None:
+    #                     # already set
+    #                     pass
+    #
+    #     logger.debug(f"Built field distribution map for {len(field_dist_map)} fields")
+    #
+    #     # --- Получаем пользователей из ClickHouse (по колонкам significant_fields) ---
+    #     rows_stream, column_names = self.get_enrichment_users(list(importance_pct.keys()))
+    #     all_users = []
+    #     with rows_stream:
+    #         for block in rows_stream:
+    #             for row in block:
+    #                 all_users.append(dict(zip(column_names, row)))
+    #
+    #     logger.info(f"Loaded {len(all_users)} candidate users for simple scoring")
+    #
+    #     results_for_csv = []
+    #     scores: list[dict] = []
+    #     for user in all_users:
+    #         total_score = 0
+    #         field_details = {}
+    #
+    #         for field, imp_pct in importance_pct.items():
+    #             raw_value = None
+    #             if field in user:
+    #                 raw_value = user.get(field)
+    #             else:
+    #                 if field.endswith("_name") and field[:-5] in user:
+    #                     raw_value = user.get(field[:-5])
+    #                 elif field + "_name" in user:
+    #                     raw_value = user.get(field + "_name")
+    #                 else:
+    #                     raw_value = user.get(field)
+    #
+    #             if raw_value is None:
+    #                 value_pct = 0
+    #                 value_str = ""
+    #             else:
+    #                 value_str = str(raw_value).strip().lower()
+    #                 fd = field_dist_map.get(field, {})
+    #                 value_pct = fd.get(value_str)
+    #                 if value_pct is None:
+    #                     simple = value_str.split(",")[0].split("/")[0].split("-")[0].strip()
+    #                     value_pct = fd.get(simple)
+    #                 if value_pct is None:
+    #                     value_pct = fd.get("other", 0)
+    #
+    #             contribution = imp_pct * int(value_pct)
+    #             total_score += contribution
+    #
+    #             field_details[field] = {
+    #                 "value": value_str,
+    #                 "value_pct": value_pct,
+    #                 "importance_pct": imp_pct,
+    #                 "contribution": contribution,
+    #             }
+    #
+    #         scores.append({"asid": user["asid"], "score": int(total_score)})
+    #
+    #         results_for_csv.append({
+    #             "asid": user["asid"],
+    #             **{f"{f}_value": d["value"] for f, d in field_details.items()},
+    #             **{f"{f}_valpct": d["value_pct"] for f, d in field_details.items()},
+    #             **{f"{f}_imp": d["importance_pct"] for f, d in field_details.items()},
+    #             **{f"{f}_contrib": d["contribution"] for f, d in field_details.items()},
+    #             "total_score": total_score,
+    #         })
+    #
+    #     scores.sort(key=lambda x: x["score"], reverse=True)
+    #     top_scores = scores[:audience_lookalike.size]
+    #
+    #     # --- Save results (bulk insert expects objects with 'asid' and 'score') ---
+    #     try:
+    #         self.enrichment_scores.bulk_insert(
+    #             lookalike_id=audience_lookalike.id, scores=top_scores
+    #         )
+    #     except Exception as e:
+    #         logger.exception("Failed to bulk_insert simple scores: %s", e)
+    #         raise
+    #
+    #     output_path = f"/tmp/simple_lookalike_{audience_lookalike.id}.csv"
+    #     try:
+    #         os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    #         fieldnames = list(results_for_csv[0].keys()) if results_for_csv else ["asid", "total_score"]
+    #         with open(output_path, "w", newline="") as csvfile:
+    #             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    #             writer.writeheader()
+    #             writer.writerows(results_for_csv)
+    #         logger.info(f"Simple lookalike CSV saved to {output_path} ({len(results_for_csv)} rows)")
+    #     except Exception as e:
+    #         logger.exception("Failed to save CSV for simple lookalike: %s", e)
+    #
+    #     asids = [s["asid"] for s in top_scores]
+    #     logger.info(f"Simple lookalike done: {len(asids)} users scored")
+    #     return self.enrichment_users.fetch_enrichment_user_ids(asids)
+
     def calculate_and_store_scores(
         self,
         model,
         lookalike_id: UUID,
     ):
         """
-        Exception list is not exhaustive 
-        
+        Exception list is not exhaustive
+
         Raises `LookalikeNotFound`
         """
         lookalike = self.lookalikes.get_lookalike_unsafe(lookalike_id)
@@ -260,7 +726,6 @@ class LookalikeFillerServiceBase:
         top_scores: list[PersonScore] = []
 
         config = self.audiences_scores.prepare_config(lookalike_id)
-        
 
         buckets = self.get_buckets(THREAD_COUNT)
 
@@ -328,7 +793,6 @@ class LookalikeFillerServiceBase:
         batch_buffer = []
 
         top_scores: list[PersonScore] = []
-
 
         _ = db.execute(
             update(AudienceLookalikes)
