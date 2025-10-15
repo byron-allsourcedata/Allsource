@@ -85,7 +85,7 @@ export const SettingsSubscription: React.FC = () => {
 			setIsLoading(true);
 
 			const response = await axiosInstance.get(
-				"/subscriptions/basic-plan-upgrade",
+				"/subscriptions/standard-plan-upgrade",
 			);
 
 			if (response.status === 200) {
@@ -110,7 +110,11 @@ export const SettingsSubscription: React.FC = () => {
 				"@media (max-width: 600px)": { pr: "16px" },
 			}}
 		>
-			<PricingTable plans={plans} handleOpenPopup={handleOpenPopup} />
+			<PricingTable
+				plans={plans}
+				handleOpenPopup={handleOpenPopup}
+				handleInstantUpgrade={handleInstantUpgrade}
+			/>
 
 			{sourcePlatform !== "shopify" && (
 				<Button

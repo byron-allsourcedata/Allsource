@@ -63,11 +63,13 @@ export type PlanNew = {
 interface PricingTableProps {
 	plans?: FrontendPlan[];
 	handleOpenPopup: () => void;
+	handleInstantUpgrade: () => void;
 }
 
 export const PricingTable: React.FC<PricingTableProps> = ({
 	plans = [],
 	handleOpenPopup,
+	handleInstantUpgrade,
 }) => {
 	const [billing, setBilling] = useState<number>(0);
 	const [selectedPlan, setSelectedPlan] = useState(0);
@@ -337,7 +339,13 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											</Box>
 											<CustomButton
 												variant="contained"
-												onClick={handleOpenPopup}
+												onClick={() => {
+													if (p.key === "standard") {
+														handleInstantUpgrade();
+													} else {
+														handleOpenPopup();
+													}
+												}}
 												sx={{
 													textWrap: "nowrap",
 												}}
