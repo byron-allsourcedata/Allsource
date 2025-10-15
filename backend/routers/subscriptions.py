@@ -235,6 +235,7 @@ async def checkout_completed(
         metadata = event_session.get("metadata", {})
 
         checkout_type = metadata.get("type")
+        print("checkout type", checkout_type)
 
         if checkout_type == "upgrade_basic":
             subscription_webhooks.move_to_basic_plan(customer_id)
