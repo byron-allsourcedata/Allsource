@@ -16,33 +16,6 @@ import { useRouter } from "next/navigation";
 import { type FrontendPlan } from "../plans";
 
 const subscriptionStyles = {
-	title: {
-		whiteSpace: "nowrap",
-		textAlign: "start",
-		lineHeight: "22px",
-		margin: 0,
-	},
-	formContainer: {
-		display: "flex",
-		gap: 3,
-		justifyContent: "space-between",
-		width: "100%",
-		height: "610px",
-		alignItems: "center",
-		"@media (max-width: 900px)": {
-			flexDirection: "column",
-			marginTop: "24px",
-		},
-	},
-	formWrapper: {
-		display: "flex",
-		pt: 1,
-		height: "100%",
-		justifyContent: "center",
-		"@media (min-width: 901px)": {
-			width: "100%",
-		},
-	},
 	plantabHeading: {
 		padding: "10px 32px",
 		color: "rgba(32, 33, 36, 1)",
@@ -72,17 +45,6 @@ const subscriptionStyles = {
 		borderRadius: "4px",
 		fontSize: "14px !important",
 		color: "#202124 !important",
-	},
-	inputLabel: {
-		top: "-3px",
-		"&.Mui-focused": {
-			top: 0,
-			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "var(--font-nunito)",
-			fontWeight: 400,
-			fontSize: "12px",
-			lineHeight: "16px",
-		},
 	},
 };
 
@@ -114,8 +76,6 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 	const handleBillingChange = (event: React.SyntheticEvent, value: number) => {
 		setBilling(value);
 	};
-
-	// данные тарифов — подгоняй цифры если нужно
 
 	// левые строки таблицы
 	const rows = [
@@ -225,9 +185,12 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 							{/* Левый столбец имен строк — тот же визуал как в таблице */}
 							<Box
 								sx={{
-									borderRadius: 0,
 									borderTopLeftRadius: "12px",
 									borderBottomLeftRadius: "12px",
+									borderTopRightRadius:
+										Array.isArray(plans) && !!plans[0]?.highlight ? "12px" : 0,
+									borderBottomRightRadius:
+										Array.isArray(plans) && !!plans[0]?.highlight ? "12px" : 0,
 									p: 2.5,
 									background: "rgba(232, 241, 252, 1)",
 									height: "100%",
@@ -238,7 +201,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 										<Typography
 											sx={{
 												color: "#111827",
-												fontSize: idx === 0 ? 16 : 14,
+												fontSize: 14,
 												fontFamily: "var(--font-nunito)",
 												py: 2,
 												borderBottom:
@@ -261,7 +224,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 						<Box
 							sx={{
 								display: "grid",
-								gridTemplateColumns: "repeat(3, 1fr)",
+								gridTemplateColumns: `repeat(${plans.length}, 1fr)`,
 								alignItems: "start",
 								overflow: "visible",
 								position: "relative",
@@ -287,6 +250,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											zIndex: isCenter ? 4 : 1,
 											// чтобы выделенный блок визуально выступал за нижнюю границу общего контейнера
 											mb: isCenter ? "-22px" : 0,
+											ml: isCenter && idx === 0 ? "16px" : 0,
 											border: isCenter ? "2px solid #3898FC" : "none",
 											borderRadius: 0,
 											borderTopLeftRadius: isCenter ? "12px" : 0,
@@ -361,7 +325,13 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 													</Typography>
 												</Box>
 
-												<Typography sx={{ fontSize: 12, color: "#6b7280" }}>
+												<Typography
+													sx={{
+														fontSize: 12,
+														color: "#6b7280",
+														textAlign: "center",
+													}}
+												>
 													{p.note}
 												</Typography>
 											</Box>
@@ -388,22 +358,24 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 										<Box
 											sx={{
 												background: "rgba(232, 241, 252, 1)",
-												py: isCenter ? 0 : 2.125,
-												pl: idx === 0 ? 2 : 0,
+												pt: isCenter ? 0 : "17px",
+												pb: isCenter ? 0 : "14px",
+												pl: idx === 0 && !isCenter ? 2 : 0,
 												pr: idx === plans.length - 1 ? 2 : 0,
-												borderRadius: 3,
+												borderTopRightRadius:
+													plans.length - 1 === idx ? "12px" : 0,
 												borderTopLeftRadius: 0,
 												borderBottomLeftRadius: isCenter ? "12px" : 0,
 												borderBottomRightRadius:
 													isCenter || plans.length - 1 === idx ? "12px" : 3,
-												mt: idx === 0 ? "5px" : 0,
-												mr: idx === 0 ? "-6px" : 0,
+												mt: idx === 0 ? "4.7px" : 0,
 											}}
 										>
 											<Box
 												sx={{
 													// если center — рисуем рамку/фон вокруг всей колонки (включая мини-план визуально)
-													borderTopLeftRadius: idx === 0 ? "12px" : 0,
+													borderTopLeftRadius:
+														idx === 0 && !isCenter ? "12px" : 0,
 													borderTopRightRadius:
 														plans.length - 1 === idx ? "12px" : 0,
 													borderBottomLeftRadius:
@@ -505,7 +477,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 									</Typography>
 									<Typography
 										sx={{
-											fontSize: 28,
+											fontSize: 20,
 											fontWeight: 700,
 											color: "#111827",
 											mt: 1,
@@ -518,8 +490,8 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 										sx={{
 											fontSize: 12,
 											color: "#6b7280",
-											mb: 2,
 											fontFamily: "var(--font-nunito)",
+											textAlign: "center",
 										}}
 									>
 										Per Month
@@ -567,8 +539,9 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 										background: "rgba(255, 255, 255, 0.8)",
 										px: 3,
 										py: 1.5,
-										fontSize: 14,
-										fontWeight: 500,
+										fontSize: 12,
+										fontWeight: 600,
+										fontFamily: "var(--font-nunito)",
 										color: "#111827",
 										overflow: "hidden",
 									}}
@@ -768,9 +741,7 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 								fontFamily: "var(--font-nunito)",
 							}}
 						>
-							{billing === 1 && plans[selectedPlan]?.yearly
-								? plans[selectedPlan]?.yearly
-								: plans[selectedPlan]?.monthly}
+							{plans[selectedPlan].title}
 						</Typography>
 
 						<Box
@@ -809,14 +780,14 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 							variant="contained"
 							onClick={handleOpenPopup}
 							disabled={
-								(billing === 0 && plans[selectedPlan].is_active_month) ||
-								(billing === 1 && plans[selectedPlan].is_active_year)
+								(billing === 0 && plans[selectedPlan]?.is_active_month) ||
+								(billing === 1 && plans[selectedPlan]?.is_active_year)
 							}
 						>
-							{(billing === 0 && plans[selectedPlan].is_active_month) ||
-							(billing === 1 && plans[selectedPlan].is_active_year)
+							{(billing === 0 && plans[selectedPlan]?.is_active_month) ||
+							(billing === 1 && plans[selectedPlan]?.is_active_year)
 								? "Current Plan"
-								: plans[selectedPlan].cta}
+								: plans[selectedPlan]?.cta}
 						</CustomButton>
 					</Paper>
 
@@ -1166,49 +1137,6 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 						mb: { xs: 3, md: 4 },
 					}}
 				>
-					{/* <CustomToggle
-                    key={"monthly"}
-                    value={"monthly"}
-                    isActive={billing === "monthly"}
-                    onClick={() => handleBillingChange("monthly")}
-                    name={"Monthly"}
-                    sx={{
-                        background: billing === "monthly" ?  "rgba(56, 152, 252, 1)" : "rgba(255, 255, 255, 1)",
-                    }}
-                />
-
-                <CustomToggle
-                    key={"yearly"}
-                    value={"yearly"}
-                    isActive={billing === "yearly"}
-                    onClick={() => handleBillingChange("yearly")}
-                >
-                    Yearly
-                    <Box
-                        sx={{
-                        ml: { xs: 0, md: 1 },
-                        px: "8px",
-                        py: "4px",
-                        borderRadius: "4px",
-                        background:"rgba(235, 245, 255, 1)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        }}
-                    >
-                        <Typography
-                        sx={{
-                            fontSize: 14,
-                            color: "#0f1724",
-                            fontWeight: 400,
-                            px: { xs: 0.5, md: 1 },
-                        }}
-                        >
-                        Save 33%
-                        </Typography>
-                    </Box>
-                </CustomToggle> */}
-
 					<Box
 						sx={{
 							display: "flex",
