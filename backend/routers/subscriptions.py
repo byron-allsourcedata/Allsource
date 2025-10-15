@@ -235,7 +235,7 @@ async def checkout_completed(
         metadata = event_session.get("metadata", {})
 
         checkout_type = metadata.get("type")
-        print("checkout type", checkout_type)
+        plan_period = metadata.get("plan_period")
 
         if checkout_type == "upgrade_basic":
             subscription_webhooks.move_to_basic_plan(customer_id)
@@ -243,7 +243,7 @@ async def checkout_completed(
             return "SUCCESS"
         elif checkout_type == "upgrade_standard":
             subscription_webhooks.move_to_standard_plan(
-                customer_id, subscription_id
+                customer_id, subscription_id, plan_period
             )
             db.commit()
             return "SUCCESS"
