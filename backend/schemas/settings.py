@@ -131,26 +131,21 @@ class Price(BaseModel):
 
 
 class Plan(BaseModel):
+    key: str
     title: str
-    alias: str
-    is_recommended: bool | None = False
-    is_active: bool | None = False
-    price: Price
-    permanent_limits: list[Advantage] | None = None
-    referrals: list[Advantage] | None = None
-    monthly_limits: list[Advantage] | None = None
-    gifted_funds: list[Advantage] | None = None
-    gifts: list[Advantage] | None = None
+    monthly: str
+    yearly: str
+    note: Optional[str] = None
+    cta: str
+    href: str
+    highlight: Optional[bool] = False
+    features: list[str]
+    is_active_year: bool = False
+    is_active_month: bool = False
 
 
 class SubscriptionPlans(BaseModel):
-    monthly: list[Plan]
-    yearly: list[Plan]
-
-
-class PlansResponse(BaseModel):
-    normal_plans: SubscriptionPlans
-    partner_plans: SubscriptionPlans
+    plans: list[Plan]
 
 
 class BuyFundsRequest(BaseModel):
