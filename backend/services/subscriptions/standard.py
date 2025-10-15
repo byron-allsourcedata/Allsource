@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 import logging
 
 from persistence.plans_persistence import PlansPersistence
@@ -28,8 +29,14 @@ class StandardPlanService:
         self.user_subscriptions = user_subscriptions
         self.user_persistence = user_persistence
 
-    def get_standard_plan_payment_url(self, customer_id: str) -> str:
-        alias = "standard"
+    def get_standard_plan_payment_url(
+        self, customer_id: str, interval: Literal["month", "year"]
+    ) -> str:
+        if interval == "month":
+            alias = "standard_monthly"
+        else:
+            alias = "standard_yearly"
+
         plan = self.plans.get_plan_by_alias(alias)
 
         if not plan:
@@ -41,13 +48,15 @@ class StandardPlanService:
             customer_id=customer_id,
             price_id=price_id,
             mode="subscription",
-            metadata={"type": "upgrade_standard"},
+            metadata={"type": "upgrade_standard", "plan_period": interval},
             success_url=StripeConfig.success_url,
         )
 
         return session_url
 
-    def move_to_standard_plan(self, customer_id: str, subscription_id: str):
+    def move_to_standard_plan(
+        self, customer_id: str, subscription_id: str, plan_period: str
+    ):
         user = self.users.by_customer_id(customer_id)
         if not user:
             logger.error(f"User not found with customer_id: {customer_id}")
@@ -66,10 +75,19 @@ class StandardPlanService:
         data = stripe_info["data"]
         plan_start = data["plan_start"]
         plan_end = data["plan_end"]
+        if plan_period == "month":
+            plan_alias = "standard_monthly"
+        elif plan_period == "year":
+            plan_alias = "standard_yearly"
+        else:
+            logger.error(
+                f"Unknown plan_period '{plan_period}', fallback to 'standard_monthly'"
+            )
+            plan_alias = "standard_monthly"
 
         self.user_subscriptions.add_subscription_with_dates(
             user_id=user_id,
-            plan_alias="standard",
+            plan_alias=plan_alias,
             plan_start=plan_start,
             plan_end=plan_end,
         )
