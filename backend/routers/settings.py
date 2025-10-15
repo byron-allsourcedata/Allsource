@@ -24,7 +24,7 @@ from schemas.settings import (
     SendBilling,
     PaymentCard,
     ApiKeysRequest,
-    PlansResponse,
+    SubscriptionPlans,
 )
 from schemas.users import VerifyTokenResponse
 from schemas.settings import BuyFundsRequest, BuyCreditsRequest
@@ -352,7 +352,7 @@ def buy_funds(
 
 @router.get(
     "/plans",
-    response_model=PlansResponse,
+    response_model=SubscriptionPlans,
     summary="Get list of subscription plans",
     tags=["Plans"],
 )
