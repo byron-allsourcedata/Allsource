@@ -183,12 +183,6 @@ const Settings: React.FC = () => {
 							userHasSubscription={userHasSubscription}
 							{...tabProps}
 						/>
-						{/* <SettingTab
-							tabName="subscription1"
-							label="Subscription1"
-							userHasSubscription={userHasSubscription}
-							{...tabProps}
-						/> */}
 						<SettingTab
 							tabName="subscription"
 							label="Subscription"
