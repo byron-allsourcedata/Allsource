@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 import logging
 
 from persistence.plans_persistence import PlansPersistence
@@ -28,8 +29,14 @@ class StandardPlanService:
         self.user_subscriptions = user_subscriptions
         self.user_persistence = user_persistence
 
-    def get_standard_plan_payment_url(self, customer_id: str) -> str:
-        alias = "standard"
+    def get_standard_plan_payment_url(
+        self, customer_id: str, interval: Literal["month", "year"]
+    ) -> str:
+        if interval == "month":
+            alias = "standard_monthly"
+        else:
+            alias = "standard_yearly"
+
         plan = self.plans.get_plan_by_alias(alias)
 
         if not plan:

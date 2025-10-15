@@ -63,7 +63,7 @@ export type PlanNew = {
 interface PricingTableProps {
 	plans?: FrontendPlan[];
 	handleOpenPopup: () => void;
-	handleInstantUpgrade: () => void;
+	handleInstantUpgrade: (interval: string) => void;
 }
 
 export const PricingTable: React.FC<PricingTableProps> = ({
@@ -341,7 +341,8 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 												variant="contained"
 												onClick={() => {
 													if (p.key === "standard") {
-														handleInstantUpgrade();
+														const interval = billing === 0 ? "month" : "year";
+														handleInstantUpgrade(interval);
 													} else {
 														handleOpenPopup();
 													}
@@ -367,7 +368,12 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											sx={{
 												background: "rgba(232, 241, 252, 1)",
 												pt: isCenter ? 0 : "17px",
-												pb: isCenter ? 0 : "14px",
+												pb:
+													idx === plans.length - 1
+														? "16.5px"
+														: isCenter
+															? 0
+															: "14px",
 												pl: idx === 0 && !isCenter ? 2 : 0,
 												pr: idx === plans.length - 1 ? 2 : 0,
 												borderTopRightRadius:

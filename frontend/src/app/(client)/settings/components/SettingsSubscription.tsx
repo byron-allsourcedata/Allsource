@@ -80,12 +80,12 @@ export const SettingsSubscription: React.FC = () => {
 		fetchData();
 	}, []);
 
-	const handleInstantUpgrade = async () => {
+	const handleInstantUpgrade = async (interval: string) => {
 		try {
 			setIsLoading(true);
 
 			const response = await axiosInstance.get(
-				"/subscriptions/standard-plan-upgrade",
+				`/subscriptions/standard-plan-upgrade?interval=${interval}`,
 			);
 
 			if (response.status === 200) {
