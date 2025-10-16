@@ -33,6 +33,7 @@ class AudienceInsightsService:
         response = self._build_response(
             raw_data.get("insights", {}), is_debug=False
         )
+        response.pop("is_debug", None)
         return response
 
     def get_lookalike_insights(
