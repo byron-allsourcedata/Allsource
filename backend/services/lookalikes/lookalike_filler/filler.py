@@ -1,11 +1,8 @@
 import logging
 import statistics
-import time
-from typing import TypedDict
+from typing import Tuple, List, Dict, Any, TypedDict
 from typing_extensions import deprecated
-
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
-
 from uuid import UUID
 from clickhouse_connect.driver.common import StreamContext
 from catboost import CatBoostRegressor
@@ -16,7 +13,6 @@ from db_dependencies import Clickhouse, Db, ClickhouseInserter, get_db
 from resolver import injectable
 
 from config.clickhouse import ClickhouseConfig
-from config.util import get_int_env
 
 from models import AudienceLookalikes
 
@@ -29,7 +25,15 @@ from persistence.enrichment_lookalike_scores import (
 )
 from persistence.enrichment_users import EnrichmentUsersPersistence
 from schemas.similar_audiences import NormalizationConfig
-from services.lookalikes.lookalike_filler.rabbitmq import RabbitLookalikesMatchingService
+from services.audience_insights import AudienceInsightsService
+from services.lookalikes.lookalike_filler.rabbitmq import (
+    RabbitLookalikesMatchingService,
+)
+from services.lookalikes.lookalike_filler.value_calculators import (
+    SimpleStatsValueCalculator,
+    MLValueCalculator,
+    ValueCalculator,
+)
 from services.lookalikes.lookalike_filler.worker import filler_worker
 from services.lookalikes import AudienceLookalikesService
 from services.similar_audiences.similar_audiences import SimilarAudienceService
@@ -72,6 +76,7 @@ class LookalikeFillerServiceBase:
         audience_lookalikes: AudienceLookalikesPersistence,
         matched_sources: AudienceSourcesMatchedPersonsPersistence,
         rabbit: RabbitLookalikesMatchingService,
+        insights_service: AudienceInsightsService,
     ):
         self.db = db
         self.clickhouse = clickhouse
@@ -86,6 +91,7 @@ class LookalikeFillerServiceBase:
         self.audience_lookalikes = audience_lookalikes
         self.matched_sources = matched_sources
         self.rabbit = rabbit
+        self.insights_service = insights_service
 
     def get_buckets(self, num_workers: int):
         buckets_per_worker = 100 // num_workers
@@ -175,6 +181,10 @@ class LookalikeFillerServiceBase:
 
         Use that trained model on each user in IDGraph and save users with top scores
         """
+        logger.info(
+            f"Processing lookalike {audience_lookalike.id} with type={audience_lookalike.scoring_type}"
+        )
+
         sig = audience_lookalike.significant_fields or {}
         config = self.audiences_scores.get_config(sig)
         profiles = self.profile_fetcher.fetch_profiles_from_lookalike(
@@ -183,17 +193,17 @@ class LookalikeFillerServiceBase:
 
         logger.info(f"fetched profiles: {len(profiles)}")
 
-        model = self.train_and_save_model(
-            lookalike_id=audience_lookalike.id,
+        # build value calculator (ML or simple)
+        calculator = self.build_value_calculator(
+            lookalike=audience_lookalike,
             user_profiles=profiles,
             config=config,
         )
 
-        logger.info(f"is fitted: {model.is_fitted()}")
-        logger.info(str(model))
+        logger.info(f"is_ml: {calculator.is_ml()} -> {type(calculator)}")
 
         self.calculate_and_store_scores(
-            model=model,
+            calculator=calculator,
             lookalike_id=audience_lookalike.id,
         )
 
@@ -203,33 +213,60 @@ class LookalikeFillerServiceBase:
 
         return user_ids
 
-    def train_and_save_model(
+    def build_value_calculator(
         self,
-        lookalike_id: UUID,
+        lookalike: AudienceLookalikes,
         user_profiles: list[dict[str, str]],
         config: NormalizationConfig,
-    ) -> CatBoostRegressor:
-        dict_enrichment = [
-            {k: str(v) if v is not None else "None" for k, v in profile.items()}
-            for profile in user_profiles
-        ]
-        trained = self.similar_audience_service.get_trained_model(
-            dict_enrichment, config
-        )
-        model = trained[0] if isinstance(trained, (tuple, list)) else trained
-        self.audiences_scores.save_enrichment_model(
-            lookalike_id=lookalike_id, model=model
-        )
-        return model
+    ) -> "ValueCalculator":
+        """
+        if scoring_type == "ml" — train model and return MLValueCalculator.
+        if scoring_type == "simple" — get distribution(insights) and return SimpleStatsValueCalculator.
+        """
+        gen_type = getattr(lookalike, "scoring_type", "ml")
+        if gen_type == "simple_all" or gen_type == "simple_any":
+            distribution = (
+                self.insights_service.get_source_insights_for_lookalike(
+                    lookalike.source_uuid
+                )
+                or {}
+            )
+            feature_weights = getattr(config, "feature_importance", None) or {}
+            calc = SimpleStatsValueCalculator(
+                distribution=distribution,
+                feature_weights=feature_weights,
+                significant_fields=lookalike.significant_fields,
+            )
+            return calc
+        else:
+            dict_enrichment = [
+                {
+                    k: str(v) if v is not None else "None"
+                    for k, v in profile.items()
+                }
+                for profile in user_profiles
+            ]
+            trained = self.similar_audience_service.get_trained_model(
+                dict_enrichment, config
+            )
+            model_obj = (
+                trained[0] if isinstance(trained, (tuple, list)) else trained
+            )
+            ml_calc = MLValueCalculator(model_obj)
+            self.audiences_scores.save_enrichment_model(
+                lookalike_id=lookalike.id,
+                model=ml_calc.model,
+            )
+            return ml_calc
 
     def calculate_and_store_scores(
         self,
-        model,
+        calculator: "ValueCalculator",
         lookalike_id: UUID,
     ):
         """
-        Exception list is not exhaustive 
-        
+        Exception list is not exhaustive
+
         Raises `LookalikeNotFound`
         """
         lookalike = self.lookalikes.get_lookalike_unsafe(lookalike_id)
@@ -260,7 +297,6 @@ class LookalikeFillerServiceBase:
         top_scores: list[PersonScore] = []
 
         config = self.audiences_scores.prepare_config(lookalike_id)
-        
 
         buckets = self.get_buckets(THREAD_COUNT)
 
@@ -276,7 +312,7 @@ class LookalikeFillerServiceBase:
                     lookalike_id=lookalike_id,
                     bucket=bucket,
                     top_n=top_n,
-                    model=model,
+                    calculator=calculator,
                     limit=limit,
                 )
 
@@ -304,108 +340,6 @@ class LookalikeFillerServiceBase:
             lookalike_id=lookalike_id, scores=top_scores
         )
         self.db_workaround(lookalike_id=lookalike_id)
-
-    def filler_worker(
-        self,
-        significant_fields: dict[str, str],
-        config: NormalizationConfig,
-        value_by_asid: dict[UUID, float],
-        lookalike_id: UUID,
-        bucket: list[int],
-        top_n: int,
-        model: CatBoostRegressor,
-        limit: int | None = None,
-    ) -> list[PersonScore]:
-        db = next(get_db())
-        BULK_SIZE: int = get_int_env("LOOKALIKE_BULK_SIZE")
-
-        rows_stream, column_names = self.get_enrichment_users_partition(
-            significant_fields=significant_fields,
-            bucket=bucket,
-            limit=limit,
-        )
-
-        batch_buffer = []
-
-        top_scores: list[PersonScore] = []
-
-
-        _ = db.execute(
-            update(AudienceLookalikes)
-            .where(AudienceLookalikes.id == lookalike_id)
-            .values(processed_train_model_size=0)
-        )
-        db.commit()
-
-        fetch_start = time.perf_counter()
-
-        with rows_stream:
-            for batch in rows_stream:
-                dict_batch = [
-                    {
-                        **dict(zip(column_names, row)),
-                        "customer_value": value_by_asid.get(
-                            row[column_names.index("asid")], 0.0
-                        ),
-                    }
-                    for row in batch
-                ]
-
-                batch_buffer.extend(dict_batch)
-
-                if len(batch_buffer) < BULK_SIZE:
-                    continue
-
-                fetch_end = time.perf_counter()
-                logger.info(f"fetch time: {fetch_end - fetch_start:.3f}")
-
-                prepare_asids_start = time.perf_counter()
-                asids: list[UUID] = [doc["asid"] for doc in batch_buffer]
-                prepare_asids_end = time.perf_counter()
-
-                logger.info(
-                    f"prepare asids time: {prepare_asids_end - prepare_asids_start:.3f}"
-                )
-
-                times, scores = self.audiences_scores.calculate_batch_scores_v3(
-                    asids,
-                    batch_buffer,
-                    model,
-                    config,
-                    lookalike_id,
-                )
-
-                logger.info(f"batch calculation time: {times:.3f}")
-
-                update_query = (
-                    update(AudienceLookalikes)
-                    .where(AudienceLookalikes.id == lookalike_id)
-                    .values(
-                        processed_train_model_size=AudienceLookalikes.processed_train_model_size
-                        + len(scores),
-                        processed_size=AudienceLookalikes.processed_size
-                        + len(scores),
-                    )
-                    .returning(AudienceLookalikes.processed_train_model_size)
-                )
-
-                processed = db.execute(update_query).scalar()
-                db.commit()
-
-                logger.info(f"processed: {processed}")
-
-                top_scores = self.audiences_scores.top_scores(
-                    old_scores=top_scores,
-                    new_scores=scores,
-                    top_n=top_n,
-                )
-
-                logging.info(f"sorted scores")
-
-                batch_buffer = []
-                fetch_start = time.perf_counter()
-
-        return top_scores
 
     @deprecated("workaround")
     def db_workaround(self, lookalike_id: UUID):

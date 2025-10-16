@@ -98,6 +98,7 @@ async def create_lookalike(
         lookalike_size=payload.lookalike_size,
         lookalike_name=payload.lookalike_name,
         created_by_user_id=user_id,
+        scoring_type=payload.scoring_type,
         audience_feature_importance=payload.audience_feature_importance,
     )
     if result["status"] == "SUCCESS":

@@ -2,8 +2,10 @@ from uuid import UUID
 
 from persistence.audience_insights import AudienceInsightsPersistence
 from schemas.insights import AudienceInsightData
+from resolver import injectable
 
 
+@injectable
 class AudienceInsightsService:
     def __init__(
         self, insights_persistence_service: AudienceInsightsPersistence
@@ -20,6 +22,18 @@ class AudienceInsightsService:
         response["name"] = raw_data.get("name", "")
         response["audience_type"] = raw_data.get("audience_type", "")
         response["significant_fields"] = raw_data.get("significant_fields", "")
+        return response
+
+    def get_source_insights_for_lookalike(self, source_uuid: UUID) -> dict:
+        raw_data = (
+            self.insights_persistence_service.get_source_insights_for_lookalike(
+                source_uuid
+            )
+        )
+        response = self._build_response(
+            raw_data.get("insights", {}), is_debug=False
+        )
+        response.pop("is_debug", None)
         return response
 
     def get_lookalike_insights(

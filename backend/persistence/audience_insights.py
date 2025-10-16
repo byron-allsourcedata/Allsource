@@ -7,13 +7,13 @@ import json
 import gzip
 from pydantic.v1 import UUID4
 
+from db_dependencies import Db
 from enums import LookalikeSize
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
-from sqlalchemy.orm import Session
 from typing import Optional, List
 import math
 from sqlalchemy import asc, desc, or_, func
@@ -24,13 +24,15 @@ from models.enrichment.enrichment_lookalike_scores import (
     EnrichmentLookalikeScore,
 )
 from uuid import UUID
+from resolver import injectable
 
 from models.users import Users
 from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
 
 
+@injectable
 class AudienceInsightsPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_source_insights_info(
@@ -65,6 +67,32 @@ class AudienceInsightsPersistence:
                 "significant_fields": source.significant_fields,
             }
 
+        return {
+            "insights": {},
+            "name": "",
+            "audience_type": "",
+            "significant_fields": {},
+        }
+
+    def get_source_insights_for_lookalike(self, uuid_of_source: UUID) -> dict:
+        source = (
+            self.db.query(
+                AudienceSource.insights,
+                AudienceSource.name,
+                AudienceSource.target_schema,
+                AudienceSource.significant_fields,
+            )
+            .filter(AudienceSource.id == uuid_of_source)
+            .first()
+        )
+
+        if source and source.insights:
+            return {
+                "insights": source.insights,
+                "name": source.name,
+                "audience_type": source.target_schema,
+                "significant_fields": source.significant_fields,
+            }
         return {
             "insights": {},
             "name": "",
