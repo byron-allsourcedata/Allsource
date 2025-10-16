@@ -1,6 +1,7 @@
 """
 This file is a workaround for python's atrocius multithreading support and issues that pickling causes
 """
+
 import logging
 import time
 from typing import Any, cast
@@ -16,6 +17,11 @@ from config.lookalikes import LookalikesConfig
 from db_dependencies import get_db
 from models.audience_lookalikes import AudienceLookalikes
 from schemas.similar_audiences import NormalizationConfig
+from services.lookalikes.lookalike_filler.value_calculators import (
+    ValueCalculator,
+    MLValueCalculator,
+    SimpleStatsValueCalculator,
+)
 from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationServiceBase,
 )
@@ -30,38 +36,43 @@ from services.similar_audiences.similar_audience_scores import (
 logger = logging.getLogger(__name__)
 
 
-def calculate_score_batches(
-    model: CatBoostRegressor,
-    df: DataFrame,
-    config: NormalizationConfig,
-) -> list[float]:
-    normalization_service = AudienceDataNormalizationServiceBase()
-    df_normed, _ = normalization_service.normalize_dataframe(df, config)
-    result = model.predict(
-        df_normed, thread_count=LookalikesConfig.THREAD_COUNT
-    )
-    return result.tolist()
-
-
-def calculate_score_dict_batch(
-    model: CatBoostRegressor,
-    persons: list[dict[str, Any]],
-    config: NormalizationConfig,
-) -> list[float]:
-    df = DataFrame(persons)
-    return calculate_score_batches(model, df, config=config)
-
-
 def calculate_batch_scores_v3(
     asids: list[UUID],
     batch: list[dict[str, Any]],
-    model: CatBoostRegressor,
+    calculator: ValueCalculator | CatBoostRegressor,
     config: NormalizationConfig,
 ) -> tuple[float, list[PersonScore]]:
-    scores, duration = measure(
-        lambda _: calculate_score_dict_batch(model, batch, config)
-    )
+    """
+    Universal calculate batch'а:
+    - if calculator = MLValueCalculator / CatBoostRegressor → ML-predict
+    - if calculator = SimpleStatsValueCalculator → simple method
+    """
 
+    def _calc(_):
+        # ML вариант
+        if isinstance(calculator, (MLValueCalculator, CatBoostRegressor)):
+            df = DataFrame(batch)
+            normalization_service = AudienceDataNormalizationServiceBase()
+            df_normed, _ = normalization_service.normalize_dataframe(df, config)
+            if isinstance(calculator, MLValueCalculator):
+                model = calculator.model
+            else:
+                model = calculator
+            result = model.predict(
+                df_normed, thread_count=LookalikesConfig.THREAD_COUNT
+            )
+            return result.tolist()
+
+        # simple вариант
+        elif isinstance(calculator, SimpleStatsValueCalculator):
+            return calculator.calculate(batch)
+
+        else:
+            raise TypeError(
+                f"Unsupported calculator type: {type(calculator).__name__}"
+            )
+
+    scores, duration = measure(_calc)
     return duration, list(zip(asids, scores))
 
 
@@ -117,7 +128,7 @@ def filler_worker(
     lookalike_id: UUID,
     bucket: list[int],
     top_n: int,
-    model: CatBoostRegressor,
+    calculator: "ValueCalculator",
     limit: int | None = None,
 ) -> list[PersonScore]:
     db = next(get_db())
@@ -171,10 +182,10 @@ def filler_worker(
             )
 
             times, scores = calculate_batch_scores_v3(
-                asids,
-                batch_buffer,
-                model,
-                config,
+                asids=asids,
+                batch=batch_buffer,
+                calculator=calculator,
+                config=config,
             )
 
             logger.info(f"batch calculation time: {times:.3f}")
