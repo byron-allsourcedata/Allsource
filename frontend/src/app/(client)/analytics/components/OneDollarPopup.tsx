@@ -17,18 +17,21 @@ import CloseIcon from "@mui/icons-material/Close";
 import CustomButton from "@/components/ui/CustomButton";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { flagStore } from "@/services/oneDollar";
 
 const OneDollarPopup = () => {
 	const router = useRouter();
 	const [open, setOpen] = useState(true);
+	const pathname = usePathname();
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 
 	const handleClose = () => {
 		setOpen(false);
 		flagStore.set(false);
-		router.push("/get-started?pixel=true");
+		if (pathname === "/get-started") {
+			router.push("/get-started?pixel=true");
+		}
 	};
 
 	const redirectToCheckoutSession = async () => {
