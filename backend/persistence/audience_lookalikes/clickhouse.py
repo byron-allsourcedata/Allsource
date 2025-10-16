@@ -282,7 +282,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         lookalike_size,
         lookalike_name,
         created_by_user_id,
-        generation_type,
+        scoring_type,
         audience_feature_importance: AudienceFeatureImportance,
     ):
         return self.postgres.create_lookalike(
@@ -291,7 +291,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
             lookalike_size,
             lookalike_name,
             created_by_user_id,
-            generation_type,
+            scoring_type,
             audience_feature_importance,
         )
 

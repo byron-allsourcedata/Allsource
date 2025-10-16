@@ -16,14 +16,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import ENUM
-from enums import LookalikeStatus, LookalikeGenerationType
+from enums import LookalikeStatus, LookalikeScoringType
 from .base import Base
 
 lookalike_type = ENUM(
     "ml",
     "simple_all",
     "simple_any",
-    name="lookalike_generation_type",
+    name="lookalike_scoring_type",
     create_type=True,
 )
 
@@ -77,10 +77,10 @@ class AudienceLookalikes(Base):
     train_model_size: Mapped[int] = mapped_column(
         Integer, server_default="0", nullable=False
     )
-    generation_type: Mapped[LookalikeGenerationType] = mapped_column(
+    scoring_type: Mapped[LookalikeScoringType] = mapped_column(
         String(32),
         nullable=False,
-        server_default=LookalikeGenerationType.ML.value,
+        server_default=LookalikeScoringType.ML.value,
     )
 
     __table_args__ = (

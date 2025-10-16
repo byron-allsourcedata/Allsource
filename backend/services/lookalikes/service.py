@@ -265,7 +265,7 @@ class AudienceLookalikesService:
         lookalike_size,
         lookalike_name,
         created_by_user_id,
-        generation_type,
+        scoring_type,
         audience_feature_importance: Dict,
     ):
         lookalike = self.lookalikes_persistence_service.create_lookalike(
@@ -274,7 +274,7 @@ class AudienceLookalikesService:
             lookalike_size,
             lookalike_name,
             created_by_user_id,
-            generation_type,
+            scoring_type,
             audience_feature_importance=audience_feature_importance,
         )
         return {"status": BaseEnum.SUCCESS.value, "lookalike": lookalike}

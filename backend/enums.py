@@ -28,7 +28,7 @@ class LookalikeStatus(Enum):
     FAILED = "failed"
 
 
-class LookalikeGenerationType(Enum):
+class LookalikeScoringType(Enum):
     ML = "ml"
     SIMPLE_ALL = "simple_all"
     SIMPLE_ANY = "simple_any"

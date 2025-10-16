@@ -182,7 +182,7 @@ class LookalikeFillerServiceBase:
         Use that trained model on each user in IDGraph and save users with top scores
         """
         logger.info(
-            f"Processing lookalike {audience_lookalike.id} with type={audience_lookalike.generation_type}"
+            f"Processing lookalike {audience_lookalike.id} with type={audience_lookalike.scoring_type}"
         )
 
         sig = audience_lookalike.significant_fields or {}
@@ -220,10 +220,10 @@ class LookalikeFillerServiceBase:
         config: NormalizationConfig,
     ) -> "ValueCalculator":
         """
-        if generation_type == "ml" — train model and return MLValueCalculator.
-        if generation_type == "simple" — get distribution(insights) and return SimpleStatsValueCalculator.
+        if scoring_type == "ml" — train model and return MLValueCalculator.
+        if scoring_type == "simple" — get distribution(insights) and return SimpleStatsValueCalculator.
         """
-        gen_type = getattr(lookalike, "generation_type", "ml")
+        gen_type = getattr(lookalike, "scoring_type", "ml")
         if gen_type == "simple_all" or gen_type == "simple_any":
             distribution = (
                 self.insights_service.get_source_insights_for_lookalike(
