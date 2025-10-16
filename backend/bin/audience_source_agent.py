@@ -7,11 +7,12 @@ import sys
 import time
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Literal, Union, Optional, Tuple
+from typing import Any, List, Literal, Union, Optional, Tuple
 from uuid import UUID
 
 import aiormq
 import boto3
+from pydantic import BaseModel
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
@@ -313,6 +314,26 @@ async def process_email_failed_leads(
         source_agent_service=source_agent_service,
         match_mode=match_mode,
     )
+
+
+def get_data_for_normalize_or_none(data: Any) -> Optional[Any]:
+    """
+    Возвращает объект data.data_for_normalize если он есть, иначе None.
+    Работает с pydantic.BaseModel, обычными объектами и dict.
+    """
+    if data is None:
+        return None
+
+    # pydantic model (v1/v2) — безопасно использовать getattr
+    if isinstance(data, BaseModel):
+        return getattr(data, "data_for_normalize", None)
+
+    # dict-like
+    if isinstance(data, dict):
+        return data.get("data_for_normalize")
+
+    # обычный объект
+    return getattr(data, "data_for_normalize", None)
 
 
 def calculate_website_visitor_user_value(
@@ -653,6 +674,7 @@ async def process_and_send_chunks(
     queue_name: str,
     connection,
     status: str,
+    user_id: int,
     match_mode: Literal["emails", "asids"] = "emails",
 ):
     outgoing: List[Tuple[str, MessageBody]] = []
@@ -719,11 +741,14 @@ async def process_and_send_chunks(
                 )
                 for p in batch
             ]
+            print("CHA SEND target_message=normalize")
             msg = MessageBody(
+                target_message="normalize",
                 type=match_mode,
                 data=DataBodyNormalize(
                     persons=rows,
                     source_id=source_id,
+                    user_id=user_id,
                     data_for_normalize=DataForNormalize(
                         matched_size=offset + len(rows),
                         all_size=total_count,
@@ -1334,6 +1359,7 @@ async def process_rmq_message(
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
         data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
+        print("datadata user_id", data.user_id)
         user_id = data.user_id
         source_id: str = data.source_id
         CH_HANDLER.start_entity(
@@ -1355,9 +1381,10 @@ async def process_rmq_message(
 
         type: str = message_body.type
         persons: Union[List[PersonRow], List[PersonEntry]] = data.persons
-        data_for_normalize: Optional[DataForNormalize] = (
+        dfn = get_data_for_normalize_or_none(data)
+        data_for_normalize = (
             data.data_for_normalize
-            if isinstance(data, DataBodyNormalize)
+            if message_body.target_message == "normalize"
             else None
         )
         atype = {
@@ -1365,9 +1392,21 @@ async def process_rmq_message(
             "b2c": BusinessType.B2C,
         }.get(audience_source.target_schema, BusinessType.ALL)
 
+        print(
+            "data_for_normalize",
+            message_body.target_message
+            if message_body.target_message
+            else None,
+            dfn,
+        )
+
         db_session.commit()
         with db_session.begin():
-            if type in ("emails", "asids") and data_for_normalize:
+            if (
+                type in ("emails", "asids")
+                and data_for_normalize
+                and isinstance(data_for_normalize, DataForNormalize)
+            ):
                 if (
                     message_body.status
                     == TypeOfCustomer.CUSTOMER_CONVERSIONS.value
@@ -1491,24 +1530,27 @@ async def process_rmq_message(
                         audience_type=atype,
                     )
 
+                print("SEND CHANK")
+
+                if type in ("emails", "asids"):
+                    await process_and_send_chunks(
+                        channel=channel,
+                        db_session=db_session,
+                        source_id=source_id,
+                        batch_size=BATCH_SIZE,
+                        queue_name=AUDIENCE_SOURCES_MATCHING,
+                        connection=connection,
+                        status=message_body.status,
+                        match_mode=type,
+                        user_id=user_id,
+                    )
+
                 logging.info(f"Source_id {source_id} processing complete.")
 
             db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
                 .values(matched_records_status="complete")
-            )
-
-        if type in ("emails", "asids") and processed_records >= total_records:
-            await process_and_send_chunks(
-                channel=channel,
-                db_session=db_session,
-                source_id=source_id,
-                batch_size=BATCH_SIZE,
-                queue_name=AUDIENCE_SOURCES_MATCHING,
-                connection=connection,
-                status=message_body.status,
-                match_mode=type,
             )
 
         db_session.commit()

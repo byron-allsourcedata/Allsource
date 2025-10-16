@@ -63,45 +63,13 @@ class EntityBufferHandler(logging.Handler):
                 return
 
             entry = {
-                "ts": datetime.fromtimestamp(
-                    record.created, tz=timezone.utc
-                ).isoformat(),
                 "level": record.levelname,
-                "logger": record.name,
-                "message": self.format(record),
-                "module": record.module,
-                "funcName": record.funcName,
-                "lineno": record.lineno,
-                "extra": {
-                    k: v
-                    for k, v in record.__dict__.items()
-                    if k not in logging.LogRecord.__dict__
-                },
+                "message": record.message,
             }
 
-            print("before lock")
-
-            # with self.lock:
-            # print("start")
             buf = self.buffers.setdefault(str(entity_id), [])
-            # print("in lock", buf)
             buf.append(entry)
-            buf_len = len(buf)
 
-            # print("in lock before", buf_len, buf_len % 50)
-            if buf_len % 50 == 0 or buf_len < 5:
-                # печатаем каждые 50 сообщений и первые пару сообщений
-                print(
-                    f"[EntityBufferHandler.emit] buffered {buf_len} messages for entity={entity_id}"
-                )
-                logging.getLogger(__name__).debug(
-                    "Buffered %d messages for entity=%s", buf_len, entity_id
-                )
-            if len(buf) > 10000:
-                self.buffers[entity_id] = buf[-5000:]
-                print(
-                    f"[EntityBufferHandler.emit] buffer truncated for entity={entity_id}, now {len(self.buffers[entity_id])}"
-                )
         except Exception as exc:
             print(f"[EntityBufferHandler.emit] exception: {exc}")
             try:
@@ -209,38 +177,6 @@ class EntityBufferHandler(logging.Handler):
             logging.getLogger(__name__).exception(
                 "ClickHouse insert failed: %s", e
             )
-            # fallback write for debugging
-            try:
-                with open(
-                    "/tmp/app_entity_logs_failed.insert", "a", encoding="utf-8"
-                ) as f:
-                    f.write(
-                        json.dumps(
-                            {
-                                "row": {
-                                    "ts": str(end_ts),
-                                    "script_name": meta["script_name"],
-                                    "entity_id": str(entity_id),
-                                    "user_id": meta["user_id"],
-                                    "start_ts": str(start_ts),
-                                    "end_ts": str(end_ts),
-                                    "duration_ms": duration_ms,
-                                    "status": status,
-                                    # store messages length to avoid huge file
-                                    "messages_count": len(buf),
-                                }
-                            },
-                            ensure_ascii=False,
-                        )
-                        + "\n"
-                    )
-                print(
-                    f"[EntityBufferHandler.end_entity] fallback written to /tmp/app_entity_logs_failed.insert for entity={entity_id}"
-                )
-            except Exception as fe:
-                print(
-                    f"[EntityBufferHandler.end_entity] fallback write failed: {fe}"
-                )
 
     def abort_entity(self, entity_id: str) -> None:
         print(
@@ -256,12 +192,3 @@ class EntityBufferHandler(logging.Handler):
                     print(
                         f"[EntityBufferHandler.abort_entity] context reset failed: {e}"
                     )
-
-    # helpers for debugging
-    def buffer_len(self, entity_id: str) -> int:
-        with self.lock:
-            return len(self.buffers.get(str(entity_id), []))
-
-    def active_entities(self) -> List[str]:
-        with self.lock:
-            return list(self.buffers.keys())

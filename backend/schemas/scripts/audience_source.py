@@ -1,6 +1,6 @@
 import re
 from decimal import Decimal
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Literal
 
 from pydantic import BaseModel
 
@@ -37,6 +37,7 @@ class DataForNormalize(BaseModel):
 
 class DataBodyNormalize(BaseModel):
     persons: List[PersonEntry]
+    user_id: int
     source_id: str
     data_for_normalize: DataForNormalize
 
@@ -64,11 +65,13 @@ class PersonRow(BaseModel):
 
 class DataBodyFromSource(BaseModel):
     persons: List[PersonRow]
-    source_id: str
-    user_id: int
+    source_id: Optional[str] = None
+    user_id: Optional[int] = None
+    data_for_normalize: Optional[DataForNormalize] = None
 
 
 class MessageBody(BaseModel):
+    target_message: Literal["normalize", "matching"]
     type: str
     data: Union[DataBodyFromSource, DataBodyNormalize]
     status: Optional[str] = None

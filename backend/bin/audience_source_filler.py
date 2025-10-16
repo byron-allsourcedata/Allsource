@@ -23,6 +23,10 @@ from aio_pika import IncomingMessage, Channel
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
+
 
 from db_dependencies import Db
 from domains.sources.order_count_service import SourcesOrderCountService
@@ -329,6 +333,7 @@ async def parse_csv_file(
 
         if batch_rows:
             message_body = MessageBody(
+                target_message="matching",
                 type="asids" if asid else "emails",
                 data=DataBodyFromSource(
                     persons=batch_rows,
@@ -537,6 +542,7 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
                 persons.append(PersonRow(lead_id=current_id))
 
         message_body = MessageBody(
+            target_message="matching",
             type="user_ids",
             data=DataBodyFromSource(
                 persons=persons, source_id=str(source_id), user_id=user_id
