@@ -7,7 +7,7 @@ import sys
 import time
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, List, Literal, Union, Optional, Tuple
+from typing import List, Literal, Union, Optional, Tuple
 from uuid import UUID
 
 import aiormq
@@ -314,26 +314,6 @@ async def process_email_failed_leads(
         source_agent_service=source_agent_service,
         match_mode=match_mode,
     )
-
-
-def get_data_for_normalize_or_none(data: Any) -> Optional[Any]:
-    """
-    Возвращает объект data.data_for_normalize если он есть, иначе None.
-    Работает с pydantic.BaseModel, обычными объектами и dict.
-    """
-    if data is None:
-        return None
-
-    # pydantic model (v1/v2) — безопасно использовать getattr
-    if isinstance(data, BaseModel):
-        return getattr(data, "data_for_normalize", None)
-
-    # dict-like
-    if isinstance(data, dict):
-        return data.get("data_for_normalize")
-
-    # обычный объект
-    return getattr(data, "data_for_normalize", None)
 
 
 def calculate_website_visitor_user_value(
