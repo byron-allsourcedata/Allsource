@@ -16,11 +16,6 @@ def get_current_entity_id() -> Optional[str]:
 
 
 class EntityBufferHandler(logging.Handler):
-    """
-    Глобальный handler, который буферизует сообщения по entity_id (из contextvar).
-    Flush выполняется вручную через .start_entity() / .end_entity().
-    """
-
     def __init__(self, ch_client: Clickhouse, table: str):
         super().__init__()
         self.ch = ch_client

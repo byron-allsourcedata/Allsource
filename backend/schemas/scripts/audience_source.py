@@ -1,6 +1,6 @@
 import re
 from decimal import Decimal
-from typing import List, Optional, Union, Literal
+from typing import List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -70,5 +70,6 @@ class DataBodyFromSource(BaseModel):
 
 class MessageBody(BaseModel):
     type: str
+    user_id: int
     data: Union[DataBodyFromSource, DataBodyNormalize]
     status: Optional[str] = None

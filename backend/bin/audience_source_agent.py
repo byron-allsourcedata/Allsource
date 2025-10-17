@@ -670,6 +670,7 @@ async def process_and_send_chunks(
     channel: Channel,
     db_session: Session,
     source_id: str,
+    user_id: int,
     batch_size: int,
     queue_name: str,
     connection,
@@ -740,8 +741,8 @@ async def process_and_send_chunks(
                 )
                 for p in batch
             ]
-            print("CHA SEND target_message=normalize")
             msg = MessageBody(
+                user_id=user_id,
                 target_message="normalize",
                 type=match_mode,
                 data=DataBodyNormalize(
@@ -1357,12 +1358,11 @@ async def process_rmq_message(
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
         data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
-        print("datadata user_id", data.user_id)
         source_id: str = data.source_id
         CH_HANDLER.start_entity(
             entity_id=source_id,
             script_name="audience_source_agent",
-            user_id=data.user_id,
+            user_id=message_body.user_id,
         )
         with db_session.begin():
             audience_source = (
@@ -1387,12 +1387,6 @@ async def process_rmq_message(
             "b2b": BusinessType.B2B,
             "b2c": BusinessType.B2C,
         }.get(audience_source.target_schema, BusinessType.ALL)
-
-        print(
-            "data_for_normalize",
-            data_for_normalize.matched_size if data_for_normalize else None,
-            data_for_normalize.all_size if data_for_normalize else None,
-        )
 
         db_session.commit()
         with db_session.begin():
@@ -1435,7 +1429,6 @@ async def process_rmq_message(
                     if not check_significant_fields_and_insights(
                         source=audience_source
                     ):
-                        print("CHA WILL BE SAVING")
                         calculate_and_save_significant_fields(
                             db_session=db_session,
                             source_id=source_id,
@@ -1525,8 +1518,6 @@ async def process_rmq_message(
                         audience_type=atype,
                     )
 
-                print("SEND CHANK")
-
                 logging.info(f"Source_id {source_id} processing complete.")
 
             db_session.execute(
@@ -1540,6 +1531,7 @@ async def process_rmq_message(
                 channel=channel,
                 db_session=db_session,
                 source_id=source_id,
+                user_id=user_id,
                 batch_size=BATCH_SIZE,
                 queue_name=AUDIENCE_SOURCES_MATCHING,
                 connection=connection,
@@ -1561,14 +1553,6 @@ async def process_rmq_message(
 
         await message.ack()
         logging.info(f"Processing completed for source_id {source_id}.")
-        print(
-            f"[process_rmq_message] about to call CH_HANDLER.end_entity for {source_id}"
-        )
-        logging.getLogger(__name__).debug(
-            "about to call CH_HANDLER.end_entity for %s", source_id
-        )
-        CH_HANDLER.end_entity(entity_id=source_id, status="complete")
-
     except BaseException as e:
         logging.warning(
             f"Message for source_id failed and will be reprocessed. {e}"
@@ -1580,6 +1564,11 @@ async def process_rmq_message(
             logging.exception("Failed to abort_entity for %s", source_id)
         db_session.rollback()
         await message.ack()
+    finally:
+        logging.getLogger(__name__).debug(
+            "about to call CH_HANDLER.end_entity for %s", source_id
+        )
+        CH_HANDLER.end_entity(entity_id=source_id, status="complete")
 
 
 async def main():
