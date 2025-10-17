@@ -328,12 +328,15 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 		const isCurrentUser = meData.email === row.email;
 		switch (key) {
 			case "name":
+				const filter =
+					"brightness(0) saturate(100%) invert(49%) sepia(76%) saturate(2575%) hue-rotate(192deg) brightness(103%) contrast(98%)";
+
 				return (
 					<Box
 						className="table-data sticky-cell"
 						sx={{
 							...suppressionsStyles.tableBodyColumn,
-							paddingLeft: "16px",
+							paddingLeft: "12px",
 							position: "sticky",
 							justifyContent: "left",
 							left: 0,
@@ -392,6 +395,18 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 										gap: 0.5,
 									}}
 								>
+									{!row.team_owner_id && (
+										<Image
+											src="/crown-flat.svg"
+											alt="team_owner"
+											color="red"
+											width={18}
+											height={18}
+											style={{
+												filter: filter,
+											}}
+										/>
+									)}
 									<Box
 										sx={{
 											textOverflow: "ellipsis",
@@ -488,7 +503,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			case "premium_sources":
 				return (
 					<Row>
-						<Link href={`/admin/premium-data/${row.id}`}>
+						<Link
+							href={`/admin/premium-data/${row.team_owner_id ? row.team_owner_id : row.id}`}
+						>
 							{row.premium_sources}
 						</Link>
 					</Row>

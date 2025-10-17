@@ -987,6 +987,7 @@ class SettingsService:
                 "highlight": False,
                 "is_active_month": False,
                 "is_active_year": False,
+                "require_contact_for_upgrade": False,
                 "features": [
                     "15+",
                     "Included",
@@ -1010,6 +1011,7 @@ class SettingsService:
                 "highlight": True,
                 "is_active_month": False,
                 "is_active_year": False,
+                "require_contact_for_upgrade": True,
                 "features": [
                     "15+",
                     "Included",
@@ -1033,6 +1035,7 @@ class SettingsService:
                 "highlight": False,
                 "is_active_month": False,
                 "is_active_year": False,
+                "require_contact_for_upgrade": True,
                 "features": [
                     "15+",
                     "Included",
@@ -1082,6 +1085,8 @@ class SettingsService:
             if idx is not None:
                 if interval == "month":
                     plans_data[idx]["is_active_month"] = True
+                    for p in plans_data:
+                        p["require_contact_for_upgrade"] = True
                 elif interval == "year":
                     plans_data[idx]["is_active_year"] = True
                     plans_data[idx]["is_active_month"] = True

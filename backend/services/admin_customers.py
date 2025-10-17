@@ -288,6 +288,7 @@ class AdminCustomersService:
                         base_user.id
                     ),
                     "role": base_user.role,
+                    "team_owner_id": user.team_owner_id,
                     "is_email_validation_enabled": base_user.is_email_validation_enabled,
                     "is_partner": base_user.is_partner,
                     "is_master": base_user.is_master,

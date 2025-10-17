@@ -10,4 +10,5 @@ export type FrontendPlan = {
 	features: string[];
 	is_active_year: boolean;
 	is_active_month: boolean;
+	require_contact_for_upgrade: boolean;
 };
