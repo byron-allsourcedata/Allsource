@@ -275,6 +275,10 @@ export const WhitelabelSettingsPage: FC<Props> = ({}) => {
 									setSmallLogoUrl("/logo-icon.svg");
 									setSmallLogoFile(null);
 								}}
+								image={{
+									width: 24,
+									height: 24,
+								}}
 							/>
 						</SettingCard>
 						<SettingCard

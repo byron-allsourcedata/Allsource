@@ -340,7 +340,10 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 											<CustomButton
 												variant="contained"
 												onClick={() => {
-													if (p.key === "standard") {
+													if (p.require_contact_for_upgrade && billing === 1) {
+														// если нужно говорить с поддержкой (годовой апгрейд при месячном плане)
+														handleOpenPopup();
+													} else if (p.key === "standard") {
 														const interval = billing === 0 ? "month" : "year";
 														handleInstantUpgrade(interval);
 													} else {
@@ -355,10 +358,18 @@ export const PricingTable: React.FC<PricingTableProps> = ({
 													(billing === 1 && p.is_active_year)
 												}
 											>
-												{(billing === 0 && p.is_active_month) ||
-												(billing === 1 && p.is_active_year)
-													? "Current Plan"
-													: p.cta}
+												{(() => {
+													if (
+														(billing === 0 && p.is_active_month) ||
+														(billing === 1 && p.is_active_year)
+													) {
+														return "Current Plan";
+													}
+													if (p.require_contact_for_upgrade && billing === 1) {
+														return "Speak to Us";
+													}
+													return p.cta;
+												})()}
 											</CustomButton>
 										</Paper>
 

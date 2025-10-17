@@ -142,6 +142,7 @@ class Plan(BaseModel):
     features: list[str]
     is_active_year: bool = False
     is_active_month: bool = False
+    require_contact_for_upgrade: bool = False
 
 
 class SubscriptionPlans(BaseModel):
