@@ -1,7 +1,7 @@
 import logging
 import sys
 from types import ModuleType
-from entity_logging import EntityBufferHandler, get_current_entity_id
+from entity_logging import EntityBufferHandler
 from config import ClickhouseInsertConfig
 
 client_clickhouse = ClickhouseInsertConfig.get_client()
@@ -16,9 +16,6 @@ CH_HANDLER.setLevel(logging.NOTSET)
 root = logging.getLogger()
 if CH_HANDLER not in root.handlers:
     root.addHandler(CH_HANDLER)
-    print("[logging_setup] CH_HANDLER added to root.handlers")
-else:
-    print("[logging_setup] CH_HANDLER already present in root.handlers")
 
 
 def setup_local_logger(logger: logging.Logger, level: int):
@@ -30,12 +27,9 @@ def setup_local_logger(logger: logging.Logger, level: int):
     )
     handler.setFormatter(formatter)
     logger.setLevel(level)
-    # keep CH_HANDLER if present
     preserved = [
         h for h in logger.handlers if isinstance(h, EntityBufferHandler)
     ]
-    preserved_names = [type(h).__name__ for h in preserved]
-    print(f"[setup_local_logger] preserving handlers: {preserved_names}")
     new_handlers = preserved + [handler]
     logger.handlers = new_handlers
 
