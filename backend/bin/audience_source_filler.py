@@ -333,7 +333,6 @@ async def parse_csv_file(
 
         if batch_rows:
             message_body = MessageBody(
-                target_message="matching",
                 type="asids" if asid else "emails",
                 data=DataBodyFromSource(
                     persons=batch_rows,
@@ -542,7 +541,6 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
                 persons.append(PersonRow(lead_id=current_id))
 
         message_body = MessageBody(
-            target_message="matching",
             type="user_ids",
             data=DataBodyFromSource(
                 persons=persons, source_id=str(source_id), user_id=user_id
