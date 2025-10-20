@@ -19,9 +19,7 @@ from models.users import User
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
-from persistence.audience_sources.unified import (
-    AudienceSourcesUnifiedPersistence,
-)
+from persistence.audience_sources import AudienceSourcesPersistence
 from resolver import injectable
 from schemas.audience import (
     SmartsAudienceObjectResponse,
@@ -54,7 +52,7 @@ class AudienceSmartsService:
         self,
         audience_smarts_persistence: AudienceSmartsPersistence,
         lookalikes_persistence_service: AudienceLookalikesPersistence,
-        audience_sources_persistence: AudienceSourcesUnifiedPersistence,
+        audience_sources_persistence: AudienceSourcesPersistence,
         audience_settings_persistence: AudienceSettingPersistence,
     ):
         self.audience_smarts_persistence = audience_smarts_persistence

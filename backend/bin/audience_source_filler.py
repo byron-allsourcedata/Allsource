@@ -23,11 +23,7 @@ from aio_pika import IncomingMessage, Channel
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
-current_dir = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
-sys.path.append(parent_dir)
 
-from utils.logs import CH_HANDLER
 from db_dependencies import Db
 from domains.sources.order_count_service import SourcesOrderCountService
 from resolver import Resolver
@@ -333,7 +329,6 @@ async def parse_csv_file(
 
         if batch_rows:
             message_body = MessageBody(
-                user_id=user_id,
                 type="asids" if asid else "emails",
                 data=DataBodyFromSource(
                     persons=batch_rows,
@@ -542,7 +537,6 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
                 persons.append(PersonRow(lead_id=current_id))
 
         message_body = MessageBody(
-            user_id=user_id,
             type="user_ids",
             data=DataBodyFromSource(
                 persons=persons, source_id=str(source_id), user_id=user_id
@@ -561,7 +555,7 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
     return True
 
 
-async def process_rmq_message(
+async def aud_sources_reader(
     message: IncomingMessage,
     db_session: Session,
     s3_session,
@@ -579,11 +573,6 @@ async def process_rmq_message(
             return
         user_id = data.get("user_id")
         source_id = str(data.get("source_id"))
-        CH_HANDLER.start_entity(
-            entity_id=source_id,
-            script_name="audience_source_filler",
-            user_id=user_id,
-        )
 
         resolver = Resolver()
         resolver.inject(Db, db_session)
@@ -622,15 +611,6 @@ async def process_rmq_message(
             channel=channel,
         )
         logging.error(f"Error processing message: {e}", exc_info=True)
-        try:
-            CH_HANDLER.abort_entity(entity_id=source_id)
-        except Exception:
-            logging.exception("Failed to abort_entity for %s", source_id)
-    finally:
-        logging.getLogger(__name__).debug(
-            "about to call CH_HANDLER.end_entity for %s", source_id
-        )
-        CH_HANDLER.end_entity(entity_id=source_id, status="complete")
 
 
 def extract_key_from_url(s3_url: str):
@@ -681,7 +661,7 @@ async def main():
             )
             await reader_queue.consume(
                 functools.partial(
-                    process_rmq_message,
+                    aud_sources_reader,
                     db_session=db_session,
                     s3_session=s3_session,
                     connection=connection,
