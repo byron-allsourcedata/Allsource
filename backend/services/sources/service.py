@@ -20,9 +20,7 @@ from schemas.audience import (
     NewSource,
     DomainsSourceResponse,
 )
-from persistence.audience_sources.unified import (
-    AudienceSourcesUnifiedPersistence,
-)
+from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.domains import UserDomainsPersistence
 from enums import TypeOfCustomer, TypeOfSourceOrigin, BusinessType
 from persistence.audience_sources_matched_persons import (
@@ -44,12 +42,11 @@ import logging
 from functools import singledispatchmethod
 from resolver import injectable
 
-
 @injectable
 class AudienceSourceService:
     def __init__(
         self,
-        audience_sources_persistence: AudienceSourcesUnifiedPersistence,
+        audience_sources_persistence: AudienceSourcesPersistence,
         domain_persistence: UserDomainsPersistence,
         audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence,
     ):
@@ -675,7 +672,6 @@ class AudienceSourceService:
 
     def delete_source(self, id) -> bool:
         count_deleted = self.audience_sources_persistence.delete_source(id)
-        self.audience_sources_persistence.delete_logs_by_source_id(id)
         return count_deleted > 0
 
     def get_sample_customers_list(self, source_type: str):

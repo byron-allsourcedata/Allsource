@@ -70,6 +70,5 @@ class DataBodyFromSource(BaseModel):
 
 class MessageBody(BaseModel):
     type: str
-    user_id: int
     data: Union[DataBodyFromSource, DataBodyNormalize]
     status: Optional[str] = None
