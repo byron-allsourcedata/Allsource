@@ -13,6 +13,7 @@ export type PremiumSourceData = {
 	rows: string;
 	price: number;
 	status: Status;
+	source_type: string;
 };
 
 export type UserPremiumSourceDto = {

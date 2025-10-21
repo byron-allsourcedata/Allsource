@@ -89,6 +89,7 @@ class PremiumSourceService:
                     user_id=base_dto.user_id,
                     rows=base_dto.rows,
                     created_at=base_dto.created_at,
+                    source_type=base_dto.source_type,
                 )
             )
 

@@ -62,7 +62,7 @@ class PremiumSourceTableService:
         )
 
         source_id = uuid4()
-        uploaded_rows = self.premium_source_rows.process_csv(
+        uploaded_rows, source_type = self.premium_source_rows.process_csv(
             source_id, csv_rows
         )
         source = self.repo.create(
@@ -72,6 +72,7 @@ class PremiumSourceTableService:
             user_id=user_id,
             s3_url=s3_url,
             rows=uploaded_rows,
+            source_type=source_type,
         )
 
         return source.id
