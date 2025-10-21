@@ -1,5 +1,6 @@
 import csv
 from io import StringIO
+from charset_normalizer import from_bytes
 
 
 class CSVError(Exception):
@@ -16,14 +17,19 @@ class CSVColumnError(CSVError):
 
 def parse_csv_bytes(data: bytes) -> list[dict[str, str]]:
     """
-    Parse CSV content from bytes into a list of dicts.\n
-    Raises CSVEncodingError for invalid UTF-8.\n
+    Parse CSV content from bytes into a list of dicts.
+    Automatically detects encoding.
+    Raises CSVEncodingError for invalid encoding.
     Raises CSVColumnError for inconsistent columns.
     """
+
+    best = from_bytes(data).best()
+    encoding = best.encoding or "utf-8"
+
     try:
-        text = data.decode("utf-8")
-    except UnicodeDecodeError as e:
-        raise CSVEncodingError("Invalid UTF-8 encoding") from e
+        text = data.decode(encoding)
+    except UnicodeDecodeError:
+        raise CSVEncodingError(f"Invalid encoding ({encoding})")
 
     reader = csv.reader(StringIO(text))
     rows: list[dict[str, str]] = []
