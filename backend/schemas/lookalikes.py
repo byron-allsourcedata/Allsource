@@ -2,6 +2,7 @@ from typing import Dict, Optional, Iterable
 
 from pydantic import BaseModel, Field
 
+from enums import LookalikeScoringType
 from schemas.similar_audiences import AudienceFeatureImportance
 
 
@@ -10,6 +11,7 @@ class LookalikeCreateRequest(BaseModel):
     lookalike_size: str
     lookalike_name: str
     audience_feature_importance: Optional[Dict]
+    scoring_type: LookalikeScoringType = LookalikeScoringType.ML
 
 
 class UpdateLookalikeRequest(BaseModel):

@@ -92,7 +92,7 @@ async def get_notification(
 @router.get("/check-user-authorization")
 def check_user_authorization(
     user=Depends(check_user_authorization_without_pixel),
-    domain: UserDomains = Depends(check_pixel_install_domain),
+    # domain: UserDomains = Depends(check_pixel_install_domain),
 ):
     return {"status": "SUCCESS"}
 
@@ -245,4 +245,9 @@ def has_current_subsciption(
 ):
     if user.get("current_subscription_id") is not None:
         return {"status": "ok"}
+
+    team_member = user.get("team_member")
+    if team_member and team_member.get("team_access_level") == "read_only":
+        return {"status": "ok"}
+
     return {"status": "error"}

@@ -17,6 +17,7 @@ import { Logo } from "@/components/ui/Logo";
 const ConfirmSend: React.FC = () => {
 	const router = useRouter();
 	const [email, setEmail] = useState<string | null>(null);
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
 
 	useEffect(() => {
 		document.body.style.overflow = "hidden";
@@ -29,12 +30,19 @@ const ConfirmSend: React.FC = () => {
 		if (typeof window !== "undefined") {
 			const storedMe = sessionStorage.getItem("me");
 			setEmail(storedMe ? JSON.parse(storedMe)?.email : null);
+
+			const token = localStorage.getItem("token");
+			setIsLoggedIn(!!token);
 		}
 	}, []);
 
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
-		router.push("/signin");
+		if (isLoggedIn) {
+			router.push("/settings");
+		} else {
+			router.push("/signin");
+		}
 	};
 
 	return (
@@ -71,7 +79,7 @@ const ConfirmSend: React.FC = () => {
 							sx={confirmStyles.submitButton}
 							fullWidth
 						>
-							Back to login
+							{isLoggedIn ? "Back to settings" : "Back to login"}
 						</Button>
 					</Box>
 				</Box>

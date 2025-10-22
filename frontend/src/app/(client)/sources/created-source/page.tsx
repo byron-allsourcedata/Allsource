@@ -182,7 +182,7 @@ const SourcesList: React.FC = () => {
 
 	const setSourceType = (sourceType: string) => {
 		return sourceType
-			.split(",")
+			?.split(",")
 			.map((item) =>
 				item
 					.split("_")
@@ -193,7 +193,7 @@ const SourcesList: React.FC = () => {
 	};
 
 	const truncateText = (text: string, maxLength: number) => {
-		return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+		return text?.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 	};
 
 	const buttonClickAllSources = () => {
@@ -537,10 +537,10 @@ const SourcesList: React.FC = () => {
 											Number of Customers
 										</Typography>
 										<Typography variant="subtitle1" className="table-data">
-											{createdData.matched_records_status === "complete" &&
+											{createdData?.matched_records_status === "complete" &&
 											createdData?.total_records === 0 ? (
 												"0"
-											) : (sourceProgress[createdData.id]?.total &&
+											) : (sourceProgress[createdData?.id]?.total &&
 													sourceProgress[createdData.id]?.total > 0) ||
 												createdData?.total_records > 0 ? (
 												sourceProgress[createdData.id]?.total > 0 ? (
@@ -567,14 +567,14 @@ const SourcesList: React.FC = () => {
 										</Typography>
 										<Typography variant="subtitle1" className="table-data">
 											{RenderProgress(
-												createdData.matched_records_status,
-												createdData.total_records,
-												createdData.matched_records,
-												createdData.processed_records,
-												sourceProgress[createdData.id]?.total,
-												sourceProgress[createdData.id]?.matched,
-												sourceProgress[createdData.id]?.processed,
-												createdData.eta_seconds,
+												createdData?.matched_records_status,
+												createdData?.total_records,
+												createdData?.matched_records,
+												createdData?.processed_records,
+												sourceProgress[createdData?.id]?.total,
+												sourceProgress[createdData?.id]?.matched,
+												sourceProgress[createdData?.id]?.processed,
+												createdData?.eta_seconds,
 											)}
 										</Typography>
 									</Box>

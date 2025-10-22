@@ -34,6 +34,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { MoreVert } from "@/icon";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
 import { useGetTeamsMembers, type TeamMember } from "./requests";
+import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 
 const teamsStyles = {
 	tableColumn: {
@@ -122,6 +123,8 @@ export const SettingsTeams: React.FC = () => {
 	const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
 	const { teams, loading, refetch: refetchTeams } = useGetTeamsMembers();
+
+	useZohoChatToggle(inviteUsersPopupOpen || upgradePlanPopup);
 
 	const fetchTeamsData = async () => {
 		try {
@@ -778,7 +781,7 @@ export const SettingsTeams: React.FC = () => {
 						>
 							Team members
 						</Typography>
-						<Typography
+						{/* <Typography
 							variant="h6"
 							className="table-data"
 							sx={{
@@ -791,7 +794,7 @@ export const SettingsTeams: React.FC = () => {
 							{memberLimit === -1
 								? "unlimited"
 								: `${memberCount}/${memberLimit} Member limit`}
-						</Typography>
+						</Typography> */}
 						<CustomTooltip
 							title={
 								"Invite team members for shared access and teamwork on projects."

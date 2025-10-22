@@ -28,6 +28,12 @@ class LookalikeStatus(Enum):
     FAILED = "failed"
 
 
+class LookalikeScoringType(Enum):
+    ML = "ml"
+    SIMPLE_ALL = "simple_all"
+    SIMPLE_ANY = "simple_any"
+
+
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = "aud_sources_matching"
     AUDIENCE_SOURCES_READER = "aud_sources_files"
@@ -112,6 +118,7 @@ class AudienceSmartDataSource(Enum):
 class AudienceValidationMode(Enum):
     ALL = "all"
     ANY = "any"
+    NONE = "none"
 
 
 class AudienceSmartStatuses(Enum):
@@ -343,6 +350,7 @@ class CompanyInfoEnum(Enum):
     NEED_EMAIL_VERIFIED = "NEED_EMAIL_VERIFIED"
     NEED_CHOOSE_PLAN = "NEED_CHOOSE_PLAN"
     DASHBOARD_ALLOWED = "DASHBOARD_ALLOWED"
+    COMPANY_NAME_ALREADY_EXIST = "COMPANY_NAME_ALREADY_EXIST"
 
 
 class AudienceInfoEnum(Enum):

@@ -358,6 +358,14 @@ const postalCustomFields = [
 	},
 ];
 
+const emailB2BCustomFields = [
+	{
+		type: "Current Company Name",
+		value: "current_company_name",
+		is_constant: false,
+	},
+];
+
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	open,
 	onClose,
@@ -464,6 +472,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				setCustomFields((prev) => [
 					...prev,
 					...getPostalFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				]);
+			}
+			if (useCase === "email") {
+				setCustomFields((prev) => [
+					...prev,
+					...getEmailFieldsBySchema(targetSchema).map((field) => ({
 						type: field.value,
 						value: field.type,
 						is_constant: false,
@@ -753,6 +771,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			return postalCustomFields.filter((f) => f.value.startsWith("home_"));
 		}
 		return postalCustomFields;
+	};
+
+	const getEmailFieldsBySchema = (targetSchema: string | undefined) => {
+		if (targetSchema === "b2b") {
+			return emailB2BCustomFields;
+		}
+		return [];
 	};
 
 	const actionBasedOnService = () => {
@@ -1189,6 +1214,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		extendedFieldsList = [
 			...extendedFieldsList,
 			...getPostalFieldsBySchema(targetSchema),
+		];
+	}
+
+	if (useCase === "email") {
+		extendedFieldsList = [
+			...extendedFieldsList,
+			...getEmailFieldsBySchema(targetSchema),
 		];
 	}
 

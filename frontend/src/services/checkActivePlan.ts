@@ -21,7 +21,8 @@ export const checkHasActivePlan = (
 	if (me) {
 		try {
 			const parsed = JSON.parse(me);
-			hasActivePlan = parsed.has_active_plan;
+			hasActivePlan =
+				parsed.access_level === "read_only" || parsed.has_active_plan;
 		} catch (e) {
 			showErrorToast("Please reload this page");
 			return false;

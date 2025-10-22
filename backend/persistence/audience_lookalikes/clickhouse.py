@@ -80,8 +80,12 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         self.postgres.update_total_dataset_size(lookalike_id, dataset_size)
 
     @override
-    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
-        self.postgres.update_processed_dataset_size(lookalike_id, processed_dataset_size)
+    def update_processed_dataset_size(
+        self, lookalike_id: UUID, processed_dataset_size: int
+    ):
+        self.postgres.update_processed_dataset_size(
+            lookalike_id, processed_dataset_size
+        )
 
     def calculate_lookalikes(
         self, user_id: int, source_uuid: UUID, lookalike_size: str
@@ -278,6 +282,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
         lookalike_size,
         lookalike_name,
         created_by_user_id,
+        scoring_type,
         audience_feature_importance: AudienceFeatureImportance,
     ):
         return self.postgres.create_lookalike(
@@ -286,6 +291,7 @@ class ClickhousePersistence(AudienceLookalikesPersistenceInterface):
             lookalike_size,
             lookalike_name,
             created_by_user_id,
+            scoring_type,
             audience_feature_importance,
         )
 

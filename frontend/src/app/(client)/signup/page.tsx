@@ -477,7 +477,7 @@ const Signup: React.FC = () => {
 										await get_me();
 										await needConfirmPrivacyPolicy();
 										await checkOneDollarSubscription();
-										navigateTo("/dashboard");
+										navigateTo("/company-setup");
 										break;
 									case "NEED_BOOK_CALL":
 										await needConfirmPrivacyPolicy();

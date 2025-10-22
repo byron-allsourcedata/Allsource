@@ -16,7 +16,7 @@ interface ChooseDomainContactTypeProps {
 	closeSkeleton: (key: BuilderKey) => void;
 }
 
-const ChooseDomainContactType: React.FC<ChooseDomainContactTypeProps> = ({
+const ChooseDomainContactTypeBox: React.FC<ChooseDomainContactTypeProps> = ({
 	renderSkeleton,
 	closeDotHintClick,
 	openDotHintClick,
@@ -266,4 +266,4 @@ const ChooseDomainContactType: React.FC<ChooseDomainContactTypeProps> = ({
 	);
 };
 
-export default ChooseDomainContactType;
+export default ChooseDomainContactTypeBox;

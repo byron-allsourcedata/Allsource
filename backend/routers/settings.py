@@ -24,11 +24,12 @@ from schemas.settings import (
     SendBilling,
     PaymentCard,
     ApiKeysRequest,
-    PlansResponse,
+    SubscriptionPlans,
 )
 from schemas.users import VerifyTokenResponse
 from schemas.settings import BuyFundsRequest, BuyCreditsRequest
 from services.settings import SettingsService
+from enums import TeamAccessLevel
 
 router = APIRouter(dependencies=[Depends(check_user_setting_access)])
 
@@ -38,7 +39,12 @@ def get_account_details(
     settings_service: SettingsService,
     user: User = Depends(check_user_authentication),
 ):
-    return settings_service.get_account_details(user=user)
+    result = settings_service.get_account_details(user=user)
+    return {
+        **result,
+        "team_access_level": user.get("team_access_level")
+        or TeamAccessLevel.READ_ONLY.value,
+    }
 
 
 @router.put("/account-details")
@@ -346,7 +352,7 @@ def buy_funds(
 
 @router.get(
     "/plans",
-    response_model=PlansResponse,
+    response_model=SubscriptionPlans,
     summary="Get list of subscription plans",
     tags=["Plans"],
 )

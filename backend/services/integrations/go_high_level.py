@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 from typing import Tuple, Annotated
+from db_dependencies import Db
 
 import httpx
 from fastapi import HTTPException, Depends
@@ -48,6 +49,7 @@ logger = logging.getLogger(__name__)
 class GoHighLevelIntegrationsService:
     def __init__(
         self,
+        db: Db,
         domain_persistence: UserDomainsPersistence,
         integrations_persistence: IntegrationsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
@@ -61,6 +63,7 @@ class GoHighLevelIntegrationsService:
         self.client = client
         self.TOKEN_URL = "https://services.leadconnectorhq.com/oauth/token"
         self.VERSION = "2021-07-28"
+        self.db = db
 
     def __handle_request(
         self,
@@ -81,14 +84,16 @@ class GoHighLevelIntegrationsService:
         )
         return response
 
-    def refresh_ghl_token(self, integration_id: int, refresh_token: str) -> str:
+    def refresh_ghl_token(
+        self, user_integration: UserIntegration
+    ) -> str | None:
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
         }
         data = {
             "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
+            "refresh_token": user_integration.access_token,
             "client_id": os.getenv("CLIENT_GO_HIGH_LEVEL_ID"),
             "client_secret": os.getenv("CLIENT_GO_HIGH_LEVEL_SECRET"),
         }
@@ -98,17 +103,15 @@ class GoHighLevelIntegrationsService:
         )
 
         tokens = response.json()
-        if not tokens.get("refresh_token"):
-            raise HTTPException(
-                status_code=409,
-                detail={
-                    "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
-                    "response": tokens,
-                },
-            )
-        self.integrations_persistence.update_refresh_token(
-            integration_id=integration_id, refresh_token=tokens["refresh_token"]
-        )
+        if not tokens.get("access_token"):
+            logger.error(f"GHL refresh token failed: {tokens}")
+            return None
+
+        new_refresh_token = tokens.get("refresh_token")
+        if new_refresh_token:
+            user_integration.access_token = new_refresh_token
+            self.db.commit()
+
         return tokens["access_token"]
 
     def get_credentials(self, domain_id: int, user_id: int):
@@ -154,17 +157,17 @@ class GoHighLevelIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persistence.create_integration(
+        integration = self.integrations_persistence.create_integration(
             integration_data
         )
 
-        if not integartion:
+        if not integration:
             raise HTTPException(
                 status_code=409,
                 detail={"status": IntegrationsStatus.CREATE_IS_FAILED.value},
             )
 
-        return integartion
+        return integration
 
     def edit_sync(
         self,
@@ -300,15 +303,13 @@ class GoHighLevelIntegrationsService:
         }
         response = self.__handle_request(method="GET", url=url, headers=headers)
         if response.status_code != 200:
-            raise HTTPException(
-                status_code=409,
-                detail={"status": IntegrationsStatus.CREDENTIALS_INVALID.value},
+            logging.error(
+                f"Failed to list custom fields: {response.status_code}, {response.text}"
             )
+            return {}
+
         result = response.json()
-
-        existing_fields = {f["name"]: f for f in result["customFields"]}
-
-        return existing_fields
+        return {f["name"]: f for f in result.get("customFields", [])}
 
     def create_custom_field(
         self,
@@ -331,7 +332,7 @@ class GoHighLevelIntegrationsService:
         )
         if response.status_code == 401:
             raise HTTPException(
-                status_code=409,
+                status_code=401,
                 detail={"status": IntegrationsStatus.CREDENTIALS_INVALID.value},
             )
 
@@ -348,10 +349,15 @@ class GoHighLevelIntegrationsService:
         validations: dict = {},
     ):
         results = []
-        access_token = self.refresh_ghl_token(
-            integration_id=user_integration.id,
-            refresh_token=user_integration.access_token,
-        )
+        access_token = self.refresh_ghl_token(user_integration)
+
+        if not access_token:
+            logging.error(
+                f"GHL access token invalid for integration {user_integration.id}"
+            )
+            integration_data_sync.sync_status = False
+            self.db.commit()
+            return []
 
         for enrichment_user in enrichment_users:
             contact_data = self.__mapped_member_into_list(
@@ -387,10 +393,16 @@ class GoHighLevelIntegrationsService:
         is_email_validation_enabled: bool,
     ):
         results = []
-        access_token = self.refresh_ghl_token(
-            integration_id=user_integration.id,
-            refresh_token=user_integration.access_token,
-        )
+        access_token = self.refresh_ghl_token(user_integration)
+
+        if not access_token:
+            logging.error(
+                f"GHL access token is invalid for integration {user_integration.id}"
+            )
+            integration_data_sync.sync_status = False
+            self.db.commit()
+            return []
+
         for lead_user, five_x_five_user in user_data:
             contact_data = await self.__mapped_profile_lead(
                 five_x_five_user=five_x_five_user,
