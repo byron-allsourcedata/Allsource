@@ -27,7 +27,10 @@ def parse_csv_bytes(data: bytes) -> list[dict[str, str]]:
     encoding = best.encoding or "utf-8"
 
     try:
-        text = data.decode(encoding)
+        if encoding.lower().replace("-", "") == "utf8":
+            text = data.decode("utf-8-sig")
+        else:
+            text = data.decode(encoding)
     except UnicodeDecodeError:
         raise CSVEncodingError(f"Invalid encoding ({encoding})")
 
@@ -40,7 +43,7 @@ def parse_csv_bytes(data: bytes) -> list[dict[str, str]]:
             continue
 
         if header is None:
-            header = [column.lower() for column in row]
+            header = [col.strip().lower().lstrip("\ufeff") for col in row]
         elif len(row) != len(header):
             raise CSVColumnError(
                 f"Inconsistent number of columns at row {row_number}"

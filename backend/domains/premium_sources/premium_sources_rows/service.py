@@ -25,14 +25,24 @@ class PremiumSourcesRowsService:
         self, premium_source_id: UUID, csv_content: list[dict[str, str]]
     ) -> tuple[int, str]:
         if not csv_content:
+            logger.error("CSV content is empty")
             return 0, "unknown"
 
         key_column = self.get_identifier_column_name(csv_content[0])
-        identifiers = [
-            row[key_column].strip()
-            for row in csv_content
-            if row.get(key_column)
-        ]
+
+        identifiers = []
+
+        for row in csv_content:
+            value = row.get(key_column)
+            if not value:
+                continue
+
+            value = value.strip().strip("{}")
+
+            if not value:
+                continue
+
+            identifiers.append(value)
 
         if not identifiers:
             raise MissingHashedEmailError(
@@ -60,14 +70,15 @@ class PremiumSourcesRowsService:
             "business_email_sha256",
         ]
         asid_candidates = ["asid", "as_id"]
+        lower_row_keys = {k.lower(): k for k in row.keys()}
 
         for candidate in email_candidates:
-            if candidate in row:
-                return candidate
+            if candidate in lower_row_keys:
+                return lower_row_keys[candidate]
 
         for candidate in asid_candidates:
-            if candidate in row:
-                return candidate
+            if candidate in lower_row_keys:
+                return lower_row_keys[candidate]
 
         raise MissingHashedEmailError(
             "CSV must contain one of: sha256_email or asid"
@@ -76,7 +87,7 @@ class PremiumSourcesRowsService:
     def upload_asid_with_email(
         self, premium_source_id: UUID, asids: list[str]
     ) -> int:
-        CHUNK_SIZE = 20_000
+        CHUNK_SIZE = 5000
         row_offset = 1
 
         for chunk in batched(asids, CHUNK_SIZE):
@@ -117,7 +128,10 @@ class PremiumSourcesRowsService:
         CHUNK_SIZE = 1_000_000
         row_offset = 1
 
-        ch_column = "asid" if "asid" in column_name else "sha256_email"
+        if "asid" in column_name.lower():
+            ch_column = "asid"
+        else:
+            ch_column = "sha256_email"
 
         for chunk in batched(identifiers, CHUNK_SIZE):
             rows = [
