@@ -3,17 +3,14 @@ from datetime import datetime, timezone
 from uuid import UUID
 import json
 
-from sqlalchemy import desc, asc, select
-from sqlalchemy.orm import Session
+from sqlalchemy import desc, asc
 
 from db_dependencies import Db
-from enums import TypeOfSourceOrigin, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.users import Users
 from models.users_domains import UserDomains
 from typing import Optional, Tuple, List, Any
 from sqlalchemy.engine.row import Row
-from sqlalchemy.orm import Query
 
 from persistence.utils import apply_filters
 from resolver import injectable
@@ -22,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @injectable
-class AudienceSourcesPersistence:
+class AudienceSourcesPostgresPersistence:
     def __init__(self, db: Db):
         self.db = db
 

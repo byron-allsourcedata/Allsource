@@ -12,6 +12,7 @@ from uuid import UUID
 
 import aiormq
 import boto3
+from pydantic import BaseModel
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
@@ -23,6 +24,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from utils.logs import CH_HANDLER
 from services.sources.agent import (
     SourceAgentService,
     EmailAsid,
@@ -648,6 +650,7 @@ async def process_and_send_chunks(
     channel: Channel,
     db_session: Session,
     source_id: str,
+    user_id: int,
     batch_size: int,
     queue_name: str,
     connection,
@@ -719,6 +722,8 @@ async def process_and_send_chunks(
                 for p in batch
             ]
             msg = MessageBody(
+                user_id=user_id,
+                target_message="normalize",
                 type=match_mode,
                 data=DataBodyNormalize(
                     persons=rows,
@@ -1087,8 +1092,6 @@ async def normalize_persons_interest_leads(
     data_for_normalize: DataForNormalize,
     db_session: Session,
 ):
-    import logging
-
     logging.info(f"Processing normalization data for source_id {source_id}")
 
     min_recency = (
@@ -1336,6 +1339,11 @@ async def process_rmq_message(
         message_body = MessageBody(**message_body_dict)
         data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
         source_id: str = data.source_id
+        CH_HANDLER.start_entity(
+            entity_id=source_id,
+            script_name="audience_source_agent",
+            user_id=message_body.user_id,
+        )
         with db_session.begin():
             audience_source = (
                 db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -1362,7 +1370,10 @@ async def process_rmq_message(
 
         db_session.commit()
         with db_session.begin():
-            if type in ("emails", "asids") and data_for_normalize:
+            if (
+                type in ("emails", "asids") and data_for_normalize
+                # and isinstance(data_for_normalize, DataForNormalize)
+            ):
                 if (
                     message_body.status
                     == TypeOfCustomer.CUSTOMER_CONVERSIONS.value
@@ -1500,6 +1511,7 @@ async def process_rmq_message(
                 channel=channel,
                 db_session=db_session,
                 source_id=source_id,
+                user_id=user_id,
                 batch_size=BATCH_SIZE,
                 queue_name=AUDIENCE_SOURCES_MATCHING,
                 connection=connection,
@@ -1521,14 +1533,22 @@ async def process_rmq_message(
 
         await message.ack()
         logging.info(f"Processing completed for source_id {source_id}.")
-
     except BaseException as e:
         logging.warning(
             f"Message for source_id failed and will be reprocessed. {e}"
         )
         logging.exception("Unhandled error for source %s", source_id)
+        try:
+            CH_HANDLER.abort_entity(entity_id=source_id)
+        except Exception:
+            logging.exception("Failed to abort_entity for %s", source_id)
         db_session.rollback()
         await message.ack()
+    finally:
+        logging.getLogger(__name__).debug(
+            "about to call CH_HANDLER.end_entity for %s", source_id
+        )
+        CH_HANDLER.end_entity(entity_id=source_id, status="complete")
 
 
 async def main():

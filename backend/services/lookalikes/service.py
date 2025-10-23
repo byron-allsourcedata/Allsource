@@ -7,7 +7,9 @@ from sqlalchemy import update
 from db_dependencies import Clickhouse
 from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
-from persistence.audience_sources import AudienceSourcesPersistence
+from persistence.audience_sources.unified import (
+    AudienceSourcesUnifiedPersistence,
+)
 from enums import BaseEnum
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
@@ -114,7 +116,7 @@ class AudienceLookalikesService:
     def __init__(
         self,
         lookalikes_persistence_service: AudienceLookalikesPersistence,
-        sources_persistence: AudienceSourcesPersistence,
+        sources_persistence: AudienceSourcesUnifiedPersistence,
         matched_source: AudienceSourcesMatchedPersonsPersistence,
         enrichment_users: EnrichmentUsersPersistence,
         enrichment_scores: EnrichmentLookalikeScoresPersistence,
