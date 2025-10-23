@@ -17,10 +17,3 @@ class AudienceSourcesClickhousePersistence:
     ):
         self.client_inserter = client_inserter
         self.postgres = postgres
-        self.table = "bin_logs"
-
-    def delete_logs_by_source_id(self, source_id: UUID) -> List[dict]:
-        self.client_inserter.command("SET max_query_size = 104857600")
-
-        sql = f"ALTER TABLE {self.table} DELETE WHERE entity_id = %(id)s"
-        self.client_inserter.command(sql, parameters={"id": source_id})

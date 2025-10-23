@@ -67,7 +67,3 @@ class AudienceSourcesPersistenceInterface(ABC):
     @abstractmethod
     def get_problematic_sources(self) -> List[dict[str, Any]]:
         pass
-
-    @abstractmethod
-    def delete_logs_by_source_id(self, source_id):
-        pass

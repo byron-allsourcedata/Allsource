@@ -84,6 +84,3 @@ class AudienceSourcesUnifiedPersistence(AudienceSourcesPersistenceInterface):
 
     def get_problematic_sources(self) -> List[dict[str, Any]]:
         return self.postgres.get_problematic_sources()
-
-    def delete_logs_by_source_id(self, source_id: UUID):
-        return self.clickhouse.delete_logs_by_source_id(source_id)
