@@ -29,6 +29,7 @@ class PremiumSourcesRowsService:
             return 0, "unknown"
 
         key_column = self.get_identifier_column_name(csv_content[0])
+
         identifiers = []
 
         for row in csv_content:
@@ -86,7 +87,7 @@ class PremiumSourcesRowsService:
     def upload_asid_with_email(
         self, premium_source_id: UUID, asids: list[str]
     ) -> int:
-        CHUNK_SIZE = 20_000
+        CHUNK_SIZE = 5000
         row_offset = 1
 
         for chunk in batched(asids, CHUNK_SIZE):
