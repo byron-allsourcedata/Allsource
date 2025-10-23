@@ -294,3 +294,25 @@ class EnrichmentUsersPersistence:
 
         self._run_query(sql_delete, {"asids": asids})
         logger.info(f"Deleted enrichment_users records for emails: {emails}")
+
+    def get_emails_by_asids(self, asids: list[str]) -> dict[str, str | None]:
+        """
+        Returns a dict { asid: email | None } with priority:
+        personal_email > business_email > any(other_emails)
+        """
+        if not asids:
+            return {}
+
+        query = """
+            SELECT
+                asid,
+                coalesce(
+                    personal_email,
+                    business_email,
+                    arrayElement(other_emails, 1)
+                ) AS email
+            FROM enrichment_users
+            WHERE asid IN %(asids)s
+        """
+        rows = self._run_query(query, {"asids": asids})
+        return {r[0]: (r[1] if r[1] is not None else None) for r in rows}

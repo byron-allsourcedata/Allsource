@@ -23,7 +23,12 @@ from aio_pika import IncomingMessage, Channel
 from dotenv import load_dotenv
 from sqlalchemy.orm import Session
 
+current_dir = os.path.dirname(os.path.realpath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
+sys.path.append(parent_dir)
 
+from entity_logging import EntityBufferHandler
+from utils.logs import init_logging_async
 from db_dependencies import Db
 from domains.sources.order_count_service import SourcesOrderCountService
 from resolver import Resolver
@@ -329,6 +334,7 @@ async def parse_csv_file(
 
         if batch_rows:
             message_body = MessageBody(
+                user_id=user_id,
                 type="asids" if asid else "emails",
                 data=DataBodyFromSource(
                     persons=batch_rows,
@@ -537,6 +543,7 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
                 persons.append(PersonRow(lead_id=current_id))
 
         message_body = MessageBody(
+            user_id=user_id,
             type="user_ids",
             data=DataBodyFromSource(
                 persons=persons, source_id=str(source_id), user_id=user_id
@@ -555,12 +562,13 @@ async def send_pixel_contacts(*, data, source_id, db_session, channel, user_id):
     return True
 
 
-async def aud_sources_reader(
+async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
     s3_session,
     connection,
     channel: Channel,
+    ch_handler: EntityBufferHandler | None,
 ):
     try:
         await message.ack()
@@ -573,6 +581,12 @@ async def aud_sources_reader(
             return
         user_id = data.get("user_id")
         source_id = str(data.get("source_id"))
+        if ch_handler:
+            ch_handler.start_entity(
+                entity_uuid_id=source_id,
+                script_name="audience_source_filler",
+                user_id=user_id,
+            )
 
         resolver = Resolver()
         resolver.inject(Db, db_session)
@@ -611,6 +625,15 @@ async def aud_sources_reader(
             channel=channel,
         )
         logging.error(f"Error processing message: {e}", exc_info=True)
+
+        if ch_handler:
+            ch_handler.abort_entity(entity_uuid_id=source_id)
+    finally:
+        if ch_handler:
+            logging.getLogger(__name__).debug(
+                "about to call CH_HANDLER.end_entity for %s", source_id
+            )
+            ch_handler.end_entity(entity_uuid_id=source_id, status="complete")
 
 
 def extract_key_from_url(s3_url: str):
@@ -659,9 +682,11 @@ async def main():
                 name=AUDIENCE_SOURCES_READER,
                 durable=True,
             )
+            ch_handler = await init_logging_async()
             await reader_queue.consume(
                 functools.partial(
-                    aud_sources_reader,
+                    process_rmq_message,
+                    ch_handler=ch_handler,
                     db_session=db_session,
                     s3_session=s3_session,
                     connection=connection,
@@ -682,6 +707,8 @@ async def main():
             if global_connection:
                 logging.info("Closing RabbitMQ connection...")
                 await global_connection.close()
+            if ch_handler:
+                await ch_handler.flush_all(timeout=30.0)
             logging.info("Shutting down...")
             time.sleep(10)
 
