@@ -25,16 +25,19 @@ const H6 = styled(T)`
 type ControllerProps = {
 	onSelectIntegration: (integration: string, integration_id: number) => void;
 	onAddIntegration: (integration: string) => void;
+	onClose: () => void;
 };
 
 export const IntegrationListController: FC<ControllerProps> = ({
 	onSelectIntegration,
 	onAddIntegration,
+	onClose,
 }) => {
 	return (
 		<IntegrationList
 			onIntegrationSelected={onSelectIntegration}
 			onAddIntegration={onAddIntegration}
+			onClose={onClose}
 		/>
 	);
 };
@@ -42,11 +45,13 @@ export const IntegrationListController: FC<ControllerProps> = ({
 type Props = {
 	onIntegrationSelected: (integration: string, integration_id: number) => void;
 	onAddIntegration: (integration: string) => void;
+	onClose: () => void;
 };
 
 export const IntegrationList: FC<Props> = ({
 	onIntegrationSelected,
 	onAddIntegration,
+	onClose,
 }) => {
 	const [{ data: integrations }, refetchIntegrations] =
 		usePremiumSyncIntegrations();
@@ -57,7 +62,7 @@ export const IntegrationList: FC<Props> = ({
 
 	return (
 		<Container>
-			<DrawerHeader title="Create a Sync" onClose={() => {}} />
+			<DrawerHeader title="Create a Sync" onClose={onClose} />
 			<Column padding="1rem 2.25rem 1rem 1.5rem" gap="1.5rem">
 				<H6>Choose from integrated platform</H6>
 				<Row gap="1rem" flexWrap="wrap">

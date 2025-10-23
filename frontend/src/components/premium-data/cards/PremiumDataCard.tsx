@@ -142,9 +142,7 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 					{props.cardType === "user" && (
 						<UserButtonGroup
 							locked={source.status === "locked"}
-							canSync={
-								source.status === "ready" && source.source_type !== "asid"
-							}
+							canSync={source.status === "ready"}
 							price={source.price}
 							onSync={props.onSync}
 							onDownload={props.onDownload}
