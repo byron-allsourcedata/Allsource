@@ -32,7 +32,7 @@ from services.integrations.million_verifier import (
 
 @injectable
 class GreenArrowIntegrationsService:
-    BASE_URL = "https://studio.example.com/ga/api/v2"
+    BASE_URL = "https://b2bpipes.com/ga/api/v2"
 
     def __init__(
         self,
