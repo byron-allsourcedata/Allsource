@@ -320,6 +320,7 @@ export const PremiumSyncDrawerController: FC<SyncDrawerProps> = ({
 			<IntegrationListController
 				onSelectIntegration={selectIntegration}
 				onAddIntegration={onAddIntegration}
+				onClose={onClose}
 			/>
 		);
 	} else if (state.step === "setup_integration") {
