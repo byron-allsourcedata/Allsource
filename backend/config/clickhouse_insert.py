@@ -21,5 +21,15 @@ class ClickhouseInsertConfig:
         )
 
     @classmethod
+    async def get_async_client(cls):
+        return await clickhouse_connect.get_async_client(
+            host=cls.host,
+            port=cls.port,
+            username=cls.user,
+            password=cls.password,
+            database=cls.database,
+        )
+
+    @classmethod
     def users_table(cls):
         return f"{cls.database}.enrichment_users"

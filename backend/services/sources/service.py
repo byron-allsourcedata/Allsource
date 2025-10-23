@@ -675,7 +675,6 @@ class AudienceSourceService:
 
     def delete_source(self, id) -> bool:
         count_deleted = self.audience_sources_persistence.delete_source(id)
-        self.audience_sources_persistence.delete_logs_by_source_id(id)
         return count_deleted > 0
 
     def get_sample_customers_list(self, source_type: str):

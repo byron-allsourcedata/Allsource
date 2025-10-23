@@ -1,21 +1,41 @@
 import logging
+import os
 import sys
 from types import ModuleType
 from entity_logging import EntityBufferHandler
 from config import ClickhouseInsertConfig
 
-client_clickhouse = ClickhouseInsertConfig.get_client()
-
-CH_HANDLER = EntityBufferHandler(ch_client=client_clickhouse, table="bin_logs")
 formatter = logging.Formatter(
     "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
-CH_HANDLER.setFormatter(formatter)
-CH_HANDLER.setLevel(logging.NOTSET)
 
-root = logging.getLogger()
-if CH_HANDLER not in root.handlers:
-    root.addHandler(CH_HANDLER)
+
+def is_ch_enabled() -> bool:
+    mode = os.getenv("MODE", "local").lower()
+    return mode in ("prod", "dev")
+
+
+async def init_logging_async():
+    global CH_HANDLER
+
+    if not is_ch_enabled():
+        logging.getLogger(__name__).info(
+            "ClickHouse logging disabled by MODE env."
+        )
+        return None
+
+    async_client = await ClickhouseInsertConfig.get_async_client()
+    CH_HANDLER = EntityBufferHandler(
+        ch_async_client=async_client, table="bin_logs"
+    )
+    CH_HANDLER.setFormatter(formatter)
+    CH_HANDLER.setLevel(logging.NOTSET)
+
+    root = logging.getLogger()
+    if CH_HANDLER not in root.handlers:
+        root.addHandler(CH_HANDLER)
+
+    return CH_HANDLER
 
 
 def setup_local_logger(logger: logging.Logger, level: int):

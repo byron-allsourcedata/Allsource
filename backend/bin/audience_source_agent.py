@@ -24,7 +24,8 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from utils.logs import CH_HANDLER
+from utils.logs import init_logging_async
+from entity_logging import EntityBufferHandler
 from services.sources.agent import (
     SourceAgentService,
     EmailAsid,
@@ -1333,17 +1334,19 @@ async def process_rmq_message(
     similar_audience_service: SimilarAudienceService,
     audience_lookalikes_service: AudienceLookalikesService,
     source_agent_service: SourceAgentService,
+    ch_handler: EntityBufferHandler | None,
 ):
     try:
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
         data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
         source_id: str = data.source_id
-        CH_HANDLER.start_entity(
-            entity_id=source_id,
-            script_name="audience_source_agent",
-            user_id=message_body.user_id,
-        )
+        if ch_handler:
+            ch_handler.start_entity(
+                entity_uuid_id=source_id,
+                script_name="audience_source_agent",
+                user_id=message_body.user_id,
+            )
         with db_session.begin():
             audience_source = (
                 db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -1538,17 +1541,16 @@ async def process_rmq_message(
             f"Message for source_id failed and will be reprocessed. {e}"
         )
         logging.exception("Unhandled error for source %s", source_id)
-        try:
-            CH_HANDLER.abort_entity(entity_id=source_id)
-        except Exception:
-            logging.exception("Failed to abort_entity for %s", source_id)
+        if ch_handler:
+            ch_handler.abort_entity(entity_uuid_id=source_id)
         db_session.rollback()
         await message.ack()
     finally:
-        logging.getLogger(__name__).debug(
-            "about to call CH_HANDLER.end_entity for %s", source_id
-        )
-        CH_HANDLER.end_entity(entity_id=source_id, status="complete")
+        if ch_handler:
+            logging.getLogger(__name__).debug(
+                "about to call CH_HANDLER.end_entity for %s", source_id
+            )
+            ch_handler.end_entity(entity_uuid_id=source_id, status="complete")
 
 
 async def main():
@@ -1564,6 +1566,7 @@ async def main():
             rmq_connection = RabbitMQConnection()
             connection = await rmq_connection.connect()
             channel = await connection.channel()
+            ch_handler = await init_logging_async()
             await channel.set_qos(prefetch_count=1)
 
             db_session = await resolver.resolve(Db)
@@ -1592,6 +1595,7 @@ async def main():
                     similar_audience_service=similar_audience_service,
                     audience_lookalikes_service=audience_lookalikes_service,
                     source_agent_service=source_agent_service,
+                    ch_handler=ch_handler,
                 )
             )
 
@@ -1608,6 +1612,8 @@ async def main():
             if rmq_connection:
                 logging.info("Closing RabbitMQ connection...")
                 await rmq_connection.close()
+            if ch_handler:
+                await ch_handler.flush_all(timeout=30.0)
             logging.info("Shutting down...")
             time.sleep(10)
 
