@@ -92,7 +92,7 @@ async def get_notification(
 @router.get("/check-user-authorization")
 def check_user_authorization(
     user=Depends(check_user_authorization_without_pixel),
-    domain: UserDomains = Depends(check_pixel_install_domain),
+    # domain: UserDomains = Depends(check_pixel_install_domain),
 ):
     return {"status": "SUCCESS"}
 

@@ -13,7 +13,8 @@ from schemas.scripts.audience_source import MessageBody
 logger = logging.getLogger(__name__)
 
 aio_pika_logger = logging.getLogger("aio_pika")
-aio_pika_logger.setLevel(logging.WARNING)
+aio_pika_logger.setLevel(logging.CRITICAL)
+logging.getLogger("aiormq").setLevel(logging.CRITICAL)
 
 
 class RabbitMQConnection:
@@ -50,6 +51,8 @@ async def publish_rabbitmq_message_with_channel(
             json_data = json.dumps(message_body).encode("utf-8")
 
         message = Message(body=json_data)
-        _ = await channel.default_exchange.publish(message, routing_key=queue_name)
+        _ = await channel.default_exchange.publish(
+            message, routing_key=queue_name
+        )
     except Exception as e:
         logger.error(e)

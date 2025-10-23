@@ -12,6 +12,7 @@ from uuid import UUID
 
 import aiormq
 import boto3
+from pydantic import BaseModel
 import pytz
 from aio_pika import IncomingMessage, Connection, Channel
 from dotenv import load_dotenv
@@ -23,6 +24,8 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from utils.logs import init_logging_async
+from entity_logging import EntityBufferHandler
 from services.sources.agent import (
     SourceAgentService,
     EmailAsid,
@@ -195,6 +198,7 @@ async def process_matching(
                 existing = existing_by_asid[str(candidate_asid)]
 
             if existing:
+                is_persisted = getattr(existing, "id", None) is not None
                 existing.count += data["orders_count"]
                 if include_amount:
                     existing.amount = (existing.amount or 0) + (
@@ -215,15 +219,21 @@ async def process_matching(
                     existing.email = candidate_email
                     existing_by_email[candidate_email] = existing
 
-                matched_persons_to_update.append(
-                    {
-                        "id": existing.id,
-                        "count": existing.count,
-                        "amount": existing.amount if include_amount else None,
-                        "start_date": existing.start_date,
-                        "recency": existing.recency,
-                    }
-                )
+                if is_persisted:
+                    matched_persons_to_update.append(
+                        {
+                            "id": existing.id,
+                            "count": existing.count,
+                            "amount": existing.amount
+                            if include_amount
+                            else None,
+                            "start_date": existing.start_date,
+                            "recency": existing.recency,
+                        }
+                    )
+                else:
+                    if existing not in matched_persons_to_add:
+                        matched_persons_to_add.append(existing)
             else:
                 new_p = AudienceSourcesMatchedPerson(
                     source_id=source_id,
@@ -644,6 +654,7 @@ async def process_and_send_chunks(
     channel: Channel,
     db_session: Session,
     source_id: str,
+    user_id: int,
     batch_size: int,
     queue_name: str,
     connection,
@@ -715,6 +726,8 @@ async def process_and_send_chunks(
                 for p in batch
             ]
             msg = MessageBody(
+                user_id=user_id,
+                target_message="normalize",
                 type=match_mode,
                 data=DataBodyNormalize(
                     persons=rows,
@@ -1083,8 +1096,6 @@ async def normalize_persons_interest_leads(
     data_for_normalize: DataForNormalize,
     db_session: Session,
 ):
-    import logging
-
     logging.info(f"Processing normalization data for source_id {source_id}")
 
     min_recency = (
@@ -1326,12 +1337,19 @@ async def process_rmq_message(
     similar_audience_service: SimilarAudienceService,
     audience_lookalikes_service: AudienceLookalikesService,
     source_agent_service: SourceAgentService,
+    ch_handler: EntityBufferHandler | None,
 ):
     try:
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
         data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
         source_id: str = data.source_id
+        if ch_handler:
+            ch_handler.start_entity(
+                entity_uuid_id=source_id,
+                script_name="audience_source_agent",
+                user_id=message_body.user_id,
+            )
         with db_session.begin():
             audience_source = (
                 db_session.query(AudienceSource).filter_by(id=source_id).first()
@@ -1358,7 +1376,10 @@ async def process_rmq_message(
 
         db_session.commit()
         with db_session.begin():
-            if type in ("emails", "asids") and data_for_normalize:
+            if (
+                type in ("emails", "asids") and data_for_normalize
+                # and isinstance(data_for_normalize, DataForNormalize)
+            ):
                 if (
                     message_body.status
                     == TypeOfCustomer.CUSTOMER_CONVERSIONS.value
@@ -1496,6 +1517,7 @@ async def process_rmq_message(
                 channel=channel,
                 db_session=db_session,
                 source_id=source_id,
+                user_id=user_id,
                 batch_size=BATCH_SIZE,
                 queue_name=AUDIENCE_SOURCES_MATCHING,
                 connection=connection,
@@ -1517,14 +1539,21 @@ async def process_rmq_message(
 
         await message.ack()
         logging.info(f"Processing completed for source_id {source_id}.")
-
     except BaseException as e:
         logging.warning(
             f"Message for source_id failed and will be reprocessed. {e}"
         )
         logging.exception("Unhandled error for source %s", source_id)
+        if ch_handler:
+            ch_handler.abort_entity(entity_uuid_id=source_id)
         db_session.rollback()
         await message.ack()
+    finally:
+        if ch_handler:
+            logging.getLogger(__name__).debug(
+                "about to call CH_HANDLER.end_entity for %s", source_id
+            )
+            ch_handler.end_entity(entity_uuid_id=source_id, status="complete")
 
 
 async def main():
@@ -1540,6 +1569,7 @@ async def main():
             rmq_connection = RabbitMQConnection()
             connection = await rmq_connection.connect()
             channel = await connection.channel()
+            ch_handler = await init_logging_async()
             await channel.set_qos(prefetch_count=1)
 
             db_session = await resolver.resolve(Db)
@@ -1568,6 +1598,7 @@ async def main():
                     similar_audience_service=similar_audience_service,
                     audience_lookalikes_service=audience_lookalikes_service,
                     source_agent_service=source_agent_service,
+                    ch_handler=ch_handler,
                 )
             )
 
@@ -1584,6 +1615,8 @@ async def main():
             if rmq_connection:
                 logging.info("Closing RabbitMQ connection...")
                 await rmq_connection.close()
+            if ch_handler:
+                await ch_handler.flush_all(timeout=30.0)
             logging.info("Shutting down...")
             time.sleep(10)
 

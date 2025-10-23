@@ -5,6 +5,10 @@
 	font-family: "Roboto", sans-serif;
 }
 
+:root {
+	--main-blue: #3898fc;
+}
+
 *,
 ::after,
 ::before {

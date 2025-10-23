@@ -116,10 +116,12 @@ interface SettingsAccountDetailsProps {
 		reset_password_sent_at: string;
 		without_password: boolean;
 	};
+	teamAccessLevel: "read_only" | "standart" | "owner";
 }
 
 export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 	accountDetails,
+	teamAccessLevel,
 }) => {
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [newPassword, setNewPassword] = useState("");
@@ -1414,450 +1416,456 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({
 						</>
 					)}
 
-					{/* <Box sx={accontDetailsStyles.orDivider}>
-						<Box sx={{ borderBottom: "1px solid #e4e4e4", flexGrow: 1 }} />
-					</Box> */}
+					{teamAccessLevel === "owner" && (
+						<>
+							<Box sx={accontDetailsStyles.orDivider}>
+								<Box sx={{ borderBottom: "1px solid #e4e4e4", flexGrow: 1 }} />
+							</Box>
 
-					{/* Business Info Section */}
-					{/* <Box sx={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-						<Typography
-							variant="h6"
-							className="first-sub-title"
-							sx={{
-								color: "#4a4a4a !important",
-								lineHeight: "22px !important",
-							}}
-						>
-							Business Info
-						</Typography>
-						<Box
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								gap: 2,
-								"@media (max-width: 600px)": {
-									flexDirection: "column",
-									alignItems: "flex-start",
-								},
-							}}
-						>
-							<TextField
-								sx={{
-									...accontDetailsStyles.formField,
-									"& .MuiInputBase-root:hover .MuiIconButton-root": {
-										display: "flex", // Show the write icon on hover
-									},
-									"& .MuiIconButton-root": {
-										display:
-											isOrganizationNameEditable ||
-											showCloseIcon(
-												isOrganizationNameTyping,
+							{/* Business Info Section */}
+							<Box
+								sx={{ display: "flex", flexDirection: "column", gap: "32px" }}
+							>
+								<Typography
+									variant="h6"
+									className="first-sub-title"
+									sx={{
+										color: "#4a4a4a !important",
+										lineHeight: "22px !important",
+									}}
+								>
+									Business Info
+								</Typography>
+								<Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										gap: 2,
+										"@media (max-width: 600px)": {
+											flexDirection: "column",
+											alignItems: "flex-start",
+										},
+									}}
+								>
+									<TextField
+										sx={{
+											...accontDetailsStyles.formField,
+											"& .MuiInputBase-root:hover .MuiIconButton-root": {
+												display: "flex", // Show the write icon on hover
+											},
+											"& .MuiIconButton-root": {
+												display:
+													isOrganizationNameEditable ||
+													showCloseIcon(
+														isOrganizationNameTyping,
+														organizationName,
+														initialOrganizationName,
+													)
+														? "none"
+														: "none", // Always hidden
+											},
+										}}
+										label="Organization Name"
+										value={organizationName}
+										inputRef={organizationNameRef}
+										onChange={handleChange(
+											setOrganizationName,
+											setIsOrganizationNameTyping,
+											setIsOrganizationNameModified,
+										)}
+										fullWidth
+										margin="normal"
+										InputLabelProps={{
+											className: "form-input-label",
+											focused: false,
+										}}
+										InputProps={{
+											readOnly: !isOrganizationNameEditable,
+											className: "form-input",
+											sx: accontDetailsStyles.formInput,
+											endAdornment: (
+												<>
+													{!isOrganizationNameEditable && (
+														<InputAdornment position="end">
+															<IconButton
+																onClick={handleEnableEdit(
+																	setIsOrganizationNameEditable,
+																	organizationNameRef,
+																)}
+																sx={{
+																	display: "none", // Hidden when input is editable
+																	"&:hover": {
+																		display: "flex", // Show on hover
+																	},
+																}}
+															>
+																<Image
+																	src="/write-icon.svg"
+																	alt="write-icon"
+																	height={24}
+																	width={24}
+																/>
+															</IconButton>
+														</InputAdornment>
+													)}
+
+													{showCloseIcon(
+														isOrganizationNameTyping,
+														organizationName,
+														initialOrganizationName,
+													) && (
+														<InputAdornment position="end">
+															<IconButton
+																onClick={handleReset(
+																	setOrganizationName,
+																	setIsOrganizationNameTyping,
+																	setIsOrganizationNameModified,
+																	setIsOrganizationNameEditable,
+																	initialOrganizationName,
+																)}
+																size="small"
+															>
+																<Image
+																	src="/close-circle-purple.svg"
+																	alt="close-icon-purple"
+																	height={18}
+																	width={18}
+																/>
+															</IconButton>
+														</InputAdornment>
+													)}
+												</>
+											),
+										}}
+										onBlur={handleBlur(
+											organizationName,
+											initialOrganizationName,
+											setIsOrganizationNameEditable,
+											setIsOrganizationNameTyping,
+											setIsOrganizationNameModified,
+										)}
+									/>
+									<Button
+										className="hyperlink-red"
+										variant="contained"
+										color="primary"
+										onClick={() => handleSaveBusinessInfo("organizationName")}
+										sx={{
+											borderRadius: "4px",
+											border: "1px solid rgba(56, 152, 252, 1)",
+											background: "#fff",
+											boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+											color: "rgba(56, 152, 252, 1) !important",
+											textTransform: "none",
+											padding: "10px 24px",
+											height: "40px",
+											"&:hover": {
+												background: "transparent",
+											},
+											"&.Mui-disabled": {
+												background: "transparent",
+												opacity: "0.4",
+											},
+										}}
+										disabled={
+											!isSaveEnabled(
 												organizationName,
 												initialOrganizationName,
+												isOrganizationNameModified,
 											)
-												? "none"
-												: "none", // Always hidden
-									},
-								}}
-								label="Organization Name"
-								value={organizationName}
-								inputRef={organizationNameRef}
-								onChange={handleChange(
-									setOrganizationName,
-									setIsOrganizationNameTyping,
-									setIsOrganizationNameModified,
-								)}
-								fullWidth
-								margin="normal"
-								InputLabelProps={{
-									className: "form-input-label",
-									focused: false,
-								}}
-								InputProps={{
-									readOnly: !isOrganizationNameEditable,
-									className: "form-input",
-									sx: accontDetailsStyles.formInput,
-									endAdornment: (
-										<>
-											{!isOrganizationNameEditable && (
-												<InputAdornment position="end">
-													<IconButton
-														onClick={handleEnableEdit(
-															setIsOrganizationNameEditable,
-															organizationNameRef,
-														)}
-														sx={{
-															display: "none", // Hidden when input is editable
-															"&:hover": {
-																display: "flex", // Show on hover
-															},
-														}}
-													>
-														<Image
-															src="/write-icon.svg"
-															alt="write-icon"
-															height={24}
-															width={24}
-														/>
-													</IconButton>
-												</InputAdornment>
-											)}
+										}
+									>
+										Save
+									</Button>
+								</Box>
+								<Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										gap: 2,
+										"@media (max-width: 600px)": {
+											flexDirection: "column",
+											alignItems: "flex-start",
+										},
+									}}
+								>
+									<TextField
+										sx={{
+											...accontDetailsStyles.formField,
+											"& .MuiInputBase-root:hover .MuiIconButton-root": {
+												display: "flex", // Show the write icon on hover
+											},
+											"& .MuiIconButton-root": {
+												display:
+													isCompanyWebsiteEditable ||
+													showCloseIcon(
+														isCompanyWebsiteTyping,
+														companyWebsite,
+														initialCompanyWebsite,
+													)
+														? "none"
+														: "none", // Always hidden
+											},
+										}}
+										label="Company Website"
+										value={companyWebsite}
+										inputRef={companyWebsiteRef}
+										onChange={handleChange(
+											setCompanyWebsite,
+											setIsCompanyWebsiteTyping,
+											setIsCompanyWebsiteModified,
+										)}
+										fullWidth
+										margin="normal"
+										InputLabelProps={{
+											className: "form-input-label",
+											focused: false,
+										}}
+										InputProps={{
+											readOnly: !isCompanyWebsiteEditable,
+											className: "form-input",
+											sx: accontDetailsStyles.formInput,
+											endAdornment: (
+												<>
+													{!isCompanyWebsiteEditable && (
+														<InputAdornment position="end">
+															<IconButton
+																onClick={handleEnableEdit(
+																	setIsCompanyWebsiteEditable,
+																	companyWebsiteRef,
+																)}
+																sx={{
+																	display: "none", // Hidden when input is editable
+																	"&:hover": {
+																		display: "flex", // Show on hover
+																	},
+																}}
+															>
+																<Image
+																	src="/write-icon.svg"
+																	alt="write-icon"
+																	height={24}
+																	width={24}
+																/>
+															</IconButton>
+														</InputAdornment>
+													)}
 
-											{showCloseIcon(
-												isOrganizationNameTyping,
-												organizationName,
-												initialOrganizationName,
-											) && (
-												<InputAdornment position="end">
-													<IconButton
-														onClick={handleReset(
-															setOrganizationName,
-															setIsOrganizationNameTyping,
-															setIsOrganizationNameModified,
-															setIsOrganizationNameEditable,
-															initialOrganizationName,
-														)}
-														size="small"
-													>
-														<Image
-															src="/close-circle-purple.svg"
-															alt="close-icon-purple"
-															height={18}
-															width={18}
-														/>
-													</IconButton>
-												</InputAdornment>
-											)}
-										</>
-									),
-								}}
-								onBlur={handleBlur(
-									organizationName,
-									initialOrganizationName,
-									setIsOrganizationNameEditable,
-									setIsOrganizationNameTyping,
-									setIsOrganizationNameModified,
-								)}
-							/>
-							<Button
-								className="hyperlink-red"
-								variant="contained"
-								color="primary"
-								onClick={() => handleSaveBusinessInfo("organizationName")}
-								sx={{
-									borderRadius: "4px",
-									border: "1px solid rgba(56, 152, 252, 1)",
-									background: "#fff",
-									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-									color: "rgba(56, 152, 252, 1) !important",
-									textTransform: "none",
-									padding: "10px 24px",
-									height: "40px",
-									"&:hover": {
-										background: "transparent",
-									},
-									"&.Mui-disabled": {
-										background: "transparent",
-										opacity: "0.4",
-									},
-								}}
-								disabled={
-									!isSaveEnabled(
-										organizationName,
-										initialOrganizationName,
-										isOrganizationNameModified,
-									)
-								}
-							>
-								Save
-							</Button>
-						</Box>
-						<Box
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								gap: 2,
-								"@media (max-width: 600px)": {
-									flexDirection: "column",
-									alignItems: "flex-start",
-								},
-							}}
-						>
-							<TextField
-								sx={{
-									...accontDetailsStyles.formField,
-									"& .MuiInputBase-root:hover .MuiIconButton-root": {
-										display: "flex", // Show the write icon on hover
-									},
-									"& .MuiIconButton-root": {
-										display:
-											isCompanyWebsiteEditable ||
-											showCloseIcon(
-												isCompanyWebsiteTyping,
+													{showCloseIcon(
+														isCompanyWebsiteTyping,
+														companyWebsite,
+														initialCompanyWebsite,
+													) && (
+														<InputAdornment position="end">
+															<IconButton
+																onClick={handleReset(
+																	setCompanyWebsite,
+																	setIsCompanyWebsiteTyping,
+																	setIsCompanyWebsiteModified,
+																	setIsCompanyWebsiteEditable,
+																	initialCompanyWebsite,
+																)}
+																size="small"
+															>
+																<Image
+																	src="/close-circle-purple.svg"
+																	alt="close-icon-purple"
+																	height={18}
+																	width={18}
+																/>
+															</IconButton>
+														</InputAdornment>
+													)}
+												</>
+											),
+										}}
+										onBlur={handleBlur(
+											companyWebsite,
+											initialCompanyWebsite,
+											setIsCompanyWebsiteEditable,
+											setIsCompanyWebsiteTyping,
+											setIsCompanyWebsiteModified,
+										)}
+									/>
+									<Button
+										className="hyperlink-red"
+										variant="contained"
+										color="primary"
+										onClick={() => handleSaveBusinessInfo("companyWebsite")}
+										sx={{
+											borderRadius: "4px",
+											border: "1px solid rgba(56, 152, 252, 1)",
+											background: "#fff",
+											boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+											color: "rgba(56, 152, 252, 1) !important",
+											textTransform: "none",
+											padding: "10px 24px",
+											height: "40px",
+											"&:hover": {
+												background: "transparent",
+											},
+											"&.Mui-disabled": {
+												background: "transparent",
+												opacity: "0.4",
+											},
+										}}
+										disabled={
+											!isSaveEnabled(
 												companyWebsite,
 												initialCompanyWebsite,
+												isCompanyWebsiteModified,
 											)
-												? "none"
-												: "none", // Always hidden
-									},
-								}}
-								label="Company Website"
-								value={companyWebsite}
-								inputRef={companyWebsiteRef}
-								onChange={handleChange(
-									setCompanyWebsite,
-									setIsCompanyWebsiteTyping,
-									setIsCompanyWebsiteModified,
-								)}
-								fullWidth
-								margin="normal"
-								InputLabelProps={{
-									className: "form-input-label",
-									focused: false,
-								}}
-								InputProps={{
-									readOnly: !isCompanyWebsiteEditable,
-									className: "form-input",
-									sx: accontDetailsStyles.formInput,
-									endAdornment: (
-										<>
-											{!isCompanyWebsiteEditable && (
-												<InputAdornment position="end">
-													<IconButton
-														onClick={handleEnableEdit(
-															setIsCompanyWebsiteEditable,
-															companyWebsiteRef,
-														)}
-														sx={{
-															display: "none", // Hidden when input is editable
-															"&:hover": {
-																display: "flex", // Show on hover
-															},
-														}}
-													>
-														<Image
-															src="/write-icon.svg"
-															alt="write-icon"
-															height={24}
-															width={24}
-														/>
-													</IconButton>
-												</InputAdornment>
-											)}
+										}
+									>
+										Save
+									</Button>
+								</Box>
+								{/* <Box
+									sx={{
+										display: "flex",
+										alignItems: "center",
+										gap: 2,
+										"@media (max-width: 600px)": {
+											flexDirection: "column",
+											alignItems: "flex-start",
+										},
+									}}
+								>
+									<TextField
+										sx={{
+											...accontDetailsStyles.formField,
+											"& .MuiInputBase-root:hover .MuiIconButton-root": {
+												display: "flex", // Show the write icon on hover
+											},
+											"& .MuiIconButton-root": {
+												display:
+													isMonthlyVisitsEditable ||
+													showCloseIcon(
+														isMonthlyVisitsTyping,
+														monthlyVisits,
+														initialMonthlyVisits,
+													)
+														? "none"
+														: "none", // Always hidden
+											},
+										}}
+										label="Monthly Visits to Website"
+										value={monthlyVisits}
+										inputRef={monthlyVisitsRef}
+										onChange={handleChange(
+											setMonthlyVisits,
+											setIsMonthlyVisitsTyping,
+											setIsMonthlyVisitsModified,
+										)}
+										fullWidth
+										margin="normal"
+										InputLabelProps={{
+											focused: false,
+											className: "form-input-label",
+										}}
+										InputProps={{
+											readOnly: !isMonthlyVisitsEditable,
+											className: "form-input",
+											sx: accontDetailsStyles.formInput,
+											endAdornment: (
+												<>
+													{!isMonthlyVisitsEditable && (
+														<InputAdornment position="end">
+															<IconButton
+																onClick={handleEnableEdit(
+																	setIsMonthlyVisitsEditable,
+																	monthlyVisitsRef,
+																)}
+																sx={{
+																	display: "none", // Hidden when input is editable
+																	"&:hover": {
+																		display: "flex", // Show on hover
+																	},
+																}}
+															>
+																<Image
+																	src="/write-icon.svg"
+																	alt="write-icon"
+																	height={24}
+																	width={24}
+																/>
+															</IconButton>
+														</InputAdornment>
+													)}
 
-											{showCloseIcon(
-												isCompanyWebsiteTyping,
-												companyWebsite,
-												initialCompanyWebsite,
-											) && (
-												<InputAdornment position="end">
-													<IconButton
-														onClick={handleReset(
-															setCompanyWebsite,
-															setIsCompanyWebsiteTyping,
-															setIsCompanyWebsiteModified,
-															setIsCompanyWebsiteEditable,
-															initialCompanyWebsite,
-														)}
-														size="small"
-													>
-														<Image
-															src="/close-circle-purple.svg"
-															alt="close-icon-purple"
-															height={18}
-															width={18}
-														/>
-													</IconButton>
-												</InputAdornment>
-											)}
-										</>
-									),
-								}}
-								onBlur={handleBlur(
-									companyWebsite,
-									initialCompanyWebsite,
-									setIsCompanyWebsiteEditable,
-									setIsCompanyWebsiteTyping,
-									setIsCompanyWebsiteModified,
-								)}
-							/>
-							<Button
-								className="hyperlink-red"
-								variant="contained"
-								color="primary"
-								onClick={() => handleSaveBusinessInfo("companyWebsite")}
-								sx={{
-									borderRadius: "4px",
-									border: "1px solid rgba(56, 152, 252, 1)",
-									background: "#fff",
-									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-									color: "rgba(56, 152, 252, 1) !important",
-									textTransform: "none",
-									padding: "10px 24px",
-									height: "40px",
-									"&:hover": {
-										background: "transparent",
-									},
-									"&.Mui-disabled": {
-										background: "transparent",
-										opacity: "0.4",
-									},
-								}}
-								disabled={
-									!isSaveEnabled(
-										companyWebsite,
-										initialCompanyWebsite,
-										isCompanyWebsiteModified,
-									)
-								}
-							>
-								Save
-							</Button>
-						</Box>
-						<Box
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								gap: 2,
-								"@media (max-width: 600px)": {
-									flexDirection: "column",
-									alignItems: "flex-start",
-								},
-							}}
-						>
-							<TextField
-								sx={{
-									...accontDetailsStyles.formField,
-									"& .MuiInputBase-root:hover .MuiIconButton-root": {
-										display: "flex", // Show the write icon on hover
-									},
-									"& .MuiIconButton-root": {
-										display:
-											isMonthlyVisitsEditable ||
-											showCloseIcon(
-												isMonthlyVisitsTyping,
+													{showCloseIcon(
+														isMonthlyVisitsTyping,
+														monthlyVisits,
+														initialMonthlyVisits,
+													) && (
+														<InputAdornment position="end">
+															<IconButton
+																onClick={handleReset(
+																	setMonthlyVisits,
+																	setIsMonthlyVisitsTyping,
+																	setIsMonthlyVisitsModified,
+																	setIsMonthlyVisitsEditable,
+																	initialMonthlyVisits,
+																)}
+																size="small"
+															>
+																<Image
+																	src="/close-circle-purple.svg"
+																	alt="close-icon-purple"
+																	height={18}
+																	width={18}
+																/>
+															</IconButton>
+														</InputAdornment>
+													)}
+												</>
+											),
+										}}
+										onBlur={handleBlur(
+											monthlyVisits,
+											initialMonthlyVisits,
+											setIsMonthlyVisitsEditable,
+											setIsMonthlyVisitsTyping,
+											setIsMonthlyVisitsModified,
+										)}
+									/>
+									<Button
+										className="hyperlink-red"
+										variant="contained"
+										color="primary"
+										onClick={() => handleSaveBusinessInfo("monthlyVisits")}
+										sx={{
+											borderRadius: "4px",
+											border: "1px solid rgba(56, 152, 252, 1)",
+											background: "#fff",
+											boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+											color: "rgba(56, 152, 252, 1) !important",
+											textTransform: "none",
+											padding: "10px 24px",
+											height: "40px",
+											"&:hover": {
+												background: "transparent",
+											},
+											"&.Mui-disabled": {
+												background: "transparent",
+												opacity: "0.4",
+											},
+										}}
+										disabled={
+											!isSaveEnabled(
 												monthlyVisits,
 												initialMonthlyVisits,
+												isMonthlyVisitsModified,
 											)
-												? "none"
-												: "none", // Always hidden
-									},
-								}}
-								label="Monthly Visits to Website"
-								value={monthlyVisits}
-								inputRef={monthlyVisitsRef}
-								onChange={handleChange(
-									setMonthlyVisits,
-									setIsMonthlyVisitsTyping,
-									setIsMonthlyVisitsModified,
-								)}
-								fullWidth
-								margin="normal"
-								InputLabelProps={{
-									focused: false,
-									className: "form-input-label",
-								}}
-								InputProps={{
-									readOnly: !isMonthlyVisitsEditable,
-									className: "form-input",
-									sx: accontDetailsStyles.formInput,
-									endAdornment: (
-										<>
-											{!isMonthlyVisitsEditable && (
-												<InputAdornment position="end">
-													<IconButton
-														onClick={handleEnableEdit(
-															setIsMonthlyVisitsEditable,
-															monthlyVisitsRef,
-														)}
-														sx={{
-															display: "none", // Hidden when input is editable
-															"&:hover": {
-																display: "flex", // Show on hover
-															},
-														}}
-													>
-														<Image
-															src="/write-icon.svg"
-															alt="write-icon"
-															height={24}
-															width={24}
-														/>
-													</IconButton>
-												</InputAdornment>
-											)}
-
-											{showCloseIcon(
-												isMonthlyVisitsTyping,
-												monthlyVisits,
-												initialMonthlyVisits,
-											) && (
-												<InputAdornment position="end">
-													<IconButton
-														onClick={handleReset(
-															setMonthlyVisits,
-															setIsMonthlyVisitsTyping,
-															setIsMonthlyVisitsModified,
-															setIsMonthlyVisitsEditable,
-															initialMonthlyVisits,
-														)}
-														size="small"
-													>
-														<Image
-															src="/close-circle-purple.svg"
-															alt="close-icon-purple"
-															height={18}
-															width={18}
-														/>
-													</IconButton>
-												</InputAdornment>
-											)}
-										</>
-									),
-								}}
-								onBlur={handleBlur(
-									monthlyVisits,
-									initialMonthlyVisits,
-									setIsMonthlyVisitsEditable,
-									setIsMonthlyVisitsTyping,
-									setIsMonthlyVisitsModified,
-								)}
-							/>
-							<Button
-								className="hyperlink-red"
-								variant="contained"
-								color="primary"
-								onClick={() => handleSaveBusinessInfo("monthlyVisits")}
-								sx={{
-									borderRadius: "4px",
-									border: "1px solid rgba(56, 152, 252, 1)",
-									background: "#fff",
-									boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-									color: "rgba(56, 152, 252, 1) !important",
-									textTransform: "none",
-									padding: "10px 24px",
-									height: "40px",
-									"&:hover": {
-										background: "transparent",
-									},
-									"&.Mui-disabled": {
-										background: "transparent",
-										opacity: "0.4",
-									},
-								}}
-								disabled={
-									!isSaveEnabled(
-										monthlyVisits,
-										initialMonthlyVisits,
-										isMonthlyVisitsModified,
-									)
-								}
-								// disabled={isSaveDisabled}
-							>
-								Save
-							</Button>
-						</Box>
-					</Box> */}
+										}
+										// disabled={isSaveDisabled}
+									>
+										Save
+									</Button>
+								</Box> */}
+							</Box>
+						</>
+					)}
 				</Box>
 			</Box>
 		</Box>

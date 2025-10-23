@@ -48,6 +48,12 @@ class PremiumSource(Base):
         default=func.now(),
         server_default=text("now()"),
     )
+    source_type: Mapped[str] = mapped_column(
+        String(length=16),
+        nullable=False,
+        server_default="email",
+        doc="Source type: 'email' или 'asid'",
+    )
 
 
 event.listen(PremiumSource, "before_update", update_timestamps)

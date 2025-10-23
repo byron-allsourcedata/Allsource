@@ -958,7 +958,7 @@ class SubscriptionService:
     def check_invitation_limit(self, user_id):
         user_subscription = self.get_user_subscription(user_id)
         subscription_member_limit = (
-            user_subscription.members_limit if user_subscription else 3
+            user_subscription.members_limit if user_subscription else -1
         )
         user_member_limit = (
             len(

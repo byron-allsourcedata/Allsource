@@ -232,10 +232,8 @@ export const UserButtonGroup: FC<UserButtonGroupProps> = ({
 
 	return (
 		<CardColumn>
-			<Row alignItems="center" gap="0.5rem">
-				<SyncButton disabled={!canSync} onClick={onSync}>
-					Sync
-				</SyncButton>
+			<Row alignItems="center" justifyContent="flex-end" gap="0.5rem">
+				{canSync && <SyncButton onClick={onSync}>Sync</SyncButton>}
 				<IconButton sx={squareIconButtonSx} onClick={onDownload}>
 					<Download />
 				</IconButton>

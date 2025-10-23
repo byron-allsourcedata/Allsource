@@ -14,6 +14,7 @@ class BasePremiumSourceDto(BaseModel):
     price: int
     rows: int
     created_at: datetime
+    source_type: str
 
 
 class PremiumSourceDto(BasePremiumSourceDto):

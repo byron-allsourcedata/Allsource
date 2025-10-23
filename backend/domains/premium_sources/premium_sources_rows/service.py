@@ -1,7 +1,9 @@
+import hashlib
 from itertools import batched
 import logging
 from uuid import UUID
 from db_dependencies import Clickhouse
+from persistence.enrichment_users import EnrichmentUsersPersistence
 from resolver import injectable
 
 logger = logging.getLogger(__name__)
@@ -13,69 +15,120 @@ class MissingHashedEmailError(Exception):
 
 @injectable
 class PremiumSourcesRowsService:
-    def __init__(self, clickhouse: Clickhouse) -> None:
+    def __init__(
+        self, clickhouse: Clickhouse, users_repo: EnrichmentUsersPersistence
+    ) -> None:
         self.clickhouse = clickhouse
+        self.users_repo = users_repo
 
     def process_csv(
         self, premium_source_id: UUID, csv_content: list[dict[str, str]]
-    ) -> int:
-        """
-        Raises MissingHashedEmailError
-        """
-
+    ) -> tuple[int, str]:
         if not csv_content:
-            return 0
+            return 0, "unknown"
 
-        hashed_column = self.get_hashed_email_column_name(csv_content[0])
-
-        emails = [
-            row[hashed_column] for row in csv_content[1:] if row[hashed_column]
+        key_column = self.get_identifier_column_name(csv_content[0])
+        identifiers = [
+            row[key_column].strip()
+            for row in csv_content
+            if row.get(key_column)
         ]
 
-        for email in emails:
-            if not email:
-                raise MissingHashedEmailError(
-                    "CSV must contain 'sha256_email' column"
-                )
+        if not identifiers:
+            raise MissingHashedEmailError(
+                f"CSV must contain at least one valid value in '{key_column}'"
+            )
 
-        return self.upload_emails(premium_source_id, emails)
+        if "asid" in key_column:
+            uploaded_rows = self.upload_asid_with_email(
+                premium_source_id, identifiers
+            )
+            source_type = "asid"
+        else:
+            uploaded_rows = self.upload_identifiers(
+                premium_source_id, identifiers, key_column
+            )
+            source_type = "email"
 
-    def get_hashed_email_column_name(self, row: dict[str, str]) -> str:
-        candidates = [
+        return uploaded_rows, source_type
+
+    def get_identifier_column_name(self, row: dict[str, str]) -> str:
+        email_candidates = [
             "personal_email_sha256",
             "email_sha256",
             "sha256_email",
             "business_email_sha256",
         ]
+        asid_candidates = ["asid", "as_id"]
 
-        for candidate in candidates:
+        for candidate in email_candidates:
             if candidate in row:
                 return candidate
 
-        raise MissingHashedEmailError("CSV must contain 'sha256_email' column")
+        for candidate in asid_candidates:
+            if candidate in row:
+                return candidate
 
-    def upload_emails(
-        self, premium_source_id: UUID, sha256_emails: list[str]
+        raise MissingHashedEmailError(
+            "CSV must contain one of: sha256_email or asid"
+        )
+
+    def upload_asid_with_email(
+        self, premium_source_id: UUID, asids: list[str]
     ) -> int:
-        # row_id must start from 1, because 0 is magic value in clickhouse join
-        CHUNK_SIZE = 1_000_000
+        CHUNK_SIZE = 20_000
         row_offset = 1
 
-        for chunk in batched(sha256_emails, CHUNK_SIZE):
-            rows = [
-                (str(premium_source_id), row_offset + i, email)
-                for i, email in enumerate(chunk)
-            ]
+        for chunk in batched(asids, CHUNK_SIZE):
+            users = self.users_repo.get_emails_by_asids(list(chunk))
+
+            rows = []
+            for asid, email in users.items():
+                sha256_email = None
+                if email:
+                    sha256_email = hashlib.sha256(
+                        email.strip().lower().encode()
+                    ).hexdigest()
+                rows.append(
+                    (str(premium_source_id), row_offset, asid, sha256_email)
+                )
+                row_offset += 1
+
             if rows:
-                logger.info(f"inserting {len(rows)} rows into clickhouse")
-                _ = self.clickhouse.insert(
+                logger.info(
+                    f"Inserting {len(rows)} ASID→email rows into ClickHouse"
+                )
+                self.clickhouse.insert(
                     "premium_sources_rows",
                     rows,
                     column_names=[
                         "premium_source_id",
                         "row_id",
+                        "asid",
                         "sha256_email",
                     ],
+                )
+
+        return row_offset
+
+    def upload_identifiers(
+        self, premium_source_id: UUID, identifiers: list[str], column_name: str
+    ) -> int:
+        CHUNK_SIZE = 1_000_000
+        row_offset = 1
+
+        ch_column = "asid" if "asid" in column_name else "sha256_email"
+
+        for chunk in batched(identifiers, CHUNK_SIZE):
+            rows = [
+                (str(premium_source_id), row_offset + i, identifier)
+                for i, identifier in enumerate(chunk)
+            ]
+            if rows:
+                self.clickhouse.insert(
+                    "premium_sources_rows",
+                    rows,
+                    column_names=["premium_source_id", "row_id", ch_column],
                 )
             row_offset += len(chunk)
 

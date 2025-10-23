@@ -1,113 +1,21 @@
 "use client";
 import type React from "react";
 import { useState, useEffect, useMemo } from "react";
-import {
-	Box,
-	Typography,
-	Button,
-	Tabs,
-	Tab,
-	TextField,
-	IconButton,
-	Drawer,
-	Link,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import { PlanCard } from "./PlanCard";
+import { Box, Button } from "@mui/material";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
-import CustomTooltip from "../../../../components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import Image from "next/image";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
-import {
-	showErrorToast,
-	showToast,
-} from "../../../../components/ToastNotification";
-import axios from "axios";
-import { usePlans, type Plan } from "./plans";
+import { type FrontendPlan } from "./plans";
 import { fetchUserData } from "@/services/meService";
 import { BookACallPopup } from "../../components/BookACallPopup";
 
-import { useBookingUrl } from "@/services/booking";
-import { AddRounded } from "@mui/icons-material";
-
-const subscriptionStyles = {
-	title: {
-		whiteSpace: "nowrap",
-		textAlign: "start",
-		lineHeight: "22px",
-		margin: 0,
-	},
-	formContainer: {
-		display: "flex",
-		gap: 3,
-		justifyContent: "space-between",
-		width: "100%",
-		height: "610px",
-		alignItems: "center",
-		"@media (max-width: 900px)": {
-			flexDirection: "column",
-			marginTop: "24px",
-		},
-	},
-	formWrapper: {
-		display: "flex",
-		pt: 1,
-		height: "100%",
-		justifyContent: "center",
-		"@media (min-width: 901px)": {
-			width: "100%",
-		},
-	},
-	plantabHeading: {
-		padding: "10px 32px",
-		color: "rgba(32, 33, 36, 1)",
-		textTransform: "none",
-		fontWeight: "400 !important",
-		"&.Mui-selected": {
-			background: "rgba(56, 152, 252, 1)",
-			color: "#fff",
-			border: "none",
-			"& .active-text-color": {
-				color: "#fff",
-			},
-			"& .active-save-color": {
-				background: "#fff",
-			},
-		},
-		"@media (max-width: 600px)": {
-			paddingLeft: "22px",
-			paddingRight: "22px",
-			fontSize: "18px !important",
-			width: "50%",
-		},
-	},
-	saveHeading: {
-		background: "rgba(235, 245, 255, 1)",
-		padding: "5px 12px",
-		borderRadius: "4px",
-		fontSize: "14px !important",
-		color: "#202124 !important",
-	},
-	inputLabel: {
-		top: "-3px",
-		"&.Mui-focused": {
-			top: 0,
-			color: "rgba(17, 17, 19, 0.6)",
-			fontFamily: "var(--font-nunito)",
-			fontWeight: 400,
-			fontSize: "12px",
-			lineHeight: "16px",
-		},
-	},
-};
+import { ExcitingOfferOnlyForYou } from "./Subscription/ExcitingOfferOnlyForYou";
+import { UnsubscribeTeamsPlan } from "./Subscription/UnsubscribeTeamsPlan";
+import { CustomPlan } from "./Subscription/CustomPlan";
+import { PricingTable } from "./Subscription/PricingTable";
 
 export const SettingsSubscription: React.FC = () => {
-	const [tabValue, setTabValue] = useState(0);
-	const [plans, setPlans] = useState<Plan[]>([]);
-	const [plansMonthly, setPlansMonthly] = useState<Plan[]>([]);
-	const [plansYearly, setPlansYearly] = useState<Plan[]>([]);
-	const [credits, setCredits] = useState<number>(50000);
+	const [plans, setPlans] = useState<FrontendPlan[]>([]);
 
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
@@ -116,18 +24,8 @@ export const SettingsSubscription: React.FC = () => {
 	const [excitingOfferPopupOpen, setExcitingOfferPopupOpen] = useState(false);
 	const [confirmCancellationPopupOpen, setConfirmCancellationPopupOpen] =
 		useState(false);
-	const [errors, setErrors] = useState<{ [key: string]: string }>({});
-	const [formValues, setFormValues] = useState({ unsubscribe: "" });
-	const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
-	const [showSlider, setShowSlider] = useState(true);
-	const [utmParams, setUtmParams] = useState<string | null>(null);
-	const [activePlan, setActivePlan] = useState<any>(null);
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
-
-	const [normalPlans, partnerPlans] = usePlans(
-		tabValue === 0 ? "month" : "year",
-	);
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
@@ -145,73 +43,27 @@ export const SettingsSubscription: React.FC = () => {
 		return "";
 	}, [typeof window !== "undefined" ? sessionStorage.getItem("me") : null]);
 
-	const handleFilterPopupClose = () => {
-		setShowSlider(false);
-	};
-
-	const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-		setTabValue(newValue);
-
-		const period = newValue === 0 ? "month" : "year";
-		if (period === "month") {
-			setPlans(plansMonthly);
-		} else {
-			setPlans(plansYearly);
-		}
-	};
-
 	const handleCustomPlanPopupOpen = () => {
 		setCustomPlanPopupOpen(true);
-	};
-
-	const handleCustomPlanPopupClose = () => {
-		setCustomPlanPopupOpen(false);
-	};
-
-	const handleCancelSubscriptionPlanPopupOpen = () => {
-		setCancelSubscriptionPlanPopupOpen(true);
 	};
 
 	const handleCancelSubscriptionPlanPopupClose = () => {
 		setCancelSubscriptionPlanPopupOpen(false);
 	};
 
-	const handleExcitingOfferPopupOpen = () => {
-		setExcitingOfferPopupOpen(true);
-	};
-
 	const handleExcitingOfferPopupClose = () => {
 		setExcitingOfferPopupOpen(false);
 	};
-
-	const handleConfirmCancellationPopupOpen = () => {
-		setConfirmCancellationPopupOpen(true);
-	};
-
-	const handleConfirmCancellationPopupClose = () => {
-		setConfirmCancellationPopupOpen(false);
-	};
-
-	interface StripePlan {
-		id: string;
-		interval: string;
-		title: string;
-		is_active: boolean;
-	}
 
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
 				setIsLoading(true);
 				const response = await axiosInterceptorInstance.get("/settings/plans");
-				setPlansMonthly(response.data.monthly);
-				setPlansYearly(response.data.yearly);
-				if (tabValue === 0) {
-					setPlans(response.data.monthly);
-				} else {
-					setPlans(response.data.yearly);
+				if (response.data.plans.length > 0) {
+					setPlans(response.data?.plans);
 				}
-			} catch (error) {
+			} catch {
 			} finally {
 				setIsLoading(false);
 			}
@@ -220,7 +72,7 @@ export const SettingsSubscription: React.FC = () => {
 		const loadUser = async () => {
 			const userData = await fetchUserData();
 			if (userData) {
-				setIsTrial(!!userData.trial);
+				setIsTrial(!!userData.is_trial_pending);
 			}
 		};
 
@@ -228,12 +80,12 @@ export const SettingsSubscription: React.FC = () => {
 		fetchData();
 	}, []);
 
-	const handleInstantUpgrade = async () => {
+	const handleInstantUpgrade = async (interval: string) => {
 		try {
 			setIsLoading(true);
 
 			const response = await axiosInstance.get(
-				"/subscriptions/basic-plan-upgrade",
+				`/subscriptions/standard-plan-upgrade?interval=${interval}`,
 			);
 
 			if (response.status === 200) {
@@ -246,256 +98,9 @@ export const SettingsSubscription: React.FC = () => {
 		}
 	};
 
-	const fetchPrefillData = async () => {
-		try {
-			const response = await axiosInstance.get("/calendly");
-			const user = response.data.user;
-
-			if (user) {
-				const { full_name, email, utm_params } = user;
-				setUtmParams(utm_params);
-			}
-		} catch (error) {
-			setUtmParams(null);
-		}
-	};
-
-	const meetingUrl = useBookingUrl(axiosInstance);
-
-	const handleChoosePlan = async (alias: string) => {
-		let path = hasActivePlan
-			? "/subscriptions/upgrade-and-downgrade-user-subscription"
-			: "/subscriptions/session/new";
-		try {
-			setIsLoading(true);
-			const response = await axiosInterceptorInstance.get(
-				`${path}?alias=${alias}`,
-			);
-			if (response.status === 200) {
-				if (response.data.link !== null && response.data.link !== undefined) {
-					if (response.data?.source_platform == "big_commerce") {
-						window.open(response.data.link, "_blank");
-					} else {
-						window.location.href = response.data.link;
-					}
-				}
-				if (response.data.status_subscription) {
-					if (response.data.status_subscription === "active") {
-						showToast("Subscription was successful!");
-						window.location.href = "/settings?section=subscription";
-					} else {
-						showToast("Subscription purchase error!");
-					}
-				} else if (response.data.status === "SUCCESS") {
-					showToast("Subscription was successful!");
-					try {
-						setIsLoading(true);
-						await new Promise((resolve) => setTimeout(resolve, 3000));
-						const response = await axiosInterceptorInstance.get(
-							`/subscriptions/stripe-plans`,
-						);
-
-						const stripePlans: StripePlan[] = response.data.stripe_plans;
-						const activePlan = stripePlans.find((plan) => plan.is_active);
-						const active = stripePlans.find(
-							(plan) =>
-								plan.is_active &&
-								plan.title !== "Free Trial" &&
-								plan.title !== "Partners Live",
-						);
-						setActivePlan(active || null);
-						setHasActivePlan(!!activePlan);
-						let interval = "month";
-						if (activePlan) {
-							interval = activePlan.interval;
-						}
-						if (interval === "year") {
-							setTabValue(1);
-						}
-						const period_plans = response.data.stripe_plans.filter(
-							(plan: any) => plan.interval === interval,
-						);
-					} catch (error) {
-					} finally {
-						setIsLoading(false);
-					}
-				} else if (response.data.status === "INCOMPLETE") {
-					const errorMessage =
-						response?.data?.message || "Subscription not found!";
-					showErrorToast(errorMessage);
-				}
-			}
-		} catch (error) {
-			if (axios.isAxiosError(error)) {
-				if (error.response && error.response.status === 403) {
-					showErrorToast(
-						"Access denied: You do not have permission to remove this member.",
-					);
-				}
-			}
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	const handleChangeCredits = (event: Event, newValue: number | number[]) => {
-		setCredits(newValue as number);
-	};
-
-	// Filter plans based on the selected tab
-	// .filter(plan =>
-	//     (tabValue === 0 && plan.interval === 'month') ||
-	//     (tabValue === 1 && plan.interval === 'year')
-	// );
-
 	if (isLoading) {
 		return <CustomizedProgressBar />;
 	}
-
-	const validateField = (name: string, value: string) => {
-		const newErrors: { [key: string]: string } = { ...errors };
-
-		switch (name) {
-			case "unsubscribe":
-				if (!value) {
-					newErrors.unsubscribe = "Please enter the reason";
-				} else {
-					delete newErrors.unsubscribe;
-				}
-				break;
-		}
-
-		setErrors(newErrors);
-	};
-
-	const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = event.target;
-		setFormValues({
-			...formValues,
-			[name]: value,
-		});
-		validateField(name, value);
-	};
-
-	const handleSubmit = async (event: React.FormEvent) => {
-		event.preventDefault();
-		const newErrors: { [key: string]: string } = {};
-
-		if (!formValues.unsubscribe) {
-			newErrors.unsubscribe = "Please enter the reason";
-			setErrors(newErrors);
-			return;
-		}
-		if (formValues.unsubscribe) {
-			try {
-				setIsLoading(true);
-				const response = await axiosInterceptorInstance.post(
-					"/subscriptions/cancel-plan",
-					{
-						reason_unsubscribe: formValues.unsubscribe,
-					},
-				);
-				if (response.status === 200) {
-					switch (response.data) {
-						case "SUCCESS":
-							showToast("Unsubscribe Teams Plan processed!");
-							break;
-						case "SUBSCRIPTION_NOT_FOUND":
-							showErrorToast("Subscription not found!");
-							break;
-						case "SUBSCRIPTION_ALREADY_CANCELED":
-							showErrorToast("Subscription already canceled!");
-							break;
-						case "INCOMPLETE":
-							showErrorToast("Subscription cancellation error!");
-							break;
-						default:
-							showErrorToast("Unknown response received.");
-					}
-				}
-			} catch (error) {
-				showErrorToast("An error occurred while sending URLs.");
-			} finally {
-				setIsLoading(false);
-				handleConfirmCancellationPopupClose();
-				handleExcitingOfferPopupClose();
-				handleCancelSubscriptionPlanPopupClose();
-			}
-		}
-	};
-
-	const getVisiblePlans = (plans: Plan[], isPartner = false) => {
-		if (plans?.length > 0) {
-			return plans.map((plan, index) => {
-				let buttonText = "Speak to Us";
-				let disabled = false;
-
-				let handle = handleOpenPopup;
-				if (isTrial === true) {
-					if (plan.title === "Free Trial") {
-						buttonText = "Current Plan";
-						disabled = true;
-					} else if (plan.title === "Basic") {
-						buttonText = "Instant Upgrade";
-						disabled = false;
-						handle = handleInstantUpgrade;
-					} else {
-						buttonText = "Speak to Us";
-						disabled = false;
-					}
-				}
-
-				if (isPartner) {
-					buttonText = "Become partner";
-				}
-
-				if (plan.is_active) {
-					buttonText = "Current Plan";
-					disabled = true;
-				}
-
-				return (
-					<Box
-						key={plan.title}
-						sx={{
-							...subscriptionStyles.formWrapper,
-						}}
-					>
-						<PlanCard
-							plan={plan}
-							isRecommended={plan.is_recommended}
-							isActive={plan.is_active}
-							buttonProps={{
-								onChoose: handle,
-								text: buttonText,
-								disabled: disabled,
-							}}
-							isPartner={isPartner}
-						/>
-					</Box>
-				);
-			});
-		}
-
-		return null;
-	};
-
-	const visibleNormalPlans = getVisiblePlans(normalPlans);
-	const visiblePartnerPlans = getVisiblePlans(partnerPlans, true);
-
-	const visiblePlans = [
-		...(visibleNormalPlans ?? []),
-		...(visiblePartnerPlans
-			? [
-					<Box key="add-icon">
-						<AddRounded
-							sx={{ width: "56px", height: "56px", color: "#E4E4E4" }}
-						/>
-					</Box>,
-					...visiblePartnerPlans,
-				]
-			: []),
-	];
 
 	return (
 		<Box
@@ -505,112 +110,12 @@ export const SettingsSubscription: React.FC = () => {
 				"@media (max-width: 600px)": { pr: "16px" },
 			}}
 		>
-			{/* Plans Section */}
-			<Box
-				sx={{
-					marginBottom: 4,
-					display: "flex",
-					flexDirection: "column",
-					width: "100%",
-					justifyContent: "center",
-				}}
-			>
-				<Box
-					sx={{
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						gap: 2,
-						marginTop: 4,
-						marginBottom: 1,
-						position: "relative",
-						"@media (max-width: 600px)": {
-							justifyContent: "start",
-						},
-					}}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-							width: "100%",
-						}}
-					>
-						{/* Tabs for Monthly and Yearly */}
-						<Tabs
-							value={tabValue}
-							onChange={handleTabChange}
-							sx={{
-								border: "1px solid rgba(237, 237, 237, 1)",
-								borderRadius: "4px",
-								"& .MuiTabs-indicator": {
-									background: "none",
-								},
-								"@media (max-width: 600px)": { width: "100%" },
-							}}
-						>
-							<Tab
-								className="first-sub-title"
-								sx={subscriptionStyles.plantabHeading}
-								label="Monthly"
-							/>
-							<Tab
-								className="first-sub-title"
-								sx={subscriptionStyles.plantabHeading}
-								label={
-									<Box
-										sx={{
-											display: "flex",
-											flexDirection: "row",
-											gap: "12px",
-											alignItems: "center",
-										}}
-									>
-										<Typography
-											className="first-sub-title active-text-color"
-											sx={{
-												fontWeight: "400 !important",
-												"@media (max-width: 600px)": {
-													fontSize: "18px !important",
-												},
-											}}
-										>
-											Yearly
-										</Typography>
-										<Typography
-											variant="body2"
-											sx={subscriptionStyles.saveHeading}
-											className="paragraph"
-											color="primary"
-										>
-											Save 33%
-										</Typography>
-									</Box>
-								}
-							/>
-						</Tabs>
-					</Box>
-				</Box>
+			<PricingTable
+				plans={plans}
+				handleOpenPopup={handleOpenPopup}
+				handleInstantUpgrade={handleInstantUpgrade}
+			/>
 
-				<Box
-					sx={{
-						...subscriptionStyles.formContainer,
-						overflowX: "auto",
-						overflowY: "none",
-						justifyContent:
-							visiblePlans.length > 0
-								? subscriptionStyles.formContainer.justifyContent
-								: "center",
-					}}
-				>
-					{visiblePlans.length > 0 ? (
-						visiblePlans
-					) : (
-						<Typography>No plans available</Typography>
-					)}
-				</Box>
-			</Box>
 			{sourcePlatform !== "shopify" && (
 				<Button
 					variant="outlined"
@@ -627,7 +132,7 @@ export const SettingsSubscription: React.FC = () => {
 						"&:hover": {
 							background: "transparent",
 						},
-						"@media (min-width: 601px)": {
+						"@media (min-width: 1px)": {
 							display: "none",
 						},
 					}}
@@ -637,571 +142,25 @@ export const SettingsSubscription: React.FC = () => {
 				</Button>
 			)}
 
-			<Drawer
-				anchor="right"
-				open={customPlanPopupOpen}
-				onClose={handleCustomPlanPopupClose}
-				PaperProps={{
-					sx: {
-						width: "640px",
-						position: "fixed",
-						zIndex: 1301,
-						top: 0,
-						bottom: 0,
-						"@media (max-width: 600px)": {
-							width: "100%",
-						},
-					},
-				}}
-			>
-				{sourcePlatform !== "shopify" && (
-					<Box
-						sx={{
-							display: "flex",
-							justifyContent: "space-between",
-							alignItems: "center",
-							py: 3.5,
-							px: 2,
-							borderBottom: "1px solid #e4e4e4",
-							position: "sticky",
-							top: 0,
-							zIndex: "9",
-							backgroundColor: "#fff",
-						}}
-					>
-						<Box
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								gap: "8px",
-								mb: 3,
-							}}
-						>
-							<Typography
-								variant="h6"
-								className="first-sub-title"
-								sx={{ textAlign: "center" }}
-							>
-								Custom plan
-							</Typography>
-							<CustomTooltip
-								title={
-									"You can download the billing history and share it with your teammates."
-								}
-								linkText="Learn more"
-								linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/custom-plan"
-							/>
-						</Box>
-						<IconButton onClick={handleCustomPlanPopupClose} sx={{ p: 0 }}>
-							<CloseIcon sx={{ width: "20px", height: "20px" }} />
-						</IconButton>
-					</Box>
-				)}
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "column",
-						justifyContent: "space-between",
-						alignItems: "center",
-						gap: 5,
-						height: "100%",
-					}}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							justifyContent: "space-between",
-							padding: 4,
-						}}
-					>
-						<Image
-							src="/custom-plan.svg"
-							alt="custom-plan"
-							width={509}
-							height={329}
-							style={{ width: "100%" }}
-						/>
-						<Typography
-							className="first-sub-title"
-							sx={{
-								marginTop: "32px",
-								marginBottom: "8px",
-								letterSpacing: "0.08px",
-							}}
-						>
-							Tailor your experience with our Custom Plan, designed just for
-							you. Choose exactly what you need and only pay for what you use!
-						</Typography>
-						<Typography
-							className="paragraph"
-							sx={{
-								letterSpacing: "0.07px",
-								fontSize: "14px !important",
-								color: "#5f6368 !important",
-							}}
-						>
-							Kindly book a call with one of our marketing specialist to custom
-							your plan.
-						</Typography>
-					</Box>
+			<CustomPlan
+				customPlanPopupOpen={customPlanPopupOpen}
+				setCustomPlanPopupOpen={setCustomPlanPopupOpen}
+			/>
 
-					<Box sx={{ position: "relative" }}>
-						<Box
-							sx={{
-								px: 4,
-								py: 3,
-								position: "fixed",
-								bottom: 0,
-								right: 0,
-								background: "#fff",
-								width: "620px",
-								"@media (max-width: 600px)": {
-									width: "100%",
-								},
-							}}
-						>
-							<Box display="flex" justifyContent="flex-end" mt={2}>
-								<Link
-									href={meetingUrl}
-									target="_blank"
-									rel="noopener noreferrer"
-									onClick={handleCustomPlanPopupClose}
-									sx={{
-										display: "inline-block",
-										width: "100%",
-										textDecoration: "none",
-										color: "#fff",
-										padding: "1em 8em",
-										fontFamily: "var(--font-nunito)",
-										fontWeight: "600",
-										fontSize: "14px",
-										borderRadius: "4px",
-										border: "none",
-										lineHeight: "22.4px",
-										backgroundColor: "rgba(56, 152, 252, 1)",
-										textTransform: "none",
-										textAlign: "center",
-										cursor: "pointer",
-									}}
-								>
-									Book a call
-								</Link>
-							</Box>
-						</Box>
-					</Box>
-				</Box>
-			</Drawer>
+			<UnsubscribeTeamsPlan
+				cancelSubscriptionPlanPopupOpen={cancelSubscriptionPlanPopupOpen}
+				handleCancelSubscriptionPlanPopupClose={
+					handleCancelSubscriptionPlanPopupClose
+				}
+				setExcitingOfferPopupOpen={setExcitingOfferPopupOpen}
+			/>
 
-			<Drawer
-				anchor="right"
-				open={cancelSubscriptionPlanPopupOpen}
-				onClose={handleCancelSubscriptionPlanPopupClose}
-				PaperProps={{
-					sx: {
-						width: "620px",
-						position: "fixed",
-						zIndex: 1301,
-						top: 0,
-						bottom: 0,
-						"@media (max-width: 600px)": {
-							width: "100%",
-						},
-					},
-				}}
-			>
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						py: 3.5,
-						px: 2,
-						borderBottom: "1px solid #e4e4e4",
-						position: "sticky",
-						top: 0,
-						zIndex: "9",
-						backgroundColor: "#fff",
-					}}
-				>
-					<Typography
-						variant="h6"
-						className="first-sub-title"
-						sx={{ textAlign: "center" }}
-					>
-						Unsubscribe Teams Plan
-					</Typography>
-					<IconButton
-						onClick={handleCancelSubscriptionPlanPopupClose}
-						sx={{ p: 0 }}
-					>
-						<CloseIcon sx={{ width: "20px", height: "20px" }} />
-					</IconButton>
-				</Box>
+			<ExcitingOfferOnlyForYou
+				handleExcitingOfferPopupClose={handleExcitingOfferPopupClose}
+				setConfirmCancellationPopupOpen={setConfirmCancellationPopupOpen}
+				excitingOfferPopupOpen={excitingOfferPopupOpen}
+			/>
 
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "column",
-						justifyContent: "space-between",
-						gap: 5,
-						height: "100%",
-					}}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							justifyContent: "space-between",
-						}}
-					>
-						<Typography
-							className="first-sub-title"
-							sx={{
-								paddingTop: "24px",
-								paddingLeft: "32px",
-							}}
-						>
-							Are you sure you want to unsubscribe teams plan?
-						</Typography>
-					</Box>
-
-					<Box sx={{ position: "relative" }}>
-						<Box
-							sx={{
-								px: 2,
-								py: 3.5,
-								border: "1px solid #e4e4e4",
-								position: "fixed",
-								bottom: 0,
-								right: 0,
-								background: "#fff",
-								width: "620px",
-								"@media (max-width: 600px)": {
-									width: "100%",
-								},
-							}}
-						>
-							<Box display="flex" justifyContent="flex-end" mt={2}>
-								<Button
-									className="hyperlink-red"
-									sx={{
-										borderRadius: "4px",
-										border: "1px solid rgba(56, 152, 252, 1)",
-										boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-										color: "rgba(56, 152, 252, 1) !important",
-										marginRight: "16px",
-										textTransform: "none",
-										padding: "10px 24px",
-									}}
-									onClick={handleExcitingOfferPopupOpen}
-								>
-									Yes
-								</Button>
-								<Button
-									className="hyperlink-red"
-									onClick={handleCancelSubscriptionPlanPopupClose}
-									sx={{
-										background: "rgba(56, 152, 252, 1)",
-										borderRadius: "4px",
-										border: "1px solid rgba(56, 152, 252, 1)",
-										boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-										color: "#fff !important",
-										textTransform: "none",
-										padding: "10px 24px",
-										"&:hover": {
-											color: "rgba(56, 152, 252, 1) !important",
-										},
-									}}
-								>
-									No
-								</Button>
-							</Box>
-						</Box>
-					</Box>
-				</Box>
-			</Drawer>
-
-			<Drawer
-				anchor="right"
-				open={excitingOfferPopupOpen}
-				onClose={handleExcitingOfferPopupClose}
-				PaperProps={{
-					sx: {
-						width: "620px",
-						position: "fixed",
-						zIndex: 1301,
-						top: 0,
-						bottom: 0,
-						"@media (max-width: 600px)": {
-							width: "100%",
-						},
-					},
-				}}
-			>
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						py: 3.5,
-						px: 2,
-						borderBottom: "1px solid #e4e4e4",
-						position: "sticky",
-						top: 0,
-						zIndex: "9",
-						backgroundColor: "#fff",
-					}}
-				>
-					<Typography
-						variant="h6"
-						className="first-sub-title"
-						sx={{ textAlign: "center" }}
-					>
-						Exciting offer only for you!
-					</Typography>
-					<IconButton onClick={handleExcitingOfferPopupClose} sx={{ p: 0 }}>
-						<CloseIcon sx={{ width: "20px", height: "20px" }} />
-					</IconButton>
-				</Box>
-
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "column",
-						justifyContent: "space-between",
-						alignItems: "center",
-						gap: 5,
-						height: "100%",
-					}}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							justifyContent: "space-between",
-							alignItems: "center",
-							padding: "24px 32px",
-						}}
-					>
-						<Image
-							src="/exciting-offer.svg"
-							alt="exciting-offer-icon"
-							width={316}
-							height={338}
-						/>
-						<Typography
-							className="first-sub-title"
-							sx={{
-								marginTop: "40px",
-								textAlign: "center",
-							}}
-						>
-							We have an exciting offer to you, we give 30% discount on next 3
-							months subscriptions only for you.
-						</Typography>
-					</Box>
-
-					<Box sx={{ position: "relative" }}>
-						<Box
-							sx={{
-								px: 2,
-								py: 3.5,
-								border: "1px solid #e4e4e4",
-								position: "fixed",
-								bottom: 0,
-								right: 0,
-								background: "#fff",
-								width: "620px",
-								"@media (max-width: 600px)": {
-									width: "100%",
-								},
-							}}
-						>
-							<Box display="flex" justifyContent="flex-end" mt={2}>
-								<Button
-									className="hyperlink-red"
-									sx={{
-										borderRadius: "4px",
-										border: "1px solid rgba(56, 152, 252, 1)",
-										boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-										color: "rgba(56, 152, 252, 1) !important",
-										marginRight: "16px",
-										textTransform: "none",
-										padding: "10px 24px",
-									}}
-									onClick={handleConfirmCancellationPopupOpen}
-								>
-									Confirm cancellation
-								</Button>
-								<Button
-									className="hyperlink-red"
-									sx={{
-										background: "rgba(56, 152, 252, 1)",
-										borderRadius: "4px",
-										border: "1px solid rgba(56, 152, 252, 1)",
-										boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-										color: "#fff !important",
-										textTransform: "none",
-										padding: "10px 24px",
-										"&:hover": {
-											color: "rgba(56, 152, 252, 1) !important",
-										},
-									}}
-								>
-									Claim offer
-								</Button>
-							</Box>
-						</Box>
-					</Box>
-				</Box>
-			</Drawer>
-
-			<Drawer
-				anchor="right"
-				open={confirmCancellationPopupOpen}
-				onClose={handleConfirmCancellationPopupClose}
-				PaperProps={{
-					sx: {
-						width: "620px",
-						position: "fixed",
-						zIndex: 1301,
-						top: 0,
-						bottom: 0,
-						"@media (max-width: 600px)": {
-							width: "100%",
-						},
-					},
-				}}
-			>
-				<Box
-					sx={{
-						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
-						py: 3.5,
-						px: 2,
-						borderBottom: "1px solid #e4e4e4",
-						position: "sticky",
-						top: 0,
-						zIndex: "9",
-						backgroundColor: "#fff",
-					}}
-				>
-					<Typography
-						variant="h6"
-						className="first-sub-title"
-						sx={{ textAlign: "center" }}
-					>
-						Unsubscribe Teams Plan
-					</Typography>
-					<IconButton
-						onClick={handleConfirmCancellationPopupClose}
-						sx={{ p: 0 }}
-					>
-						<CloseIcon sx={{ width: "20px", height: "20px" }} />
-					</IconButton>
-				</Box>
-
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "column",
-						justifyContent: "space-between",
-						gap: 5,
-						height: "100%",
-					}}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							justifyContent: "space-between",
-							padding: "24px 32px",
-						}}
-					>
-						<Typography
-							className="first-sub-title"
-							sx={{
-								marginBottom: "32px",
-							}}
-						>
-							Are you sure you want to unsubscribe teams plan?
-						</Typography>
-						<TextField
-							InputLabelProps={{
-								sx: subscriptionStyles.inputLabel,
-								focused: false,
-							}}
-							label="Enter the reason for unsubscribe"
-							name="unsubscribe"
-							variant="outlined"
-							fullWidth
-							value={formValues.unsubscribe}
-							onChange={handleChange}
-							error={Boolean(errors.unsubscribe)}
-							helperText={errors.unsubscribe}
-							InputProps={{
-								className: "form-input",
-							}}
-						/>
-					</Box>
-
-					<Box sx={{ position: "relative" }}>
-						<Box
-							sx={{
-								px: 2,
-								py: 3.5,
-								border: "1px solid #e4e4e4",
-								position: "fixed",
-								bottom: 0,
-								right: 0,
-								background: "#fff",
-								width: "620px",
-								"@media (max-width: 600px)": {
-									width: "100%",
-								},
-							}}
-						>
-							<Box display="flex" justifyContent="flex-end" mt={2}>
-								<Button
-									className="hyperlink-red"
-									onClick={handleSubmit}
-									sx={{
-										borderRadius: "4px",
-										border: "1px solid rgba(56, 152, 252, 1)",
-										boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-										color: "rgba(56, 152, 252, 1) !important",
-										marginRight: "16px",
-										textTransform: "none",
-										padding: "10px 24px",
-									}}
-								>
-									Yes
-								</Button>
-								<Button
-									className="hyperlink-red"
-									onClick={handleConfirmCancellationPopupClose}
-									sx={{
-										background: "rgba(56, 152, 252, 1)",
-										borderRadius: "4px",
-										border: "1px solid rgba(56, 152, 252, 1)",
-										boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-										color: "#fff !important",
-										textTransform: "none",
-										padding: "10px 24px",
-										"&:hover": {
-											color: "rgba(56, 152, 252, 1) !important",
-										},
-									}}
-								>
-									No
-								</Button>
-							</Box>
-						</Box>
-					</Box>
-				</Box>
-			</Drawer>
 			{popupOpen && (
 				<BookACallPopup
 					open={popupOpen}

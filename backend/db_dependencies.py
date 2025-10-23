@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 
 from config import ClickhouseConfig
+from config import ClickhouseInsertConfig
 from config.database import SessionLocal
 from config.rmq_connection import RabbitMQConnection
 
@@ -33,7 +34,7 @@ def get_clickhouse_db():
 
 
 def get_clickhouse_inserter_db():
-    ch = ClickhouseConfig.get_client()
+    ch = ClickhouseInsertConfig.get_client()
 
     try:
         yield ch

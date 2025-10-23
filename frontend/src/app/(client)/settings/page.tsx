@@ -29,14 +29,20 @@ const Settings: React.FC = () => {
 	const [accountDetails, setAccountDetails] = useState<any>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [userHasSubscription, setUserHasSubscription] = useState(false);
+	const [teamAccessLevel, setTeamAccessLevel] = useState<
+		"read_only" | "standart" | "owner"
+	>("read_only");
 
-	const [{ data: whitelabelEnabled }, refetch] = useAxios({
-		url: "/whitelabel/is-enabled",
-	}, { manual: true});
+	const [{ data: whitelabelEnabled }, refetch] = useAxios(
+		{
+			url: "/whitelabel/is-enabled",
+		},
+		{ manual: true },
+	);
 
 	useEffect(() => {
-		refetch().catch(() => { })
-	}, [])
+		refetch().catch(() => {});
+	}, []);
 
 	const fetchAccountDetails = async () => {
 		try {
@@ -45,6 +51,7 @@ const Settings: React.FC = () => {
 				"/settings/account-details",
 			);
 			const data = response.data;
+			setTeamAccessLevel(data.team_access_level);
 			setAccountDetails(data);
 			setUserHasSubscription(data.has_subscription);
 		} catch (error) {
@@ -206,7 +213,10 @@ const Settings: React.FC = () => {
 				}}
 			>
 				{activeSection === "accountDetails" && accountDetails && (
-					<SettingsAccountDetails accountDetails={accountDetails} />
+					<SettingsAccountDetails
+						accountDetails={accountDetails}
+						teamAccessLevel={teamAccessLevel}
+					/>
 				)}
 
 				{activeSection === "teams" && <SettingsTeams />}
@@ -262,14 +272,6 @@ const SettingTab: FC<Props> = ({
 			sx={planStyles.buttonHeading}
 			variant={activeTab === tabName ? "contained" : "outlined"}
 			onClick={() => {
-				if (
-					!userHasSubscription &&
-					tabName !== "accountDetails" &&
-					tabName !== "teams"
-				) {
-					flagStore.set(true);
-					return;
-				}
 				handleTabChange(tabName);
 			}}
 		>

@@ -21,7 +21,6 @@ from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
-from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_sources_matched_persons import (
     AudienceSourcesMatchedPersonsPersistence,
 )
@@ -46,6 +45,7 @@ from persistence.referral_user import ReferralUserPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
+from persistence.account_setup import AccountSetupPersistence
 from persistence.user_persistence import UserDict, UserPersistence
 from schemas.auth_token import Token
 from services.accounts import AccountsService
@@ -54,7 +54,7 @@ from services.audience_dashboard import DashboardAudienceService
 from services.audience_insights import AudienceInsightsService
 from services.aws import AWSService
 from services.companies import CompanyService
-from services.company_info import CompanyInfoService
+from services.account_setup import CompanyInfoService
 from services.crm.service import CrmService
 from services.dashboard import DashboardService
 from services.domains import UserDomainsService
@@ -150,6 +150,10 @@ def get_million_verifier_service(
 
 def get_company_persistence(db: Session = Depends(get_db)):
     return CompanyPersistence(db=db)
+
+
+def get_account_setup_persistence(db: Session = Depends(get_db)):
+    return AccountSetupPersistence(db=db)
 
 
 def get_suppression_persistence(
@@ -728,6 +732,7 @@ def get_payments_service(
 def get_company_info_service(
     subscription_service: SubscriptionService,
     partners_persistence: PartnersPersistence,
+    account_setup_persistence: AccountSetupPersistence,
     db: Session = Depends(get_db),
     user=Depends(check_user_authentication),
 ):
@@ -736,6 +741,7 @@ def get_company_info_service(
         user=user,
         subscription_service=subscription_service,
         partners_persistence=partners_persistence,
+        account_setup_persistence=account_setup_persistence,
     )
 
 

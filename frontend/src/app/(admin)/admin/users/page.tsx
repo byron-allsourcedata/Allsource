@@ -52,6 +52,7 @@ export interface UserData {
 	invited_by_email?: string;
 	subscription_plan?: string;
 	role: string[];
+	team_owner_id: number | null;
 	pixel_installed_count?: number;
 	contacts_count?: number;
 	sources_count?: number;

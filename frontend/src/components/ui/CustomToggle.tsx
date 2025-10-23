@@ -4,7 +4,8 @@ import { ToggleButton, SxProps, Theme } from "@mui/material";
 interface CustomToggleProps {
 	isActive: boolean;
 	value: string;
-	name: string;
+	name?: string;
+	children?: React.ReactNode;
 	onClick: () => void;
 	sx?: SxProps<Theme>;
 }
@@ -15,6 +16,7 @@ const CustomToggle: React.FC<CustomToggleProps> = ({
 	name,
 	isActive,
 	sx,
+	children,
 }) => {
 	const toggleStyle = {
 		"&.MuiToggleButton-root.Mui-selected": {
@@ -56,6 +58,7 @@ const CustomToggle: React.FC<CustomToggleProps> = ({
 			}}
 		>
 			{name}
+			{children}
 		</ToggleButton>
 	);
 };

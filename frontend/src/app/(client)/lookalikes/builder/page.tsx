@@ -48,6 +48,7 @@ const CreateLookalikePage: React.FC = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const preselectedUuid = searchParams.get("source_uuid");
+	const isSimple = searchParams.get("is_simple") === "true";
 	const [selectedSourceId, setSelectedSourceId] = useState<string>("");
 	const [selectedSize, setSelectedSize] = useState<string>("");
 	const [selectedLabel, setSelectedLabel] = useState<string>("");
@@ -195,6 +196,7 @@ const CreateLookalikePage: React.FC = () => {
 				uuid_of_source: selectedSourceId,
 				lookalike_size: toSnakeCase(selectedLabel),
 				lookalike_name: sourceName,
+				scoring_type: isSimple ? "simple_all" : "ml",
 				audience_feature_importance: featureImportanceMap,
 			};
 			if (

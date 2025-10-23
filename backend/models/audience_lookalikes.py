@@ -3,6 +3,7 @@ import uuid
 
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy import (
+    Boolean,
     Column,
     Integer,
     TIMESTAMP,
@@ -14,9 +15,17 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import Mapped, mapped_column
-
-from enums import LookalikeStatus
+from sqlalchemy.dialects.postgresql import ENUM
+from enums import LookalikeStatus, LookalikeScoringType
 from .base import Base
+
+lookalike_type = ENUM(
+    "ml",
+    "simple_all",
+    "simple_any",
+    name="lookalike_scoring_type",
+    create_type=True,
+)
 
 
 class AudienceLookalikes(Base):
@@ -47,7 +56,9 @@ class AudienceLookalikes(Base):
     processed_size: Mapped[int] = mapped_column(
         Integer, server_default="0", nullable=False
     )
-    size: Mapped[int] = mapped_column(Integer, server_default="0", nullable=False)
+    size: Mapped[int] = mapped_column(
+        Integer, server_default="0", nullable=False
+    )
     source_uuid: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("audience_sources.id", ondelete="CASCADE"),
@@ -65,6 +76,11 @@ class AudienceLookalikes(Base):
     )
     train_model_size: Mapped[int] = mapped_column(
         Integer, server_default="0", nullable=False
+    )
+    scoring_type: Mapped[LookalikeScoringType] = mapped_column(
+        String(32),
+        nullable=False,
+        server_default=LookalikeScoringType.ML.value,
     )
 
     __table_args__ = (
