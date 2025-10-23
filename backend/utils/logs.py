@@ -1,6 +1,37 @@
 import logging
 import sys
 from types import ModuleType
+from entity_logging import EntityBufferHandler
+from config import ClickhouseInsertConfig
+
+client_clickhouse = ClickhouseInsertConfig.get_client()
+
+CH_HANDLER = EntityBufferHandler(ch_client=client_clickhouse, table="bin_logs")
+formatter = logging.Formatter(
+    "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
+)
+CH_HANDLER.setFormatter(formatter)
+CH_HANDLER.setLevel(logging.NOTSET)
+
+root = logging.getLogger()
+if CH_HANDLER not in root.handlers:
+    root.addHandler(CH_HANDLER)
+
+
+def setup_local_logger(logger: logging.Logger, level: int):
+    handler = logging.StreamHandler()
+    handler.setLevel(level)
+    formatter = logging.Formatter(
+        fmt="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    handler.setFormatter(formatter)
+    logger.setLevel(level)
+    preserved = [
+        h for h in logger.handlers if isinstance(h, EntityBufferHandler)
+    ]
+    new_handlers = preserved + [handler]
+    logger.handlers = new_handlers
 
 
 def setup_global_logger(level: int):
@@ -12,22 +43,6 @@ def setup_global_logger(level: int):
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-
-
-def setup_local_logger(logger: logging.Logger, level: int):
-    """
-    Use setup_logger instead
-    """
-    handler = logging.StreamHandler()
-    handler.setLevel(level)
-    formatter = logging.Formatter(
-        fmt="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    handler.setFormatter(formatter)
-    logger.setLevel(level)
-    logger.handlers.clear()
-    logger.addHandler(handler)
 
 
 def setup_logging(
