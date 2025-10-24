@@ -50,6 +50,7 @@ from .slack import SlackService
 from .webhook import WebhookIntegrationService
 from .zapier import ZapierIntegrationService
 from .instantly import InstantlyIntegrationsService
+from .green_arrow import GreenArrowIntegrationsService
 
 
 @injectable
@@ -87,6 +88,7 @@ class IntegrationService:
         linked_in: LinkedinIntegrationsService,
         customer_io: CustomerIoIntegrationsService,
         instantly: InstantlyIntegrationsService,
+        green_arrow: GreenArrowIntegrationsService,
     ):
         self.db = db
         self.client = httpx.Client(
@@ -126,6 +128,7 @@ class IntegrationService:
         self.linked_in = linked_in
         self.customer_io = customer_io
         self.instantly = instantly
+        self.green_arrow = green_arrow
 
     def __enter__(self):
         return self

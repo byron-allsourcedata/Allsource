@@ -56,10 +56,6 @@ class GreenArrowIntegrationsService:
             "Content-Type": "application/json",
         }
 
-    def _base_api(self, base_url: str) -> str:
-        # base_url должен содержать /ga/api/v2 или аналог, без завершающего слэша
-        return (base_url or self.BASE_URL).rstrip("/")
-
     def get_credentials(self, domain_id: int, user_id: int):
         return self.integrations_persisntece.get_credentials_for_service(
             domain_id=domain_id,
@@ -195,20 +191,20 @@ class GreenArrowIntegrationsService:
     ):
         domain_id = domain.id if domain else None
         api_key = credentials.green_arrow.api_key
-        base_url = credentials.green_arrow.base_url
-        try:
-            lists = self.get_list(
-                api_key=api_key,
-                domain_id=domain_id,
-                user_id=user.get("id"),
-                base_url=base_url,
-            )
-            if lists is None:
-                raise Exception("Invalid")
-        except Exception:
-            raise HTTPException(
-                status_code=200, detail={"status": "CREDENTIALS_INVALID"}
-            )
+        base_url = self.BASE_URL
+        # try:
+        #     lists = self.get_list(
+        #         api_key=api_key,
+        #         domain_id=domain_id,
+        #         user_id=user.get("id"),
+        #         base_url=base_url,
+        #     )
+        #     if lists is None:
+        #         raise Exception("Invalid")
+        # except Exception:
+        #     raise HTTPException(
+        #         status_code=200, detail={"status": "CREDENTIALS_INVALID"}
+        #     )
 
         integration = self.__save_integation(
             domain_id=domain_id, api_key=api_key, base_url=base_url, user=user
