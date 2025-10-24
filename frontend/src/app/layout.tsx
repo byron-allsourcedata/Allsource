@@ -23,6 +23,8 @@ import {
 import type { WhitelabelSettingsSchema } from "./features/whitelabel/schemas";
 import { getStoredWhitelabel } from "@/components/utils";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import { ThemeProvider } from "@mui/material/styles";
+import { coreTheme } from "@/themes/coreTheme";
 
 const inter = Inter({ subsets: ["latin"] });
 const nunito = Nunito_Sans({
@@ -115,29 +117,33 @@ export default function RootLayout({
 				/>
 			</head>
 			<body className={inter.className}>
-				<GoogleOAuthProvider clientId={googleClientId as string}>
-					<SSEProvider>
-						<SidebarProvider>
-							<TrialProvider>
-								<HintsProvider>
-									<BillingProvider>
-										<PrivacyPolicyProvider>
-											<UserProvider>
-												<WhitelabelProvider
-													whitelabel={whitelabel}
-													setWhitelabel={setWhitelabel}
-													autofetch={true}
-												>
-													<IntegrationProvider>{children}</IntegrationProvider>
-												</WhitelabelProvider>
-											</UserProvider>
-										</PrivacyPolicyProvider>
-									</BillingProvider>
-								</HintsProvider>
-							</TrialProvider>
-						</SidebarProvider>
-					</SSEProvider>
-				</GoogleOAuthProvider>
+				<ThemeProvider theme={coreTheme}>
+					<GoogleOAuthProvider clientId={googleClientId as string}>
+						<SSEProvider>
+							<SidebarProvider>
+								<TrialProvider>
+									<HintsProvider>
+										<BillingProvider>
+											<PrivacyPolicyProvider>
+												<UserProvider>
+													<WhitelabelProvider
+														whitelabel={whitelabel}
+														setWhitelabel={setWhitelabel}
+														autofetch={true}
+													>
+														<IntegrationProvider>
+															{children}
+														</IntegrationProvider>
+													</WhitelabelProvider>
+												</UserProvider>
+											</PrivacyPolicyProvider>
+										</BillingProvider>
+									</HintsProvider>
+								</TrialProvider>
+							</SidebarProvider>
+						</SSEProvider>
+					</GoogleOAuthProvider>
+				</ThemeProvider>
 
 				<ToastNotificationContainer />
 				<script
