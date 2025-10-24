@@ -151,6 +151,86 @@ class AdminCustomersService:
 
         return {"users": paginated, "count": len(combined)}
 
+    def get_customer_accounts(
+        self,
+        *,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        exclude_test_users: bool,
+        last_login_date_start: Optional[int] = None,
+        last_login_date_end: Optional[int] = None,
+        join_date_start: Optional[int] = None,
+        join_date_end: Optional[int] = None,
+        statuses: Optional[str] = None,
+    ):
+        filters = {}
+        if last_login_date_start is not None:
+            filters["last_login_date_start"] = last_login_date_start
+        if last_login_date_end is not None:
+            filters["last_login_date_end"] = last_login_date_end
+        if join_date_start is not None:
+            filters["join_date_start"] = join_date_start
+        if join_date_end is not None:
+            filters["join_date_end"] = join_date_end
+        if statuses is not None:
+            filters["statuses"] = statuses
+
+        accounts, total_count = self.user_persistence.get_base_accounts(
+            search_query=search_query,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            exclude_test_users=exclude_test_users,
+            filters=filters,
+        )
+
+        account_ids = [a.id for a in accounts]
+        aggregates = self.user_persistence.get_customer_aggregates(account_ids)
+
+        result = []
+        for acc in accounts:
+            cost_leads_overage = acc.overage_leads_count * 0.08
+            agg = aggregates.get(acc.id, {})
+
+            result.append(
+                {
+                    "id": acc.id,
+                    "company_name": acc.company_name,
+                    "owner_full_name": acc.full_name,
+                    "email": acc.email,
+                    "created_at": acc.created_at,
+                    "last_login": acc.last_login,
+                    "status": acc.user_status,
+                    "is_trial": self.plans_persistence.get_trial_status_by_user_id(
+                        acc.id
+                    ),
+                    "role": acc.role,
+                    "is_email_validation_enabled": acc.is_email_validation_enabled,
+                    "is_partner": acc.is_partner,
+                    "is_master": acc.is_master,
+                    "pixel_installed_count": agg.get(
+                        "pixel_installed_count", 0
+                    ),
+                    "sources_count": agg.get("sources_count", 0),
+                    "contacts_count": acc.total_leads,
+                    "subscription_plan": acc.subscription_plan,
+                    "lookalikes_count": agg.get("lookalikes_count", 0),
+                    "type": "account",
+                    "credits_count": acc.credits_count,
+                    "is_another_domain_resolved": acc.is_another_domain_resolved,
+                    "has_credit_card": acc.has_credit_card,
+                    "cost_leads_overage": cost_leads_overage,
+                    "whitelabel_settings_enabled": acc.whitelabel_settings_enabled,
+                    "premium_sources": acc.premium_sources,
+                }
+            )
+
+        return {"accounts": result, "count": total_count}
+
     def generate_access_token(self, user: dict, user_account_id: int):
         user_info = self.user_persistence.get_user_by_id(user_account_id)
         if not user_info:
@@ -329,11 +409,12 @@ class AdminCustomersService:
         )
 
         result = []
-        for d, user_name in domains:
+        for d, user_name, company_name in domains:
             result.append(
                 {
                     "id": d.id,
                     "domain": d.domain,
+                    "company_name": company_name,
                     "user_name": user_name,
                     "is_pixel_installed": d.is_pixel_installed,
                     "is_enable": d.is_enable,

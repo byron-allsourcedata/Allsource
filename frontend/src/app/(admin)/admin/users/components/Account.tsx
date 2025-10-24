@@ -417,10 +417,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 											pr: "10px",
 										}}
 									>
-										{row.full_name.replace("#test", "").trim()}
+										{row.full_name?.replace("#test", "").trim()}
 									</Box>
 
-									{row.full_name.includes("#test") && (
+									{row.full_name?.includes("#test") && (
 										<Chip
 											label="Test"
 											size="small"
@@ -618,7 +618,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 
 	return (
 		<TableBody>
-			{data.map((row) => (
+			{data?.map((row) => (
 				<TableRow
 					key={row.id}
 					sx={{

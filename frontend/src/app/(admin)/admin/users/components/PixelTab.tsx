@@ -13,6 +13,7 @@ import {
 	TableContainer,
 	TableHead,
 	TableRow,
+	Grid,
 } from "@mui/material";
 import { useRef, useState } from "react";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
@@ -25,6 +26,8 @@ import {
 import { Paginator } from "@/components/PaginationComponent";
 import type { UserData } from "../schemas";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
+import CustomSwitch from "@/components/ui/CustomSwitch";
 
 interface tableHeaders {
 	key: string;
@@ -143,29 +146,147 @@ const TableBodyDomains: React.FC<{ data: any[] }> = ({ data }) => {
 		});
 	};
 
+	function changeUserIsEmailValidation(id: any): void {
+		throw new Error("Function not implemented.");
+	}
+
 	return (
 		<TableBody>
 			{data.map((row) => (
-				<TableRow key={row.id} hover>
-					<TableCell sx={{ fontWeight: 500 }}>{row.domain}</TableCell>
-					<TableCell>{row.user_name || "—"}</TableCell>
-					<TableCell>
+				<TableRow
+					key={row.id}
+					sx={{
+						"&:hover": {
+							backgroundColor: "rgba(247, 247, 247, 1)", // как в TableBodyClient
+						},
+						"&:last-of-type .MuiTableCell-root": {
+							borderBottom: "none", // убрать нижнюю границу в последней строке
+						},
+					}}
+				>
+					<TableCell
+						className="seventh-sub-title"
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "left",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
+						{row.domain}
+					</TableCell>
+
+					<TableCell
+						className="description"
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "left",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
+						{row.company_name || "--"}
+					</TableCell>
+
+					<TableCell
+						className="description"
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "left",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
+						{row.user_name || "--"}
+					</TableCell>
+
+					<TableCell
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "left",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
 						<Chip
 							label={row.is_pixel_installed ? "Installed" : "Missing"}
 							color={row.is_pixel_installed ? "success" : "warning"}
 							size="small"
 						/>
 					</TableCell>
-					<TableCell>
+
+					<TableCell
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "left",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
 						<Chip
 							label={row.is_enable ? "Active" : "Disabled"}
 							color={row.is_enable ? "success" : "default"}
 							size="small"
 						/>
 					</TableCell>
-					<TableCell>{row.total_leads}</TableCell>
-					<TableCell>{formatDate(row.created_at)}</TableCell>
-					<TableCell>
+
+					<TableCell
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "center",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
+						{row.total_leads}
+					</TableCell>
+
+					<TableCell
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "left",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
+						{formatDate(row.created_at)}
+					</TableCell>
+
+					<TableCell
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "left",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
+						<Box
+							sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+						>
+							<CustomSwitch
+								stateSwitch={row.is_email_validation_enabled}
+								changeState={() => changeUserIsEmailValidation(row.id)}
+							/>
+						</Box>
+					</TableCell>
+
+					<TableCell
+						sx={{
+							...leadsStyles.table_array,
+							position: "relative",
+							textAlign: "center",
+							padding: "8px",
+							borderBottom: "1px solid rgba(224, 224, 224, 1)",
+						}}
+					>
 						<IconButton size="small">
 							<MoreVert fontSize="small" />
 						</IconButton>
@@ -221,15 +342,12 @@ const PixelTab: React.FC<PixelTabProps> = ({
 	const [loadingLocal, setLoadingLocal] = useState(false);
 	const tableContainerRef = useRef<HTMLDivElement>(null);
 
-	const tableHeaders = [
-		{ key: "domain", label: "Domain", sortable: true },
-		{ key: "user_name", label: "User", sortable: false },
-		{ key: "is_pixel_installed", label: "Pixel", sortable: false },
-		{ key: "is_enable", label: "Status", sortable: false },
-		{ key: "total_leads", label: "Leads", sortable: true },
-		{ key: "created_at", label: "Created", sortable: true },
-		{ key: "actions", label: "Actions", sortable: false },
-	];
+	const handleRowsPerPageChange = (
+		event: React.ChangeEvent<{ value: unknown }>,
+	) => {
+		setRowsPerPage(Number.parseInt(event.target.value as string, 10));
+		setPage(0);
+	};
 
 	const handlePageChange = (
 		event: React.MouseEvent<HTMLButtonElement> | null,
@@ -237,13 +355,30 @@ const PixelTab: React.FC<PixelTabProps> = ({
 	) => {
 		setPage(newPage);
 	};
-
-	const handleRowsPerPageChange = (
-		event: React.ChangeEvent<{ value: unknown }>,
-	) => {
-		setRowsPerPage(Number.parseInt(event.target.value as string, 10));
-		setPage(0);
+	const paginationProps = {
+		countRows: totalCount ?? 0,
+		page,
+		rowsPerPage,
+		onPageChange: handlePageChange,
+		onRowsPerPageChange: handleRowsPerPageChange,
+		rowsPerPageOptions,
 	};
+
+	const tableHeaders = [
+		{ key: "domain", label: "Domain", sortable: true },
+		{ key: "company_name", label: "Company Name", sortable: false },
+		{ key: "user_name", label: "User", sortable: false },
+		{ key: "is_pixel_installed", label: "Pixel", sortable: false },
+		{ key: "is_enable", label: "Status", sortable: false },
+		{ key: "total_leads", label: "Leads", sortable: true },
+		{ key: "created_at", label: "Created", sortable: true },
+		{
+			key: "is_email_validation_enabled",
+			label: "Email Validation",
+			sortable: false,
+		},
+		{ key: "actions", label: "Actions", sortable: false },
+	];
 
 	const handleSortRequest = (property: string) => {
 		const isDesc = orderBy === property && order === "desc";
@@ -254,36 +389,55 @@ const PixelTab: React.FC<PixelTabProps> = ({
 	if (loadingLocal) return <CustomizedProgressBar />;
 
 	return (
-		<Box sx={{ background: "#fff", borderRadius: 2, overflow: "hidden" }}>
-			<TableContainer
-				ref={tableContainerRef}
-				component={Paper}
-				sx={{ maxHeight: "70vh" }}
+		<>
+			<Box
+				sx={{
+					backgroundColor: "#fff",
+					width: "100%",
+					padding: 0,
+					margin: "0 auto",
+					display: "flex",
+					flexDirection: "column",
+					justifyContent: "space-between",
+					mt: 2,
+				}}
 			>
-				<Table stickyHeader>
-					<TableHeader
-						onSort={handleSortRequest}
-						sortField={orderBy}
-						sortOrder={order}
-						tableHeaders={tableHeaders}
-					/>
+				<Grid
+					container
+					direction="column"
+					justifyContent="flex-start"
+					sx={{ width: "100%" }}
+				>
+					<Grid item xs={12} sx={{ mt: 0, width: "100%" }}>
+						<TableContainer
+							ref={tableContainerRef}
+							component={Paper}
+							sx={{
+								border: "1px solid rgba(235, 235, 235, 1)",
+								borderBottom: "none",
+								overflowX: "auto",
+								maxHeight: "50vh",
+							}}
+						>
+							<Table stickyHeader>
+								<TableHeader
+									onSort={handleSortRequest}
+									sortField={orderBy}
+									sortOrder={order}
+									tableHeaders={tableHeaders}
+								/>
 
-					<TableBodyDomains data={domains} />
-				</Table>
-			</TableContainer>
+								<TableBodyDomains data={domains} />
+							</Table>
+						</TableContainer>
 
-			<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
-				<Paginator
-					tableMode
-					countRows={totalCount ?? 0}
-					page={page}
-					rowsPerPage={rowsPerPage}
-					onPageChange={handlePageChange}
-					onRowsPerPageChange={handleRowsPerPageChange}
-					rowsPerPageOptions={rowsPerPageOptions}
-				/>
+						<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
+							<Paginator tableMode {...paginationProps} />
+						</Box>
+					</Grid>
+				</Grid>
 			</Box>
-		</Box>
+		</>
 	);
 };
 

@@ -205,14 +205,16 @@ const Users: React.FC = () => {
 	const fetchUserData = async () => {
 		try {
 			const basePath = "/admin";
-			let endpoint = "/users";
+			let endpoint = "/accounts";
 
 			switch (tabIndex) {
 				case 0:
-					endpoint = "/users";
+					//endpoint = "/users";
+					endpoint = "/accounts";
 					break;
 				case 1:
-					endpoint = "/accounts"; // Switch with 1 and 0
+					//endpoint = "/accounts";
+					endpoint = "/users";
 					break;
 				case 2:
 					endpoint = "/domains";
@@ -227,7 +229,7 @@ const Users: React.FC = () => {
 					endpoint = "/partners";
 					break;
 				default:
-					endpoint = "/users";
+					endpoint = "/accounts";
 			}
 
 			let queryParams = [
@@ -261,7 +263,11 @@ const Users: React.FC = () => {
 					setDomainData(response.data.domains);
 					setTotalCount(response.data.count);
 				}
-				setUserData(response.data.users);
+				if (tabIndex === 0) {
+					setUserData(response.data.accounts);
+				} else {
+					setUserData(response.data.users);
+				}
 				setTotalCount(response.data.count);
 				const options = [50, 100, 300, 500];
 				let RowsPerPageOptions = options.filter(
@@ -287,8 +293,8 @@ const Users: React.FC = () => {
 	};
 
 	const tabs = [
-		{ id: 0, label: "Users", visible: true },
-		{ id: 1, label: "Account", visible: true },
+		{ id: 0, label: "Account", visible: true },
+		{ id: 1, label: "Users", visible: true },
 		{ id: 2, label: "Pixels", visible: true },
 		{ id: 3, label: "Admins", visible: true },
 		{ id: 4, label: "Master Partners", visible: true },
@@ -654,7 +660,7 @@ const Users: React.FC = () => {
 									},
 								}}
 							/>
-							{tabIndex === 1 && (
+							{tabIndex === 3 && (
 								<Button
 									variant="outlined"
 									sx={{
