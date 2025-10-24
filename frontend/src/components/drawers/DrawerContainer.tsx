@@ -2,7 +2,7 @@ import { styled } from "@mui/material";
 import { Column } from "../Column";
 
 export const DrawerContainer = styled(Column)`
-    width: 620px;
+    width: 40%;
     height: 100%;
 `;
 

@@ -33,6 +33,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import MailchimpDatasync from "@/components/data-syncs/MailchimpDatasync";
 import InstantlyDatasync from "@/components/data-syncs/InstantlyDataSync";
+import GreenArrowDataSync from "@/components/data-syncs/GreenArrowDataSync";
 import OmnisendDataSync from "@/components/data-syncs/OmnisendDataSync";
 import SendlaneDatasync from "@/components/data-syncs/SendlaneDatasync";
 import S3Datasync from "@/components/data-syncs/S3Datasync";
@@ -105,6 +106,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
 	const [mailchimpIconPopupOpen, setMailchimpIconPopupOpen] = useState(false);
 	const [instantlyIconPopupOpen, setInstantlyIconPopupOpen] = useState(false);
+	const [greenArrowIconPopupOpen, setGreenArrowIconPopupOpen] = useState(false);
 	const [omnisendIconPopupOpen, setOmnisendIconPopupOpen] = useState(false);
 
 	const [totalRows, setTotalRows] = useState(0);
@@ -405,6 +407,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						height={18}
 					/>
 				);
+			case "green_arrow":
+				return (
+					<Image
+						src={"/green_arrow-icon.svg"}
+						alt="greenArrow"
+						width={18}
+						height={18}
+					/>
+				);
 			default:
 				return null;
 		}
@@ -568,6 +579,23 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		} catch (error) {}
 	};
 
+	const handleGreenArrowIconPopupClose = async () => {
+		setGreenArrowIconPopupOpen(false);
+		setSelectedId(null);
+		try {
+			const response = await axiosInstance.get(
+				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
+			);
+			if (response) {
+				setData((prevData) =>
+					prevData.map((item) =>
+						item.id === selectedId ? { ...item, ...response.data } : item,
+					),
+				);
+			}
+		} catch (error) {}
+	};
+
 	const handleOmnisendIconPopupClose = async () => {
 		setOmnisendIconPopupOpen(false);
 		setSelectedId(null);
@@ -618,6 +646,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setOpenGoHighLevelIconPopup(true);
 			} else if (dataSyncPlatform === "instantly") {
 				setInstantlyIconPopupOpen(true);
+			} else if (dataSyncPlatform === "green_arrow") {
+				setGreenArrowIconPopupOpen(true);
 			}
 
 			setIsLoading(false);
@@ -630,6 +660,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			metaIconPopupOpen ||
 			mailchimpIconPopupOpen ||
 			instantlyIconPopupOpen ||
+			greenArrowIconPopupOpen ||
 			omnisendIconPopupOpen ||
 			openSendlaneConnect ||
 			openS3Connect ||
@@ -1833,6 +1864,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					<InstantlyDatasync
 						open={instantlyIconPopupOpen}
 						onClose={handleInstantlyIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+						isEdit={isEdit}
+					/>
+				)}
+				{greenArrowIconPopupOpen && isEdit === true && (
+					<GreenArrowDataSync
+						open={greenArrowIconPopupOpen}
+						onClose={handleGreenArrowIconPopupClose}
 						data={data.find((item) => item.id === selectedId)}
 						isEdit={isEdit}
 					/>

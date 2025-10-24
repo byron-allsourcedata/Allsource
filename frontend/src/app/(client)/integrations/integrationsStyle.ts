@@ -34,6 +34,31 @@ export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
 			backgroundColor: "rgba(235, 235, 235, 1)", // Border color
 		},
 	},
+	tabHeading: {
+		textTransform: "none",
+		padding: "4px 10px",
+		pb: "10px",
+		flexGrow: 0,
+		minHeight: "auto",
+		minWidth: "auto",
+		fontSize: "14px",
+		fontWeight: 700,
+		lineHeight: "19.1px",
+		textAlign: "left",
+		mr: 2,
+		"&.Mui-selected": {
+			color: "rgba(56, 152, 252, 1)",
+		},
+		"@media (max-width: 600px)": {
+			flexGrow: 1,
+			mr: 0,
+			borderRadius: "4px",
+			"&.Mui-selected": {
+				backgroundColor: "rgba(249, 249, 253, 1)",
+				border: "1px solid rgba(220, 220, 239, 1)",
+			},
+		},
+	},
 
 	container: {
 		display: "flex",

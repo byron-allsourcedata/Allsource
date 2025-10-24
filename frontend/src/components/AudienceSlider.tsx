@@ -26,11 +26,13 @@ import BingAdsDataSync from "@/components/data-syncs/BingAdsDataSync";
 import MailchimpConnect from "@/components/integrations/MailchimpIntegration";
 import MailchimpDatasync from "@/components/data-syncs/MailchimpDatasync";
 import InstantlyDatasync from "@/components/data-syncs/InstantlyDataSync";
+import GreenArrowDataSync from "@/components/data-syncs/GreenArrowDataSync";
 import SlackDatasync from "@/components/data-syncs/SlackDataSync";
 import GoogleADSDatasync from "@/components/data-syncs/GoogleADSDataSync";
 import LinkedinDataSync from "@/components/data-syncs/LinkedinDataSync";
 import SendlaneConnect from "@/components/integrations/SendlaneIntegration";
 import ConnectInstantly from "@/components/integrations/InstantlyIntegration";
+import GreenArrowIntegrationDrawer from "@/components/integrations/GreenArrowIntegration";
 import S3Connect from "@/components/integrations/S3Integration";
 import LinkedinConnectPopup from "@/components/integrations/LinkedinIntegration";
 import SendlaneDatasync from "@/components/data-syncs/SendlaneDatasync";
@@ -93,6 +95,7 @@ type ServiceHandlers = {
 	go_high_level: () => void;
 	customer_io: () => void;
 	instantly: () => void;
+	green_arrow: () => void;
 };
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({
@@ -132,12 +135,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [linkedinIconPopupOpen, setOpenLinkedinIconPopup] = useState(false);
 	const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false);
 	const [openInstantlyConnect, setOpeninstantlyConnect] = useState(false);
+	const [openGreenArrowConnect, setOpenGreenArrowConnect] = useState(false);
 	const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] =
 		useState(false);
 	const [openS3IconPopupOpen, setOpenS3IconPopupOpen] = useState(false);
 	const [openWebhookIconPopupOpen, setOpenWebhookIconPopupOpen] =
 		useState(false);
 	const [instantlyIconPopupOpen, setOpenInstantlyIconPopup] = useState(false);
+	const [greenArrowIconPopupOpen, setOpenGreenArrowIconPopup] = useState(false);
 	const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
 	const [openCustomerIoConnect, setOpenCustomerIoConnect] = useState(false);
 	const [openS3Connect, setOpenS3Connect] = useState(false);
@@ -217,6 +222,19 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleInstantlyIconPopupClose = () => {
 		setOpenInstantlyIconPopup(false);
+		setPlusIconPopupOpen(false);
+	};
+
+	const handleOpenGreenArrowConnect = () => {
+		setOpenGreenArrowConnect(true);
+	};
+
+	const handleGreenArrowIconPopupIconOpen = () => {
+		setOpenGreenArrowIconPopup(true);
+	};
+
+	const handleGreenArrowIconPopupClose = () => {
+		setOpenGreenArrowIconPopup(false);
 		setPlusIconPopupOpen(false);
 	};
 
@@ -339,6 +357,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	const handleOpenInstantlyConnectClose = () => {
 		setOpeninstantlyConnect(false);
+	};
+
+	const handleOpenGreenArrowConnectClose = () => {
+		setOpenGreenArrowConnect(false);
 	};
 
 	const handleIntegrationSelect = (integration: string) => {
@@ -556,6 +578,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		{ image: "omnisend_icon_black.svg", service_name: "omnisend" },
 		{ image: "sendlane-icon.svg", service_name: "sendlane" },
 		{ image: "instantly-icon.svg", service_name: "instantly" },
+		{ image: "green_arrow-icon.svg", service_name: "green_arrow" },
 		{ image: "klaviyo.svg", service_name: "klaviyo" },
 		{ image: "s3.svg", service_name: "s3" },
 	];
@@ -591,6 +614,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		hubspot: handleCreateHubspotOpen,
 		mailchimp: handleOpenMailchimpConnect,
 		instantly: handleOpenInstantlyConnect,
+		green_arrow: handleOpenGreenArrowConnect,
 		sales_force: handleCreateSalesForceOpen,
 		google_ads: handleCreateGoogleAdsOpen,
 		go_high_level: handleGoHightLevelOpen,
@@ -611,6 +635,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 		hubspot: handleHubspotIconPopupOpen,
 		mailchimp: handleMailchimpIconPopupIconOpen,
 		instantly: handleInstantlyIconPopupIconOpen,
+		green_arrow: handleGreenArrowIconPopupIconOpen,
 		sales_force: handleSalesForceIconPopupOpen,
 		google_ads: handleGoogleAdsIconPopupIconOpen,
 		s3: handleS3IconPopupOpen,
@@ -782,6 +807,12 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			<InstantlyDatasync
 				open={instantlyIconPopupOpen}
 				onClose={handleInstantlyIconPopupClose}
+				onCloseCreateSync={onClose}
+				data={null}
+			/>
+			<GreenArrowDataSync
+				open={greenArrowIconPopupOpen}
+				onClose={handleGreenArrowIconPopupClose}
 				onCloseCreateSync={onClose}
 				data={null}
 			/>
@@ -998,6 +1029,17 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				initApiKey={
 					integrationsCredentials.find(
 						(integartion) => integartion.service_name === "instantly",
+					)?.access_token
+				}
+			/>
+			<GreenArrowIntegrationDrawer
+				onSave={handleSaveSettings}
+				open={openGreenArrowConnect}
+				handleClose={handleOpenGreenArrowConnectClose}
+				invalid_api_key={isInvalidApiKey}
+				initApiKey={
+					integrationsCredentials.find(
+						(integartion) => integartion.service_name === "green_arrow",
 					)?.access_token
 				}
 			/>
