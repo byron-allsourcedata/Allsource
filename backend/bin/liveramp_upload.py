@@ -33,7 +33,9 @@ async def main():
     delivr_persistence = DelivrPersistence(
         clickhouse_persistence=clickhouse_persistence
     )
-    snowflake_persistence = SnowflakePersistence()
+    snowflake_persistence = SnowflakePersistence(
+        clickhouse_persistence=clickhouse_persistence
+    )
 
     service = LiverampService(
         postgres_persistence=postgres_persistence,

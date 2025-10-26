@@ -10,6 +10,8 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 import logging
 
+BATCH_SIZE = 5000
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,17 +34,13 @@ def _convert_age_range_to_age(age_range: str) -> str:
 
 
 def _extract_first_email(emails_data) -> str:
-    """Извлекает первый email из данных, обрабатывая numpy arrays"""
     try:
-        # Если это None или пустой массив
         if emails_data is None:
             return ""
 
-        # Если это numpy array
         if hasattr(emails_data, "dtype") and hasattr(emails_data, "size"):
             if emails_data.size == 0:
                 return ""
-            # Берем первый элемент массива
             first_email = (
                 emails_data.flat[0]
                 if hasattr(emails_data, "flat")
@@ -50,14 +48,11 @@ def _extract_first_email(emails_data) -> str:
             )
             return str(first_email) if first_email is not None else ""
 
-        # Если это обычный список
         if isinstance(emails_data, list) and emails_data:
             first_item = emails_data[0]
             return str(first_item) if first_item is not None else ""
 
-        # Если это строка
         if isinstance(emails_data, str) and emails_data.strip():
-            # Пытаемся распарсить если выглядит как список
             if emails_data.startswith("[") and emails_data.endswith("]"):
                 try:
                     parsed_list = eval(emails_data)
@@ -67,7 +62,6 @@ def _extract_first_email(emails_data) -> str:
                     pass
             return emails_data.strip()
 
-        # Для других типов просто конвертируем в строку
         return str(emails_data) if emails_data is not None else ""
 
     except Exception as e:
@@ -76,12 +70,10 @@ def _extract_first_email(emails_data) -> str:
 
 
 def _convert_has_children(has_children) -> int:
-    """Преобразует наличие детей в 1/0, обрабатывая numpy arrays"""
     try:
         if has_children is None:
             return 0
 
-        # Если это numpy array, берем первое значение
         if hasattr(has_children, "dtype") and hasattr(has_children, "size"):
             if has_children.size == 0:
                 return 0
@@ -105,12 +97,10 @@ def _convert_has_children(has_children) -> int:
 
 
 def _convert_marital_status(is_married) -> str:
-    """Преобразует семейное положение, обрабатывая numpy arrays"""
     try:
         if is_married is None:
             return "U"
 
-        # Если это numpy array, берем первое значение
         if hasattr(is_married, "dtype") and hasattr(is_married, "size"):
             if is_married.size == 0:
                 return "U"
@@ -174,10 +164,9 @@ class DelivrPersistence:
                 f"Extracted {len(all_emails)} unique emails from Delivr data"
             )
 
-            batch_size = 5000
             email_batches = [
-                all_emails[i : i + batch_size]
-                for i in range(0, len(all_emails), batch_size)
+                all_emails[i : i + BATCH_SIZE]
+                for i in range(0, len(all_emails), BATCH_SIZE)
             ]
             logger.info(
                 f"Split {len(all_emails)} emails into {len(email_batches)} batches"
@@ -236,12 +225,10 @@ class DelivrPersistence:
                 f"Transforming {len(raw_df)} Delivr records to unified format"
             )
 
-            # Обрабатываем записи Delivr также батчами для избежания memory issues
-            transform_batch_size = 2000
-            for i in range(0, len(raw_df), transform_batch_size):
-                batch_df = raw_df.iloc[i : i + transform_batch_size]
+            for i in range(0, len(raw_df), BATCH_SIZE):
+                batch_df = raw_df.iloc[i : i + BATCH_SIZE]
                 logger.info(
-                    f"Transforming batch {i // transform_batch_size + 1}/{(len(raw_df) - 1) // transform_batch_size + 1} with {len(batch_df)} records"
+                    f"Transforming batch {i // BATCH_SIZE + 1}/{(len(raw_df) - 1) // BATCH_SIZE + 1} with {len(batch_df)} records"
                 )
 
                 for index, row in batch_df.iterrows():
@@ -250,15 +237,13 @@ class DelivrPersistence:
                     )
                     if unified_record:
                         unified_data.append(unified_record)
-                        if unified_record.get(
-                            "ASID"
-                        ):  # Если есть ASID - значит сматчилось
+                        if unified_record.get("ASID"):
                             matched_count += 1
                         else:
                             unmatched_count += 1
                     else:
                         error_count += 1
-                        if error_count <= 5:  # Логируем только первые 5 ошибок
+                        if error_count <= 5:
                             logger.warning(
                                 f"Transformation failure at row {index}"
                             )
@@ -292,7 +277,6 @@ class DelivrPersistence:
             return []
 
     def _extract_all_emails_from_data(self, df: pd.DataFrame) -> List[str]:
-        """Извлекаем все уникальные email из Delivr данных"""
         emails = set()
 
         for _, row in df.iterrows():
@@ -313,7 +297,6 @@ class DelivrPersistence:
     def _transform_to_unified_format(
         self, delivr_row, clickhouse_data_map: Dict[str, Dict] = None
     ) -> Optional[Dict[str, Any]]:
-        """Преобразует запись Delivr в единый формат с обогащением из ClickHouse"""
         try:
             personal_emails = delivr_row.get("personal_emails", [])
             personal_email = _extract_first_email(personal_emails)
@@ -321,7 +304,6 @@ class DelivrPersistence:
             business_emails = delivr_row.get("business_emails", [])
             business_email = _extract_first_email(business_emails)
 
-            # Ищем соответствующие данные в ClickHouse по email
             clickhouse_record = None
             if clickhouse_data_map:
                 if (
@@ -535,7 +517,6 @@ class DelivrPersistence:
             return pd.DataFrame()
 
     async def _fetch_day_parquets(self, s3, prefix: str, day: str):
-        """Получаем parquet файлы за конкретный день"""
         dfs = []
         try:
             response = await s3.list_objects_v2(

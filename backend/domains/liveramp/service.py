@@ -1,8 +1,5 @@
 import csv
 import io
-import os
-from datetime import datetime, timedelta
-import pandas as pd
 from resolver import injectable
 from .persistence.clickhouse import ClickHousePersistence
 from .persistence.postgresql import PostgresPersistence
@@ -37,7 +34,6 @@ class LiverampService:
         try:
             statistics = {}
 
-            # 1. Получаем данные из PostgreSQL + ClickHouse (уже в правильном формате)
             logger.info("Step 1: Fetching data from PostgreSQL + ClickHouse...")
             postgres_clickhouse_data = (
                 await self._get_postgres_clickhouse_data()
@@ -46,7 +42,6 @@ class LiverampService:
                 postgres_clickhouse_data
             )
 
-            # 2. Получаем данные из Delivr S3 (уже преобразованные в единый формат)
             logger.info("Step 2: Fetching unified data from Delivr S3...")
             delivr_data = await self.delivr.fetch_weekly_unified_data(days=7)
             statistics["delivr_records"] = len(delivr_data)
@@ -77,7 +72,6 @@ class LiverampService:
             raise
 
     async def _get_postgres_clickhouse_data(self) -> List[Dict[str, Any]]:
-        """Получаем данные из PostgreSQL и обогащаем через ClickHouse"""
         try:
             leads_data = self.postgres.fetch_leads_last_week()
             if not leads_data:
@@ -94,10 +88,8 @@ class LiverampService:
             return []
 
     async def _get_snowflake_data(self) -> List[Dict[str, Any]]:
-        """Получаем данные из Snowflake"""
         try:
-            # TODO: Добавить преобразование Snowflake данных в единый формат
-            return await self.snowflake.fetch_weekly_data(days=7)
+            return await self.snowflake.get_snowflake_data()
         except Exception as e:
             logger.error(f"Error getting Snowflake data: {e}")
             return []
@@ -105,7 +97,6 @@ class LiverampService:
     def _format_unified_data_to_csv(
         self, unified_data: List[Dict[str, Any]]
     ) -> str:
-        """Форматируем унифицированные данные в CSV"""
         if not unified_data:
             return ""
 
@@ -141,7 +132,6 @@ class LiverampService:
     def save_csv_to_file(
         self, csv_content: str, filename: str = "combined_report.csv"
     ):
-        """Сохраняем CSV в файл"""
         if not csv_content:
             logger.warning("No CSV content to save")
             return

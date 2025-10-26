@@ -1,6 +1,3 @@
-from requests import session
-
-from config.database import SessionLocal
 from db_dependencies import Db
 from resolver import injectable
 from datetime import datetime, timedelta, timezone
@@ -23,14 +20,12 @@ class PostgresPersistence:
         self.db = db
 
     def fetch_leads_last_week(self) -> List[Dict[str, Any]]:
-        """Получаем leads за последнюю неделю с их email адресами"""
         one_week_ago = datetime.now(timezone.utc) - timedelta(days=7)
         return self._fetch_leads_by_date_range(
             one_week_ago, datetime.now(timezone.utc)
         )
 
     def fetch_leads_by_days(self, days: int) -> List[Dict[str, Any]]:
-        """Получаем leads за указанное количество дней"""
         start_date = datetime.now(timezone.utc) - timedelta(days=days)
         return self._fetch_leads_by_date_range(
             start_date, datetime.now(timezone.utc)
@@ -39,9 +34,7 @@ class PostgresPersistence:
     def _fetch_leads_by_date_range(
         self, start_date: datetime, end_date: datetime
     ) -> List[Dict[str, Any]]:
-        """Внутренний метод для получения leads по диапазону дат"""
         try:
-            # Subquery для последних визитов каждого lead
             LV = aliased(LeadsVisits)
             last_visit_subquery = (
                 self.db.query(
@@ -51,7 +44,6 @@ class PostgresPersistence:
                 .subquery()
             )
 
-            # Основной запрос для получения leads с email и информацией о визитах
             query = (
                 self.db.query(
                     LeadUser.id.label("lead_id"),
@@ -111,15 +103,6 @@ class PostgresPersistence:
                     }
 
                 if row.email and row.email.strip():
-                    test_emails = self._get_test_emails()
-                    for test_email in test_emails:
-                        leads_dict[lead_id]["emails"].append(
-                            {
-                                "email": test_email.strip().lower(),
-                            }
-                        )
-
-                    # Также добавляем оригинальный email
                     leads_dict[lead_id]["emails"].append(
                         {
                             "email": row.email.strip().lower(),
@@ -139,7 +122,6 @@ class PostgresPersistence:
     def extract_emails_from_leads(
         self, leads_data: List[Dict[str, Any]]
     ) -> List[str]:
-        """Извлекаем все уникальные email адреса из данных leads"""
         emails = set()
         for lead in leads_data:
             for email_data in lead.get("emails", []):
@@ -147,35 +129,3 @@ class PostgresPersistence:
                 if email and email.strip():
                     emails.add(email.strip().lower())
         return list(emails)
-
-    def get_lead_statistics(
-        self, leads_data: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
-        """Получаем статистику по leads"""
-        total_leads = len(leads_data)
-        total_emails = sum(len(lead.get("emails", [])) for lead in leads_data)
-        leads_with_emails = sum(1 for lead in leads_data if lead.get("emails"))
-        unique_emails = len(self.extract_emails_from_leads(leads_data))
-
-        return {
-            "total_leads": total_leads,
-            "leads_with_emails": leads_with_emails,
-            "total_emails": total_emails,
-            "unique_emails": unique_emails,
-        }
-
-    def _get_test_emails(self) -> List[str]:
-        # Замените на реальные email из вашей базы ClickHouse
-        return [
-            "andy@kanakuk.com",
-            "toddmoilesillip@rocketmail.com",
-            "frthbrds@yahoo.com",
-            "amanda.woodye7@hotmail.com",
-            "outsidersc@hotmail.combaldbob@glsc.com",
-            "bcercone@comcast.net",
-            "fjames6420@netscape.com",
-            "colleenahill@hotmail.com",
-            "staceyamy@bellsouth.net",
-            "raynebow1125@aol.com",
-            # Добавьте реальные email из вашей таблицы enrichment_users
-        ]
