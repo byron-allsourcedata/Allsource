@@ -76,22 +76,58 @@ class ClickHousePersistence:
             return []
 
         try:
-            matched_users = self.enrichment_users.get_user_ids_by_emails(emails)
-            asids = [user.asid for user in matched_users if user.asid]
+            batch_size = 5000
+            all_matched_users = []
+            total = len(emails)
 
-            if not asids:
-                logger.info(f"No ASIDs found for {len(emails)} emails")
+            logger.info(
+                f"Starting email matching for {total} emails (batch size={batch_size})"
+            )
+
+            for i in range(0, total, batch_size):
+                batch = emails[i : i + batch_size]
+                logger.info(
+                    f"Processing email batch {i // batch_size + 1}/{(total - 1) // batch_size + 1} ({len(batch)} emails)"
+                )
+
+                try:
+                    matched_users = (
+                        self.enrichment_users.get_user_ids_by_emails(batch)
+                    )
+                    all_matched_users.extend(matched_users)
+                    logger.info(
+                        f"  Batch {i // batch_size + 1}: matched {len(matched_users)} users"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"  Error matching batch {i // batch_size + 1}: {e}"
+                    )
+                    continue
+
+            if not all_matched_users:
+                logger.info(
+                    f"No users matched for {len(emails)} emails in total"
+                )
                 return []
 
-            logger.info(f"Found {len(asids)} ASIDs for {len(emails)} emails")
+            asids = [user.asid for user in all_matched_users if user.asid]
+            if not asids:
+                logger.info(
+                    f"No ASIDs found for {len(all_matched_users)} matched users"
+                )
+                return []
 
-            batch_size = 5000
+            logger.info(
+                f"Found {len(asids)} ASIDs for {len(emails)} emails total"
+            )
+
+            batch_size_asids = 5000
             all_user_data = []
 
-            for i in range(0, len(asids), batch_size):
-                batch = asids[i : i + batch_size]
+            for i in range(0, len(asids), batch_size_asids):
+                batch = asids[i : i + batch_size_asids]
                 logger.info(
-                    f"Fetching enrichment data batch {i // batch_size + 1} ({len(batch)} ASIDs)"
+                    f"Fetching enrichment data batch {i // batch_size_asids + 1} ({len(batch)} ASIDs)"
                 )
 
                 user_data = self._get_enrichment_user_data_by_asids(batch)
