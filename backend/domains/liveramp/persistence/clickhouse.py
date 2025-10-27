@@ -18,6 +18,59 @@ class ClickHousePersistence:
         self.clickhouse = clickhouse
         self.enrichment_users = enrichment_users
 
+    STATE_MAP = {
+        "AL": "Alabama",
+        "AK": "Alaska",
+        "AZ": "Arizona",
+        "AR": "Arkansas",
+        "CA": "California",
+        "CO": "Colorado",
+        "CT": "Connecticut",
+        "DE": "Delaware",
+        "FL": "Florida",
+        "GA": "Georgia",
+        "HI": "Hawaii",
+        "ID": "Idaho",
+        "IL": "Illinois",
+        "IN": "Indiana",
+        "IA": "Iowa",
+        "KS": "Kansas",
+        "KY": "Kentucky",
+        "LA": "Louisiana",
+        "ME": "Maine",
+        "MD": "Maryland",
+        "MA": "Massachusetts",
+        "MI": "Michigan",
+        "MN": "Minnesota",
+        "MS": "Mississippi",
+        "MO": "Missouri",
+        "MT": "Montana",
+        "NE": "Nebraska",
+        "NV": "Nevada",
+        "NH": "New Hampshire",
+        "NJ": "New Jersey",
+        "NM": "New Mexico",
+        "NY": "New York",
+        "NC": "North Carolina",
+        "ND": "North Dakota",
+        "OH": "Ohio",
+        "OK": "Oklahoma",
+        "OR": "Oregon",
+        "PA": "Pennsylvania",
+        "RI": "Rhode Island",
+        "SC": "South Carolina",
+        "SD": "South Dakota",
+        "TN": "Tennessee",
+        "TX": "Texas",
+        "UT": "Utah",
+        "VT": "Vermont",
+        "VA": "Virginia",
+        "WA": "Washington",
+        "WV": "West Virginia",
+        "WI": "Wisconsin",
+        "WY": "Wyoming",
+    }
+
     def match_leads_with_users(self, emails: List[str]) -> List[Dict[str, Any]]:
         if not emails:
             return []
@@ -159,6 +212,9 @@ class ClickHousePersistence:
             else:
                 gender = None
 
+            age = self._convert_age(user.get("age"))
+            state_full = self._convert_state(user.get("home_state"))
+
             formatted_user = {
                 "ASID": str(user["asid"]),
                 "FirstName": user["first_name"],
@@ -167,9 +223,9 @@ class ClickHousePersistence:
                 "PERSONAL_EMAIL": user["personal_email"],
                 "PhoneMobile1": user["phone_mobile1"],
                 "HomeCity": user["home_city"],
-                "HomeState": user["home_state"],
+                "HomeState": state_full,
                 "Gender": gender,
-                "Age": user["age"],
+                "Age": age,
                 "MaritalStatus": marital_status,
                 "Pets": pets,
                 "ChildrenPresent": children_present,
@@ -195,6 +251,41 @@ class ClickHousePersistence:
 
     def _convert_boolean_to_int(self, value: Optional[bool]) -> int:
         return 1 if value is True else 0
+
+    def _convert_state(self, state_code: Optional[str]) -> Optional[str]:
+        if not state_code:
+            return None
+
+        state_code = state_code.strip().upper()
+        return self.STATE_MAP.get(state_code, state_code.capitalize())
+
+    def _convert_age(self, age_raw: Any) -> Optional[float]:
+        if age_raw is None:
+            return None
+
+        if isinstance(age_raw, str):
+            age_raw = age_raw.strip()
+            if age_raw.lower() == "unknown" or not age_raw:
+                return None
+
+            if "-" in age_raw:
+                parts = age_raw.split("-")
+                try:
+                    nums = [int(p) for p in parts if p.strip().isdigit()]
+                    if len(nums) == 2:
+                        return sum(nums) / 2
+                except ValueError:
+                    return None
+
+            try:
+                return int(age_raw)
+            except ValueError:
+                return None
+
+        elif isinstance(age_raw, (int, float)):
+            return age_raw
+
+        return None
 
     def _convert_children_present(
         self, number_of_children: Optional[int]

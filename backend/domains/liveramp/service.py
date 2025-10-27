@@ -1,6 +1,7 @@
 import csv
 import io
 from resolver import injectable
+from .file_service import LiveRampFileService
 from .persistence.clickhouse import ClickHousePersistence
 from .persistence.postgresql import PostgresPersistence
 from .persistence.delivr_s3 import DelivrPersistence
@@ -19,13 +20,15 @@ class LiverampService:
         clickhouse_persistence: ClickHousePersistence,
         delivr_persistence: DelivrPersistence,
         snowflake_persistence: SnowflakePersistence,
+        file_service: LiveRampFileService,
     ):
         self.postgres = postgres_persistence
         self.clickhouse = clickhouse_persistence
         self.delivr = delivr_persistence
         self.snowflake = snowflake_persistence
+        self.file_service = file_service
 
-    async def generate_combined_report(self) -> Tuple[str, Dict[str, Any]]:
+    async def generate_combined_report(self) -> Tuple[str, str, Dict[str, Any]]:
         """
         1. PostgreSQL + ClickHouse
         2. Delivr S3 + ClickHouse
@@ -46,26 +49,28 @@ class LiverampService:
             delivr_data = await self.delivr.fetch_weekly_unified_data(days=7)
             statistics["delivr_records"] = len(delivr_data)
 
-            # 3. Получаем данные из Snowflake
             logger.info("Step 3: Fetching data from Snowflake...")
             snowflake_data = await self._get_snowflake_data()
             statistics["snowflake_records"] = len(snowflake_data)
 
-            # 4. Объединяем все данные
             logger.info("Step 4: Combining all data sources...")
             combined_data = (
                 postgres_clickhouse_data + delivr_data + snowflake_data
             )
             statistics["combined_records"] = len(combined_data)
 
-            # 5. Форматируем в CSV
             logger.info("Step 5: Formatting to CSV...")
-            csv_content = self._format_unified_data_to_csv(combined_data)
+            csv_content = self.file_service.format_data_to_csv(combined_data)
+
+            logger.info("Step 6: Saving to file...")
+            filepath = self.file_service.save_csv_to_file(csv_content)
 
             logger.info(
                 f"Final combined report: {len(combined_data)} total records"
             )
-            return csv_content, statistics
+            logger.info(f"File saved: {filepath}")
+
+            return csv_content, filepath, statistics
 
         except Exception as e:
             logger.error(f"Error generating combined report: {e}")
@@ -93,49 +98,3 @@ class LiverampService:
         except Exception as e:
             logger.error(f"Error getting Snowflake data: {e}")
             return []
-
-    def _format_unified_data_to_csv(
-        self, unified_data: List[Dict[str, Any]]
-    ) -> str:
-        if not unified_data:
-            return ""
-
-        fieldnames = [
-            "ASID",
-            "FirstName",
-            "LastName",
-            "BUSINESS_EMAIL",
-            "PERSONAL_EMAIL",
-            "PhoneMobile1",
-            "HomeCity",
-            "HomeState",
-            "Gender",
-            "Age",
-            "MaritalStatus",
-            "Pets",
-            "ChildrenPresent",
-            "Spend",
-        ]
-
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=fieldnames, delimiter="\t")
-        writer.writeheader()
-
-        for record in unified_data:
-            row = {field: record.get(field, "") for field in fieldnames}
-            writer.writerow(row)
-
-        csv_content = output.getvalue()
-        logger.info(f"Formatted CSV with {len(unified_data)} rows")
-        return csv_content
-
-    def save_csv_to_file(
-        self, csv_content: str, filename: str = "combined_report.csv"
-    ):
-        if not csv_content:
-            logger.warning("No CSV content to save")
-            return
-
-        with open(filename, "w", newline="", encoding="utf-8") as f:
-            f.write(csv_content)
-        logger.info(f"CSV report saved to {filename}")

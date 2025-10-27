@@ -1,4 +1,6 @@
 import asyncio
+
+from domains.liveramp.file_service import LiveRampFileService
 from domains.liveramp.service import LiverampService
 from domains.liveramp.persistence.postgresql import PostgresPersistence
 from domains.liveramp.persistence.clickhouse import ClickHousePersistence
@@ -37,18 +39,17 @@ async def main():
         clickhouse_persistence=clickhouse_persistence
     )
 
+    file_service = LiveRampFileService()
+
     service = LiverampService(
         postgres_persistence=postgres_persistence,
         clickhouse_persistence=clickhouse_persistence,
         delivr_persistence=delivr_persistence,
         snowflake_persistence=snowflake_persistence,
+        file_service=file_service,
     )
 
-    csv_content, statistics = await service.generate_combined_report()
-
-    print(f"Processing statistics: {statistics}")
-
-    service.save_csv_to_file(csv_content, "combined_data_report.csv")
+    await service.generate_combined_report()
 
 
 if __name__ == "__main__":
