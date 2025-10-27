@@ -52,6 +52,25 @@ const commonFields: FieldSpec[] = [
 /* -------------------------------------------
    EMAIL Use Case
 ------------------------------------------- */
+
+// const metaBoth: FieldSpec[] = [
+// 	// Essential
+// 	{ label: "Phone", key: "phone", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
+// 	{ label: "Gender", key: "gender", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
+// 	{ label: "Birth date", key: "birth_date", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
+// 	{ label: "State", key: "state", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
+// 	{ label: "City", key: "city", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
+// 	{ label: "Zip code", key: "zip_code", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
+// ]
+
+// const googleAdsBoth: FieldSpec[] = [
+// 	// Essential
+// 	{ label: "Phone", key: "phone", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
+// 	{ label: "State", key: "state", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
+// 	{ label: "City", key: "city", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
+// 	{ label: "Country code", key: "country_code", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
+// ]
+
 const emailB2B: FieldSpec[] = [
 	// Essential
 	{
@@ -582,8 +601,25 @@ const serviceDefaults: Record<ServiceType, string[]> = {
 	default: ["email", "first_name", "last_name"],
 	CSV: ["first_name", "last_name", "email"],
 	mailchimp: ["email", "first_name", "last_name"],
-	meta: ["email", "phone"],
-	google_ads: ["email", "first_name", "last_name"],
+	meta: [
+		"email",
+		"first_name",
+		"last_name",
+		"phone",
+		"city",
+		"state",
+		"birth_date",
+		"zip_code",
+	],
+	google_ads: [
+		"email",
+		"first_name",
+		"last_name",
+		"phone",
+		"city",
+		"state",
+		"country_code",
+	],
 	sales_force: ["email", "first_name", "last_name"],
 	hubspot: ["email", "first_name", "last_name"],
 	s3: ["email", "first_name", "last_name"],
