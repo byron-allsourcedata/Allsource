@@ -588,6 +588,26 @@ async def ensure_integration(
                         await message.ack()
                         return
 
+                    case ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value:
+                        logging.debug(
+                            f"Custom variables don't created: {service_name}"
+                        )
+                        update_users_integrations(
+                            session=pg_session,
+                            status=ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value,
+                            integration_data_sync_id=integration_data_sync.id,
+                            service_name=service_name,
+                            user_domain_integration_id=integration_data_sync.integration_id,
+                        )
+                        await send_error_msg(
+                            user_integration.user_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.DATA_SYNC_ERROR.value,
+                        )
+                        await message.ack()
+                        return
+
             bulk_update_data_sync_imported_leads(
                 session=pg_session,
                 updates=[

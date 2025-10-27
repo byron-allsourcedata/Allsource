@@ -6,31 +6,18 @@ import {
 	IconButton,
 	TextField,
 	Divider,
-	FormGroup,
 	FormControlLabel,
 	FormControl,
 	FormLabel,
 	Radio,
-	Collapse,
-	Checkbox,
 	Button,
-	List,
-	ListItem,
 	Link,
 	Tab,
 	Tooltip,
-	Switch,
 	RadioGroup,
-	InputLabel,
 	MenuItem,
-	Select,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
 	Popover,
 	Menu,
-	SelectChangeEvent,
 	ListItemText,
 	ClickAwayListener,
 	InputAdornment,
@@ -724,7 +711,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-greanArrow"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-grean-arrow"
 							target="_blank"
 							rel="noopener referrer"
 							className="main-text"
@@ -753,7 +740,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 				>
 					<UserTip
 						title="Data Sync Speed"
-						content="GreanArrow standard sync speed is 100 contacts per minute."
+						content="GreanArrow standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",

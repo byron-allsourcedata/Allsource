@@ -90,7 +90,7 @@ class GreenArrowIntegrationsService:
             credential.error_message = "Invalid API Key"
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
-            return {"status": "CREDENTIALS_INVALID"}
+            return {"status": IntegrationsStatus.CREDENTIALS_INVALID}
 
         if not resp.status_code == 200:
             logging.error(
@@ -98,7 +98,10 @@ class GreenArrowIntegrationsService:
                 resp.status_code,
                 resp.text,
             )
-            return {"status": "CREATE_IS_FAILED", "detail": resp.text}
+            return {
+                "status": IntegrationsStatus.CREATE_IS_FAILED,
+                "detail": resp.text,
+            }
 
         data = resp.json().get("data")
         list_id = data.get("id")
@@ -140,15 +143,12 @@ class GreenArrowIntegrationsService:
                 result.append({"id": str(lid), "list_name": name})
         return result
 
-    def __save_integation(
-        self, domain_id: int, api_key: str, base_url: str, user: dict
-    ):
+    def __save_integation(self, domain_id: int, api_key: str, user: dict):
         credential = self.get_credentials(
             domain_id=domain_id, user_id=user.get("id")
         )
         if credential:
             credential.access_token = api_key
-            credential.data_center = base_url
             credential.is_failed = False
             self.integrations_persisntece.db.commit()
             return credential
@@ -156,10 +156,9 @@ class GreenArrowIntegrationsService:
         common_integration = os.getenv("COMMON_INTEGRATION") == "True"
         integration_data = {
             "access_token": api_key,
-            "data_center": base_url,
             "full_name": user.get("full_name"),
             "service_name": SourcePlatformEnum.GREEN_ARROW.value,
-            "limit": None,
+            "limit": IntegrationLimit.INSTANTLY.value,
         }
 
         if common_integration:
@@ -182,19 +181,6 @@ class GreenArrowIntegrationsService:
         domain_id = domain.id if domain else None
         api_key = credentials.green_arrow.api_key
         base_url = self.BASE_URL
-        # try:
-        #     lists = self.get_list(
-        #         api_key=api_key,
-        #         domain_id=domain_id,
-        #         user_id=user.get("id"),
-        #         base_url=base_url,
-        #     )
-        #     if lists is None:
-        #         raise Exception("Invalid")
-        # except Exception:
-        #     raise HTTPException(
-        #         status_code=200, detail={"status": "CREDENTIALS_INVALID"}
-        #     )
 
         integration = self.__save_integation(
             domain_id=domain_id, api_key=api_key, base_url=base_url, user=user
@@ -302,20 +288,21 @@ class GreenArrowIntegrationsService:
         results = []
 
         for lead_user, five_x_five_user in user_data:
-            profile = await self.__map_lead_to_green_arrow_contact(
+            profile_or_status = await self.__map_lead_to_green_arrow_contact(
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
             )
 
-            if profile in (
+            if profile_or_status in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
-                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
-                results.append({"lead_id": lead_user.id, "status": profile})
+                status = profile_or_status
+                results.append({"lead_id": lead_user.id, "status": status})
                 continue
 
+            profile = profile_or_status
             results.append(
                 {
                     "lead_id": lead_user.id,
@@ -336,44 +323,21 @@ class GreenArrowIntegrationsService:
             )
         except Exception as exc:
             logging.error("Exception during sync_contacts_bulk: %s", exc)
-            import_response = "AUTH_FAILED_OR_ERROR"
+            import_response = {
+                "status": ProccessDataSyncResult.UNEXPECTED_ERROR.value
+            }
 
-        create_profile_result = None
+        status = import_response.get("status")
 
-        if isinstance(import_response, dict):
-            status = import_response.get("status")
-            if status == "SUCCESS":
-                create_profile_result = ProccessDataSyncResult.SUCCESS.value
-            elif status == "RATE_LIMITED":
-                create_profile_result = (
-                    ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-                )
-            else:
-                create_profile_result = (
-                    ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-                )
-        else:
-            if import_response in ("AUTH_FAILED", "AUTH_FAILED_OR_ERROR"):
-                create_profile_result = (
-                    ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-                )
-            elif import_response == "NO_PROFILES":
-                create_profile_result = (
-                    ProccessDataSyncResult.INCORRECT_FORMAT.value
-                )
-            else:
-                create_profile_result = (
-                    ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-                )
-
-        if create_profile_result in (
+        if status in (
             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.LIST_NOT_EXISTS.value,
+            ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value,
         ):
             for res in results:
                 if res["status"] == ProccessDataSyncResult.SUCCESS.value:
-                    res["status"] = create_profile_result
+                    res["status"] = status
 
         return results
 
@@ -384,18 +348,19 @@ class GreenArrowIntegrationsService:
         is_email_validation_enabled: bool,
     ) -> dict | str:
         if is_email_validation_enabled:
-            email = await get_valid_email(
+            email_or_status = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
             )
         else:
-            email = get_valid_email_without_million(five_x_five_user)
+            email_or_status = get_valid_email_without_million(five_x_five_user)
 
-        if email in (
+        if email_or_status in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return email
+            return email_or_status
 
+        email = email_or_status
         phone = get_valid_phone(five_x_five_user)
         return {
             "email": email,
@@ -428,11 +393,8 @@ class GreenArrowIntegrationsService:
         integration_data_sync: IntegrationUserSync,
         user_integration: UserIntegration,
     ):
-        if not profiles_list:
-            return "NO_PROFILES"
-
         api_key = user_integration.access_token
-        base_url = (user_integration.data_center or self.BASE_URL).rstrip("/")
+        base_url = self.BASE_URL
         url = f"{base_url}/mailing_lists/{list_id}/subscriber_imports"
         headers = self._auth_headers(api_key)
 
@@ -480,7 +442,10 @@ class GreenArrowIntegrationsService:
             logging.error(
                 "No valid columns to import after filtering; aborting import."
             )
-            return {"status": "ERROR", "error_message": "no_valid_columns"}
+            return {
+                "status": ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value,
+                "error_message": "no_valid_columns",
+            }
 
         lines = [",".join(filtered_ordered)]
         for r in flat_rows:
@@ -529,14 +494,14 @@ class GreenArrowIntegrationsService:
             )
         except Exception as exc:
             logging.error("HTTP error when starting subscriber_import: %s", exc)
-            return "AUTH_FAILED_OR_ERROR"
+            return {"status": ProccessDataSyncResult.UNEXPECTED_ERROR.value}
 
         if resp.status_code == 401:
             logging.error(
                 "Authentication failed when starting subscriber_import: %s",
                 resp.text,
             )
-            return "AUTH_FAILED"
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         if resp.status_code == 429:
             ra = resp.headers.get("Retry-After")
             logging.error(
@@ -544,7 +509,10 @@ class GreenArrowIntegrationsService:
                 resp.text,
                 ra,
             )
-            return {"status": "RATE_LIMITED", "retry_after": ra}
+            return {
+                "status": ProccessDataSyncResult.TOO_MANY_REQUESTS.value,
+                "retry_after": ra,
+            }
         if not (200 <= resp.status_code < 300):
             logging.error(
                 "GreenArrow subscriber_import failed HTTP %s: %s",
@@ -556,12 +524,12 @@ class GreenArrowIntegrationsService:
                 err_code = body.get("error_code")
                 err_msg = body.get("error_message")
                 return {
-                    "status": "ERROR",
+                    "status": ProccessDataSyncResult.FAILED.value,
                     "error_code": err_code,
                     "error_message": err_msg,
                 }
             except Exception:
-                return "AUTH_FAILED_OR_ERROR"
+                return {"status": ProccessDataSyncResult.UNEXPECTED_ERROR.value}
 
         try:
             body = resp.json()
@@ -570,18 +538,26 @@ class GreenArrowIntegrationsService:
                 "Invalid JSON in subscriber_import response: %s",
                 resp.text[:1000],
             )
-            return "AUTH_FAILED_OR_ERROR"
+            return {
+                "status": ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
+            }
 
         import_id = None
         if isinstance(body, dict):
             data_obj = body.get("data") or body.get("subscriber_import") or body
             if isinstance(data_obj, dict):
                 import_id = data_obj.get("id") or data_obj.get("import_id")
+
         if import_id is None:
             logging.warning(
                 "subscriber_import response parsed but no import id found. response body: %s",
                 json.dumps(body)[:1000],
             )
-            return {"status": "ERROR", "body": body}
+            return {
+                "status": ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
+            }
 
-        return {"status": "SUCCESS", "import_id": import_id}
+        return {
+            "status": ProccessDataSyncResult.SUCCESS.value,
+            "import_id": import_id,
+        }
