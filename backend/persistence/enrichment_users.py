@@ -4,7 +4,7 @@ from typing import Iterable, List
 from uuid import UUID
 
 
-from db_dependencies import Db, Clickhouse
+from db_dependencies import Clickhouse
 from resolver import injectable
 from pydantic import BaseModel, EmailStr
 
@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 @injectable
 class EnrichmentUsersPersistence:
-    def __init__(self, db: Db, clickhouse: Clickhouse):
-        self.db = db
+    def __init__(self, clickhouse: Clickhouse):
         self.clickhouse = clickhouse
 
     def _run_query(
@@ -168,7 +167,13 @@ class EnrichmentUsersPersistence:
             elapsed,
         )
 
-        for email, asid in rows:
+        for i, row in enumerate(rows):
+            if isinstance(row, dict):
+                email = row.get("business_email")
+                asid = row.get("asid")
+            else:
+                email, asid = row
+
             if not email or not isinstance(email, str):
                 continue
             email_l = email.strip().lower()
@@ -176,9 +181,9 @@ class EnrichmentUsersPersistence:
                 try:
                     matched[email_l] = EmailAsid(email=email_l, asid=str(asid))
                     count_business += 1
-                except:
+                except Exception as e:
                     logger.error(
-                        f"Error validating EmailAsid for {email}",
+                        f"  Error validating EmailAsid for {email}: {e}"
                     )
                     continue
 
@@ -191,8 +196,14 @@ class EnrichmentUsersPersistence:
                 FROM enrichment_users
                 WHERE personal_email IN %(ids)s
             """
+
             start_time = time.perf_counter()
-            rows = self._run_query(sql_personal, {"ids": remaining})
+            try:
+                rows = self._run_query(sql_personal, {"ids": remaining})
+            except Exception as e:
+                logger.error(f"Personal query error: {e}")
+                rows = []
+
             elapsed = time.perf_counter() - start_time
             logger.info(
                 "Personal email query returned %d rows in %.4f seconds",
@@ -200,7 +211,13 @@ class EnrichmentUsersPersistence:
                 elapsed,
             )
 
-            for email, asid in rows:
+            for i, row in enumerate(rows):
+                if isinstance(row, dict):
+                    email = row.get("personal_email")
+                    asid = row.get("asid")
+                else:
+                    email, asid = row
+
                 if not email or not isinstance(email, str):
                     continue
                 email_l = email.strip().lower()
@@ -209,13 +226,13 @@ class EnrichmentUsersPersistence:
                         email_asid_pair = EmailAsid(
                             email=email_l, asid=str(asid)
                         )
+                        matched[email_l] = email_asid_pair
+                        count_personal += 1
                     except Exception as e:
                         logger.error(
                             f"Error creating EmailAsid object for {email}: {e}",
                         )
                         continue
-                    matched[email_l] = email_asid_pair
-                    count_personal += 1
 
             remaining = [e for e in remaining if e not in matched]
 
@@ -230,7 +247,12 @@ class EnrichmentUsersPersistence:
                 WHERE other_email IN %(ids)s
             """
             start_time = time.perf_counter()
-            rows = self._run_query(sql_other, {"ids": remaining})
+            try:
+                rows = self._run_query(sql_other, {"ids": remaining})
+            except Exception as e:
+                logger.error(f"Other query error: {e}")
+                rows = []
+
             elapsed = time.perf_counter() - start_time
             logger.info(
                 "Other email query returned %d rows in %.4f seconds",
@@ -238,8 +260,15 @@ class EnrichmentUsersPersistence:
                 elapsed,
             )
 
-            for email, asid in rows:
+            for i, row in enumerate(rows):
+                if isinstance(row, dict):
+                    email = row.get("other_email")
+                    asid = row.get("asid")
+                else:
+                    email, asid = row
+
                 if not email or not isinstance(email, str):
+                    logger.info(f"  Skipping - invalid email: {email}")
                     continue
                 email_l = email.strip().lower()
                 if email_l not in matched:
@@ -247,20 +276,23 @@ class EnrichmentUsersPersistence:
                         email_asid_pair = EmailAsid(
                             email=email_l, asid=str(asid)
                         )
+                        matched[email_l] = email_asid_pair
+                        count_other += 1
                     except Exception as e:
                         logger.error(
                             f"Error creating EmailAsid object for {email}: {e}",
                         )
                         continue
-                    matched[email_l] = email_asid_pair
-                    count_other += 1
 
         result = list(matched.values())
 
         logger.info(
-            "Finished email matching: %d total matches (from %d input). Business: %d, Personal: %d, Other: %d",
+            "Total matches: %d (from %d input emails)",
             len(result),
             len(emails_clean),
+        )
+        logger.info(
+            "Breakdown - Business: %d, Personal: %d, Other: %d",
             count_business,
             count_personal,
             count_other,
