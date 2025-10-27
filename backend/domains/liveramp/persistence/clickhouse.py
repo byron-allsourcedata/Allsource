@@ -85,9 +85,19 @@ class ClickHousePersistence:
 
             logger.info(f"Found {len(asids)} ASIDs for {len(emails)} emails")
 
-            user_data = self._get_enrichment_user_data_by_asids(asids)
+            batch_size = 5000
+            all_user_data = []
 
-            formatted_data = self._format_user_data(user_data)
+            for i in range(0, len(asids), batch_size):
+                batch = asids[i : i + batch_size]
+                logger.info(
+                    f"Fetching enrichment data batch {i // batch_size + 1} ({len(batch)} ASIDs)"
+                )
+
+                user_data = self._get_enrichment_user_data_by_asids(batch)
+                all_user_data.extend(user_data)
+
+            formatted_data = self._format_user_data(all_user_data)
             logger.info(f"Formatted {len(formatted_data)} user records")
 
             return formatted_data
