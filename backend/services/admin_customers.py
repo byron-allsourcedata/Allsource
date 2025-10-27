@@ -355,7 +355,6 @@ class AdminCustomersService:
 
             cost_leads_overage = base_user.overage_leads_count * 0.08
             agg = aggregates.get(user.id, {})
-
             result.append(
                 {
                     "id": user.id,
@@ -368,6 +367,7 @@ class AdminCustomersService:
                         base_user.id
                     ),
                     "role": base_user.role,
+                    "team_access_level": base_user.team_access_level,
                     "team_owner_id": user.team_owner_id,
                     "is_email_validation_enabled": base_user.is_email_validation_enabled,
                     "is_partner": base_user.is_partner,

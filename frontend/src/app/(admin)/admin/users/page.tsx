@@ -15,7 +15,9 @@ import {
 import axios from "axios";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { useRouter } from "next/navigation";
-import Account from "./components/Account";
+import AccountsTab from "./components/AccountsTab";
+import UsersTab from "./components/UsersTab";
+import PixelsTab, { DomainData } from "./components/PixelsTab";
 import InviteAdmin from "./components/InviteAdmin";
 import CustomCards from "./components/CustomCards";
 import FilterPopup from "./components/FilterPopup";
@@ -23,7 +25,6 @@ import CustomizedProgressBar from "@/app/(admin)/components/AdminProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
 import CustomSwitch from "@/components/ui/CustomSwitch";
-import PixelTab, { DomainData } from "./components/PixelTab";
 
 interface CustomCardsProps {
 	users: number;
@@ -52,6 +53,7 @@ export interface UserData {
 	invited_by_email?: string;
 	subscription_plan?: string;
 	role: string[];
+	team_access_level: string[];
 	team_owner_id: number | null;
 	pixel_installed_count?: number;
 	contacts_count?: number;
@@ -204,6 +206,7 @@ const Users: React.FC = () => {
 
 	const fetchUserData = async () => {
 		try {
+			setLoading(true);
 			const basePath = "/admin";
 			let endpoint = "/accounts";
 
@@ -450,10 +453,6 @@ const Users: React.FC = () => {
 			});
 	};
 
-	if (loading) {
-		return <CustomizedProgressBar />;
-	}
-
 	return (
 		<>
 			<Box
@@ -468,6 +467,7 @@ const Users: React.FC = () => {
 					height: "100%",
 				}}
 			>
+				{loading && <CustomizedProgressBar />}
 				<Box
 					sx={{
 						display: "flex",
@@ -614,52 +614,57 @@ const Users: React.FC = () => {
 						</Box>
 
 						<Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
-							<Box sx={{ display: "flex", alignItems: "center" }}>
-								<Typography className="black-table-header">
-									Exclude test users
-								</Typography>
-								<CustomSwitch
-									stateSwitch={excludeTestUsers}
-									changeState={() => setExcludeTestUsers((prev) => !prev)}
-								/>
-							</Box>
-							<TextField
-								id="input-with-icon-textfield"
-								placeholder="Search by account name, emails"
-								value={search}
-								onChange={(e) => {
-									handleSearchChange(e);
-								}}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") {
-										e.preventDefault();
-										fetchData();
-									}
-								}}
-								InputProps={{
-									startAdornment: (
-										<InputAdornment position="start">
-											<SearchIcon style={{ cursor: "pointer" }} />
-										</InputAdornment>
-									),
-								}}
-								variant="outlined"
-								sx={{
-									flex: 1,
-									width: "360px",
-									"& .MuiOutlinedInput-root": {
-										borderRadius: "4px",
-										height: "40px",
-									},
-									"& input": {
-										paddingLeft: 0,
-									},
-									"& input::placeholder": {
-										fontSize: "14px",
-										color: "#8C8C8C",
-									},
-								}}
-							/>
+							{(tabIndex === 1 || tabIndex === 4 || tabIndex === 5) && (
+								<>
+									<Box sx={{ display: "flex", alignItems: "center" }}>
+										<Typography className="black-table-header">
+											Exclude test users
+										</Typography>
+										<CustomSwitch
+											stateSwitch={excludeTestUsers}
+											changeState={() => setExcludeTestUsers((prev) => !prev)}
+										/>
+									</Box>
+
+									<TextField
+										id="input-with-icon-textfield"
+										placeholder="Search by account name, emails"
+										value={search}
+										onChange={(e) => {
+											handleSearchChange(e);
+										}}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") {
+												e.preventDefault();
+												fetchData();
+											}
+										}}
+										InputProps={{
+											startAdornment: (
+												<InputAdornment position="start">
+													<SearchIcon style={{ cursor: "pointer" }} />
+												</InputAdornment>
+											),
+										}}
+										variant="outlined"
+										sx={{
+											flex: 1,
+											width: "360px",
+											"& .MuiOutlinedInput-root": {
+												borderRadius: "4px",
+												height: "40px",
+											},
+											"& input": {
+												paddingLeft: 0,
+											},
+											"& input::placeholder": {
+												fontSize: "14px",
+												color: "#8C8C8C",
+											},
+										}}
+									/>
+								</>
+							)}
 							{tabIndex === 3 && (
 								<Button
 									variant="outlined"
@@ -751,31 +756,46 @@ const Users: React.FC = () => {
 							/>
 						</Box>
 					</Box>
-					{tabIndex !== 2 && (
-						<>
-							<Account
-								is_admin={tabIndex === 3}
-								rowsPerPageOptions={rowsPerPageOptions}
-								totalCount={totalCount}
-								userData={userData}
-								setPage={setPage}
-								page={page}
-								setRowsPerPage={setRowsPerPage}
-								rowsPerPage={rowsPerPage}
-								order={order}
-								orderBy={orderBy}
-								setOrder={setOrder}
-								setOrderBy={setOrderBy}
-								setLoading={setLoading}
-								changeUserIsEmailValidation={changeUserIsEmailValidation}
-								onPlanChanged={fetchUserData}
-								isPartnerTab={tabIndex === 4 || tabIndex === 5}
-								isMaster={tabIndex === 4}
-							/>
-						</>
+					{tabIndex === 0 && (
+						<AccountsTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							changeUserIsEmailValidation={changeUserIsEmailValidation}
+							onPlanChanged={fetchUserData}
+						/>
+					)}
+					{tabIndex === 1 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							changeUserIsEmailValidation={changeUserIsEmailValidation}
+							onPlanChanged={fetchUserData}
+							isMaster={false}
+							isPartnerTab={false}
+						/>
 					)}
 					{tabIndex === 2 && (
-						<PixelTab
+						<PixelsTab
 							domains={domainData}
 							setPage={setPage}
 							page={page}
@@ -787,6 +807,67 @@ const Users: React.FC = () => {
 							setOrderBy={setOrderBy}
 							setLoading={setLoading}
 							totalCount={totalCount}
+							changeUserIsEmailValidation={changeUserIsEmailValidation}
+						/>
+					)}
+					{tabIndex === 3 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							changeUserIsEmailValidation={changeUserIsEmailValidation}
+							onPlanChanged={fetchUserData}
+							isMaster={false}
+							isPartnerTab={false}
+						/>
+					)}
+					{tabIndex === 4 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							changeUserIsEmailValidation={changeUserIsEmailValidation}
+							onPlanChanged={fetchUserData}
+							isMaster={true}
+							isPartnerTab={true}
+						/>
+					)}
+					{tabIndex === 5 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							changeUserIsEmailValidation={changeUserIsEmailValidation}
+							onPlanChanged={fetchUserData}
+							isMaster={false}
+							isPartnerTab={true}
 						/>
 					)}
 				</Box>

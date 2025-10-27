@@ -24,33 +24,33 @@ import {
 	ArrowUpwardIcon,
 } from "@/icon";
 import { Paginator } from "@/components/PaginationComponent";
-import type { UserData } from "../schemas";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import CustomSwitch from "@/components/ui/CustomSwitch";
 
-interface tableHeaders {
+interface TableHeaders {
 	key: string;
 	label: string;
 	sortable: boolean;
 }
 
-interface TableBodyUserProps {
-	data: UserData[];
-	currentPage: number;
-	tableHeaders: tableHeaders[];
-	setLoading: (state: boolean) => void;
-	changeUserIsEmailValidation: (userId: number) => void;
-	onPlanChanged: () => void;
-	isPartnerTab: boolean;
-	isMaster: boolean;
+export interface DomainData {
+	id: number;
+	domain: string;
+	company_name: string;
+	user_name: string;
+	is_pixel_installed: boolean;
+	is_enable: boolean;
+	total_leads: number;
+	created_at: string;
+	is_email_validation_enabled: boolean;
 }
 
 const TableHeader: React.FC<{
 	onSort: (field: string) => void;
 	sortField?: string;
 	sortOrder?: string;
-	tableHeaders: tableHeaders[];
+	tableHeaders: TableHeaders[];
 }> = ({ onSort, sortField, sortOrder, tableHeaders }) => {
 	return (
 		<TableHead>
@@ -72,42 +72,35 @@ const TableHeader: React.FC<{
 							whiteSpace: "nowrap",
 							overflow: "hidden",
 							textOverflow: "ellipsis",
-							...(key === "name" && {
-								width: "100px",
-								maxWidth: "200px",
-								minWidth: "100px",
+							...(key === "domain" && {
+								width: "200px",
+								maxWidth: "250px",
+								minWidth: "150px",
 								position: "sticky",
 								left: 0,
 								zIndex: 2,
 							}),
-							...(key === "status" && {
-								width: "180px",
-								maxWidth: "100px",
-								minWidth: "120px",
-								left: 0,
-								zIndex: 1,
-							}),
-							...(key === "email" && {
+							...(key === "company_name" && {
 								width: "200px",
 								maxWidth: "200px",
 								minWidth: "150px",
 								zIndex: 1,
 							}),
-							// ...(key === "actions" && {
-							// 	width: "100px",
-							// 	maxWidth: "100px",
-							// 	minWidth: "60px",
-							// 	"::after": {
-							// 		content: "none",
-							// 	},
-							// }),
+							...(key === "user_name" && {
+								width: "150px",
+								maxWidth: "150px",
+								minWidth: "120px",
+								zIndex: 1,
+							}),
 						}}
 						onClick={sortable ? () => onSort(key) : undefined}
 					>
 						<Box
 							sx={{ display: "flex", alignItems: "center" }}
 							style={
-								key === "email" || key === "status"
+								key === "domain" ||
+								key === "company_name" ||
+								key === "user_name"
 									? { justifyContent: "left" }
 									: {}
 							}
@@ -136,7 +129,10 @@ const TableHeader: React.FC<{
 	);
 };
 
-const TableBodyDomains: React.FC<{ data: any[] }> = ({ data }) => {
+const TableBodyDomains: React.FC<{
+	data: DomainData[];
+	changeUserIsEmailValidation: (userId: number) => void;
+}> = ({ data, changeUserIsEmailValidation }) => {
 	const formatDate = (dateString: string | null) => {
 		if (!dateString) return "--";
 		return new Date(dateString).toLocaleDateString("en-US", {
@@ -146,10 +142,6 @@ const TableBodyDomains: React.FC<{ data: any[] }> = ({ data }) => {
 		});
 	};
 
-	function changeUserIsEmailValidation(id: any): void {
-		throw new Error("Function not implemented.");
-	}
-
 	return (
 		<TableBody>
 			{data.map((row) => (
@@ -157,10 +149,10 @@ const TableBodyDomains: React.FC<{ data: any[] }> = ({ data }) => {
 					key={row.id}
 					sx={{
 						"&:hover": {
-							backgroundColor: "rgba(247, 247, 247, 1)", // как в TableBodyClient
+							backgroundColor: "rgba(247, 247, 247, 1)",
 						},
 						"&:last-of-type .MuiTableCell-root": {
-							borderBottom: "none", // убрать нижнюю границу в последней строке
+							borderBottom: "none",
 						},
 					}}
 				>
@@ -297,17 +289,7 @@ const TableBodyDomains: React.FC<{ data: any[] }> = ({ data }) => {
 	);
 };
 
-export interface DomainData {
-	id: number;
-	domain: string;
-	user_name: string;
-	is_pixel_installed: boolean;
-	is_enable: boolean;
-	total_leads: number;
-	created_at: string;
-}
-
-interface PixelTabProps {
+interface PixelsTabProps {
 	rowsPerPageOptions?: number[];
 	totalCount: number;
 	setTotalCount?: (n: number) => void;
@@ -321,9 +303,10 @@ interface PixelTabProps {
 	setOrder?: any;
 	setOrderBy?: any;
 	domains: DomainData[];
+	changeUserIsEmailValidation: (userId: number) => void;
 }
 
-const PixelTab: React.FC<PixelTabProps> = ({
+const PixelsTab: React.FC<PixelsTabProps> = ({
 	rowsPerPageOptions,
 	totalCount,
 	setTotalCount,
@@ -337,6 +320,7 @@ const PixelTab: React.FC<PixelTabProps> = ({
 	setOrder,
 	setOrderBy,
 	domains,
+	changeUserIsEmailValidation,
 }) => {
 	const [search, setSearch] = useState("");
 	const [loadingLocal, setLoadingLocal] = useState(false);
@@ -355,6 +339,7 @@ const PixelTab: React.FC<PixelTabProps> = ({
 	) => {
 		setPage(newPage);
 	};
+
 	const paginationProps = {
 		countRows: totalCount ?? 0,
 		page,
@@ -427,7 +412,10 @@ const PixelTab: React.FC<PixelTabProps> = ({
 									tableHeaders={tableHeaders}
 								/>
 
-								<TableBodyDomains data={domains} />
+								<TableBodyDomains
+									data={domains}
+									changeUserIsEmailValidation={changeUserIsEmailValidation}
+								/>
 							</Table>
 						</TableContainer>
 
@@ -441,4 +429,4 @@ const PixelTab: React.FC<PixelTabProps> = ({
 	);
 };
 
-export default PixelTab;
+export default PixelsTab;

@@ -22,6 +22,7 @@ type Props = {
 	currentPlanAlias: string;
 	user: {
 		name: string;
+		company_name?: string;
 		email: string;
 		joinDate: string;
 	};
@@ -32,6 +33,7 @@ type Props = {
 	enableWhitelabel?: () => void;
 	disableWhitelabel?: () => void;
 	whitelabelEnabled?: boolean;
+	isAccountTab?: boolean;
 };
 
 export const ActionsMenu: React.FC<Props> = ({
@@ -47,6 +49,7 @@ export const ActionsMenu: React.FC<Props> = ({
 	whitelabelEnabled,
 	enableWhitelabel,
 	disableWhitelabel,
+	isAccountTab,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -179,7 +182,9 @@ export const ActionsMenu: React.FC<Props> = ({
 				}}
 				MenuListProps={{ dense: true }}
 			>
-				<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+				{!isAccountTab && (
+					<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+				)}
 
 				<MenuItem
 					disabled={actionsLoading || (!isMaster && isPartnerTab)}
@@ -262,6 +267,7 @@ export const ActionsMenu: React.FC<Props> = ({
 				newPlan={selectedPlan ?? ""}
 				user={{
 					name: user.name,
+					company_name: user.company_name,
 					email: user.email,
 					joinDate: user.joinDate,
 					currentPlan: currentPlanAlias,

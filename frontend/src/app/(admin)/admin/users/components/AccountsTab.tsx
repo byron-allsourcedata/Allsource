@@ -1,37 +1,26 @@
 "use client";
 
-import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	Box,
 	Typography,
 	Grid,
 	Chip,
-	Paper,
-	IconButton,
 	Table,
 	TableBody,
 	TableCell,
-	TableContainer,
-	TableHead,
 	TableRow,
 	Link,
+	IconButton,
 } from "@mui/material";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
-import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
 import { MenuIconButton } from "@/components/table";
-import {
-	MoreVert,
-	SwapVertIcon,
-	ArrowDownwardIcon,
-	ArrowUpwardIcon,
-} from "@/icon";
-import { Paginator } from "@/components/PaginationComponent";
+import { MoreVert } from "@/icon";
 import CustomSwitch from "@/components/ui/CustomSwitch";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import type { UserData } from "../schemas";
@@ -43,123 +32,27 @@ import {
 import { formatMoney } from "@/components/PartnersAccounts";
 import { Row } from "@/components/Row";
 import { useSidebar } from "@/context/SidebarContext";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+import TableHeader, { TableHeaders } from "./shared/TableHeader";
+import TablePagination from "./shared/TablePagination";
+import TableContainerWrapper from "./shared/TableContainerWrapper";
 
-interface tableHeaders {
-	key: string;
-	label: string;
-	sortable: boolean;
-}
-
-interface TableBodyUserProps {
+interface TableBodyAccountProps {
 	data: UserData[];
 	currentPage: number;
-	tableHeaders: tableHeaders[];
+	tableHeaders: TableHeaders[];
 	setLoading: (state: boolean) => void;
 	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
-	isPartnerTab: boolean;
-	isMaster: boolean;
 }
 
-const TableHeader: React.FC<{
-	onSort: (field: string) => void;
-	sortField?: string;
-	sortOrder?: string;
-	tableHeaders: tableHeaders[];
-}> = ({ onSort, sortField, sortOrder, tableHeaders }) => {
-	return (
-		<TableHead>
-			<TableRow
-				sx={{
-					position: "sticky",
-					top: 0,
-					zIndex: 97,
-				}}
-			>
-				{tableHeaders.map(({ key, label, sortable }) => (
-					<TableCell
-						key={key}
-						sx={{
-							...datasyncStyle.table_column,
-							backgroundColor: "#fff",
-							textWrap: "wrap",
-							textAlign: "center",
-							whiteSpace: "nowrap",
-							overflow: "hidden",
-							textOverflow: "ellipsis",
-							...(key === "name" && {
-								width: "100px",
-								maxWidth: "200px",
-								minWidth: "100px",
-								position: "sticky",
-								left: 0,
-								zIndex: 2,
-							}),
-							...(key === "status" && {
-								width: "180px",
-								maxWidth: "100px",
-								minWidth: "120px",
-								left: 0,
-								zIndex: 1,
-							}),
-							...(key === "email" && {
-								width: "200px",
-								maxWidth: "200px",
-								minWidth: "150px",
-								zIndex: 1,
-							}),
-							// ...(key === "actions" && {
-							// 	width: "100px",
-							// 	maxWidth: "100px",
-							// 	minWidth: "60px",
-							// 	"::after": {
-							// 		content: "none",
-							// 	},
-							// }),
-						}}
-						onClick={sortable ? () => onSort(key) : undefined}
-					>
-						<Box
-							sx={{ display: "flex", alignItems: "center" }}
-							style={
-								key === "email" || key === "status"
-									? { justifyContent: "left" }
-									: {}
-							}
-						>
-							<Typography variant="body2" className="table-heading">
-								{label}
-							</Typography>
-							{sortable && (
-								<IconButton size="small">
-									{sortField === key ? (
-										sortOrder === "asc" ? (
-											<ArrowUpwardIcon fontSize="inherit" />
-										) : (
-											<ArrowDownwardIcon fontSize="inherit" />
-										)
-									) : (
-										<SwapVertIcon fontSize="inherit" />
-									)}
-								</IconButton>
-							)}
-						</Box>
-					</TableCell>
-				))}
-			</TableRow>
-		</TableHead>
-	);
-};
-
-const TableBodyClient: React.FC<TableBodyUserProps> = ({
+const TableBodyAccounts: React.FC<TableBodyAccountProps> = ({
 	data,
 	tableHeaders,
 	setLoading,
 	currentPage,
 	changeUserIsEmailValidation,
 	onPlanChanged,
-	isPartnerTab,
-	isMaster,
 }) => {
 	const router = useRouter();
 	const { setBackButton, triggerBackButton } = useUser();
@@ -255,6 +148,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 		};
 		return new Date(dateString).toLocaleDateString("en-US", options);
 	};
+
 	const getStatusStyle = (behavior_type: string) => {
 		switch (behavior_type) {
 			case "NEED_CONFIRM_EMAIL":
@@ -327,7 +221,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	const renderCellContent = (key: string, row: UserData) => {
 		const isCurrentUser = meData.email === row.email;
 		switch (key) {
-			case "name":
+			case "company_name":
 				const filter =
 					"brightness(0) saturate(100%) invert(49%) sepia(76%) saturate(2575%) hue-rotate(192deg) brightness(103%) contrast(98%)";
 
@@ -380,7 +274,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 									flexWrap: "wrap",
 									alignItems: "center",
 									color:
-										isCurrentUser || row.type !== "user"
+										isCurrentUser || row.type !== "account"
 											? "#000"
 											: "rgba(56, 152, 252, 1)",
 									gap: 0.5,
@@ -395,18 +289,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 										gap: 0.5,
 									}}
 								>
-									{!row.team_owner_id && (
-										<Image
-											src="/crown-flat.svg"
-											alt="team_owner"
-											color="red"
-											width={18}
-											height={18}
-											style={{
-												filter: filter,
-											}}
-										/>
-									)}
 									<Box
 										sx={{
 											textOverflow: "ellipsis",
@@ -417,10 +299,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 											pr: "10px",
 										}}
 									>
-										{row.full_name?.replace("#test", "").trim()}
+										{row.company_name?.replace("#test", "").trim() || "N/A"}
 									</Box>
 
-									{row.full_name?.includes("#test") && (
+									{row.company_name?.includes("#test") && (
 										<Chip
 											label="Test"
 											size="small"
@@ -434,23 +316,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 										/>
 									)}
 								</Box>
-
-								{row.type === "invitation" && (
-									<Chip
-										label="Invitation"
-										size="small"
-										sx={{
-											fontSize: "0.7rem",
-											height: "20px",
-											backgroundColor: "#FFE0B2",
-											color: "#BF360C",
-											ml: 0,
-										}}
-									/>
-								)}
 							</Box>
 
-							{!isCurrentUser && row.type === "user" && (
+							{!isCurrentUser && row.type === "account" && (
 								<IconButton
 									onClick={(e) => {
 										e.stopPropagation();
@@ -474,12 +342,20 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 						</Box>
 					</Box>
 				);
-			case "email":
-				return row.email || "--";
 			case "last_login_date":
 				return formatDate(row.last_login);
-			case "invited_by":
-				return row.invited_by_email || "--";
+			case "has_credit_card":
+				return row.has_credit_card ? "Yes" : "No";
+			case "premium_sources":
+				return (
+					<Row>
+						<Link
+							href={`/admin/premium-data/${row.team_owner_id ? row.team_owner_id : row.id}`}
+						>
+							{row.premium_sources}
+						</Link>
+					</Row>
+				);
 			case "pixel_installed_count":
 				return row.pixel_installed_count || "0";
 			case "join_date":
@@ -494,18 +370,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 				return row.cost_leads_overage
 					? `${formatMoney(row.cost_leads_overage)}`
 					: "N/A";
-			case "has_credit_card":
-				return row.has_credit_card ? "Yes" : "No";
-			case "premium_sources":
-				return (
-					<Row>
-						<Link
-							href={`/admin/premium-data/${row.team_owner_id ? row.team_owner_id : row.id}`}
-						>
-							{row.premium_sources}
-						</Link>
-					</Row>
-				);
 			case "credits_count":
 				return formatCreditsCount(row.credits_count || 0);
 			case "status":
@@ -561,17 +425,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 						{row.subscription_plan || "--"}
 					</Box>
 				);
-			case "is_email_validation_enabled":
-				return (
-					<Box
-						sx={{ display: "flex", justifyContent: "center", width: "100%" }}
-					>
-						<CustomSwitch
-							stateSwitch={row.is_email_validation_enabled}
-							changeState={() => changeUserIsEmailValidation(row.id)}
-						/>
-					</Box>
-				);
 
 			case "actions":
 				return (
@@ -591,13 +444,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							userId={row.id}
 							currentPlanAlias={row.subscription_plan ?? ""}
 							user={{
-								name: row.full_name,
+								name: row.owner_full_name ? row.owner_full_name : row.full_name,
+								company_name: row.company_name,
 								email: row.email,
 								joinDate: row.created_at,
 							}}
 							onPlanChanged={onPlanChanged}
-							isPartnerTab={isPartnerTab || row.is_partner}
-							isMaster={isMaster || row.is_master}
+							isPartnerTab={false}
+							isMaster={false}
 							actionsLoading={whitelabelActionsLoading}
 							whitelabelEnabled={row.whitelabel_settings_enabled}
 							enableWhitelabel={() =>
@@ -606,6 +460,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							disableWhitelabel={() =>
 								disableWhitelabel(row.id).then(onPlanChanged)
 							}
+							isAccountTab={true}
 						/>
 					</Box>
 				);
@@ -651,31 +506,24 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	);
 };
 
-interface PartnersAccountsProps {
-	is_admin?: boolean;
+interface AccountsTabProps {
 	rowsPerPageOptions?: number[];
 	totalCount: number;
-	userData: AccountData[];
+	userData: UserData[];
 	setPage: any;
 	page: number;
 	setLoading?: any;
 	rowsPerPage: number;
-	accountsData?: any;
-	order?: any;
+	order?: "asc" | "desc" | "unset";
 	orderBy?: string;
 	setRowsPerPage?: any;
 	setOrder?: any;
 	setOrderBy?: any;
 	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
-	isPartnerTab: boolean;
-	isMaster: boolean;
 }
 
-type AccountData = UserData;
-
-const Account: React.FC<PartnersAccountsProps> = ({
-	is_admin,
+const AccountsTab: React.FC<AccountsTabProps> = ({
 	rowsPerPageOptions,
 	totalCount,
 	userData,
@@ -690,46 +538,27 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setOrderBy,
 	changeUserIsEmailValidation,
 	onPlanChanged,
-	isPartnerTab,
-	isMaster,
 }) => {
-	const tableHeaders = is_admin
-		? [
-				{ key: "name", label: "Account name", sortable: false },
-				{ key: "email", label: "Email", sortable: false },
-				{ key: "join_date", label: "Join date", sortable: true },
-				{ key: "last_login_date", label: "Last Login", sortable: true },
-				{ key: "invited_by", label: "Invited by", sortable: false },
-				{ key: "access_level", label: "Access level", sortable: false },
-				// { key: "actions", label: "Actions", sortable: false },
-			]
-		: [
-				{ key: "name", label: "Account name", sortable: false },
-				{ key: "email", label: "Email", sortable: false },
-				{ key: "join_date", label: "Join date", sortable: true },
-				{ key: "last_login_date", label: "Last Login", sortable: true },
-				{ key: "has_credit_card", label: "Has CC", sortable: true },
-				{ key: "premium_sources", label: "Premium Data", sortable: false },
-				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
-				{ key: "contacts_count", label: "Contacts", sortable: true },
-				{ key: "sources_count", label: "Sources", sortable: false },
-				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
-				{ key: "credits_count", label: "Credits", sortable: false },
-				{ key: "cost_leads_overage", label: "Revenue", sortable: true },
-
-				{ key: "status", label: "Status", sortable: false },
-				{
-					key: "subscription_plan",
-					label: "Plan",
-					sortable: false,
-				},
-				{
-					key: "is_email_validation_enabled",
-					label: "Email Validation",
-					sortable: false,
-				},
-				{ key: "actions", label: "Actions", sortable: false },
-			];
+	const tableHeaders = [
+		{ key: "company_name", label: "Company Name", sortable: false },
+		{ key: "join_date", label: "Join Date", sortable: true },
+		{ key: "last_login_date", label: "Last Login", sortable: true },
+		{ key: "has_credit_card", label: "Has CC", sortable: true },
+		{ key: "premium_sources", label: "Premium Data", sortable: false },
+		{ key: "pixel_installed_count", label: "Pixel", sortable: false },
+		{ key: "contacts_count", label: "Contacts", sortable: true },
+		{ key: "sources_count", label: "Sources", sortable: false },
+		{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
+		{ key: "credits_count", label: "Credits", sortable: false },
+		{ key: "cost_leads_overage", label: "Revenue", sortable: true },
+		{ key: "status", label: "Status", sortable: false },
+		{
+			key: "subscription_plan",
+			label: "Plan",
+			sortable: false,
+		},
+		{ key: "actions", label: "Actions", sortable: false },
+	];
 
 	const handlePageChange = (
 		event: React.MouseEvent<HTMLButtonElement> | null,
@@ -751,7 +580,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 		setOrderBy(property);
 	};
 
-	const tableContainerRef = useRef<HTMLDivElement>(null);
 	const paginationProps = {
 		countRows: totalCount ?? 0,
 		page,
@@ -760,6 +588,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 		onRowsPerPageChange: handleRowsPerPageChange,
 		rowsPerPageOptions,
 	};
+
 	return (
 		<>
 			<Box
@@ -780,38 +609,26 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					sx={{ width: "100%" }}
 				>
 					<Grid item xs={12} sx={{ mt: 0, width: "100%" }}>
-						<TableContainer
-							component={Paper}
-							ref={tableContainerRef}
-							sx={{
-								border: "1px solid rgba(235, 235, 235, 1)",
-								borderBottom: "none",
-								overflowX: "auto",
-								maxHeight: "50vh",
-							}}
-						>
+						<TableContainerWrapper>
 							<Table stickyHeader>
 								<TableHeader
 									onSort={handleSortRequest}
 									tableHeaders={tableHeaders}
 									sortField={orderBy}
 									sortOrder={order}
+									stickyColumns={{ name: true, status: true, email: true }}
 								/>
-								<TableBodyClient
+								<TableBodyAccounts
 									data={userData}
 									tableHeaders={tableHeaders}
 									setLoading={setLoading}
 									currentPage={page}
 									changeUserIsEmailValidation={changeUserIsEmailValidation}
 									onPlanChanged={onPlanChanged}
-									isPartnerTab={isPartnerTab}
-									isMaster={isMaster}
 								/>
 							</Table>
-						</TableContainer>
-						<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
-							<Paginator tableMode {...paginationProps} />
-						</Box>
+						</TableContainerWrapper>
+						<TablePagination {...paginationProps} />
 					</Grid>
 				</Grid>
 			</Box>
@@ -819,4 +636,4 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	);
 };
 
-export default Account;
+export default AccountsTab;
