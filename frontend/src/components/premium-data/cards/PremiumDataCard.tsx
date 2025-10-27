@@ -149,7 +149,9 @@ export const PremiumSourceCard: FC<Props> = (props) => {
 					{props.cardType === "user" && (
 						<UserButtonGroup
 							locked={source.status === "locked"}
-							canSync={source.status === "ready"}
+							canSync={
+								source.status === "ready" && source.source_type !== "asid"
+							}
 							price={source.price}
 							onSync={props.onSync}
 							onDownload={props.onDownload}
@@ -239,10 +241,8 @@ export const UserButtonGroup: FC<UserButtonGroupProps> = ({
 
 	return (
 		<CardColumn>
-			<Row alignItems="center" gap="0.5rem">
-				<SyncButton disabled={!canSync} onClick={onSync}>
-					Sync
-				</SyncButton>
+			<Row alignItems="center" justifyContent="flex-end" gap="0.5rem">
+				{canSync && <SyncButton onClick={onSync}>Sync</SyncButton>}
 				<IconButton sx={squareIconButtonSx} onClick={onDownload}>
 					<Download />
 				</IconButton>

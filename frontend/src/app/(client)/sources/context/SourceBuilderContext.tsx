@@ -14,8 +14,9 @@ import {
 	SourceType,
 	InterfaceMappingRowsSourceType,
 	Row,
+	InterfaceMappingHeadingSubstitution,
 } from "../builder/components/types";
-import { type SkeletonState } from "@/app/(client)/sources/builder/components/PixelDomainSelector";
+import { type SkeletonState } from "@/app/(client)/sources/builder/components/PixelDomainSelectorBox";
 import { BuilderKey } from "../context/hintsCardsContent";
 import { useSourcesHints } from "../context/SourcesHintsContext";
 
@@ -71,6 +72,13 @@ interface SourceBuilderContextType {
 	setFileName: Dispatch<SetStateAction<string>>;
 	file: File | null;
 	setFile: Dispatch<SetStateAction<File | null>>;
+	isChatGPTProcessing: boolean;
+	setIsChatGPTProcessing: Dispatch<SetStateAction<boolean>>;
+	isContinuePressed: boolean;
+	setIsContinuePressed: Dispatch<SetStateAction<boolean>>;
+	headersinCSV: string[];
+	setHeadersinCSV: Dispatch<SetStateAction<string[]>>;
+	mappingHeadingSubstitution: InterfaceMappingHeadingSubstitution;
 }
 
 interface SourceBuilderProviderProps {
@@ -94,6 +102,8 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 	const [domains, setDomains] = useState<DomainsLeads[]>([]);
 
 	const { changeSourcesBuilderHint } = useSourcesHints();
+
+	const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
 
 	const initialSkeletons: SkeletonState = {
 		sourceType: false,
@@ -164,7 +174,7 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 	const [fileName, setFileName] = useState<string>("");
 
 	const hasUnsubstitutedHeadings = () => {
-		const mappingRows =
+		let mappingRowsSelectType =
 			sourceType in mappingRowsSourceType
 				? [
 						...defaultMapping,
@@ -174,11 +184,23 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 					]
 				: defaultMapping;
 
+		let headingsNot = headingsNotSubstitution;
+
+		if (!headingsNotSubstitution["ASID"]) {
+			//asid matching
+			mappingRowsSelectType = mappingRowsSelectType.filter(
+				(el) => el.isRequiredForAsidMatching,
+			);
+		} else {
+			const { ASID, ...rest } = headingsNotSubstitution;
+			headingsNot = rest as Record<string, boolean>;
+		}
+
 		const deletableKeys = new Set(
 			mappingRows.filter((row) => row.canDelete).map((row) => row.type),
 		);
 
-		return Object.entries(headingsNotSubstitution).some(
+		return Object.entries(headingsNot).some(
 			([key, value]) => !deletableKeys.has(key) && value,
 		);
 	};
@@ -275,6 +297,26 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 		},
 	];
 
+	const customerConversionHeadingSubstitution = {
+		"Transaction Date": false,
+		"Order Amount": false,
+		"Order Count": false,
+	};
+
+	const failedLeadsHeadingSubstitution = {
+		"Lead Date": false,
+	};
+
+	const interestHeadingSubstitution = {
+		"Interest Date": false,
+	};
+
+	const mappingHeadingSubstitution: InterfaceMappingHeadingSubstitution = {
+		Interest: interestHeadingSubstitution,
+		"Failed Leads": failedLeadsHeadingSubstitution,
+		"Customer Conversions": customerConversionHeadingSubstitution,
+	};
+
 	const mappingRowsSourceType: InterfaceMappingRowsSourceType = {
 		Interest: interestMapping,
 		"Failed Leads": failedLeadsMapping,
@@ -289,6 +331,9 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 	};
 
 	const [mappingRows, setMappingRows] = useState<Row[]>([]);
+
+	const [isContinuePressed, setIsContinuePressed] = useState(false);
+	const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
 
 	return (
 		<SourcesBuilderContext.Provider
@@ -344,6 +389,13 @@ export const SourceBuilderProvider: React.FC<SourceBuilderProviderProps> = ({
 				setFile,
 				fileName,
 				setFileName,
+				isChatGPTProcessing,
+				setIsChatGPTProcessing,
+				isContinuePressed,
+				setIsContinuePressed,
+				headersinCSV,
+				setHeadersinCSV,
+				mappingHeadingSubstitution,
 			}}
 		>
 			{children}

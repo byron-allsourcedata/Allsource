@@ -11,7 +11,7 @@ sys.path.append(parent_parent_dir)
 
 from resolver import Resolver
 from schemas.audience import NewSource, RegeneretedAudienceSmart
-from services.audience_sources import AudienceSourceService
+from services.sources.service import AudienceSourceService
 from services.audience_smarts import AudienceSmartsService
 
 logging.basicConfig(level=logging.INFO)

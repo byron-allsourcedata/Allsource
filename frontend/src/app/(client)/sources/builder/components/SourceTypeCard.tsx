@@ -7,7 +7,7 @@ import {
 } from "@mui/material";
 import type { FC } from "react";
 import Image from "next/image";
-import type { SourceTypeSchema } from "./schemas";
+import type { SourceTypeSchema } from "./types";
 
 type Props = {
 	selectedSourceType: string;

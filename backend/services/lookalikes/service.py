@@ -265,6 +265,7 @@ class AudienceLookalikesService:
         lookalike_size,
         lookalike_name,
         created_by_user_id,
+        scoring_type,
         audience_feature_importance: Dict,
     ):
         lookalike = self.lookalikes_persistence_service.create_lookalike(
@@ -273,6 +274,7 @@ class AudienceLookalikesService:
             lookalike_size,
             lookalike_name,
             created_by_user_id,
+            scoring_type,
             audience_feature_importance=audience_feature_importance,
         )
         return {"status": BaseEnum.SUCCESS.value, "lookalike": lookalike}
@@ -477,18 +479,23 @@ class AudienceLookalikesService:
         )
 
     def update_total_dataset_size(self, lookalike_id: UUID, dataset_size: int):
-        self.lookalikes_persistence_service.update_total_dataset_size(lookalike_id=lookalike_id, dataset_size=dataset_size)
+        self.lookalikes_persistence_service.update_total_dataset_size(
+            lookalike_id=lookalike_id, dataset_size=dataset_size
+        )
 
-    def update_processed_dataset_size(self, lookalike_id: UUID, processed_dataset_size: int):
-        self.lookalikes_persistence_service.update_processed_dataset_size(lookalike_id=lookalike_id, processed_dataset_size=processed_dataset_size)
-    
+    def update_processed_dataset_size(
+        self, lookalike_id: UUID, processed_dataset_size: int
+    ):
+        self.lookalikes_persistence_service.update_processed_dataset_size(
+            lookalike_id=lookalike_id,
+            processed_dataset_size=processed_dataset_size,
+        )
+
     def prepare_lookalike_size(self, lookalike_id: UUID, dataset_size: int):
         self.update_total_dataset_size(
             lookalike_id=lookalike_id, dataset_size=dataset_size
         )
-        self.update_processed_dataset_size(
-            lookalike_id, 0
-        )
+        self.update_processed_dataset_size(lookalike_id, 0)
 
     def get_processing_lookalike(self, id: str):
         lookalike = (

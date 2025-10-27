@@ -17,15 +17,21 @@ import CloseIcon from "@mui/icons-material/Close";
 import CustomButton from "@/components/ui/CustomButton";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { usePathname, useRouter } from "next/navigation";
 import { flagStore } from "@/services/oneDollar";
 
 const OneDollarPopup = () => {
+	const router = useRouter();
 	const [open, setOpen] = useState(true);
+	const pathname = usePathname();
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 
 	const handleClose = () => {
 		setOpen(false);
 		flagStore.set(false);
+		if (pathname === "/get-started") {
+			router.push("/get-started?pixel=true");
+		}
 	};
 
 	const redirectToCheckoutSession = async () => {
@@ -33,7 +39,7 @@ const OneDollarPopup = () => {
 			setIsLoading(true);
 
 			const response = await axiosInstance.get(
-				"/subscriptions/basic-plan-upgrade",
+				"/subscriptions/standard-plan-upgrade",
 			);
 
 			if (response.status === 200) {
@@ -93,7 +99,7 @@ const OneDollarPopup = () => {
 							textAlign="center"
 							fontFamily="var(--font-nunito)"
 						>
-							Get Started for Just $1
+							Standart Plan for $499
 						</Typography>
 					</Box>
 				</DialogTitle>
@@ -107,8 +113,8 @@ const OneDollarPopup = () => {
 							margin: "0 auto",
 						}}
 					>
-						Launch today for $1 and discover your perfect audience matches from
-						250M+ profiles with AI-driven insights.
+						Launch today for $499 and discover your perfect audience matches
+						from 250M+ profiles with AI-driven insights.
 					</Typography>
 
 					<Card
@@ -242,8 +248,8 @@ const OneDollarPopup = () => {
 											height={24}
 										/>
 									}
-									label="Free Contact Downloads:"
-									value="500*"
+									label="Contact Downloads:"
+									value="Unlimited"
 								/>
 								<GiftRow
 									icon={
@@ -255,7 +261,7 @@ const OneDollarPopup = () => {
 										/>
 									}
 									label="Validation funds:"
-									value="$500"
+									value="$1,000"
 								/>
 								<GiftRow
 									icon={
@@ -267,7 +273,7 @@ const OneDollarPopup = () => {
 										/>
 									}
 									label="Premium Data funds:"
-									value="$500"
+									value="$1,000"
 								/>
 							</Stack>
 						</CardContent>
@@ -278,17 +284,9 @@ const OneDollarPopup = () => {
 								onClick={redirectToCheckoutSession}
 								sx={{ borderRadius: "8px" }}
 							>
-								Start for $1
+								Start for $499
 							</CustomButton>
 						</CardActions>
-						<Typography
-							sx={{ pt: 0, pl: 2, pr: 2 }}
-							className="sixth-sub-title"
-							style={{ fontWeight: "500" }}
-						>
-							*After 500 resolutions $0,08 per contact, charge on last day of
-							month
-						</Typography>
 					</Card>
 				</DialogContent>
 			</Dialog>

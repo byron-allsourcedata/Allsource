@@ -36,7 +36,7 @@ export type HintsProps<T extends string> = {
 	resetHints: () => void;
 };
 
-export const PixelDomainSelector: FC<PixelDomainSelectBlockProps> = ({
+const PixelDomainSelectorBox: FC<PixelDomainSelectBlockProps> = ({
 	pixelInstalled,
 	isDomainSearchProcessing,
 	renderSkeleton,
@@ -315,3 +315,5 @@ export const PixelDomainSelector: FC<PixelDomainSelectBlockProps> = ({
 		</Box>
 	);
 };
+
+export default PixelDomainSelectorBox;

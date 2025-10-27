@@ -169,7 +169,7 @@ class MillionVerifierIntegrationsService:
         if checked_email:
             return checked_email.is_verify, checked_email.verify_result
 
-        result = await self._fetch_email_verification(email, max_retries=2)
+        result = await self._fetch_email_verification(email, max_retries=0)
         if result.get("error"):
             raise MillionVerifierError(result.get("error"))
 

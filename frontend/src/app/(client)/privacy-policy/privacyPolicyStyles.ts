@@ -15,7 +15,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 	},
 	headers: {
 		display: "flex",
-		marginTop: "10px",
+		// marginTop: "10px",
 		justifyContent: "space-between",
 		alignItems: "center",
 		paddingRight: "1.5rem",

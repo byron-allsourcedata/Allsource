@@ -4,10 +4,12 @@ import logging
 from fastapi import (
     APIRouter,
     Depends,
+    Query,
     Request as fastRequest,
     HTTPException,
     status,
 )
+from typing import Literal
 
 from config.rmq_connection import (
     RabbitMQConnection,
@@ -33,6 +35,7 @@ from services.payments import PaymentsService
 from services.plans import PlansService
 from services.subscriptions import SubscriptionService
 from services.subscriptions.basic import BasicPlanService
+from services.subscriptions.standard import StandardPlanService
 from services.subscriptions.webhooks import SubscriptionWebhookService
 from services.webhook import WebhookService
 
@@ -82,6 +85,20 @@ async def test(
     customer_id = plans_service.get_customer_id(user)
     session_url = basic_plan_service.get_basic_plan_payment_url(
         customer_id=customer_id
+    )
+    return session_url
+
+
+@router.get("/standard-plan-upgrade")
+async def upgrade_to_standard(
+    user: AuthUser,
+    standard_plan_service: StandardPlanService,
+    plans_service: PlansService,
+    interval: Literal["month", "year"] = Query(...),
+):
+    customer_id = plans_service.get_customer_id(user)
+    session_url = standard_plan_service.get_standard_plan_payment_url(
+        customer_id=customer_id, interval=interval
     )
     return session_url
 
@@ -213,13 +230,21 @@ async def checkout_completed(
     if event_type == "checkout.session.completed":
         event_session = event["data"]["object"]
         customer_id = event_session["customer"]
+        subscription_id = event_session.get("subscription")
 
         metadata = event_session.get("metadata", {})
 
         checkout_type = metadata.get("type")
+        plan_period = metadata.get("plan_period")
 
         if checkout_type == "upgrade_basic":
             subscription_webhooks.move_to_basic_plan(customer_id)
+            db.commit()
+            return "SUCCESS"
+        elif checkout_type == "upgrade_standard":
+            subscription_webhooks.move_to_standard_plan(
+                customer_id, subscription_id, plan_period
+            )
             db.commit()
             return "SUCCESS"
         else:

@@ -145,14 +145,15 @@ async def process_rmq_message(
                                 "token": REAL_TIME_API_KEY,
                             },
                         )
+
+                        if response.status_code != 200:
+                            continue
+
                         response_data = response.json()
 
                         logging.debug(
                             f"response: {response.status_code} {response_data}"
                         )
-
-                        if response.status_code != 200:
-                            continue
 
                         caller_name = response_data.get(
                             "caller_name", ""
@@ -305,7 +306,7 @@ async def process_rmq_message(
         smart_validation_agent_service.update_step_processed(
             aud_smart_id=aud_smart_id,
             validation_type=f"phone-{validation_type}",
-            batch_size=count_processed,
+            batch_size=len(batch),
         )
 
         db_session.commit()

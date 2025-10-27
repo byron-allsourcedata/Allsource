@@ -147,6 +147,12 @@ class UsersAuth:
                     )
                 )
 
+                if user.get("team_access_level") is None:
+                    if not user.get("company_name") or not user.get(
+                        "company_website"
+                    ):
+                        return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+
                 if subscription_plan_is_active:
                     return UserAuthorizationStatus.SUCCESS
 
@@ -504,29 +510,29 @@ class UsersAuth:
                 return {"status": LoginStatus.FILL_COMPANY_DETAILS}
         else:
             if user.is_email_confirmed:
-                if user.company_name:
-                    if user.is_book_call_passed:
-                        subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(
-                            user.id
+                if user.is_book_call_passed:
+                    subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(
+                        user.id
+                    )
+                    if user.stripe_payment_url:
+                        stripe_payment_url = get_stripe_payment_url(
+                            user.customer_id, user.stripe_payment_url
                         )
-                        if subscription_plan_is_active:
-                            return {"status": LoginStatus.SUCCESS}
-                        else:
-                            if user.stripe_payment_url:
-                                stripe_payment_url = get_stripe_payment_url(
-                                    user.customer_id, user.stripe_payment_url
-                                )
-                                return {
-                                    "status": LoginStatus.PAYMENT_NEEDED,
-                                    "stripe_payment_url": stripe_payment_url,
-                                }
-                            else:
-                                return {"status": LoginStatus.NEED_CHOOSE_PLAN}
-                    else:
-                        return {"status": LoginStatus.NEED_BOOK_CALL}
-                else:
-                    return {"status": LoginStatus.FILL_COMPANY_DETAILS}
-        return {"status": LoginStatus.NEED_CONFIRM_EMAIL}
+                        return {
+                            "status": LoginStatus.PAYMENT_NEEDED,
+                            "stripe_payment_url": stripe_payment_url,
+                        }
+
+                    if user.team_access_level is None:
+                        if not user.company_name or not user.company_website:
+                            return {"status": LoginStatus.FILL_COMPANY_DETAILS}
+
+                    if subscription_plan_is_active:
+                        return {"status": LoginStatus.SUCCESS}
+
+                    return {"status": LoginStatus.SUCCESS}
+            else:
+                return {"status": LoginStatus.NEED_CONFIRM_EMAIL}
 
     async def login_google(self, auth_google_data: AuthGoogleData):
         client_id = os.getenv("CLIENT_GOOGLE_ID")

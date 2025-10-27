@@ -1,3 +1,9 @@
+from datetime import datetime, timezone, timedelta
+
+try:
+    from dateutil.relativedelta import relativedelta
+except Exception:
+    relativedelta = None
 import math
 import os
 import uuid
@@ -69,6 +75,25 @@ class StripeService:
 
         return subscription
 
+    def create_standard_plan_subscription(
+        self, customer_id: str, stripe_price_id: str
+    ):
+        active_subs = stripe.Subscription.list(
+            customer=customer_id, status="active"
+        )
+        active_count = len(active_subs["data"])
+        if active_count >= 1:
+            return None
+
+        subscription = stripe.Subscription.create(
+            customer=customer_id,
+            items=[{"price": stripe_price_id}],
+            collection_method="charge_automatically",
+            off_session=True,
+        )
+
+        return subscription
+
     @staticmethod
     def record_usage(customer_id: str, quantity: int):
         resp = stripe.billing.MeterEvent.create(
@@ -99,16 +124,20 @@ class StripeService:
         payment_intent_data: Optional[dict] = None,
         success_url: str = StripeConfig.success_url,
     ):
-        session = stripe.checkout.Session.create(
-            success_url=success_url,
-            cancel_url=StripeConfig.cancel_url,
-            customer=customer_id,
-            payment_method_types=["card"],
-            payment_intent_data=payment_intent_data,
-            line_items=[{"price": price_id, "quantity": 1}],
-            mode=mode,
-            metadata=metadata,
-        )
+        params = {
+            "success_url": success_url,
+            "cancel_url": StripeConfig.cancel_url,
+            "customer": customer_id,
+            "payment_method_types": ["card"],
+            "line_items": [{"price": price_id, "quantity": 1}],
+            "mode": mode,
+            "metadata": metadata,
+        }
+
+        if mode == "payment" and payment_intent_data:
+            params["payment_intent_data"] = payment_intent_data
+
+        session = stripe.checkout.Session.create(**params)
 
         return session.url
 
@@ -157,6 +186,132 @@ class StripeService:
             result["error"] = f"Error while charging: {str(e)}"
 
         return result
+
+    def get_subscription_info(self, subscription_id: str):
+        try:
+            subscription = stripe.Subscription.retrieve(subscription_id)
+
+            cps = subscription.get("current_period_start")
+            cpe = subscription.get("current_period_end")
+
+            items = subscription.get("items", {}).get("data", []) or []
+            item0 = items[0] if items else None
+            if not cps and item0:
+                cps = item0.get("current_period_start") or item0.get(
+                    "current_period_start"
+                )
+            if not cpe and item0:
+                cpe = item0.get("current_period_end") or item0.get(
+                    "current_period_end"
+                )
+
+            if (not cps or not cpe) and subscription.get("latest_invoice"):
+                try:
+                    invoice = stripe.Invoice.retrieve(
+                        subscription["latest_invoice"]
+                    )
+                    lines = invoice.get("lines", {}).get("data", []) or []
+                    if lines:
+                        period = lines[0].get("period", {}) or {}
+                        cps = cps or period.get("start")
+                        cpe = cpe or period.get("end")
+                except Exception as e:
+                    logging.getLogger(__name__).warning(
+                        "Failed to retrieve invoice %s for subscription %s: %s",
+                        subscription.get("latest_invoice"),
+                        subscription_id,
+                        str(e),
+                    )
+
+            if (
+                (not cps or not cpe)
+                and subscription.get("start_date")
+                and item0
+            ):
+                try:
+                    cps = cps or subscription.get("start_date")
+                    recurring = (
+                        item0.get("price", {}).get("recurring", {})
+                        if item0
+                        else {}
+                    )
+                    interval = recurring.get("interval")
+                    interval_count = recurring.get("interval_count") or 1
+
+                    if interval == "month":
+                        start_dt = datetime.fromtimestamp(
+                            int(cps), tz=timezone.utc
+                        )
+                        if relativedelta:
+                            end_dt = start_dt + relativedelta(
+                                months=int(interval_count)
+                            )
+                        else:
+                            end_dt = start_dt + timedelta(
+                                days=30 * int(interval_count)
+                            )
+                        cpe = cpe or int(end_dt.timestamp())
+                    elif interval == "year":
+                        start_dt = datetime.fromtimestamp(
+                            int(cps), tz=timezone.utc
+                        )
+                        if relativedelta:
+                            end_dt = start_dt + relativedelta(
+                                years=int(interval_count)
+                            )
+                        else:
+                            end_dt = start_dt + timedelta(
+                                days=365 * int(interval_count)
+                            )
+                        cpe = cpe or int(end_dt.timestamp())
+                except Exception:
+                    pass
+
+            plan_start = (
+                datetime.fromtimestamp(int(cps), tz=timezone.utc)
+                if cps
+                else None
+            )
+            plan_end = (
+                datetime.fromtimestamp(int(cpe), tz=timezone.utc)
+                if cpe
+                else None
+            )
+
+            price_id = None
+            if item0:
+                price_id = item0.get("price", {}).get("id") or item0.get(
+                    "plan", {}
+                ).get("id")
+            else:
+                price_id = subscription.get("plan", {}).get(
+                    "id"
+                ) or subscription.get("items", {}).get("data", [{}])[0].get(
+                    "price", {}
+                ).get("id")
+
+            info = {
+                "subscription_id": subscription.get("id"),
+                "customer_id": subscription.get("customer"),
+                "status": subscription.get("status"),
+                "plan_start": plan_start,
+                "plan_end": plan_end,
+                "cancel_at_period_end": subscription.get(
+                    "cancel_at_period_end"
+                ),
+                "price_id": price_id,
+                "raw_subscription": dict(subscription),
+            }
+
+            return {"status": "SUCCESS", "data": info}
+
+        except stripe.error.InvalidRequestError as e:
+            return {
+                "status": "ERROR",
+                "message": f"Invalid request: {e.user_message}",
+            }
+        except Exception as e:
+            return {"status": "ERROR", "message": str(e)}
 
 
 def create_customer(user: NewStripeCustomer):
@@ -350,7 +505,7 @@ def cancel_downgrade(platform_subscription_id):
         return "SUCCESS"
 
 
-def save_payment_details_in_stripe(customer_id):
+def save_payment_details_in_stripe(customer_id: str):
     try:
         methods = stripe.PaymentMethod.list(
             customer=customer_id, type="card"

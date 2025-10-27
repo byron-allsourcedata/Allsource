@@ -1,2 +1,7 @@
 Email,Phone number,Last Name,First Name,Transaction Date,Order Amount,Order Count
 test@mail.com,+1231234567,Doe,Jane,01-01-2025 00:00:00,205.83,3
+
+---- or ----
+
+ASID,Order Amount
+1127BCAC-C369-4056-B359-B079B22D496E,342.51

@@ -2,7 +2,7 @@ import asyncio
 import argparse
 from resolver import Resolver
 from services.lookalikes import AudienceLookalikesService
-from services.audience_sources import AudienceSourceService
+from services.sources.service import AudienceSourceService
 from services.audience_smarts import AudienceSmartsService
 
 

@@ -70,12 +70,15 @@ def check_correct_data_sync(
             IntegrationUserSync,
             IntegrationUserSync.integration_id == UserIntegration.id,
         )
-        .filter(IntegrationUserSync.id == pixel_sync_id)
+        .filter(
+            IntegrationUserSync.id == pixel_sync_id,
+            IntegrationUserSync.sync_status != False,
+        )
         .first()
     )
 
     if not integration_data:
-        logging.info("Pixel sync not found")
+        logging.info("Pixel sync not found or Sync status is False")
         return None
 
     result = (

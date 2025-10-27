@@ -8,6 +8,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 		justifyContent: "center",
 		alignItems: "center",
 		height: "100vh",
+		marginTop: "-80px",
 	},
 	employeeButtons: {
 		display: "flex",

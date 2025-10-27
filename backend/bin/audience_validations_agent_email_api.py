@@ -393,7 +393,7 @@ async def process_rmq_message(
         smart_validation_agent_service.update_step_processed(
             aud_smart_id=aud_smart_id,
             validation_type=f"{validation_type}-delivery",
-            batch_size=count_processed,
+            batch_size=len(batch),
         )
 
         db_session.commit()

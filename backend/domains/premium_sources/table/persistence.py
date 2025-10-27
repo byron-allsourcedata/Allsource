@@ -39,6 +39,7 @@ class PremiumSourcePersistence:
         user_id: int,
         s3_url: str,
         rows: int,
+        source_type: str,
         source_id: UUID | None = None,
     ) -> PremiumSource:
         if source_id is not None:
@@ -52,6 +53,7 @@ class PremiumSourcePersistence:
             user_id=user_id,
             s3_url=s3_url,
             rows=rows,
+            source_type=source_type,
         )
         self.db.add(new_source)
         self.db.flush()
@@ -99,6 +101,7 @@ class PremiumSourcePersistence:
                     user_id=row.user_id,
                     rows=row.rows,
                     created_at=row.created_at,
+                    source_type=row.source_type,
                 )
             )
         return result

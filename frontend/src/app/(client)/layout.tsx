@@ -34,6 +34,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 		"/signup",
 		"/email-verificate",
 		"/account-setup",
+		"/company-setup",
 		"/reset-password",
 		"/reset-password/confirm-send",
 		"/choose-plan",
@@ -77,7 +78,11 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							setInstalledResources,
 						);
 
-						if (userData && userData.has_active_plan === false) {
+						if (
+							userData &&
+							userData.has_active_plan === false &&
+							userData.access_level !== "read_only"
+						) {
 							flagStore.set(true);
 						}
 						const notifications = response.data;

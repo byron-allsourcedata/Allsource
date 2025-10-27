@@ -59,6 +59,7 @@ class PersonRecord(BaseModel):
     business_address_line_1: Optional[str] = None
     business_address_line_2: Optional[str] = None
     business_postal_code: Optional[str] = None
+    current_company_name: Optional[str] = None
 
     # enrichment_personal_profiles
     age: Optional[str] = None

@@ -32,7 +32,6 @@ import MetaConnectButton from "@/components/integrations/MetaIntegration";
 import S3Connect from "@/components/integrations/S3Integration";
 import MailchimpConnect from "@/components/integrations/MailchimpIntegration";
 import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
-import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
 import IntegrationBox from "./IntegrationBox";
 import GoogleAdsContactSyncTab from "./GoogleAdsContactSyncTab";
 import MailchimpContactSyncTab from "./MailchimpContactSyncTab";
@@ -40,13 +39,14 @@ import MetaContactSyncTab from "./MetaContactSyncTab";
 import S3ContactSyncTab from "./S3ContactSyncTab";
 import { styled } from "@mui/material/styles";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import {
-	BookACallPopup,
-	LeftMenuProps,
-} from "@/app/(client)/components/BookACallPopup";
+import useFieldSchema, {
+	Row,
+	CustomRow as HookCustomRow,
+	AvailableField,
+} from "./data_schemas/useFieldSchema";
+import { BookACallPopup } from "@/app/(client)/components/BookACallPopup";
 import { AxiosError } from "axios";
 import GoHighLevelConnectPopup from "@/components/integrations/GoHighLevelIntegration";
-import { InfoIcon } from "@/icon";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import CustomButton from "@/components/ui/CustomButton";
 import { Logo } from "@/components/ui/Logo";
@@ -90,14 +90,6 @@ interface FormValues {
 	campaignObjective: string;
 	bidAmount: number;
 	dailyBudget: number;
-}
-
-interface Row {
-	id: number;
-	type: string;
-	value: string;
-	selectValue?: string;
-	canDelete?: boolean;
 }
 
 interface CustomRow {
@@ -149,18 +141,6 @@ type ServiceHandlers = {
 	go_high_level: () => void;
 	s3: () => void;
 };
-type ServiceType =
-	| "hubspot"
-	| "mailchimp"
-	| "CSV"
-	| "default"
-	| "meta"
-	| "s3"
-	| "google_ads"
-	| "sales_force"
-	| "go_high_level";
-
-type ArrayMapping = Record<ServiceType, CustomRow[]>;
 
 const styles = {
 	tabHeading: {
@@ -236,24 +216,6 @@ const integrationsImage = [
 	{ image: "s3.svg", service_name: "s3" },
 ];
 
-const customFieldsList: Row[] = [
-	{ id: 1, type: "Phone", value: "phone" },
-	{ id: 2, type: "City", value: "city" },
-	{ id: 3, type: "State", value: "state" },
-	{ id: 4, type: "Country code", value: "country_code" },
-	{ id: 5, type: "Company", value: "company" },
-	{ id: 6, type: "Linkedin url", value: "linkedin_url" },
-];
-
-const customFieldsListHubspot: Row[] = [
-	{ id: 1, type: "Phone", value: "phone" },
-	{ id: 2, type: "City", value: "city" },
-	{ id: 3, type: "State", value: "state" },
-	{ id: 4, type: "Zip", value: "zip_code" },
-	{ id: 5, type: "Gender", value: "gender" },
-	{ id: 6, type: "Company", value: "company" },
-];
-
 const customFieldsListCSV: Row[] = [
 	{ id: 3, type: "Business Email", value: "business_email" },
 	{ id: 4, type: "Personal Email", value: "personal_email" },
@@ -278,55 +240,6 @@ const customFieldsListCSV: Row[] = [
 const defaultRowsCSV: Row[] = [
 	{ id: 1, type: "First Name", value: "first_name" },
 	{ id: 2, type: "Last Name", value: "last_name" },
-];
-
-const defaultRows: Row[] = [
-	{ id: 1, type: "Email", value: "email" },
-	{ id: 2, type: "Firstname", value: "firstname" },
-	{ id: 3, type: "Lastname", value: "lastname" },
-];
-
-const defaultSalesForce: Row[] = [
-	{ id: 1, type: "Email", value: "email" },
-	{ id: 2, type: "Firstname", value: "firstname" },
-	{ id: 3, type: "Lastname", value: "lastname" },
-	{ id: 4, type: "Gender", value: "gender" },
-	{ id: 5, type: "Company", value: "company" },
-	{ id: 6, type: "Title", value: "title" },
-	{ id: 7, type: "Phone", value: "phone" },
-	{ id: 8, type: "Industry", value: "industry" },
-	{ id: 9, type: "City", value: "city" },
-	{ id: 10, type: "State", value: "state" },
-	{ id: 11, type: "PostalCode", value: "postal_code" },
-	{ id: 12, type: "Country", value: "country" },
-];
-
-const defaultRowsHubspot: Row[] = [
-	{ id: 1, type: "Email", value: "email" },
-	{ id: 2, type: "Firstname", value: "firstname" },
-	{ id: 3, type: "Lastname", value: "lastname" },
-];
-
-const defaultRowsMeta: Row[] = [
-	{ id: 1, type: "Email", value: "email" },
-	{ id: 2, type: "Phone", value: "phone" },
-	{ id: 3, type: "Gender", value: "gender" },
-	{ id: 4, type: "Birth date", value: "birth_date" },
-	{ id: 7, type: "First name", value: "first_name" },
-	{ id: 8, type: "Last name", value: "last_name" },
-	{ id: 9, type: "State", value: "state" },
-	{ id: 10, type: "City", value: "city" },
-	{ id: 11, type: "Zip code", value: "zip_code" },
-];
-
-const defaultRowsGoogleAds: Row[] = [
-	{ id: 1, type: "Email", value: "email" },
-	{ id: 2, type: "First name", value: "first_name" },
-	{ id: 3, type: "Last name", value: "last_name" },
-	{ id: 4, type: "Phone", value: "phone" },
-	{ id: 5, type: "City", value: "city" },
-	{ id: 6, type: "State", value: "state" },
-	{ id: 7, type: "Country code", value: "country_code" },
 ];
 
 const postalCustomFields = [
@@ -354,6 +267,22 @@ const postalCustomFields = [
 	{
 		type: "Business Postal Code",
 		value: "business_postal_code",
+		is_constant: false,
+	},
+];
+
+const emailB2BCustomFields = [
+	{
+		type: "Current Company Name",
+		value: "current_company_name",
+		is_constant: false,
+	},
+];
+
+const telemarketingB2BCustomFields = [
+	{
+		type: "Job Title",
+		value: "job_title",
 		is_constant: false,
 	},
 ];
@@ -403,10 +332,33 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-
-	const [customFields, setCustomFields] = useState<CustomRow[]>([]);
-	const [rows, setRows] = useState(defaultRows);
 	const { needsSync } = useIntegrationContext();
+
+	const {
+		rows,
+		setRows,
+		customFields,
+		setCustomFields,
+		availableFields,
+		addCustomFieldByKey,
+		removeCustomFieldByIndex,
+		handleChangeCustomField,
+		handleAddEmptyCustomField,
+		handleDeleteCustomField,
+		isValueDuplicate,
+		hasAnyDuplicates,
+		buildDataMapForRequest,
+		resetToDefaults,
+	} = useFieldSchema(
+		activeService as any,
+		useCase as any,
+		(targetSchema as any) ?? undefined,
+	);
+
+	const extendedAvailableFields =
+		activeService === "hubspot"
+			? [{ value: "__constant__", type: "Constant field" }, ...availableFields]
+			: availableFields;
 
 	//GENERAL
 
@@ -420,10 +372,63 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			"https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-sync",
 		);
 		setValueContactSync(0);
+		resetToDefaults();
 		setCustomFields([]);
 		setOptionAdAccountMeta(null);
 		setSelectedOptionMeta(null);
 	};
+
+	useEffect(() => {
+		if (!activeService) return;
+		if (activeService === "mailchimp") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-mailchimp",
+			);
+			setContactSyncTab(true);
+			getList();
+		}
+		if (activeService === "s3") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3",
+			);
+			setContactSyncTab(true);
+			getS3List();
+		}
+		if (activeService === "meta") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta",
+			);
+			setContactSyncTab(true);
+			fetchAdAccount();
+		}
+		if (activeService === "google_ads") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads",
+			);
+			setContactSyncTab(true);
+			getCustomersInfo();
+		}
+		if (activeService === "hubspot") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-hubspot",
+			);
+		}
+		if (activeService === "CSV") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/csv",
+			);
+		}
+		if (activeService === "sales_force") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
+			);
+		}
+		if (activeService === "go_high_level") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
+			);
+		}
+	}, [activeService]);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -454,26 +459,50 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-sync",
 			);
-			setCustomFields([
-				...customFieldsListCSV.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			]);
+
+			let nextCustom: CustomRow[] = customFieldsListCSV.map((field) => ({
+				type: field.value,
+				value: field.type,
+			}));
+
 			if (useCase === "postal") {
-				setCustomFields((prev) => [
-					...prev,
+				nextCustom = [
+					...nextCustom,
 					...getPostalFieldsBySchema(targetSchema).map((field) => ({
 						type: field.value,
 						value: field.type,
 						is_constant: false,
 					})),
-				]);
+				];
 			}
+
+			if (useCase === "email") {
+				nextCustom = [
+					...nextCustom,
+					...getEmailFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				];
+			}
+
+			if (useCase === "tele_marketing") {
+				nextCustom = [
+					...nextCustom,
+					...getTelemarketingFieldsBySchema(targetSchema).map((field) => ({
+						type: field.value,
+						value: field.type,
+						is_constant: false,
+					})),
+				];
+			}
+
+			setCustomFields(nextCustom);
 		} else {
 			setValue("1");
 		}
-	}, [isDownloadAction]);
+	}, [isDownloadAction, useCase, targetSchema, customFieldsListCSV]);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -590,7 +619,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 						value: item.type,
 						type: toSnakeCase(item.type),
 					})),
-					...customFields,
+					...buildDataMapForRequest(),
 				],
 			};
 			const response = await axiosInstance.post(
@@ -638,7 +667,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			const requestObj: RequestData = {
 				sent_contacts: valueContactSync,
 				smart_audience_id: id,
-				data_map: customFields,
+				data_map: buildDataMapForRequest(),
 			};
 
 			if (activeService === "mailchimp") {
@@ -755,176 +784,23 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		return postalCustomFields;
 	};
 
-	const actionBasedOnService = () => {
-		if (activeService === "mailchimp") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-mailchimp",
-			);
-			setContactSyncTab(true);
-			getList();
-			setRows(defaultRows);
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
+	const getEmailFieldsBySchema = (targetSchema: string | undefined) => {
+		if (targetSchema === "b2b") {
+			return emailB2BCustomFields;
 		}
+		return [];
+	};
 
-		if (activeService === "s3") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3",
-			);
-			setContactSyncTab(true);
-			getS3List();
-			setRows(defaultRows);
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
+	const getTelemarketingFieldsBySchema = (targetSchema: string | undefined) => {
+		if (targetSchema === "b2b") {
+			return telemarketingB2BCustomFields;
 		}
-
-		if (activeService === "meta") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta",
-			);
-			setContactSyncTab(true);
-			fetchAdAccount();
-			setRows(defaultRowsMeta);
-		}
-
-		if (activeService === "google_ads") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads",
-			);
-			setContactSyncTab(true);
-			getCustomersInfo();
-			setRows(defaultRowsGoogleAds);
-		}
-
-		if (activeService === "hubspot") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-hubspot",
-			);
-			setRows(defaultRowsHubspot);
-			setCustomFields(
-				customFieldsListHubspot.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-			if (useCase === "postal") {
-				setCustomFields((prev) => [
-					...prev,
-					...getPostalFieldsBySchema(targetSchema).map((field) => ({
-						type: field.value,
-						value: field.type,
-						is_constant: false,
-					})),
-				]);
-			}
-		}
-
-		if (activeService === "CSV") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/csv",
-			);
-			setRows(defaultRowsCSV);
-			setCustomFields(
-				customFieldsListCSV.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-			if (useCase === "postal") {
-				setCustomFields((prev) => [
-					...prev,
-					...getPostalFieldsBySchema(targetSchema).map((field) => ({
-						type: field.value,
-						value: field.type,
-						is_constant: false,
-					})),
-				]);
-			}
-		}
-
-		if (activeService === "sales_force") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
-			);
-			setRows(defaultSalesForce);
-			const excluded = [
-				"phone",
-				"city",
-				"state",
-				"zip_code",
-				"postal_code",
-				"company",
-			];
-			setCustomFields(
-				customFieldsList
-					.filter((field) => !excluded.includes(field.value.toLowerCase()))
-					.map((field) => ({
-						type: field.value,
-						value: field.type,
-					})),
-			);
-			if (useCase === "postal") {
-				setCustomFields((prev) => [
-					...prev,
-					...getPostalFieldsBySchema(targetSchema).map((field) => ({
-						type: field.value,
-						value: field.type,
-						is_constant: false,
-					})),
-				]);
-			}
-		}
-		if (activeService === "go_high_level") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
-			);
-			setRows(defaultRows);
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-			if (useCase === "postal") {
-				setCustomFields([
-					...customFieldsList.map((field) => ({
-						type: field.value,
-						value: field.type,
-					})),
-					...getPostalFieldsBySchema(targetSchema).map((field) => ({
-						type: field.value,
-						value: field.type,
-						is_constant: false,
-					})),
-				]);
-			}
-		}
-		if (activeService === "s3") {
-			setActiveUrl(
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3",
-			);
-			setRows(defaultRows);
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-		}
+		return [];
 	};
 
 	const handleNextTab = async () => {
 		if (value === "1") {
 			if (activeService) {
-				actionBasedOnService();
 				setValue((prevValue) => String(Number(prevValue) + 1));
 			}
 		} else if (value === "2") {
@@ -933,7 +809,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			}
 		} else if (value === "3" || value === "4") {
 			if (canSendDataSync()) {
-				if (isDownloadAction || activeService == "CSV") {
+				if (isDownloadAction || activeService === "CSV") {
 					downloadPersons();
 				} else {
 					createDataSync();
@@ -948,9 +824,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		if (newValue === "1") {
 			setContactSyncTab(false);
 			setValueContactSync(0);
-		}
-		if (newValue === "2") {
-			actionBasedOnService();
 		}
 		if (newValue === "3") {
 			if (!valueContactSync) return;
@@ -980,25 +853,18 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 
 	const handleChangeField = (
 		index: number,
-		key: keyof CustomRow,
+		key: keyof any,
 		value: string | boolean | undefined,
 	) => {
-		setCustomFields((prev) => {
-			const updated = [...prev];
-			updated[index] = {
-				...updated[index],
-				[key]: value,
-			};
-			return updated;
-		});
+		handleChangeCustomField(index, key as any, value);
 	};
 
 	const handleAddField = () => {
-		setCustomFields([...customFields, { type: "", value: "" }]);
+		handleAddEmptyCustomField();
 	};
 
 	const handleDeleteField = (index: number) => {
-		setCustomFields(customFields.filter((_, i) => i !== index));
+		handleDeleteCustomField(index);
 	};
 
 	const handleMapListChange = (
@@ -1163,52 +1029,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		"company",
 	];
 
-	const arrayWithCustomFields: ArrayMapping = {
-		hubspot: customFieldsListHubspot,
-		mailchimp: customFieldsList,
-		CSV: customFieldsListCSV,
-		default: customFieldsList,
-		meta: customFieldsList,
-		s3: customFieldsList,
-		google_ads: customFieldsList,
-		sales_force: customFieldsList.filter(
-			(field) => !excludedSalesforce.includes(field.value.toLowerCase()),
-		),
-		go_high_level: customFieldsList,
-	};
-
-	let extendedFieldsList = [
-		...(activeService === "hubspot"
-			? [{ value: "__constant__", type: "Constant field" }]
-			: []),
-		...(arrayWithCustomFields[(activeService as ServiceType) ?? "default"] ??
-			[]),
-	];
-
-	if (useCase === "postal") {
-		extendedFieldsList = [
-			...extendedFieldsList,
-			...getPostalFieldsBySchema(targetSchema),
-		];
-	}
-
-	const availableFields = extendedFieldsList.filter(
-		(field) => !customFields.some((cf) => cf.type === field.value),
-	);
-
-	const isValueDuplicate = (value: string, currentIndex: number): boolean => {
-		return (
-			customFields.some(
-				(f, idx) => f.value === value && idx !== currentIndex,
-			) || rows.some((r) => r.value === value)
-		);
-	};
-
-	const hasAnyDuplicates = (): boolean => {
-		return customFields.some((field, index) =>
-			isValueDuplicate(field.value, index),
-		);
-	};
 	const handleAddIntegration = async (service_name: string) => {
 		try {
 			setIsLoading(true);
@@ -2259,17 +2079,23 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 															onChange={(e) => {
 																const selected = e.target.value;
 																if (selected === "__constant__") {
-																	setCustomFields((prev) => {
-																		const updated = [...prev];
-																		updated[index] = {
-																			...updated[index],
+																	// build new array once and set it (не используем функциональный апдейтер)
+																	const updated: CustomRow[] = [
+																		...customFields,
+																	];
+																	updated[index] = {
+																		...(updated[index] ?? {
 																			type: "",
-																			is_constant: true,
-																		};
-																		return updated;
-																	});
+																			value: "",
+																		}),
+																		type: "",
+																		is_constant: true,
+																	};
+																	setCustomFields(updated);
 																} else {
+																	// меняем type у поля через общую функцию
 																	handleChangeField(index, "type", selected);
+																	// явно сбрасываем флаг is_constant
 																	handleChangeField(
 																		index,
 																		"is_constant",
@@ -2323,21 +2149,25 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 																},
 															}}
 														>
-															{extendedFieldsList.map((item) => (
-																<MenuItem
-																	key={item.value}
-																	value={item.value}
-																	disabled={
-																		item.value !== "__constant__" &&
-																		(customFields.some(
-																			(f) => f.type === item.value,
-																		) ||
-																			rows.some((r) => r.type === item.value))
-																	}
-																>
-																	{item.type}
-																</MenuItem>
-															))}
+															{extendedAvailableFields.map(
+																(item: AvailableField) => (
+																	<MenuItem
+																		key={item.value}
+																		value={item.value}
+																		disabled={
+																			item.value !== "__constant__" &&
+																			(customFields.some(
+																				(f) => f.type === item.value,
+																			) ||
+																				rows.some(
+																					(r) => r.value === item.value,
+																				))
+																		}
+																	>
+																		{item.type}
+																	</MenuItem>
+																),
+															)}
 														</TextField>
 													)}
 												</Grid>

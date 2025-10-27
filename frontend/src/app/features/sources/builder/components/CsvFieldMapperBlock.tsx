@@ -13,7 +13,7 @@ import {
 import type { FC } from "react";
 import Image from "next/image";
 import { SmartHintCard } from "../../../../(client)/sources/builder/components/SmartHintCard";
-import type { HintsProps } from "../../../../(client)/sources/builder/components/PixelDomainSelector";
+import type { HintsProps } from "../../../../(client)/sources/builder/components/PixelDomainSelectorBox";
 import type { MappingRow } from "../schemas";
 import {
 	builderHintCards,
