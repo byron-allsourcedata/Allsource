@@ -103,85 +103,86 @@ class ClickHousePersistence:
             return []
 
         try:
-            asid_str = ", ".join([f"'{asid}'" for asid in asids])
+            batch_size = 5000
+            all_user_data = []
 
-            query = f"""
-            SELECT 
-                asid,
-                first_name,
-                last_name,
-                business_email,
-                personal_email,
-                phone_mobile1,
-                home_city,
-                home_state,
-                gender,
-                age,
-                marital_status,
-                pets,
-                number_of_children
-            FROM enrichment_users 
-            WHERE asid IN ({asid_str})
-            """
+            for i in range(0, len(asids), batch_size):
+                batch_asids = asids[i : i + batch_size]
+                asid_str = ", ".join([f"'{asid}'" for asid in batch_asids])
+
+                query = f"""
+                SELECT 
+                    asid,
+                    first_name,
+                    last_name,
+                    business_email,
+                    personal_email,
+                    phone_mobile1,
+                    home_city,
+                    home_state,
+                    gender,
+                    age,
+                    marital_status,
+                    pets,
+                    number_of_children
+                FROM enrichment_users 
+                WHERE asid IN ({asid_str})
+                """
+
+                logger.info(
+                    f"Executing enrichment data query for batch {i // batch_size + 1}/{(len(asids) - 1) // batch_size + 1} with {len(batch_asids)} ASIDs"
+                )
+
+                result = self.clickhouse.query(query)
+                logger.info(
+                    f"Batch query returned {len(result.result_rows)} rows"
+                )
+
+                for row in result.result_rows:
+                    try:
+                        if isinstance(row, dict):
+                            user_record = {
+                                "asid": row["asid"],
+                                "first_name": row["first_name"],
+                                "last_name": row["last_name"],
+                                "business_email": row["business_email"],
+                                "personal_email": row["personal_email"],
+                                "phone_mobile1": row["phone_mobile1"],
+                                "home_city": row["home_city"],
+                                "home_state": row["home_state"],
+                                "gender": row["gender"],
+                                "age": row["age"],
+                                "marital_status": row["marital_status"],
+                                "pets": row["pets"],
+                                "number_of_children": row["number_of_children"],
+                            }
+                        else:
+                            user_record = {
+                                "asid": row[0],
+                                "first_name": row[1],
+                                "last_name": row[2],
+                                "business_email": row[3],
+                                "personal_email": row[4],
+                                "phone_mobile1": row[5],
+                                "home_city": row[6],
+                                "home_state": row[7],
+                                "gender": row[8],
+                                "age": row[9],
+                                "marital_status": row[10],
+                                "pets": row[11],
+                                "number_of_children": row[12],
+                            }
+
+                        all_user_data.append(user_record)
+
+                    except Exception as e:
+                        logger.error(f"Error processing row {row}: {e}")
+                        continue
 
             logger.info(
-                f"Executing enrichment data query for {len(asids)} ASIDs"
+                f"Successfully processed {len(all_user_data)} user records from {len(asids)} ASIDs"
             )
-
-            result = self.clickhouse.query(query)
-            logger.info(
-                f"Enrichment data query returned {len(result.result_rows)} rows"
-            )
-
-            user_data = []
-            for i, row in enumerate(result.result_rows):
-                try:
-                    logger.debug(f"Processing row {i}: {row}")
-
-                    if isinstance(row, dict):
-                        # If this dict - by key
-                        user_record = {
-                            "asid": row["asid"],
-                            "first_name": row["first_name"],
-                            "last_name": row["last_name"],
-                            "business_email": row["business_email"],
-                            "personal_email": row["personal_email"],
-                            "phone_mobile1": row["phone_mobile1"],
-                            "home_city": row["home_city"],
-                            "home_state": row["home_state"],
-                            "gender": row["gender"],
-                            "age": row["age"],
-                            "marital_status": row["marital_status"],
-                            "pets": row["pets"],
-                            "number_of_children": row["number_of_children"],
-                        }
-                    else:
-                        # If this tuple - by index(need rewrite)
-                        user_record = {
-                            "asid": row[0],  # asid
-                            "first_name": row[1],  # first_name
-                            "last_name": row[2],  # last_name
-                            "business_email": row[3],  # business_email
-                            "personal_email": row[4],  # personal_email
-                            "phone_mobile1": row[5],  # phone_mobile1
-                            "home_city": row[6],  # home_city
-                            "home_state": row[7],  # home_state
-                            "gender": row[8],  # gender
-                            "age": row[9],  # age
-                            "marital_status": row[10],  # marital_status
-                            "pets": row[11],  # pets
-                            "number_of_children": row[12],  # number_of_children
-                        }
-
-                    user_data.append(user_record)
-                    logger.debug(f"Successfully processed row {i}")
-
-                except Exception as e:
-                    logger.error(f"Error processing row {i} ({row}): {e}")
-                    continue
-
-            logger.info(f"Successfully processed {len(user_data)} user records")
-            return user_data
+            return all_user_data
 
         except Exception as e:
             logger.error(f"Error getting enrichment user data by asids: {e}")
