@@ -73,6 +73,10 @@ class CustomerIoCredentials(BaseModel):
     api_key: str
 
 
+class GreenArrowCredentials(BaseModel):
+    api_key: str
+
+
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
@@ -94,6 +98,7 @@ class IntegrationCredentials(BaseModel):
     sales_force: Optional[SalesForceCredentials] = None
     customer_io: Optional[CustomerIoCredentials] = None
     instantly: Optional[CustomerIoCredentials] = None
+    green_arrow: Optional[GreenArrowCredentials] = None
 
     pixel_install: bool = False
     supperssion: bool = False
