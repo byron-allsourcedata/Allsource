@@ -469,39 +469,88 @@ const TableBodyAccounts: React.FC<TableBodyAccountProps> = ({
 
 	return (
 		<TableBody>
-			{data?.map((row) => (
-				<TableRow
-					key={row.id}
-					sx={{
-						"&:hover": {
-							backgroundColor: "rgba(247, 247, 247, 1)",
-						},
-						"&:last-of-type .MuiTableCell-root": {
+			{data?.length > 0 ? (
+				data.map((row) => (
+					<TableRow
+						key={row.id}
+						sx={{
+							"&:hover": { backgroundColor: "rgba(247, 247, 247, 1)" },
+							"&:last-of-type .MuiTableCell-root": { borderBottom: "none" },
+						}}
+					>
+						{tableHeaders.map(({ key }) => (
+							<TableCell
+								key={key}
+								sx={{
+									...leadsStyles.table_array,
+									textAlign: "left",
+									position: "relative",
+									padding: "8px",
+								}}
+							>
+								{renderCellContent(key, row)}
+							</TableCell>
+						))}
+					</TableRow>
+				))
+			) : (
+				<TableRow>
+					<TableCell
+						colSpan={tableHeaders.length}
+						sx={{
+							position: "relative",
+							height: 400,
 							borderBottom: "none",
-						},
-					}}
-				>
-					{tableHeaders.map(({ key }) => (
-						<TableCell
-							key={key}
+						}}
+					>
+						<Box
 							sx={{
-								...leadsStyles.table_array,
-								textAlign: "left",
-								position: "relative",
-								padding: "8px",
-								"&:last-of-type::after": {
-									display:
-										key === "subscription_plan" || key === "access_level"
-											? "none"
-											: "block",
-								},
+								position: "absolute",
+								top: "50%",
+								left: "50%",
+								transform: "translate(-50%, -50%)",
+								textAlign: "center",
+								width: "100%",
+								pointerEvents: "none",
 							}}
 						>
-							{renderCellContent(key, row)}
-						</TableCell>
-					))}
+							<Typography
+								variant="h5"
+								sx={{
+									mb: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "20px",
+									color: "#4a4a4a",
+									fontWeight: 600,
+									lineHeight: "28px",
+								}}
+							>
+								Data not matched yet!
+							</Typography>
+							<Image
+								src="/no-data.svg"
+								alt="No Data"
+								height={250}
+								width={340}
+							/>
+							<Typography
+								variant="body1"
+								color="textSecondary"
+								sx={{
+									mt: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									color: "#808080",
+									fontWeight: 600,
+									lineHeight: "20px",
+								}}
+							>
+								No data found for the current search query or applied filters.
+							</Typography>
+						</Box>
+					</TableCell>
 				</TableRow>
-			))}
+			)}
 		</TableBody>
 	);
 };
@@ -628,7 +677,9 @@ const AccountsTab: React.FC<AccountsTabProps> = ({
 								/>
 							</Table>
 						</TableContainerWrapper>
-						<TablePagination {...paginationProps} />
+						{paginationProps.countRows > 0 && (
+							<TablePagination {...paginationProps} />
+						)}
 					</Grid>
 				</Grid>
 			</Box>

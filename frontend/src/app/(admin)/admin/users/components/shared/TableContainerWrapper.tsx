@@ -20,7 +20,7 @@ const TableContainerWrapper: React.FC<TableContainerWrapperProps> = ({
 				border: "1px solid rgba(235, 235, 235, 1)",
 				borderBottom: "none",
 				overflowX: "auto",
-				maxHeight: "50vh",
+				maxHeight: "60vh",
 			}}
 		>
 			{children}

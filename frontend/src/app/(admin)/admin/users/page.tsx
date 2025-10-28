@@ -11,6 +11,7 @@ import {
 	TextField,
 	InputAdornment,
 	Button,
+	IconButton,
 } from "@mui/material";
 import axios from "axios";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
@@ -212,11 +213,9 @@ const Users: React.FC = () => {
 
 			switch (tabIndex) {
 				case 0:
-					//endpoint = "/users";
 					endpoint = "/accounts";
 					break;
 				case 1:
-					//endpoint = "/accounts";
 					endpoint = "/users";
 					break;
 				case 2:
@@ -428,7 +427,29 @@ const Users: React.FC = () => {
 		event: React.SyntheticEvent | null,
 		newIndex: number,
 	) => {
+		setSearch("");
+		setExcludeTestUsers(false);
 		setTabIndex(newIndex);
+	};
+
+	const tabConfig: Record<
+		number,
+		{ placeholder: string; showExclude: boolean }
+	> = {
+		0: { placeholder: "Search company name", showExclude: false },
+		1: { placeholder: "Search by account name, emails", showExclude: true },
+		2: {
+			placeholder: "Search by domain, company name, user",
+			showExclude: false,
+		},
+		3: { placeholder: "Search by admin account", showExclude: false },
+		4: { placeholder: "Search master partner name, emails", showExclude: true },
+		5: { placeholder: "Search by partner name, emails", showExclude: true },
+	};
+
+	const { placeholder, showExclude } = tabConfig[tabIndex] || {
+		placeholder: "Search...",
+		showExclude: false,
 	};
 
 	const changeUserIsEmailValidation = (userId: number) => {
@@ -468,19 +489,7 @@ const Users: React.FC = () => {
 				}}
 			>
 				{loading && <CustomizedProgressBar />}
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "row",
-						alignItems: "start",
-						justifyContent: "space-between",
-					}}
-				>
-					<Typography variant="h4" component="h1" sx={usersStyle.title}>
-						Users
-					</Typography>
-				</Box>
-				<Box sx={{ display: "flex", flexDirection: "column" }}>
+				<Box sx={{ display: "flex", flexDirection: "column", pt: 3 }}>
 					<Box>
 						<CustomCards values={valuesMetrics} />
 					</Box>
@@ -614,57 +623,60 @@ const Users: React.FC = () => {
 						</Box>
 
 						<Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
-							{(tabIndex === 1 || tabIndex === 4 || tabIndex === 5) && (
-								<>
-									<Box sx={{ display: "flex", alignItems: "center" }}>
-										<Typography className="black-table-header">
-											Exclude test users
-										</Typography>
-										<CustomSwitch
-											stateSwitch={excludeTestUsers}
-											changeState={() => setExcludeTestUsers((prev) => !prev)}
-										/>
-									</Box>
-
-									<TextField
-										id="input-with-icon-textfield"
-										placeholder="Search by account name, emails"
-										value={search}
-										onChange={(e) => {
-											handleSearchChange(e);
-										}}
-										onKeyDown={(e) => {
-											if (e.key === "Enter") {
-												e.preventDefault();
-												fetchData();
-											}
-										}}
-										InputProps={{
-											startAdornment: (
-												<InputAdornment position="start">
-													<SearchIcon style={{ cursor: "pointer" }} />
-												</InputAdornment>
-											),
-										}}
-										variant="outlined"
-										sx={{
-											flex: 1,
-											width: "360px",
-											"& .MuiOutlinedInput-root": {
-												borderRadius: "4px",
-												height: "40px",
-											},
-											"& input": {
-												paddingLeft: 0,
-											},
-											"& input::placeholder": {
-												fontSize: "14px",
-												color: "#8C8C8C",
-											},
-										}}
+							{showExclude && (
+								<Box sx={{ display: "flex", alignItems: "center" }}>
+									<Typography className="black-table-header">
+										Exclude test users
+									</Typography>
+									<CustomSwitch
+										stateSwitch={excludeTestUsers}
+										changeState={() => setExcludeTestUsers((prev) => !prev)}
 									/>
-								</>
+								</Box>
 							)}
+
+							<TextField
+								placeholder={placeholder}
+								value={search}
+								onChange={(e) => {
+									handleSearchChange(e);
+								}}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										e.preventDefault();
+										fetchData();
+									}
+								}}
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<IconButton
+												sx={{ ":hover": { backgroundColor: "transparent" } }}
+												size="small"
+												onClick={() => fetchData()}
+											>
+												<SearchIcon style={{ cursor: "pointer" }} />{" "}
+											</IconButton>
+										</InputAdornment>
+									),
+								}}
+								variant="outlined"
+								sx={{
+									flex: 1,
+									width: "360px",
+									"& .MuiOutlinedInput-root": {
+										borderRadius: "4px",
+										height: "40px",
+									},
+									"& input": {
+										paddingLeft: 0,
+									},
+									"& input::placeholder": {
+										fontSize: "14px",
+										color: "#8C8C8C",
+									},
+								}}
+							/>
 							{tabIndex === 3 && (
 								<Button
 									variant="outlined"
@@ -688,67 +700,69 @@ const Users: React.FC = () => {
 									Add Admin
 								</Button>
 							)}
-							<Button
-								onClick={handleFilterPopupOpen}
-								aria-haspopup="true"
-								sx={{
-									textTransform: "none",
-									height: "40px",
-									color:
-										selectedFilters.length > 0
-											? "rgba(56, 152, 252, 1)"
-											: "rgba(128, 128, 128, 1)",
-									border:
-										selectedFilters.length > 0
-											? `1px solid ${"rgba(56, 152, 252, 1)"}`
-											: "1px solid rgba(184, 184, 184, 1)",
-									borderRadius: "4px",
-									padding: "8px",
-									opacity: "1",
-									minWidth: "auto",
-									position: "relative",
-									"@media (max-width: 900px)": {
-										border: "none",
-										padding: 0,
-									},
-									"&:hover": {
-										backgroundColor: "transparent",
-										border: `1px solid ${"rgba(56, 152, 252, 1)"}`,
-										color: "rgba(56, 152, 252, 1)",
-										"& .MuiSvgIcon-root": {
-											color: "rgba(56, 152, 252, 1)",
-										},
-									},
-								}}
-							>
-								<FilterListIcon
-									fontSize="medium"
+							{(showExclude || tabIndex === 0) && (
+								<Button
+									onClick={handleFilterPopupOpen}
+									aria-haspopup="true"
 									sx={{
+										textTransform: "none",
+										height: "40px",
 										color:
 											selectedFilters.length > 0
 												? "rgba(56, 152, 252, 1)"
 												: "rgba(128, 128, 128, 1)",
-									}}
-								/>
-
-								{selectedFilters.length > 0 && (
-									<Box
-										sx={{
-											position: "absolute",
-											top: 6,
-											right: 8,
-											width: "10px",
-											height: "10px",
-											backgroundColor: "red",
-											borderRadius: "50%",
-											"@media (max-width: 900px)": {
-												top: -1,
-												right: 1,
+										border:
+											selectedFilters.length > 0
+												? `1px solid ${"rgba(56, 152, 252, 1)"}`
+												: "1px solid rgba(184, 184, 184, 1)",
+										borderRadius: "4px",
+										padding: "8px",
+										opacity: "1",
+										minWidth: "auto",
+										position: "relative",
+										"@media (max-width: 900px)": {
+											border: "none",
+											padding: 0,
+										},
+										"&:hover": {
+											backgroundColor: "transparent",
+											border: `1px solid ${"rgba(56, 152, 252, 1)"}`,
+											color: "rgba(56, 152, 252, 1)",
+											"& .MuiSvgIcon-root": {
+												color: "rgba(56, 152, 252, 1)",
 											},
+										},
+									}}
+								>
+									<FilterListIcon
+										fontSize="medium"
+										sx={{
+											color:
+												selectedFilters.length > 0
+													? "rgba(56, 152, 252, 1)"
+													: "rgba(128, 128, 128, 1)",
 										}}
 									/>
-								)}
-							</Button>
+
+									{selectedFilters.length > 0 && (
+										<Box
+											sx={{
+												position: "absolute",
+												top: 6,
+												right: 8,
+												width: "10px",
+												height: "10px",
+												backgroundColor: "red",
+												borderRadius: "50%",
+												"@media (max-width: 900px)": {
+													top: -1,
+													right: 1,
+												},
+											}}
+										/>
+									)}
+								</Button>
+							)}
 							<FilterPopup
 								open={filterPopupOpen}
 								onClose={handleFilterPopupClose}

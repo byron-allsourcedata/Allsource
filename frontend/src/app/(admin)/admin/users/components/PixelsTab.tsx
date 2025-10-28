@@ -1,6 +1,7 @@
 "use client";
 
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import Image from "next/image";
 import {
 	Box,
 	Typography,
@@ -144,147 +145,240 @@ const TableBodyDomains: React.FC<{
 
 	return (
 		<TableBody>
-			{data.map((row) => (
-				<TableRow
-					key={row.id}
-					sx={{
-						"&:hover": {
-							backgroundColor: "rgba(247, 247, 247, 1)",
-						},
-						"&:last-of-type .MuiTableCell-root": {
+			{data?.length > 0 ? (
+				data.map((row) => (
+					<TableRow
+						key={row.id}
+						sx={{
+							"&:hover": {
+								backgroundColor: "rgba(247, 247, 247, 1)",
+							},
+							"&:last-of-type .MuiTableCell-root": {
+								borderBottom: "none",
+							},
+						}}
+					>
+						<TableCell
+							className="seventh-sub-title"
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "left",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							{row.domain}
+						</TableCell>
+
+						<TableCell
+							className="description"
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "left",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							{row.company_name || "--"}
+						</TableCell>
+
+						<TableCell
+							className="description"
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "left",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							{row.user_name || "--"}
+						</TableCell>
+
+						<TableCell
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "left",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							<Typography
+								sx={{
+									fontFamily: "var(--font-roboto)",
+									fontWeight: 400,
+									fontSize: "14px",
+									lineHeight: "140%",
+									letterSpacing: 0,
+									color: row.is_pixel_installed
+										? "rgba(74, 158, 79, 1)"
+										: "rgba(205, 40, 43, 1)",
+									display: "flex",
+									alignItems: "center",
+									gap: "4px",
+								}}
+							>
+								{row.is_pixel_installed ? "✓ Installed" : "✗ Missing"}
+							</Typography>
+						</TableCell>
+
+						<TableCell
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							<Typography
+								sx={{
+									fontFamily: "var(--font-roboto)",
+									fontWeight: 400,
+									fontSize: "14px",
+									lineHeight: "140%",
+									letterSpacing: 0,
+									color: row.is_enable
+										? "rgba(74, 158, 79, 1)"
+										: "rgba(205, 40, 43, 1)",
+									display: "flex",
+									backgroundColor: row.is_enable
+										? "rgba(220, 245, 221, 1)"
+										: "rgba(255, 235, 238, 1)",
+									padding: "4px 8px",
+									borderRadius: "4px",
+									textAlign: "center",
+									justifyContent: "center",
+									alignItems: "center",
+									gap: "4px",
+								}}
+							>
+								{row.is_enable ? "Resolved" : "Unresolved"}
+							</Typography>
+						</TableCell>
+
+						<TableCell
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "center",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							{row.total_leads}
+						</TableCell>
+
+						<TableCell
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "left",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							{formatDate(row.created_at)}
+						</TableCell>
+
+						<TableCell
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "left",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							<Box
+								sx={{
+									display: "flex",
+									justifyContent: "center",
+									width: "100%",
+								}}
+							>
+								<CustomSwitch
+									stateSwitch={row.is_email_validation_enabled}
+									changeState={() => changeUserIsEmailValidation(row.id)}
+								/>
+							</Box>
+						</TableCell>
+
+						<TableCell
+							sx={{
+								...leadsStyles.table_array,
+								position: "relative",
+								textAlign: "center",
+								padding: "8px",
+								borderBottom: "1px solid rgba(224, 224, 224, 1)",
+							}}
+						>
+							<IconButton size="small">
+								<MoreVert fontSize="small" />
+							</IconButton>
+						</TableCell>
+					</TableRow>
+				))
+			) : (
+				<TableRow>
+					<TableCell
+						colSpan={9}
+						sx={{
+							position: "relative",
+							height: 400,
 							borderBottom: "none",
-						},
-					}}
-				>
-					<TableCell
-						className="seventh-sub-title"
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "left",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						{row.domain}
-					</TableCell>
-
-					<TableCell
-						className="description"
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "left",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						{row.company_name || "--"}
-					</TableCell>
-
-					<TableCell
-						className="description"
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "left",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						{row.user_name || "--"}
-					</TableCell>
-
-					<TableCell
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "left",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						<Chip
-							label={row.is_pixel_installed ? "Installed" : "Missing"}
-							color={row.is_pixel_installed ? "success" : "warning"}
-							size="small"
-						/>
-					</TableCell>
-
-					<TableCell
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "left",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						<Chip
-							label={row.is_enable ? "Active" : "Disabled"}
-							color={row.is_enable ? "success" : "default"}
-							size="small"
-						/>
-					</TableCell>
-
-					<TableCell
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "center",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						{row.total_leads}
-					</TableCell>
-
-					<TableCell
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "left",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						{formatDate(row.created_at)}
-					</TableCell>
-
-					<TableCell
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "left",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
 						}}
 					>
 						<Box
-							sx={{ display: "flex", justifyContent: "center", width: "100%" }}
+							sx={{
+								position: "absolute",
+								top: "50%",
+								left: "50%",
+								transform: "translate(-50%, -50%)",
+								textAlign: "center",
+								width: "100%",
+								pointerEvents: "none", // не блокирует скролл
+							}}
 						>
-							<CustomSwitch
-								stateSwitch={row.is_email_validation_enabled}
-								changeState={() => changeUserIsEmailValidation(row.id)}
+							<Typography
+								variant="h5"
+								sx={{
+									mb: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "20px",
+									color: "#4a4a4a",
+									fontWeight: 600,
+									lineHeight: "28px",
+								}}
+							>
+								Data not matched yet!
+							</Typography>
+							<Image
+								src="/no-data.svg"
+								alt="No Data"
+								height={250}
+								width={340}
 							/>
+							<Typography
+								variant="body1"
+								color="textSecondary"
+								sx={{
+									mt: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									color: "#808080",
+									fontWeight: 600,
+									lineHeight: "20px",
+								}}
+							>
+								No data found for the current search query or applied filters.
+							</Typography>
 						</Box>
 					</TableCell>
-
-					<TableCell
-						sx={{
-							...leadsStyles.table_array,
-							position: "relative",
-							textAlign: "center",
-							padding: "8px",
-							borderBottom: "1px solid rgba(224, 224, 224, 1)",
-						}}
-					>
-						<IconButton size="small">
-							<MoreVert fontSize="small" />
-						</IconButton>
-					</TableCell>
 				</TableRow>
-			))}
+			)}
 		</TableBody>
 	);
 };
@@ -401,7 +495,7 @@ const PixelsTab: React.FC<PixelsTabProps> = ({
 								border: "1px solid rgba(235, 235, 235, 1)",
 								borderBottom: "none",
 								overflowX: "auto",
-								maxHeight: "50vh",
+								maxHeight: "60vh",
 							}}
 						>
 							<Table stickyHeader>
@@ -419,9 +513,11 @@ const PixelsTab: React.FC<PixelsTabProps> = ({
 							</Table>
 						</TableContainer>
 
-						<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
-							<Paginator tableMode {...paginationProps} />
-						</Box>
+						{paginationProps.countRows > 0 && (
+							<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
+								<Paginator tableMode {...paginationProps} />
+							</Box>
+						)}
 					</Grid>
 				</Grid>
 			</Box>

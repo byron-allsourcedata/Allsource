@@ -578,40 +578,90 @@ const TableBodyUsers: React.FC<TableBodyUserProps> = ({
 	};
 
 	return (
-		<TableBody>
-			{data?.map((row) => (
-				<TableRow
-					key={row.id}
-					sx={{
-						"&:hover": {
-							backgroundColor: "rgba(247, 247, 247, 1)",
-						},
-						"&:last-of-type .MuiTableCell-root": {
+		<TableBody sx={{ position: "relative" }}>
+			{data?.length > 0 ? (
+				data.map((row) => (
+					<TableRow
+						key={row.id}
+						sx={{
+							"&:hover": { backgroundColor: "rgba(247, 247, 247, 1)" },
+							"&:last-of-type .MuiTableCell-root": { borderBottom: "none" },
+						}}
+					>
+						{tableHeaders.map(({ key }) => (
+							<TableCell
+								key={key}
+								sx={{
+									...leadsStyles.table_array,
+									textAlign: "left",
+									position: "relative",
+									padding: "8px",
+								}}
+							>
+								{renderCellContent(key, row)}
+							</TableCell>
+						))}
+					</TableRow>
+				))
+			) : (
+				<TableRow>
+					<TableCell
+						colSpan={tableHeaders.length}
+						sx={{
+							position: "relative",
+							height: 400, // чтобы было пространство под изображение
 							borderBottom: "none",
-						},
-					}}
-				>
-					{tableHeaders.map(({ key }) => (
-						<TableCell
-							key={key}
+						}}
+					>
+						{/* Центрируем по горизонтали и вертикали */}
+						<Box
 							sx={{
-								...leadsStyles.table_array,
-								textAlign: "left",
-								position: "relative",
-								padding: "8px",
-								"&:last-of-type::after": {
-									display:
-										key === "subscription_plan" || key === "access_level"
-											? "none"
-											: "block",
-								},
+								position: "absolute",
+								top: "50%",
+								left: "50%",
+								transform: "translate(-50%, -50%)",
+								textAlign: "center",
+								width: "100%",
+								pointerEvents: "none", // не блокирует скролл
 							}}
 						>
-							{renderCellContent(key, row)}
-						</TableCell>
-					))}
+							<Typography
+								variant="h5"
+								sx={{
+									mb: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "20px",
+									color: "#4a4a4a",
+									fontWeight: 600,
+									lineHeight: "28px",
+								}}
+							>
+								Data not matched yet!
+							</Typography>
+							<Image
+								src="/no-data.svg"
+								alt="No Data"
+								height={250}
+								width={340}
+							/>
+							<Typography
+								variant="body1"
+								color="textSecondary"
+								sx={{
+									mt: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									color: "#808080",
+									fontWeight: 600,
+									lineHeight: "20px",
+								}}
+							>
+								No data found for the current search query or applied filters.
+							</Typography>
+						</Box>
+					</TableCell>
 				</TableRow>
-			))}
+			)}
 		</TableBody>
 	);
 };
@@ -734,7 +784,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
 								border: "1px solid rgba(235, 235, 235, 1)",
 								borderBottom: "none",
 								overflowX: "auto",
-								maxHeight: "50vh",
+								maxHeight: "60vh",
 							}}
 						>
 							<Table stickyHeader>
@@ -756,9 +806,11 @@ const UsersTab: React.FC<UsersTabProps> = ({
 								/>
 							</Table>
 						</TableContainer>
-						<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
-							<Paginator tableMode {...paginationProps} />
-						</Box>
+						{paginationProps.countRows > 0 && (
+							<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
+								<Paginator tableMode {...paginationProps} />
+							</Box>
+						)}
 					</Grid>
 				</Grid>
 			</Box>
