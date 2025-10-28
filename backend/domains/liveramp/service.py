@@ -59,6 +59,10 @@ class LiverampService:
             )
             statistics["combined_records"] = len(combined_data)
 
+            logger.info("Step 4.5: Checking for duplicates...")
+            duplicate_check = self._check_for_duplicates(combined_data)
+            statistics.update(duplicate_check)
+
             logger.info("Step 5: Formatting to CSV...")
             csv_content = self.file_service.format_data_to_csv(combined_data)
 
@@ -75,6 +79,44 @@ class LiverampService:
         except Exception as e:
             logger.error(f"Error generating combined report: {e}")
             raise
+
+    def _check_for_duplicates(
+        self, data: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        asid_count = {}
+        duplicate_info = {
+            "total_unique_asids": 0,
+            "total_duplicate_asids": 0,
+            "duplicate_examples": [],
+        }
+
+        for record in data:
+            asid = record.get("ASID")
+            if asid:
+                asid_count[asid] = asid_count.get(asid, 0) + 1
+
+        unique_asids = set()
+        duplicate_asids = set()
+
+        for asid, count in asid_count.items():
+            if count == 1:
+                unique_asids.add(asid)
+            else:
+                duplicate_asids.add(asid)
+
+        duplicate_info["total_unique_asids"] = len(unique_asids)
+        duplicate_info["total_duplicate_asids"] = len(duplicate_asids)
+
+        if duplicate_asids:
+            examples = list(duplicate_asids)[:5]
+            duplicate_info["duplicate_examples"] = examples
+            logger.warning(
+                f"Found {len(duplicate_asids)} duplicate ASIDs. Examples: {examples}"
+            )
+        else:
+            logger.info("No duplicate ASIDs found in source data")
+
+        return duplicate_info
 
     async def _get_postgres_clickhouse_data(self) -> List[Dict[str, Any]]:
         try:
