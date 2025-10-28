@@ -137,7 +137,7 @@ class LiveRampFileService:
         ]
 
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=fieldnames, delimiter="\t")
+        writer = csv.DictWriter(output, fieldnames=fieldnames, delimiter=",")
         writer.writeheader()
 
         valid_records = 0
@@ -210,7 +210,7 @@ class LiveRampFileService:
             header = lines[0] if lines else ""
             data_lines = lines[1:] if len(lines) > 1 else []
 
-            expected_header = "ASID\tFirstName\tLastName\tBUSINESS_EMAIL\tPERSONAL_EMAIL\tPhoneMobile1\tHomeCity\tHomeState\tGender\tAge\tMaritalStatus\tPets\tChildrenPresent\tSpend"
+            expected_header = "ASID,FirstName,LastName,BUSINESS_EMAIL,PERSONAL_EMAIL,PhoneMobile1,HomeCity,HomeState,Gender,Age,MaritalStatus,Pets,ChildrenPresent,Spend"
             if header != expected_header:
                 logger.warning(
                     f"CSV header mismatch. Expected: {expected_header}, Got: {header}"
@@ -221,7 +221,7 @@ class LiveRampFileService:
 
             for i, line in enumerate(data_lines, 2):
                 if line.strip():
-                    parts = line.split("\t")
+                    parts = line.split(",")
                     if parts and len(parts) > 0:
                         asid = parts[0]
                         if asid in asids_in_file:
