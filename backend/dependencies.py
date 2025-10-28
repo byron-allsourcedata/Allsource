@@ -21,7 +21,6 @@ from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
-from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_sources_matched_persons import (
     AudienceSourcesMatchedPersonsPersistence,
 )

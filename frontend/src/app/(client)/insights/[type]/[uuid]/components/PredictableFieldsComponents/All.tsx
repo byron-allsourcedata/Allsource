@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import Link from "next/link";
 import FeatureListTable from "../FeatureListTable";
 import { SignificantFields } from "@/types/insights";
@@ -44,50 +44,118 @@ const Categories: React.FC<PredictableFieldsTabProps> = ({ data }) => {
 					}}
 				>
 					<Typography
-						className="paragraph"
-						sx={{ fontWeight: "600 !important" }}
+						className="paragraph-description"
+						sx={{
+							fontWeight: "600 !important",
+							color: "rgba(95, 99, 104, 1) !important",
+						}}
 					>
 						Predictable Fields{" "}
 					</Typography>
-					<Typography className="paragraph">
-						Gain data-powered insights into your audience&apos;s likely traits
-						and behaviors across key life domains. Our predictive models
-						estimate values for:{" "}
-					</Typography>
+					<Stack pt={2} textAlign={"start"} pr={4} gap={0.5}>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							Understand your audience beyond basic demographics — discover what
+							truly <br /> drives their behavior.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong> Predictable Fields </strong> use advanced data models to
+							estimate the most likely traits <br /> and preferences of your
+							audience across key areas of life.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							These insights help you{" "}
+							<strong>
+								{" "}
+								build smarter segments, improve targeting, and reduce guesswork.
+							</strong>
+						</Typography>
+					</Stack>
 				</Box>
 				<Box
 					sx={{
-						gap: 1.5,
+						gap: 2,
 						width: "100%",
 						display: "flex",
 						flexDirection: "column",
 					}}
 				>
-					<Typography className="paragraph">
-						- Personal Profile: Age, gender, education, household composition,
-						and more.
+					<Typography
+						className="paragraph-description"
+						sx={{
+							fontWeight: "600 !important",
+							color: "rgba(95, 99, 104, 1) !important",
+						}}
+					>
+						What You Get{" "}
 					</Typography>
-					<Typography className="paragraph">
-						- Financial: Income range, credit propensity, spending habits, and
-						financial priorities.
-					</Typography>
-					<Typography className="paragraph">
-						- Lifestyle: Interests, hobbies, brand preferences, and digital
-						engagement trends.
-					</Typography>
-					<Typography className="paragraph">
-						- Voter: Political leanings, voting likelihood, and key issues of
-						influence.
-					</Typography>
-					<Typography className="paragraph">
-						- Real Estate: Homeownership status, property value estimates, and
-						relocation probability.
-					</Typography>
+					<Stack textAlign={"start"} pr={4} gap={0.5}>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							Our models predict values across several domains:
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>• Personal Profile - </strong> age, gender, education,
+							family size, and more.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>• Financial - </strong> income range, credit tendensity,
+							spending style, and financial focus.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>• Lifestyle - </strong> interests, hobbies, brand
+							affinity, and online engagement.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>• Voter - </strong> political orientation, voting
+							likelihood, and key influencing issues.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>• Real Estate - </strong> Homeownership status, property
+							value estimates, and relocation probability.
+						</Typography>
+					</Stack>
 				</Box>
-				<Typography className="paragraph">
-					Refine targeting, reduce guesswork, and act on what truly
-					resonates—powered by predictive intelligence.
-				</Typography>
+				<Box
+					sx={{
+						gap: 2,
+						width: "100%",
+						display: "flex",
+						flexDirection: "column",
+					}}
+				>
+					<Typography
+						className="paragraph-description"
+						sx={{
+							fontWeight: "600 !important",
+							color: "rgba(95, 99, 104, 1) !important",
+						}}
+					>
+						Why It Matters{" "}
+					</Typography>
+					<Stack textAlign={"start"} pr={4} gap={0.5}>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							These fields represent{" "}
+							<strong>the most influential factors</strong> in audience
+							modeling.
+							<br />
+							They allow you to:
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>•</strong> Identify what truly defines your
+							best-performing users.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>•</strong> Predict future behaviors with higher accuracy.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							<strong>•</strong> Personalize communication and offers that
+							resonate.
+						</Typography>
+						<Typography className="paragraph" color={"#5F6368 !important"}>
+							Predictable Fields turn data into direction — helping you act with
+							confidence, not assumptions.
+						</Typography>
+					</Stack>
+				</Box>
 
 				{/* <Box>
 					<Link

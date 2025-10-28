@@ -3,11 +3,13 @@ from typing import Annotated, TypeAlias
 from aio_pika.abc import AbstractChannel, AbstractConnection
 import clickhouse_connect
 from clickhouse_connect.driver import Client
+from clickhouse_connect.driver import AsyncClient
 
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
 from config import ClickhouseConfig
+from config import ClickhouseInsertConfig
 from config.database import SessionLocal
 from config.rmq_connection import RabbitMQConnection
 
@@ -32,8 +34,17 @@ def get_clickhouse_db():
         ch.close()
 
 
+async def get_async_clickhouse_db():
+    ch = await ClickhouseConfig.get_async_client()
+
+    try:
+        yield ch
+    finally:
+        await ch.close()
+
+
 def get_clickhouse_inserter_db():
-    ch = ClickhouseConfig.get_client()
+    ch = ClickhouseInsertConfig.get_client()
 
     try:
         yield ch
@@ -42,6 +53,7 @@ def get_clickhouse_inserter_db():
 
 
 Clickhouse = Annotated[Client, Depends(get_clickhouse_db)]
+AsyncClickHouse = Annotated[AsyncClient, Depends(get_async_clickhouse_db)]
 
 ClickhouseInserter = Annotated[Client, Depends(get_clickhouse_inserter_db)]
 

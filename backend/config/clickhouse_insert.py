@@ -3,12 +3,12 @@ import clickhouse_connect
 from config.util import getenv, get_int_env
 
 
-class ClickhouseConfig:
-    host = getenv("CLICKHOUSE_HOST")
-    port = get_int_env("CLICKHOUSE_PORT")
-    user = getenv("CLICKHOUSE_USER")
-    password = getenv("CLICKHOUSE_PASSWORD")
-    database = getenv("CLICKHOUSE_DATABASE")
+class ClickhouseInsertConfig:
+    host = getenv("CLICKHOUSE_INSERT_HOST")
+    port = get_int_env("CLICKHOUSE_INSERT_PORT")
+    user = getenv("CLICKHOUSE_INSERT_USER")
+    password = getenv("CLICKHOUSE_INSERT_PASSWORD")
+    database = getenv("CLICKHOUSE_INSERT_DATABASE")
 
     @classmethod
     def get_client(cls):
