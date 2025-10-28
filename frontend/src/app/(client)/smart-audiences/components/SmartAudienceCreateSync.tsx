@@ -636,8 +636,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 						type: toSnakeCase(item.type),
 					})),
 					...buildDataMapForRequest(),
-				],
+				].map((el) => ({ type: el.type, value: el.value })),
 			};
+			console.log(requestObj);
 			const response = await axiosInstance.post(
 				"/audience-smarts/download-persons",
 				requestObj,
