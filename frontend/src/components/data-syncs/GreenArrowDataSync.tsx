@@ -198,7 +198,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 		setMapListNameError(false);
 	};
 
-	const getGreanArrowList = async () => {
+	const getGreenArrowList = async () => {
 		try {
 			setLoading(true);
 			const response = await axiosInstance.get("/integrations/sync/list/", {
@@ -226,7 +226,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 	};
 	useEffect(() => {
 		if (open) {
-			getGreanArrowList();
+			getGreenArrowList();
 		}
 	}, [open]);
 

@@ -3,9 +3,10 @@ import json
 import logging
 import os
 import httpx
-from typing import Annotated, List, Tuple
+from typing import Annotated, Any, List, Tuple
 from fastapi import Depends, HTTPException
 
+from models.enrichment.enrichment_users import EnrichmentUser
 from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -71,6 +72,11 @@ class GreenArrowIntegrationsService:
             service_name=SourcePlatformEnum.GREEN_ARROW.value,
         )
 
+    def get_smart_credentials(self, user_id: int):
+        return self.integrations_persisntece.get_smart_credentials_for_service(
+            user_id=user_id, service_name=SourcePlatformEnum.GREEN_ARROW.value
+        )
+
     def create_list(self, list_data, domain_id: int, user_id: int):
         credential = self.get_credentials(domain_id, user_id)
         if not credential:
@@ -104,6 +110,8 @@ class GreenArrowIntegrationsService:
             }
 
         data = resp.json().get("data")
+        if not data:
+            return {"status": IntegrationsStatus.CREATE_IS_FAILED}
         list_id = data.get("id")
 
         return ListFromIntegration(id=str(list_id), list_name=data.get("name"))
@@ -215,6 +223,31 @@ class GreenArrowIntegrationsService:
         )
         return sync
 
+    def create_smart_audience_sync(
+        self,
+        smart_audience_id: UUID,
+        sent_contacts: int,
+        list_id: str,
+        list_name: str,
+        data_map: List[DataMap],
+        created_by: str,
+        user: dict,
+    ):
+        credentials = self.get_smart_credentials(user_id=user.get("id"))
+        sync = self.sync_persistence.create_sync(
+            {
+                "integration_id": credentials.id,
+                "list_id": list_id,
+                "list_name": list_name,
+                "sent_contacts": sent_contacts,
+                "sync_type": DataSyncType.AUDIENCE.value,
+                "smart_audience_id": smart_audience_id,
+                "data_map": data_map,
+                "created_by": created_by,
+            }
+        )
+        return sync
+
     async def _ensure_custom_fields_exist(
         self,
         list_id: str,
@@ -276,6 +309,72 @@ class GreenArrowIntegrationsService:
                     r.text,
                 )
         return existing
+
+    async def process_data_sync(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        enrichment_users: List[EnrichmentUser],
+        target_schema: str,
+        validations: dict = {},
+    ):
+        profiles = []
+        results = []
+        for enrichment_user in enrichment_users:
+            profile = self.__map_lead_to_green_arrow_audience(
+                enrichment_user,
+                target_schema,
+                validations,
+                integration_data_sync.data_map,
+            )
+            if profile == ProccessDataSyncResult.INCORRECT_FORMAT.value:
+                results.append(
+                    {
+                        "enrichment_user_asid": enrichment_user.asid,
+                        "status": profile,
+                    }
+                )
+                continue
+            else:
+                results.append(
+                    {
+                        "enrichment_user_asid": enrichment_user.asid,
+                        "status": ProccessDataSyncResult.SUCCESS.value,
+                    }
+                )
+
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return results
+
+        try:
+            import_response = await self.sync_contacts_bulk(
+                integration_data_sync.list_id,
+                profiles,
+                integration_data_sync,
+                user_integration,
+            )
+        except Exception as exc:
+            logging.error("Exception during sync_contacts_bulk: %s", exc)
+            import_response = {
+                "status": ProccessDataSyncResult.UNEXPECTED_ERROR.value
+            }
+
+        status = import_response.get("status")
+
+        if status in (
+            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ProccessDataSyncResult.LIST_NOT_EXISTS.value,
+            ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value,
+        ):
+            for res in results:
+                if res["status"] == ProccessDataSyncResult.SUCCESS.value:
+                    res["status"] = status
+
+        return results
 
     async def process_data_sync_lead(
         self,
@@ -340,6 +439,92 @@ class GreenArrowIntegrationsService:
                     res["status"] = status
 
         return results
+
+    def __map_lead_to_green_arrow_audience(
+        self,
+        enrichment_user: EnrichmentUser,
+        target_schema: str,
+        validations: dict,
+        data_map: list,
+    ) -> dict | str:
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        business_email, personal_email, phone = (
+            self.sync_persistence.get_verified_email_and_phone(
+                enrichment_user.asid
+            )
+        )
+        main_email, main_phone = resolve_main_email_and_phone(
+            enrichment_contacts=enrichment_contacts,
+            validations=validations,
+            target_schema=target_schema,
+            business_email=business_email,
+            personal_email=personal_email,
+            phone=phone,
+        )
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
+
+        if not main_email or not first_name or not last_name:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        def _serialize(v):
+            if isinstance(v, (datetime, date)):
+                return v.isoformat()
+            return v
+
+        prof = getattr(enrichment_user, "professional_profiles", None)
+        postal = getattr(enrichment_user, "postal", None)
+        personal = getattr(enrichment_user, "personal_profiles", None)
+        contacts = enrichment_contacts
+
+        custom_vars: dict[str, Any] = {}  # need typing
+        for field in data_map or []:
+            ftype = field.get("type")
+            fkey = field.get("value")
+            if not ftype or not fkey:
+                continue
+
+            raw = None
+
+            if ftype == "business_email":
+                raw = business_email
+            elif ftype == "personal_email":
+                raw = personal_email
+            elif ftype in ("phone", "mobile", "main_phone"):
+                raw = main_phone
+
+            if raw is None:
+                raw = getattr(contacts, ftype, None)
+
+            if raw is None:
+                raw = getattr(enrichment_user, ftype, None)
+
+            if raw is None and prof is not None:
+                raw = getattr(prof, ftype, None)
+
+            if raw is None and postal is not None:
+                raw = getattr(postal, ftype, None)
+
+            if raw is None and personal is not None:
+                raw = getattr(personal, ftype, None)
+
+            val = raw
+            val = _serialize(val)
+            custom_vars[fkey] = val
+
+        base = {
+            "First Name": _serialize(first_name),
+            "Last Name": _serialize(last_name),
+            "Phone": format_phone_number(main_phone),
+        }
+
+        return {
+            "email": main_email,
+            "custom_variables": {**base, **custom_vars},
+        }
 
     async def __map_lead_to_green_arrow_contact(
         self,

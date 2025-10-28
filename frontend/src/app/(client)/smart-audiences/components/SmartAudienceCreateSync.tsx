@@ -31,10 +31,12 @@ import GoogleADSConnectPopup from "@/components/integrations/GoogleADSIntegratio
 import MetaConnectButton from "@/components/integrations/MetaIntegration";
 import S3Connect from "@/components/integrations/S3Integration";
 import MailchimpConnect from "@/components/integrations/MailchimpIntegration";
+import GreenArrowIntegrationDrawer from "@/components/integrations/GreenArrowIntegration";
 import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
 import IntegrationBox from "./IntegrationBox";
 import GoogleAdsContactSyncTab from "./GoogleAdsContactSyncTab";
 import MailchimpContactSyncTab from "./MailchimpContactSyncTab";
+import GreenArrowContactSyncTabProps from "./GreenArrowContactSyncTab";
 import MetaContactSyncTab from "./MetaContactSyncTab";
 import S3ContactSyncTab from "./S3ContactSyncTab";
 import { styled } from "@mui/material/styles";
@@ -214,6 +216,7 @@ const integrationsImage = [
 	{ image: "salesforce-icon.svg", service_name: "sales_force" },
 	{ image: "go-high-level-icon.svg", service_name: "go_high_level" },
 	{ image: "s3.svg", service_name: "s3" },
+	{ image: "green_arrow-icon.svg", service_name: "green_arrow" },
 ];
 
 const customFieldsListCSV: Row[] = [
@@ -306,6 +309,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	>([]);
 	const [createHubspot, setCreateHubspot] = useState<boolean>(false);
 	const [createSalesForce, setCreateSalesForce] = useState<boolean>(false);
+	const [createGreenArrow, setCreateGreenArrow] = useState<boolean>(false);
 	const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false);
 	const [createGoHighLevel, setCreateGoHighLevel] = useState<boolean>(false);
 	const [integrations, setIntegrations] = useState<Integrations[]>([]);
@@ -427,6 +431,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
 			);
+		}
+		if (activeService === "green_arrow") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-green_arrow",
+			);
+			setContactSyncTab(true);
+			getGreenArrowList();
 		}
 	}, [activeService]);
 
@@ -588,6 +599,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce",
 			);
 		}
+		if (service === "green_arrow") {
+			setActiveUrl(
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-green-arrow",
+			);
+		}
 		if (service === "s3") {
 			setActiveUrl(
 				"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3",
@@ -677,6 +693,22 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				if (selectedOptionMailchimp?.id && selectedOptionMailchimp?.list_name) {
 					(requestObj.list_id = String(selectedOptionMailchimp?.id)),
 						(requestObj.list_name = selectedOptionMailchimp?.list_name);
+				} else {
+					showErrorToast("You have selected incorrect data!");
+					return;
+				}
+			}
+
+			if (activeService === "green_arrow") {
+				setActiveUrl(
+					"https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-green-arrow",
+				);
+				if (
+					selectedOptionGreenArrow?.id &&
+					selectedOptionGreenArrow?.list_name
+				) {
+					(requestObj.list_id = String(selectedOptionGreenArrow?.id)),
+						(requestObj.list_name = selectedOptionGreenArrow?.list_name);
 				} else {
 					showErrorToast("You have selected incorrect data!");
 					return;
@@ -973,6 +1005,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		setCreateSalesForce(false);
 	};
 
+	const handleCreateGreenArrowClose = () => {
+		setCreateGreenArrow(false);
+	};
+
 	const handleCreateHubspotClose = () => {
 		setCreateHubspot(false);
 	};
@@ -1071,6 +1107,42 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				},
 			});
 			setKlaviyoList(response.data);
+		} catch {
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	// Green Arrow
+
+	const [greenArrowList, setGrenArrowList] = useState<KlaviyoList[]>([]);
+	const [selectedOptionGreenArrow, setSelectedOptionGreenArrow] =
+		useState<KlaviyoList | null>(null);
+
+	const getGreenArrowList = async () => {
+		try {
+			setIsLoading(true);
+			const response = await axiosInstance.get("/integrations/sync/list/", {
+				params: {
+					service_name: "green_arrow",
+				},
+			});
+			setGrenArrowList(response.data);
+			// const foundItem = response.data?.find(
+			// 	(item: any) => item.list_name === data?.list_name,
+			// );
+			// if (foundItem) {
+			// 	setUpdateKlaviuo(data.id);
+			// 	setSelectedOptionGreenArrow({
+			// 		id: foundItem.id,
+			// 		list_name: foundItem.list_name,
+			// 	});
+			// 	setlistNameGreenArrow(foundItem.list_name);
+			// } else {
+			// 	setSelectedOptionGreenArrow(null);
+			// }
+			// setSelectedRadioValue(data?.type);
+			// setIsLoading(false);
 		} catch {
 		} finally {
 			setIsLoading(false);
@@ -1598,6 +1670,15 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 													setSelectedOptions3={setSelectedOptions3}
 													selectedOptions3={selectedOptionS3}
 													s3List={s3List}
+												/>
+											)}
+
+											{activeService === "green_arrow" && (
+												<GreenArrowContactSyncTabProps
+													setSelectedOption={setSelectedOptionGreenArrow}
+													selectedOption={selectedOptionGreenArrow}
+													list={greenArrowList}
+													setIsloading={setIsLoading}
 												/>
 											)}
 
@@ -2381,6 +2462,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				initApiKey={
 					integrationsCredentials.find(
 						(integartion) => integartion.service_name === "sales_force",
+					)?.access_token
+				}
+			/>
+			<GreenArrowIntegrationDrawer
+				open={createGreenArrow}
+				handleClose={handleCreateGreenArrowClose}
+				onSave={handleSaveSettings}
+				initApiKey={
+					integrationsCredentials.find(
+						(integartion) => integartion.service_name === "green_arrow",
 					)?.access_token
 				}
 			/>

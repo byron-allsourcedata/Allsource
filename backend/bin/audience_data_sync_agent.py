@@ -469,6 +469,7 @@ async def ensure_integration(
             "sales_force": integration_service.sales_force,
             "mailchimp": integration_service.mailchimp,
             "go_high_level": integration_service.go_high_level,
+            "green_arrow": integration_service.green_arrow,
         }
 
         service = service_map.get(service_name)
