@@ -15,6 +15,8 @@ import {
 	TableHead,
 	TableRow,
 	Grid,
+	Popover,
+	Button,
 } from "@mui/material";
 import { useRef, useState } from "react";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
@@ -28,6 +30,7 @@ import { Paginator } from "@/components/PaginationComponent";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import CustomSwitch from "@/components/ui/CustomSwitch";
+import { style } from "@/app/(client)/management/components/TableManagement";
 
 interface TableHeaders {
 	key: string;
@@ -318,6 +321,99 @@ const TableBodyDomains: React.FC<{
 							<IconButton size="small">
 								<MoreVert fontSize="small" />
 							</IconButton>
+							<TableCell sx={{ width: 20, height: 20, textAlign: "center" }}>
+								<IconButton
+									onClick={(e) => handleOpenMenu(e, row.id)}
+									size="small"
+								>
+									<MoreVert
+										fontSize="small"
+										sx={{ color: "rgba(32, 33, 36, 1)" }}
+									/>
+								</IconButton>
+
+								<Popover
+									open={Boolean(menuAnchor) && activeRow === row.id}
+									anchorEl={menuAnchor}
+									onClose={() => setMenuAnchor(null)}
+									anchorOrigin={{
+										vertical: "bottom",
+										horizontal: "left",
+									}}
+									transformOrigin={{
+										vertical: "top",
+										horizontal: "right",
+									}}
+									PaperProps={{
+										sx: {
+											boxShadow: 2,
+											borderRadius: 1,
+											maxWidth: 240,
+											width: "auto",
+										},
+									}}
+								>
+									<Box display="flex" flexDirection="column" p={1}>
+										{row.pixel_status ? (
+											<Box
+												display="flex"
+												flexDirection="column"
+												alignItems="flex-start"
+											>
+												<Button
+													sx={style.actionButtonText}
+													onClick={() =>
+														handleCheckPixelHealthClick(row.domain_name)
+													}
+												>
+													Check Health
+												</Button>
+												<Button
+													sx={style.actionButtonText}
+													onClick={() =>
+														handleReinstallPixelClick(row.domain_name)
+													}
+												>
+													Reinstall Pixel
+												</Button>
+												<Button
+													sx={style.actionButtonText}
+													onClick={() =>
+														handleAdditionalPixelClick(row.domain_name, row.id)
+													}
+												>
+													Add Additional Pixel Script
+												</Button>
+												<DeleteButton
+													onClick={(e) => handleOpenConfirmDialog(e, row)}
+													disabled={row.contacts_resolving}
+													sx={style.actionButtonText}
+												/>
+											</Box>
+										) : (
+											<Box
+												display="flex"
+												flexDirection="column"
+												alignItems="flex-start"
+											>
+												<Button
+													sx={style.actionButtonText}
+													onClick={() =>
+														handleInstallPixelClick(row.domain_name)
+													}
+												>
+													Install Pixel
+												</Button>
+												<DeleteButton
+													onClick={(e) => handleOpenConfirmDialog(e, row)}
+													disabled={row.contacts_resolving}
+													sx={style.actionButtonText}
+												/>
+											</Box>
+										)}
+									</Box>
+								</Popover>
+							</TableCell>
 						</TableCell>
 					</TableRow>
 				))
