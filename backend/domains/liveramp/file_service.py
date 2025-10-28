@@ -46,10 +46,78 @@ class LiveRampFileService:
 
         return sanitized
 
+    def remove_duplicate_records(
+        self, data: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        if not data:
+            return []
+
+        seen_asids = set()
+        unique_records = []
+        duplicates_count = 0
+
+        for record in data:
+            asid = record.get("ASID")
+            if not asid:
+                continue
+
+            if asid not in seen_asids:
+                seen_asids.add(asid)
+                unique_records.append(record)
+            else:
+                duplicates_count += 1
+                existing_record = next(
+                    (r for r in unique_records if r.get("ASID") == asid), None
+                )
+                if existing_record:
+                    existing_data_count = self._count_filled_fields(
+                        existing_record
+                    )
+                    current_data_count = self._count_filled_fields(record)
+
+                    if current_data_count > existing_data_count:
+                        unique_records = [
+                            r for r in unique_records if r.get("ASID") != asid
+                        ]
+                        unique_records.append(record)
+                        logger.debug(
+                            f"Replaced duplicate ASID {asid} with more complete data"
+                        )
+
+        if duplicates_count > 0:
+            logger.warning(
+                f"Removed {duplicates_count} duplicate records by ASID. Final unique records: {len(unique_records)}"
+            )
+
+        return unique_records
+
+    def _count_filled_fields(self, record: Dict[str, Any]) -> int:
+        count = 0
+        for key, value in record.items():
+            if value and str(value).strip():
+                count += 1
+        return count
+
+    def validate_record(self, record: Dict[str, Any]) -> bool:
+        if not record.get("ASID"):
+            return False
+
+        try:
+            for key, value in record.items():
+                if value is not None:
+                    str(value)
+            return True
+        except Exception:
+            return False
+
     def format_data_to_csv(self, data: List[Dict[str, Any]]) -> str:
         if not data:
             logger.warning("No data to format to CSV")
             return ""
+
+        logger.info(f"Original data count: {len(data)}")
+        unique_data = self.remove_duplicate_records(data)
+        logger.info(f"After removing duplicates: {len(unique_data)}")
 
         fieldnames = [
             "ASID",
@@ -73,20 +141,39 @@ class LiveRampFileService:
         writer.writeheader()
 
         valid_records = 0
-        for record in data:
+        invalid_records = 0
+
+        for record in unique_data:
             try:
-                if not record.get("ASID"):
+                if not self.validate_record(record):
+                    invalid_records += 1
                     continue
 
-                row = {field: record.get(field, "") for field in fieldnames}
+                row = {}
+                for field in fieldnames:
+                    value = record.get(field, "")
+                    if value is None:
+                        row[field] = ""
+                    else:
+                        row[field] = str(value).strip()
+
                 writer.writerow(row)
                 valid_records += 1
+
             except Exception as e:
-                logger.warning(f"Error formatting record: {e}")
+                logger.warning(
+                    f"Error formatting record {record.get('ASID')}: {e}"
+                )
+                invalid_records += 1
                 continue
 
         csv_content = output.getvalue()
-        logger.info(f"Formatted CSV with {valid_records} valid rows")
+
+        logger.info(
+            f"Formatted CSV: {valid_records} valid rows, {invalid_records} invalid rows"
+        )
+        logger.info(f"Final CSV size: {len(csv_content)} characters")
+
         return csv_content
 
     def save_csv_to_file(self, csv_content: str, filename: str = None) -> str:
@@ -105,11 +192,56 @@ class LiveRampFileService:
 
             file_size = os.path.getsize(filepath)
             logger.info(f"CSV report saved to {filepath} ({file_size} bytes)")
+
+            self._validate_csv_file(filepath)
+
             return filepath
 
         except Exception as e:
             logger.error(f"Error saving CSV file: {e}")
             raise
+
+    def _validate_csv_file(self, filepath: str):
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            lines = content.split("\n")
+            header = lines[0] if lines else ""
+            data_lines = lines[1:] if len(lines) > 1 else []
+
+            expected_header = "ASID\tFirstName\tLastName\tBUSINESS_EMAIL\tPERSONAL_EMAIL\tPhoneMobile1\tHomeCity\tHomeState\tGender\tAge\tMaritalStatus\tPets\tChildrenPresent\tSpend"
+            if header != expected_header:
+                logger.warning(
+                    f"CSV header mismatch. Expected: {expected_header}, Got: {header}"
+                )
+
+            asids_in_file = set()
+            duplicate_asids = set()
+
+            for i, line in enumerate(data_lines, 2):
+                if line.strip():
+                    parts = line.split("\t")
+                    if parts and len(parts) > 0:
+                        asid = parts[0]
+                        if asid in asids_in_file:
+                            duplicate_asids.add(asid)
+                            logger.warning(
+                                f"Duplicate ASID in CSV line {i}: {asid}"
+                            )
+                        asids_in_file.add(asid)
+
+            if duplicate_asids:
+                logger.error(
+                    f"Found {len(duplicate_asids)} duplicate ASIDs in final CSV file"
+                )
+            else:
+                logger.info(
+                    "CSV file validation passed - no duplicate ASIDs found"
+                )
+
+        except Exception as e:
+            logger.error(f"Error validating CSV file: {e}")
 
     def get_file_path(self, filename: str = None) -> str:
         if not filename:
