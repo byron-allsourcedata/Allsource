@@ -4,33 +4,21 @@ import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
 import {
 	Box,
-	List,
-	ListItem,
 	TextField,
 	Tooltip,
 	Typography,
 	Drawer,
-	Backdrop,
 	Link,
 	IconButton,
-	Button,
-	RadioGroup,
-	FormControl,
-	FormControlLabel,
-	Radio,
-	FormLabel,
-	Divider,
 	Tab,
-	Switch,
 	LinearProgress,
 } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import { IntegrationConnectStyles } from "@/app/(client)/integrations/styles";
 import CustomButton from "@/components/ui/CustomButton";
 import type { InstructionInstallInterface } from "@/components/ui/integrations/IntegrationInstruction";
@@ -46,16 +34,6 @@ interface CreateOmnisendProps {
 	initApiKey?: string;
 	boxShadow?: string;
 	invalid_api_key?: boolean;
-}
-
-interface IntegrationsCredentials {
-	id: number;
-	access_token: string;
-	ad_account_id: string;
-	shop_domain: string;
-	data_center: string;
-	service_name: string;
-	is_with_suppression: boolean;
 }
 
 const instructions: InstructionInstallInterface[] = [

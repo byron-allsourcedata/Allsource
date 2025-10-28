@@ -469,6 +469,7 @@ async def ensure_integration(
             "sales_force": integration_service.sales_force,
             "mailchimp": integration_service.mailchimp,
             "go_high_level": integration_service.go_high_level,
+            "green_arrow": integration_service.green_arrow,
         }
 
         service = service_map.get(service_name)
@@ -584,6 +585,26 @@ async def ensure_integration(
                             service_name,
                             notification_persistence,
                             NotificationTitles.QUOTA_EXHAUSTED.value,
+                        )
+                        await message.ack()
+                        return
+
+                    case ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value:
+                        logging.debug(
+                            f"Custom variables don't created: {service_name}"
+                        )
+                        update_users_integrations(
+                            session=pg_session,
+                            status=ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value,
+                            integration_data_sync_id=integration_data_sync.id,
+                            service_name=service_name,
+                            user_domain_integration_id=integration_data_sync.integration_id,
+                        )
+                        await send_error_msg(
+                            user_integration.user_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.DATA_SYNC_ERROR.value,
                         )
                         await message.ack()
                         return

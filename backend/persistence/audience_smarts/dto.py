@@ -78,6 +78,17 @@ class PersonRecord(BaseModel):
     language_code: Optional[str] = None
     state_abbr: Optional[str] = None
     zip_code5: Optional[str] = None
+    has_children: Optional[str] = None
+    home_city: Optional[str] = None
+    business_state: Optional[str] = None
+    company_size: Optional[str] = None
+    home_state: Optional[str] = None
+    income_range: Optional[str] = None
+    current_job_title: Optional[str] = None
+    department: Optional[str] = None
+    primary_industry: Optional[str] = None
+    business_country: Optional[str] = None
+    business_city: Optional[str] = None
 
     model_config = {
         "from_attributes": True,
