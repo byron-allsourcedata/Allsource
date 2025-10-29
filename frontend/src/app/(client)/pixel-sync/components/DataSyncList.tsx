@@ -1011,7 +1011,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "sync_status",
 			label: "Status",
-			widths: { width: "8vw", minWidth: "8vw", maxWidth: "8vw" },
+			widths: { width: "120px", minWidth: "120px", maxWidth: "8vw" },
 		},
 		{
 			key: "action",

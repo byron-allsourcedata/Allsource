@@ -166,7 +166,7 @@ class GreenArrowIntegrationsService:
             "access_token": api_key,
             "full_name": user.get("full_name"),
             "service_name": SourcePlatformEnum.GREEN_ARROW.value,
-            "limit": IntegrationLimit.INSTANTLY.value,
+            "limit": IntegrationLimit.GREEN_ARROW.value,
         }
 
         if common_integration:
@@ -456,6 +456,9 @@ class GreenArrowIntegrationsService:
                 enrichment_user.asid
             )
         )
+        if business_email is None or personal_email is None:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
         main_email, main_phone = resolve_main_email_and_phone(
             enrichment_contacts=enrichment_contacts,
             validations=validations,
@@ -532,12 +535,21 @@ class GreenArrowIntegrationsService:
         data_map: list,
         is_email_validation_enabled: bool,
     ) -> dict | str:
+        for field in data_map:
+            if field["value"] == "Email":
+                chosen_email_variation = field["type"]
+                break
+
         if is_email_validation_enabled:
             email_or_status = await get_valid_email(
-                five_x_five_user, self.million_verifier_integrations
+                five_x_five_user,
+                self.million_verifier_integrations,
+                email_fields=[chosen_email_variation],
             )
         else:
-            email_or_status = get_valid_email_without_million(five_x_five_user)
+            email_or_status = get_valid_email_without_million(
+                five_x_five_user, email_fields=[chosen_email_variation]
+            )
 
         if email_or_status in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -567,6 +579,7 @@ class GreenArrowIntegrationsService:
                         else getattr(five_x_five_user, field["type"], None)
                     )
                     for field in data_map
+                    if field["value"] != "Email"
                 },
             },
         }
