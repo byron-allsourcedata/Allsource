@@ -127,7 +127,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 	];
 	const [activeEmailVariation, setActiveEmailVariation] = useState<Row>({
 		id: 1,
-		type: "personal_emails",
+		type: "business_email",
 		value: "Email",
 	});
 
