@@ -29,6 +29,7 @@ type Props = {
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
+	isUserTab: boolean;
 	actionsLoading?: boolean;
 	enableWhitelabel?: () => void;
 	disableWhitelabel?: () => void;
@@ -45,6 +46,7 @@ export const ActionsMenu: React.FC<Props> = ({
 	onPlanChanged,
 	isPartnerTab,
 	isMaster,
+	isUserTab,
 	actionsLoading,
 	whitelabelEnabled,
 	enableWhitelabel,
@@ -182,41 +184,47 @@ export const ActionsMenu: React.FC<Props> = ({
 				}}
 				MenuListProps={{ dense: true }}
 			>
-				{!isAccountTab && (
+				{isUserTab ? (
 					<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+				) : (
+					<>
+						{!isAccountTab && (
+							<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+						)}
+
+						<MenuItem
+							disabled={actionsLoading || (!isMaster && isPartnerTab)}
+							onClick={() => handleOpenPartnerPopup(false)}
+						>
+							Make a Partner
+						</MenuItem>
+
+						<MenuItem
+							disabled={actionsLoading || (isMaster && isPartnerTab)}
+							onClick={() => handleOpenPartnerPopup(true)}
+						>
+							Make a Master Partner
+						</MenuItem>
+
+						<MenuItem
+							disabled={actionsLoading || !isPartnerTab}
+							onClick={toggleWhitelabel}
+						>
+							{whitelabelEnabled ? "Disable " : "Enable "}
+							whitelabel
+						</MenuItem>
+
+						<MenuItem onMouseEnter={handleOpenSubmenu}>
+							<ListItemText>Change Plan</ListItemText>
+							<ListItemIcon>
+								<ArrowRightIcon
+									fontSize="small"
+									sx={{ color: "rgba(32, 33, 36, 1)" }}
+								/>
+							</ListItemIcon>
+						</MenuItem>
+					</>
 				)}
-
-				<MenuItem
-					disabled={actionsLoading || (!isMaster && isPartnerTab)}
-					onClick={() => handleOpenPartnerPopup(false)}
-				>
-					Make a Partner
-				</MenuItem>
-
-				<MenuItem
-					disabled={actionsLoading || (isMaster && isPartnerTab)}
-					onClick={() => handleOpenPartnerPopup(true)}
-				>
-					Make a Master Partner
-				</MenuItem>
-
-				<MenuItem
-					disabled={actionsLoading || !isPartnerTab}
-					onClick={toggleWhitelabel}
-				>
-					{whitelabelEnabled ? "Disable " : "Enable "}
-					whitelabel
-				</MenuItem>
-
-				<MenuItem onMouseEnter={handleOpenSubmenu}>
-					<ListItemText>Change Plan</ListItemText>
-					<ListItemIcon>
-						<ArrowRightIcon
-							fontSize="small"
-							sx={{ color: "rgba(32, 33, 36, 1)" }}
-						/>
-					</ListItemIcon>
-				</MenuItem>
 			</Menu>
 
 			<Menu

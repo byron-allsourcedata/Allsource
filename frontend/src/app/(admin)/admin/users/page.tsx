@@ -102,20 +102,16 @@ const Users: React.FC = () => {
 	});
 
 	useEffect(() => {
-		const accessToken = localStorage.getItem("token");
-		if (!accessToken) {
-			router.push("/signin");
-			return;
-		}
-	}, []);
-
-	useEffect(() => {
 		fetchData();
 	}, [order, orderBy, selectedFilters, excludeTestUsers]);
 
 	useEffect(() => {
 		fetchUserData();
 	}, [tabIndex, page, rowsPerPage, order, orderBy, selectedFilters]);
+
+	const refresh = () => {
+		fetchUserData(); // или fetchData(), если нужно всё обновлять
+	};
 
 	const handleSearchChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -439,7 +435,7 @@ const Users: React.FC = () => {
 		0: { placeholder: "Search company name", showExclude: false },
 		1: { placeholder: "Search by account name, emails", showExclude: true },
 		2: {
-			placeholder: "Search by domain, company name, user",
+			placeholder: "Search by domain, account name",
 			showExclude: false,
 		},
 		3: { placeholder: "Search by admin account", showExclude: false },
@@ -822,6 +818,7 @@ const Users: React.FC = () => {
 							setLoading={setLoading}
 							totalCount={totalCount}
 							changeUserIsEmailValidation={changeUserIsEmailValidation}
+							refresh={refresh}
 						/>
 					)}
 					{tabIndex === 3 && (

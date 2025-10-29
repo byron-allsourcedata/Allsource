@@ -5,7 +5,7 @@ from typing import Optional, TypedDict
 from decimal import Decimal
 
 import pytz
-from sqlalchemy import func, desc, asc, or_, and_, select, update, case
+from sqlalchemy import func, desc, asc, or_, and_, select, update, case, text
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import case as caseSQl, literal_column
 
@@ -1414,33 +1414,54 @@ class UserPersistence:
         sort_order: str | None,
         search_query: str | None,
     ):
-        query = self.db.query(
-            UserDomains, Users.full_name, Users.company_name
-        ).join(Users, Users.id == UserDomains.user_id)
+        query = (
+            self.db.query(
+                UserDomains,
+                Users.full_name,
+                Users.company_name,
+                func.count(func.distinct(IntegrationUserSync.id)).label(
+                    "sync_count"
+                ),
+                func.count(func.distinct(LeadUser.id)).label("lead_count"),
+            )
+            .join(Users, Users.id == UserDomains.user_id)
+            .outerjoin(
+                IntegrationUserSync,
+                IntegrationUserSync.domain_id == UserDomains.id,
+            )
+            .outerjoin(LeadUser, LeadUser.domain_id == UserDomains.id)
+            .group_by(UserDomains.id, Users.full_name, Users.company_name)
+        )
 
         if search_query:
             pattern = f"%{search_query.lower()}%"
             query = query.filter(
                 or_(
                     UserDomains.domain.ilike(pattern),
-                    Users.full_name.ilike(pattern),
+                    Users.company_name.ilike(pattern),
                 )
             )
 
         sort_map = {
             "domain": UserDomains.domain,
-            "user_name": Users.full_name,
-            "is_pixel_installed": UserDomains.is_pixel_installed,
-            "is_enable": UserDomains.is_enable,
-            "total_leads": UserDomains.total_leads,
+            "company_name": Users.company_name,
+            "total_leads": "lead_count",
+            "data_syncs_count": "sync_count",
             "created_at": UserDomains.created_at,
         }
 
         sort_col = sort_map.get(sort_by, UserDomains.created_at)
-        if sort_order == "asc":
-            query = query.order_by(asc(sort_col))
+
+        if isinstance(sort_col, str):
+            query = query.order_by(
+                asc(text(sort_col))
+                if sort_order == "asc"
+                else desc(text(sort_col))
+            )
         else:
-            query = query.order_by(desc(sort_col))
+            query = query.order_by(
+                asc(sort_col) if sort_order == "asc" else desc(sort_col)
+            )
 
         total_count = query.count()
         records = query.offset((page - 1) * per_page).limit(per_page).all()

@@ -563,6 +563,7 @@ const TableBodyUsers: React.FC<TableBodyUserProps> = ({
 							onPlanChanged={onPlanChanged}
 							isPartnerTab={isPartnerTab || row.is_partner}
 							isMaster={isMaster || row.is_master}
+							isUserTab={!isPartnerTab}
 							actionsLoading={whitelabelActionsLoading}
 							whitelabelEnabled={row.whitelabel_settings_enabled}
 							enableWhitelabel={() =>
@@ -703,29 +704,35 @@ const UsersTab: React.FC<UsersTabProps> = ({
 	changeUserIsEmailValidation,
 	onPlanChanged,
 }) => {
-	const tableHeaders = [
-		{ key: "name", label: "User Name", sortable: false },
-		{ key: "email", label: "Email", sortable: false },
-		{ key: "join_date", label: "Join Date", sortable: true },
-		{ key: "last_login_date", label: "Last Login", sortable: true },
-		{ key: "invited_by", label: "Invited By", sortable: false },
-		{ key: "access_level", label: "Access Level", sortable: false },
-		{ key: "has_credit_card", label: "Has CC", sortable: true },
-		{ key: "premium_sources", label: "Premium Data", sortable: false },
-		{ key: "pixel_installed_count", label: "Pixel", sortable: false },
-		{ key: "contacts_count", label: "Contacts", sortable: true },
-		{ key: "sources_count", label: "Sources", sortable: false },
-		{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
-		{ key: "credits_count", label: "Credits", sortable: false },
-		{ key: "cost_leads_overage", label: "Revenue", sortable: true },
-		{ key: "status", label: "Status", sortable: false },
-		{
-			key: "subscription_plan",
-			label: "Plan",
-			sortable: false,
-		},
-		{ key: "actions", label: "Actions", sortable: false },
-	];
+	const tableHeaders = isPartnerTab
+		? [
+				{ key: "name", label: "Full name", sortable: false },
+				{ key: "email", label: "Email", sortable: false },
+				{ key: "join_date", label: "Join Date", sortable: true },
+				{ key: "last_login_date", label: "Last Login", sortable: true },
+				{ key: "invited_by", label: "Invited By", sortable: false },
+				{ key: "access_level", label: "Access Level", sortable: false },
+				{ key: "has_credit_card", label: "Has CC", sortable: true },
+				{ key: "premium_sources", label: "Premium Data", sortable: false },
+				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
+				{ key: "contacts_count", label: "Contacts", sortable: true },
+				{ key: "sources_count", label: "Sources", sortable: false },
+				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
+				{ key: "credits_count", label: "Credits", sortable: false },
+				{ key: "cost_leads_overage", label: "Revenue", sortable: true },
+				{ key: "status", label: "Status", sortable: false },
+				{ key: "subscription_plan", label: "Plan", sortable: false },
+				{ key: "actions", label: "Actions", sortable: false },
+			]
+		: [
+				{ key: "name", label: "Full name", sortable: false },
+				{ key: "email", label: "Email", sortable: false },
+				{ key: "join_date", label: "Join Date", sortable: true },
+				{ key: "last_login_date", label: "Last Login", sortable: true },
+				{ key: "invited_by", label: "Invited By", sortable: false },
+				{ key: "status", label: "Status", sortable: false },
+				{ key: "actions", label: "Actions", sortable: false },
+			];
 
 	const handlePageChange = (
 		event: React.MouseEvent<HTMLButtonElement> | null,
@@ -784,7 +791,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
 								border: "1px solid rgba(235, 235, 235, 1)",
 								borderBottom: "none",
 								overflowX: "auto",
-								maxHeight: "60vh",
+								maxHeight: "56vh",
 							}}
 						>
 							<Table stickyHeader>

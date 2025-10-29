@@ -452,6 +452,7 @@ const TableBodyAccounts: React.FC<TableBodyAccountProps> = ({
 							onPlanChanged={onPlanChanged}
 							isPartnerTab={false}
 							isMaster={false}
+							isUserTab={false}
 							actionsLoading={whitelabelActionsLoading}
 							whitelabelEnabled={row.whitelabel_settings_enabled}
 							enableWhitelabel={() =>

@@ -357,3 +357,25 @@ class UserDomainsPersistence:
             add_to_cart=domain.is_add_to_cart_installed,
             converted_sale=domain.is_converted_sales_installed,
         )
+
+    def delete_domain_admin(self, domain_id: int):
+        domain = (
+            self.db.query(UserDomains)
+            .filter(UserDomains.id == domain_id)
+            .first()
+        )
+        if not domain:
+            raise HTTPException(status_code=404, detail="Domain not found")
+
+        lead_exists = self.leads_persistence.exists_leads_by_domain_id(
+            domain_id=domain_id
+        )
+
+        if lead_exists:
+            raise HTTPException(
+                status_code=400,
+                detail="Domain cannot be deleted because it has associated leads",
+            )
+
+        self.db.delete(domain)
+        self.db.commit()

@@ -243,13 +243,23 @@ async def get_domains(
     """
     Admin route to fetch paginated domain list with search and sorting.
     """
-    return admin_domains_service.get_domains(
+    return admin_domains_service.get_all_domains_details(
         page=page,
         per_page=per_page,
         sort_by=sort_by,
         sort_order=sort_order,
         search_query=search_query,
     )
+
+
+@router.delete("/domains/{domain_id}")
+def delete_domain(
+    domain_id: int,
+    domain_service: AdminCustomersService,
+    user: dict = Depends(check_user_admin),
+):
+    domain_service.delete_domain(domain_id)
+    return {"status": "SUCCESS"}
 
 
 @router.put("/change-email-validation", response_model=bool)

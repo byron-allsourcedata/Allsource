@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from db_dependencies import Db
 from persistence.admin import AdminPersistence
+from persistence.domains import UserDomainsPersistence
 from resolver import injectable
 from schemas.admin import PartnersQueryParams
 from schemas.users import UpdateUserRequest
@@ -26,6 +27,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.audience_dashboard import DashboardAudiencePersistence
+from services.integrations.base import IntegrationService
 from services.jwt_service import create_access_token
 from services.sendgrid import SendgridHandler
 from services.subscriptions import SubscriptionService
@@ -52,6 +54,8 @@ class AdminCustomersService:
         partners_persistence: PartnersPersistence,
         dashboard_audience_persistence: DashboardAudiencePersistence,
         admin_persistence: AdminPersistence,
+        domain_persistence: UserDomainsPersistence,
+        integration_service: IntegrationService,
     ):
         self.db = db
         self.user_subscription_service = user_subscription_service
@@ -63,6 +67,8 @@ class AdminCustomersService:
         self.partners_persistence = partners_persistence
         self.dashboard_audience_persistence = dashboard_audience_persistence
         self.admin_persistence = admin_persistence
+        self.domain_persistence = domain_persistence
+        self.integration_service = integration_service
 
     def get_admin_users(
         self,
@@ -391,7 +397,7 @@ class AdminCustomersService:
 
         return {"users": result, "count": total_count}
 
-    def get_domains(
+    def get_all_domains_details(
         self,
         *,
         page: int,
@@ -409,16 +415,46 @@ class AdminCustomersService:
         )
 
         result = []
-        for d, user_name, company_name in domains:
+
+        for d, user_name, company_name, sync_count, lead_count in domains:
+            user_id = d.user_id
+
+            resolutions = [
+                {"date": date, "lead_count": count}
+                for date, count in self.domain_persistence.leads_persistence.get_leads_count_by_day(
+                    domain_id=d.id
+                )
+            ]
+
+            contacts_resolving_domains = (
+                self.domain_persistence.get_domains_with_contacts_resolving(
+                    user_id
+                )
+            )
+
+            status = (
+                "Synced"
+                if sync_count > 0
+                else "Leads"
+                if lead_count > 0
+                else "No Leads"
+            )
+
             result.append(
                 {
                     "id": d.id,
                     "domain": d.domain,
                     "company_name": company_name,
-                    "user_name": user_name,
                     "is_pixel_installed": d.is_pixel_installed,
-                    "is_enable": d.is_enable,
-                    "total_leads": d.total_leads,
+                    "status": status,
+                    "additional_pixel": {
+                        "is_add_to_cart_installed": d.is_add_to_cart_installed,
+                        "is_converted_sales_installed": d.is_converted_sales_installed,
+                        "is_view_product_installed": d.is_view_product_installed,
+                    },
+                    "total_leads": lead_count,
+                    "resolutions": resolutions,
+                    "data_syncs_count": sync_count,
                     "created_at": d.created_at.isoformat()
                     if d.created_at
                     else None,
@@ -646,3 +682,6 @@ class AdminCustomersService:
             self.db.commit()
             return True
         return False
+
+    def delete_domain(self, domain_id: int):
+        return self.domain_persistence.delete_domain_admin(domain_id)
