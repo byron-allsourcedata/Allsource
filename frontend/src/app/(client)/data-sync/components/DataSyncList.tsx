@@ -1099,7 +1099,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 								{data.length === 0 ? (
 									<TableRow sx={datasyncStyle.tableBodyRow}>
 										<TableCell
-											colSpan={11}
+											colSpan={9}
 											sx={{
 												...datasyncStyle.tableBodyColumn,
 												textAlign: "center",
