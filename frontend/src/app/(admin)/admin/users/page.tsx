@@ -424,7 +424,11 @@ const Users: React.FC = () => {
 		newIndex: number,
 	) => {
 		setSearch("");
-		setExcludeTestUsers(false);
+		if (newIndex == 1 || newIndex == 5 || newIndex == 4) {
+			setExcludeTestUsers(true);
+		} else {
+			setExcludeTestUsers(false);
+		}
 		setTabIndex(newIndex);
 	};
 
