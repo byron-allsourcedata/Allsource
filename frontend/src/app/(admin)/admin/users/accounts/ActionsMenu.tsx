@@ -10,7 +10,7 @@ import { ArrowRightIcon } from "@mui/x-date-pickers";
 import { useState } from "react";
 import { ConfirmPlanChangeDialog } from "./ConfirmPlanChangeDialog";
 import MakePartnerPopup from "../components/MakePartnerPopup";
-import ConfirmDialog from "@/components/ui/dialogs/ConfirmDialog";
+import ConfirmDialog from "@/components/ui/popovers/ConfirmDialogPopover";
 
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import React from "react";
