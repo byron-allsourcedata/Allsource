@@ -71,6 +71,15 @@ const getUseCaseStyle = (status: string) => {
 					height={20}
 				/>
 			);
+		case "green_arrow":
+			return (
+				<Image
+					src="./green_arrow-icon.svg"
+					alt="GreenArrow icon"
+					width={20}
+					height={20}
+				/>
+			);
 		case "bing_ads":
 			return (
 				<Image
