@@ -535,10 +535,15 @@ class GreenArrowIntegrationsService:
         data_map: list,
         is_email_validation_enabled: bool,
     ) -> dict | str:
+        chosen_email_variation = None
         for field in data_map:
             if field["value"] == "Email":
                 chosen_email_variation = field["type"]
                 break
+
+        if not chosen_email_variation:
+            logging.info("Email field is not configured in data_map")
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         if is_email_validation_enabled:
             email_or_status = await get_valid_email(
