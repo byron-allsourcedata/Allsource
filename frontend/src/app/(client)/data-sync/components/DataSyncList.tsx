@@ -243,6 +243,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	};
 
 	useEffect(() => {
+		console.log({ allData });
 		if (allData.length !== 0) {
 			if (filters) {
 				const filterData = () => {
@@ -876,7 +877,17 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "smart_audience_name",
 			label: "Smart Audience Name",
-			widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+			widths: { width: "120px", minWidth: "120px", maxWidth: "20vw" },
+		},
+		{
+			key: "list_name",
+			label: "List Name",
+			widths: { width: "100px", minWidth: "100px", maxWidth: "20vw" },
+		},
+		{
+			key: "platform",
+			label: "Destination",
+			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
 			key: "created",
@@ -890,24 +901,19 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
 		},
 		{
-			key: "platform",
-			label: "Destination",
-			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
-		},
-		{
 			key: "data_sync",
 			label: "Active Segments",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			widths: { width: "80px", minWidth: "80px", maxWidth: "8vw" },
 		},
 		{
 			key: "record_synced",
 			label: "Records Synced",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12	vw" },
+			widths: { width: "80px", minWidth: "80px", maxWidth: "8vw" },
 		},
 		{
 			key: "sync_status",
 			label: "Status",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			widths: { width: "120px", minWidth: "120px", maxWidth: "8vw" },
 		},
 		{
 			key: "action",
@@ -1044,6 +1050,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														sx={{
 															...leadsStyles.table_column,
 															borderRight: "0",
+															textOverflow: "ellipsis",
+															whiteSpace: "nowrap",
+															overflow: "hidden",
 														}}
 													>
 														{label}
@@ -1090,7 +1099,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 								{data.length === 0 ? (
 									<TableRow sx={datasyncStyle.tableBodyRow}>
 										<TableCell
-											colSpan={11}
+											colSpan={9}
 											sx={{
 												...datasyncStyle.tableBodyColumn,
 												textAlign: "center",
@@ -1140,6 +1149,33 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												cellOptions={{
 													sx: {
 														position: "relative",
+													},
+												}}
+												tooltipOptions={{ content: row.list_name || "--" }}
+											>
+												{row.list_name || "--"}
+											</SmartCell>
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
+													},
+												}}
+												tooltipOptions={{ content: row.platform || "--" }}
+											>
+												<Box
+													sx={{
+														display: "flex",
+														justifyContent: "center",
+													}}
+												>
+													{platformIcon(row.platform) || "--"}
+												</Box>
+											</SmartCell>
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
 														pr: 0,
 													},
 												}}
@@ -1181,23 +1217,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												{row.lastSync || "--"}
 											</SmartCell>
 
-											<SmartCell
-												cellOptions={{
-													sx: {
-														position: "relative",
-													},
-												}}
-												tooltipOptions={{ content: row.platform || "--" }}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														justifyContent: "center",
-													}}
-												>
-													{platformIcon(row.platform) || "--"}
-												</Box>
-											</SmartCell>
 											<SmartCell
 												cellOptions={{
 													sx: {

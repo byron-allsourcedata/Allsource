@@ -47,6 +47,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
+import { dataSyncStyles } from "./dataSyncStyles";
 
 interface ConnectInstantlyPopupProps {
 	open: boolean;
@@ -134,6 +135,16 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 		{ type: "Time on site", value: "time_on_site" },
 		{ type: "DPV Code", value: "dpv_code" },
 	]);
+	const emailsVariations = [
+		{ id: 1, type: "Personal Email", value: "Personal Email" },
+		{ id: 1, type: "Business Email", value: "Business Email" },
+	];
+	const [activeEmailVariation, setActiveEmailVariation] = useState<Row>({
+		id: 1,
+		type: "business_email",
+		value: "Email",
+	});
+
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
@@ -288,7 +299,7 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 					{
 						integrations_users_sync_id: data.id,
 						leads_type: selectedRadioValue,
-						data_map: customFields,
+						data_map: [activeEmailVariation, ...customFields],
 						list_id: list?.id,
 						list_name: list?.list_name,
 					},
@@ -311,7 +322,7 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 						list_id: list?.id,
 						list_name: list?.list_name,
 						leads_type: selectedRadioValue,
-						data_map: customFields,
+						data_map: [activeEmailVariation, ...customFields],
 					},
 					{
 						params: {
@@ -570,7 +581,6 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 	}
 
 	const defaultRows: Row[] = [
-		{ id: 1, type: "Email", value: "Email" },
 		{ id: 2, type: "Phone number", value: "Phone number" },
 		{ id: 3, type: "First name", value: "First name" },
 		{ id: 4, type: "Second name", value: "Second name" },
@@ -1452,6 +1462,92 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 											&nbsp;
 										</Grid>
 									</Grid>
+
+									<Box sx={{ mb: 2 }}>
+										<Grid
+											container
+											spacing={2}
+											alignItems="center"
+											sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+										>
+											{/* Left Input Field */}
+											<Grid item xs={5} sm={5}>
+												<FormControl fullWidth sx={{ height: "36px" }}>
+													<Select
+														value={
+															activeEmailVariation.type === "personal_emails"
+																? "Personal Email"
+																: "Business Email"
+														}
+														onChange={(e) => {
+															const type =
+																e.target.value === "Personal Email"
+																	? "personal_emails"
+																	: "business_email";
+															setActiveEmailVariation({
+																id: 1,
+																type: type,
+																value: "Email",
+															});
+														}}
+														displayEmpty
+														inputProps={{
+															sx: dataSyncStyles.formControlInputStyles,
+														}}
+														sx={dataSyncStyles.formControlStyles}
+													>
+														{emailsVariations.map(
+															(item: Row, index: number) => (
+																<MenuItem key={index} value={item.value}>
+																	{item.value}
+																</MenuItem>
+															),
+														)}
+													</Select>
+												</FormControl>
+											</Grid>
+
+											{/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+											<Grid
+												item
+												xs={1}
+												sm={1}
+												container
+												justifyContent="center"
+											>
+												<Image
+													src="/chevron-right-purple.svg"
+													alt="chevron-right-purple"
+													height={18}
+													width={18}
+												/>
+											</Grid>
+
+											<Grid item xs={5} sm={5}>
+												<TextField
+													fullWidth
+													variant="outlined"
+													value={"Email"}
+													disabled={true}
+													InputLabelProps={{
+														sx: dataSyncStyles.textFieldInputLabelStyles,
+													}}
+													InputProps={{
+														sx: dataSyncStyles.textFieldInputStyles,
+													}}
+												/>
+											</Grid>
+
+											{/* Delete Icon */}
+											<Grid
+												item
+												xs={1}
+												sm={1}
+												container
+												justifyContent="center"
+											/>
+										</Grid>
+									</Box>
 
 									{defaultRows.map((row, index) => (
 										<Box key={row.id} sx={{ mb: 2 }}>
