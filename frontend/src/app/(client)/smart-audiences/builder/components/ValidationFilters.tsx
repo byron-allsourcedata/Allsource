@@ -528,6 +528,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 										? "1px solid rgba(235, 235, 235, 1)"
 										: "",
 									cursor: isValidate ? "default" : "pointer",
+									pointerEvents: targetAudience === "B2B" ? "none" : "auto",
+									opacity: targetAudience === "B2B" ? 0.5 : 1,
 								}}
 								onClick={() =>
 									toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)
@@ -894,7 +896,11 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 						{/* Business Email Filter */}
 						<Box sx={ValidationStyle.main_filter_form}>
 							<Box
-								sx={ValidationStyle.filter_form}
+								sx={{
+									...ValidationStyle.filter_form,
+									pointerEvents: targetAudience === "B2C" ? "none" : "auto",
+									opacity: targetAudience === "B2C" ? 0.5 : 1,
+								}}
 								onClick={() =>
 									toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)
 								}
