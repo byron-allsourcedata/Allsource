@@ -47,6 +47,11 @@ import {
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { TableRowData } from "../page";
 import BadLookalikeErrorModal from "./BadLookalikeErrorModal";
+import EditNamePopover from "@/components/ui/popovers/EditNamePopover";
+import ConfirmDialogPopover from "@/components/ui/popovers/ConfirmDialogPopover";
+import MoreActionPopover from "@/components/ui/popovers/MoreActionPopover";
+import { MoreVert } from "@/icon";
+import { LookalikeData } from "@/types";
 
 interface LookalikeTableProps {
 	tableData: TableRowData[];
@@ -150,7 +155,7 @@ const columns = (isDebug: boolean) => [
 	},
 	{
 		key: "actions",
-		label: "",
+		label: "Actions",
 		widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
 	},
 ];
@@ -190,6 +195,14 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 		tableData.length,
 	);
 	const paginatorRef = useClampTableHeight(tableContainerRef, 8, 122);
+	const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+	const isOpeMorePopover = Boolean(anchorEl);
+	const [selectedRowData, setSelectedRowData] = useState<TableRowData>();
+	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
+	const handleCloseMorePopover = () => {
+		setAnchorEl(null);
+	};
 
 	const toggleRow = (id: string) => {
 		setOpenRowId((prevId) => (prevId === id ? null : id));
@@ -209,6 +222,14 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 	const handleCloseEditPopover = () => {
 		setIsEditPopoverOpen(false);
 		setEditPopoverAnchorEl(null);
+	};
+
+	const handleOpenMorePopover = (
+		event: React.MouseEvent<HTMLElement>,
+		rowData: TableRowData,
+	) => {
+		setAnchorEl(event.currentTarget);
+		setSelectedRowData(rowData);
 	};
 
 	const clearPollingInterval = () => {
@@ -339,6 +360,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 
 	const handleOpenFailedPopup = () => {
 		setOpenfailedPopup(true);
+	};
+
+	const handleOpenConfirmDialog = () => {
+		setIsConfirmOpen(true);
 	};
 
 	return (
@@ -697,132 +722,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 													/>
 												</IconButton>
 											</Box>
-											<Popover
-												open={isEditPopoverOpen}
-												anchorEl={editPopoverAnchorEl}
-												onClose={handleCloseEditPopover}
-												anchorOrigin={{
-													vertical: "center",
-													horizontal: "center",
-												}}
-												transformOrigin={{
-													vertical: "top",
-													horizontal: "left",
-												}}
-												slotProps={{
-													paper: {
-														sx: {
-															width: "15.875rem",
-															boxShadow: 0,
-															borderRadius: "4px",
-															border: "0.5px solid rgba(175, 175, 175, 1)",
-														},
-													},
-												}}
-											>
-												<Box sx={{ p: 2 }}>
-													<TextField
-														value={editedName}
-														onChange={(e) => setEditedName(e.target.value)}
-														variant="outlined"
-														label="Lookalike Name"
-														size="small"
-														fullWidth
-														sx={{
-															"& label.Mui-focused": {
-																color: "rgba(56, 152, 252, 1)",
-															},
-															"& .MuiOutlinedInput-root:hover fieldset": {
-																color: "rgba(56, 152, 252, 1)",
-															},
-															"& .MuiOutlinedInput-root": {
-																"&:hover fieldset": {
-																	borderColor: "rgba(56, 152, 252, 1)",
-																	border: "1px solid rgba(56, 152, 252, 1)",
-																},
-																"&.Mui-focused fieldset": {
-																	borderColor: "rgba(56, 152, 252, 1)",
-																	border: "1px solid rgba(56, 152, 252, 1)",
-																},
-															},
-														}}
-														InputProps={{
-															style: {
-																fontFamily: "var(--font-roboto)",
-																fontSize: "14px",
-															},
-														}}
-														InputLabelProps={{
-															style: {
-																fontSize: "14px",
-																fontFamily: "var(--font-roboto)",
-															},
-														}}
-													/>
-													<Box
-														sx={{
-															display: "flex",
-															justifyContent: "flex-end",
-															mt: 2,
-														}}
-													>
-														<Button
-															onClick={handleCloseEditPopover}
-															sx={{
-																backgroundColor: "#fff",
-																color: "rgba(56, 152, 252, 1) !important",
-																fontSize: "14px",
-																textTransform: "none",
-																padding: "0.75em 1em",
-																maxWidth: "50px",
-																maxHeight: "30px",
-																mr: 0.5,
-																"&:hover": {
-																	backgroundColor: "#fff",
-																	boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-																},
-															}}
-														>
-															<Typography
-																className="second-sub-title"
-																sx={{
-																	color: "rgba(56, 152, 252, 1) !important",
-																}}
-															>
-																Cancel
-															</Typography>
-														</Button>
-														<Button
-															onClick={() => {
-																handleConfirmRename();
-																handleCloseEditPopover();
-															}}
-															sx={{
-																backgroundColor: "#fff",
-																color: "rgba(56, 152, 252, 1) !important",
-																fontSize: "14px",
-																textTransform: "none",
-																padding: "0.75em 1em",
-																maxWidth: "50px",
-																maxHeight: "30px",
-																"&:hover": {
-																	backgroundColor: "#fff",
-																	boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-																},
-															}}
-														>
-															<Typography
-																className="second-sub-title"
-																sx={{
-																	color: "rgba(56, 152, 252, 1) !important",
-																}}
-															>
-																Save
-															</Typography>
-														</Button>
-													</Box>
-												</Box>
-											</Popover>
 										</SmartCell>
 
 										<SmartCell
@@ -973,7 +872,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												},
 											}}
 										>
-											<IconButton
+											{/* <IconButton
 												className="action-icon"
 												sx={{
 													p: 0,
@@ -991,95 +890,23 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												}}
 											>
 												<DeleteIcon sx={{ maxHeight: "18px" }} />
-											</IconButton>
-											<Popover
-												open={isConfirmOpen}
-												anchorEl={confirmAnchorEl}
-												onClose={handleCloseConfirm}
-												anchorOrigin={{
-													vertical: "bottom",
-													horizontal: "right",
-												}}
-												transformOrigin={{
-													vertical: "top",
-													horizontal: "center",
-												}}
-												PaperProps={{
-													sx: {
-														padding: "0.125rem",
-														width: "15.875rem",
-														boxShadow: 0,
-														borderRadius: "8px",
-														border: "0.5px solid rgba(175, 175, 175, 1)",
+											</IconButton> */}
+
+											<IconButton
+												onClick={(event) => handleOpenMorePopover(event, row)}
+												sx={{
+													fontSize: "16px",
+													":hover": {
+														backgroundColor: "transparent",
 													},
 												}}
 											>
-												<Typography
-													className="first-sub-title"
-													sx={{ paddingLeft: 2, pt: 1, pb: 0 }}
-												>
-													Confirm Deletion
-												</Typography>
-												<DialogContent sx={{ padding: 2 }}>
-													<DialogContentText className="table-data">
-														Are you sure you want to delete the lookalike named{" "}
-														<strong
-															style={{
-																fontWeight: 500,
-																color: "rgba(32, 33, 36, 1)",
-															}}
-														>
-															{editedName}
-														</strong>{" "}
-														?
-													</DialogContentText>
-												</DialogContent>
-												<DialogActions>
-													<Button
-														className="second-sub-title"
-														sx={{
-															backgroundColor: "#fff",
-															color: "rgba(56, 152, 252, 1) !important",
-															fontSize: "14px",
-															textTransform: "none",
-															padding: "0.75em 1em",
-															border: "1px solid rgba(56, 152, 252, 1)",
-															maxWidth: "50px",
-															maxHeight: "30px",
-															"&:hover": {
-																backgroundColor: "#fff",
-																boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
-															},
-														}}
-														onClick={handleCloseConfirm}
-													>
-														Cancel
-													</Button>
-													<Button
-														className="second-sub-title"
-														sx={{
-															backgroundColor: "rgba(56, 152, 252, 1)",
-															color: "#fff !important",
-															fontSize: "14px",
-															textTransform: "none",
-															padding: "0.75em 1em",
-															border: "1px solid rgba(56, 152, 252, 1)",
-															maxWidth: "60px",
-															maxHeight: "30px",
-															"&:hover": {
-																backgroundColor: "rgba(56, 152, 252, 1)",
-																boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
-															},
-														}}
-														onClick={() => {
-															handleDelete(editingRowId || "");
-															handleCloseConfirm();
-														}}
-													>
-														Delete
-													</Button>
-												</DialogActions>
-											</Popover>
+												<MoreVert
+													sx={{
+														color: "rgba(32, 33, 36, 1)",
+													}}
+												/>
+											</IconButton>
 										</SmartCell>
 									</TableRow>
 
@@ -1278,6 +1105,45 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 					</TableBody>
 				</Table>
 			</TableContainer>
+
+			<MoreActionPopover
+				openPopover={isOpeMorePopover}
+				handleClose={handleCloseMorePopover}
+				anchorEl={anchorEl}
+				listItemButtons={[
+					{
+						disabled: false,
+						onClick: () => {
+							handleOpenConfirmDialog();
+						},
+						primaryText: "Remove",
+					},
+				]}
+			/>
+
+			<ConfirmDialogPopover
+				openConfirmDialog={isConfirmOpen}
+				confirmAction={() => {
+					handleDelete(selectedRowData?.id || "");
+					handleCloseConfirm();
+					handleCloseMorePopover();
+				}}
+				handleCloseConfirmDialog={handleCloseConfirm}
+				anchorEl={anchorEl}
+				title="Confirm Deletion"
+				description="Are you sure you want to delete this lookalike?"
+				successButtonText="Delete"
+			/>
+
+			<EditNamePopover
+				openPopover={isEditPopoverOpen}
+				handleConfirmRename={handleConfirmRename}
+				handleClose={handleCloseEditPopover}
+				anchorEl={editPopoverAnchorEl}
+				editedName={editedName}
+				setEditedName={setEditedName}
+				label="Lookalike Name"
+			/>
 			<Box
 				ref={paginatorRef}
 				sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}

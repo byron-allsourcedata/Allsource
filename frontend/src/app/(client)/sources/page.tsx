@@ -72,6 +72,8 @@ import {
 	defaultPaginationOptions,
 	filterPaginationOptions,
 } from "@/utils/pagination";
+import ConfirmDialogPopover from "@/components/ui/popovers/ConfirmDialogPopover";
+import MoreActionPopover from "@/components/ui/popovers/MoreActionPopover";
 
 interface Source {
 	id: string;
@@ -1580,201 +1582,6 @@ const Sources: React.FC = () => {
 																						}}
 																					/>
 																				</IconButton>
-
-																				<Popover
-																					open={isOpen}
-																					anchorEl={anchorEl}
-																					onClose={handleClosePopover}
-																					slotProps={{
-																						paper: {
-																							sx: {
-																								boxShadow: 0,
-																								borderRadius: "4px",
-																								border:
-																									"0.5px solid rgba(175, 175, 175, 1)",
-																							},
-																						},
-																					}}
-																					anchorOrigin={{
-																						vertical: "center",
-																						horizontal: "center",
-																					}}
-																					transformOrigin={{
-																						vertical: "top",
-																						horizontal: "right",
-																					}}
-																				>
-																					<List
-																						sx={{
-																							width: "100%",
-																							maxWidth: 360,
-																							boxShadow: "none",
-																						}}
-																					>
-																						<ListItemButton
-																							disabled={
-																								selectedRowData?.matched_records ===
-																									0 ||
-																								selectedRowData?.is_disabled
-																							}
-																							sx={{
-																								padding: "4px 16px",
-																								":hover": {
-																									backgroundColor:
-																										"rgba(80, 82, 178, 0.1)",
-																								},
-																							}}
-																							onClick={() => {
-																								handleClosePopover();
-																								router.push(
-																									`/lookalikes/builder?source_uuid=${selectedRowData?.id}`,
-																								);
-																							}}
-																						>
-																							<ListItemText
-																								primaryTypographyProps={{
-																									fontSize: "14px",
-																								}}
-																								primary="Create Lookalike"
-																							/>
-																						</ListItemButton>
-																						<ListItemButton
-																							sx={{
-																								padding: "4px 16px",
-																								":hover": {
-																									backgroundColor:
-																										"rgba(80, 82, 178, 0.1)",
-																								},
-																							}}
-																							onClick={() => {
-																								handleOpenConfirmDialog();
-																							}}
-																						>
-																							<ListItemText
-																								primaryTypographyProps={{
-																									fontSize: "14px",
-																								}}
-																								primary="Remove"
-																							/>
-																						</ListItemButton>
-																						{isDebug && (
-																							<ListItemButton
-																								sx={{
-																									padding: "4px 16px",
-																									":hover": {
-																										backgroundColor:
-																											"rgba(80, 82, 178, 0.1)",
-																									},
-																								}}
-																								onClick={() => {
-																									downloadCSVFile();
-																								}}
-																							>
-																								<ListItemText
-																									primaryTypographyProps={{
-																										fontSize: "14px",
-																									}}
-																									primary="Download Value calculations"
-																								/>
-																							</ListItemButton>
-																						)}
-																						<Popover
-																							open={openConfirmDialog}
-																							onClose={handleCloseConfirmDialog}
-																							anchorEl={anchorEl}
-																							anchorOrigin={{
-																								vertical: "bottom",
-																								horizontal: "right",
-																							}}
-																							transformOrigin={{
-																								vertical: "top",
-																								horizontal: "center",
-																							}}
-																							slotProps={{
-																								paper: {
-																									sx: {
-																										padding: "0.125rem",
-																										width: "15.875rem",
-																										boxShadow: 0,
-																										borderRadius: "8px",
-																										border:
-																											"0.5px solid rgba(175, 175, 175, 1)",
-																									},
-																								},
-																							}}
-																						>
-																							<Typography
-																								className="first-sub-title"
-																								sx={{
-																									paddingLeft: 2,
-																									pt: 1,
-																									pb: 0,
-																								}}
-																							>
-																								Confirm Deletion
-																							</Typography>
-																							<DialogContent
-																								sx={{ padding: 2 }}
-																							>
-																								<DialogContentText className="table-data">
-																									Are you sure you want to
-																									delete this source?
-																								</DialogContentText>
-																							</DialogContent>
-																							<DialogActions>
-																								<Button
-																									className="second-sub-title"
-																									onClick={
-																										handleCloseConfirmDialog
-																									}
-																									sx={{
-																										backgroundColor: "#fff",
-																										color:
-																											"rgba(56, 152, 252, 1) !important",
-																										fontSize: "14px",
-																										textTransform: "none",
-																										padding: "0.75em 1em",
-																										border:
-																											"1px solid rgba(56, 152, 252, 1)",
-																										maxWidth: "50px",
-																										maxHeight: "30px",
-																										"&:hover": {
-																											backgroundColor: "#fff",
-																											boxShadow:
-																												"0 2px 2px rgba(0, 0, 0, 0.3)",
-																										},
-																									}}
-																								>
-																									Cancel
-																								</Button>
-																								<Button
-																									className="second-sub-title"
-																									onClick={handleDeleteSource}
-																									sx={{
-																										backgroundColor:
-																											"rgba(56, 152, 252, 1)",
-																										color: "#fff !important",
-																										fontSize: "14px",
-																										textTransform: "none",
-																										padding: "0.75em 1em",
-																										border:
-																											"1px solid rgba(56, 152, 252, 1)",
-																										maxWidth: "60px",
-																										maxHeight: "30px",
-																										"&:hover": {
-																											backgroundColor:
-																												"rgba(56, 152, 252, 1)",
-																											boxShadow:
-																												"0 2px 2px rgba(0, 0, 0, 0.3)",
-																										},
-																									}}
-																								>
-																									Delete
-																								</Button>
-																							</DialogActions>
-																						</Popover>
-																					</List>
-																				</Popover>
 																			</SmartCell>
 																		</TableRow>
 																	);
@@ -1844,6 +1651,55 @@ const Sources: React.FC = () => {
 											</Box>
 										</Popover>
 									</Box>
+
+									<MoreActionPopover
+										openPopover={isOpen}
+										handleClose={handleClosePopover}
+										anchorEl={anchorEl}
+										listItemButtons={[
+											{
+												disabled:
+													selectedRowData?.matched_records === 0 ||
+													selectedRowData?.is_disabled ||
+													false,
+												onClick: () => {
+													handleClosePopover();
+													router.push(
+														`/lookalikes/builder?source_uuid=${selectedRowData?.id}`,
+													);
+												},
+												primaryText: "Create Lookalike",
+											},
+											{
+												disabled: false,
+												onClick: () => {
+													handleOpenConfirmDialog();
+												},
+												primaryText: "Remove",
+											},
+											...(isDebug
+												? [
+														{
+															disabled: false,
+															onClick: () => {
+																downloadCSVFile();
+															},
+															primaryText: "Download Value calculations",
+														},
+													]
+												: []),
+										]}
+									/>
+
+									<ConfirmDialogPopover
+										openConfirmDialog={openConfirmDialog}
+										confirmAction={handleDeleteSource}
+										handleCloseConfirmDialog={handleCloseConfirmDialog}
+										anchorEl={anchorEl}
+										title="Confirm Deletion"
+										description="Are you sure you want to delete this source?"
+										successButtonText="Delete"
+									/>
 
 									<FilterPopup
 										open={filterPopupOpen}
