@@ -55,7 +55,6 @@ interface TableBodyUserProps {
 	currentPage: number;
 	tableHeaders: TableHeaders[];
 	setLoading: (state: boolean) => void;
-	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
@@ -148,7 +147,6 @@ const TableBodyUsers: React.FC<TableBodyUserProps> = ({
 	tableHeaders,
 	setLoading,
 	currentPage,
-	changeUserIsEmailValidation,
 	onPlanChanged,
 	isMaster,
 	isPartnerTab,
@@ -680,7 +678,6 @@ interface UsersTabProps {
 	setRowsPerPage?: any;
 	setOrder?: any;
 	setOrderBy?: any;
-	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
@@ -701,7 +698,6 @@ const UsersTab: React.FC<UsersTabProps> = ({
 	setOrderBy,
 	isPartnerTab,
 	isMaster,
-	changeUserIsEmailValidation,
 	onPlanChanged,
 }) => {
 	const tableHeaders = isPartnerTab
@@ -806,7 +802,6 @@ const UsersTab: React.FC<UsersTabProps> = ({
 									tableHeaders={tableHeaders}
 									setLoading={setLoading}
 									currentPage={page}
-									changeUserIsEmailValidation={changeUserIsEmailValidation}
 									onPlanChanged={onPlanChanged}
 									isPartnerTab={isPartnerTab}
 									isMaster={isMaster}

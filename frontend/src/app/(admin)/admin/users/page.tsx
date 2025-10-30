@@ -448,28 +448,6 @@ const Users: React.FC = () => {
 		showExclude: false,
 	};
 
-	const changeUserIsEmailValidation = (userId: number) => {
-		axiosInstance
-			.put<boolean>(`/admin/change-email-validation?user_id=${userId}`)
-			.then((response) => {
-				if (response.status === 200 && response.data) {
-					const updatedUserData = userData.map((user) => {
-						if (user.id === userId) {
-							return {
-								...user,
-								is_email_validation_enabled: !user.is_email_validation_enabled,
-							};
-						}
-						return user;
-					});
-					setUserData(updatedUserData);
-				}
-			})
-			.catch(() => {
-				showErrorToast("Error changing email validation");
-			});
-	};
-
 	return (
 		<>
 			<Box
@@ -780,7 +758,6 @@ const Users: React.FC = () => {
 							setOrder={setOrder}
 							setOrderBy={setOrderBy}
 							setLoading={setLoading}
-							changeUserIsEmailValidation={changeUserIsEmailValidation}
 							onPlanChanged={fetchUserData}
 						/>
 					)}
@@ -798,7 +775,6 @@ const Users: React.FC = () => {
 							setOrder={setOrder}
 							setOrderBy={setOrderBy}
 							setLoading={setLoading}
-							changeUserIsEmailValidation={changeUserIsEmailValidation}
 							onPlanChanged={fetchUserData}
 							isMaster={false}
 							isPartnerTab={false}
@@ -817,7 +793,6 @@ const Users: React.FC = () => {
 							setOrderBy={setOrderBy}
 							setLoading={setLoading}
 							totalCount={totalCount}
-							changeUserIsEmailValidation={changeUserIsEmailValidation}
 							refresh={refresh}
 						/>
 					)}
@@ -835,7 +810,6 @@ const Users: React.FC = () => {
 							setOrder={setOrder}
 							setOrderBy={setOrderBy}
 							setLoading={setLoading}
-							changeUserIsEmailValidation={changeUserIsEmailValidation}
 							onPlanChanged={fetchUserData}
 							isMaster={false}
 							isPartnerTab={false}
@@ -855,7 +829,6 @@ const Users: React.FC = () => {
 							setOrder={setOrder}
 							setOrderBy={setOrderBy}
 							setLoading={setLoading}
-							changeUserIsEmailValidation={changeUserIsEmailValidation}
 							onPlanChanged={fetchUserData}
 							isMaster={true}
 							isPartnerTab={true}
@@ -875,7 +848,6 @@ const Users: React.FC = () => {
 							setOrder={setOrder}
 							setOrderBy={setOrderBy}
 							setLoading={setLoading}
-							changeUserIsEmailValidation={changeUserIsEmailValidation}
 							onPlanChanged={fetchUserData}
 							isMaster={false}
 							isPartnerTab={true}

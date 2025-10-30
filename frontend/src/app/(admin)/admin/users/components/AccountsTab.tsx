@@ -42,7 +42,6 @@ interface TableBodyAccountProps {
 	currentPage: number;
 	tableHeaders: TableHeaders[];
 	setLoading: (state: boolean) => void;
-	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
 }
 
@@ -51,7 +50,6 @@ const TableBodyAccounts: React.FC<TableBodyAccountProps> = ({
 	tableHeaders,
 	setLoading,
 	currentPage,
-	changeUserIsEmailValidation,
 	onPlanChanged,
 }) => {
 	const router = useRouter();
@@ -569,7 +567,6 @@ interface AccountsTabProps {
 	setRowsPerPage?: any;
 	setOrder?: any;
 	setOrderBy?: any;
-	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
 }
 
@@ -586,7 +583,6 @@ const AccountsTab: React.FC<AccountsTabProps> = ({
 	setLoading,
 	setOrder,
 	setOrderBy,
-	changeUserIsEmailValidation,
 	onPlanChanged,
 }) => {
 	const tableHeaders = [
@@ -673,7 +669,6 @@ const AccountsTab: React.FC<AccountsTabProps> = ({
 									tableHeaders={tableHeaders}
 									setLoading={setLoading}
 									currentPage={page}
-									changeUserIsEmailValidation={changeUserIsEmailValidation}
 									onPlanChanged={onPlanChanged}
 								/>
 							</Table>

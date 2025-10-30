@@ -11,6 +11,8 @@ from typing import Any
 
 from sqlalchemy import Row, update
 
+from models import UserDomains
+
 # from pprint import pprint
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -90,6 +92,26 @@ def check_correct_data_sync(
         .all()
     )
     return integration_data, result
+
+
+def get_domain_is_email_validation_enabled(
+    domain_id: int, session: Session
+) -> bool:
+    """
+    Returns is_email_validation_enabled flag for domain_id.
+    If domain does not exist — returns False.
+    """
+
+    if not domain_id:
+        return False  # Безопасно возвращаем False
+
+    result = (
+        session.query(UserDomains.is_email_validation_enabled)
+        .filter(UserDomains.id == domain_id)
+        .first()
+    )
+
+    return bool(result[0]) if result else False
 
 
 def get_lead_attributes(session, lead_user_ids):
@@ -277,9 +299,10 @@ async def ensure_integration(
         }
         lead_user_ids = [t.lead_users_id for t in lead_user_data]
         service = service_map.get(service_name)
-        user = user_persistence.get_user_by_id(user_id=users_id)
-        is_email_validation_enabled = user.get("is_email_validation_enabled")
         leads = get_lead_attributes(db_session, lead_user_ids)
+        is_email_validation_enabled = get_domain_is_email_validation_enabled(
+            domain_id=data_sync.domain_id, session=db_session
+        )
         if service:
             try:
                 results = await service.process_data_sync_lead(
@@ -448,6 +471,9 @@ async def main():
     setup_logging(log_level)
     resolver = Resolver()
     while True:
+        rabbitmq_connection = None
+        db_session = None  # ✅ объявляем до try
+        integration_service = None
         try:
             rabbitmq_connection = RabbitMQConnection()
             connection = await rabbitmq_connection.connect()

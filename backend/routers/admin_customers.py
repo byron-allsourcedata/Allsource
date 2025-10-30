@@ -266,10 +266,10 @@ def delete_domain(
 def change_email_validation(
     admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
-    user_id: int = Query(None),
+    domain_id: int = Query(None),
 ):
     return admin_customers_service.change_email_validation(
-        user_id=user_id,
+        domain_id=domain_id,
     )
 
 

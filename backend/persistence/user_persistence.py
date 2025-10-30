@@ -72,14 +72,6 @@ class UserPersistence:
         )
         self.db.commit()
 
-    async def is_email_validation_enabled(self, users_id: int) -> bool:
-        result = (
-            self.db.query(Users.is_email_validation_enabled)
-            .filter(Users.id == users_id)
-            .scalar()
-        )
-        return result
-
     def save_user_domain(self, user_id: int, domain: str):
         user_domain = (
             self.db.query(UserDomains)
@@ -234,7 +226,6 @@ class UserPersistence:
                 "premium_source_credits": user.premium_source_credits,
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
-                "is_email_validation_enabled": user.is_email_validation_enabled,
                 "whitelabel_settings_enabled": user.whitelabel_settings_enabled,
                 "random_seed": user.random_seed,
             }
@@ -529,9 +520,6 @@ class UserPersistence:
                 Users.team_owner_id,
                 Users.leads_credits.label("credits_count"),
                 Users.total_leads,
-                Users.is_email_validation_enabled.label(
-                    "is_email_validation_enabled"
-                ),
                 Users.overage_leads_count,
                 Users.has_credit_card,
                 subscription_plan_case,
@@ -569,7 +557,6 @@ class UserPersistence:
                 Users.team_owner_id,
                 Users.leads_credits,
                 Users.total_leads,
-                Users.is_email_validation_enabled,
                 Users.overage_leads_count,
                 Users.has_credit_card,
                 Users.whitelabel_settings_enabled,
@@ -630,9 +617,6 @@ class UserPersistence:
                 Users.team_owner_id,
                 Users.leads_credits.label("credits_count"),
                 Users.total_leads,
-                Users.is_email_validation_enabled.label(
-                    "is_email_validation_enabled"
-                ),
                 Users.overage_leads_count,
                 Users.has_credit_card,
                 subscription_plan_case,
@@ -729,7 +713,6 @@ class UserPersistence:
             Users.team_owner_id,
             Users.leads_credits,
             Users.total_leads,
-            Users.is_email_validation_enabled,
             Users.overage_leads_count,
             Users.has_credit_card,
             Users.whitelabel_settings_enabled,
@@ -805,7 +788,6 @@ class UserPersistence:
                 Users.total_leads,
                 Users.overage_leads_count,
                 Users.has_credit_card,
-                Users.is_email_validation_enabled,
                 Users.whitelabel_settings_enabled,
                 Users.is_partner,
                 Partner.is_master.label("is_master"),
@@ -899,7 +881,6 @@ class UserPersistence:
             Users.total_leads,
             Users.overage_leads_count,
             Users.has_credit_card,
-            Users.is_email_validation_enabled,
             Users.whitelabel_settings_enabled,
             Users.is_partner,
             Partner.is_master,
@@ -1253,13 +1234,13 @@ class UserPersistence:
         self.db.commit()
         return result.rowcount
 
-    def change_email_validation(self, user_id: int) -> int:
+    def change_email_validation(self, domain_id: int) -> int:
         updated_count = (
-            self.db.query(Users)
-            .filter(Users.id == user_id)
+            self.db.query(UserDomains)
+            .filter(UserDomains.id == domain_id)
             .update(
                 {
-                    Users.is_email_validation_enabled: ~Users.is_email_validation_enabled
+                    UserDomains.is_email_validation_enabled: ~UserDomains.is_email_validation_enabled
                 },
                 synchronize_session=False,
             )
@@ -1310,9 +1291,6 @@ class UserPersistence:
                 Users.role,
                 Users.leads_credits.label("credits_count"),
                 Users.total_leads,
-                Users.is_email_validation_enabled.label(
-                    "is_email_validation_enabled"
-                ),
                 subscription_plan_case,
                 status_case.label("user_status"),
                 case((subq_domain_resolved, True), else_=False).label(
@@ -1467,3 +1445,15 @@ class UserPersistence:
         records = query.offset((page - 1) * per_page).limit(per_page).all()
 
         return records, total_count
+
+    def get_domain_is_email_validation_enabled(self, domain_id: int):
+        if not domain_id:
+            return False
+
+        result = (
+            self.db.query(UserDomains.is_email_validation_enabled)
+            .filter(UserDomains.id == domain_id)
+            .first()
+        )
+
+        return bool(result[0]) if result else False

@@ -86,7 +86,7 @@ export interface DomainData {
 	user_name: string;
 	is_pixel_installed: boolean;
 	is_enable: boolean;
-	status: "Leads" | "No Leads" | "Synced";
+	status: "Working" | "Broken" | "Idle";
 	resolutions: ResolutionItem[];
 	total_leads: number;
 	created_at: string;
@@ -179,9 +179,8 @@ const TableHeader: React.FC<{
 
 const TableBodyDomains: React.FC<{
 	data: DomainData[];
-	changeUserIsEmailValidation: (userId: number) => void;
 	refresh: () => void;
-}> = ({ data, changeUserIsEmailValidation, refresh }) => {
+}> = ({ data, refresh }) => {
 	const router = useRouter();
 	const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
 	const [activeRow, setActiveRow] = useState<number | null>(null);
@@ -244,7 +243,7 @@ const TableBodyDomains: React.FC<{
 	};
 
 	const handleDelete = async (toDelete: DomainData) => {
-		if (toDelete.status === "Leads" || toDelete.status === "Synced") {
+		if (toDelete.status === "Working" || toDelete.status === "Broken") {
 			showErrorToast(
 				"Domain cannot be deleted because it has associated leads",
 			);
@@ -264,6 +263,20 @@ const TableBodyDomains: React.FC<{
 		} finally {
 			setLoading(false);
 		}
+	};
+
+	const changeUserIsEmailValidation = (domain_id: number) => {
+		axiosInstance
+			.put<boolean>(`/admin/change-email-validation?domain_id=${domain_id}`)
+			.then((response) => {
+				if (response.status === 200 && response.data) {
+					showToast("Email validation status changed successfully");
+					refresh();
+				}
+			})
+			.catch(() => {
+				showErrorToast("Error changing email validation");
+			});
 	};
 
 	const handleConfirmDelete = () => {
@@ -393,16 +406,16 @@ const TableBodyDomains: React.FC<{
 										lineHeight: "140%",
 										letterSpacing: 0,
 										color:
-											row.status === "Synced"
+											row.status === "Working"
 												? "rgba(74,158,79,1)"
-												: row.status === "Leads"
+												: row.status === "Broken"
 													? "rgba(158,132,58,1)"
 													: "rgba(205,40,43,1)",
 										display: "flex",
 										backgroundColor:
-											row.status === "Synced"
+											row.status === "Working"
 												? "rgba(220,245,221,1)"
-												: row.status === "Leads"
+												: row.status === "Broken"
 													? "rgba(255,249,196,1)"
 													: "rgba(255,235,238,1)",
 										padding: "4px 8px",
@@ -623,7 +636,7 @@ const TableBodyDomains: React.FC<{
 												<DeleteButton
 													onClick={(e) => handleOpenConfirmDialog(e, row)}
 													disabled={
-														row.status === "Leads" || row.status === "Synced"
+														row.status === "Working" || row.status === "Broken"
 													}
 													sx={style.actionButtonText}
 												/>
@@ -637,7 +650,7 @@ const TableBodyDomains: React.FC<{
 												<DeleteButton
 													onClick={(e) => handleOpenConfirmDialog(e, row)}
 													disabled={
-														row.status === "Leads" || row.status === "Synced"
+														row.status === "Working" || row.status === "Broken"
 													}
 													sx={style.actionButtonText}
 												/>
@@ -795,7 +808,6 @@ interface PixelsTabProps {
 	setOrder?: any;
 	setOrderBy?: any;
 	domains: DomainData[];
-	changeUserIsEmailValidation: (userId: number) => void;
 	refresh: () => void;
 }
 
@@ -813,7 +825,6 @@ const PixelsTab: React.FC<PixelsTabProps> = ({
 	setOrder,
 	setOrderBy,
 	domains,
-	changeUserIsEmailValidation,
 	refresh,
 }) => {
 	const [search, setSearch] = useState("");
@@ -906,11 +917,7 @@ const PixelsTab: React.FC<PixelsTabProps> = ({
 									tableHeaders={tableHeaders}
 								/>
 
-								<TableBodyDomains
-									data={domains}
-									changeUserIsEmailValidation={changeUserIsEmailValidation}
-									refresh={refresh}
-								/>
+								<TableBodyDomains data={domains} refresh={refresh} />
 							</Table>
 						</TableContainer>
 						{paginationProps.countRows > 0 && (

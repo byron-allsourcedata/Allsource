@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
 from sqlalchemy import func
@@ -215,7 +215,6 @@ class AdminCustomersService:
                         acc.id
                     ),
                     "role": acc.role,
-                    "is_email_validation_enabled": acc.is_email_validation_enabled,
                     "is_partner": acc.is_partner,
                     "is_master": acc.is_master,
                     "pixel_installed_count": agg.get(
@@ -375,7 +374,6 @@ class AdminCustomersService:
                     "role": base_user.role,
                     "team_access_level": base_user.team_access_level,
                     "team_owner_id": user.team_owner_id,
-                    "is_email_validation_enabled": base_user.is_email_validation_enabled,
                     "is_partner": base_user.is_partner,
                     "is_master": base_user.is_master,
                     "pixel_installed_count": agg.get(
@@ -417,28 +415,28 @@ class AdminCustomersService:
         result = []
 
         for d, user_name, company_name, sync_count, lead_count in domains:
-            user_id = d.user_id
-
-            resolutions = [
-                {"date": date, "lead_count": count}
-                for date, count in self.domain_persistence.leads_persistence.get_leads_count_by_day(
-                    domain_id=d.id
-                )
-            ]
-
-            contacts_resolving_domains = (
-                self.domain_persistence.get_domains_with_contacts_resolving(
-                    user_id
-                )
+            leads_by_day = self.domain_persistence.leads_persistence.get_leads_count_by_day(
+                domain_id=d.id
             )
 
-            status = (
-                "Synced"
-                if sync_count > 0
-                else "Leads"
-                if lead_count > 0
-                else "No Leads"
+            now = datetime.now(timezone.utc)
+            threshold = now - timedelta(hours=48)
+
+            last_48h_leads = sum(
+                count
+                for date, count in leads_by_day
+                if datetime.combine(
+                    date, datetime.min.time(), tzinfo=timezone.utc
+                )
+                >= threshold
             )
+
+            if last_48h_leads > 0 or sync_count > 0:
+                status = "Working"
+            elif lead_count > 0:
+                status = "Broken"
+            else:
+                status = "Idle"
 
             result.append(
                 {
@@ -453,9 +451,13 @@ class AdminCustomersService:
                         "is_view_product_installed": d.is_view_product_installed,
                     },
                     "total_leads": lead_count,
-                    "resolutions": resolutions,
+                    "resolutions": [
+                        {"date": date, "lead_count": count}
+                        for date, count in leads_by_day
+                    ],
                     "data_syncs_count": sync_count,
-                    "created_at": d.created_at.isoformat()
+                    "created_at": d.created_at.isoformat(),
+                    "is_email_validation_enabled": d.is_email_validation_enabled
                     if d.created_at
                     else None,
                 }
@@ -512,7 +514,6 @@ class AdminCustomersService:
                     "status": user.user_status,
                     "last_login": user.last_login,
                     "role": user.role,
-                    "is_email_validation_enabled": user.is_email_validation_enabled,
                     "pixel_installed_count": pixel_installed_count,
                     "sources_count": sources_count,
                     "contacts_count": user.total_leads,
@@ -670,8 +671,8 @@ class AdminCustomersService:
 
         return user_data
 
-    def change_email_validation(self, user_id: int) -> bool:
-        updated_row = self.user_persistence.change_email_validation(user_id)
+    def change_email_validation(self, domain_id: int) -> bool:
+        updated_row = self.user_persistence.change_email_validation(domain_id)
         return updated_row > 0
 
     def did_change_plan(self, user_id: int, plan_alias: str) -> bool:
