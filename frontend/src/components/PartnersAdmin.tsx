@@ -42,6 +42,8 @@ import RewardsHistory from "@/components/Rewardshistory";
 import PartnersAccounts from "./PartnersAccounts";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import CustomSwitch from "./ui/CustomSwitch";
+import { MoreVert } from "@/icon";
+import MoreActionPopover from "./ui/popovers/MoreActionPopover";
 
 interface PartnerData {
 	id: number;
@@ -1244,188 +1246,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 																":hover": { backgroundColor: "transparent" },
 															}}
 														>
-															<Image
-																src="/more_horizontal.svg"
-																alt="more"
-																height={16.18}
-																width={22.91}
-															/>
+															<MoreVert />
 														</IconButton>
-
-														<Popover
-															open={open}
-															anchorEl={menuAnchor}
-															onClose={handleCloseMenu}
-															anchorOrigin={{
-																vertical: "center",
-																horizontal: "center",
-															}}
-															transformOrigin={{
-																vertical: "top",
-																horizontal: "right",
-															}}
-															slotProps={{
-																paper: {
-																	sx: {
-																		boxShadow: "none",
-																		border: "1px solid #E0E0E0",
-																	},
-																},
-															}}
-														>
-															<List
-																sx={{
-																	width: "100%",
-																	maxWidth: 360,
-																	boxShadow: 0,
-																}}
-															>
-																<ListItemButton
-																	sx={{
-																		padding: "4px 16px",
-																		":hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.1)",
-																		},
-																	}}
-																	onClick={() => {}}
-																>
-																	<ListItemText
-																		primaryTypographyProps={{
-																			fontSize: "14px",
-																			fontFamily: "var(--font-nunito)",
-																		}}
-																		primary="Payment history"
-																	/>
-																</ListItemButton>
-																<ListItemButton
-																	sx={{
-																		padding: "4px 16px",
-																		":hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.1)",
-																		},
-																	}}
-																	onClick={() => {
-																		handleCloseMenu();
-																		setRewardsPage(true);
-																		setPartnerName(
-																			selectedRowData.partner_name,
-																		);
-																		setId(selectedRowData.id);
-																		fetchRewards(year, selectedRowData.id);
-																	}}
-																>
-																	<ListItemText
-																		primaryTypographyProps={{
-																			fontSize: "14px",
-																			fontFamily: "var(--font-nunito)",
-																		}}
-																		primary="Reward history"
-																	/>
-																</ListItemButton>
-																{selectedRowData?.isActive === true ? (
-																	<ListItemButton
-																		sx={{
-																			padding: "4px 16px",
-																			":hover": {
-																				backgroundColor:
-																					"rgba(80, 82, 178, 0.1)",
-																			},
-																		}}
-																		onClick={() => {
-																			handleCloseMenu();
-																			handleNoticeOpenPopup();
-																			setEnabledData({
-																				id: selectedRowData.id,
-																			});
-																		}}
-																	>
-																		<ListItemText
-																			primaryTypographyProps={{
-																				fontSize: "14px",
-																				fontFamily: "var(--font-nunito)",
-																			}}
-																			primary="Disable"
-																		/>
-																	</ListItemButton>
-																) : (
-																	<ListItemButton
-																		sx={{
-																			padding: "4px 16px",
-																			":hover": {
-																				backgroundColor:
-																					"rgba(80, 82, 178, 0.1)",
-																			},
-																		}}
-																		onClick={() => {
-																			handleCloseMenu();
-																			setEnabled();
-																			setEnabledData({
-																				id: selectedRowData.id,
-																			});
-																		}}
-																	>
-																		<ListItemText
-																			primaryTypographyProps={{
-																				fontSize: "14px",
-																				fontFamily: "var(--font-nunito)",
-																			}}
-																			primary="Enable"
-																		/>
-																	</ListItemButton>
-																)}
-																<ListItemButton
-																	sx={{
-																		padding: "4px 16px",
-																		":hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.1)",
-																		},
-																	}}
-																	onClick={() => {
-																		handleNoticeOpenPopup();
-																		setEnabledData({
-																			id: selectedRowData.id,
-																			fullName: selectedRowData.partner_name,
-																		});
-																		handleCloseMenu();
-																	}}
-																>
-																	<ListItemText
-																		primaryTypographyProps={{
-																			fontSize: "14px",
-																			fontFamily: "var(--font-nunito)",
-																		}}
-																		primary="Terminate"
-																	/>
-																</ListItemButton>
-																<ListItemButton
-																	sx={{
-																		padding: "4px 16px",
-																		":hover": {
-																			backgroundColor: "rgba(80, 82, 178, 0.1)",
-																		},
-																	}}
-																	onClick={() => {
-																		setFileData({
-																			id: selectedRowData.id,
-																			email: selectedRowData.email,
-																			fullName: selectedRowData.partner_name,
-																			companyName: selectedRowData.company_name,
-																			commission: selectedRowData.commission,
-																		});
-																		handleFormOpenPopup();
-																		handleCloseMenu();
-																	}}
-																>
-																	<ListItemText
-																		primaryTypographyProps={{
-																			fontSize: "14px",
-																			fontFamily: "var(--font-nunito)",
-																		}}
-																		primary="Edit"
-																	/>
-																</ListItemButton>
-															</List>
-														</Popover>
 													</TableCell>
 												</TableRow>
 											))}
@@ -1470,6 +1292,85 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({
 									</Box>
 								)}
 							</Box>
+
+							<MoreActionPopover
+								openPopover={open}
+								handleClose={handleCloseMenu}
+								anchorEl={menuAnchor}
+								listItemButtons={[
+									{
+										disabled: true,
+										onClick: () => {},
+										primaryText: "Payment history",
+									},
+									{
+										disabled: false,
+										onClick: () => {
+											handleCloseMenu();
+											setRewardsPage(true);
+											setPartnerName(selectedRowData.partner_name);
+											setId(selectedRowData.id);
+											fetchRewards(year, selectedRowData.id);
+										},
+										primaryText: "Reward history",
+									},
+									{
+										disabled: false,
+										onClick: () => {
+											handleNoticeOpenPopup();
+											setEnabledData({
+												id: selectedRowData.id,
+												fullName: selectedRowData.partner_name,
+											});
+											handleCloseMenu();
+										},
+										primaryText: "Terminate",
+									},
+									{
+										disabled: false,
+										onClick: () => {
+											setFileData({
+												id: selectedRowData.id,
+												email: selectedRowData.email,
+												fullName: selectedRowData.partner_name,
+												companyName: selectedRowData.company_name,
+												commission: selectedRowData.commission,
+											});
+											handleFormOpenPopup();
+											handleCloseMenu();
+										},
+										primaryText: "Edit",
+									},
+									...(selectedRowData?.isActive
+										? [
+												{
+													disabled: false,
+													onClick: () => {
+														handleCloseMenu();
+														handleNoticeOpenPopup();
+														setEnabledData({
+															id: selectedRowData.id,
+														});
+													},
+													primaryText: "Disable",
+												},
+											]
+										: [
+												{
+													disabled: false,
+													onClick: () => {
+														handleCloseMenu();
+														setEnabled();
+														setEnabledData({
+															id: selectedRowData.id,
+														});
+													},
+													primaryText: "Enable",
+												},
+											]),
+								]}
+							/>
+
 							<InvitePartnerPopup
 								isMaster={is_master}
 								updateOrAddPartner={updateOrAddPartner}
