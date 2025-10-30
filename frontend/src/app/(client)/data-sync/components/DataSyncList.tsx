@@ -73,6 +73,8 @@ import CustomerIoDataSync from "@/components/data-syncs/CustomerIoDataSync";
 import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
 import CustomerIoConnect from "@/components/integrations/CustomerIoIntegration";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import GreenArrowDataSync from "@/components/data-syncs/GreenArrowDataSync";
+import GreenArrowIntegrationDrawer from "@/components/integrations/GreenArrowIntegration";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -112,6 +114,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [s3IconPopupOpen, setOpenS3IconPopup] = useState(false);
 	const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false);
 	const [hubspotIconPopupOpen, setOpenHubspotIconPopup] = useState(false);
+	const [greenArrowIconPopupOpen, setOpenGreenArrowIconPopup] = useState(false);
 	const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
 	const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false);
 	const [linkedinIconPopupOpen, setOpenLinkedinIconPopup] = useState(false);
@@ -129,6 +132,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const [openMetaConnect, setOpenMetaConnect] = useState(false);
 	const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
 	const [openSalesForceConnect, setOpenSalesForceConnect] = useState(false);
+	const [openGreenArrowConnect, setOpenGreenArrowConnect] = useState(false);
 	const [openAttentiveConnect, setAttentiveConnect] = useState(false);
 	const [openShopifuConnect, setOpenShopifyConnect] = useState(false);
 	const [openBigcommrceConnect, setOpenBigcommerceConnect] = useState(false);
@@ -167,6 +171,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			openMetaConnect ||
 			openKlaviyoConnect ||
 			openMailchimpConnect ||
+			openGreenArrowConnect ||
 			openOmnisendConnect,
 	);
 
@@ -238,6 +243,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	};
 
 	useEffect(() => {
+		console.log({ allData });
 		if (allData.length !== 0) {
 			if (filters) {
 				const filterData = () => {
@@ -380,6 +386,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				return (
 					<Image src={"/bing-ads.svg"} alt="bingAds" width={18} height={18} />
 				);
+			case "green_arrow":
+				return (
+					<Image
+						src={"/green_arrow-icon.svg"}
+						alt="GreenArrow"
+						width={18}
+						height={18}
+					/>
+				);
 			default:
 				return null;
 		}
@@ -419,9 +434,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				switch (response.data.status) {
 					case "SUCCESS":
 						if (response.data.data_sync) {
-							showToast("Pixel Sync enabled successfully");
+							showToast("Data Sync enabled successfully");
 						} else {
-							showToast("Pixel Sync is disabled");
+							showToast("Data Sync is disabled");
 						}
 						setData((prevData) =>
 							prevData.map((item) =>
@@ -607,6 +622,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setOpenHubspotIconPopup(true);
 			} else if (dataSyncPlatform === "sales_force") {
 				setSalesForceIconPopupOpen(true);
+			} else if (dataSyncPlatform === "green_arrow") {
+				setOpenGreenArrowIconPopup(true);
 			}
 
 			setIsLoading(false);
@@ -628,6 +645,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
 	const handleHubspotIconPopupClose = () => {
 		setOpenHubspotIconPopup(false);
+	};
+
+	const handleGreenArrowIconPopupClose = () => {
+		setOpenGreenArrowIconPopup(false);
 	};
 
 	const handleSlackIconPopupClose = () => {
@@ -730,6 +751,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenHubspotConnect(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setOpenSalesForceConnect(true);
+					} else if (dataSyncPlatform === "green_arrow") {
+						setOpenGreenArrowConnect(true);
 					}
 					setIsLoading(false);
 					setAnchorEl(null);
@@ -759,6 +782,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setOpenGoHighLevelConnect(true);
 					} else if (dataSyncPlatform === "customer_io") {
 						setOpenCustomerIoConnect(true);
+					} else if (dataSyncPlatform === "green_arrow") {
+						setOpenGreenArrowConnect(true);
 					}
 
 					setIsLoading(false);
@@ -820,23 +845,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		return null;
 	}
 
-	const listType = (listType: string) => {
-		switch (listType) {
-			case "allContacts":
-				return "All Contacts";
-			case "viewed_product":
-				return "View Product";
-			case "converted_sales":
-				return "Converted sales";
-			case "visitor":
-				return "Visitors";
-			case "abandoned_cart":
-				return "Abandoned cart";
-			default:
-				return null;
-		}
-	};
-
 	const handleDownloadPersons = async () => {
 		setIsLoading(true);
 		try {
@@ -869,7 +877,17 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "smart_audience_name",
 			label: "Smart Audience Name",
-			widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+			widths: { width: "120px", minWidth: "120px", maxWidth: "20vw" },
+		},
+		{
+			key: "list_name",
+			label: "List Name",
+			widths: { width: "100px", minWidth: "100px", maxWidth: "20vw" },
+		},
+		{
+			key: "platform",
+			label: "Destination",
+			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
 			key: "created",
@@ -880,27 +898,22 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "last_sync",
 			label: "Last Sync",
-			widths: { width: "12vw", minWidth: "190px", maxWidth: "20vw" },
-		},
-		{
-			key: "platform",
-			label: "Sync",
-			widths: { width: "60px", minWidth: "60px", maxWidth: "60px" },
+			widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
 		},
 		{
 			key: "data_sync",
 			label: "Active Segments",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			widths: { width: "80px", minWidth: "80px", maxWidth: "8vw" },
 		},
 		{
 			key: "record_synced",
 			label: "Records Synced",
-			widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
+			widths: { width: "80px", minWidth: "80px", maxWidth: "8vw" },
 		},
 		{
 			key: "sync_status",
 			label: "Status",
-			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+			widths: { width: "120px", minWidth: "120px", maxWidth: "8vw" },
 		},
 		{
 			key: "action",
@@ -1037,6 +1050,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														sx={{
 															...leadsStyles.table_column,
 															borderRight: "0",
+															textOverflow: "ellipsis",
+															whiteSpace: "nowrap",
+															overflow: "hidden",
 														}}
 													>
 														{label}
@@ -1083,7 +1099,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 								{data.length === 0 ? (
 									<TableRow sx={datasyncStyle.tableBodyRow}>
 										<TableCell
-											colSpan={11}
+											colSpan={9}
 											sx={{
 												...datasyncStyle.tableBodyColumn,
 												textAlign: "center",
@@ -1133,6 +1149,33 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												cellOptions={{
 													sx: {
 														position: "relative",
+													},
+												}}
+												tooltipOptions={{ content: row.list_name || "--" }}
+											>
+												{row.list_name || "--"}
+											</SmartCell>
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
+													},
+												}}
+												tooltipOptions={{ content: row.platform || "--" }}
+											>
+												<Box
+													sx={{
+														display: "flex",
+														justifyContent: "center",
+													}}
+												>
+													{platformIcon(row.platform) || "--"}
+												</Box>
+											</SmartCell>
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
 														pr: 0,
 													},
 												}}
@@ -1174,23 +1217,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												{row.lastSync || "--"}
 											</SmartCell>
 
-											<SmartCell
-												cellOptions={{
-													sx: {
-														position: "relative",
-													},
-												}}
-												tooltipOptions={{ content: row.platform || "--" }}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														justifyContent: "center",
-													}}
-												>
-													{platformIcon(row.platform) || "--"}
-												</Box>
-											</SmartCell>
 											<SmartCell
 												cellOptions={{
 													sx: {
@@ -1512,6 +1538,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						data={data.find((item) => item.id === selectedId)}
 					/>
 				)}
+				{greenArrowIconPopupOpen && isEdit && (
+					<GreenArrowDataSync
+						open={greenArrowIconPopupOpen}
+						isEdit={isEdit}
+						onClose={handleGreenArrowIconPopupClose}
+						data={data.find((item) => item.id === selectedId)}
+					/>
+				)}
 				{slackIconPopupOpen && isEdit && (
 					<SlackDatasync
 						open={slackIconPopupOpen}
@@ -1596,6 +1630,19 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					initApiKey={
 						integrationsCredentials.find(
 							(integartion) => integartion.service_name === "mailchimp",
+						)?.access_token
+					}
+					invalid_api_key={isInvalidApiKey}
+					boxShadow="rgba(0, 0, 0, 0.01)"
+				/>
+				<GreenArrowIntegrationDrawer
+					open={openGreenArrowConnect}
+					handleClose={() => {
+						setOpenGreenArrowConnect(false), setIsInvalidApiKey(false);
+					}}
+					initApiKey={
+						integrationsCredentials.find(
+							(integartion) => integartion.service_name === "green_arrow",
 						)?.access_token
 					}
 					invalid_api_key={isInvalidApiKey}

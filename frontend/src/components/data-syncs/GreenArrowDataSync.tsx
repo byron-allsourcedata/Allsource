@@ -6,36 +6,24 @@ import {
 	IconButton,
 	TextField,
 	Divider,
-	FormGroup,
 	FormControlLabel,
 	FormControl,
 	FormLabel,
 	Radio,
-	Collapse,
-	Checkbox,
 	Button,
-	List,
-	ListItem,
 	Link,
 	Tab,
 	Tooltip,
-	Switch,
 	RadioGroup,
-	InputLabel,
 	MenuItem,
-	Select,
-	Dialog,
-	DialogActions,
-	DialogContent,
-	DialogTitle,
 	Popover,
 	Menu,
-	SelectChangeEvent,
 	ListItemText,
 	ClickAwayListener,
 	InputAdornment,
 	Grid,
 	LinearProgress,
+	Select,
 } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -47,6 +35,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
+import { dataSyncStyles } from "./dataSyncStyles";
 
 interface ConnectGreanArrowPopupProps {
 	open: boolean;
@@ -131,6 +120,17 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 		{ type: "Time on site", value: "time_on_site" },
 		{ type: "DPV Code", value: "dpv_code" },
 	]);
+
+	const emailsVariations = [
+		{ id: 1, type: "Personal Email", value: "Personal Email" },
+		{ id: 1, type: "Business Email", value: "Business Email" },
+	];
+	const [activeEmailVariation, setActiveEmailVariation] = useState<Row>({
+		id: 1,
+		type: "business_email",
+		value: "Email",
+	});
+
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
@@ -211,7 +211,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 		setMapListNameError(false);
 	};
 
-	const getGreanArrowList = async () => {
+	const getGreenArrowList = async () => {
 		try {
 			setLoading(true);
 			const response = await axiosInstance.get("/integrations/sync/list/", {
@@ -239,7 +239,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 	};
 	useEffect(() => {
 		if (open) {
-			getGreanArrowList();
+			getGreenArrowList();
 		}
 	}, [open]);
 
@@ -285,7 +285,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 					{
 						integrations_users_sync_id: data.id,
 						leads_type: selectedRadioValue,
-						data_map: customFields,
+						data_map: [activeEmailVariation, ...customFields],
 						list_id: list?.id,
 						list_name: list?.list_name,
 					},
@@ -308,7 +308,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 						list_id: list?.id,
 						list_name: list?.list_name,
 						leads_type: selectedRadioValue,
-						data_map: customFields,
+						data_map: [activeEmailVariation, ...customFields],
 					},
 					{
 						params: {
@@ -567,7 +567,6 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 	}
 
 	const defaultRows: Row[] = [
-		{ id: 1, type: "Email", value: "Email" },
 		{ id: 2, type: "Phone number", value: "Phone number" },
 		{ id: 3, type: "First name", value: "First name" },
 		{ id: 4, type: "Second name", value: "Second name" },
@@ -724,7 +723,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-greanArrow"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-grean-arrow"
 							target="_blank"
 							rel="noopener referrer"
 							className="main-text"
@@ -753,7 +752,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 				>
 					<UserTip
 						title="Data Sync Speed"
-						content="GreanArrow standard sync speed is 100 contacts per minute."
+						content="GreanArrow standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
@@ -1450,6 +1449,92 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 										</Grid>
 									</Grid>
 
+									<Box sx={{ mb: 2 }}>
+										<Grid
+											container
+											spacing={2}
+											alignItems="center"
+											sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+										>
+											{/* Left Input Field */}
+											<Grid item xs={5} sm={5}>
+												<FormControl fullWidth sx={{ height: "36px" }}>
+													<Select
+														value={
+															activeEmailVariation.type === "personal_emails"
+																? "Personal Email"
+																: "Business Email"
+														}
+														onChange={(e) => {
+															const type =
+																e.target.value === "Personal Email"
+																	? "personal_emails"
+																	: "business_email";
+															setActiveEmailVariation({
+																id: 1,
+																type: type,
+																value: "Email",
+															});
+														}}
+														displayEmpty
+														inputProps={{
+															sx: dataSyncStyles.formControlInputStyles,
+														}}
+														sx={dataSyncStyles.formControlStyles}
+													>
+														{emailsVariations.map(
+															(item: Row, index: number) => (
+																<MenuItem key={index} value={item.value}>
+																	{item.value}
+																</MenuItem>
+															),
+														)}
+													</Select>
+												</FormControl>
+											</Grid>
+
+											{/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+											<Grid
+												item
+												xs={1}
+												sm={1}
+												container
+												justifyContent="center"
+											>
+												<Image
+													src="/chevron-right-purple.svg"
+													alt="chevron-right-purple"
+													height={18}
+													width={18}
+												/>
+											</Grid>
+
+											<Grid item xs={5} sm={5}>
+												<TextField
+													fullWidth
+													variant="outlined"
+													value={"Email"}
+													disabled={true}
+													InputLabelProps={{
+														sx: dataSyncStyles.textFieldInputLabelStyles,
+													}}
+													InputProps={{
+														sx: dataSyncStyles.textFieldInputStyles,
+													}}
+												/>
+											</Grid>
+
+											{/* Delete Icon */}
+											<Grid
+												item
+												xs={1}
+												sm={1}
+												container
+												justifyContent="center"
+											/>
+										</Grid>
+									</Box>
+
 									{defaultRows.map((row, index) => (
 										<Box key={row.id} sx={{ mb: 2 }}>
 											{" "}
@@ -1475,48 +1560,10 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 															)
 														}
 														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
+															sx: dataSyncStyles.textFieldInputLabelStyles,
 														}}
 														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "12px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
-																		},
-																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
-																},
-															},
+															sx: dataSyncStyles.textFieldInputStyles,
 														}}
 													/>
 												</Grid>

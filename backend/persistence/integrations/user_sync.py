@@ -514,6 +514,7 @@ class IntegrationsUserSyncPersistence:
                     "syncStatus": False if sync.is_failed else sync.sync_status,
                     "integration_is_failed": sync.is_failed,
                     "list_id": sync.list_id,
+                    "list_name": sync.list_name,
                     "active_segment": sync.sent_contacts,
                     "records_synced": sync.no_of_contacts,
                     "is_progress": sync.imported_count < sync.sent_contacts
@@ -546,6 +547,7 @@ class IntegrationsUserSyncPersistence:
                 "syncStatus": False if sync.is_failed else sync.sync_status,
                 "integration_is_failed": sync.is_failed,
                 "list_id": sync.list_id,
+                "list_name": sync.list_name,
                 "active_segments": sync.sent_contacts,
                 "records_synced": sync.no_of_contacts,
                 "is_progress": sync.imported_count < sync.sent_contacts

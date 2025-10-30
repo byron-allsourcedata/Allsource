@@ -556,6 +556,9 @@ class MailchimpIntegrationsService:
                 enrichment_user.asid
             )
         )
+        if business_email is None or personal_email is None:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
         main_email, main_phone = resolve_main_email_and_phone(
             enrichment_contacts=enrichment_contacts,
             validations=validations,
@@ -645,20 +648,24 @@ class MailchimpIntegrationsService:
         is_email_validation_enabled: bool,
     ):
         if is_email_validation_enabled:
-            first_email = await get_valid_email(
-                five_x_five_user, self.million_verifier_integrations
+            email_or_status = await get_valid_email(
+                five_x_five_user,
+                self.million_verifier_integrations,
+                email_fields=["business_email"],
             )
         else:
-            first_email = get_valid_email_without_million(five_x_five_user)
+            email_or_status = get_valid_email_without_million(
+                five_x_five_user, email_fields=["business_email"]
+            )
 
-        if first_email in (
+        if email_or_status in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return first_email
+            return email_or_status
 
+        email = email_or_status
         first_phone = get_valid_phone(five_x_five_user)
-
         location = {
             "address": getattr(five_x_five_user, "personal_address")
             or getattr(five_x_five_user, "company_address", None),
@@ -675,7 +682,7 @@ class MailchimpIntegrationsService:
         )
 
         result = {
-            "email_address": first_email,
+            "email_address": email,
             "phone_number": format_phone_number(first_phone),
             "first_name": getattr(five_x_five_user, "first_name", None),
             "last_name": getattr(five_x_five_user, "last_name", None),
