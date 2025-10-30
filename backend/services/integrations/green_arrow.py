@@ -191,7 +191,7 @@ class GreenArrowIntegrationsService:
         base_url = self.BASE_URL
 
         integration = self.__save_integation(
-            domain_id=domain_id, api_key=api_key, base_url=base_url, user=user
+            domain_id=domain_id, api_key=api_key, user=user
         )
         return integration
 
