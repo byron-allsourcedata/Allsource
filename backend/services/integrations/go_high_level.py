@@ -383,7 +383,7 @@ class GoHighLevelIntegrationsService:
             ):
                 continue
 
-        return result
+        return results
 
     async def process_data_sync_lead(
         self,
