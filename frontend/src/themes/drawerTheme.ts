@@ -20,7 +20,14 @@ export const drawerTheme = createTheme({
 		MuiModal: {
 			defaultProps: {
 				BackdropProps: {
-					sx: { backgroundColor: "rgba(0, 0, 0, 0.01)" },
+					sx: { backgroundColor: "rgba(0, 0, 0, 0.5)" },
+				},
+			},
+		},
+		MuiPopover: {
+			defaultProps: {
+				BackdropProps: {
+					sx: { backgroundColor: "rgba(0, 0, 0, 0.25)" },
 				},
 			},
 		},

@@ -344,11 +344,6 @@ class IntegrationsUserSyncPersistence:
             success_synced_persons_query = success_synced_persons_query.filter(
                 UserIntegration.service_name == service_name
             )
-        is_user_validations = None
-        if user_id:
-            user = self.db.query(Users).filter(Users.id == user_id).first()
-            if user:
-                is_user_validations = user.is_email_validation_enabled
 
         if integrations_users_sync_id:
             sync = success_synced_persons_query.filter(
@@ -373,7 +368,7 @@ class IntegrationsUserSyncPersistence:
                     "processed_contacts": sync.processed,
                     "successful_contacts": sync.successful_contacts,
                     "validation_contacts": sync.validation,
-                    "synced_contacts": sync.validation,
+                    "synced_contacts": sync.successful_contacts,
                     "createdBy": sync.created_by,
                     "accountId": sync.platform_user_id,
                     "data_map": sync.data_map,
@@ -388,11 +383,6 @@ class IntegrationsUserSyncPersistence:
                     "customer_id": sync.customer_id,
                     "hook_url": sync.hook_url,
                     "method": sync.method,
-                    **(
-                        {"is_user_validations": is_user_validations}
-                        if is_user_validations is not None
-                        else {}
-                    ),
                 }
         syncs = success_synced_persons_query.order_by(
             desc(IntegrationUserSync.created_at)
@@ -416,7 +406,7 @@ class IntegrationsUserSyncPersistence:
                 "processed_contacts": sync.processed,
                 "successful_contacts": sync.successful_contacts,
                 "validation_contacts": sync.validation,
-                "synced_contacts": sync.validation,
+                "synced_contacts": sync.successful_contacts,
                 "createdBy": sync.created_by,
                 "accountId": sync.platform_user_id,
                 "campaign_id": sync.campaign_id,
@@ -431,11 +421,6 @@ class IntegrationsUserSyncPersistence:
                 "list_id": sync.list_id,
                 "hook_url": sync.hook_url,
                 "method": sync.method,
-                **(
-                    {"is_user_validations": is_user_validations}
-                    if is_user_validations is not None
-                    else {}
-                ),
             }
             for sync in syncs
         ]
@@ -529,6 +514,7 @@ class IntegrationsUserSyncPersistence:
                     "syncStatus": False if sync.is_failed else sync.sync_status,
                     "integration_is_failed": sync.is_failed,
                     "list_id": sync.list_id,
+                    "list_name": sync.list_name,
                     "active_segment": sync.sent_contacts,
                     "records_synced": sync.no_of_contacts,
                     "is_progress": sync.imported_count < sync.sent_contacts
@@ -561,6 +547,7 @@ class IntegrationsUserSyncPersistence:
                 "syncStatus": False if sync.is_failed else sync.sync_status,
                 "integration_is_failed": sync.is_failed,
                 "list_id": sync.list_id,
+                "list_name": sync.list_name,
                 "active_segments": sync.sent_contacts,
                 "records_synced": sync.no_of_contacts,
                 "is_progress": sync.imported_count < sync.sent_contacts

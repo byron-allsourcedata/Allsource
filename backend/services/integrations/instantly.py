@@ -566,19 +566,29 @@ class InstantlyIntegrationsService:
         data_map: list,
         is_email_validation_enabled: bool,
     ) -> dict | str:
+        for field in data_map:
+            if field["value"] == "Email":
+                chosen_email_variation = field["type"]
+                break
+
         if is_email_validation_enabled:
-            email = await get_valid_email(
-                five_x_five_user, self.million_verifier_integrations
+            email_or_status = await get_valid_email(
+                five_x_five_user,
+                self.million_verifier_integrations,
+                email_fields=[chosen_email_variation],
             )
         else:
-            email = get_valid_email_without_million(five_x_five_user)
+            email_or_status = get_valid_email_without_million(
+                five_x_five_user, email_fields=[chosen_email_variation]
+            )
 
-        if email in (
+        if email_or_status in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return email
+            return email_or_status
 
+        email = email_or_status
         phone = get_valid_phone(five_x_five_user)
         return {
             "email": email,
@@ -596,6 +606,7 @@ class InstantlyIntegrationsService:
                     else getattr(five_x_five_user, field["type"], None)
                 )
                 for field in data_map
+                if field["value"] != "Email"
             },
         }
 

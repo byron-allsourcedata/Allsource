@@ -19,7 +19,7 @@ type Props = {
 	successButtonText?: string;
 };
 
-const ConfirmDialog: React.FC<Props> = ({
+const ConfirmDialogPopover: React.FC<Props> = ({
 	openConfirmDialog,
 	confirmAction,
 	handleCloseConfirmDialog,
@@ -114,4 +114,4 @@ const ConfirmDialog: React.FC<Props> = ({
 	);
 };
 
-export default ConfirmDialog;
+export default ConfirmDialogPopover;

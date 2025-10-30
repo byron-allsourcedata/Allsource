@@ -53,8 +53,10 @@ class DataSyncImportedService:
     ):
         lead_ids = [lead_user.id for lead_user in lead_users]
         users_id = lead_users[-1].user_id
-        is_validation = await self.user_persistence.is_email_validation_enabled(
-            users_id
+        is_validation = (
+            self.user_persistence.get_domain_is_email_validation_enabled(
+                domain_id=data_sync.domain_id,
+            )
         )
         data_sync_imported_ids = (
             await self.data_sync_imported_persistence.save_data_imported_leads(

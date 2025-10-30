@@ -1,6 +1,5 @@
 "use client";
 
-import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	Box,
 	Typography,
@@ -43,8 +42,9 @@ import {
 import { formatMoney } from "@/components/PartnersAccounts";
 import { Row } from "@/components/Row";
 import { useSidebar } from "@/context/SidebarContext";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
-interface tableHeaders {
+interface TableHeaders {
 	key: string;
 	label: string;
 	sortable: boolean;
@@ -53,9 +53,8 @@ interface tableHeaders {
 interface TableBodyUserProps {
 	data: UserData[];
 	currentPage: number;
-	tableHeaders: tableHeaders[];
+	tableHeaders: TableHeaders[];
 	setLoading: (state: boolean) => void;
-	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
@@ -65,7 +64,7 @@ const TableHeader: React.FC<{
 	onSort: (field: string) => void;
 	sortField?: string;
 	sortOrder?: string;
-	tableHeaders: tableHeaders[];
+	tableHeaders: TableHeaders[];
 }> = ({ onSort, sortField, sortOrder, tableHeaders }) => {
 	return (
 		<TableHead>
@@ -108,14 +107,6 @@ const TableHeader: React.FC<{
 								minWidth: "150px",
 								zIndex: 1,
 							}),
-							// ...(key === "actions" && {
-							// 	width: "100px",
-							// 	maxWidth: "100px",
-							// 	minWidth: "60px",
-							// 	"::after": {
-							// 		content: "none",
-							// 	},
-							// }),
 						}}
 						onClick={sortable ? () => onSort(key) : undefined}
 					>
@@ -151,15 +142,14 @@ const TableHeader: React.FC<{
 	);
 };
 
-const TableBodyClient: React.FC<TableBodyUserProps> = ({
+const TableBodyUsers: React.FC<TableBodyUserProps> = ({
 	data,
 	tableHeaders,
 	setLoading,
 	currentPage,
-	changeUserIsEmailValidation,
 	onPlanChanged,
-	isPartnerTab,
 	isMaster,
+	isPartnerTab,
 }) => {
 	const router = useRouter();
 	const { setBackButton, triggerBackButton } = useUser();
@@ -255,6 +245,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 		};
 		return new Date(dateString).toLocaleDateString("en-US", options);
 	};
+
 	const getStatusStyle = (behavior_type: string) => {
 		switch (behavior_type) {
 			case "NEED_CONFIRM_EMAIL":
@@ -395,18 +386,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 										gap: 0.5,
 									}}
 								>
-									{!row.team_owner_id && (
-										<Image
-											src="/crown-flat.svg"
-											alt="team_owner"
-											color="red"
-											width={18}
-											height={18}
-											style={{
-												filter: filter,
-											}}
-										/>
-									)}
 									<Box
 										sx={{
 											textOverflow: "ellipsis",
@@ -417,10 +396,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 											pr: "10px",
 										}}
 									>
-										{row.full_name.replace("#test", "").trim()}
+										{row.full_name?.replace("#test", "").trim()}
 									</Box>
 
-									{row.full_name.includes("#test") && (
+									{row.full_name?.includes("#test") && (
 										<Chip
 											label="Test"
 											size="small"
@@ -434,20 +413,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 										/>
 									)}
 								</Box>
-
-								{row.type === "invitation" && (
-									<Chip
-										label="Invitation"
-										size="small"
-										sx={{
-											fontSize: "0.7rem",
-											height: "20px",
-											backgroundColor: "#FFE0B2",
-											color: "#BF360C",
-											ml: 0,
-										}}
-									/>
-								)}
 							</Box>
 
 							{!isCurrentUser && row.type === "user" && (
@@ -481,9 +446,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			case "invited_by":
 				return row.invited_by_email || "--";
 			case "access_level":
-				return Array.isArray(row.role) && row.role.length > 0
-					? row.role.join(", ")
-					: "--";
+				const role =
+					Array.isArray(row.role) && row.role.length > 0
+						? row.role.join(", ")
+						: "--";
+				const teamAccessLevel = row.team_access_level
+					? `(${row.team_access_level})`
+					: "";
+				return `${role} ${teamAccessLevel}`;
 			case "pixel_installed_count":
 				return row.pixel_installed_count || "0";
 			case "join_date":
@@ -565,17 +535,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 						{row.subscription_plan || "--"}
 					</Box>
 				);
-			case "is_email_validation_enabled":
-				return (
-					<Box
-						sx={{ display: "flex", justifyContent: "center", width: "100%" }}
-					>
-						<CustomSwitch
-							stateSwitch={row.is_email_validation_enabled}
-							changeState={() => changeUserIsEmailValidation(row.id)}
-						/>
-					</Box>
-				);
 
 			case "actions":
 				return (
@@ -602,6 +561,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							onPlanChanged={onPlanChanged}
 							isPartnerTab={isPartnerTab || row.is_partner}
 							isMaster={isMaster || row.is_master}
+							isUserTab={!isPartnerTab}
 							actionsLoading={whitelabelActionsLoading}
 							whitelabelEnabled={row.whitelabel_settings_enabled}
 							enableWhitelabel={() =>
@@ -617,69 +577,113 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 	};
 
 	return (
-		<TableBody>
-			{data.map((row) => (
-				<TableRow
-					key={row.id}
-					sx={{
-						"&:hover": {
-							backgroundColor: "rgba(247, 247, 247, 1)",
-						},
-						"&:last-of-type .MuiTableCell-root": {
+		<TableBody sx={{ position: "relative" }}>
+			{data?.length > 0 ? (
+				data.map((row) => (
+					<TableRow
+						key={row.id}
+						sx={{
+							"&:hover": { backgroundColor: "rgba(247, 247, 247, 1)" },
+							"&:last-of-type .MuiTableCell-root": { borderBottom: "none" },
+						}}
+					>
+						{tableHeaders.map(({ key }) => (
+							<TableCell
+								key={key}
+								sx={{
+									...leadsStyles.table_array,
+									textAlign: "left",
+									position: "relative",
+									padding: "8px",
+								}}
+							>
+								{renderCellContent(key, row)}
+							</TableCell>
+						))}
+					</TableRow>
+				))
+			) : (
+				<TableRow>
+					<TableCell
+						colSpan={tableHeaders.length}
+						sx={{
+							position: "relative",
+							height: 400, // чтобы было пространство под изображение
 							borderBottom: "none",
-						},
-					}}
-				>
-					{tableHeaders.map(({ key }) => (
-						<TableCell
-							key={key}
+						}}
+					>
+						{/* Центрируем по горизонтали и вертикали */}
+						<Box
 							sx={{
-								...leadsStyles.table_array,
-								textAlign: "left",
-								position: "relative",
-								padding: "8px",
-								"&:last-of-type::after": {
-									display:
-										key === "subscription_plan" || key === "access_level"
-											? "none"
-											: "block",
-								},
+								position: "absolute",
+								top: "50%",
+								left: "50%",
+								transform: "translate(-50%, -50%)",
+								textAlign: "center",
+								width: "100%",
+								pointerEvents: "none", // не блокирует скролл
 							}}
 						>
-							{renderCellContent(key, row)}
-						</TableCell>
-					))}
+							<Typography
+								variant="h5"
+								sx={{
+									mb: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "20px",
+									color: "#4a4a4a",
+									fontWeight: 600,
+									lineHeight: "28px",
+								}}
+							>
+								Data not matched yet!
+							</Typography>
+							<Image
+								src="/no-data.svg"
+								alt="No Data"
+								height={250}
+								width={340}
+							/>
+							<Typography
+								variant="body1"
+								color="textSecondary"
+								sx={{
+									mt: 2,
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									color: "#808080",
+									fontWeight: 600,
+									lineHeight: "20px",
+								}}
+							>
+								No data found for the current search query or applied filters.
+							</Typography>
+						</Box>
+					</TableCell>
 				</TableRow>
-			))}
+			)}
 		</TableBody>
 	);
 };
 
-interface PartnersAccountsProps {
-	is_admin?: boolean;
+interface UsersTabProps {
 	rowsPerPageOptions?: number[];
 	totalCount: number;
-	userData: AccountData[];
+	userData: UserData[];
 	setPage: any;
 	page: number;
 	setLoading?: any;
 	rowsPerPage: number;
-	accountsData?: any;
-	order?: any;
+	order?: "asc" | "desc" | "unset";
 	orderBy?: string;
 	setRowsPerPage?: any;
 	setOrder?: any;
 	setOrderBy?: any;
-	changeUserIsEmailValidation: (userId: number) => void;
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
 }
 
-type AccountData = UserData;
-
-const Account: React.FC<PartnersAccountsProps> = ({
-	is_admin,
+const UsersTab: React.FC<UsersTabProps> = ({
 	rowsPerPageOptions,
 	totalCount,
 	userData,
@@ -692,26 +696,18 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	setLoading,
 	setOrder,
 	setOrderBy,
-	changeUserIsEmailValidation,
-	onPlanChanged,
 	isPartnerTab,
 	isMaster,
+	onPlanChanged,
 }) => {
-	const tableHeaders = is_admin
+	const tableHeaders = isPartnerTab
 		? [
-				{ key: "name", label: "Account name", sortable: false },
+				{ key: "name", label: "Full name", sortable: false },
 				{ key: "email", label: "Email", sortable: false },
-				{ key: "join_date", label: "Join date", sortable: true },
+				{ key: "join_date", label: "Join Date", sortable: true },
 				{ key: "last_login_date", label: "Last Login", sortable: true },
-				{ key: "invited_by", label: "Invited by", sortable: false },
-				{ key: "access_level", label: "Access level", sortable: false },
-				// { key: "actions", label: "Actions", sortable: false },
-			]
-		: [
-				{ key: "name", label: "Account name", sortable: false },
-				{ key: "email", label: "Email", sortable: false },
-				{ key: "join_date", label: "Join date", sortable: true },
-				{ key: "last_login_date", label: "Last Login", sortable: true },
+				{ key: "invited_by", label: "Invited By", sortable: false },
+				{ key: "access_level", label: "Access Level", sortable: false },
 				{ key: "has_credit_card", label: "Has CC", sortable: true },
 				{ key: "premium_sources", label: "Premium Data", sortable: false },
 				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
@@ -720,18 +716,17 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
 				{ key: "credits_count", label: "Credits", sortable: false },
 				{ key: "cost_leads_overage", label: "Revenue", sortable: true },
-
 				{ key: "status", label: "Status", sortable: false },
-				{
-					key: "subscription_plan",
-					label: "Plan",
-					sortable: false,
-				},
-				{
-					key: "is_email_validation_enabled",
-					label: "Email Validation",
-					sortable: false,
-				},
+				{ key: "subscription_plan", label: "Plan", sortable: false },
+				{ key: "actions", label: "Actions", sortable: false },
+			]
+		: [
+				{ key: "name", label: "Full name", sortable: false },
+				{ key: "email", label: "Email", sortable: false },
+				{ key: "join_date", label: "Join Date", sortable: true },
+				{ key: "last_login_date", label: "Last Login", sortable: true },
+				{ key: "invited_by", label: "Invited By", sortable: false },
+				{ key: "status", label: "Status", sortable: false },
 				{ key: "actions", label: "Actions", sortable: false },
 			];
 
@@ -764,6 +759,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 		onRowsPerPageChange: handleRowsPerPageChange,
 		rowsPerPageOptions,
 	};
+
 	return (
 		<>
 			<Box
@@ -791,7 +787,7 @@ const Account: React.FC<PartnersAccountsProps> = ({
 								border: "1px solid rgba(235, 235, 235, 1)",
 								borderBottom: "none",
 								overflowX: "auto",
-								maxHeight: "50vh",
+								maxHeight: "56vh",
 							}}
 						>
 							<Table stickyHeader>
@@ -801,21 +797,22 @@ const Account: React.FC<PartnersAccountsProps> = ({
 									sortField={orderBy}
 									sortOrder={order}
 								/>
-								<TableBodyClient
+								<TableBodyUsers
 									data={userData}
 									tableHeaders={tableHeaders}
 									setLoading={setLoading}
 									currentPage={page}
-									changeUserIsEmailValidation={changeUserIsEmailValidation}
 									onPlanChanged={onPlanChanged}
 									isPartnerTab={isPartnerTab}
 									isMaster={isMaster}
 								/>
 							</Table>
 						</TableContainer>
-						<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
-							<Paginator tableMode {...paginationProps} />
-						</Box>
+						{paginationProps.countRows > 0 && (
+							<Box sx={{ borderTop: "1px solid rgba(235,235,235,1)" }}>
+								<Paginator tableMode {...paginationProps} />
+							</Box>
+						)}
 					</Grid>
 				</Grid>
 			</Box>
@@ -823,4 +820,4 @@ const Account: React.FC<PartnersAccountsProps> = ({
 	);
 };
 
-export default Account;
+export default UsersTab;

@@ -65,12 +65,12 @@ def end_of_month(dt: datetime) -> datetime:
 async def get_valid_email(
     user: FiveXFiveUser,
     million_verifier_integrations: MillionVerifierIntegrationsService,
-) -> str:
-    email_fields = [
+    email_fields=[
         "business_email",
         "personal_emails",
         "additional_personal_emails",
-    ]
+    ],
+) -> str:
     thirty_days_ago = datetime.now() - timedelta(days=30)
     thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
     verity = 0
@@ -113,12 +113,14 @@ async def get_valid_email(
     return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
 
-def get_valid_email_without_million(user: FiveXFiveUser) -> str:
-    email_fields = [
+def get_valid_email_without_million(
+    user: FiveXFiveUser,
+    email_fields=[
         "business_email",
         "personal_emails",
         "additional_personal_emails",
-    ]
+    ],
+) -> str:
     for field in email_fields:
         email = getattr(user, field, None)
         if email:

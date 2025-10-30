@@ -259,15 +259,6 @@ def get_previous_imported_leads(session, data_sync_id):
     return lead_users
 
 
-def is_email_validation_enabled(session: Session, users_id: int) -> bool:
-    result = (
-        session.query(Users.is_email_validation_enabled)
-        .filter(Users.id == users_id)
-        .scalar()
-    )
-    return result
-
-
 async def process_user_integrations(
     db_session: Db,
     leads_service: LeadsService,

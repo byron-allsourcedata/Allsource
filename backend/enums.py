@@ -82,7 +82,7 @@ class IntegrationLimit(Enum):
     GO_HIGH_LEVEL = 50
     CUSTOMER_IO = 200
     INSTANTLY = 100
-    GREEN_ARROW = 100
+    GREEN_ARROW = 500
 
 
 class BusinessType(Enum):
@@ -454,6 +454,7 @@ class ProccessDataSyncResult(Enum):
     VERIFY_EMAIL_FAILED = "verify_email_failed"
     PAYMENT_REQUIRED = "payment_required"
     QUOTA_EXHAUSTED = "quota_exhausted"
+    ERROR_CREATE_CUSTOM_VARIABLES = "error_create_custom_variables"
 
 
 ProccessDataSyncStatusLiteral = Literal[
@@ -471,6 +472,7 @@ ProccessDataSyncStatusLiteral = Literal[
     "verify_email_failed",
     "payment_required",
     "quota_exhausted",
+    "error_create_custom_variables",
 ]
 
 

@@ -11,6 +11,8 @@ from typing import Any
 
 from sqlalchemy import Row, update
 
+from models import UserDomains
+
 # from pprint import pprint
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -62,7 +64,7 @@ def setup_logging(level):
 
 
 def check_correct_data_sync(
-    data_sync_id: int, data_sync_imported_ids: list[int], session: Session
+    pixel_sync_id: int, pixel_sync_imported_ids: list[int], session: Session
 ) -> tuple[Any, list[Row[tuple[Any]]]] | None:
     integration_data = (
         session.query(UserIntegration, IntegrationUserSync)
@@ -71,25 +73,45 @@ def check_correct_data_sync(
             IntegrationUserSync.integration_id == UserIntegration.id,
         )
         .filter(
-            IntegrationUserSync.id == data_sync_id,
+            IntegrationUserSync.id == pixel_sync_id,
             IntegrationUserSync.sync_status != False,
         )
         .first()
     )
 
     if not integration_data:
-        logging.info("Data sync not found or Sync status is False")
+        logging.info("Pixel sync not found or Sync status is False")
         return None
 
     result = (
         session.query(DataSyncImportedLead.lead_users_id.label("lead_users_id"))
         .filter(
-            DataSyncImportedLead.id.in_(data_sync_imported_ids),
+            DataSyncImportedLead.id.in_(pixel_sync_imported_ids),
             DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
         )
         .all()
     )
     return integration_data, result
+
+
+def get_domain_is_email_validation_enabled(
+    domain_id: int, session: Session
+) -> bool:
+    """
+    Returns is_email_validation_enabled flag for domain_id.
+    If domain does not exist — returns False.
+    """
+
+    if not domain_id:
+        return False  # Безопасно возвращаем False
+
+    result = (
+        session.query(UserDomains.is_email_validation_enabled)
+        .filter(UserDomains.id == domain_id)
+        .first()
+    )
+
+    return bool(result[0]) if result else False
 
 
 def get_lead_attributes(session, lead_user_ids):
@@ -241,8 +263,8 @@ async def ensure_integration(
         users_id = message_body.get("users_id")
         logging.info(f"Data sync id {data_sync_id}")
         check_data = check_correct_data_sync(
-            data_sync_id,
-            data_sync_imported_ids=data_sync_imported_ids,
+            pixel_sync_id=data_sync_id,
+            pixel_sync_imported_ids=data_sync_imported_ids,
             session=db_session,
         )
         if not check_data:
@@ -277,9 +299,10 @@ async def ensure_integration(
         }
         lead_user_ids = [t.lead_users_id for t in lead_user_data]
         service = service_map.get(service_name)
-        user = user_persistence.get_user_by_id(user_id=users_id)
-        is_email_validation_enabled = user.get("is_email_validation_enabled")
         leads = get_lead_attributes(db_session, lead_user_ids)
+        is_email_validation_enabled = get_domain_is_email_validation_enabled(
+            domain_id=data_sync.domain_id, session=db_session
+        )
         if service:
             try:
                 results = await service.process_data_sync_lead(
@@ -405,6 +428,25 @@ async def ensure_integration(
                         await message.ack()
                         return
 
+                    case ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value:
+                        logging.debug(
+                            f"Custom variables don't created: {service_name}"
+                        )
+                        update_users_integrations(
+                            db_session,
+                            status=ProccessDataSyncResult.ERROR_CREATE_CUSTOM_VARIABLES.value,
+                            integration_data_sync_id=data_sync.id,
+                            service_name=service_name,
+                        )
+                        await send_error_msg(
+                            user_integration.user_id,
+                            service_name,
+                            notification_persistence,
+                            NotificationTitles.DATA_SYNC_ERROR.value,
+                        )
+                        await message.ack()
+                        return
+
             bulk_update_imported_leads(
                 session=db_session,
                 updates=[
@@ -448,6 +490,9 @@ async def main():
     setup_logging(log_level)
     resolver = Resolver()
     while True:
+        rabbitmq_connection = None
+        db_session = None  # ✅ объявляем до try
+        integration_service = None
         try:
             rabbitmq_connection = RabbitMQConnection()
             connection = await rabbitmq_connection.connect()

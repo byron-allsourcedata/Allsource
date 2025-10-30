@@ -11,11 +11,14 @@ import {
 	TextField,
 	InputAdornment,
 	Button,
+	IconButton,
 } from "@mui/material";
 import axios from "axios";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { useRouter } from "next/navigation";
-import Account from "./components/Account";
+import AccountsTab from "./components/AccountsTab";
+import UsersTab from "./components/UsersTab";
+import PixelsTab, { DomainData } from "./components/PixelsTab";
 import InviteAdmin from "./components/InviteAdmin";
 import CustomCards from "./components/CustomCards";
 import FilterPopup from "./components/FilterPopup";
@@ -51,6 +54,7 @@ export interface UserData {
 	invited_by_email?: string;
 	subscription_plan?: string;
 	role: string[];
+	team_access_level: string[];
 	team_owner_id: number | null;
 	pixel_installed_count?: number;
 	contacts_count?: number;
@@ -86,6 +90,7 @@ const Users: React.FC = () => {
 		{ label: string; value: string }[]
 	>([]);
 	const [userData, setUserData] = useState<UserData[]>([]);
+	const [domainData, setDomainData] = useState<DomainData[]>([]);
 	const [valuesMetrics, setValueMetrics] = useState<CustomCardsProps>({
 		users: 0,
 		pixel_contacts: 0,
@@ -97,20 +102,16 @@ const Users: React.FC = () => {
 	});
 
 	useEffect(() => {
-		const accessToken = localStorage.getItem("token");
-		if (!accessToken) {
-			router.push("/signin");
-			return;
-		}
-	}, []);
-
-	useEffect(() => {
 		fetchData();
 	}, [order, orderBy, selectedFilters, excludeTestUsers]);
 
 	useEffect(() => {
 		fetchUserData();
 	}, [tabIndex, page, rowsPerPage, order, orderBy, selectedFilters]);
+
+	const refresh = () => {
+		fetchUserData(); // или fetchData(), если нужно всё обновлять
+	};
 
 	const handleSearchChange = (
 		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -202,24 +203,31 @@ const Users: React.FC = () => {
 
 	const fetchUserData = async () => {
 		try {
+			setLoading(true);
 			const basePath = "/admin";
-			let endpoint = "/users";
+			let endpoint = "/accounts";
 
 			switch (tabIndex) {
 				case 0:
-					endpoint = "/users";
+					endpoint = "/accounts";
 					break;
 				case 1:
-					endpoint = "/admins";
+					endpoint = "/users";
 					break;
 				case 2:
-					endpoint = "/partners?is_master=true";
+					endpoint = "/domains";
 					break;
 				case 3:
+					endpoint = "/admins";
+					break;
+				case 4:
+					endpoint = "/partners?is_master=true";
+					break;
+				case 5:
 					endpoint = "/partners";
 					break;
 				default:
-					endpoint = "/users";
+					endpoint = "/accounts";
 			}
 
 			let queryParams = [
@@ -249,7 +257,15 @@ const Users: React.FC = () => {
 
 			const response = await axiosInstance.get(url);
 			if (response.status === 200) {
-				setUserData(response.data.users);
+				if (tabIndex === 2) {
+					setDomainData(response.data.domains);
+					setTotalCount(response.data.count);
+				}
+				if (tabIndex === 0) {
+					setUserData(response.data.accounts);
+				} else {
+					setUserData(response.data.users);
+				}
 				setTotalCount(response.data.count);
 				const options = [50, 100, 300, 500];
 				let RowsPerPageOptions = options.filter(
@@ -275,10 +291,12 @@ const Users: React.FC = () => {
 	};
 
 	const tabs = [
-		{ label: "Accounts", visible: true },
-		{ label: "Admins", visible: true },
-		{ label: "Master Partners", visible: true },
-		{ label: "Partners", visible: true },
+		{ id: 0, label: "Account", visible: true },
+		{ id: 1, label: "Users", visible: true },
+		{ id: 2, label: "Pixels", visible: true },
+		{ id: 3, label: "Admins", visible: true },
+		{ id: 4, label: "Master Partners", visible: true },
+		{ id: 5, label: "Partners", visible: true },
 	];
 
 	const handleFilterPopupOpen = () => {
@@ -405,34 +423,30 @@ const Users: React.FC = () => {
 		event: React.SyntheticEvent | null,
 		newIndex: number,
 	) => {
+		setSearch("");
+		setExcludeTestUsers(false);
 		setTabIndex(newIndex);
 	};
 
-	const changeUserIsEmailValidation = (userId: number) => {
-		axiosInstance
-			.put<boolean>(`/admin/change-email-validation?user_id=${userId}`)
-			.then((response) => {
-				if (response.status === 200 && response.data) {
-					const updatedUserData = userData.map((user) => {
-						if (user.id === userId) {
-							return {
-								...user,
-								is_email_validation_enabled: !user.is_email_validation_enabled,
-							};
-						}
-						return user;
-					});
-					setUserData(updatedUserData);
-				}
-			})
-			.catch(() => {
-				showErrorToast("Error changing email validation");
-			});
+	const tabConfig: Record<
+		number,
+		{ placeholder: string; showExclude: boolean }
+	> = {
+		0: { placeholder: "Search company name", showExclude: false },
+		1: { placeholder: "Search by account name, emails", showExclude: true },
+		2: {
+			placeholder: "Search by domain, account name",
+			showExclude: false,
+		},
+		3: { placeholder: "Search by admin account", showExclude: false },
+		4: { placeholder: "Search master partner name, emails", showExclude: true },
+		5: { placeholder: "Search by partner name, emails", showExclude: true },
 	};
 
-	if (loading) {
-		return <CustomizedProgressBar />;
-	}
+	const { placeholder, showExclude } = tabConfig[tabIndex] || {
+		placeholder: "Search...",
+		showExclude: false,
+	};
 
 	return (
 		<>
@@ -448,19 +462,8 @@ const Users: React.FC = () => {
 					height: "100%",
 				}}
 			>
-				<Box
-					sx={{
-						display: "flex",
-						flexDirection: "row",
-						alignItems: "start",
-						justifyContent: "space-between",
-					}}
-				>
-					<Typography variant="h4" component="h1" sx={usersStyle.title}>
-						Users
-					</Typography>
-				</Box>
-				<Box sx={{ display: "flex", flexDirection: "column" }}>
+				{loading && <CustomizedProgressBar />}
+				<Box sx={{ display: "flex", flexDirection: "column", pt: 3 }}>
 					<Box>
 						<CustomCards values={valuesMetrics} />
 					</Box>
@@ -594,18 +597,20 @@ const Users: React.FC = () => {
 						</Box>
 
 						<Box sx={{ display: "flex", gap: "16px", alignItems: "center" }}>
-							<Box sx={{ display: "flex", alignItems: "center" }}>
-								<Typography className="black-table-header">
-									Exclude test users
-								</Typography>
-								<CustomSwitch
-									stateSwitch={excludeTestUsers}
-									changeState={() => setExcludeTestUsers((prev) => !prev)}
-								/>
-							</Box>
+							{showExclude && (
+								<Box sx={{ display: "flex", alignItems: "center" }}>
+									<Typography className="black-table-header">
+										Exclude test users
+									</Typography>
+									<CustomSwitch
+										stateSwitch={excludeTestUsers}
+										changeState={() => setExcludeTestUsers((prev) => !prev)}
+									/>
+								</Box>
+							)}
+
 							<TextField
-								id="input-with-icon-textfield"
-								placeholder="Search by account name, emails"
+								placeholder={placeholder}
 								value={search}
 								onChange={(e) => {
 									handleSearchChange(e);
@@ -619,7 +624,13 @@ const Users: React.FC = () => {
 								InputProps={{
 									startAdornment: (
 										<InputAdornment position="start">
-											<SearchIcon style={{ cursor: "pointer" }} />
+											<IconButton
+												sx={{ ":hover": { backgroundColor: "transparent" } }}
+												size="small"
+												onClick={() => fetchData()}
+											>
+												<SearchIcon style={{ cursor: "pointer" }} />{" "}
+											</IconButton>
 										</InputAdornment>
 									),
 								}}
@@ -640,7 +651,7 @@ const Users: React.FC = () => {
 									},
 								}}
 							/>
-							{tabIndex === 1 && (
+							{tabIndex === 3 && (
 								<Button
 									variant="outlined"
 									sx={{
@@ -663,67 +674,69 @@ const Users: React.FC = () => {
 									Add Admin
 								</Button>
 							)}
-							<Button
-								onClick={handleFilterPopupOpen}
-								aria-haspopup="true"
-								sx={{
-									textTransform: "none",
-									height: "40px",
-									color:
-										selectedFilters.length > 0
-											? "rgba(56, 152, 252, 1)"
-											: "rgba(128, 128, 128, 1)",
-									border:
-										selectedFilters.length > 0
-											? `1px solid ${"rgba(56, 152, 252, 1)"}`
-											: "1px solid rgba(184, 184, 184, 1)",
-									borderRadius: "4px",
-									padding: "8px",
-									opacity: "1",
-									minWidth: "auto",
-									position: "relative",
-									"@media (max-width: 900px)": {
-										border: "none",
-										padding: 0,
-									},
-									"&:hover": {
-										backgroundColor: "transparent",
-										border: `1px solid ${"rgba(56, 152, 252, 1)"}`,
-										color: "rgba(56, 152, 252, 1)",
-										"& .MuiSvgIcon-root": {
-											color: "rgba(56, 152, 252, 1)",
-										},
-									},
-								}}
-							>
-								<FilterListIcon
-									fontSize="medium"
+							{(showExclude || tabIndex === 0) && (
+								<Button
+									onClick={handleFilterPopupOpen}
+									aria-haspopup="true"
 									sx={{
+										textTransform: "none",
+										height: "40px",
 										color:
 											selectedFilters.length > 0
 												? "rgba(56, 152, 252, 1)"
 												: "rgba(128, 128, 128, 1)",
-									}}
-								/>
-
-								{selectedFilters.length > 0 && (
-									<Box
-										sx={{
-											position: "absolute",
-											top: 6,
-											right: 8,
-											width: "10px",
-											height: "10px",
-											backgroundColor: "red",
-											borderRadius: "50%",
-											"@media (max-width: 900px)": {
-												top: -1,
-												right: 1,
+										border:
+											selectedFilters.length > 0
+												? `1px solid ${"rgba(56, 152, 252, 1)"}`
+												: "1px solid rgba(184, 184, 184, 1)",
+										borderRadius: "4px",
+										padding: "8px",
+										opacity: "1",
+										minWidth: "auto",
+										position: "relative",
+										"@media (max-width: 900px)": {
+											border: "none",
+											padding: 0,
+										},
+										"&:hover": {
+											backgroundColor: "transparent",
+											border: `1px solid ${"rgba(56, 152, 252, 1)"}`,
+											color: "rgba(56, 152, 252, 1)",
+											"& .MuiSvgIcon-root": {
+												color: "rgba(56, 152, 252, 1)",
 											},
+										},
+									}}
+								>
+									<FilterListIcon
+										fontSize="medium"
+										sx={{
+											color:
+												selectedFilters.length > 0
+													? "rgba(56, 152, 252, 1)"
+													: "rgba(128, 128, 128, 1)",
 										}}
 									/>
-								)}
-							</Button>
+
+									{selectedFilters.length > 0 && (
+										<Box
+											sx={{
+												position: "absolute",
+												top: 6,
+												right: 8,
+												width: "10px",
+												height: "10px",
+												backgroundColor: "red",
+												borderRadius: "50%",
+												"@media (max-width: 900px)": {
+													top: -1,
+													right: 1,
+												},
+											}}
+										/>
+									)}
+								</Button>
+							)}
 							<FilterPopup
 								open={filterPopupOpen}
 								onClose={handleFilterPopupClose}
@@ -731,25 +744,115 @@ const Users: React.FC = () => {
 							/>
 						</Box>
 					</Box>
-					<Account
-						is_admin={tabIndex === 1}
-						rowsPerPageOptions={rowsPerPageOptions}
-						totalCount={totalCount}
-						userData={userData}
-						setPage={setPage}
-						page={page}
-						setRowsPerPage={setRowsPerPage}
-						rowsPerPage={rowsPerPage}
-						order={order}
-						orderBy={orderBy}
-						setOrder={setOrder}
-						setOrderBy={setOrderBy}
-						setLoading={setLoading}
-						changeUserIsEmailValidation={changeUserIsEmailValidation}
-						onPlanChanged={fetchUserData}
-						isPartnerTab={tabIndex === 2 || tabIndex === 3}
-						isMaster={tabIndex === 2}
-					/>
+					{tabIndex === 0 && (
+						<AccountsTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							onPlanChanged={fetchUserData}
+						/>
+					)}
+					{tabIndex === 1 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							onPlanChanged={fetchUserData}
+							isMaster={false}
+							isPartnerTab={false}
+						/>
+					)}
+					{tabIndex === 2 && (
+						<PixelsTab
+							domains={domainData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							totalCount={totalCount}
+							refresh={refresh}
+						/>
+					)}
+					{tabIndex === 3 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							onPlanChanged={fetchUserData}
+							isMaster={false}
+							isPartnerTab={false}
+						/>
+					)}
+					{tabIndex === 4 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							onPlanChanged={fetchUserData}
+							isMaster={true}
+							isPartnerTab={true}
+						/>
+					)}
+					{tabIndex === 5 && (
+						<UsersTab
+							rowsPerPageOptions={rowsPerPageOptions}
+							totalCount={totalCount}
+							userData={userData}
+							setPage={setPage}
+							page={page}
+							setRowsPerPage={setRowsPerPage}
+							rowsPerPage={rowsPerPage}
+							order={order}
+							orderBy={orderBy}
+							setOrder={setOrder}
+							setOrderBy={setOrderBy}
+							setLoading={setLoading}
+							onPlanChanged={fetchUserData}
+							isMaster={false}
+							isPartnerTab={true}
+						/>
+					)}
 				</Box>
 			</Box>
 		</>

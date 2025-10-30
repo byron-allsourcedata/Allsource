@@ -274,6 +274,9 @@ async def process_matching(
             count_matched_persons = getattr(result, "rowcount", 0) or 0
             logging.info(f"Adding {len(matched_persons_to_add)} new persons")
 
+        matched_persons_to_update = [
+            m for m in matched_persons_to_update if m.get("id")
+        ]
         if matched_persons_to_update:
             logging.info(f"Updating {len(matched_persons_to_update)} persons")
             db_session.bulk_update_mappings(
