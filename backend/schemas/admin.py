@@ -42,7 +42,6 @@ class UserResult(BaseModel):
     status: str
     last_login: datetime
     role: str
-    is_email_validation_enabled: bool
     pixel_installed_count: int
     sources_count: int
     contacts_count: int

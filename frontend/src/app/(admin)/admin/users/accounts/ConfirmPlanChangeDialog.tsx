@@ -14,6 +14,7 @@ interface ConfirmPlanChangeDialogProps {
 	onConfirm: () => void;
 	user: {
 		name: string;
+		company_name?: string;
 		email: string;
 		joinDate: string;
 		currentPlan: string;
@@ -40,6 +41,9 @@ export const ConfirmPlanChangeDialog: React.FC<
 				<Grid container spacing={1}>
 					{[
 						{ label: "Name", value: user.name },
+						user.company_name
+							? { label: "Company Name", value: user.company_name }
+							: null,
 						{ label: "Email", value: user.email },
 						{
 							label: "Join Date",
@@ -50,27 +54,31 @@ export const ConfirmPlanChangeDialog: React.FC<
 							}),
 						},
 						{ label: "Current Plan", value: user.currentPlan },
-					].map(({ label, value }) => (
-						<Grid
-							item
-							xs={12}
-							key={label}
-							sx={{
-								display: "flex",
-								justifyContent: "space-between",
-								alignItems: "center",
-								py: 0.5,
-							}}
-						>
-							<Typography className="modal-text">{label}</Typography>
-							<Typography
-								className="modal-text-semibold"
-								sx={{ textAlign: "right" }}
+					]
+						.filter(
+							(item): item is { label: string; value: string } => item !== null,
+						)
+						.map(({ label, value }) => (
+							<Grid
+								item
+								xs={12}
+								key={label}
+								sx={{
+									display: "flex",
+									justifyContent: "space-between",
+									alignItems: "center",
+									py: 0.5,
+								}}
 							>
-								{value}
-							</Typography>
-						</Grid>
-					))}
+								<Typography className="modal-text">{label}</Typography>
+								<Typography
+									className="modal-text-semibold"
+									sx={{ textAlign: "right" }}
+								>
+									{value}
+								</Typography>
+							</Grid>
+						))}
 				</Grid>
 			</DialogContent>
 

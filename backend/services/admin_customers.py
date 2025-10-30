@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
 from sqlalchemy import func
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from db_dependencies import Db
 from persistence.admin import AdminPersistence
+from persistence.domains import UserDomainsPersistence
 from resolver import injectable
 from schemas.admin import PartnersQueryParams
 from schemas.users import UpdateUserRequest
@@ -26,6 +27,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.audience_dashboard import DashboardAudiencePersistence
+from services.integrations.base import IntegrationService
 from services.jwt_service import create_access_token
 from services.sendgrid import SendgridHandler
 from services.subscriptions import SubscriptionService
@@ -52,6 +54,8 @@ class AdminCustomersService:
         partners_persistence: PartnersPersistence,
         dashboard_audience_persistence: DashboardAudiencePersistence,
         admin_persistence: AdminPersistence,
+        domain_persistence: UserDomainsPersistence,
+        integration_service: IntegrationService,
     ):
         self.db = db
         self.user_subscription_service = user_subscription_service
@@ -63,6 +67,8 @@ class AdminCustomersService:
         self.partners_persistence = partners_persistence
         self.dashboard_audience_persistence = dashboard_audience_persistence
         self.admin_persistence = admin_persistence
+        self.domain_persistence = domain_persistence
+        self.integration_service = integration_service
 
     def get_admin_users(
         self,
@@ -150,6 +156,85 @@ class AdminCustomersService:
         paginated = combined[start:end]
 
         return {"users": paginated, "count": len(combined)}
+
+    def get_customer_accounts(
+        self,
+        *,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        exclude_test_users: bool,
+        last_login_date_start: Optional[int] = None,
+        last_login_date_end: Optional[int] = None,
+        join_date_start: Optional[int] = None,
+        join_date_end: Optional[int] = None,
+        statuses: Optional[str] = None,
+    ):
+        filters = {}
+        if last_login_date_start is not None:
+            filters["last_login_date_start"] = last_login_date_start
+        if last_login_date_end is not None:
+            filters["last_login_date_end"] = last_login_date_end
+        if join_date_start is not None:
+            filters["join_date_start"] = join_date_start
+        if join_date_end is not None:
+            filters["join_date_end"] = join_date_end
+        if statuses is not None:
+            filters["statuses"] = statuses
+
+        accounts, total_count = self.user_persistence.get_base_accounts(
+            search_query=search_query,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            exclude_test_users=exclude_test_users,
+            filters=filters,
+        )
+
+        account_ids = [a.id for a in accounts]
+        aggregates = self.user_persistence.get_customer_aggregates(account_ids)
+
+        result = []
+        for acc in accounts:
+            cost_leads_overage = acc.overage_leads_count * 0.08
+            agg = aggregates.get(acc.id, {})
+
+            result.append(
+                {
+                    "id": acc.id,
+                    "company_name": acc.company_name,
+                    "owner_full_name": acc.full_name,
+                    "email": acc.email,
+                    "created_at": acc.created_at,
+                    "last_login": acc.last_login,
+                    "status": acc.user_status,
+                    "is_trial": self.plans_persistence.get_trial_status_by_user_id(
+                        acc.id
+                    ),
+                    "role": acc.role,
+                    "is_partner": acc.is_partner,
+                    "is_master": acc.is_master,
+                    "pixel_installed_count": agg.get(
+                        "pixel_installed_count", 0
+                    ),
+                    "sources_count": agg.get("sources_count", 0),
+                    "contacts_count": acc.total_leads,
+                    "subscription_plan": acc.subscription_plan,
+                    "lookalikes_count": agg.get("lookalikes_count", 0),
+                    "type": "account",
+                    "credits_count": acc.credits_count,
+                    "is_another_domain_resolved": acc.is_another_domain_resolved,
+                    "has_credit_card": acc.has_credit_card,
+                    "cost_leads_overage": cost_leads_overage,
+                    "whitelabel_settings_enabled": acc.whitelabel_settings_enabled,
+                    "premium_sources": acc.premium_sources,
+                }
+            )
+
+        return {"accounts": result, "count": total_count}
 
     def generate_access_token(self, user: dict, user_account_id: int):
         user_info = self.user_persistence.get_user_by_id(user_account_id)
@@ -275,7 +360,6 @@ class AdminCustomersService:
 
             cost_leads_overage = base_user.overage_leads_count * 0.08
             agg = aggregates.get(user.id, {})
-
             result.append(
                 {
                     "id": user.id,
@@ -288,8 +372,8 @@ class AdminCustomersService:
                         base_user.id
                     ),
                     "role": base_user.role,
+                    "team_access_level": base_user.team_access_level,
                     "team_owner_id": user.team_owner_id,
-                    "is_email_validation_enabled": base_user.is_email_validation_enabled,
                     "is_partner": base_user.is_partner,
                     "is_master": base_user.is_master,
                     "pixel_installed_count": agg.get(
@@ -310,6 +394,76 @@ class AdminCustomersService:
             )
 
         return {"users": result, "count": total_count}
+
+    def get_all_domains_details(
+        self,
+        *,
+        page: int,
+        per_page: int,
+        sort_by: str | None,
+        sort_order: str | None,
+        search_query: str | None,
+    ):
+        domains, total_count = self.user_persistence.get_domains_with_users(
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            search_query=search_query,
+        )
+
+        result = []
+
+        for d, user_name, company_name, sync_count, lead_count in domains:
+            leads_by_day = self.domain_persistence.leads_persistence.get_leads_count_by_day(
+                domain_id=d.id
+            )
+
+            now = datetime.now(timezone.utc)
+            threshold = now - timedelta(hours=48)
+
+            last_48h_leads = sum(
+                count
+                for date, count in leads_by_day
+                if datetime.combine(
+                    date, datetime.min.time(), tzinfo=timezone.utc
+                )
+                >= threshold
+            )
+
+            if last_48h_leads > 0 or sync_count > 0:
+                status = "Working"
+            elif lead_count > 0:
+                status = "Broken"
+            else:
+                status = "Idle"
+
+            result.append(
+                {
+                    "id": d.id,
+                    "domain": d.domain,
+                    "company_name": company_name,
+                    "is_pixel_installed": d.is_pixel_installed,
+                    "status": status,
+                    "additional_pixel": {
+                        "is_add_to_cart_installed": d.is_add_to_cart_installed,
+                        "is_converted_sales_installed": d.is_converted_sales_installed,
+                        "is_view_product_installed": d.is_view_product_installed,
+                    },
+                    "total_leads": lead_count,
+                    "resolutions": [
+                        {"date": date, "lead_count": count}
+                        for date, count in leads_by_day
+                    ],
+                    "data_syncs_count": sync_count,
+                    "created_at": d.created_at.isoformat(),
+                    "is_email_validation_enabled": d.is_email_validation_enabled
+                    if d.created_at
+                    else None,
+                }
+            )
+
+        return {"domains": result, "count": total_count}
 
     def get_partners_users(self, query_params: PartnersQueryParams):
         filters = {}
@@ -360,7 +514,6 @@ class AdminCustomersService:
                     "status": user.user_status,
                     "last_login": user.last_login,
                     "role": user.role,
-                    "is_email_validation_enabled": user.is_email_validation_enabled,
                     "pixel_installed_count": pixel_installed_count,
                     "sources_count": sources_count,
                     "contacts_count": user.total_leads,
@@ -518,8 +671,8 @@ class AdminCustomersService:
 
         return user_data
 
-    def change_email_validation(self, user_id: int) -> bool:
-        updated_row = self.user_persistence.change_email_validation(user_id)
+    def change_email_validation(self, domain_id: int) -> bool:
+        updated_row = self.user_persistence.change_email_validation(domain_id)
         return updated_row > 0
 
     def did_change_plan(self, user_id: int, plan_alias: str) -> bool:
@@ -530,3 +683,6 @@ class AdminCustomersService:
             self.db.commit()
             return True
         return False
+
+    def delete_domain(self, domain_id: int):
+        return self.domain_persistence.delete_domain_admin(domain_id)

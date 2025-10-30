@@ -22,16 +22,19 @@ type Props = {
 	currentPlanAlias: string;
 	user: {
 		name: string;
+		company_name?: string;
 		email: string;
 		joinDate: string;
 	};
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
+	isUserTab: boolean;
 	actionsLoading?: boolean;
 	enableWhitelabel?: () => void;
 	disableWhitelabel?: () => void;
 	whitelabelEnabled?: boolean;
+	isAccountTab?: boolean;
 };
 
 export const ActionsMenu: React.FC<Props> = ({
@@ -43,10 +46,12 @@ export const ActionsMenu: React.FC<Props> = ({
 	onPlanChanged,
 	isPartnerTab,
 	isMaster,
+	isUserTab,
 	actionsLoading,
 	whitelabelEnabled,
 	enableWhitelabel,
 	disableWhitelabel,
+	isAccountTab,
 }) => {
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
@@ -179,39 +184,47 @@ export const ActionsMenu: React.FC<Props> = ({
 				}}
 				MenuListProps={{ dense: true }}
 			>
-				<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+				{isUserTab ? (
+					<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+				) : (
+					<>
+						{!isAccountTab && (
+							<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+						)}
 
-				<MenuItem
-					disabled={actionsLoading || (!isMaster && isPartnerTab)}
-					onClick={() => handleOpenPartnerPopup(false)}
-				>
-					Make a Partner
-				</MenuItem>
+						<MenuItem
+							disabled={actionsLoading || (!isMaster && isPartnerTab)}
+							onClick={() => handleOpenPartnerPopup(false)}
+						>
+							Make a Partner
+						</MenuItem>
 
-				<MenuItem
-					disabled={actionsLoading || (isMaster && isPartnerTab)}
-					onClick={() => handleOpenPartnerPopup(true)}
-				>
-					Make a Master Partner
-				</MenuItem>
+						<MenuItem
+							disabled={actionsLoading || (isMaster && isPartnerTab)}
+							onClick={() => handleOpenPartnerPopup(true)}
+						>
+							Make a Master Partner
+						</MenuItem>
 
-				<MenuItem
-					disabled={actionsLoading || !isPartnerTab}
-					onClick={toggleWhitelabel}
-				>
-					{whitelabelEnabled ? "Disable " : "Enable "}
-					whitelabel
-				</MenuItem>
+						<MenuItem
+							disabled={actionsLoading || !isPartnerTab}
+							onClick={toggleWhitelabel}
+						>
+							{whitelabelEnabled ? "Disable " : "Enable "}
+							whitelabel
+						</MenuItem>
 
-				<MenuItem onMouseEnter={handleOpenSubmenu}>
-					<ListItemText>Change Plan</ListItemText>
-					<ListItemIcon>
-						<ArrowRightIcon
-							fontSize="small"
-							sx={{ color: "rgba(32, 33, 36, 1)" }}
-						/>
-					</ListItemIcon>
-				</MenuItem>
+						<MenuItem onMouseEnter={handleOpenSubmenu}>
+							<ListItemText>Change Plan</ListItemText>
+							<ListItemIcon>
+								<ArrowRightIcon
+									fontSize="small"
+									sx={{ color: "rgba(32, 33, 36, 1)" }}
+								/>
+							</ListItemIcon>
+						</MenuItem>
+					</>
+				)}
 			</Menu>
 
 			<Menu
@@ -262,6 +275,7 @@ export const ActionsMenu: React.FC<Props> = ({
 				newPlan={selectedPlan ?? ""}
 				user={{
 					name: user.name,
+					company_name: user.company_name,
 					email: user.email,
 					joinDate: user.joinDate,
 					currentPlan: currentPlanAlias,

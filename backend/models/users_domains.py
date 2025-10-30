@@ -62,6 +62,9 @@ class UserDomains(Base):
     is_another_domain_resolved = Column(
         Boolean, nullable=False, server_default="false", default=False
     )
+    is_email_validation_enabled = Column(
+        Boolean, nullable=False, server_default=text("true")
+    )
 
     __table_args__ = (
         Index(

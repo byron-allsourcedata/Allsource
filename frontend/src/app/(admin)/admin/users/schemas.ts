@@ -1,6 +1,8 @@
 export interface UserData {
 	id: number;
 	full_name: string;
+	owner_full_name?: string;
+	company_name?: string;
 	email: string;
 	created_at: string;
 	status?: string;
@@ -9,6 +11,7 @@ export interface UserData {
 	invited_by_email?: string;
 	subscription_plan?: string;
 	role: string[];
+	team_access_level: string[];
 	team_owner_id: number | null;
 	pixel_installed_count?: number;
 	contacts_count?: number;

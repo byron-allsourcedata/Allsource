@@ -1442,8 +1442,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																	component="div"
 																	sx={{ fontSize: "12px !important" }}
 																>
-																	Email validation was disabled for your
-																	account, contact support
+																	Email validation was disabled for your domain,
+																	contact support
 																</Typography>
 															</Box>
 														}

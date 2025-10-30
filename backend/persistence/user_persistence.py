@@ -5,7 +5,7 @@ from typing import Optional, TypedDict
 from decimal import Decimal
 
 import pytz
-from sqlalchemy import func, desc, asc, or_, and_, select, update, case
+from sqlalchemy import func, desc, asc, or_, and_, select, update, case, text
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import case as caseSQl, literal_column
 
@@ -71,14 +71,6 @@ class UserPersistence:
             synchronize_session=False,
         )
         self.db.commit()
-
-    async def is_email_validation_enabled(self, users_id: int) -> bool:
-        result = (
-            self.db.query(Users.is_email_validation_enabled)
-            .filter(Users.id == users_id)
-            .scalar()
-        )
-        return result
 
     def save_user_domain(self, user_id: int, domain: str):
         user_domain = (
@@ -234,7 +226,6 @@ class UserPersistence:
                 "premium_source_credits": user.premium_source_credits,
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
-                "is_email_validation_enabled": user.is_email_validation_enabled,
                 "whitelabel_settings_enabled": user.whitelabel_settings_enabled,
                 "random_seed": user.random_seed,
             }
@@ -504,7 +495,7 @@ class UserPersistence:
             .exists()
         )
 
-        subscription_plan_case = caseSQl(
+        subscription_plan_case = case(
             (
                 and_(
                     Users.current_subscription_id == None,
@@ -525,12 +516,107 @@ class UserPersistence:
                 Users.created_at,
                 Users.last_login,
                 Users.role,
+                Users.team_access_level,
                 Users.team_owner_id,
                 Users.leads_credits.label("credits_count"),
                 Users.total_leads,
-                Users.is_email_validation_enabled.label(
-                    "is_email_validation_enabled"
+                Users.overage_leads_count,
+                Users.has_credit_card,
+                subscription_plan_case,
+                status_case.label("user_status"),
+                case((subq_domain_resolved, True), else_=False).label(
+                    "is_another_domain_resolved"
                 ),
+                Users.whitelabel_settings_enabled,
+                Users.is_partner,
+                Partner.is_master.label("is_master"),
+                func.coalesce(premium_source_count.c.count, 0).label(
+                    "premium_sources"
+                ),
+            )
+            .outerjoin(
+                UserSubscriptions,
+                UserSubscriptions.id == Users.current_subscription_id,
+            )
+            .outerjoin(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .outerjoin(
+                premium_source_count, premium_source_count.c.id == Users.id
+            )
+            .outerjoin(Partner, Partner.user_id == Users.id)
+            .filter(Users.role.any("customer"))
+            .group_by(
+                Users.id,
+                Users.email,
+                Users.full_name,
+                Users.created_at,
+                Users.last_login,
+                Users.role,
+                Users.team_owner_id,
+                Users.leads_credits,
+                Users.total_leads,
+                Users.overage_leads_count,
+                Users.has_credit_card,
+                Users.whitelabel_settings_enabled,
+                Users.is_partner,
+                Partner.is_master,
+                SubscriptionPlan.title,
+                premium_source_count.c.count,
+                status_case,
+                subq_domain_resolved,
+            )
+        )
+
+        return query, status_case
+
+    def get_base_customers(
+        self,
+        search_query,
+        page,
+        per_page,
+        sort_by: str,
+        sort_order,
+        exclude_test_users,
+        filters,
+    ):
+        status_case = self.calculate_user_status()
+
+        subq_domain_resolved = (
+            self.db.query(UserDomains.user_id)
+            .filter(
+                UserDomains.user_id == Users.id,
+                UserDomains.is_another_domain_resolved.is_(True),
+            )
+            .exists()
+        )
+
+        subscription_plan_case = case(
+            (
+                and_(
+                    Users.current_subscription_id == None,
+                    Users.total_leads == 0,
+                ),
+                literal_column("'N/A'"),
+            ),
+            else_=SubscriptionPlan.title,
+        ).label("subscription_plan")
+
+        premium_source_count = premium_source.count_by_user().subquery()
+
+        query = (
+            self.db.query(
+                Users.id,
+                Users.email,
+                Users.full_name,
+                Users.created_at,
+                Users.last_login,
+                Users.role,
+                Users.team_access_level,
+                Users.team_owner_id,
+                Users.leads_credits.label("credits_count"),
+                Users.total_leads,
                 Users.overage_leads_count,
                 Users.has_credit_card,
                 subscription_plan_case,
@@ -560,9 +646,102 @@ class UserPersistence:
             .filter(Users.role.any("customer"))
         )
 
-        return query, status_case
+        if exclude_test_users:
+            query = query.filter(~Users.full_name.like("#test%"))
 
-    def get_base_customers(
+        if filters.get("statuses"):
+            statuses = [
+                s.strip().lower() for s in filters["statuses"].split(",")
+            ]
+            filter_conditions = []
+            if "multiple_domains" in statuses:
+                filter_conditions.append(subq_domain_resolved)
+                statuses.remove("multiple_domains")
+            if statuses:
+                filter_conditions.append(func.lower(status_case).in_(statuses))
+            if filter_conditions:
+                query = query.filter(or_(*filter_conditions))
+
+        if filters.get("last_login_date_start"):
+            query = query.filter(
+                func.DATE(Users.last_login)
+                >= datetime.fromtimestamp(
+                    filters["last_login_date_start"], tz=pytz.UTC
+                ).date()
+            )
+
+        if filters.get("last_login_date_end"):
+            query = query.filter(
+                func.DATE(Users.last_login)
+                <= datetime.fromtimestamp(
+                    filters["last_login_date_end"], tz=pytz.UTC
+                ).date()
+            )
+
+        if filters.get("join_date_start"):
+            query = query.filter(
+                func.DATE(Users.created_at)
+                >= datetime.fromtimestamp(
+                    filters["join_date_start"], tz=pytz.UTC
+                ).date()
+            )
+
+        if filters.get("join_date_end"):
+            query = query.filter(
+                func.DATE(Users.created_at)
+                <= datetime.fromtimestamp(
+                    filters["join_date_end"], tz=pytz.UTC
+                ).date()
+            )
+
+        if search_query:
+            query = query.filter(
+                or_(
+                    Users.email.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%"),
+                )
+            )
+
+        query = query.group_by(
+            Users.id,
+            Users.email,
+            Users.full_name,
+            Users.created_at,
+            Users.last_login,
+            Users.role,
+            Users.team_access_level,
+            Users.team_owner_id,
+            Users.leads_credits,
+            Users.total_leads,
+            Users.overage_leads_count,
+            Users.has_credit_card,
+            Users.whitelabel_settings_enabled,
+            Users.is_partner,
+            Partner.is_master,
+            SubscriptionPlan.title,
+            premium_source_count.c.count,
+            status_case,
+            subq_domain_resolved,
+        )
+
+        sort_options = {
+            "id": Users.id,
+            "join_date": Users.created_at,
+            "last_login_date": Users.last_login,
+            "contacts_count": Users.total_leads,
+            "has_credit_card": Users.has_credit_card,
+            "cost_leads_overage": Users.overage_leads_count,
+        }
+        sort_column = sort_options.get(sort_by, Users.created_at)
+        query = query.order_by(
+            asc(sort_column) if sort_order == "asc" else desc(sort_column)
+        )
+
+        total_count = query.count()
+        users = query.offset((page - 1) * per_page).limit(per_page).all()
+        return users, total_count
+
+    def get_base_accounts(
         self,
         search_query,
         page,
@@ -572,7 +751,70 @@ class UserPersistence:
         exclude_test_users,
         filters,
     ):
-        query, status_case = self._base_customer_query()
+        status_case = self.calculate_user_status()
+
+        subq_domain_resolved = (
+            self.db.query(UserDomains.user_id)
+            .filter(
+                UserDomains.user_id == Users.id,
+                UserDomains.is_another_domain_resolved.is_(True),
+            )
+            .exists()
+        )
+
+        subscription_plan_case = case(
+            (
+                and_(
+                    Users.current_subscription_id == None,
+                    Users.total_leads == 0,
+                ),
+                literal_column("'N/A'"),
+            ),
+            else_=SubscriptionPlan.title,
+        ).label("subscription_plan")
+
+        premium_source_count = premium_source.count_by_user().subquery()
+
+        query = (
+            self.db.query(
+                Users.id,
+                Users.company_name.label("company_name"),
+                Users.full_name.label("full_name"),
+                Users.email,
+                Users.created_at,
+                Users.last_login,
+                Users.role,
+                Users.leads_credits.label("credits_count"),
+                Users.total_leads,
+                Users.overage_leads_count,
+                Users.has_credit_card,
+                Users.whitelabel_settings_enabled,
+                Users.is_partner,
+                Partner.is_master.label("is_master"),
+                func.coalesce(premium_source_count.c.count, 0).label(
+                    "premium_sources"
+                ),
+                status_case.label("user_status"),
+                case((subq_domain_resolved, True), else_=False).label(
+                    "is_another_domain_resolved"
+                ),
+                subscription_plan_case,
+            )
+            .outerjoin(
+                UserSubscriptions,
+                UserSubscriptions.id == Users.current_subscription_id,
+            )
+            .outerjoin(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
+            .outerjoin(
+                premium_source_count, premium_source_count.c.id == Users.id
+            )
+            .outerjoin(Partner, Partner.user_id == Users.id)
+            .filter(Users.role.any("customer"))
+            .filter(Users.team_owner_id.is_(None))  # Только владельцы аккаунтов
+        )
 
         if exclude_test_users:
             query = query.filter(~Users.full_name.like("#test%"))
@@ -583,9 +825,7 @@ class UserPersistence:
             ]
             filter_conditions = []
             if "multiple_domains" in statuses:
-                filter_conditions.append(
-                    query.column_descriptions[13]["expr"]
-                )  # is_another_domain_resolved
+                filter_conditions.append(subq_domain_resolved)
                 statuses.remove("multiple_domains")
             if statuses:
                 filter_conditions.append(func.lower(status_case).in_(statuses))
@@ -623,10 +863,32 @@ class UserPersistence:
         if search_query:
             query = query.filter(
                 or_(
-                    Users.email.ilike(f"%{search_query}%"),
+                    Users.company_name.ilike(f"%{search_query}%"),
                     Users.full_name.ilike(f"%{search_query}%"),
+                    Users.email.ilike(f"%{search_query}%"),
                 )
             )
+
+        query = query.group_by(
+            Users.id,
+            Users.company_name,
+            Users.full_name,
+            Users.email,
+            Users.created_at,
+            Users.last_login,
+            Users.role,
+            Users.leads_credits,
+            Users.total_leads,
+            Users.overage_leads_count,
+            Users.has_credit_card,
+            Users.whitelabel_settings_enabled,
+            Users.is_partner,
+            Partner.is_master,
+            premium_source_count.c.count,
+            status_case,
+            subq_domain_resolved,
+            SubscriptionPlan.title,
+        )
 
         sort_options = {
             "id": Users.id,
@@ -635,6 +897,7 @@ class UserPersistence:
             "contacts_count": Users.total_leads,
             "has_credit_card": Users.has_credit_card,
             "cost_leads_overage": Users.overage_leads_count,
+            "company_name": Users.company_name,
         }
         sort_column = sort_options.get(sort_by, Users.created_at)
         query = query.order_by(
@@ -642,8 +905,8 @@ class UserPersistence:
         )
 
         total_count = query.count()
-        users = query.offset((page - 1) * per_page).limit(per_page).all()
-        return users, total_count
+        accounts = query.offset((page - 1) * per_page).limit(per_page).all()
+        return accounts, total_count
 
     def get_customers_by_ids(self, ids: list[int]) -> list:
         if not ids:
@@ -971,13 +1234,13 @@ class UserPersistence:
         self.db.commit()
         return result.rowcount
 
-    def change_email_validation(self, user_id: int) -> int:
+    def change_email_validation(self, domain_id: int) -> int:
         updated_count = (
-            self.db.query(Users)
-            .filter(Users.id == user_id)
+            self.db.query(UserDomains)
+            .filter(UserDomains.id == domain_id)
             .update(
                 {
-                    Users.is_email_validation_enabled: ~Users.is_email_validation_enabled
+                    UserDomains.is_email_validation_enabled: ~UserDomains.is_email_validation_enabled
                 },
                 synchronize_session=False,
             )
@@ -1028,9 +1291,6 @@ class UserPersistence:
                 Users.role,
                 Users.leads_credits.label("credits_count"),
                 Users.total_leads,
-                Users.is_email_validation_enabled.label(
-                    "is_email_validation_enabled"
-                ),
                 subscription_plan_case,
                 status_case.label("user_status"),
                 case((subq_domain_resolved, True), else_=False).label(
@@ -1123,3 +1383,77 @@ class UserPersistence:
         total_count = query.count()
         users = query.offset((page - 1) * per_page).limit(per_page).all()
         return users, total_count
+
+    def get_domains_with_users(
+        self,
+        page: int,
+        per_page: int,
+        sort_by: str | None,
+        sort_order: str | None,
+        search_query: str | None,
+    ):
+        query = (
+            self.db.query(
+                UserDomains,
+                Users.full_name,
+                Users.company_name,
+                func.count(func.distinct(IntegrationUserSync.id)).label(
+                    "sync_count"
+                ),
+                func.count(func.distinct(LeadUser.id)).label("lead_count"),
+            )
+            .join(Users, Users.id == UserDomains.user_id)
+            .outerjoin(
+                IntegrationUserSync,
+                IntegrationUserSync.domain_id == UserDomains.id,
+            )
+            .outerjoin(LeadUser, LeadUser.domain_id == UserDomains.id)
+            .group_by(UserDomains.id, Users.full_name, Users.company_name)
+        )
+
+        if search_query:
+            pattern = f"%{search_query.lower()}%"
+            query = query.filter(
+                or_(
+                    UserDomains.domain.ilike(pattern),
+                    Users.company_name.ilike(pattern),
+                )
+            )
+
+        sort_map = {
+            "domain": UserDomains.domain,
+            "company_name": Users.company_name,
+            "total_leads": "lead_count",
+            "data_syncs_count": "sync_count",
+            "created_at": UserDomains.created_at,
+        }
+
+        sort_col = sort_map.get(sort_by, UserDomains.created_at)
+
+        if isinstance(sort_col, str):
+            query = query.order_by(
+                asc(text(sort_col))
+                if sort_order == "asc"
+                else desc(text(sort_col))
+            )
+        else:
+            query = query.order_by(
+                asc(sort_col) if sort_order == "asc" else desc(sort_col)
+            )
+
+        total_count = query.count()
+        records = query.offset((page - 1) * per_page).limit(per_page).all()
+
+        return records, total_count
+
+    def get_domain_is_email_validation_enabled(self, domain_id: int):
+        if not domain_id:
+            return False
+
+        result = (
+            self.db.query(UserDomains.is_email_validation_enabled)
+            .filter(UserDomains.id == domain_id)
+            .first()
+        )
+
+        return bool(result[0]) if result else False

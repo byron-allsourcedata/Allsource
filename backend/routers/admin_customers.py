@@ -92,6 +92,50 @@ async def get_users(
     return users
 
 
+@router.get("/accounts")
+async def get_users(
+    admin_customers_service: AdminCustomersService,
+    user: dict = Depends(check_user_admin),
+    sort_by: str = Query(None, description="Field"),
+    sort_order: str = Query(
+        None, description="Field to sort by: 'asc' or 'desc'"
+    ),
+    page: int = Query(1, alias="page", ge=1, description="Page number"),
+    last_login_date_start: int = Query(
+        None, description="Start date in integer format"
+    ),
+    search_query: str = Query(
+        None, description="Search for email, account name"
+    ),
+    last_login_date_end: int = Query(
+        None, description="End date in integer format"
+    ),
+    join_date_start: int = Query(
+        None, description="Start date in integer format"
+    ),
+    join_date_end: int = Query(None, description="End date in integer format"),
+    per_page: int = Query(
+        9, alias="per_page", ge=1, le=500, description="Items per page"
+    ),
+    exclude_test_users: bool = Query(False),
+    statuses: str = Query(None),
+):
+    accounts = admin_customers_service.get_customer_accounts(
+        search_query=search_query,
+        page=page,
+        per_page=per_page,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        last_login_date_start=last_login_date_start,
+        last_login_date_end=last_login_date_end,
+        join_date_start=join_date_start,
+        join_date_end=join_date_end,
+        exclude_test_users=exclude_test_users,
+        statuses=statuses,
+    )
+    return accounts
+
+
 @router.get("/admins")
 async def get_admins(
     admin_customers_service: AdminCustomersService,
@@ -184,14 +228,48 @@ async def get_partners(
     return admin_customers_service.get_partners_users(query_params)
 
 
+@router.get("/domains")
+async def get_domains(
+    admin_domains_service: AdminCustomersService,
+    user: dict = Depends(check_user_admin),
+    sort_by: str | None = Query(None, description="Field to sort by"),
+    sort_order: str | None = Query(None, description="'asc' or 'desc'"),
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(10, ge=1, le=500, description="Items per page"),
+    search_query: str | None = Query(
+        None, description="Search for domain or user/company name"
+    ),
+):
+    """
+    Admin route to fetch paginated domain list with search and sorting.
+    """
+    return admin_domains_service.get_all_domains_details(
+        page=page,
+        per_page=per_page,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        search_query=search_query,
+    )
+
+
+@router.delete("/domains/{domain_id}")
+def delete_domain(
+    domain_id: int,
+    domain_service: AdminCustomersService,
+    user: dict = Depends(check_user_admin),
+):
+    domain_service.delete_domain(domain_id)
+    return {"status": "SUCCESS"}
+
+
 @router.put("/change-email-validation", response_model=bool)
 def change_email_validation(
     admin_customers_service: AdminCustomersService,
     user: dict = Depends(check_user_admin),
-    user_id: int = Query(None),
+    domain_id: int = Query(None),
 ):
     return admin_customers_service.change_email_validation(
-        user_id=user_id,
+        domain_id=domain_id,
     )
 
 
