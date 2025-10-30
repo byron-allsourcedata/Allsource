@@ -1697,7 +1697,7 @@ const Sources: React.FC = () => {
 										handleCloseConfirmDialog={handleCloseConfirmDialog}
 										anchorEl={anchorEl}
 										title="Confirm Deletion"
-										description="Are you sure you want to delete this smart audience?"
+										description="Are you sure you want to delete this source?"
 										successButtonText="Delete"
 									/>
 
