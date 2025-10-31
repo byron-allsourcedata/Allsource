@@ -172,19 +172,13 @@ class ReferralPayoutsPersistence:
                 Users.email,
                 Users.id.label("user_id"),
                 Users.created_at,
-                ReferralDiscountCode.coupon,
             )
             .join(ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id)
             .outerjoin(
                 ReferralUser, ReferralUser.user_id == ReferralPayouts.user_id
             )
             .outerjoin(Users, Users.id == ReferralPayouts.user_id)
-            .outerjoin(
-                ReferralDiscountCode,
-                ReferralDiscountCode.id == ReferralUser.discount_code_id,
-            )
             .filter(Partner.id == partner_id)
-            .order_by(ReferralPayouts.created_at.desc())
         )
 
         if reward_type == "master_partner":
@@ -221,6 +215,10 @@ class ReferralPayoutsPersistence:
                 extract("month", ReferralPayouts.created_at) == month
             )
 
+        query = query.distinct(ReferralPayouts.id)
+        query = query.order_by(
+            ReferralPayouts.id, ReferralPayouts.created_at.desc()
+        )
         sort_options = {
             "join_date": Users.created_at,
         }
