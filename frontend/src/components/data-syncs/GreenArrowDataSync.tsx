@@ -37,7 +37,7 @@ import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 import { dataSyncStyles } from "./dataSyncStyles";
 
-interface ConnectGreanArrowPopupProps {
+interface ConnectGreenArrowPopupProps {
 	open: boolean;
 	onClose: () => void;
 	onCloseCreateSync?: () => void;
@@ -45,12 +45,12 @@ interface ConnectGreanArrowPopupProps {
 	isEdit?: boolean;
 }
 
-type GreanArrowList = {
+type GreenArrowList = {
 	id: string;
 	list_name: string;
 };
 
-const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
+const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 	open,
 	onClose,
 	onCloseCreateSync,
@@ -63,7 +63,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 	const [checked, setChecked] = useState(false);
 	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [selectedOption, setSelectedOption] = useState<GreanArrowList | null>(
+	const [selectedOption, setSelectedOption] = useState<GreenArrowList | null>(
 		null,
 	);
 	const [listName, setlistName] = useState<string | null>(data?.name ?? "");
@@ -89,7 +89,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
 	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
 	const [maplistNameError, setMapListNameError] = useState(false);
-	const [greanArrowList, setGreanArrowList] = useState<GreanArrowList[]>([]);
+	const [greenArrowList, setGreenArrowList] = useState<GreenArrowList[]>([]);
 	const [customFieldsList, setCustomFieldsList] = useState([
 		{ type: "Gender", value: "gender" },
 		{ type: "Company Name", value: "company_name" },
@@ -219,7 +219,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 					service_name: "green_arrow",
 				},
 			});
-			setGreanArrowList(response.data);
+			setGreenArrowList(response.data);
 			const foundItem = response.data?.find(
 				(item: any) => item.list_name === data?.list_name,
 			);
@@ -265,7 +265,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 
 	const handleSaveSync = async () => {
 		setLoading(true);
-		let list: GreanArrowList | null = null;
+		let list: GreenArrowList | null = null;
 
 		try {
 			if (selectedOption && selectedOption.id === "-1") {
@@ -355,14 +355,14 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 		setNewListName(""); // Clear new list name when closing
 	};
 
-	const handleSelectOption = (value: GreanArrowList | string) => {
+	const handleSelectOption = (value: GreenArrowList | string) => {
 		if (value === "createNew") {
 			setShowCreateForm((prev) => !prev);
 			if (!showCreateForm) {
 				setAnchorEl(textFieldRef.current);
 			}
-		} else if (isGreanArrowList(value)) {
-			// Проверка, является ли value объектом GreanArrowList
+		} else if (isGreenArrowList(value)) {
+			// Проверка, является ли value объектом GreenArrowList
 			setSelectedOption({
 				id: value.id,
 				list_name: value.list_name,
@@ -376,7 +376,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 		}
 	};
 
-	const isGreanArrowList = (value: any): value is GreanArrowList => {
+	const isGreenArrowList = (value: any): value is GreenArrowList => {
 		return (
 			value !== null &&
 			typeof value === "object" &&
@@ -398,17 +398,17 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 
 		// If valid, save and close
 		if (valid) {
-			const newGreanArrowList = { id: "-1", list_name: newListName };
-			setSelectedOption(newGreanArrowList);
-			setlistName(newGreanArrowList.list_name);
-			if (isGreanArrowList(newGreanArrowList)) {
+			const newGreenArrowList = { id: "-1", list_name: newListName };
+			setSelectedOption(newGreenArrowList);
+			setlistName(newGreenArrowList.list_name);
+			if (isGreenArrowList(newGreenArrowList)) {
 				setIsDropdownValid(true);
 			}
 			handleClose();
 		}
 	};
 
-	const greanArrowStyles = {
+	const greenArrowStyles = {
 		tabHeading: {
 			textTransform: "none",
 			padding: 0,
@@ -713,7 +713,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 						className="first-sub-title"
 						sx={{ textAlign: "center" }}
 					>
-						Connect to GreanArrow
+						Connect to GreenArrow
 					</Typography>
 					<Box
 						sx={{
@@ -723,7 +723,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-grean-arrow"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-green-arrow"
 							target="_blank"
 							rel="noopener referrer"
 							className="main-text"
@@ -752,7 +752,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 				>
 					<UserTip
 						title="Data Sync Speed"
-						content="GreanArrow standard sync speed is 500 contacts per minute."
+						content="GreenArrow standard sync speed is 500 contacts per minute."
 						sx={{
 							width: "100%",
 							padding: "16px 24px 0px 24px",
@@ -769,7 +769,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 							<Box sx={{ pb: 4 }}>
 								<TabList
 									centered
-									aria-label="Connect to GreanArrow Tabs"
+									aria-label="Connect to GreenArrow Tabs"
 									TabIndicatorProps={{
 										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
 									}}
@@ -791,19 +791,19 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 										label="Sync Filter"
 										value="1"
 										className="tab-heading"
-										sx={greanArrowStyles.tabHeading}
+										sx={greenArrowStyles.tabHeading}
 									/>
 									<Tab
 										label="Contact Sync"
 										value="2"
 										className="tab-heading"
-										sx={greanArrowStyles.tabHeading}
+										sx={greenArrowStyles.tabHeading}
 									/>
 									<Tab
 										label="Map data"
 										value="3"
 										className="tab-heading"
-										sx={greanArrowStyles.tabHeading}
+										sx={greenArrowStyles.tabHeading}
 									/>
 								</TabList>
 							</Box>
@@ -1120,7 +1120,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 																)}
 															</InputAdornment>
 														),
-														sx: greanArrowStyles.formInput,
+														sx: greenArrowStyles.formInput,
 													}}
 													sx={{
 														"& input": {
@@ -1327,11 +1327,11 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 													)}
 
 													{/* Show static options */}
-													{greanArrowList &&
-														greanArrowList.map((greanArrow, option) => (
+													{greenArrowList &&
+														greenArrowList.map((greenArrow, option) => (
 															<MenuItem
-																key={greanArrow.id}
-																onClick={() => handleSelectOption(greanArrow)}
+																key={greenArrow.id}
+																onClick={() => handleSelectOption(greenArrow)}
 																sx={{
 																	"&:hover": {
 																		background: "rgba(80, 82, 178, 0.10)",
@@ -1339,7 +1339,7 @@ const GreenArrowDataSync: React.FC<ConnectGreanArrowPopupProps> = ({
 																}}
 															>
 																<ListItemText
-																	primary={greanArrow.list_name}
+																	primary={greenArrow.list_name}
 																	primaryTypographyProps={{
 																		sx: {
 																			fontFamily: "var(--font-nunito)",

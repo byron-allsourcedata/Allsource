@@ -15,6 +15,8 @@ import Image from "next/image";
 import { showErrorToast } from "@/components/ToastNotification";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { IntegrationConnectStyles } from "@/app/(client)/integrations/styles";
+import { CustomButton } from "@/components/ui";
+import { popupStyle } from "@/app/(client)/lookalikes/components/BadLookalikeErrorModal";
 
 type KlaviyoList = {
 	id: string;
@@ -36,6 +38,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 }) => {
 	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
+	const [isCreatedNewList, setIsCreatedNewList] = useState<boolean>(false);
 	const [showCreateFormMailchimp, setShowCreateFormMailchimp] =
 		useState<boolean>(false);
 	const [listNameError, setListNameError] = useState(false);
@@ -107,7 +110,6 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 					},
 				},
 			);
-			console.log(newListResponse.data);
 			if (
 				newListResponse.status !== 201 ||
 				newListResponse.data?.status === "CREATED_IS_FAILED"
@@ -116,6 +118,8 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 				return;
 			}
 			const data = newListResponse.data;
+			setNewListName(newListName);
+			setIsCreatedNewList(true);
 			setSelectedOption(data);
 			setIsDropdownValid(true);
 		} catch {
@@ -139,8 +143,17 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 		}
 	};
 
+	const [isOpenSelectExistingList, setOpenSelectExistingList] =
+		useState<boolean>(false);
+	const [isOpenCreateList, setOpenCreateList] = useState<boolean>(true);
+	const [isShowCreateNewListButton, setShowCreateNewListButton] =
+		useState<boolean>(false);
+	const [isShowSelectExistingListButton, setShowSelectExistingListButton] =
+		useState<boolean>(true);
+
 	return (
-		<ClickAwayListener onClickAway={handleCloseSelectMailchimp}>
+		<>
+			{/* <ClickAwayListener onClickAway={handleCloseSelectMailchimp}>
 			<Box>
 				<TextField
 					ref={textFieldRefMailchimp}
@@ -410,7 +423,258 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 						))}
 				</Menu>
 			</Box>
-		</ClickAwayListener>
+		</ClickAwayListener> */}
+
+			<ClickAwayListener onClickAway={handleCloseSelectMailchimp}>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: "column",
+						alignItems: "start",
+						gap: 2,
+					}}
+				>
+					{isOpenCreateList && (
+						<Box
+							sx={{
+								display: "flex",
+								justifyContent: "space-between",
+								gap: 2,
+								width: "100%",
+								alignItems: "center",
+								p: 0,
+							}}
+						>
+							<Box
+								sx={{
+									display: "flex",
+									width: "100%",
+									justifyContent: "space-between",
+									gap: "16px",
+									"@media (max-width: 600px)": {
+										flexDirection: "column",
+									},
+								}}
+							>
+								<TextField
+									label="List Name"
+									variant="outlined"
+									value={newListName}
+									onChange={(e) => setNewListName(e.target.value)}
+									size="small"
+									fullWidth
+									onKeyDown={(e) => e.stopPropagation()}
+									error={listNameError}
+									helperText={listNameError ? "List Name is required" : ""}
+									InputLabelProps={{
+										sx: {
+											fontFamily: "var(--font-nunito)",
+											fontSize: "12px",
+											lineHeight: "24px",
+											fontWeight: "400",
+											color: "rgba(17, 17, 19, 0.60)",
+											// color: "var(--main-blue)",
+											"&.Mui-focused": {
+												color: "var(--main-blue)",
+											},
+										},
+									}}
+									InputProps={{
+										endAdornment: newListName && ( // Conditionally render close icon if input is not empty
+											<InputAdornment position="end">
+												<IconButton
+													edge="end"
+													onClick={() => setNewListName("")} // Clear the text field when clicked
+													disabled={isCreatedNewList}
+												>
+													<Image
+														src="/close-circle.svg"
+														alt="close-circle"
+														height={18}
+														width={18} // Adjust the size as needed
+													/>
+												</IconButton>
+											</InputAdornment>
+										),
+										sx: {
+											"&.MuiOutlinedInput-root": {
+												height: "40px",
+												"& .MuiOutlinedInput-input": {
+													padding: "8px 12px",
+													fontFamily: "var(--font-roboto)",
+													color: "#202124",
+													fontSize: "14px",
+													fontWeight: "400",
+													lineHeight: "20px",
+												},
+												"& .MuiOutlinedInput-notchedOutline": {
+													borderColor: "#A3B0C2",
+												},
+												"&:hover .MuiOutlinedInput-notchedOutline": {
+													borderColor: "#A3B0C2",
+												},
+												"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+													borderColor: "rgba(56, 152, 252, 1)",
+												},
+											},
+											"&+.MuiFormHelperText-root": {
+												marginLeft: "0",
+											},
+										},
+									}}
+								/>
+							</Box>
+							<Box sx={{ textAlign: "right" }}>
+								<CustomButton
+									variant="outlined"
+									onClick={handleSave}
+									disabled={listNameError || !newListName || isCreatedNewList}
+								>
+									Save
+								</CustomButton>
+							</Box>
+						</Box>
+					)}
+
+					{isShowSelectExistingListButton && (
+						<Button
+							sx={popupStyle.learnMoreText}
+							onClick={() => {
+								setOpenSelectExistingList(true);
+								setOpenCreateList(false);
+
+								setShowCreateNewListButton(true);
+								setShowSelectExistingListButton(false);
+							}}
+						>
+							Select existing list
+						</Button>
+					)}
+
+					{isOpenSelectExistingList && (
+						<TextField
+							ref={textFieldRefMailchimp}
+							variant="outlined"
+							value={selectedOption?.list_name || ""}
+							onClick={handleClickMailchimp}
+							size="small"
+							fullWidth
+							label={selectedOption?.list_name ? "" : "Select list"}
+							InputLabelProps={{
+								shrink: selectedOption ? false : isShrunkMailchimp,
+								sx: {
+									fontSize: "14px",
+									"&.Mui-focused": {
+										color: "var(--main-blue)",
+									},
+								},
+							}}
+							InputProps={{
+								endAdornment: (
+									<InputAdornment position="end">
+										{
+											<IconButton
+												onClick={handleDropdownToggleMailchimp}
+												edge="end"
+											>
+												{isDropdownOpen ? (
+													<Image
+														src="/chevron-drop-up.svg"
+														alt="chevron-drop-up"
+														height={24}
+														width={24}
+													/>
+												) : (
+													<Image
+														src="/chevron-drop-down.svg"
+														alt="chevron-drop-down"
+														height={24}
+														width={24}
+													/>
+												)}
+											</IconButton>
+										}
+									</InputAdornment>
+								),
+								sx: IntegrationConnectStyles.formInput,
+							}}
+							sx={{
+								height: "40px",
+								"& input": {
+									caretColor: "transparent", // Hide caret with transparent color
+									fontFamily: "var(--font-nunito)",
+									fontSize: "14px",
+									fontWeight: "600",
+									lineHeight: "normal",
+								},
+								"& .MuiOutlinedInput-input": {
+									cursor: "default", // Prevent showing caret on input field
+									top: "5px",
+								},
+							}}
+						/>
+					)}
+
+					{isShowCreateNewListButton && (
+						<Button
+							sx={popupStyle.learnMoreText}
+							onClick={() => {
+								setOpenSelectExistingList(false);
+								setOpenCreateList(true);
+
+								setShowCreateNewListButton(false);
+								setShowSelectExistingListButton(true);
+							}}
+						>
+							Create List
+						</Button>
+					)}
+
+					<Menu
+						anchorEl={anchorElMailchimp}
+						open={Boolean(anchorElMailchimp) && isDropdownOpen}
+						onClose={handleCloseSelectMailchimp}
+						PaperProps={{
+							sx: {
+								width: anchorElMailchimp
+									? `${anchorElMailchimp.clientWidth}px`
+									: "538px",
+								borderRadius: "4px",
+								border: "1px solid #e4e4e4",
+							}, // Match dropdown width to input
+						}}
+						sx={{}}
+					>
+						{/* Show static options */}
+						{list &&
+							list.map((greenArrow, option) => (
+								<MenuItem
+									key={greenArrow.id}
+									onClick={() => handleSelectOptionMailchimp(greenArrow)}
+									sx={{
+										"&:hover": {
+											background: "rgba(80, 82, 178, 0.10)",
+										},
+									}}
+								>
+									<ListItemText
+										primary={greenArrow.list_name}
+										primaryTypographyProps={{
+											sx: {
+												fontFamily: "var(--font-nunito)",
+												fontSize: "14px",
+												color: "#202124",
+												fontWeight: "500",
+												lineHeight: "20px",
+											},
+										}}
+									/>
+								</MenuItem>
+							))}
+					</Menu>
+				</Box>
+			</ClickAwayListener>
+		</>
 	);
 };
 

@@ -84,6 +84,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 				opacity: 0.6,
 				boxShadow: "none",
 				border: "1px solid rgba(56, 152, 252, 1)",
+				color: "rgba(56, 152, 252, 0.40)",
 			},
 		},
 	};
