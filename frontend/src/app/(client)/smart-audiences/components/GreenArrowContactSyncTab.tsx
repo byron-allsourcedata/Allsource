@@ -49,7 +49,6 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
 
 	const handleSelectOptionMailchimp = (value: KlaviyoList | string) => {
-		console.log(value);
 		if (value === "createNew") {
 			setShowCreateFormMailchimp((prev) => !prev);
 			if (!showCreateFormMailchimp) {
@@ -73,8 +72,6 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({
 		setIsDropdownOpen((prev) => !prev);
 		setAnchorElMailchimp(event.currentTarget);
 		setShowCreateFormMailchimp(false);
-		// console.log(event.currentTarget)
-		// setSelectedOption()
 	};
 
 	const handleCloseSelectMailchimp = () => {
