@@ -107,19 +107,54 @@ class SimilarAudienceService:
     def train_catboost(
         self, df: DataFrame, amount: DataFrame, random_seed: int = 42
     ) -> CatBoostRegressor:
-        x = df
-        y = amount
+        x = df.copy()
+        y = amount.copy()
+
+        if isinstance(y, pd.DataFrame):
+            if y.shape[1] == 1:
+                y = y.iloc[:, 0]
+            else:
+                y = y.iloc[:, 0]
+        y = pd.to_numeric(y, errors="coerce")
+        y.replace(
+            [pd.NA, pd.NaT, float("inf"), float("-inf")], pd.NA, inplace=True
+        )
+        valid_target_mask = ~y.isna()
+        if not valid_target_mask.all():
+            x = x.loc[valid_target_mask]
+            y = y.loc[valid_target_mask]
+        if len(y) == 0:
+            raise EmptyTrainDataset(
+                "Empty train dataset after dropping rows with invalid target values"
+            )
 
         cat_features = x.select_dtypes(
             include=["object", "category"]
         ).columns.tolist()
         if cat_features:
+            for col in cat_features:
+                x[col] = x[col].apply(
+                    lambda v: (
+                        v.decode("utf-8", errors="replace")
+                        if isinstance(v, (bytes, bytearray))
+                        else v
+                    )
+                )
             x[cat_features] = (
                 x[cat_features]
                 .fillna("NA")
                 .astype(str)
                 .infer_objects(copy=False)
             )
+
+        numeric_cols = x.select_dtypes(include=["number"]).columns.tolist()
+        if numeric_cols:
+            x[numeric_cols] = x[numeric_cols].replace(
+                [float("inf"), float("-inf")], pd.NA
+            )
+            x = self.safe_fillna_numeric(x, numeric_cols)
+
+        x, y = x.align(y, axis=0, join="inner")
 
         x_train, x_test, y_train, y_test = train_test_split(
             x, y, test_size=0.05, random_state=42, shuffle=False
