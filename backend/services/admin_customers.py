@@ -38,6 +38,18 @@ from utils import get_utc_aware_date
 from persistence.partners_persistence import PartnersPersistence
 
 logger = logging.getLogger(__name__)
+POPULAR_EMAIL_PROVIDERS = {
+    "gmail.com",
+    "yahoo.com",
+    "hotmail.com",
+    "outlook.com",
+    "live.com",
+    "aol.com",
+    "icloud.com",
+    "mail.ru",
+    "yandex.ru",
+    "yandex.com",
+}
 
 
 @injectable
@@ -340,24 +352,36 @@ class AdminCustomersService:
     def _derive_company_from_domain(self, domain: str | None) -> str | None:
         if not domain:
             return None
+
         host = domain.strip().lower()
         if not host:
             return None
-        # Убираем возможную почтовую схему и пробелы
+
         if "@" in host:
             host = host.split("@", 1)[1]
+
+        if host in POPULAR_EMAIL_PROVIDERS:
+            return None
+
         first_label = host.split(".", 1)[0]
-        return self._normalize_company_token(first_label)
+        company = self._normalize_company_token(first_label)
+        if not company:
+            return None
+
+        return f"{company} (domain)"
 
     def _derive_company_from_email(self, email: str | None) -> str | None:
         if not email:
             return None
+
         try:
-            local_domain = email.strip().split("@", 1)
-            if len(local_domain) != 2:
+            parts = email.strip().split("@", 1)
+            if len(parts) != 2:
                 return None
-            domain = local_domain[1]
+
+            domain = parts[1]
             return self._derive_company_from_domain(domain)
+
         except Exception:
             return None
 
