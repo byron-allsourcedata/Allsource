@@ -202,10 +202,18 @@ class AdminCustomersService:
             cost_leads_overage = acc.overage_leads_count * 0.08
             agg = aggregates.get(acc.id, {})
 
+            company_name = (
+                acc.company_name.strip() if acc.company_name else None
+            )
+            if not company_name:
+                company_name = (
+                    self._derive_company_from_email(acc.email) or None
+                )
+
             result.append(
                 {
                     "id": acc.id,
-                    "company_name": acc.company_name,
+                    "company_name": company_name,
                     "owner_full_name": acc.full_name,
                     "email": acc.email,
                     "created_at": acc.created_at,
@@ -305,6 +313,53 @@ class AdminCustomersService:
             user.created_at,
             user.last_login,
         )
+
+    def _normalize_company_token(self, token: str) -> str | None:
+        """Преобразует строку в название компании: разбивает по не-буквенно-цифровым
+        символам, капитализирует части и склеивает без пробелов. Возвращает None, если token пустой.
+        Примеры: "plusmarkets" -> "Plusmarkets", "acme-inc" -> "AcmeInc".
+        """
+        if not token:
+            return None
+        # Оставляем только буквы/цифры, остальные символы считаем разделителями
+        parts: list[str] = []
+        buf = []
+        for ch in token:
+            if ch.isalnum():
+                buf.append(ch)
+            else:
+                if buf:
+                    parts.append("".join(buf))
+                    buf = []
+        if buf:
+            parts.append("".join(buf))
+        if not parts:
+            return None
+        return "".join(p.capitalize() for p in parts if p)
+
+    def _derive_company_from_domain(self, domain: str | None) -> str | None:
+        if not domain:
+            return None
+        host = domain.strip().lower()
+        if not host:
+            return None
+        # Убираем возможную почтовую схему и пробелы
+        if "@" in host:
+            host = host.split("@", 1)[1]
+        first_label = host.split(".", 1)[0]
+        return self._normalize_company_token(first_label)
+
+    def _derive_company_from_email(self, email: str | None) -> str | None:
+        if not email:
+            return None
+        try:
+            local_domain = email.strip().split("@", 1)
+            if len(local_domain) != 2:
+                return None
+            domain = local_domain[1]
+            return self._derive_company_from_domain(domain)
+        except Exception:
+            return None
 
     def get_customer_users(
         self,
@@ -438,11 +493,17 @@ class AdminCustomersService:
             else:
                 status = "Idle"
 
+            _company_name = company_name.strip() if company_name else None
+            if not _company_name:
+                _company_name = (
+                    self._derive_company_from_domain(d.domain) or None
+                )
+
             result.append(
                 {
                     "id": d.id,
                     "domain": d.domain,
-                    "company_name": company_name,
+                    "company_name": _company_name,
                     "is_pixel_installed": d.is_pixel_installed,
                     "status": status,
                     "additional_pixel": {
