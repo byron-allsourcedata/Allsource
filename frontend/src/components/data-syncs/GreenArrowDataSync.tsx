@@ -36,6 +36,8 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 import { dataSyncStyles } from "./dataSyncStyles";
+import { integrationsStyle } from "@/app/(client)/integrations/integrationsStyle";
+import { CustomButton } from "../ui";
 
 interface ConnectGreenArrowPopupProps {
 	open: boolean;
@@ -408,146 +410,37 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		}
 	};
 
-	const greenArrowStyles = {
-		tabHeading: {
-			textTransform: "none",
-			padding: 0,
-			minWidth: "auto",
-			px: 2,
-			"@media (max-width: 600px)": {
-				alignItems: "flex-start",
-				p: 0,
-			},
-			"&.Mui-selected": {
-				color: "rgba(56, 152, 252, 1)",
-				fontWeight: "700",
-			},
-		},
-		inputLabel: {
-			fontFamily: "var(--font-nunito)",
-			fontSize: "12px",
-			lineHeight: "16px",
-			color: "rgba(17, 17, 19, 0.60)",
-			"&.Mui-focused": {
-				color: "rgba(56, 152, 252, 1)",
-			},
-		},
-		formInput: {
-			"&.MuiOutlinedInput-root": {
-				height: "48px",
-				"& .MuiOutlinedInput-input": {
-					padding: "12px 16px 13px 16px",
-					fontFamily: "var(--font-roboto)",
-					color: "#202124",
-					fontSize: "14px",
-					lineHeight: "20px",
-					fontWeight: "400",
-				},
-				"&:hover .MuiOutlinedInput-notchedOutline": {
-					borderColor: "rgba(56, 152, 252, 1)",
-				},
-			},
-			"&+.MuiFormHelperText-root": {
-				marginLeft: "0",
-			},
-		},
-	};
-
 	const getButton = (tabValue: string) => {
 		switch (tabValue) {
 			case "1":
 				return (
-					<Button
+					<CustomButton
 						variant="contained"
 						onClick={handleNextTab}
 						disabled={!selectedRadioValue}
-						sx={{
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "var(--font-nunito)",
-							fontSize: "14px",
-							fontWeight: "600",
-							lineHeight: "20px",
-							letterSpacing: "normal",
-							color: "#fff",
-							textTransform: "none",
-							padding: "10px 24px",
-							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							":hover": {
-								backgroundColor: "rgba(30, 136, 229, 1)",
-							},
-							":active": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-							},
-							":disabled": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-								color: "#fff",
-								opacity: 0.6,
-							},
-							borderRadius: "4px",
-						}}
 					>
 						Next
-					</Button>
+					</CustomButton>
 				);
 			case "2":
 				return (
-					<Button
+					<CustomButton
 						variant="contained"
-						disabled={!isDropdownValid && !listName}
 						onClick={handleNextTab}
-						sx={{
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "var(--font-nunito)",
-							fontSize: "14px",
-							fontWeight: "600",
-							lineHeight: "20px",
-							letterSpacing: "normal",
-							color: "#fff",
-							textTransform: "none",
-							padding: "10px 24px",
-							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							":hover": {
-								backgroundColor: "rgba(30, 136, 229, 1)",
-							},
-							":active": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-							},
-							":disabled": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-								color: "#fff",
-								opacity: 0.6,
-							},
-							borderRadius: "4px",
-						}}
+						disabled={!isDropdownValid && !listName}
 					>
 						Next
-					</Button>
+					</CustomButton>
 				);
 			case "3":
 				return (
-					<Button
+					<CustomButton
 						variant="contained"
 						onClick={handleSaveSync}
 						disabled={!listName || !selectedRadioValue}
-						sx={{
-							backgroundColor: "rgba(56, 152, 252, 1)",
-							fontFamily: "var(--font-nunito)",
-							fontSize: "14px",
-							fontWeight: "600",
-							lineHeight: "20px",
-							letterSpacing: "normal",
-							color: "#fff",
-							textTransform: "none",
-							padding: "10px 24px",
-							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
-								backgroundColor: "rgba(56, 152, 252, 1)",
-							},
-							borderRadius: "4px",
-						}}
 					>
 						Export
-					</Button>
+					</CustomButton>
 				);
 			default:
 				return null;
@@ -791,19 +684,19 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 										label="Sync Filter"
 										value="1"
 										className="tab-heading"
-										sx={greenArrowStyles.tabHeading}
+										sx={integrationsStyle.tabHeading}
 									/>
 									<Tab
 										label="Contact Sync"
 										value="2"
 										className="tab-heading"
-										sx={greenArrowStyles.tabHeading}
+										sx={integrationsStyle.tabHeading}
 									/>
 									<Tab
 										label="Map data"
 										value="3"
 										className="tab-heading"
-										sx={greenArrowStyles.tabHeading}
+										sx={integrationsStyle.tabHeading}
 									/>
 								</TabList>
 							</Box>
@@ -1120,7 +1013,7 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 																)}
 															</InputAdornment>
 														),
-														sx: greenArrowStyles.formInput,
+														sx: integrationsStyle.formInput,
 													}}
 													sx={{
 														"& input": {
@@ -1616,49 +1509,10 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 															)
 														}
 														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
+															sx: dataSyncStyles.textFieldInputLabelStyles,
 														}}
 														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
-																	height: "36px",
-
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "12px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
-																		},
-																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
-																},
-															},
+															sx: dataSyncStyles.textFieldInputStyles,
 														}}
 													/>
 												</Grid>
@@ -1808,53 +1662,10 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 															handleChangeField(index, "type", e.target.value)
 														}
 														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																left: "2px",
-																flexShrink: 0,
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																	padding: 0,
-																	margin: 0,
-																	flexShrink: 0,
-																},
-															},
+															sx: dataSyncStyles.textFieldInputLabelStyles,
 														}}
 														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "14px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
-																		},
-																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
-																},
-															},
+															sx: dataSyncStyles.textFieldInputStyles,
 														}}
 													>
 														{customFieldsList.map((item) => (
@@ -1895,43 +1706,10 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 														}
 														placeholder="Enter value"
 														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
+															sx: dataSyncStyles.textFieldInputLabelStyles,
 														}}
 														InputProps={{
-															sx: {
-																height: "36px",
-																"& .MuiOutlinedInput-input": {
-																	padding: "6.5px 8px",
-																	fontFamily: "var(--font-roboto)",
-																	color: "#202124",
-																	fontSize: "14px",
-																	fontWeight: "400",
-																	lineHeight: "20px",
-																},
-																"& .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&:hover .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																	{
-																		borderColor: "rgba(56, 152, 252, 1)",
-																	},
-															},
+															sx: dataSyncStyles.textFieldInputStyles,
 														}}
 													/>
 												</Grid>
