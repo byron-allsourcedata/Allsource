@@ -590,17 +590,11 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 								<>
 									<TableRow
 										key={row.id}
-										onClick={() => {
-											if (row.status === "failed") {
-												handleOpenFailedPopup();
-											}
-										}}
 										sx={{
 											backgroundColor:
 												selectedRows.has(row.id) && !loader_for_table
 													? "rgba(247, 247, 247, 1)"
 													: "#fff",
-											cursor: row.status === "failed" ? "pointer" : "default",
 											"&:hover": {
 												backgroundColor: "rgba(247, 247, 247, 1)",
 												"& .sticky-cell": {
@@ -807,6 +801,13 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												sx: {
 													position: "relative",
 													textAlign: "center",
+													cursor:
+														row.status === "failed" ? "pointer" : "default",
+												},
+												onClick: () => {
+													if (row.status === "failed") {
+														handleOpenFailedPopup();
+													}
 												},
 											}}
 										>
