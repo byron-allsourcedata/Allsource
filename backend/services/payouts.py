@@ -220,7 +220,6 @@ class PayoutsService:
         processed_payouts = []
 
         for referral_payout in referral_payouts:
-            referral_link = f"{os.getenv('SITE_HOST_URL')}signup?coupon={referral_payout.coupon}"
             processed_payouts.append(
                 {
                     "referral_payouts_id": referral_payout.id,
@@ -237,7 +236,6 @@ class PayoutsService:
                     "payout_date": referral_payout.paid_at.strftime("%Y-%m-%d")
                     if referral_payout.paid_at
                     else None,
-                    "referral_link": referral_link,
                     "comment": referral_payout.comment,
                     "reward_status": referral_payout.confirmation_status,
                 }
