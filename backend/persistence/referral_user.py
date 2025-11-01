@@ -7,6 +7,7 @@ from models.partner import Partner
 from models.subscriptions import UserSubscriptions
 from models.referral_users import ReferralUser
 from datetime import datetime
+from constant import COST_CONTACT_ON_BASIC_PLAN
 
 from resolver import injectable
 
@@ -71,9 +72,11 @@ class ReferralUserPersistence:
                     "subscription_status"
                 ),  # 10
                 self.calculate_user_status().label("status"),  # 11
+                func.max(Partner.commission).label("partner_commission"),  # 12
             )
             .outerjoin(ReferralUser, ReferralUser.user_id == Users.id)
-            .outerjoin(Partner, Partner.user_id == Users.id)
+            .outerjoin(Partner, Partner.user_id == ReferralUser.parent_user_id)
+            # .outerjoin(Partner, Partner.user_id == Users.id)
             .outerjoin(ReferralPayouts, ReferralPayouts.user_id == Users.id)
             .outerjoin(
                 UserSubscriptions,
@@ -109,6 +112,8 @@ class ReferralUserPersistence:
 
         accounts = query.offset(offset).limit(limit).all()
 
+        print(accounts)
+
         return [
             {
                 "id": account[0],
@@ -121,8 +126,16 @@ class ReferralUserPersistence:
                 "reward_status": account[7].capitalize()
                 if account[7]
                 else "Inactive",
-                "monthly_spends": account[8] * 0.08 if account[8] else "--",
+                "monthly_spends": account[8] * COST_CONTACT_ON_BASIC_PLAN
+                if account[8]
+                else "--",
                 "status": account[11],
+                "commission_rates": account[8]
+                * COST_CONTACT_ON_BASIC_PLAN
+                * account[12]
+                / 100
+                if account[8] and account[12]
+                else "--",
             }
             for account in accounts
         ], query.count()
