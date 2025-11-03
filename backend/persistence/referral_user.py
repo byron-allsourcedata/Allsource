@@ -1,12 +1,15 @@
+from decimal import Decimal
 from db_dependencies import Db
 from enums import UserStatusInAdmin
 from models.referral_payouts import ReferralPayouts
 from sqlalchemy import func, case, or_, desc, asc, literal
+from sqlalchemy.orm import aliased
 from models.users import Users
 from models.partner import Partner
 from models.subscriptions import UserSubscriptions
 from models.referral_users import ReferralUser
 from datetime import datetime
+from constant import COST_CONTACT_ON_BASIC_PLAN
 
 from resolver import injectable
 
@@ -45,6 +48,8 @@ class ReferralUserPersistence:
             asc(order_column) if order == "asc" else desc(order_column)
         )
 
+        MasterPartner = aliased(Partner)
+
         query = (
             self.db.query(
                 Users.id,  # 0
@@ -71,9 +76,15 @@ class ReferralUserPersistence:
                     "subscription_status"
                 ),  # 10
                 self.calculate_user_status().label("status"),  # 11
+                func.max(Partner.commission).label("partner_commission"),  # 12
+                Partner.is_master.label("partner_is_master"),  # 13
+                func.max(MasterPartner.commission).label(
+                    "master_commission"
+                ),  # 14
             )
             .outerjoin(ReferralUser, ReferralUser.user_id == Users.id)
-            .outerjoin(Partner, Partner.user_id == Users.id)
+            .outerjoin(Partner, Partner.user_id == ReferralUser.parent_user_id)
+            .outerjoin(MasterPartner, MasterPartner.id == Partner.master_id)
             .outerjoin(ReferralPayouts, ReferralPayouts.user_id == Users.id)
             .outerjoin(
                 UserSubscriptions,
@@ -88,6 +99,7 @@ class ReferralUserPersistence:
                 UserSubscriptions.status,
                 Users.is_email_confirmed,
                 Users.has_credit_card,
+                Partner.is_master,
             )
         )
 
@@ -109,23 +121,65 @@ class ReferralUserPersistence:
 
         accounts = query.offset(offset).limit(limit).all()
 
-        return [
-            {
-                "id": account[0],
-                "account_name": account[1],
-                "email": account[2],
-                "last_login": account[3],
-                "join_date": account[4],
-                "last_payment_date": account[5],
-                "reward_payout_date": account[6],
-                "reward_status": account[7].capitalize()
-                if account[7]
-                else "Inactive",
-                "monthly_spends": account[8] * 0.08 if account[8] else "--",
-                "status": account[11],
-            }
-            for account in accounts
-        ], query.count()
+        results = []
+
+        for account in accounts:
+            overage = account[8]
+            partner_commission = account[12]
+            partner_is_master = account[13]
+            master_commission = account[14]
+
+            monthly_spends, commission_amount = (
+                self._compute_commission_for_account(
+                    overage,
+                    partner_commission,
+                    partner_is_master,
+                    master_commission,
+                )
+            )
+
+            results.append(
+                {
+                    "id": account[0],
+                    "account_name": account[1],
+                    "email": account[2],
+                    "last_login": account[3],
+                    "join_date": account[4],
+                    "last_payment_date": account[5],
+                    "reward_payout_date": account[6],
+                    "reward_status": account[7].capitalize()
+                    if account[7]
+                    else "Inactive",
+                    "monthly_spends": monthly_spends
+                    if monthly_spends
+                    else "--",
+                    "status": account[11],
+                    "commission_rates": commission_amount
+                    if commission_amount
+                    else "--",
+                }
+            )
+
+        return results, query.count()
+
+    def _compute_commission_for_account(
+        self, overage_leads_count, partner_comm, partner_is_master, master_comm
+    ):
+        if overage_leads_count is None:
+            return None, None
+
+        monthly_spends = overage_leads_count * COST_CONTACT_ON_BASIC_PLAN
+
+        if master_comm and partner_is_master:
+            raw_comm = master_comm - partner_comm
+        else:
+            raw_comm = partner_comm
+
+        raw_comm = raw_comm / Decimal("100")
+
+        commission_amount = monthly_spends * raw_comm
+
+        return monthly_spends, commission_amount
 
     def is_user_referral(self, user_id: int) -> bool:
         return (

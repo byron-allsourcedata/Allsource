@@ -531,6 +531,8 @@ class UsersAuth:
                         return {"status": LoginStatus.SUCCESS}
 
                     return {"status": LoginStatus.SUCCESS}
+                else:
+                    return {"status": LoginStatus.NEED_CONFIRM_EMAIL}
             else:
                 return {"status": LoginStatus.NEED_CONFIRM_EMAIL}
 
@@ -1084,6 +1086,8 @@ class UsersAuth:
         authorization_data = self.get_user_authorization_information(
             user_object
         )
+
+        print("authorization_data", authorization_data)
         if authorization_data["status"] == LoginStatus.PAYMENT_NEEDED:
             result = {
                 "status": authorization_data["status"].value,

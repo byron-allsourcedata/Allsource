@@ -39,6 +39,7 @@ const tableHeaders = [
 	{ key: "join_date", label: "Join date", sortable: true },
 	{ key: "last_login", label: "Last login", sortable: false },
 	{ key: "monthly_spends", label: "Monthly Spends", sortable: false },
+	{ key: "commission_rates", label: "Commission Rate", sortable: false },
 	{ key: "reward_status", label: "Reward status", sortable: false },
 	{ key: "reward_payout_date", label: "Reward Payout date", sortable: true },
 	{ key: "last_payment_date", label: "Last payment date", sortable: true },
@@ -130,6 +131,7 @@ interface AccountData {
 	join_date: Date | string;
 	last_login: Date | string;
 	monthly_spends: string;
+	commission_rates: string;
 	reward_status: string;
 	reward_amount: string;
 	reward_payout_date: string;
@@ -829,6 +831,16 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 												}}
 											>
 												{formatMoney(data.monthly_spends)}
+											</TableCell>
+
+											<TableCell
+												className="table-data"
+												sx={{
+													...suppressionsStyles.tableBodyColumn,
+													paddingLeft: "16px",
+												}}
+											>
+												{formatMoney(data.commission_rates)}
 											</TableCell>
 
 											<TableCell
