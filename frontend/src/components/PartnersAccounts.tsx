@@ -841,7 +841,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 												}}
 											>
 												{/* {formatMoney(data.commission_rates)} */}
-												{data.commission_rates}
+												{data.commission_rates}%
 											</TableCell>
 
 											<TableCell
