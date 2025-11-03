@@ -154,7 +154,8 @@ class ReferralUserPersistence:
                     if monthly_spends
                     else "--",
                     "status": account[11],
-                    "commission_rates": commission_amount
+                    "commission_rate": partner_commission,
+                    "commission_amount": commission_amount
                     if commission_amount
                     else "--",
                 }

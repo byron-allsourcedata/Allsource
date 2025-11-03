@@ -840,7 +840,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({
 													paddingLeft: "16px",
 												}}
 											>
-												{formatMoney(data.commission_rates)}
+												{/* {formatMoney(data.commission_rates)} */}
+												{data.commission_rates}
 											</TableCell>
 
 											<TableCell
