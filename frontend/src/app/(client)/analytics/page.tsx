@@ -105,9 +105,6 @@ const Dashboard: React.FC = () => {
 			const fetchData = async () => {
 				try {
 					const response = await axiosInstance.get("/check-user-authorization");
-					if (response.data.status === "SUCCESS") {
-						setShowCharts(true);
-					}
 					if (response.data.status === "NEED_BOOK_CALL") {
 						setShowSlider(true);
 					} else {
@@ -165,6 +162,11 @@ const Dashboard: React.FC = () => {
 						return;
 					}
 				} catch (error) {
+					if (error instanceof AxiosError && error.response?.status === 403) {
+						if (error.response.data.status === "PIXEL_INSTALLATION_NEEDED") {
+							setShowCharts(false);
+						}
+					}
 				} finally {
 					setLoading(false);
 				}

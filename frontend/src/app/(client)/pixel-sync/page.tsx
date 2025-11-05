@@ -35,11 +35,15 @@ import FilterDatasync from "@/components/FilterDatasync";
 import AudiencePopup from "@/components/AudienceSlider";
 import { useNotification } from "@/context/NotificationContext";
 // import FirstTimeScree from "./components/FirstTimeScree";
-import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
+import {
+	FirstTimeScreenCommonVariant1,
+	FirstTimeScreenCommonVariant2,
+} from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import GettingStartedSection from "@/components/GettingStartedSection";
 
 const DataSync = () => {
 	const router = useRouter();
@@ -104,6 +108,11 @@ const DataSync = () => {
 				setHasDataSync(response.data.hasDataSync);
 				setHasContacts(response.data.hasContacts);
 			} catch (err) {
+				if (err instanceof AxiosError && err.response?.status === 403) {
+					if (err.response.data.status === "PIXEL_INSTALLATION_NEEDED") {
+						setStatus("PIXEL_INSTALLATION_NEEDED");
+					}
+				}
 				console.error("Error checking integrations:", err);
 			} finally {
 				setIsLoading(false);
@@ -266,59 +275,44 @@ const DataSync = () => {
 						}}
 					>
 						{status === "PIXEL_INSTALLATION_NEEDED" && !isLoading ? (
-							<Box sx={centerContainerStyles}>
-								<Typography
-									variant="h5"
-									className="first-sub-title"
-									sx={{
-										mb: 3,
-										fontFamily: "var(--font-nunito)",
-										fontSize: "20px",
-										color: "#4a4a4a",
-										fontWeight: "600",
-										lineHeight: "28px",
+							<Box sx={{ mr: 2 }}>
+								<FirstTimeScreenCommonVariant2
+									Header={{
+										TextTitle: "Install Pixel",
 									}}
-								>
-									Pixel Integration isn&apos;t completed yet!
-								</Typography>
-								<Image
-									src="/pixel_installation_needed.svg"
-									alt="Need Pixel Install"
-									height={250}
-									width={300}
+									InfoNotification={{
+										Text: "Pixel Sync page will be available after pixel installation",
+									}}
+									HelpCard={{
+										headline: "Need Help with Pixel Setup?",
+										description:
+											"Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
+										helpPoints: [
+											{
+												title: "Quick Setup Walkthrough",
+												description: "Step-by-step pixel installation help",
+											},
+											{
+												title: "Troubleshooting Session",
+												description: "Fix errors and verify your pixel",
+											},
+											{
+												title: "Platform Demo",
+												description: "See how everything works in action",
+											},
+										],
+									}}
+									Content={<GettingStartedSection />}
+									ContentStyleSX={{
+										display: "flex",
+										flexDirection: "column",
+										justifyContent: "center",
+										alignItems: "center",
+										width: "100%",
+										pb: 2,
+										mt: 2,
+									}}
 								/>
-								<Typography
-									variant="body1"
-									className="table-data"
-									sx={{
-										mt: 3,
-										fontFamily: "var(--font-nunito)",
-										fontSize: "14px",
-										color: "#808080",
-										fontWeight: "600",
-										lineHeight: "20px",
-									}}
-								>
-									Install the pixel to unlock and gain valuable insights! Start
-									viewing your leads now
-								</Typography>
-								<Button
-									variant="contained"
-									onClick={installPixel}
-									className="second-sub-title"
-									sx={{
-										backgroundColor: "rgba(56, 152, 252, 1)",
-										textTransform: "none",
-										padding: "10px 24px",
-										mt: 3,
-										color: "#fff !important",
-										":hover": {
-											backgroundColor: "rgba(56, 152, 252, 1)",
-										},
-									}}
-								>
-									Setup Pixel
-								</Button>
 							</Box>
 						) : !isLoading ? (
 							<>
