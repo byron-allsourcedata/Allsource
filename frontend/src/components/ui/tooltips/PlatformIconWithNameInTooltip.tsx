@@ -1,8 +1,9 @@
 import { Box, Tooltip, Typography } from "@mui/material";
+import { ReactElement } from "react";
 
 interface PlatformIconWithNameInTooltipProps {
 	platformName: string;
-	getPlatformIcon: (platform: string) => void;
+	getPlatformIcon: (platform: string) => ReactElement;
 }
 
 const PlatformIconWithNameInTooltip = ({

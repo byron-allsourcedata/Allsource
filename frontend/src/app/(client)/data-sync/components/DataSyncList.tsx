@@ -76,6 +76,7 @@ import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 import GreenArrowDataSync from "@/components/data-syncs/GreenArrowDataSync";
 import GreenArrowIntegrationDrawer from "@/components/integrations/GreenArrowIntegration";
 import PlatformIconWithNameInTooltip from "@/components/ui/tooltips/PlatformIconWithNameInTooltip";
+import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -396,7 +397,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					/>
 				);
 			default:
-				return null;
+				return <MailOutlinedIcon />;
 		}
 	};
 
