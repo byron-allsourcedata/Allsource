@@ -89,6 +89,7 @@ class PersonRecord(BaseModel):
     primary_industry: Optional[str] = None
     business_country: Optional[str] = None
     business_city: Optional[str] = None
+    annual_sales: Optional[str] = None
 
     model_config = {
         "from_attributes": True,
