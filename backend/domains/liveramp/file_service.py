@@ -126,14 +126,14 @@ class LiveRampFileService:
             "BUSINESS_EMAIL",
             "PERSONAL_EMAIL",
             "PhoneMobile1",
-            "HomeCity",
-            "HomeState",
-            "Gender",
-            "Age",
-            "MaritalStatus",
-            "Pets",
-            "ChildrenPresent",
-            "Spend",
+            "SKINCARE_HOMECITY",
+            "SKINCARE_HOMESTATE",
+            "SKINCARE_GENDER",
+            "SKINCARE_AGE",
+            "SKINCARE_MARITALSTATUS",
+            "SKINCARE_PETS",
+            "SKINCARE_CHILDRENPRESENT",
+            "SKINCARE_SPEND",
         ]
 
         output = io.StringIO()
@@ -210,7 +210,11 @@ class LiveRampFileService:
             header = lines[0] if lines else ""
             data_lines = lines[1:] if len(lines) > 1 else []
 
-            expected_header = "ASID,FirstName,LastName,BUSINESS_EMAIL,PERSONAL_EMAIL,PhoneMobile1,HomeCity,HomeState,Gender,Age,MaritalStatus,Pets,ChildrenPresent,Spend"
+            expected_header = (
+                "ASID,FirstName,LastName,BUSINESS_EMAIL,PERSONAL_EMAIL,PhoneMobile1,"
+                "SKINCARE_HOMECITY,SKINCARE_HOMESTATE,SKINCARE_GENDER,SKINCARE_AGE,"
+                "SKINCARE_MARITALSTATUS,SKINCARE_PETS,SKINCARE_CHILDRENPRESENT,SKINCARE_SPEND"
+            )
             if header != expected_header:
                 logger.warning(
                     f"CSV header mismatch. Expected: {expected_header}, Got: {header}"
