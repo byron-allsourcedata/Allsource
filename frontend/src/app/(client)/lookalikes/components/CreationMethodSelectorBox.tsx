@@ -23,7 +23,7 @@ const audienceSize = [
 const RECOMMENDED_SIZE = "smart";
 
 interface AudienceSizeSelectorProps {
-	onSelectSize: (id: string, min: number, max: number, label: string) => void;
+	onSelectSize: (id: string, min: number, max: number) => void;
 	selectedSize: string;
 }
 
@@ -113,12 +113,7 @@ const CreationMethodSelectorBox: React.FC<AudienceSizeSelectorProps> = ({
 								)}
 								<Button
 									onClick={() =>
-										onSelectSize(
-											source.id,
-											source.min_value,
-											source.max_value,
-											source.label,
-										)
+										onSelectSize(source.id, source.min_value, source.max_value)
 									}
 									sx={{
 										display: "flex",

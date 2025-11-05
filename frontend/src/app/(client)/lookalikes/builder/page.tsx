@@ -120,10 +120,8 @@ const CreateLookalikePage: React.FC = () => {
 		id: string,
 		min_value: number,
 		max_value: number,
-		label: string,
 	) => {
 		setSelectedMethod(id as SelectedMethod);
-		setSelectedLabel(label);
 		setCalculatedResults(null);
 		setCurrentStep(3);
 	};
@@ -245,9 +243,7 @@ const CreateLookalikePage: React.FC = () => {
 		resetSourcesBuilderHints();
 	}, []);
 
-	useEffect(() => {
-		console.log({ currentStep });
-	}, [currentStep]);
+	useEffect(() => {}, [currentStep]);
 
 	useEffect(() => {
 		if (preselectedUuid && sourceData.length) {
