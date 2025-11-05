@@ -7,6 +7,7 @@ from dependencies import (
     check_domain,
     check_user_authorization_without_pixel,
     check_user_authentication,
+    check_pixel_install_domain,
 )
 from enums import TeamAccessLevel, BaseEnum
 from schemas.integrations.integrations import *
@@ -54,7 +55,7 @@ def has_integration_and_data_sync(
 def has_data_sync_and_contacts(
     integration_service: IntegrationService,
     user: dict = Depends(check_user_authorization_without_pixel),
-    domain: dict = Depends(check_domain),
+    domain: dict = Depends(check_pixel_install_domain),
 ):
     return integration_service.has_data_sync_and_contacts(
         user=user, domain=domain

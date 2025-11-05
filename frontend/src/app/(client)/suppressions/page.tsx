@@ -88,7 +88,7 @@ const Suppressions: React.FC = () => {
 
 	const checkPixel = async () => {
 		try {
-			const response = await axiosInstance.get("/check-user-authorization");
+			const response = await axiosInstance.get("/check-pixel-installed");
 			if (response.data.status === "NEED_BOOK_CALL") {
 				sessionStorage?.setItem("is_slider_opened", "true");
 			}
