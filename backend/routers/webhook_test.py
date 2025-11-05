@@ -10,3 +10,4 @@ router = APIRouter()
 @router.post("/test", response_model=bool)
 async def set_company_info(request=Body(...)):
     print(request)
+    return True
