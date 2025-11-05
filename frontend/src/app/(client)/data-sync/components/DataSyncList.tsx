@@ -75,6 +75,8 @@ import CustomerIoConnect from "@/components/integrations/CustomerIoIntegration";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 import GreenArrowDataSync from "@/components/data-syncs/GreenArrowDataSync";
 import GreenArrowIntegrationDrawer from "@/components/integrations/GreenArrowIntegration";
+import PlatformIconWithNameInTooltip from "@/components/ui/tooltips/PlatformIconWithNameInTooltip";
+import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -395,7 +397,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					/>
 				);
 			default:
-				return null;
+				return <MailOutlinedIcon />;
 		}
 	};
 
@@ -921,13 +923,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 	];
 
-	function toCamelCase(platform: string): string {
-		return platform
-			.split("_")
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-			.join(" ");
-	}
-
 	return (
 		<>
 			{isLoading && <CustomizedProgressBar />}
@@ -1175,50 +1170,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														justifyContent: "center",
 													}}
 												>
-													<Tooltip
-														title={
-															<Box
-																sx={{
-																	backgroundColor: "#fff",
-																	margin: 0,
-																	padding: 0,
-																	display: "flex",
-																	flexDirection: "row",
-																	alignItems: "center",
-																}}
-															>
-																<Typography
-																	className="table-data"
-																	component="div"
-																	sx={{
-																		fontSize: "12px !important",
-																	}}
-																>
-																	{toCamelCase(row.platform) || "--"}
-																</Typography>
-															</Box>
-														}
-														componentsProps={{
-															tooltip: {
-																sx: {
-																	backgroundColor: "#fff",
-																	color: "#000",
-																	boxShadow:
-																		"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-																	border: "0.5px solid rgba(225, 225, 225, 1)",
-																	borderRadius: "4px",
-																	maxHeight: "100%",
-																	maxWidth: "500px",
-																	padding: "11px 10px",
-																	marginLeft: "0.5rem !important",
-																},
-															},
-														}}
-														enterDelay={100}
-													>
-														{platformIcon(row.platform) ?? <span>--</span>}
-													</Tooltip>
-													{/* {platformIcon(row.platform) || "--"} */}
+													<PlatformIconWithNameInTooltip
+														getPlatformIcon={platformIcon}
+														platformName={row.platform}
+													/>
 												</Box>
 											</SmartCell>
 											<SmartCell
