@@ -6,6 +6,7 @@ import type {
 	CalculationResponse,
 	RecommendedByCategory,
 } from "@/types";
+import type { SelectedMethod } from "../../builder/page";
 
 interface CalculatedStepsProps {
 	calculatedResults: CalculationResponse;
@@ -14,6 +15,7 @@ interface CalculatedStepsProps {
 	handleNextStep: () => void;
 	handleSetCanProceed: (value: boolean) => void;
 	onFieldsOrderChangeUp: (newOrder: Field[]) => void;
+	selectedMethod: SelectedMethod;
 }
 
 export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
@@ -23,6 +25,7 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
 	handleNextStep,
 	handleSetCanProceed,
 	onFieldsOrderChangeUp,
+	selectedMethod,
 }) => {
 	// Initial recommended by category
 	const initialRecommendedByCategory = useMemo<RecommendedByCategory>(() => {
@@ -134,7 +137,7 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
 	handleSetCanProceed(canProceed);
 	return (
 		<Box>
-			<Box hidden={currentStep !== 2}>
+			<Box hidden={currentStep !== 3}>
 				<AudienceFieldsSelector
 					calculatedResults={calculatedResults}
 					recommendedByCategory={initialRecommendedByCategory}
@@ -144,10 +147,11 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
 					canProcessed={canProceed}
 					onResetSelection={handleResetAllState}
 					disableResetSelection={isDefaultSelection && isDefaultOrder}
+					selectedMethod={selectedMethod}
 				/>
 			</Box>
 
-			<Box hidden={currentStep !== 3} sx={{ position: "relative" }}>
+			<Box hidden={currentStep !== 4} sx={{ position: "relative" }}>
 				<OrderFieldsStep
 					fields={dndFields}
 					handlePrevStep={handlePrevStep}

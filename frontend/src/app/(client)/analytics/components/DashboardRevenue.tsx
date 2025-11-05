@@ -278,6 +278,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 						]);
 						setDays(days);
 					}
+				} catch (error) {
 				} finally {
 					setLoading(false);
 				}

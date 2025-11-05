@@ -3,7 +3,6 @@ from models.users import User
 from services.suppression import SuppressionService
 from dependencies import (
     get_suppression_service,
-    check_user_authorization,
     check_user_authorization_without_pixel,
     check_domain,
 )

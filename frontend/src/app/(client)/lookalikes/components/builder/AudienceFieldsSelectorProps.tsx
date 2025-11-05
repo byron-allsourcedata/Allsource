@@ -14,6 +14,8 @@ import {
 import { useLookalikesHints } from "../../context/LookalikesHintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 
+import type { SelectedMethod } from "../../builder/page";
+
 interface AudienceFieldsSelectorProps {
 	calculatedResults?: CalculationResponse;
 	handleNextStep: () => void;
@@ -23,6 +25,7 @@ interface AudienceFieldsSelectorProps {
 	canProcessed: boolean;
 	onResetSelection: () => void;
 	disableResetSelection: boolean;
+	selectedMethod: SelectedMethod;
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
@@ -34,6 +37,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
 	onResetSelection,
 	currentSelection,
 	disableResetSelection,
+	selectedMethod,
 }) => {
 	const {
 		lookalikesBuilderHints,
@@ -138,95 +142,101 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
 			</Grid>
 
 			<Grid container sx={{ mb: 2 }}>
-				<Grid container xs={12} md={4}>
-					<Grid
-						item
-						sx={{
-							borderRight: "1px solid rgba(233, 233, 233, 1)",
-							borderLeft: "1px solid rgba(233, 233, 233, 1)",
-							borderTopRightRadius: 3,
-							borderTopLeftRadius: 3,
-						}}
-					>
-						{/* «Recommended fields» */}
-						<Button
-							onClick={handleStep(0)}
-							disableRipple
+				{selectedMethod === "predictive" && (
+					<Grid container xs={12} md={4}>
+						<Grid
+							item
 							sx={{
-								minWidth: 0,
-								textTransform: "none",
-								fontFamily: "var(--font-nunito)",
-								fontWeight: 500,
-								fontSize: "14px",
-								color: "rgba(56, 152, 252, 1)",
-								borderTop: "2px solid rgba(56, 152, 252, 1)",
-								mb: 0.5,
-								"&:hover": { backgroundColor: "transparent" },
+								borderRight: "1px solid rgba(233, 233, 233, 1)",
+								borderLeft: "1px solid rgba(233, 233, 233, 1)",
+								borderTopRightRadius: 3,
+								borderTopLeftRadius: 3,
 							}}
 						>
-							Recommended fields
-						</Button>
-					</Grid>
-					<Grid item sx={{ borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
-						{/* «Order fields» */}
-						<Box
-							sx={{
-								position: "relative",
-								display: "inline-flex",
-								alignItems: "center",
-							}}
-						>
-							<HintCard
-								card={cardsLookalikeBuilder.predictable}
-								positionTop={15}
-								positionLeft={130}
-								rightSide={false}
-								isOpenBody={lookalikesBuilderHints.predictable.showBody}
-								toggleClick={() =>
-									changeLookalikesBuilderHint(
-										"predictable",
-										"showBody",
-										"toggle",
-									)
-								}
-								closeClick={() =>
-									changeLookalikesBuilderHint(
-										"predictable",
-										"showBody",
-										"close",
-									)
-								}
-							/>
+							{/* «Recommended fields» */}
 							<Button
-								onClick={handleStep(1)}
+								onClick={handleStep(0)}
 								disableRipple
 								sx={{
 									minWidth: 0,
 									textTransform: "none",
 									fontFamily: "var(--font-nunito)",
-									fontWeight: 700,
+									fontWeight: 500,
 									fontSize: "14px",
-									color: "rgba(112, 112, 113, 1)",
-									ml: 0.5,
-									backgroundColor: "rgba(246, 248, 250, 1)",
-									"&:hover": { backgroundColor: "rgba(226, 229, 232, 0.74)" },
+									color: "rgba(56, 152, 252, 1)",
+									borderTop: "2px solid rgba(56, 152, 252, 1)",
+									mb: 0.5,
+									"&:hover": { backgroundColor: "transparent" },
 								}}
 							>
-								Order fields
+								Recommended fields
 							</Button>
-						</Box>
+						</Grid>
+						<Grid
+							item
+							sx={{ borderBottom: "1px solid rgba(233, 233, 233, 1)" }}
+						>
+							{/* «Order fields» */}
+							<Box
+								sx={{
+									position: "relative",
+									display: "inline-flex",
+									alignItems: "center",
+								}}
+							>
+								<HintCard
+									card={cardsLookalikeBuilder.predictable}
+									positionTop={15}
+									positionLeft={130}
+									rightSide={false}
+									isOpenBody={lookalikesBuilderHints.predictable.showBody}
+									toggleClick={() =>
+										changeLookalikesBuilderHint(
+											"predictable",
+											"showBody",
+											"toggle",
+										)
+									}
+									closeClick={() =>
+										changeLookalikesBuilderHint(
+											"predictable",
+											"showBody",
+											"close",
+										)
+									}
+								/>
+								<Button
+									onClick={handleStep(1)}
+									disableRipple
+									sx={{
+										minWidth: 0,
+										textTransform: "none",
+										fontFamily: "var(--font-nunito)",
+										fontWeight: 700,
+										fontSize: "14px",
+										color: "rgba(112, 112, 113, 1)",
+										ml: 0.5,
+										backgroundColor: "rgba(246, 248, 250, 1)",
+										"&:hover": { backgroundColor: "rgba(226, 229, 232, 0.74)" },
+									}}
+								>
+									Order fields
+								</Button>
+							</Box>
+						</Grid>
+						<Grid
+							item
+							sx={{
+								flexGrow: 1,
+								borderBottom: "1px solid rgba(233, 233, 233, 1)",
+							}}
+						></Grid>
 					</Grid>
-					<Grid
-						item
-						sx={{
-							flexGrow: 1,
-							borderBottom: "1px solid rgba(233, 233, 233, 1)",
-						}}
-					></Grid>
-				</Grid>
+				)}
+
 				<Grid
 					item
-					md={2}
+					md={selectedMethod === "predictive" ? 2 : 6}
 					sx={{
 						textAlign: "right",
 						borderBottom: "1px solid rgba(233, 233, 233, 1)",

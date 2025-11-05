@@ -7,11 +7,10 @@ from typing_extensions import Annotated
 from dependencies import (
     get_users_email_verification_service,
     get_users_service,
-    check_user_authorization,
     check_user_authorization_without_pixel,
-    check_pixel_install_domain,
     check_user_authentication,
     get_notification_service,
+    check_pixel_install_domain,
 )
 from domains.auth.signup.service import SignupService
 from models.users_domains import UserDomains
@@ -93,6 +92,14 @@ async def get_notification(
 def check_user_authorization(
     user=Depends(check_user_authorization_without_pixel),
     # domain: UserDomains = Depends(check_pixel_install_domain),
+):
+    return {"status": "SUCCESS"}
+
+
+@router.get("/check-pixel-installed")
+def check_user_authorization(
+    # user=Depends(check_user_authorization_without_pixel),
+    domain: UserDomains = Depends(check_pixel_install_domain),
 ):
     return {"status": "SUCCESS"}
 

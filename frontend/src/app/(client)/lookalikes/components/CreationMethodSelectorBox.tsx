@@ -5,50 +5,29 @@ import HintCard from "../../components/HintCard";
 
 const audienceSize = [
 	{
-		id: "almost",
-		label: "Almost identical",
-		text: "Lookalike size: 10,000 contacts",
+		id: "smart",
+		label: "Smart Matching",
+		text: "Create lookalike based on complete source data.",
 		min_value: 0,
 		max_value: 3,
 	},
 	{
-		id: "extremely",
-		label: "Extremely similar",
-		text: "Lookalike size: 50,000 contacts",
+		id: "predictive",
+		label: "Predictive Matching",
+		text: "Our Machine Learning algorithm selects only the most relevant audience signals.",
 		min_value: 0,
 		max_value: 7,
 	},
-	{
-		id: "very",
-		label: "Very similar",
-		text: "Lookalike size: 100,000 contacts",
-		min_value: 0,
-		max_value: 10,
-	},
-	{
-		id: "quite",
-		label: "Quite similar",
-		text: "Lookalike size: 200,000 contacts",
-		min_value: 0,
-		max_value: 15,
-	},
-	{
-		id: "broad",
-		label: "Broad",
-		text: "Lookalike size: 500,000 contacts",
-		min_value: 0,
-		max_value: 20,
-	},
 ];
 
-const RECOMMENDED_SIZE = "extremely";
+const RECOMMENDED_SIZE = "smart";
 
 interface AudienceSizeSelectorProps {
-	onSelectSize: (id: string, min: number, max: number, label: string) => void;
+	onSelectSize: (id: string, min: number, max: number) => void;
 	selectedSize: string;
 }
 
-const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
+const CreationMethodSelectorBox: React.FC<AudienceSizeSelectorProps> = ({
 	onSelectSize,
 	selectedSize,
 }) => {
@@ -80,11 +59,12 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
 				}}
 			>
 				<Typography className="second-sub-title">
-					Choose lookalike size
+					Choose lookalike method
 				</Typography>
 				<Typography className="paragraph">
-					Fine-tune your targeting! Choose the size of your lookalike audience
-					to match your marketing goals.
+					{
+						"Select how you’d like to build your audience — with AI insights or simple matching."
+					}
 				</Typography>
 
 				<Box
@@ -133,12 +113,7 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
 								)}
 								<Button
 									onClick={() =>
-										onSelectSize(
-											source.id,
-											source.min_value,
-											source.max_value,
-											source.label,
-										)
+										onSelectSize(source.id, source.min_value, source.max_value)
 									}
 									sx={{
 										display: "flex",
@@ -174,7 +149,15 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
 										<Typography className="black-table-header">
 											{source.label}
 										</Typography>
-										<Typography className="paragraph">{source.text}</Typography>
+										<Typography
+											className="paragraph"
+											sx={{
+												textAlign: "left",
+												maxWidth: { xs: "100%", sm: "15rem" },
+											}}
+										>
+											{source.text}
+										</Typography>
 									</Box>
 								</Button>
 							</Box>
@@ -186,4 +169,4 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
 	);
 };
 
-export default AudienceSizeSelector;
+export default CreationMethodSelectorBox;

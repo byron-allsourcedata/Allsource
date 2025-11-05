@@ -65,7 +65,8 @@ export default function RootLayout({
 	const [whitelabel, setWhitelabel] = useState<WhitelabelSettingsSchema>(
 		restoreWhitelabel() ?? {
 			brand_name: "",
-			brand_logo_url: "",
+			// brand_logo_url: "", was be so
+			brand_logo_url: "/logo.svg",
 			brand_icon_url: "/logo-icon.svg",
 		},
 	);
