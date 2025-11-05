@@ -361,7 +361,7 @@ class DelivrPersistence:
 
             home_city_delivr = delivr_row.get("personal_city", "")
             home_city_ch = (
-                clickhouse_record.get("HomeCity", "")
+                clickhouse_record.get("SKINCARE_HOMECITY", "")
                 if clickhouse_record
                 else ""
             )
@@ -369,7 +369,7 @@ class DelivrPersistence:
 
             home_state_delivr = delivr_row.get("personal_state", "")
             home_state_ch = (
-                clickhouse_record.get("HomeState", "")
+                clickhouse_record.get("SKINCARE_HOMESTATE", "")
                 if clickhouse_record
                 else ""
             )
@@ -377,28 +377,34 @@ class DelivrPersistence:
 
             gender_delivr = _convert_gender(delivr_row.get("gender", ""))
             gender_ch = (
-                clickhouse_record.get("Gender", "") if clickhouse_record else ""
+                clickhouse_record.get("SKINCARE_GENDER", "")
+                if clickhouse_record
+                else ""
             )
             gender_value = gender_delivr or gender_ch
 
             age_ch = (
-                clickhouse_record.get("Age", "") if clickhouse_record else ""
+                clickhouse_record.get("SKINCARE_AGE", "")
+                if clickhouse_record
+                else ""
             )
             age_value = age or age_ch
 
             marital_status_ch = (
-                clickhouse_record.get("MaritalStatus", "")
+                clickhouse_record.get("SKINCARE_MARITALSTATUS", "")
                 if clickhouse_record
                 else ""
             )
             marital_status_value = marital_status or marital_status_ch
 
             pets_value = (
-                clickhouse_record.get("Pets", 0) if clickhouse_record else 0
+                clickhouse_record.get("SKINCARE_PETS", 0)
+                if clickhouse_record
+                else 0
             )
 
             children_present_ch = (
-                clickhouse_record.get("ChildrenPresent", "")
+                clickhouse_record.get("SKINCARE_CHILDRENPRESENT", "")
                 if clickhouse_record
                 else ""
             )
@@ -411,14 +417,14 @@ class DelivrPersistence:
                 "BUSINESS_EMAIL": business_email,
                 "PERSONAL_EMAIL": personal_email,
                 "PhoneMobile1": phone_value,
-                "HomeCity": home_city_value,
-                "HomeState": home_state_value,
-                "Gender": gender_value,
-                "Age": age_value,
-                "MaritalStatus": marital_status_value,
-                "Pets": pets_value,
-                "ChildrenPresent": children_present_value,
-                "Spend": spend,
+                "SKINCARE_HOMECITY": home_city_value,
+                "SKINCARE_HOMESTATE": home_state_value,
+                "SKINCARE_GENDER": gender_value,
+                "SKINCARE_AGE": age_value,
+                "SKINCARE_MARITALSTATUS": marital_status_value,
+                "SKINCARE_PETS": pets_value,
+                "SKINCARE_CHILDRENPRESENT": children_present_value,
+                "SKINCARE_SPEND": spend,
             }
 
             return unified_record

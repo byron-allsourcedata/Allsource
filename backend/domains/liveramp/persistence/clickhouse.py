@@ -269,14 +269,14 @@ class ClickHousePersistence:
                 "BUSINESS_EMAIL": user["business_email"],
                 "PERSONAL_EMAIL": user["personal_email"],
                 "PhoneMobile1": user["phone_mobile1"],
-                "HomeCity": user["home_city"],
-                "HomeState": state_full,
-                "Gender": gender,
-                "Age": age,
-                "MaritalStatus": marital_status,
-                "Pets": pets,
-                "ChildrenPresent": children_present,
-                "Spend": "Medium",
+                "SKINCARE_HOMECITY": user["home_city"],
+                "SKINCARE_HOMESTATE": state_full,
+                "SKINCARE_GENDER": gender,
+                "SKINCARE_AGE": age,
+                "SKINCARE_MARITALSTATUS": marital_status,
+                "SKINCARE_PETS": pets,
+                "SKINCARE_CHILDRENPRESENT": children_present,
+                "SKINCARE_SPEND": "Medium",
             }
             formatted_data.append(formatted_user)
 
