@@ -710,541 +710,649 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 						flexDirection: "column",
 						alignItems: "center",
 						height: "100%",
+						justifyContent: "space-between",
 					}}
 				>
-					<UserTip
-						title="Data Sync Speed"
-						content="Webhook standard sync speed is 150 contacts per minute."
-						sx={{
-							width: "100%",
-							padding: "16px 24px 0px 24px",
-						}}
-					/>
 					<Box
 						sx={{
+							display: "flex",
+							flexDirection: "column",
 							width: "100%",
-							padding: "16px 24px 24px 24px",
-							position: "relative",
 						}}
 					>
-						<TabContext value={value}>
-							<Box sx={{ pb: 4 }}>
-								<TabList
-									centered
-									aria-label="Connect to Webhook Tabs"
-									TabIndicatorProps={{
-										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
-									}}
-									sx={{
-										"& .MuiTabs-scroller": {
-											overflowX: "auto !important",
-										},
-										"& .MuiTabs-flexContainer": {
-											justifyContent: "center",
-											"@media (max-width: 600px)": {
-												gap: "16px",
-												justifyContent: "flex-start",
+						<UserTip
+							title="Data Sync Speed"
+							content="Webhook standard sync speed is 150 contacts per minute."
+							sx={{
+								width: "100%",
+								padding: "16px 24px 0px 24px",
+							}}
+						/>
+						<Box
+							sx={{
+								width: "100%",
+								padding: "16px 24px 24px 24px",
+								position: "relative",
+							}}
+						>
+							<TabContext value={value}>
+								<Box sx={{ pb: 4 }}>
+									<TabList
+										centered
+										aria-label="Connect to Webhook Tabs"
+										TabIndicatorProps={{
+											sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
+										}}
+										sx={{
+											"& .MuiTabs-scroller": {
+												overflowX: "auto !important",
 											},
-										},
-									}}
-									onChange={handleChangeTab}
-								>
-									<Tab
-										label="Sync Filter"
-										value="1"
-										className="tab-heading"
-										sx={klaviyoStyles.tabHeading}
-									/>
-									<Tab
-										label="Contact Sync"
-										value="2"
-										className="tab-heading"
-										sx={klaviyoStyles.tabHeading}
-									/>
-									<Tab
-										label="Map data"
-										value="3"
-										className="tab-heading"
-										sx={klaviyoStyles.tabHeading}
-									/>
-								</TabList>
-							</Box>
-							<TabPanel value="1" sx={{ p: 0 }}>
-								<Box
-									sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
-								>
+											"& .MuiTabs-flexContainer": {
+												justifyContent: "center",
+												"@media (max-width: 600px)": {
+													gap: "16px",
+													justifyContent: "flex-start",
+												},
+											},
+										}}
+										onChange={handleChangeTab}
+									>
+										<Tab
+											label="Sync Filter"
+											value="1"
+											className="tab-heading"
+											sx={klaviyoStyles.tabHeading}
+										/>
+										<Tab
+											label="Contact Sync"
+											value="2"
+											className="tab-heading"
+											sx={klaviyoStyles.tabHeading}
+										/>
+										<Tab
+											label="Map data"
+											value="3"
+											className="tab-heading"
+											sx={klaviyoStyles.tabHeading}
+										/>
+									</TabList>
+								</Box>
+								<TabPanel value="1" sx={{ p: 0 }}>
 									<Box
 										sx={{
-											p: 2,
-											border: "1px solid #f0f0f0",
-											borderRadius: "4px",
-											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 											display: "flex",
 											flexDirection: "column",
 											gap: "16px",
 										}}
 									>
-										<Typography variant="subtitle1" className="paragraph">
-											Synchronize all data in real-time from this moment forward
-											for seamless integration and continuous updates.
-										</Typography>
-										<FormControl sx={{ gap: "16px" }} error={tab2Error}>
-											<FormLabel
-												id="contact-type-radio-buttons-group-label"
-												className="first-sub-title"
-												sx={{
-													"&.Mui-focused": {
-														color: "#000",
-														transform: "none !important",
-													},
-												}}
-											>
-												Filter by Contact type
-											</FormLabel>
-											<RadioGroup
-												aria-labelledby="contact-type-radio-buttons-group-label"
-												name="contact-type-row-radio-buttons-group"
-												value={selectedRadioValue}
-												onChange={handleRadioChange}
-											>
-												<FormControlLabel
-													value="allContacts"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="All Contacts"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "allContacts"
-																		? 1
-																		: 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="visitor"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="Visitors"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "visitors" ? 1 : 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="viewed_product"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="View Product"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "viewProduct"
-																		? 1
-																		: 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="abandoned_cart"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="Abandoned cart"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "addToCart" ? 1 : 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="converted_sales"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="Converted Sales"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "addToCart" ? 1 : 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-											</RadioGroup>
-										</FormControl>
-									</Box>
-								</Box>
-							</TabPanel>
-							<TabPanel value="2" sx={{ p: 0 }}>
-								<Box
-									sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
-								>
-									<Box
-										sx={{
-											p: 2,
-											border: "1px solid #f0f0f0",
-											borderRadius: "4px",
-											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-										}}
-									>
 										<Box
 											sx={{
-												display: "flex",
-												alignItems: "center",
-												gap: "8px",
-												mb: 3,
-											}}
-										>
-											<Image
-												src="/webhook-icon.svg"
-												alt="sendlane"
-												height={26}
-												width={32}
-											/>
-											<Typography variant="h6" className="first-sub-title">
-												Url webhook
-											</Typography>
-											<Tooltip title="Sync data with list" placement="right">
-												<Image
-													src="/baseline-info-icon.svg"
-													alt="baseline-info-icon"
-													height={16}
-													width={16}
-												/>
-											</Tooltip>
-										</Box>
-										<Box
-											sx={{
+												p: 2,
+												border: "1px solid #f0f0f0",
+												borderRadius: "4px",
+												boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 												display: "flex",
 												flexDirection: "column",
-												gap: 2,
-												color: "rgba(17, 17, 19, 0.60)",
+												gap: "16px",
 											}}
 										>
-											<TextField
-												label="Enter Name"
-												variant="outlined"
-												fullWidth
-												value={newListName}
-												onChange={handleListNameChange}
-												InputLabelProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "12px",
-														lineHeight: "16px",
-														color: "rgba(17, 17, 19, 0.60)",
+											<Typography variant="subtitle1" className="paragraph">
+												Synchronize all data in real-time from this moment
+												forward for seamless integration and continuous updates.
+											</Typography>
+											<FormControl sx={{ gap: "16px" }} error={tab2Error}>
+												<FormLabel
+													id="contact-type-radio-buttons-group-label"
+													className="first-sub-title"
+													sx={{
 														"&.Mui-focused": {
-															color: "rgba(56, 152, 252, 1)",
-															top: 0,
+															color: "#000",
+															transform: "none !important",
 														},
-														"&.MuiInputLabel-shrink": {
-															top: 0,
-														},
-													},
-												}}
-											/>
-											<TextField
-												label="Enter URL"
-												variant="outlined"
-												fullWidth
-												value={url}
-												onChange={handleUrlChange}
-												error={error}
-												helperText={error ? "Invalid URL" : ""}
-												InputLabelProps={{
-													sx: {
-														fontFamily: "var(--font-nunito)",
-														fontSize: "12px",
-														lineHeight: "16px",
-														color: "rgba(17, 17, 19, 0.60)",
-														"&.Mui-focused": {
-															color: "rgba(56, 152, 252, 1)",
-															top: 0,
-														},
-														"&.MuiInputLabel-shrink": {
-															top: 0,
-														},
-													},
-												}}
-											/>
-											<ToggleButtonGroup
-												value={method}
-												exclusive
-												onChange={handleMethodChange}
-												aria-label="request method"
-											>
-												<ToggleButton
-													value="POST"
-													sx={{ fontSize: "14px", padding: "4px 8px" }}
+													}}
 												>
-													POST
-												</ToggleButton>
-												<ToggleButton
-													value="PUT"
-													sx={{ fontSize: "14px", padding: "4px 8px" }}
+													Filter by Contact type
+												</FormLabel>
+												<RadioGroup
+													aria-labelledby="contact-type-radio-buttons-group-label"
+													name="contact-type-row-radio-buttons-group"
+													value={selectedRadioValue}
+													onChange={handleRadioChange}
 												>
-													PUT
-												</ToggleButton>
-											</ToggleButtonGroup>
-										</Box>
-									</Box>
-								</Box>
-							</TabPanel>
-							<TabPanel value="3" sx={{ p: 0 }}>
-								<Box
-									sx={{
-										borderRadius: "4px",
-										border: "1px solid #f0f0f0",
-										boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-										padding: "16px 24px",
-										overflowX: "auto",
-									}}
-								>
-									<Box
-										sx={{ display: "flex", gap: "8px", marginBottom: "20px" }}
-									>
-										<Typography variant="h6" className="first-sub-title">
-											Map list
-										</Typography>
-										<Typography
-											variant="h6"
-											sx={{
-												background: "#EDEDF7",
-												borderRadius: "3px",
-												fontFamily: "var(--font-roboto)",
-												fontSize: "12px",
-												fontWeight: "400",
-												color: "#5f6368",
-												padding: "2px 4px",
-												lineHeight: "16px",
-											}}
-										>
-											{newListName}
-										</Typography>
-										<Typography
-											variant="h6"
-											sx={{
-												fontFamily: "var(--font-roboto)",
-												fontSize: "12px",
-												fontWeight: "400",
-												color: "#5f6368",
-												padding: "2px 4px",
-												lineHeight: "16px",
-											}}
-										>
-											Enter the field format as it should be sent
-										</Typography>
-									</Box>
-
-									<Grid
-										container
-										alignItems="center"
-										sx={{
-											flexWrap: { xs: "nowrap", sm: "wrap" },
-											marginBottom: "14px",
-										}}
-									>
-										<Grid
-											item
-											xs="auto"
-											sm={5}
-											sx={{
-												textAlign: "center",
-												"@media (max-width:599px)": {
-													minWidth: "196px",
-												},
-											}}
-										>
-											<LogoSmall height={20} width={24} />
-										</Grid>
-										<Grid
-											item
-											xs="auto"
-											sm={1}
-											sx={{
-												"@media (max-width:599px)": {
-													minWidth: "50px",
-												},
-											}}
-										>
-											&nbsp;
-										</Grid>
-										<Grid
-											item
-											xs="auto"
-											sm={5}
-											sx={{
-												textAlign: "center",
-												"@media (max-width:599px)": {
-													minWidth: "196px",
-												},
-											}}
-										>
-											<Image
-												src="/webhook-icon.svg"
-												alt="webhook"
-												height={20}
-												width={24}
-											/>
-										</Grid>
-										<Grid item xs="auto" sm={1}>
-											&nbsp;
-										</Grid>
-									</Grid>
-									<Box sx={{ mb: 2 }}>
-										{customFields.map((field, index) => (
-											<Grid
-												container
-												spacing={2}
-												alignItems="center"
-												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-												key={index}
-											>
-												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														select
-														fullWidth
-														variant="outlined"
-														label="Custom Field"
-														value={field.type}
-														onChange={(e) =>
-															handleChangeField(index, "type", e.target.value)
+													<FormControlLabel
+														value="allContacts"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
 														}
-														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
+														label="All Contacts"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "allContacts"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
 																},
 															},
 														}}
-														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+													<FormControlLabel
+														value="visitor"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="Visitors"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "visitors"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+													<FormControlLabel
+														value="viewed_product"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="View Product"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "viewProduct"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+													<FormControlLabel
+														value="abandoned_cart"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="Abandoned cart"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "addToCart"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+													<FormControlLabel
+														value="converted_sales"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="Converted Sales"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "addToCart"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+												</RadioGroup>
+											</FormControl>
+										</Box>
+									</Box>
+								</TabPanel>
+								<TabPanel value="2" sx={{ p: 0 }}>
+									<Box
+										sx={{
+											display: "flex",
+											flexDirection: "column",
+											gap: "16px",
+										}}
+									>
+										<Box
+											sx={{
+												p: 2,
+												border: "1px solid #f0f0f0",
+												borderRadius: "4px",
+												boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+											}}
+										>
+											<Box
+												sx={{
+													display: "flex",
+													alignItems: "center",
+													gap: "8px",
+													mb: 3,
+												}}
+											>
+												<Image
+													src="/webhook-icon.svg"
+													alt="sendlane"
+													height={26}
+													width={32}
+												/>
+												<Typography variant="h6" className="first-sub-title">
+													Url webhook
+												</Typography>
+												<Tooltip title="Sync data with list" placement="right">
+													<Image
+														src="/baseline-info-icon.svg"
+														alt="baseline-info-icon"
+														height={16}
+														width={16}
+													/>
+												</Tooltip>
+											</Box>
+											<Box
+												sx={{
+													display: "flex",
+													flexDirection: "column",
+													gap: 2,
+													color: "rgba(17, 17, 19, 0.60)",
+												}}
+											>
+												<TextField
+													label="Enter Name"
+													variant="outlined"
+													fullWidth
+													value={newListName}
+													onChange={handleListNameChange}
+													InputLabelProps={{
+														sx: {
+															fontFamily: "var(--font-nunito)",
+															fontSize: "12px",
+															lineHeight: "16px",
+															color: "rgba(17, 17, 19, 0.60)",
+															"&.Mui-focused": {
+																color: "rgba(56, 152, 252, 1)",
+																top: 0,
+															},
+															"&.MuiInputLabel-shrink": {
+																top: 0,
+															},
+														},
+													}}
+												/>
+												<TextField
+													label="Enter URL"
+													variant="outlined"
+													fullWidth
+													value={url}
+													onChange={handleUrlChange}
+													error={error}
+													helperText={error ? "Invalid URL" : ""}
+													InputLabelProps={{
+														sx: {
+															fontFamily: "var(--font-nunito)",
+															fontSize: "12px",
+															lineHeight: "16px",
+															color: "rgba(17, 17, 19, 0.60)",
+															"&.Mui-focused": {
+																color: "rgba(56, 152, 252, 1)",
+																top: 0,
+															},
+															"&.MuiInputLabel-shrink": {
+																top: 0,
+															},
+														},
+													}}
+												/>
+												<ToggleButtonGroup
+													value={method}
+													exclusive
+													onChange={handleMethodChange}
+													aria-label="request method"
+												>
+													<ToggleButton
+														value="POST"
+														sx={{ fontSize: "14px", padding: "4px 8px" }}
+													>
+														POST
+													</ToggleButton>
+													<ToggleButton
+														value="PUT"
+														sx={{ fontSize: "14px", padding: "4px 8px" }}
+													>
+														PUT
+													</ToggleButton>
+												</ToggleButtonGroup>
+											</Box>
+										</Box>
+									</Box>
+								</TabPanel>
+								<TabPanel value="3" sx={{ p: 0 }}>
+									<Box
+										sx={{
+											borderRadius: "4px",
+											border: "1px solid #f0f0f0",
+											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+											padding: "16px 24px",
+											overflowX: "auto",
+										}}
+									>
+										<Box
+											sx={{ display: "flex", gap: "8px", marginBottom: "20px" }}
+										>
+											<Typography variant="h6" className="first-sub-title">
+												Map list
+											</Typography>
+											<Typography
+												variant="h6"
+												sx={{
+													background: "#EDEDF7",
+													borderRadius: "3px",
+													fontFamily: "var(--font-roboto)",
+													fontSize: "12px",
+													fontWeight: "400",
+													color: "#5f6368",
+													padding: "2px 4px",
+													lineHeight: "16px",
+												}}
+											>
+												{newListName}
+											</Typography>
+											<Typography
+												variant="h6"
+												sx={{
+													fontFamily: "var(--font-roboto)",
+													fontSize: "12px",
+													fontWeight: "400",
+													color: "#5f6368",
+													padding: "2px 4px",
+													lineHeight: "16px",
+												}}
+											>
+												Enter the field format as it should be sent
+											</Typography>
+										</Box>
+
+										<Grid
+											container
+											alignItems="center"
+											sx={{
+												flexWrap: { xs: "nowrap", sm: "wrap" },
+												marginBottom: "14px",
+											}}
+										>
+											<Grid
+												item
+												xs="auto"
+												sm={5}
+												sx={{
+													textAlign: "center",
+													"@media (max-width:599px)": {
+														minWidth: "196px",
+													},
+												}}
+											>
+												<LogoSmall height={20} width={24} />
+											</Grid>
+											<Grid
+												item
+												xs="auto"
+												sm={1}
+												sx={{
+													"@media (max-width:599px)": {
+														minWidth: "50px",
+													},
+												}}
+											>
+												&nbsp;
+											</Grid>
+											<Grid
+												item
+												xs="auto"
+												sm={5}
+												sx={{
+													textAlign: "center",
+													"@media (max-width:599px)": {
+														minWidth: "196px",
+													},
+												}}
+											>
+												<Image
+													src="/webhook-icon.svg"
+													alt="webhook"
+													height={20}
+													width={24}
+												/>
+											</Grid>
+											<Grid item xs="auto" sm={1}>
+												&nbsp;
+											</Grid>
+										</Grid>
+										<Box sx={{ mb: 2 }}>
+											{customFields.map((field, index) => (
+												<Grid
+													container
+													spacing={2}
+													alignItems="center"
+													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+													key={index}
+												>
+													<Grid item xs="auto" sm={5} mb={2}>
+														<TextField
+															select
+															fullWidth
+															variant="outlined"
+															label="Custom Field"
+															value={field.type}
+															onChange={(e) =>
+																handleChangeField(index, "type", e.target.value)
+															}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
+																},
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "var(--font-roboto)",
+																			color: "#202124",
+																			fontSize: "14px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+														>
+															{customFieldsList.map((item) => (
+																<MenuItem
+																	key={item.value}
+																	value={item.value}
+																	disabled={customFields.some(
+																		(f) => f.type === item.value,
+																	)} // Дизейблим выбранные
+																>
+																	{item.type}
+																</MenuItem>
+															))}
+														</TextField>
+													</Grid>
+													<Grid
+														item
+														xs="auto"
+														sm={1}
+														mb={2}
+														container
+														justifyContent="center"
+													>
+														<Image
+															src="/chevron-right-purple.svg"
+															alt="chevron-right-purple"
+															height={18}
+															width={18}
+														/>
+													</Grid>
+													<Grid item xs="auto" sm={5} mb={2}>
+														<TextField
+															fullWidth
+															variant="outlined"
+															value={field.value}
+															onChange={(e) =>
+																handleChangeField(
+																	index,
+																	"value",
+																	e.target.value,
+																)
+															}
+															placeholder="Enter value"
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
+																},
+															}}
+															InputProps={{
+																sx: {
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
@@ -1265,156 +1373,76 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
-																},
-															},
-														}}
-													>
-														{customFieldsList.map((item) => (
-															<MenuItem
-																key={item.value}
-																value={item.value}
-																disabled={customFields.some(
-																	(f) => f.type === item.value,
-																)} // Дизейблим выбранные
-															>
-																{item.type}
-															</MenuItem>
-														))}
-													</TextField>
-												</Grid>
-												<Grid
-													item
-													xs="auto"
-													sm={1}
-													mb={2}
-													container
-													justifyContent="center"
-												>
-													<Image
-														src="/chevron-right-purple.svg"
-														alt="chevron-right-purple"
-														height={18}
-														width={18}
-													/>
-												</Grid>
-												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														fullWidth
-														variant="outlined"
-														value={field.value}
-														onChange={(e) =>
-															handleChangeField(index, "value", e.target.value)
-														}
-														placeholder="Enter value"
-														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
-														}}
-														InputProps={{
-															sx: {
-																height: "36px",
-																"& .MuiOutlinedInput-input": {
-																	padding: "6.5px 8px",
-																	fontFamily: "var(--font-roboto)",
-																	color: "#202124",
-																	fontSize: "14px",
-																	fontWeight: "400",
-																	lineHeight: "20px",
-																},
-																"& .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&:hover .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																	{
-																		borderColor: "rgba(56, 152, 252, 1)",
-																	},
-															},
-														}}
-													/>
-												</Grid>
-												<Grid
-													item
-													xs="auto"
-													mb={2}
-													sm={1}
-													container
-													justifyContent="center"
-												>
-													<IconButton
-														onClick={() => handleDeleteField(index)}
-														disabled={customFields.length === 1}
-													>
-														<DeleteIcon
-															sx={{
-																color:
-																	customFields.length === 1
-																		? "grey.400"
-																		: "inherit",
 															}}
 														/>
-													</IconButton>
+													</Grid>
+													<Grid
+														item
+														xs="auto"
+														mb={2}
+														sm={1}
+														container
+														justifyContent="center"
+													>
+														<IconButton
+															onClick={() => handleDeleteField(index)}
+															disabled={customFields.length === 1}
+														>
+															<DeleteIcon
+																sx={{
+																	color:
+																		customFields.length === 1
+																			? "grey.400"
+																			: "inherit",
+																}}
+															/>
+														</IconButton>
+													</Grid>
 												</Grid>
-											</Grid>
-										))}
-										<Box
-											sx={{
-												display: "flex",
-												justifyContent: "flex-end",
-												mb: 2,
-												mr: 6,
-											}}
-										>
-											<Button
-												onClick={handleAddField}
-												aria-haspopup="true"
+											))}
+											<Box
 												sx={{
-													textTransform: "none",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													borderRadius: "4px",
-													padding: "9px 16px",
-													minWidth: "auto",
-													"@media (max-width: 900px)": {
-														display: "none",
-													},
+													display: "flex",
+													justifyContent: "flex-end",
+													mb: 2,
+													mr: 6,
 												}}
 											>
-												<Typography
+												<Button
+													onClick={handleAddField}
+													aria-haspopup="true"
 													sx={{
-														marginRight: "0.5em",
-														fontFamily: "var(--font-nunito)",
-														lineHeight: "22.4px",
-														fontSize: "16px",
-														textAlign: "left",
-														fontWeight: "500",
-														color: "rgba(56, 152, 252, 1)",
+														textTransform: "none",
+														border: "1px solid rgba(56, 152, 252, 1)",
+														borderRadius: "4px",
+														padding: "9px 16px",
+														minWidth: "auto",
+														"@media (max-width: 900px)": {
+															display: "none",
+														},
 													}}
 												>
-													Add
-												</Typography>
-											</Button>
+													<Typography
+														sx={{
+															marginRight: "0.5em",
+															fontFamily: "var(--font-nunito)",
+															lineHeight: "22.4px",
+															fontSize: "16px",
+															textAlign: "left",
+															fontWeight: "500",
+															color: "rgba(56, 152, 252, 1)",
+														}}
+													>
+														Add
+													</Typography>
+												</Button>
+											</Box>
 										</Box>
 									</Box>
-								</Box>
-							</TabPanel>
-						</TabContext>
-						{/* Button based on selected tab */}
+								</TabPanel>
+							</TabContext>
+							{/* Button based on selected tab */}
+						</Box>
 					</Box>
 					<Box
 						sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
