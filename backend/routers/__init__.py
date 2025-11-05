@@ -33,7 +33,6 @@ from routers import (
     opt_out,
     privacy_policy,
     teams,
-    webhook_test,
 )
 
 from domains import whitelabel
@@ -84,4 +83,3 @@ main_router.include_router(privacy_policy.router, prefix="/privacy-policy")
 main_router.include_router(teams.router, prefix="/teams")
 main_router.include_router(whitelabel.router, prefix="/whitelabel")
 main_router.include_router(premium_sources.router, prefix="/premium-data")
-main_router.include_router(webhook_test.router, prefix="/webhook")
