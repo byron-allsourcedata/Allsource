@@ -25,6 +25,7 @@ import {
 } from "@mui/material";
 import CustomTooltip from "@/components/customToolTip";
 import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
+import CreationMethodSelectorBox from "@/app/(client)/lookalikes/components/CreationMethodSelectorBox";
 import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -44,6 +45,8 @@ import UserTip from "@/components/ui/tips/TipInsideDrawer";
 
 export const dynamic = "force-dynamic";
 
+export type SelectedMethod = "smart" | "predictive" | "";
+
 const CreateLookalikePage: React.FC = () => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -51,6 +54,7 @@ const CreateLookalikePage: React.FC = () => {
 	const isSimple = searchParams.get("is_simple") === "true";
 	const [selectedSourceId, setSelectedSourceId] = useState<string>("");
 	const [selectedSize, setSelectedSize] = useState<string>("");
+	const [selectedMethod, setSelectedMethod] = useState<SelectedMethod>("");
 	const [selectedLabel, setSelectedLabel] = useState<string>("");
 	const [currentStep, setCurrentStep] = useState(0);
 	const [sourceName, setSourceName] = useState("");
@@ -108,7 +112,20 @@ const CreateLookalikePage: React.FC = () => {
 		setSelectedSize(id);
 		setSelectedLabel(label);
 		setCalculatedResults(null);
-		setCurrentStep(1);
+		setCurrentStep(2);
+		setSelectedMethod("");
+	};
+
+	const handleSelectMethod = (
+		id: string,
+		min_value: number,
+		max_value: number,
+		label: string,
+	) => {
+		setSelectedMethod(id as SelectedMethod);
+		setSelectedLabel(label);
+		setCalculatedResults(null);
+		setCurrentStep(3);
 	};
 
 	const handleSourceData = async () => {
@@ -151,7 +168,7 @@ const CreateLookalikePage: React.FC = () => {
 			);
 			if (response.data) {
 				setCalculatedResults(response.data);
-				setCurrentStep(2);
+				setCurrentStep(3);
 				setTimeout(() => {
 					scrollToBlock(blocks.predictableFields);
 				}, 100);
@@ -196,7 +213,7 @@ const CreateLookalikePage: React.FC = () => {
 				uuid_of_source: selectedSourceId,
 				lookalike_size: toSnakeCase(selectedLabel),
 				lookalike_name: sourceName,
-				scoring_type: isSimple ? "simple_all" : "ml",
+				scoring_type: selectedMethod === "predictive" ? "simple_all" : "ml",
 				audience_feature_importance: featureImportanceMap,
 			};
 			if (
@@ -227,6 +244,10 @@ const CreateLookalikePage: React.FC = () => {
 		handleSourceData();
 		resetSourcesBuilderHints();
 	}, []);
+
+	useEffect(() => {
+		console.log({ currentStep });
+	}, [currentStep]);
 
 	useEffect(() => {
 		if (preselectedUuid && sourceData.length) {
@@ -625,7 +646,7 @@ const CreateLookalikePage: React.FC = () => {
 												Select Audience Size
 											</Typography>
 											<CustomTooltip
-												title={"Smart Audience Builder."}
+												title={"Audience Size."}
 												linkText="Learn more"
 												linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder"
 											/>
@@ -637,8 +658,73 @@ const CreateLookalikePage: React.FC = () => {
 									</Box>
 								)}
 
+								{/* Audience size selector */}
+								{currentStep >= 2 && (
+									<Box
+										ref={blocks.lookalikeSize}
+										sx={{
+											textAlign: "left",
+											padding: "16px 20px 20px 20px",
+											borderRadius: "6px",
+											border: "1px solid #E4E4E4",
+											backgroundColor: "white",
+											marginTop: 2,
+											position: "relative",
+										}}
+									>
+										{currentStep === 2 && (
+											<Box sx={{ position: "absolute", top: 0, left: 0 }}>
+												<HintCard
+													card={cardsLookalikeBuilder.size}
+													positionTop={70}
+													positionLeft={220}
+													rightSide={false}
+													isOpenBody={lookalikesBuilderHints.size.showBody}
+													toggleClick={() =>
+														changeLookalikesBuilderHint(
+															"size",
+															"showBody",
+															"toggle",
+														)
+													}
+													closeClick={() =>
+														changeLookalikesBuilderHint(
+															"size",
+															"showBody",
+															"close",
+														)
+													}
+												/>
+											</Box>
+										)}
+
+										<Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+											<Typography
+												variant="h6"
+												sx={{
+													fontFamily: "var(--font-nunito)",
+													fontWeight: 500,
+													fontSize: "16px",
+													lineHeight: "22.5px",
+												}}
+											>
+												Choose Your Lookalike Creation Method
+											</Typography>
+											<CustomTooltip
+												title={"Lookalike Creation Method"}
+												linkText="Learn more"
+												linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder"
+											/>
+										</Box>
+										<CreationMethodSelectorBox
+											onSelectSize={handleSelectMethod}
+											selectedSize={selectedMethod}
+										/>
+									</Box>
+								)}
+
 								{/* Calculate button aligned to the right (content remains visible when clicked) */}
-								{selectedSize && !calculatedResults && (
+								{selectedMethod && !calculatedResults && (
 									<Box
 										sx={{
 											marginTop: 2,
@@ -672,7 +758,7 @@ const CreateLookalikePage: React.FC = () => {
 									</Box>
 								)}
 
-								{calculatedResults && currentStep >= 2 && (
+								{calculatedResults && currentStep >= 3 && (
 									<Box sx={{ mt: 2 }} ref={blocks.predictableFields}>
 										<CalculatedSteps
 											handleSetCanProceed={setCanProceed}
@@ -681,11 +767,12 @@ const CreateLookalikePage: React.FC = () => {
 											handlePrevStep={handlePrevStep}
 											handleNextStep={handleNextStep}
 											onFieldsOrderChangeUp={setDndFields}
+											selectedMethod={selectedMethod}
 										/>
 									</Box>
 								)}
 								{/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
-								{currentStep >= 3 && (
+								{currentStep >= 4 && (
 									<Box
 										ref={blocks.name}
 										sx={{
@@ -764,7 +851,7 @@ const CreateLookalikePage: React.FC = () => {
 									</Box>
 								)}
 							</Box>
-							{currentStep == 2 && (
+							{currentStep == 3 && calculatedResults && (
 								<Box
 									sx={{
 										width: "100%",
@@ -789,14 +876,14 @@ const CreateLookalikePage: React.FC = () => {
 									<CustomButton
 										variant="contained"
 										onClick={handleNextStep}
-										disabled={!canProceed}
+										disabled={!selectedSize}
 										sx={{ padding: "10px 31px" }}
 									>
 										Continue
 									</CustomButton>
 								</Box>
 							)}
-							{currentStep >= 3 && (
+							{currentStep >= 4 && (
 								<Box
 									sx={{
 										width: "100%",
