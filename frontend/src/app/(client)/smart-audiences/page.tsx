@@ -84,6 +84,7 @@ import {
 import ConfirmDialogPopover from "@/components/ui/popovers/ConfirmDialogPopover";
 import EditNamePopover from "@/components/ui/popovers/EditNamePopover";
 import MoreActionPopover from "@/components/ui/popovers/MoreActionPopover";
+import HoverPlatformNameTooltip from "@/components/ui/tooltips/PlatformIconWithNameInTooltip";
 
 interface Smarts {
 	id: string;
@@ -953,6 +954,13 @@ const SmartAudiences: React.FC = () => {
 		setPopupOpen(true);
 	};
 
+	function toCamelCase(platform: string): string {
+		return platform
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(" ");
+	}
+
 	return (
 		<Box
 			sx={{
@@ -1707,7 +1715,10 @@ const SmartAudiences: React.FC = () => {
 																					content: row.use_case_alias,
 																				}}
 																			>
-																				{getUseCaseStyle(row.use_case_alias)}
+																				<HoverPlatformNameTooltip
+																					getPlatformIcon={getUseCaseStyle}
+																					platformName={row.use_case_alias}
+																				/>
 																			</SmartCell>
 
 																			{/* Validations Column */}
