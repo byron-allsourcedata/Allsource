@@ -162,14 +162,18 @@ class SnowflakePersistence:
             "BUSINESS_EMAIL": clickhouse_data.get("BUSINESS_EMAIL", ""),
             "PERSONAL_EMAIL": clickhouse_data.get("PERSONAL_EMAIL", ""),
             "PhoneMobile1": clickhouse_data.get("PhoneMobile1", ""),
-            "HomeCity": clickhouse_data.get("HomeCity", ""),
-            "HomeState": clickhouse_data.get("HomeState", ""),
-            "Gender": clickhouse_data.get("Gender", ""),
-            "Age": clickhouse_data.get("Age", ""),
-            "MaritalStatus": clickhouse_data.get("MaritalStatus", ""),
-            "Pets": clickhouse_data.get("Pets", 0),
-            "ChildrenPresent": clickhouse_data.get("ChildrenPresent", ""),
-            "Spend": spend,
+            "SKINCARE_HOMECITY": clickhouse_data.get("SKINCARE_HOMECITY", ""),
+            "SKINCARE_HOMESTATE": clickhouse_data.get("SKINCARE_HOMESTATE", ""),
+            "SKINCARE_GENDER": clickhouse_data.get("SKINCARE_GENDER", ""),
+            "SKINCARE_AGE": clickhouse_data.get("SKINCARE_AGE", ""),
+            "SKINCARE_MARITALSTATUS": clickhouse_data.get(
+                "SKINCARE_MARITALSTATUS", ""
+            ),
+            "SKINCARE_PETS": clickhouse_data.get("SKINCARE_PETS", 0),
+            "SKINCARE_CHILDRENPRESENT": clickhouse_data.get(
+                "SKINCARE_CHILDRENPRESENT", ""
+            ),
+            "SKINCARE_SPEND": spend,
         }
 
         return merged_data
