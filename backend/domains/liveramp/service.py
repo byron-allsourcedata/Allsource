@@ -46,7 +46,7 @@ class LiverampService:
             )
 
             logger.info("Step 2: Fetching unified data from Delivr S3...")
-            delivr_data = await self.delivr.fetch_weekly_unified_data(days=7)
+            delivr_data = await self.delivr.fetch_last_2_months_unified_data()
             statistics["delivr_records"] = len(delivr_data)
 
             logger.info("Step 3: Fetching data from Snowflake...")

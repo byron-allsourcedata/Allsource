@@ -7,6 +7,7 @@ from domains.liveramp.persistence.clickhouse import ClickHousePersistence
 from resolver import injectable
 from config.util import getenv
 from datetime import datetime, timedelta, timezone
+from dateutil.relativedelta import relativedelta
 from typing import List, Dict, Any, Optional
 import logging
 
@@ -150,11 +151,9 @@ class DelivrPersistence:
         self.region = getenv("DELIVR_AWS_REGION")
         self.clickhouse_persistence = clickhouse_persistence
 
-    async def fetch_weekly_unified_data(
-        self, days: int = 7
-    ) -> List[Dict[str, Any]]:
+    async def fetch_last_2_months_unified_data(self) -> List[Dict[str, Any]]:
         try:
-            raw_df = await self.fetch_weekly_parquet(days=days)
+            raw_df = await self.fetch_parquet_last_2_months()
             if raw_df.empty:
                 logger.info("No Delivr data found")
                 return []
@@ -456,15 +455,8 @@ class DelivrPersistence:
             )
             return 0
 
-    async def fetch_weekly_parquet(
-        self, end_date: datetime | None = None, days: int = 7
-    ) -> pd.DataFrame:
-        end_date = end_date or datetime.now(timezone.utc)
-        result = []
-
-        logger.info(
-            f"Starting Delivr S3 data fetch for {days} days, end date: {end_date.strftime('%Y-%m-%d')}"
-        )
+    async def fetch_parquet_last_2_months(self) -> pd.DataFrame:
+        end_date = datetime.now(timezone.utc)
 
         session = aioboto3.Session()
         async with session.client(
@@ -473,12 +465,46 @@ class DelivrPersistence:
             aws_secret_access_key=self.aws_secret_key,
             region_name=self.region,
         ) as s3:
+            response = await s3.list_objects_v2(
+                Bucket=self.bucket,
+                Prefix="day=",
+                Delimiter="/",
+            )
+
+            prefixes = [
+                cp.get("Prefix")
+                for cp in response.get("CommonPrefixes", [])
+                if cp.get("Prefix", "").startswith("day=")
+            ]
+
+            if not prefixes:
+                logger.warning("No day=YYYYMMDD prefixes found in S3 bucket.")
+                return pd.DataFrame()
+
+            earliest_prefix = min(prefixes)
+            earliest_day = datetime.strptime(
+                earliest_prefix.replace("day=", "").replace("/", ""), "%Y%m%d"
+            ).replace(tzinfo=timezone.utc)
+
+            calculated_start = end_date - relativedelta(months=2)
+
+            start_date = max(calculated_start, earliest_day)
+
+            logger.info(
+                f"Fetching last 2 months from {start_date.date()} to {end_date.date()} "
+                f"(earliest S3 date: {earliest_day.date()})"
+            )
+
+            # Количество дней
+            days = (end_date.date() - start_date.date()).days + 1
+
+            result = []
             tasks = []
             days_processed = 0
             days_with_data = 0
 
             for i in range(days):
-                day = (end_date - timedelta(days=i)).strftime("%Y%m%d")
+                day = (start_date + timedelta(days=i)).strftime("%Y%m%d")
                 prefix = f"day={day}/"
                 logger.info(f"Processing day: {day}, prefix: {prefix}")
                 tasks.append(self._fetch_day_parquets(s3, prefix, day))
