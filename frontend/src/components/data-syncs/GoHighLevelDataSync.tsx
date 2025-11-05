@@ -529,498 +529,889 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 						flexDirection: "column",
 						alignItems: "center",
 						height: "100%",
+						justifyContent: "space-between",
 					}}
 				>
-					<UserTip
-						title="Data Sync Speed"
-						content="GoHighLevel standard sync speed is 50 contacts per minute."
-						sx={{
-							width: "100%",
-							padding: "16px 24px 0px 24px",
-						}}
-					/>
 					<Box
 						sx={{
+							display: "flex",
+							flexDirection: "column",
 							width: "100%",
-							padding: "16px 24px 24px 24px",
-							position: "relative",
 						}}
 					>
-						<TabContext value={value}>
-							<Box sx={{ pb: 4 }}>
-								<TabList
-									centered
-									aria-label="Connect to Mailchimp Tabs"
-									TabIndicatorProps={{
-										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
-									}}
-									sx={{
-										"& .MuiTabs-scroller": {
-											overflowX: "auto !important",
-										},
-										"& .MuiTabs-flexContainer": {
-											justifyContent: "center",
-											"@media (max-width: 600px)": {
-												gap: "16px",
-												justifyContent: "flex-start",
+						<UserTip
+							title="Data Sync Speed"
+							content="GoHighLevel standard sync speed is 50 contacts per minute."
+							sx={{
+								width: "100%",
+								padding: "16px 24px 0px 24px",
+							}}
+						/>
+						<Box
+							sx={{
+								width: "100%",
+								padding: "16px 24px 24px 24px",
+								position: "relative",
+							}}
+						>
+							<TabContext value={value}>
+								<Box sx={{ pb: 4 }}>
+									<TabList
+										centered
+										aria-label="Connect to Mailchimp Tabs"
+										TabIndicatorProps={{
+											sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
+										}}
+										sx={{
+											"& .MuiTabs-scroller": {
+												overflowX: "auto !important",
 											},
-										},
-									}}
-									onChange={handleChangeTab}
-								>
-									<Tab
-										label="Sync Filter"
-										value="1"
-										className="tab-heading"
-										sx={goHighLevelStyles.tabHeading}
-									/>
-									<Tab
-										label="Map data"
-										value="2"
-										className="tab-heading"
-										sx={goHighLevelStyles.tabHeading}
-									/>
-								</TabList>
-							</Box>
-							<TabPanel value="1" sx={{ p: 0 }}>
-								<Box
-									sx={{ display: "flex", flexDirection: "column", gap: "16px" }}
-								>
+											"& .MuiTabs-flexContainer": {
+												justifyContent: "center",
+												"@media (max-width: 600px)": {
+													gap: "16px",
+													justifyContent: "flex-start",
+												},
+											},
+										}}
+										onChange={handleChangeTab}
+									>
+										<Tab
+											label="Sync Filter"
+											value="1"
+											className="tab-heading"
+											sx={goHighLevelStyles.tabHeading}
+										/>
+										<Tab
+											label="Map data"
+											value="2"
+											className="tab-heading"
+											sx={goHighLevelStyles.tabHeading}
+										/>
+									</TabList>
+								</Box>
+								<TabPanel value="1" sx={{ p: 0 }}>
 									<Box
 										sx={{
-											p: 2,
-											border: "1px solid #f0f0f0",
-											borderRadius: "4px",
-											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
 											display: "flex",
 											flexDirection: "column",
 											gap: "16px",
 										}}
 									>
-										<Typography variant="subtitle1" className="paragraph">
-											Synchronize all data in real-time from this moment forward
-											for seamless integration and continuous updates.
-										</Typography>
-										<FormControl sx={{ gap: "16px" }} error={tab2Error}>
-											<FormLabel
-												id="contact-type-radio-buttons-group-label"
-												className="first-sub-title"
-												sx={{
-													"&.Mui-focused": {
-														color: "#000",
-														transform: "none !important",
-													},
-												}}
-											>
-												Filter by Contact type
-											</FormLabel>
-											<RadioGroup
-												aria-labelledby="contact-type-radio-buttons-group-label"
-												name="contact-type-row-radio-buttons-group"
-												value={selectedRadioValue}
-												onChange={handleRadioChange}
-											>
-												<FormControlLabel
-													value="allContacts"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="All Contacts"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "allContacts"
-																		? 1
-																		: 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="visitor"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="Visitors"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "visitors" ? 1 : 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="viewed_product"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="View Product"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "viewProduct"
-																		? 1
-																		: 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="abandoned_cart"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="Abandoned cart"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "addToCart" ? 1 : 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-												<FormControlLabel
-													value="converted_sales"
-													control={
-														<Radio
-															sx={{
-																color: "#e4e4e4",
-																"&.Mui-checked": {
-																	color: "rgba(56, 152, 252, 1)", // checked color
-																},
-															}}
-														/>
-													}
-													label="Converted Sales"
-													componentsProps={{
-														typography: {
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "14px",
-																fontWeight: "500",
-																color: "#000",
-																lineHeight: "normal",
-																opacity:
-																	selectedRadioValue === "addToCart" ? 1 : 0.43,
-																"@media (max-width:440px)": {
-																	fontSize: "12px",
-																},
-															},
-														},
-													}}
-													sx={{
-														"@media (max-width:600px)": {
-															flexBasis: "calc(50% - 8px)",
-														},
-													}}
-												/>
-											</RadioGroup>
-										</FormControl>
-									</Box>
-								</Box>
-							</TabPanel>
-							<TabPanel value="2" sx={{ p: 0 }}>
-								<Box
-									sx={{
-										borderRadius: "4px",
-										border: "1px solid #f0f0f0",
-										boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-										padding: "16px 24px",
-										overflowX: "auto",
-									}}
-								>
-									<Box
-										sx={{ display: "flex", gap: "8px", marginBottom: "20px" }}
-									>
-										<Typography variant="h6" className="first-sub-title">
-											Map list
-										</Typography>
-									</Box>
-
-									<Grid
-										container
-										alignItems="center"
-										sx={{
-											flexWrap: { xs: "nowrap", sm: "wrap" },
-											marginBottom: "14px",
-										}}
-									>
-										<Grid
-											item
-											xs="auto"
-											sm={5}
+										<Box
 											sx={{
-												textAlign: "center",
-												"@media (max-width:599px)": {
-													minWidth: "196px",
-												},
+												p: 2,
+												border: "1px solid #f0f0f0",
+												borderRadius: "4px",
+												boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+												display: "flex",
+												flexDirection: "column",
+												gap: "16px",
 											}}
 										>
-											<Logo height={22} width={34} />
-										</Grid>
-										<Grid
-											item
-											xs="auto"
-											sm={1}
-											sx={{
-												"@media (max-width:599px)": {
-													minWidth: "50px",
-												},
-											}}
-										>
-											&nbsp;
-										</Grid>
-										<Grid
-											item
-											xs="auto"
-											sm={5}
-											sx={{
-												textAlign: "center",
-												"@media (max-width:599px)": {
-													minWidth: "196px",
-												},
-											}}
-										>
-											<Image
-												src="/go-high-level-icon.svg"
-												alt="goHighLevel"
-												height={20}
-												width={24}
-											/>
-										</Grid>
-										<Grid item xs="auto" sm={1}>
-											&nbsp;
-										</Grid>
-									</Grid>
-
-									{defaultRows.map((row, index) => (
-										<Box key={row.id} sx={{ mb: 2 }}>
-											{" "}
-											{/* Add margin between rows */}
-											<Grid
-												container
-												spacing={2}
-												alignItems="center"
-												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-											>
-												{/* Left Input Field */}
-												<Grid item xs="auto" sm={5}>
-													<TextField
-														fullWidth
-														variant="outlined"
-														disabled={true}
-														value={row.value}
-														onChange={(e) =>
-															handleMapListChange(
-																row.id,
-																"value",
-																e.target.value,
-															)
+											<Typography variant="subtitle1" className="paragraph">
+												Synchronize all data in real-time from this moment
+												forward for seamless integration and continuous updates.
+											</Typography>
+											<FormControl sx={{ gap: "16px" }} error={tab2Error}>
+												<FormLabel
+													id="contact-type-radio-buttons-group-label"
+													className="first-sub-title"
+													sx={{
+														"&.Mui-focused": {
+															color: "#000",
+															transform: "none !important",
+														},
+													}}
+												>
+													Filter by Contact type
+												</FormLabel>
+												<RadioGroup
+													aria-labelledby="contact-type-radio-buttons-group-label"
+													name="contact-type-row-radio-buttons-group"
+													value={selectedRadioValue}
+													onChange={handleRadioChange}
+												>
+													<FormControlLabel
+														value="allContacts"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
 														}
-														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
+														label="All Contacts"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "allContacts"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
 																},
 															},
 														}}
-														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "12px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
-																		},
-																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
-																},
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
 															},
 														}}
 													/>
-												</Grid>
-												{/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+													<FormControlLabel
+														value="visitor"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="Visitors"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "visitors"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+													<FormControlLabel
+														value="viewed_product"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="View Product"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "viewProduct"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+													<FormControlLabel
+														value="abandoned_cart"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="Abandoned cart"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "addToCart"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+													<FormControlLabel
+														value="converted_sales"
+														control={
+															<Radio
+																sx={{
+																	color: "#e4e4e4",
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)", // checked color
+																	},
+																}}
+															/>
+														}
+														label="Converted Sales"
+														componentsProps={{
+															typography: {
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "14px",
+																	fontWeight: "500",
+																	color: "#000",
+																	lineHeight: "normal",
+																	opacity:
+																		selectedRadioValue === "addToCart"
+																			? 1
+																			: 0.43,
+																	"@media (max-width:440px)": {
+																		fontSize: "12px",
+																	},
+																},
+															},
+														}}
+														sx={{
+															"@media (max-width:600px)": {
+																flexBasis: "calc(50% - 8px)",
+															},
+														}}
+													/>
+												</RadioGroup>
+											</FormControl>
+										</Box>
+									</Box>
+								</TabPanel>
+								<TabPanel value="2" sx={{ p: 0 }}>
+									<Box
+										sx={{
+											borderRadius: "4px",
+											border: "1px solid #f0f0f0",
+											boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+											padding: "16px 24px",
+											overflowX: "auto",
+										}}
+									>
+										<Box
+											sx={{ display: "flex", gap: "8px", marginBottom: "20px" }}
+										>
+											<Typography variant="h6" className="first-sub-title">
+												Map list
+											</Typography>
+										</Box>
+
+										<Grid
+											container
+											alignItems="center"
+											sx={{
+												flexWrap: { xs: "nowrap", sm: "wrap" },
+												marginBottom: "14px",
+											}}
+										>
+											<Grid
+												item
+												xs="auto"
+												sm={5}
+												sx={{
+													textAlign: "center",
+													"@media (max-width:599px)": {
+														minWidth: "196px",
+													},
+												}}
+											>
+												<Logo height={22} width={34} />
+											</Grid>
+											<Grid
+												item
+												xs="auto"
+												sm={1}
+												sx={{
+													"@media (max-width:599px)": {
+														minWidth: "50px",
+													},
+												}}
+											>
+												&nbsp;
+											</Grid>
+											<Grid
+												item
+												xs="auto"
+												sm={5}
+												sx={{
+													textAlign: "center",
+													"@media (max-width:599px)": {
+														minWidth: "196px",
+													},
+												}}
+											>
+												<Image
+													src="/go-high-level-icon.svg"
+													alt="goHighLevel"
+													height={20}
+													width={24}
+												/>
+											</Grid>
+											<Grid item xs="auto" sm={1}>
+												&nbsp;
+											</Grid>
+										</Grid>
+
+										{defaultRows.map((row, index) => (
+											<Box key={row.id} sx={{ mb: 2 }}>
+												{" "}
+												{/* Add margin between rows */}
 												<Grid
-													item
-													xs="auto"
-													sm={1}
 													container
-													justifyContent="center"
+													spacing={2}
+													alignItems="center"
+													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
 												>
-													{row.selectValue !== undefined ? (
-														row.selectValue ? (
+													{/* Left Input Field */}
+													<Grid item xs="auto" sm={5}>
+														<TextField
+															fullWidth
+															variant="outlined"
+															disabled={true}
+															value={row.value}
+															onChange={(e) =>
+																handleMapListChange(
+																	row.id,
+																	"value",
+																	e.target.value,
+																)
+															}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
+																},
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "var(--font-roboto)",
+																			color: "#202124",
+																			fontSize: "12px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+														/>
+													</Grid>
+													{/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+													<Grid
+														item
+														xs="auto"
+														sm={1}
+														container
+														justifyContent="center"
+													>
+														{row.selectValue !== undefined ? (
+															row.selectValue ? (
+																<Image
+																	src="/chevron-right-purple.svg"
+																	alt="chevron-right-purple"
+																	height={18}
+																	width={18} // Adjust the size as needed
+																/>
+															) : (
+																<Image
+																	src="/close-circle.svg"
+																	alt="close-circle"
+																	height={18}
+																	width={18} // Adjust the size as needed
+																/>
+															)
+														) : (
 															<Image
 																src="/chevron-right-purple.svg"
 																alt="chevron-right-purple"
 																height={18}
 																width={18} // Adjust the size as needed
+															/> // For the first two rows, always show the right arrow
+														)}
+													</Grid>
+
+													{/* Right Side Input or Dropdown */}
+													<Grid item xs="auto" sm={5}>
+														<TextField
+															fullWidth
+															variant="outlined"
+															disabled={true}
+															value={row.type}
+															onChange={(e) =>
+																handleMapListChange(
+																	row.id,
+																	"type",
+																	e.target.value,
+																)
+															}
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
+																},
+															}}
+															InputProps={{
+																sx: {
+																	"&.MuiOutlinedInput-root": {
+																		height: "36px",
+																		"& .MuiOutlinedInput-input": {
+																			padding: "6.5px 8px",
+																			fontFamily: "var(--font-roboto)",
+																			color: "#202124",
+																			fontSize: "12px",
+																			fontWeight: "400",
+																			lineHeight: "20px",
+																		},
+																		"& .MuiOutlinedInput-notchedOutline": {
+																			borderColor: "#A3B0C2",
+																		},
+																		"&:hover .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "#A3B0C2",
+																			},
+																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																			{
+																				borderColor: "rgba(56, 152, 252, 1)",
+																			},
+																	},
+																	"&+.MuiFormHelperText-root": {
+																		marginLeft: "0",
+																	},
+																},
+															}}
+														/>
+													</Grid>
+
+													{/* Delete Icon */}
+													<Grid
+														item
+														xs="auto"
+														sm={1}
+														container
+														justifyContent="center"
+													>
+														{row.canDelete && (
+															<>
+																<IconButton
+																	onClick={(event) =>
+																		handleClickOpen(event, row.id)
+																	}
+																>
+																	<Image
+																		src="/trash-icon-filled.svg"
+																		alt="trash-icon-filled"
+																		height={18}
+																		width={18} // Adjust the size as needed
+																	/>
+																</IconButton>
+																<Popover
+																	id={deleteId}
+																	open={deleteOpen}
+																	anchorEl={deleteAnchorEl}
+																	onClose={handleDeleteClose}
+																	anchorOrigin={{
+																		vertical: "bottom",
+																		horizontal: "center",
+																	}}
+																	transformOrigin={{
+																		vertical: "top",
+																		horizontal: "right",
+																	}}
+																>
+																	<Box
+																		sx={{
+																			minWidth: "254px",
+																			borderRadius: "4px",
+																			border: "0.2px solid #afafaf",
+																			background: "#fff",
+																			boxShadow:
+																				"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																			padding: "16px 21px 16px 16px",
+																		}}
+																	>
+																		<Typography
+																			variant="body1"
+																			className="first-sub-title"
+																			sx={{
+																				paddingBottom: "12px",
+																			}}
+																		>
+																			Confirm Deletion
+																		</Typography>
+																		<Typography
+																			variant="body2"
+																			sx={{
+																				color: "#5f6368",
+																				fontFamily: "var(--font-roboto)",
+																				fontSize: "12px",
+																				fontWeight: "400",
+																				lineHeight: "16px",
+																				paddingBottom: "26px",
+																			}}
+																		>
+																			Are you sure you want to delete this{" "}
+																			<br /> map data?
+																		</Typography>
+																		<Box
+																			display="flex"
+																			justifyContent="flex-end"
+																			mt={2}
+																		>
+																			<Button
+																				onClick={handleDeleteClose}
+																				sx={{
+																					borderRadius: "4px",
+																					border:
+																						"1px solid rgba(56, 152, 252, 1)",
+																					boxShadow:
+																						"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+																					color: "rgba(56, 152, 252, 1)",
+																					fontFamily: "var(--font-nunito)",
+																					fontSize: "14px",
+																					fontWeight: "600",
+																					lineHeight: "20px",
+																					marginRight: "16px",
+																					textTransform: "none",
+																				}}
+																			>
+																				Clear
+																			</Button>
+																			<Button
+																				onClick={handleDelete}
+																				sx={{
+																					background: "rgba(56, 152, 252, 1)",
+																					borderRadius: "4px",
+																					border:
+																						"1px solid rgba(56, 152, 252, 1)",
+																					boxShadow:
+																						"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+																					color: "#fff",
+																					fontFamily: "var(--font-nunito)",
+																					fontSize: "14px",
+																					fontWeight: "600",
+																					lineHeight: "20px",
+																					textTransform: "none",
+																					"&:hover": {
+																						color: "rgba(56, 152, 252, 1)",
+																					},
+																				}}
+																			>
+																				Delete
+																			</Button>
+																		</Box>
+																	</Box>
+																</Popover>
+															</>
+														)}
+													</Grid>
+												</Grid>
+											</Box>
+										))}
+										<Box sx={{ mb: 2 }}>
+											{customFields.map((field, index) => (
+												<Grid
+													container
+													spacing={2}
+													alignItems="center"
+													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+													key={index}
+												>
+													<Grid item xs="auto" sm={5} mb={2}>
+														{field.is_constant ? (
+															<TextField
+																fullWidth
+																variant="outlined"
+																label="Constant Field Name"
+																value={field.type}
+																onChange={(e) =>
+																	handleChangeField(
+																		index,
+																		"type",
+																		e.target.value,
+																	)
+																}
+																placeholder="Enter field name"
+																error={
+																	field.is_constant &&
+																	!!field.type &&
+																	!isSafeFieldName(field.type)
+																}
+																InputLabelProps={{
+																	sx: {
+																		fontFamily: "var(--font-nunito)",
+																		fontSize: "13px",
+																		lineHeight: "16px",
+																		color: "rgba(17, 17, 19, 0.60)",
+																		top: "-5px",
+																		"&.Mui-focused": {
+																			color: "rgba(56, 152, 252, 1)",
+																			top: 0,
+																		},
+																		"&.MuiInputLabel-shrink": {
+																			top: 0,
+																		},
+																	},
+																}}
+																InputProps={{
+																	sx: {
+																		"&.MuiOutlinedInput-root": {
+																			height: "36px",
+																			"& .MuiOutlinedInput-input": {
+																				padding: "6.5px 8px",
+																				fontFamily: "var(--font-roboto)",
+																				color: "#202124",
+																				fontSize: "14px",
+																				fontWeight: "400",
+																				lineHeight: "20px",
+																			},
+																			"& .MuiOutlinedInput-notchedOutline": {
+																				borderColor: "#A3B0C2",
+																			},
+																			"&:hover .MuiOutlinedInput-notchedOutline":
+																				{
+																					borderColor: "#A3B0C2",
+																				},
+																			"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																				{
+																					borderColor: "rgba(56, 152, 252, 1)",
+																				},
+																		},
+																		"&+.MuiFormHelperText-root": {
+																			marginLeft: "0",
+																		},
+																	},
+																}}
 															/>
 														) : (
-															<Image
-																src="/close-circle.svg"
-																alt="close-circle"
-																height={18}
-																width={18} // Adjust the size as needed
-															/>
-														)
-													) : (
+															<TextField
+																select
+																fullWidth
+																variant="outlined"
+																label="Custom Field"
+																value={field.type}
+																onChange={(e) => {
+																	const selected = e.target.value;
+																	if (selected === "__constant__") {
+																		setCustomFields((prev) => {
+																			const updated = [...prev];
+																			updated[index] = {
+																				...updated[index],
+																				type: "",
+																				is_constant: true,
+																			};
+																			return updated;
+																		});
+																	} else {
+																		handleChangeField(index, "type", selected);
+																		handleChangeField(
+																			index,
+																			"is_constant",
+																			undefined,
+																		);
+																	}
+																}}
+																InputLabelProps={{
+																	sx: {
+																		fontFamily: "var(--font-nunito)",
+																		fontSize: "13px",
+																		lineHeight: "16px",
+																		color: "rgba(17, 17, 19, 0.60)",
+																		top: "-5px",
+																		"&.Mui-focused": {
+																			color: "rgba(56, 152, 252, 1)",
+																			top: 0,
+																		},
+																		"&.MuiInputLabel-shrink": {
+																			top: 0,
+																		},
+																	},
+																}}
+																InputProps={{
+																	sx: {
+																		"&.MuiOutlinedInput-root": {
+																			height: "36px",
+																			"& .MuiOutlinedInput-input": {
+																				padding: "6.5px 8px",
+																				fontFamily: "var(--font-roboto)",
+																				color: "#202124",
+																				fontSize: "14px",
+																				fontWeight: "400",
+																				lineHeight: "20px",
+																			},
+																			"& .MuiOutlinedInput-notchedOutline": {
+																				borderColor: "#A3B0C2",
+																			},
+																			"&:hover .MuiOutlinedInput-notchedOutline":
+																				{
+																					borderColor: "#A3B0C2",
+																				},
+																			"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+																				{
+																					borderColor: "rgba(56, 152, 252, 1)",
+																				},
+																		},
+																		"&+.MuiFormHelperText-root": {
+																			marginLeft: "0",
+																		},
+																	},
+																}}
+																error={isDuplicate(field.type, index)}
+																helperText={
+																	isDuplicate(field.type, index)
+																		? "This field name already exists"
+																		: ""
+																}
+															>
+																{extendedCustomFieldsList.map((item) => (
+																	<MenuItem
+																		key={item.value}
+																		value={item.value}
+																		disabled={
+																			item.value !== "__constant__" &&
+																			customFields.some(
+																				(f) => f.type === item.value,
+																			)
+																		}
+																	>
+																		{item.type}
+																	</MenuItem>
+																))}
+															</TextField>
+														)}
+													</Grid>
+													<Grid
+														item
+														xs="auto"
+														sm={1}
+														mb={2}
+														container
+														justifyContent="center"
+													>
 														<Image
 															src="/chevron-right-purple.svg"
 															alt="chevron-right-purple"
 															height={18}
-															width={18} // Adjust the size as needed
-														/> // For the first two rows, always show the right arrow
-													)}
-												</Grid>
-
-												{/* Right Side Input or Dropdown */}
-												<Grid item xs="auto" sm={5}>
-													<TextField
-														fullWidth
-														variant="outlined"
-														disabled={true}
-														value={row.type}
-														onChange={(e) =>
-															handleMapListChange(
-																row.id,
-																"type",
-																e.target.value,
-															)
-														}
-														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
+															width={18}
+														/>
+													</Grid>
+													<Grid item xs="auto" sm={5} mb={2}>
+														<TextField
+															fullWidth
+															variant="outlined"
+															value={field.value}
+															onChange={(e) =>
+																handleChangeField(
+																	index,
+																	"value",
+																	e.target.value,
+																)
+															}
+															placeholder="Enter value"
+															InputLabelProps={{
+																sx: {
+																	fontFamily: "var(--font-nunito)",
+																	fontSize: "12px",
+																	lineHeight: "16px",
+																	color: "rgba(17, 17, 19, 0.60)",
+																	top: "-5px",
+																	"&.Mui-focused": {
+																		color: "rgba(56, 152, 252, 1)",
+																		top: 0,
+																	},
+																	"&.MuiInputLabel-shrink": {
+																		top: 0,
+																	},
 																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
-														}}
-														InputProps={{
-															sx: {
-																"&.MuiOutlinedInput-root": {
+															}}
+															InputProps={{
+																sx: {
 																	height: "36px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "var(--font-roboto)",
 																		color: "#202124",
-																		fontSize: "12px",
+																		fontSize: "14px",
 																		fontWeight: "400",
 																		lineHeight: "20px",
 																	},
@@ -1035,433 +1426,73 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
-																"&+.MuiFormHelperText-root": {
-																	marginLeft: "0",
-																},
-															},
-														}}
-													/>
-												</Grid>
-
-												{/* Delete Icon */}
-												<Grid
-													item
-													xs="auto"
-													sm={1}
-													container
-													justifyContent="center"
-												>
-													{row.canDelete && (
-														<>
-															<IconButton
-																onClick={(event) =>
-																	handleClickOpen(event, row.id)
-																}
-															>
-																<Image
-																	src="/trash-icon-filled.svg"
-																	alt="trash-icon-filled"
-																	height={18}
-																	width={18} // Adjust the size as needed
-																/>
-															</IconButton>
-															<Popover
-																id={deleteId}
-																open={deleteOpen}
-																anchorEl={deleteAnchorEl}
-																onClose={handleDeleteClose}
-																anchorOrigin={{
-																	vertical: "bottom",
-																	horizontal: "center",
-																}}
-																transformOrigin={{
-																	vertical: "top",
-																	horizontal: "right",
-																}}
-															>
-																<Box
-																	sx={{
-																		minWidth: "254px",
-																		borderRadius: "4px",
-																		border: "0.2px solid #afafaf",
-																		background: "#fff",
-																		boxShadow:
-																			"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-																		padding: "16px 21px 16px 16px",
-																	}}
-																>
-																	<Typography
-																		variant="body1"
-																		className="first-sub-title"
-																		sx={{
-																			paddingBottom: "12px",
-																		}}
-																	>
-																		Confirm Deletion
-																	</Typography>
-																	<Typography
-																		variant="body2"
-																		sx={{
-																			color: "#5f6368",
-																			fontFamily: "var(--font-roboto)",
-																			fontSize: "12px",
-																			fontWeight: "400",
-																			lineHeight: "16px",
-																			paddingBottom: "26px",
-																		}}
-																	>
-																		Are you sure you want to delete this <br />{" "}
-																		map data?
-																	</Typography>
-																	<Box
-																		display="flex"
-																		justifyContent="flex-end"
-																		mt={2}
-																	>
-																		<Button
-																			onClick={handleDeleteClose}
-																			sx={{
-																				borderRadius: "4px",
-																				border:
-																					"1px solid rgba(56, 152, 252, 1)",
-																				boxShadow:
-																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																				color: "rgba(56, 152, 252, 1)",
-																				fontFamily: "var(--font-nunito)",
-																				fontSize: "14px",
-																				fontWeight: "600",
-																				lineHeight: "20px",
-																				marginRight: "16px",
-																				textTransform: "none",
-																			}}
-																		>
-																			Clear
-																		</Button>
-																		<Button
-																			onClick={handleDelete}
-																			sx={{
-																				background: "rgba(56, 152, 252, 1)",
-																				borderRadius: "4px",
-																				border:
-																					"1px solid rgba(56, 152, 252, 1)",
-																				boxShadow:
-																					"0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-																				color: "#fff",
-																				fontFamily: "var(--font-nunito)",
-																				fontSize: "14px",
-																				fontWeight: "600",
-																				lineHeight: "20px",
-																				textTransform: "none",
-																				"&:hover": {
-																					color: "rgba(56, 152, 252, 1)",
-																				},
-																			}}
-																		>
-																			Delete
-																		</Button>
-																	</Box>
-																</Box>
-															</Popover>
-														</>
-													)}
-												</Grid>
-											</Grid>
-										</Box>
-									))}
-									<Box sx={{ mb: 2 }}>
-										{customFields.map((field, index) => (
-											<Grid
-												container
-												spacing={2}
-												alignItems="center"
-												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-												key={index}
-											>
-												<Grid item xs="auto" sm={5} mb={2}>
-													{field.is_constant ? (
-														<TextField
-															fullWidth
-															variant="outlined"
-															label="Constant Field Name"
-															value={field.type}
-															onChange={(e) =>
-																handleChangeField(index, "type", e.target.value)
-															}
-															placeholder="Enter field name"
-															error={
-																field.is_constant &&
-																!!field.type &&
-																!isSafeFieldName(field.type)
-															}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "13px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "14px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
 															}}
 														/>
-													) : (
-														<TextField
-															select
-															fullWidth
-															variant="outlined"
-															label="Custom Field"
-															value={field.type}
-															onChange={(e) => {
-																const selected = e.target.value;
-																if (selected === "__constant__") {
-																	setCustomFields((prev) => {
-																		const updated = [...prev];
-																		updated[index] = {
-																			...updated[index],
-																			type: "",
-																			is_constant: true,
-																		};
-																		return updated;
-																	});
-																} else {
-																	handleChangeField(index, "type", selected);
-																	handleChangeField(
-																		index,
-																		"is_constant",
-																		undefined,
-																	);
-																}
-															}}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "13px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "14px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-															error={isDuplicate(field.type, index)}
-															helperText={
-																isDuplicate(field.type, index)
-																	? "This field name already exists"
-																	: ""
-															}
+													</Grid>
+													<Grid
+														item
+														xs="auto"
+														mb={2}
+														sm={1}
+														container
+														justifyContent="center"
+													>
+														<IconButton
+															onClick={() => handleDeleteField(index)}
 														>
-															{extendedCustomFieldsList.map((item) => (
-																<MenuItem
-																	key={item.value}
-																	value={item.value}
-																	disabled={
-																		item.value !== "__constant__" &&
-																		customFields.some(
-																			(f) => f.type === item.value,
-																		)
-																	}
-																>
-																	{item.type}
-																</MenuItem>
-															))}
-														</TextField>
-													)}
+															<Image
+																src="/trash-icon-filled.svg"
+																alt="trash-icon-filled"
+																height={18}
+																width={18}
+															/>
+														</IconButton>
+													</Grid>
 												</Grid>
-												<Grid
-													item
-													xs="auto"
-													sm={1}
-													mb={2}
-													container
-													justifyContent="center"
-												>
-													<Image
-														src="/chevron-right-purple.svg"
-														alt="chevron-right-purple"
-														height={18}
-														width={18}
-													/>
-												</Grid>
-												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														fullWidth
-														variant="outlined"
-														value={field.value}
-														onChange={(e) =>
-															handleChangeField(index, "value", e.target.value)
-														}
-														placeholder="Enter value"
-														InputLabelProps={{
-															sx: {
-																fontFamily: "var(--font-nunito)",
-																fontSize: "12px",
-																lineHeight: "16px",
-																color: "rgba(17, 17, 19, 0.60)",
-																top: "-5px",
-																"&.Mui-focused": {
-																	color: "rgba(56, 152, 252, 1)",
-																	top: 0,
-																},
-																"&.MuiInputLabel-shrink": {
-																	top: 0,
-																},
-															},
-														}}
-														InputProps={{
-															sx: {
-																height: "36px",
-																"& .MuiOutlinedInput-input": {
-																	padding: "6.5px 8px",
-																	fontFamily: "var(--font-roboto)",
-																	color: "#202124",
-																	fontSize: "14px",
-																	fontWeight: "400",
-																	lineHeight: "20px",
-																},
-																"& .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&:hover .MuiOutlinedInput-notchedOutline": {
-																	borderColor: "#A3B0C2",
-																},
-																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																	{
-																		borderColor: "rgba(56, 152, 252, 1)",
-																	},
-															},
-														}}
-													/>
-												</Grid>
-												<Grid
-													item
-													xs="auto"
-													mb={2}
-													sm={1}
-													container
-													justifyContent="center"
-												>
-													<IconButton onClick={() => handleDeleteField(index)}>
-														<Image
-															src="/trash-icon-filled.svg"
-															alt="trash-icon-filled"
-															height={18}
-															width={18}
-														/>
-													</IconButton>
-												</Grid>
-											</Grid>
-										))}
-										<Box
-											sx={{
-												display: "flex",
-												justifyContent: "flex-end",
-												mb: 2,
-												mr: 6,
-											}}
-										>
-											<Button
-												onClick={handleAddField}
-												aria-haspopup="true"
+											))}
+											<Box
 												sx={{
-													textTransform: "none",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													borderRadius: "4px",
-													padding: "9px 16px",
-													minWidth: "auto",
-													"@media (max-width: 900px)": {
-														display: "none",
-													},
+													display: "flex",
+													justifyContent: "flex-end",
+													mb: 2,
+													mr: 6,
 												}}
 											>
-												<Typography
+												<Button
+													onClick={handleAddField}
+													aria-haspopup="true"
 													sx={{
-														marginRight: "0.5em",
-														fontFamily: "var(--font-nunito)",
-														lineHeight: "22.4px",
-														fontSize: "16px",
-														textAlign: "left",
-														fontWeight: "500",
-														color: "rgba(56, 152, 252, 1)",
+														textTransform: "none",
+														border: "1px solid rgba(56, 152, 252, 1)",
+														borderRadius: "4px",
+														padding: "9px 16px",
+														minWidth: "auto",
+														"@media (max-width: 900px)": {
+															display: "none",
+														},
 													}}
 												>
-													Add
-												</Typography>
-											</Button>
+													<Typography
+														sx={{
+															marginRight: "0.5em",
+															fontFamily: "var(--font-nunito)",
+															lineHeight: "22.4px",
+															fontSize: "16px",
+															textAlign: "left",
+															fontWeight: "500",
+															color: "rgba(56, 152, 252, 1)",
+														}}
+													>
+														Add
+													</Typography>
+												</Button>
+											</Box>
 										</Box>
 									</Box>
-								</Box>
-							</TabPanel>
-						</TabContext>
-						{/* Button based on selected tab */}
+								</TabPanel>
+							</TabContext>
+							{/* Button based on selected tab */}
+						</Box>
 					</Box>
 					<Box
 						sx={{ px: 2, py: 2, width: "100%", border: "1px solid #e4e4e4" }}
