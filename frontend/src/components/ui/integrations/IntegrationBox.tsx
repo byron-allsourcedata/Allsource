@@ -314,24 +314,26 @@ export const IntegrationBox = ({
 						maxWidth: "160px",
 					}}
 				>
-					<Button
-						sx={{
-							justifyContent: "flex-start",
-							width: "100%",
-							textTransform: "none",
-							fontFamily: "var(--font-nunito)",
-							fontSize: "14px",
-							color: "rgba(32, 33, 36, 1)",
-							fontWeight: 600,
-							":hover": {
-								color: "rgba(56, 152, 252, 1)",
-								backgroundColor: "rgba(80, 82, 178, 0.1)",
-							},
-						}}
-						onClick={handleClickEdit}
-					>
-						Edit
-					</Button>
+					{service_name !== "webhook" && (
+						<Button
+							sx={{
+								justifyContent: "flex-start",
+								width: "100%",
+								textTransform: "none",
+								fontFamily: "var(--font-nunito)",
+								fontSize: "14px",
+								color: "rgba(32, 33, 36, 1)",
+								fontWeight: 600,
+								":hover": {
+									color: "rgba(56, 152, 252, 1)",
+									backgroundColor: "rgba(80, 82, 178, 0.1)",
+								},
+							}}
+							onClick={handleClickEdit}
+						>
+							Edit
+						</Button>
+					)}
 					<Button
 						sx={{
 							justifyContent: "flex-start",
