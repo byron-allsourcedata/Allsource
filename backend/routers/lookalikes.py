@@ -50,7 +50,6 @@ async def get_lookalikes(
     ),
     is_debug: bool = Query(False),
 ):
-    print(lookalike_size)
     return lookalike_service.get_lookalikes(
         user=user,
         sort_by=sort_by,
