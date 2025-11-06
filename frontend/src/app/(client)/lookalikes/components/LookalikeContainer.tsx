@@ -16,6 +16,7 @@ import { useSSE } from "@/context/SSEContext";
 import ProgressBar from "./ProgressLoader";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { usePolling } from "@/hooks/usePolling";
+import { creationMethodMapping } from "./LookalikeTable";
 
 interface TableData {
 	id: string;
@@ -25,6 +26,7 @@ interface TableData {
 	source: string;
 	type: string;
 	source_target_schema: string;
+	scoring_type: string;
 	lookalike_size: string;
 	created_date: string;
 	created_by: string;
@@ -197,6 +199,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 						<TableCell>Source</TableCell>
 						<TableCell>Source Type</TableCell>
 						<TableCell>Target Type</TableCell>
+						<TableCell>Method</TableCell>
 						<TableCell>Lookalike Size</TableCell>
 						<TableCell>Created date</TableCell>
 						<TableCell>Created By</TableCell>
@@ -277,6 +280,13 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 								</Box>
 							</TableCell>
 							<TableCell>{row.source_target_schema?.toUpperCase()}</TableCell>
+							<TableCell>
+								{
+									creationMethodMapping[
+										row.scoring_type as keyof typeof creationMethodMapping
+									]
+								}
+							</TableCell>
 							<TableCell>
 								{(() => {
 									const size = audienceSize.find(
@@ -385,6 +395,15 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
 							<Box> Source: {setSourceOrigin(row.source)}</Box>
 							<Box> Source Type: {row.type}</Box>
 							<Box> Target Type: {row.source_target_schema.toUpperCase()}</Box>
+							<Box>
+								{" "}
+								Method:{" "}
+								{
+									creationMethodMapping[
+										row.scoring_type as keyof typeof creationMethodMapping
+									]
+								}
+							</Box>
 							<Box> Lookalike Size: {row.lookalike_size}</Box>
 							<Box> Created Date: {row.created_date}</Box>
 							<Box> Created By: {row.created_by}</Box>

@@ -8,12 +8,12 @@ import {
 	Button,
 	LinearProgress,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
-import { CompressOutlined } from "@mui/icons-material";
 
 interface CreateWebhookProps {
 	handleClose: () => void;
@@ -33,9 +33,7 @@ const WebhookConnectPopup = ({
 	invalid_api_key,
 }: CreateWebhookProps) => {
 	const { triggerSync, setNeedsSync } = useIntegrationContext();
-	const [apiKey, setApiKey] = useState("");
 	const [loading, setLoading] = useState(false);
-	const [value, setValue] = useState<string>("1");
 
 	const handleApiKeySave = async () => {
 		try {
@@ -155,7 +153,6 @@ const WebhookConnectPopup = ({
 						alignItems: "center",
 						py: 2.85,
 						px: 2,
-						borderBottom: "1px solid #e4e4e4",
 					}}
 				>
 					<Typography
@@ -205,33 +202,100 @@ const WebhookConnectPopup = ({
 						justifyContent: "space-between",
 						alignItems: "center",
 						height: "100%",
+						borderTop: "1px solid #e4e4e4",
+						padding: "1rem 1.5rem",
 					}}
 				>
 					<Box
-						sx={{ px: 2, py: 2, width: "100%", borderTop: "1px solid #e4e4e4" }}
+						sx={{
+							width: "100%",
+							height: "320px",
+							border: "1px solid rgba(240, 240, 240, 1)",
+							display: "flex",
+							flexDirection: "column",
+							justifyContent: "space-between",
+							alignItems: "center",
+							textAlign: "center",
+							background: "#fff",
+							padding: "1rem",
+						}}
 					>
 						<Box
 							sx={{
-								width: "100%",
 								display: "flex",
-								justifyContent: "flex-end",
+								gap: 1,
+								alignItems: "center",
+								textAlign: "left",
+								width: "100%",
 							}}
 						>
-							{getButton(value)}
+							<Image
+								src="/webhook-icon.svg"
+								alt="Webhook Header"
+								height={30}
+								width={30}
+							/>
+							<Typography
+								sx={{
+									fontFamily: "var(--font-nunito)",
+									fontWeight: 600,
+									fontSize: "16px",
+									color: "rgba(32, 33, 36, 1)",
+									alignSelf: "flex-start",
+									pt: "1px",
+								}}
+							>
+								Connect to Webhook
+							</Typography>
 						</Box>
+
+						<Box
+							component="img"
+							src="/webhook-plug.svg"
+							alt="webhook-illustration"
+							sx={{
+								maxWidth: "540px",
+								objectFit: "contain",
+								flexGrow: 1,
+							}}
+						/>
+
+						<Button
+							variant="contained"
+							fullWidth
+							sx={{
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								fontFamily: "var(--font-nunito)",
+								fontSize: "14px",
+								fontWeight: "600",
+								lineHeight: "20px",
+								letterSpacing: "normal",
+								color: "#fff",
+								textTransform: "none",
+								padding: "10px 24px",
+								boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+								"&:hover": {
+									backgroundColor: "rgba(56, 152, 252, 1)",
+								},
+								borderRadius: "4px",
+							}}
+							onClick={() => handleApiKeySave()}
+						>
+							Connect
+						</Button>
+
 						{invalid_api_key && (
 							<Typography
 								color="error"
 								sx={{
 									fontFamily: "var(--font-nunito)",
 									fontSize: "14px",
-									fontWeight: "600",
-									lineHeight: "21.82px",
-									marginTop: "10px",
+									fontWeight: 600,
+									marginTop: "12px",
 								}}
 							>
 								Invalid API Key detected. Please reconnect to Webhook and try
-								again
+								again.
 							</Typography>
 						)}
 					</Box>
