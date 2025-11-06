@@ -217,7 +217,7 @@ const CreateLookalike: React.FC = () => {
 			return Object.entries(obj)
 				.filter(([_, value]) => value)
 				.map(([key]) => key)
-				.join(", ");
+				.join(",");
 		};
 
 		const dateFormat = "MM/DD/YYYY";
@@ -244,7 +244,7 @@ const CreateLookalike: React.FC = () => {
 			{
 				condition: filters.size?.length,
 				label: "Size",
-				value: () => filters.size!.join(", "),
+				value: () => filters.size!.join(","),
 			},
 			{
 				condition: filters.searchQuery?.trim() !== "",
@@ -307,7 +307,7 @@ const CreateLookalike: React.FC = () => {
 				if (filter) {
 					const snakeCaseParam = toSnakeCase(filter);
 					url += `&${paramName}=${encodeURIComponent(
-						snakeCaseParam?.split(", ").join(","),
+						snakeCaseParam?.split(" ").join("_"),
 					)}`;
 				}
 			};
@@ -377,27 +377,13 @@ const CreateLookalike: React.FC = () => {
 		isDebug,
 	]);
 
-	const handleResetFilters = async () => {
-		const url = `/audience-lookalikes`;
+	const handleResetFilters = () => {
+		setAppliedDates({ start: null, end: null });
+		setFormattedDates("");
+		sessionStorage.removeItem("lookalike-filters");
 
-		try {
-			setIsLoading(true);
-			setAppliedDates({ start: null, end: null });
-			setFormattedDates("");
-			sessionStorage.removeItem("lookalike-filters");
-			const response = await axiosInstance.get(url);
-			const [leads, count] = response.data;
-			const leadsArray = Array.isArray(leads) ? leads : [];
-
-			setLookalikeData(leadsArray);
-			setCountLookalike(count || 0);
-			setSelectedDates({ start: null, end: null });
-			setSelectedFilters([]);
-		} catch (error) {
-			console.error("Error fetching leads:", error);
-		} finally {
-			setIsLoading(false);
-		}
+		setSelectedDates({ start: null, end: null });
+		setSelectedFilters([]);
 	};
 
 	const handleDeleteFilter = (filterToDelete: {

@@ -6,39 +6,23 @@ import {
 	Button,
 	IconButton,
 	Backdrop,
-	TextField,
-	InputAdornment,
 	Collapse,
-	Divider,
-	FormControlLabel,
-	Checkbox,
-	Radio,
 	List,
 	ListItem,
 	ListItemText,
-	FormControl,
-	MenuItem,
-	Select,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import DnsIcon from "@mui/icons-material/Dns";
 import GroupsIcon from "@mui/icons-material/Groups";
-import EventIcon from "@mui/icons-material/Event";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import {
-	LocalizationProvider,
-	DatePicker,
-	TimePicker,
-} from "@mui/x-date-pickers";
-import dayjs, { Dayjs } from "dayjs";
-import Image from "next/image";
 import { filterStyles } from "@/css/filterSlider";
 import debounce from "lodash/debounce";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import ExpandableCheckboxFilter from "@/components/filters/ExpandableCheckboxFilter";
+import { TextFieldWithLoupe } from "@/components/ui/inputs/TextFieldWithLoupe";
+import { CustomButton } from "@/components/ui";
+import { CustomChip } from "@/components/filters/CustomChip";
 
 interface FilterPopupProps {
 	open: boolean;
@@ -74,39 +58,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 				: [...prev, label],
 		);
 	};
-
-	interface CustomChipProps {
-		label: string;
-		onDelete: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-	}
-
-	const CustomChip: React.FC<CustomChipProps> = ({ label, onDelete }) => (
-		<Box
-			sx={{
-				display: "flex",
-				alignItems: "center",
-				backgroundColor: "rgba(255, 255, 255, 1)",
-				border: "1px solid rgba(229, 229, 229, 1)",
-				borderRadius: "3px",
-				px: 1,
-				mr: 1,
-				py: 0.5,
-				fontSize: "12px",
-			}}
-		>
-			<IconButton
-				size="medium"
-				onClick={(e) => {
-					e.stopPropagation();
-					onDelete(e);
-				}}
-				sx={{ p: 0, mr: 0.5 }}
-			>
-				<CloseIcon sx={{ fontSize: "14px" }} />
-			</IconButton>
-			<Typography className="table-data">{label}</Typography>
-		</Box>
-	);
 
 	const [checkedFiltersTypes, setcheckedFiltersTypes] = useState<
 		Record<string, boolean>
@@ -230,29 +181,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 	return (
 		<>
 			<Backdrop open={open} sx={{ zIndex: 100, color: "#fff" }} />
-			<Drawer
-				anchor="right"
-				open={open}
-				onClose={onClose}
-				PaperProps={{
-					sx: {
-						width: "40%",
-						position: "fixed",
-						top: 0,
-						bottom: 0,
-						"@media (max-width: 600px)": {
-							width: "100%",
-						},
-					},
-				}}
-				slotProps={{
-					backdrop: {
-						sx: {
-							backgroundColor: "rgba(0, 0, 0, 0.01)",
-						},
-					},
-				}}
-			>
+			<Drawer anchor="right" open={open} onClose={onClose}>
 				<Box
 					sx={{
 						display: "flex",
@@ -300,56 +229,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 							pb: 2,
 						}}
 					>
-						<TextField
+						<TextFieldWithLoupe
 							placeholder="Search by lookalikes name, source or creator"
-							variant="outlined"
-							fullWidth
 							value={searchQuery}
 							onChange={handleSearchQueryChange}
-							InputProps={{
-								startAdornment: (
-									<InputAdornment position="start">
-										<Button
-											disabled={true}
-											sx={{
-												textTransform: "none",
-												textDecoration: "none",
-												padding: 0,
-												minWidth: 0,
-												height: "auto",
-												width: "auto",
-											}}
-										>
-											<SearchIcon
-												sx={{ color: "rgba(101, 101, 101, 1)" }}
-												fontSize="medium"
-											/>
-										</Button>
-									</InputAdornment>
-								),
-								sx: {
-									"& input": {
-										paddingLeft: 0,
-									},
-									fontFamily: "var(--font-roboto)",
-									fontSize: "0.875rem",
-									fontWeight: 400,
-									lineHeight: "19.6px",
-									textAlign: "left",
-									color: "rgba(112, 112, 113, 1)",
-								},
-							}}
-							sx={{
-								padding: "1em 1em 0em 1em",
-								"& .MuiInputBase-input::placeholder": {
-									fontFamily: "var(--font-roboto)",
-									fontSize: "0.875rem",
-									fontWeight: 400,
-									lineHeight: "19.6px",
-									textAlign: "left",
-									color: "rgba(112, 112, 113, 1)",
-								},
-							}}
 						/>
 						<Box sx={{ paddingLeft: 2, paddingRight: 2, pt: "3px" }}>
 							{contacts?.length > 0 && (
@@ -452,7 +335,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								)}
 								allowedOptions={[
 									"Customer Conversions",
-									"Lead Failures",
+									"Failed Leads",
 									"Interest",
 									"Visitor",
 									"Viewed Product",
@@ -518,11 +401,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								}}
 							>
 								{[
-									{ label: "Almost identical", value: "0-3" },
-									{ label: "Extremely Similar", value: "0-7" },
-									{ label: "Very similar", value: "0-10" },
-									{ label: "Quite similar", value: "0-15" },
-									{ label: "Broad", value: "0-20" },
+									{ label: "Almost Identical", value: "10,000 Contacts" },
+									{ label: "Extremely Similar", value: "50,000 Contacts" },
+									{ label: "Very similar", value: "100,000 Contacts" },
+									{ label: "Quite similar", value: "200,000 Contacts" },
+									{ label: "Broad", value: "500,000 Contacts" },
 								].map(({ label, value }) => {
 									const isSelected = selectedSize.includes(label);
 									return (
@@ -576,7 +459,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 												{label}
 											</Typography>
 											{value && (
-												<span style={{ fontSize: "0.8em", color: "#808080" }}>
+												<span
+													style={{
+														fontSize: "12px",
+														fontFamily: "var(--font-roboto)",
+														color: "#808080",
+													}}
+												>
 													{value}
 												</span>
 											)}
@@ -586,14 +475,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 							</Box>
 						</Collapse>
 					</Box>
-					{/* Created date */}
-					<Box
-						sx={{
-							mb: 0,
-							padding: "0.15em",
-							visibility: "hidden",
-						}}
-					></Box>
 					{/* Buttons */}
 					<Box
 						sx={{
@@ -612,39 +493,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 							"@media (max-width: 600px)": { width: "100%" },
 						}}
 					>
-						<Button
-							variant="contained"
-							onClick={handleClearFilters}
-							className="second-sub-title"
-							sx={{
-								color: "rgba(56, 152, 252, 1) !important",
-								backgroundColor: "#fff",
-								border: " 1px solid rgba(56, 152, 252, 1)",
-								textTransform: "none",
-								padding: "0.75em 2.5em",
-								"&:hover": {
-									backgroundColor: "transparent",
-								},
-							}}
-						>
+						<CustomButton variant="outlined" onClick={handleClearFilters}>
 							Clear all
-						</Button>
-						<Button
-							variant="contained"
-							onClick={handleApply}
-							className="second-sub-title"
-							sx={{
-								backgroundColor: "rgba(56, 152, 252, 1)",
-								color: "rgba(255, 255, 255, 1) !important",
-								textTransform: "none",
-								padding: "0.75em 2.5em",
-								"&:hover": {
-									backgroundColor: "rgba(56, 152, 252, 1)",
-								},
-							}}
-						>
+						</CustomButton>
+						<CustomButton variant="contained" onClick={handleApply}>
 							Apply
-						</Button>
+						</CustomButton>
 					</Box>
 				</Box>
 			</Drawer>
