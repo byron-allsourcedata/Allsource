@@ -152,21 +152,19 @@ const Dashboard: React.FC = () => {
 				setTabIndex(1);
 			} else {
 				try {
+					// NEED TO FIX AND CHECK ANALYTICS DATA
 					setLoading(true);
 					const response = await axiosInstance.get("/dashboard/revenue");
+					setShowCharts(true);
 					if (
 						!response?.data.total_counts ||
 						!response?.data.total_counts.total_revenue
 					) {
+						setShowCharts(true);
 						setTabIndex(1);
 						return;
 					}
 				} catch (error) {
-					if (error instanceof AxiosError && error.response?.status === 403) {
-						if (error.response.data.status === "PIXEL_INSTALLATION_NEEDED") {
-							setShowCharts(false);
-						}
-					}
 				} finally {
 					setLoading(false);
 				}
