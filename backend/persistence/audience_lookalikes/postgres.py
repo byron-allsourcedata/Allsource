@@ -93,6 +93,7 @@ class AudienceLookalikesPostgresPersistence(
             AudienceSource.source_origin,
             UserDomains.domain,
             AudienceSource.target_schema,
+            AudienceLookalikes.scoring_type,
         ]
 
         if include_json_fields:

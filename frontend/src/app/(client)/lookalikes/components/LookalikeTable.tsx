@@ -109,12 +109,17 @@ const createCommonCellStyles = () => ({
 	width: "150px",
 });
 
+export const creationMethodMapping = {
+	ml: "Predictive",
+	simple_all: "Smart",
+};
+
 const columns = (isDebug: boolean) => [
 	{
 		key: "name",
 		label: "Name",
 		sortable: true,
-		widths: { width: "170px", minWidth: "170px", maxWidth: "170px" },
+		widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
 	},
 	{
 		key: "source",
@@ -129,6 +134,11 @@ const columns = (isDebug: boolean) => [
 	{
 		key: "target_schema",
 		label: "Target Type",
+		widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
+	},
+	{
+		key: "scoring_type",
+		label: "Method",
 		widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
 	},
 	{
@@ -521,6 +531,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												sx={{
 													...lookalikesStyles.table_column,
 													borderRight: "0",
+													textOverflow: "ellipsis",
+													whiteSpace: "nowrap",
+													overflow: "hidden",
 												}}
 											>
 												{label}
@@ -764,6 +777,26 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 													position: "relative",
 												},
 											}}
+											tooltipOptions={{
+												content:
+													creationMethodMapping[
+														row.scoring_type as keyof typeof creationMethodMapping
+													],
+											}}
+										>
+											{
+												creationMethodMapping[
+													row.scoring_type as keyof typeof creationMethodMapping
+												]
+											}
+										</SmartCell>
+
+										<SmartCell
+											cellOptions={{
+												sx: {
+													position: "relative",
+												},
+											}}
 											tooltipOptions={{ content: lookalikeText }}
 										>
 											{lookalikeText}
@@ -811,20 +844,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 												},
 											}}
 										>
-											{/* {row.processed_size + row.processed_train_model_size ===
-												row.size + row.train_model_size &&
-											row.size + row.train_model_size !== 0 ? (
-												row.size.toLocaleString("en-US")
-											) : (
-												<ProgressBar
-													progress={{
-														total: row.size + row.train_model_size || 0,
-														processed:
-															row.processed_size +
-																row.processed_train_model_size || 0,
-													}}
-												/>
-											)} */}
 											{row.status === "failed" ? (
 												<span
 													style={{

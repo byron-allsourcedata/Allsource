@@ -79,6 +79,7 @@ export interface TableRowData {
 	significant_fields: Record<string, any>;
 	similarity_score: Record<string, any>;
 	target_schema: string;
+	scoring_type: string;
 	eta_seconds?: number;
 }
 
