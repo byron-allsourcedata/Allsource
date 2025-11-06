@@ -45,6 +45,7 @@ export interface LookalikeData {
 	type: string;
 	size_progress: number;
 	size: number;
+	scoring_type: string;
 	source_target_schema: string;
 	lookalike_size: string;
 	created_date: string;

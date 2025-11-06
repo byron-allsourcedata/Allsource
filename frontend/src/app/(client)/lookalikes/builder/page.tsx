@@ -189,6 +189,7 @@ const CreateLookalikePage: React.FC = () => {
 			source: row.source,
 			type: row.type,
 			source_target_schema: row.target_schema,
+			scoring_type: data.lookalike.scoring_type,
 			lookalike_size: selectedLabel,
 			created_date: new Date().toISOString(),
 			created_by: row.created_by,
@@ -211,7 +212,7 @@ const CreateLookalikePage: React.FC = () => {
 				uuid_of_source: selectedSourceId,
 				lookalike_size: toSnakeCase(selectedLabel),
 				lookalike_name: sourceName,
-				scoring_type: selectedMethod === "predictive" ? "simple_all" : "ml",
+				scoring_type: selectedMethod === "predictive" ? "ml" : "simple_all",
 				audience_feature_importance: featureImportanceMap,
 			};
 			if (
