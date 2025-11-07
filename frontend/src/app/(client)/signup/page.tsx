@@ -29,6 +29,7 @@ import PageWithLoader from "@/components/FirstLevelLoader";
 import { flagStore } from "@/services/oneDollar";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { Logo } from "@/components/ui/Logo";
+import LottiePlayer from "./components/LottiePlayer";
 
 const UTM_STORAGE_KEY = "utm_params";
 
@@ -408,12 +409,71 @@ const Signup: React.FC = () => {
 		/>
 	);
 
+	function useVideoSize() {
+		const [dimensions, setDimensions] = useState<{
+			width: string;
+			height: string;
+		}>({ width: "0", height: "0" });
+
+		useEffect(() => {
+			const updateSize = () => {
+				const vh = window.innerHeight;
+				const vw = window.innerWidth;
+
+				if (vw > 900) {
+					// Вычисляем оптимальную ширину для соотношения 16:9
+					const maxWidth = vw * 0.3; // максимум 50% ширины экрана
+					const calculatedWidth = Math.min(maxWidth, vh * (16 / 9));
+					setDimensions({
+						width: `${calculatedWidth}px`,
+						height: `${vh}px`,
+					});
+				} else {
+					setDimensions({ width: "0px", height: `${vh}px` });
+				}
+			};
+
+			updateSize();
+			window.addEventListener("resize", updateSize);
+			return () => window.removeEventListener("resize", updateSize);
+		}, []);
+
+		return dimensions;
+	}
+
+	const videoSize = useVideoSize();
+
+	const dynamicStyles = {
+		mainContainer: {
+			display: "grid",
+			width: "100%",
+			height: "100vh",
+			gridTemplateColumns: `${videoSize.width} 1fr`,
+			"@media (max-width: 900px)": {
+				gridTemplateColumns: "0 100%",
+			},
+		},
+		videoContainer: {
+			backgroundColor: "rgba(218, 235, 255, 1)",
+			width: videoSize.width,
+			height: videoSize.height,
+			overflow: "hidden",
+			position: "relative",
+		},
+	};
+
 	return (
-		<>
-			<Box sx={signupStyles.logoContainer}>
-				<Logo />
-			</Box>
-			<Box sx={signupStyles.mainContent}>
+		<Box sx={signupStyles.mainContent}>
+			<Box sx={signupStyles.mainContainer}>
+				<Box sx={signupStyles.videoContainer}>
+					{/* <Box sx={{ width: "100%", height: "100%" }}> */}
+					<LottiePlayer
+						src="/animations/signup.json"
+						width="100%"
+						height="100%"
+					/>
+					{/* </Box> */}
+				</Box>
 				<Box sx={signupStyles.container}>
 					<Typography
 						variant="h4"
@@ -697,7 +757,7 @@ const Signup: React.FC = () => {
 									I accept the{" "}
 									<Link
 										sx={signupStyles.checkboxContentLink}
-										href="https://allforce.io/privacy-policy"
+										href="https://allsourcedata.io/privacy-policy"
 										color="primary"
 										target="_blank"
 										rel="noopener noreferrer"
@@ -742,7 +802,7 @@ const Signup: React.FC = () => {
 					</Typography>
 				</Box>
 			</Box>
-		</>
+		</Box>
 	);
 };
 

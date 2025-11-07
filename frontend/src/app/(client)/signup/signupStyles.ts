@@ -9,10 +9,72 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		alignItems: "center",
 		justifyContent: "center",
 		minHeight: "100vh",
-		marginTop: "-80px",
 		"@media (max-width: 440px)": {
 			marginTop: "-60px",
 			padding: "0",
+		},
+	},
+	mainContainer: {
+		display: "grid",
+		width: "100%",
+		height: "100vh",
+		// gridTemplateColumns: "minmax(0, min(30vw, calc(100vh * 16 / 9))) 1fr",
+		// "@media (max-width: 900px)": {
+		// 	gridTemplateColumns: "0 100%",
+		// },
+
+		gridTemplateColumns: {
+			xs: "0 100%", // мобильные
+			// Для экранов шире 900px подбираем значения для разных соотношений
+			lg: "minmax(400px, 35vw) 1fr", // стандартные десктопы
+			xl: "minmax(500px, 40vw) 1fr", // широкие экраны
+		},
+		// Альтернатива: точные брейкпоинты по ширине
+		"@media (min-width: 901px) and (max-width: 1200px)": {
+			gridTemplateColumns: "35vw 1fr",
+		},
+		"@media (min-width: 1201px) and (max-width: 1600px)": {
+			gridTemplateColumns: "30vw 1fr",
+		},
+		"@media (min-width: 1601px)": {
+			gridTemplateColumns: "30vw 1fr",
+		},
+		"@media (max-width: 900px)": {
+			gridTemplateColumns: "0 100%",
+		},
+	},
+	// videoContainer: {
+	// 	backgroundColor: "rgba(218, 235, 255, 1)",
+	// 	// display: "flex",
+	// 	// alignItems: "center",
+	// 	// justifyContent: "center",
+	// 	// height: "100%",
+	// 	// overflow: "hidden",
+	// 	// overflow: "visible",
+	// 	position: "relative",
+	// 	padding: 0,
+	// 	"& > div": {
+	// 		aspectRatio: "16/9",
+	// 		width: "100%",
+	// 		height: "100%",
+	// 		objectFit: "contain"
+	// 	}
+	// },
+	videoContainer: {
+		backgroundColor: "rgba(218, 235, 255, 1)",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		width: "100%",
+		height: "100%",
+		overflow: "hidden",
+		position: "relative",
+		"& > div": {
+			width: "100% !important",
+			height: "100% !important",
+			display: "flex !important",
+			alignItems: "center !important",
+			justifyContent: "center !important",
 		},
 	},
 	container: {
@@ -20,7 +82,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
-		margin: "0 auto",
+		margin: "auto auto",
 		position: "relative",
 		boxShadow: "0rem 0.2em 0.8em 0px #00000033",
 		borderRadius: "0.625rem",
@@ -28,19 +90,13 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		textAlign: "center",
 		padding: "32px",
 		maxWidth: "464px",
-		minHeight: "481px",
-		marginTop: "76px",
-		marginBottom: "76px",
+		height: "60vh",
+		minHeight: "581px",
 		"@media (max-width: 440px)": {
 			boxShadow: "0rem 0px 0px 0px #00000033",
 			border: "none",
 			padding: "0 20px 40px 20px",
-			marginTop: "0",
-			marginBottom: "0",
 			maxWidth: "100%",
-		},
-		"@media (max-width: 380px)": {
-			marginTop: "76px",
 		},
 	},
 	logoContainer: {
