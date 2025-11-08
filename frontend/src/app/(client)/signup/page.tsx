@@ -409,59 +409,6 @@ const Signup: React.FC = () => {
 		/>
 	);
 
-	function useVideoSize() {
-		const [dimensions, setDimensions] = useState<{
-			width: string;
-			height: string;
-		}>({ width: "0", height: "0" });
-
-		useEffect(() => {
-			const updateSize = () => {
-				const vh = window.innerHeight;
-				const vw = window.innerWidth;
-
-				if (vw > 900) {
-					// Вычисляем оптимальную ширину для соотношения 16:9
-					const maxWidth = vw * 0.3; // максимум 50% ширины экрана
-					const calculatedWidth = Math.min(maxWidth, vh * (16 / 9));
-					setDimensions({
-						width: `${calculatedWidth}px`,
-						height: `${vh}px`,
-					});
-				} else {
-					setDimensions({ width: "0px", height: `${vh}px` });
-				}
-			};
-
-			updateSize();
-			window.addEventListener("resize", updateSize);
-			return () => window.removeEventListener("resize", updateSize);
-		}, []);
-
-		return dimensions;
-	}
-
-	const videoSize = useVideoSize();
-
-	const dynamicStyles = {
-		mainContainer: {
-			display: "grid",
-			width: "100%",
-			height: "100vh",
-			gridTemplateColumns: `${videoSize.width} 1fr`,
-			"@media (max-width: 900px)": {
-				gridTemplateColumns: "0 100%",
-			},
-		},
-		videoContainer: {
-			backgroundColor: "rgba(218, 235, 255, 1)",
-			width: videoSize.width,
-			height: videoSize.height,
-			overflow: "hidden",
-			position: "relative",
-		},
-	};
-
 	return (
 		<Box sx={signupStyles.mainContent}>
 			<Box sx={signupStyles.mainContainer}>
@@ -469,8 +416,6 @@ const Signup: React.FC = () => {
 					{/* <Box sx={{ width: "100%", height: "100%" }}> */}
 					<LottiePlayer
 						src="/animations/signup.json"
-						width="100%"
-						height="100%"
 					/>
 					{/* </Box> */}
 				</Box>

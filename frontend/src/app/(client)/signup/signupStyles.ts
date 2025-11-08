@@ -1,5 +1,3 @@
-// signupStyles.ts
-import { red } from "@mui/material/colors";
 import { SxProps, Theme } from "@mui/system";
 
 export const signupStyles: { [key: string]: SxProps<Theme> } = {
@@ -18,65 +16,64 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		display: "grid",
 		width: "100%",
 		height: "100vh",
+		gridTemplateColumns: "30vw 1fr",
 		// gridTemplateColumns: "minmax(0, min(30vw, calc(100vh * 16 / 9))) 1fr",
-		// "@media (max-width: 900px)": {
-		// 	gridTemplateColumns: "0 100%",
-		// },
-
-		gridTemplateColumns: {
-			xs: "0 100%", // мобильные
-			// Для экранов шире 900px подбираем значения для разных соотношений
-			lg: "minmax(400px, 35vw) 1fr", // стандартные десктопы
-			xl: "minmax(500px, 40vw) 1fr", // широкие экраны
-		},
-		// Альтернатива: точные брейкпоинты по ширине
-		"@media (min-width: 901px) and (max-width: 1200px)": {
-			gridTemplateColumns: "35vw 1fr",
-		},
-		"@media (min-width: 1201px) and (max-width: 1600px)": {
-			gridTemplateColumns: "30vw 1fr",
-		},
-		"@media (min-width: 1601px)": {
-			gridTemplateColumns: "30vw 1fr",
-		},
 		"@media (max-width: 900px)": {
 			gridTemplateColumns: "0 100%",
 		},
-	},
-	// videoContainer: {
-	// 	backgroundColor: "rgba(218, 235, 255, 1)",
-	// 	// display: "flex",
-	// 	// alignItems: "center",
-	// 	// justifyContent: "center",
-	// 	// height: "100%",
-	// 	// overflow: "hidden",
-	// 	// overflow: "visible",
-	// 	position: "relative",
-	// 	padding: 0,
-	// 	"& > div": {
-	// 		aspectRatio: "16/9",
-	// 		width: "100%",
-	// 		height: "100%",
-	// 		objectFit: "contain"
-	// 	}
-	// },
-	videoContainer: {
-		backgroundColor: "rgba(218, 235, 255, 1)",
-		display: "flex",
-		alignItems: "center",
-		justifyContent: "center",
-		width: "100%",
-		height: "100%",
-		overflow: "hidden",
-		position: "relative",
-		"& > div": {
-			width: "100% !important",
-			height: "100% !important",
-			display: "flex !important",
-			alignItems: "center !important",
-			justifyContent: "center !important",
+
+    "@media (min-width: 1601px)": {
+			gridTemplateColumns: "25vw 1fr",
 		},
+
+		// gridTemplateColumns: {
+		// 	xs: "0 100%",
+		// 	lg: "minmax(400px, 35vw) 1fr",
+		// 	xl: "minmax(500px, 40vw) 1fr",
+		// },
+		// "@media (min-width: 901px) and (max-width: 1200px)": {
+		// 	gridTemplateColumns: "35vw 1fr",
+		// },
+		// "@media (min-width: 901px) and (max-width: 1600px)": {
+		// 	gridTemplateColumns: "0 1fr",
+		// },
+		// "@media (min-width: 1201px) and (max-width: 1600px)": {
+		// 	gridTemplateColumns: "30vw 1fr",
+		// },
+		// "@media (min-width: 1601px)": {
+		// 	gridTemplateColumns: "30vw 1fr",
+		// },
+		// "@media (min-width: 1001px) and (min-height: 1200px)": {
+		// 	gridTemplateColumns: "65vw 1fr",
+		// },
+		// "@media (min-width: 1201px) and (min-height: 1200px)": {
+		// 	gridTemplateColumns: "60vw 1fr",
+		// },
+		// "@media (min-width: 1401px) and (min-height: 1200px)": {
+		// 	gridTemplateColumns: "53vw 1fr",
+		// },
+		// "@media (min-width: 1601px) and (min-height: 1200px)": {
+		// 	gridTemplateColumns: "45vw 1fr",
+		// },
+		// "@media (min-width: 1801px) and (min-height: 1200px)": {
+		// 	gridTemplateColumns: "47vw 1fr",
+		// },
+		// "@media (min-width: 2001px) and (min-height: 1200px)": {
+		// 	gridTemplateColumns: "37vw 1fr",
+		// },
+		// "@media (max-width: 900px)": {
+		// 	gridTemplateColumns: "0 100%",
+		// },
 	},
+  videoContainer: {
+    backgroundColor: "rgba(218, 235, 255, 1)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    position: "relative",
+    padding: 0,
+  },
 	container: {
 		display: "flex",
 		flexDirection: "column",
