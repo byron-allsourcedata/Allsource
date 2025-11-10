@@ -8,6 +8,7 @@ from services.stripe_service import (
 )
 from services.subscriptions.basic import BasicPlanService
 from services.subscriptions.standard import StandardPlanService
+from services.subscriptions.pixel_plan import PixelPlanService
 from services.subscriptions.invoice import InvoiceService
 
 
@@ -21,10 +22,12 @@ class SubscriptionWebhookService:
         user_subscriptions_persistence: UserSubscriptionsPersistence,
         invoice_service: InvoiceService,
         standard_plan_service: StandardPlanService,
+        pixel_plan_service: PixelPlanService,
     ):
         self.user_persistence = user_persistence
         self.basic_plan_service = basic_plan_service
         self.standard_plan_service = standard_plan_service
+        self.pixel_plan_service = pixel_plan_service
         self.invoice_service = invoice_service
         self.stripe = stripe
         self.user_subscriptions_persistence = user_subscriptions_persistence
@@ -39,6 +42,10 @@ class SubscriptionWebhookService:
         self.standard_plan_service.move_to_standard_plan(
             customer_id, subscription_id, plan_period
         )
+        save_payment_details_in_stripe(customer_id=customer_id)
+
+    def move_to_pixel_plan(self, customer_id: str, subscription_id: str):
+        self.pixel_plan_service.move_to_pixel_plan(customer_id, subscription_id)
         save_payment_details_in_stripe(customer_id=customer_id)
 
     def update_subscription_status(self, customer_id: str, status: str):

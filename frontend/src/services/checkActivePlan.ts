@@ -1,5 +1,5 @@
 import { showErrorToast } from "@/components/ToastNotification";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 
 interface CheckActivePlanOptions {
 	/** If true — checking without API request, immediately set the flag */
@@ -31,7 +31,7 @@ export const checkHasActivePlan = (
 
 	if (!hasActivePlan) {
 		if (options?.withoutApi) {
-			flagStore.set(true);
+			flagOneDollarPlan.set(true);
 		}
 		return false;
 	}

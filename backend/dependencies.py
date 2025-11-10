@@ -453,6 +453,14 @@ def check_user_authorization_without_pixel(
     return user
 
 
+def check_pixel_installation_paid(
+    user: UserDict = Depends(check_user_authorization_without_pixel),
+):
+    if user is None or not user.get("is_pixel_install_paid"):
+        return False
+    return True
+
+
 def check_team_admin(
     Authorization: Annotated[str, Header()],
     user_persistence_service: UserPersistence,

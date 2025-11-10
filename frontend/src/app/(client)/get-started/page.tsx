@@ -17,6 +17,7 @@ import {
 } from "@/components/first-time-screens";
 import ProgressBar from "@/components/ProgressBar";
 import { Column } from "@/components/Column";
+import { flagPixelPlan } from "@/services/payPixelPlan";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -85,6 +86,22 @@ const GetStarted: React.FC = () => {
 			setLoading(false);
 		}
 	};
+	const checkPixelInstallationPaid = async () => {
+		setLoading(true);
+		try {
+			const response = await axiosInstance.get(
+				"/check-pixel-installation-paid",
+			);
+			console.log(response.data);
+			if (response.status === 200 && response.data === "ok") {
+				return true;
+			}
+			return false;
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		const fetchData = async () => {
 			await checkPixel();
@@ -104,7 +121,12 @@ const GetStarted: React.FC = () => {
 		setWelcomePopup(storedPopup);
 	}, []);
 
-	const handleClick = () => {
+	const handleClickPixel = async () => {
+		const pixelInstallationPaid = await checkPixelInstallationPaid();
+		if (!pixelInstallationPaid) {
+			flagPixelPlan.set(true);
+			return;
+		}
 		setShowHeading(false);
 		const params = new URLSearchParams(searchParams.toString());
 		params.set("pixel", "true");
@@ -217,7 +239,9 @@ const GetStarted: React.FC = () => {
 										subtitle:
 											"It will automatically collect visitor information from your website.",
 										imageSrc: "/pixel.svg",
-										onClick: pixelInstalled ? undefined : () => handleClick(),
+										onClick: pixelInstalled
+											? undefined
+											: () => handleClickPixel(),
 										showRecommended: false,
 										showInstalled: pixelInstalled,
 										img_height: 120,

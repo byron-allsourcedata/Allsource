@@ -187,6 +187,62 @@ class StripeService:
 
         return result
 
+    def create_shedule_payments(
+        self,
+        subscription_id: str,
+        future_plan_price_id: str,
+        current_period_end,
+    ) -> dict:
+        result = {"success": False}
+        try:
+            subscription = stripe.Subscription.retrieve(subscription_id)
+
+            items = subscription.get("items", {}).get("data", []) or []
+            phase1_items = []
+            if items:
+                for itm in items:
+                    price_id = itm.get("price", {}).get("id")
+                    quantity = itm.get("quantity", 1)
+                    if price_id:
+                        phase1_items.append(
+                            {"price": price_id, "quantity": quantity}
+                        )
+            else:
+                result["error"] = (
+                    "No items found in subscription, using current_plan_price_id"
+                )
+
+            if isinstance(current_period_end, datetime):
+                current_period_end_ts = int(current_period_end.timestamp())
+            else:
+                current_period_end_ts = (
+                    int(current_period_end) if current_period_end else None
+                )
+
+            phase1 = {
+                "items": phase1_items,
+                "end_date": current_period_end_ts,
+            }
+
+            phase2 = {
+                "items": [{"price": future_plan_price_id, "quantity": 1}],
+            }
+
+            schedule = stripe.SubscriptionSchedule.create(
+                from_subscription=subscription_id,
+                phases=[phase1, phase2],
+                end_behavior="release",
+            )
+            schedule_id = schedule["id"]
+            result["action"] = "created"
+            result["updated"] = dict(schedule)
+            result["schedule_id"] = schedule_id
+            result["success"] = True
+        except Exception as e:
+            result["error"] = f"Error while charging: {str(e)}"
+
+        return result
+
     def get_subscription_info(self, subscription_id: str):
         try:
             subscription = stripe.Subscription.retrieve(subscription_id)

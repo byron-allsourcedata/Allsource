@@ -5,7 +5,6 @@ import {
 	DialogContent,
 	Typography,
 	Box,
-	Backdrop,
 	CardContent,
 	CardActions,
 	Card,
@@ -17,15 +16,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import CustomButton from "@/components/ui/CustomButton";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
+import { flagPixelPlan } from "@/services/payPixelPlan";
 
-const OneDollarPopup = () => {
+const PayPixelInstallationDrawer = () => {
 	const [open, setOpen] = useState(true);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 
 	const handleClose = () => {
 		setOpen(false);
-		flagOneDollarPlan.set(false);
+		flagPixelPlan.set(false);
 	};
 
 	const redirectToCheckoutSession = async () => {
@@ -33,7 +32,7 @@ const OneDollarPopup = () => {
 			setIsLoading(true);
 
 			const response = await axiosInstance.get(
-				"/subscriptions/basic-plan-upgrade",
+				"/subscriptions/pay-pixel-install",
 			);
 
 			if (response.status === 200) {
@@ -48,23 +47,13 @@ const OneDollarPopup = () => {
 
 	return (
 		<>
-			{/* <Backdrop
-                open={open}
-                onClick={() => {}}
-                sx={{
-                    zIndex: 3000,
-                    color: "#fff",
-                    backdropFilter: "blur(12px)",
-                    backgroundColor: "#0000001A",
-                }}
-            /> */}
 			<Dialog
 				open={open}
 				disablePortal
 				hideBackdrop
 				sx={{
 					position: "absolute",
-					zIndex: 9, // ниже, чем у хедера
+					zIndex: 9,
 					"& .MuiDialog-paper": {
 						borderRadius: "16px",
 					},
@@ -93,7 +82,7 @@ const OneDollarPopup = () => {
 							textAlign="center"
 							fontFamily="var(--font-nunito)"
 						>
-							Get Started for Just $1
+							Get Started for Just $5
 						</Typography>
 					</Box>
 				</DialogTitle>
@@ -103,12 +92,12 @@ const OneDollarPopup = () => {
 						sx={{
 							textAlign: "center",
 							lineHeight: 1.4,
-							maxWidth: "360px",
+							maxWidth: "380px",
 							margin: "0 auto",
 						}}
 					>
-						Launch today for $1 and discover your perfect audience matches from
-						250M+ profiles with AI-driven insights.
+						Get started now for only $5 for 14 days of contacts. Then $499/mo —
+						unlimited pixel capture, no per-contact fees
 					</Typography>
 
 					<Card
@@ -243,31 +232,7 @@ const OneDollarPopup = () => {
 										/>
 									}
 									label="Free Contact Downloads:"
-									value="500*"
-								/>
-								<GiftRow
-									icon={
-										<Image
-											src="/validation_funds.png"
-											alt="validation funds icon"
-											width={24}
-											height={24}
-										/>
-									}
-									label="Validation funds:"
-									value="$500"
-								/>
-								<GiftRow
-									icon={
-										<Image
-											src="/premium_source_funds.png"
-											alt="premium data funds icon"
-											width={24}
-											height={24}
-										/>
-									}
-									label="Premium Data funds:"
-									value="$500"
+									value="Unlimited"
 								/>
 							</Stack>
 						</CardContent>
@@ -278,7 +243,7 @@ const OneDollarPopup = () => {
 								onClick={redirectToCheckoutSession}
 								sx={{ borderRadius: "8px" }}
 							>
-								Start for $1
+								GET 14 DAYS FOR $5
 							</CustomButton>
 						</CardActions>
 						<Typography
@@ -286,8 +251,8 @@ const OneDollarPopup = () => {
 							className="sixth-sub-title"
 							style={{ fontWeight: "500" }}
 						>
-							*After 500 resolutions $0,08 per contact, charge on last day of
-							month
+							*After 14 days, $499/mo unless canceled. Full refund if canceled
+							within 14 days.
 						</Typography>
 					</Card>
 				</DialogContent>
@@ -356,4 +321,4 @@ const GiftRow = ({ icon, label, value }: GiftRowProps) => (
 	</Box>
 );
 
-export default OneDollarPopup;
+export default PayPixelInstallationDrawer;

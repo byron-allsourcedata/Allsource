@@ -227,6 +227,7 @@ class UserPersistence:
                 "smart_audience_quota": user.smart_audience_quota,
                 "overage_leads_count": user.overage_leads_count,
                 "whitelabel_settings_enabled": user.whitelabel_settings_enabled,
+                "is_pixel_install_paid": user.is_pixel_install_paid,
                 "random_seed": user.random_seed,
             }
         self.db.rollback()

@@ -16,8 +16,10 @@ import { fetchUserData } from "@/services/meService";
 import PixelSubheader from "./components/PixelSubheader";
 import { useHasSubheader } from "@/hooks/useHasSubheader";
 import OneDollarPopup from "./analytics/components/OneDollarPopup";
-import { useGlobalFlag } from "@/hooks/useOneDollar";
-import { flagStore } from "@/services/oneDollar";
+import PayPixelInstallationDrawer from "./get-started/PayPixelInstallationDrawer";
+import { useFlagPayOneDollarPlan } from "@/hooks/useOneDollarPlan";
+import { useFlagPayPixelPlan } from "@/hooks/usePixelPlan";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 import Script from "next/script";
 
 interface ClientLayoutProps {
@@ -26,7 +28,8 @@ interface ClientLayoutProps {
 
 const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 	const pathname = usePathname(); // Get the current path
-	const isUnauthorized = useGlobalFlag();
+	const isShowPayOneDollarDrawer = useFlagPayOneDollarPlan();
+	const isShowPayPixelDrawer = useFlagPayPixelPlan();
 	const { isGetStartedPage, setIsGetStartedPage, setInstalledResources } =
 		useSidebar();
 	const excludedPaths = [
@@ -83,7 +86,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							userData.has_active_plan === false &&
 							userData.access_level !== "read_only"
 						) {
-							flagStore.set(true);
+							flagOneDollarPlan.set(true);
 						}
 						const notifications = response.data;
 
@@ -242,7 +245,8 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						NotificationData={latestNotification}
 						onDismissNotification={handleDismissNotification}
 					/>
-					{isUnauthorized && <OneDollarPopup />}
+					{isShowPayOneDollarDrawer && <OneDollarPopup />}
+					{isShowPayPixelDrawer && <PayPixelInstallationDrawer />}
 					<Box
 						sx={{
 							flexGrow: 1,
@@ -250,9 +254,9 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							flexDirection: "column",
 							minHeight: 0,
 							overflow: "hidden",
-							...(isUnauthorized && {
-								filter: "blur(12px)",
-							}),
+							...(isShowPayOneDollarDrawer || isShowPayPixelDrawer
+								? { filter: "blur(12px)" }
+								: {}),
 						}}
 					>
 						<PixelSubheader />

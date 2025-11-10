@@ -12,7 +12,7 @@ import { useUser } from "../../../context/UserContext";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import PersonIcon from "@mui/icons-material/Person";
 import useAxios from "axios-hooks";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 import { Logo } from "@/components/ui/Logo";
 import { resetLocalStorage } from "@/components/utils";
 
@@ -116,14 +116,14 @@ const EmailVerificate: React.FC = () => {
 				.then((response) => {
 					if (response.status === 200 && response.data.status === "ok") {
 						resolve();
-						flagStore.set(false);
+						flagOneDollarPlan.set(false);
 					} else {
-						flagStore.set(true);
+						flagOneDollarPlan.set(true);
 						resolve();
 					}
 				})
 				.catch(() => {
-					flagStore.set(true);
+					flagOneDollarPlan.set(true);
 				});
 		});
 	};

@@ -17,63 +17,23 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		width: "100%",
 		height: "100vh",
 		gridTemplateColumns: "30vw 1fr",
-		// gridTemplateColumns: "minmax(0, min(30vw, calc(100vh * 16 / 9))) 1fr",
 		"@media (max-width: 900px)": {
 			gridTemplateColumns: "0 100%",
 		},
 
-    "@media (min-width: 1601px)": {
+		"@media (min-width: 1601px)": {
 			gridTemplateColumns: "25vw 1fr",
 		},
-
-		// gridTemplateColumns: {
-		// 	xs: "0 100%",
-		// 	lg: "minmax(400px, 35vw) 1fr",
-		// 	xl: "minmax(500px, 40vw) 1fr",
-		// },
-		// "@media (min-width: 901px) and (max-width: 1200px)": {
-		// 	gridTemplateColumns: "35vw 1fr",
-		// },
-		// "@media (min-width: 901px) and (max-width: 1600px)": {
-		// 	gridTemplateColumns: "0 1fr",
-		// },
-		// "@media (min-width: 1201px) and (max-width: 1600px)": {
-		// 	gridTemplateColumns: "30vw 1fr",
-		// },
-		// "@media (min-width: 1601px)": {
-		// 	gridTemplateColumns: "30vw 1fr",
-		// },
-		// "@media (min-width: 1001px) and (min-height: 1200px)": {
-		// 	gridTemplateColumns: "65vw 1fr",
-		// },
-		// "@media (min-width: 1201px) and (min-height: 1200px)": {
-		// 	gridTemplateColumns: "60vw 1fr",
-		// },
-		// "@media (min-width: 1401px) and (min-height: 1200px)": {
-		// 	gridTemplateColumns: "53vw 1fr",
-		// },
-		// "@media (min-width: 1601px) and (min-height: 1200px)": {
-		// 	gridTemplateColumns: "45vw 1fr",
-		// },
-		// "@media (min-width: 1801px) and (min-height: 1200px)": {
-		// 	gridTemplateColumns: "47vw 1fr",
-		// },
-		// "@media (min-width: 2001px) and (min-height: 1200px)": {
-		// 	gridTemplateColumns: "37vw 1fr",
-		// },
-		// "@media (max-width: 900px)": {
-		// 	gridTemplateColumns: "0 100%",
-		// },
 	},
-  videoContainer: {
-    backgroundColor: "rgba(218, 235, 255, 1)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-    position: "relative",
-    padding: 0,
-  },
+	videoContainer: {
+		backgroundColor: "rgba(218, 235, 255, 1)",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		height: "100%",
+		position: "relative",
+		padding: 0,
+	},
 	container: {
 		display: "flex",
 		flexDirection: "column",
@@ -88,7 +48,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		padding: "32px",
 		maxWidth: "464px",
 		height: "60vh",
-		minHeight: "581px",
+		minHeight: "601px",
 		"@media (max-width: 440px)": {
 			boxShadow: "0rem 0px 0px 0px #00000033",
 			border: "none",
