@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, time, timezone, timedelta
 
 try:
     from dateutil.relativedelta import relativedelta
@@ -300,6 +300,82 @@ class StripeService:
             result["error"] = f"Error while charging: {str(e)}"
 
         return result
+
+    def create_pixel_plan_subscription_with_one_time_charge(
+        self,
+        customer_id: str,
+        future_plan_price_id: str,
+        one_time_amount_cents: int = 500,
+        trial_days: int = 14,
+        currency: str = "usd",
+    ) -> dict:
+        result = {"success": False}
+        try:
+            # Найти default payment method
+            customer = stripe.Customer.retrieve(
+                customer_id, expand=["invoice_settings.default_payment_method"]
+            )
+            default_pm = customer.get("invoice_settings", {}).get(
+                "default_payment_method"
+            )
+            if not default_pm:
+                pms = stripe.PaymentMethod.list(
+                    customer=customer_id, type="card", limit=1
+                )
+                if pms and pms.get("data"):
+                    default_pm = pms["data"][0]["id"]
+
+            if not default_pm:
+                result["error"] = (
+                    "Customer has no saved payment method. Collect card via Checkout/Setup first."
+                )
+                return result
+
+            pi = stripe.PaymentIntent.create(
+                amount=one_time_amount_cents,
+                currency=currency,
+                customer=customer_id,
+                payment_method=default_pm,
+                off_session=True,
+                confirm=True,
+                metadata={"purpose": "pixel_one_time_2weeks"},
+            )
+
+            trial_end_ts = int(time.time()) + int(trial_days) * 24 * 3600
+
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=[{"price": future_plan_price_id, "quantity": 1}],
+                default_payment_method=default_pm,
+                trial_end=trial_end_ts,
+                collection_method="charge_automatically",
+                expand=["latest_invoice.payment_intent"],
+            )
+
+            cps = subscription.get("current_period_start")
+            cpe = subscription.get("current_period_end")
+            # если cpe пуст, можно вычислить на основе trial_end
+            plan_start = (
+                datetime.fromtimestamp(int(cps), tz=timezone.utc)
+                if cps
+                else None
+            )
+            plan_end = (
+                datetime.fromtimestamp(int(cpe), tz=timezone.utc)
+                if cpe
+                else datetime.fromtimestamp(trial_end_ts, tz=timezone.utc)
+            )
+
+            result["success"] = True
+            result["subscription"] = dict(subscription)
+            result["subscription_id"] = subscription.get("id")
+            result["plan_start"] = plan_start
+            result["plan_end"] = plan_end
+            return result
+
+        except Exception as e:
+            result["error"] = str(e)
+            return result
 
     def get_subscription_info(self, subscription_id: str):
         try:
