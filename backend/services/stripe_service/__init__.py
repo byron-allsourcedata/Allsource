@@ -273,15 +273,15 @@ class StripeService:
                 )
                 return result
 
-            pi = stripe.PaymentIntent.create(
-                amount=one_time_amount_cents,
-                currency=currency,
-                customer=customer_id,
-                payment_method=default_pm,
-                off_session=True,
-                confirm=True,
-                metadata={"purpose": "pixel_one_time_2weeks"},
-            )
+            # pi = stripe.PaymentIntent.create(
+            #     amount=one_time_amount_cents,
+            #     currency=currency,
+            #     customer=customer_id,
+            #     payment_method=default_pm,
+            #     off_session=True,
+            #     confirm=True,
+            #     metadata={"purpose": "pixel_one_time_2weeks"},
+            # )
 
             trial_end_ts = int(time.time()) + int(trial_days) * 24 * 3600
 

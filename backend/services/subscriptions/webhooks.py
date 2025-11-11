@@ -10,6 +10,7 @@ from services.subscriptions.basic import BasicPlanService
 from services.subscriptions.standard import StandardPlanService
 from services.subscriptions.pixel_plan import PixelPlanService
 from services.subscriptions.invoice import InvoiceService
+from db_dependencies import Db
 
 
 @injectable
@@ -23,6 +24,7 @@ class SubscriptionWebhookService:
         invoice_service: InvoiceService,
         standard_plan_service: StandardPlanService,
         pixel_plan_service: PixelPlanService,
+        db: Db,
     ):
         self.user_persistence = user_persistence
         self.basic_plan_service = basic_plan_service
@@ -31,6 +33,7 @@ class SubscriptionWebhookService:
         self.invoice_service = invoice_service
         self.stripe = stripe
         self.user_subscriptions_persistence = user_subscriptions_persistence
+        self.db = db
 
     def move_to_basic_plan(self, customer_id: str):
         self.basic_plan_service.move_to_basic_plan(customer_id)
@@ -105,6 +108,7 @@ class SubscriptionWebhookService:
             action_type="create" if stripe_subscription_id else "update",
             stripe_subscription_id=stripe_subscription_id,
         )
+        self.db.commit()
         return "SUCCESS"
 
     def save_intent_payment(self, event_type: str, event: dict):
