@@ -53,6 +53,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import CustomTooltip from "@/components/customToolTip";
 import { Row } from "./Row";
 import { features } from "@/app/config/features";
+import { flagPixelPlan } from "@/services/payPixelPlan";
 
 const sidebarStyles = {
 	container: {
@@ -377,6 +378,21 @@ const Sidebar: React.FC<SidebarProps> = ({
 		setOpen(!open);
 	};
 
+	const checkPixelInstallationPaid = async () => {
+		setLoading(true);
+		try {
+			const response = await axiosInstance.get(
+				"/check-pixel-installation-paid",
+			);
+			if (response.status === 200 && response.data.status === "ok") {
+				return true;
+			}
+			return false;
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	return (
 		<Box
 			sx={{
@@ -591,7 +607,15 @@ const Sidebar: React.FC<SidebarProps> = ({
 											fontFamily: "var(--font-nunito)",
 											fontWeight: "600",
 										}}
-										onClick={() => handleNavigation("/get-started?pixel=true")}
+										onClick={async () => {
+											const pixelInstallationPaid =
+												await checkPixelInstallationPaid();
+											if (!pixelInstallationPaid) {
+												flagPixelPlan.set(true);
+												return;
+											}
+											handleNavigation("/get-started?pixel=true");
+										}}
 									>
 										Install Pixel
 									</Button>

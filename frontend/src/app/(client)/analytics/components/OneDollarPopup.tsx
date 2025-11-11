@@ -29,9 +29,6 @@ const OneDollarPopup = () => {
 	const handleClose = () => {
 		setOpen(false);
 		flagOneDollarPlan.set(false);
-		if (pathname === "/get-started") {
-			router.push("/get-started?pixel=true");
-		}
 	};
 
 	const redirectToCheckoutSession = async () => {

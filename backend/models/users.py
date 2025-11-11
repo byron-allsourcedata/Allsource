@@ -145,9 +145,6 @@ class Users(Base):
     are whitelabel settings enabled and showing for that account
     """
 
-    is_pixel_install_paid: Column[bool] = Column(
-        Boolean, nullable=False, server_default=text("false")
-    )
     random_seed: Column[int] = Column(
         Integer, nullable=False, server_default=text("42")
     )

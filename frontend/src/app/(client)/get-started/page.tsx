@@ -92,8 +92,7 @@ const GetStarted: React.FC = () => {
 			const response = await axiosInstance.get(
 				"/check-pixel-installation-paid",
 			);
-			console.log(response.data);
-			if (response.status === 200 && response.data === "ok") {
+			if (response.status === 200 && response.data.status === "ok") {
 				return true;
 			}
 			return false;

@@ -39,7 +39,10 @@ class PixelPlanService:
         session_url = self.stripe.create_checkout_session(
             customer_id=customer_id,
             price_id=price_id,
-            mode="subscription",
+            payment_intent_data={
+                "setup_future_usage": "off_session",
+            },
+            mode="payment",
             metadata={"type": "upgrade_pixel_plan"},
             success_url=StripeConfig.success_url,
         )
@@ -51,8 +54,10 @@ class PixelPlanService:
         if not user:
             logger.error(f"User not found with customer_id: {customer_id}")
             return
+
         user_id = user.id
         self.user_persistence.set_has_credit_card(user_id)
+        self.user_subscriptions.move_to_plan(user_id, "pixel")
 
         stripe_info = self.stripe.get_subscription_info(subscription_id)
         if stripe_info["status"] != "SUCCESS":
