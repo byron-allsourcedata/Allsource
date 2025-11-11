@@ -391,6 +391,7 @@ class GreenArrowIntegrationsService:
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
+                lead_user.first_visit_id,
             )
 
             if profile_or_status in (
@@ -534,13 +535,12 @@ class GreenArrowIntegrationsService:
         five_x_five_user: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> dict | str:
-        chosen_email_variation = None
-        for field in data_map:
-            if field["value"] == "Email":
-                chosen_email_variation = field["type"]
-                break
-
+        chosen_email_variation = next(
+            (field["type"] for field in data_map if field["value"] == "Email"),
+            None,
+        )
         if not chosen_email_variation:
             logging.info("Email field is not configured in data_map")
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
@@ -563,29 +563,47 @@ class GreenArrowIntegrationsService:
             return email_or_status
 
         email = email_or_status
-        phone = get_valid_phone(five_x_five_user)
+
+        values_by_type = {
+            # стандартные поля
+            "first_name": getattr(five_x_five_user, "first_name", None),
+            "last_name": getattr(five_x_five_user, "last_name", None),
+            "phone": format_phone_number(get_valid_phone(five_x_five_user)),
+            **{
+                field["type"]: getattr(five_x_five_user, field["type"], None)
+                for field in data_map
+            },
+        }
+
+        if any(field["type"] == "visited_date" for field in data_map):
+            values_by_type["visited_date"] = (
+                self.leads_persistence.get_visited_date(lead_visit_id)
+            )
+
+        custom_variables = {
+            "First Name": values_by_type["first_name"],
+            "Last Name": values_by_type["last_name"],
+            "Phone": values_by_type["phone"],
+        }
+
+        # Пробегаем data_map и используем values_by_type
+        for field in data_map:
+            label = field["value"]  # Field label in Green Arrow
+            key = field["type"]  # Field key from FiveXFiveUser
+            if label == "Email":
+                continue
+
+            val = values_by_type.get(key)
+
+            if isinstance(val, (datetime, date)):
+                val = val.isoformat()
+
+            custom_variables[label] = val
+
         return {
             "email": email,
             "custom_variables": {
-                **{
-                    "First Name": getattr(five_x_five_user, "first_name", None),
-                    "Last Name": getattr(five_x_five_user, "last_name", None),
-                    "Phone": format_phone_number(phone),
-                },
-                **{
-                    field["value"]: (
-                        getattr(
-                            five_x_five_user, field["type"], None
-                        ).isoformat()
-                        if isinstance(
-                            getattr(five_x_five_user, field["type"], None),
-                            (datetime, date),
-                        )
-                        else getattr(five_x_five_user, field["type"], None)
-                    )
-                    for field in data_map
-                    if field["value"] != "Email"
-                },
+                k: v for k, v in custom_variables.items() if v not in (None, "")
             },
         }
 
@@ -764,3 +782,29 @@ class GreenArrowIntegrationsService:
             "status": ProccessDataSyncResult.SUCCESS.value,
             "import_id": import_id,
         }
+
+    def edit_sync(
+        self,
+        leads_type: str,
+        list_id: str,
+        list_name: str,
+        integrations_users_sync_id: int,
+        data_map: List[DataMap],
+        domain_id: int,
+        created_by: str,
+        user_id: int,
+    ):
+        credentials = self.get_credentials(domain_id, user_id)
+        sync = self.sync_persistence.edit_sync(
+            {
+                "integration_id": credentials.id,
+                "list_id": list_id,
+                "list_name": list_name,
+                "leads_type": leads_type,
+                "data_map": data_map,
+                "created_by": created_by,
+            },
+            integrations_users_sync_id,
+        )
+
+        return sync

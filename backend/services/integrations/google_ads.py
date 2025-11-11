@@ -42,6 +42,7 @@ from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
 from resolver import injectable
 from schemas.integrations.google_ads import GoogleAdsProfile
 from schemas.integrations.integrations import *
@@ -95,12 +96,14 @@ class GoogleAdsIntegrationsService:
         sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
+        leads_persistence: LeadsPersistence,
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persistence = integrations_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
+        self.leads_persistence = leads_persistence
 
     def __handle_request(
         self,
@@ -361,7 +364,9 @@ class GoogleAdsIntegrationsService:
         results = []
         for lead_user, five_x_five_user in user_data:
             profile = await self.__mapped_googleads_profile_lead(
-                five_x_five_user, is_email_validation_enabled
+                five_x_five_user,
+                is_email_validation_enabled,
+                lead_user.first_visit_id,
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -531,7 +536,10 @@ class GoogleAdsIntegrationsService:
         return {"message": "successfuly"}
 
     async def __mapped_googleads_profile_lead(
-        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
+        self,
+        five_x_five_user: FiveXFiveUser,
+        is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> GoogleAdsProfile | str:
         if is_email_validation_enabled:
             first_email = await get_valid_email(
@@ -550,6 +558,8 @@ class GoogleAdsIntegrationsService:
 
         address_parts = get_valid_location(five_x_five_user)
 
+        visited_date = self.leads_persistence.get_visited_date(lead_visit_id)
+
         return GoogleAdsProfile(
             email=first_email,
             first_name=getattr(five_x_five_user, "first_name", None),
@@ -558,6 +568,7 @@ class GoogleAdsIntegrationsService:
             city=address_parts[1],
             state=address_parts[2],
             address=address_parts[0],
+            visited_date=visited_date,
         )
 
     def __mapped_googleads_profile(

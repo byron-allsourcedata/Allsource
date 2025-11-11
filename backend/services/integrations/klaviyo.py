@@ -562,7 +562,9 @@ class KlaviyoIntegrationsService:
         is_email_validation_enabled: bool,
     ):
         profile = await self.__mapped_klaviyo_profile(
-            five_x_five_user, is_email_validation_enabled
+            five_x_five_user,
+            is_email_validation_enabled,
+            lead_user.first_visit_id,
         )
         if profile in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -801,7 +803,10 @@ class KlaviyoIntegrationsService:
         ]
 
     async def __mapped_klaviyo_profile(
-        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
+        self,
+        five_x_five_user: FiveXFiveUser,
+        is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> KlaviyoProfile:
         if is_email_validation_enabled:
             first_email = await get_valid_email(
@@ -817,6 +822,10 @@ class KlaviyoIntegrationsService:
             return first_email
 
         first_phone = get_valid_phone(five_x_five_user)
+
+        visited_date = await asyncio.to_thread(
+            self.leads_persistence.get_visited_date, lead_visit_id
+        )
 
         location = {
             "address1": getattr(five_x_five_user, "personal_address")
@@ -836,6 +845,7 @@ class KlaviyoIntegrationsService:
             organization=getattr(five_x_five_user, "company_name", None),
             location=location,
             title=getattr(five_x_five_user, "job_title", None),
+            visited_date=visited_date,
         )
 
     async def __map_properties(

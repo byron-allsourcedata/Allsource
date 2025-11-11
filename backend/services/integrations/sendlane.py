@@ -265,6 +265,7 @@ class SendlaneIntegrationService:
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
+                lead_user.first_visit_id,
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -301,6 +302,7 @@ class SendlaneIntegrationService:
         lead: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> str | dict[str, str]:
         if is_email_validation_enabled:
             first_email = await get_valid_email(
@@ -316,12 +318,14 @@ class SendlaneIntegrationService:
             return first_email
 
         first_phone = get_valid_phone(lead)
+        visited_date = self.leads_persistence.get_visited_date(lead_visit_id)
 
         profile = {
             "email": first_email,
             "phone": validate_and_format_phone(first_phone),
             "first_name": getattr(lead, "first_name", None),
             "last_name": getattr(lead, "last_name", None),
+            "visited_date": visited_date,
         }
 
         cleaned = {k: v for k, v in profile.items() if v not in (None, "")}

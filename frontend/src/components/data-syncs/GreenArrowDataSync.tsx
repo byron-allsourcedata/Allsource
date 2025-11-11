@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
 	Drawer,
 	Box,
@@ -38,6 +38,8 @@ import { LogoSmall } from "@/components/ui/Logo";
 import { dataSyncStyles } from "./dataSyncStyles";
 import { integrationsStyle } from "@/app/(client)/integrations/integrationsStyle";
 import { CustomButton } from "../ui";
+import { useCustomFields, Row } from "./pixel-sync-data/useCustomFields";
+import { CustomFieldRow } from "./pixel-sync-data/CustomFieldRow";
 
 interface ConnectGreenArrowPopupProps {
 	open: boolean;
@@ -51,6 +53,14 @@ type GreenArrowList = {
 	id: string;
 	list_name: string;
 };
+
+const defaultRows: Row[] = [
+	{ id: 2, type: "Phone number", value: "Phone number" },
+	{ id: 3, type: "First name", value: "First name" },
+	{ id: 4, type: "Second name", value: "Second name" },
+	{ id: 5, type: "Job Title", value: "Job Title" },
+	{ id: 6, type: "Location", value: "Location" },
+];
 
 const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 	open,
@@ -75,10 +85,6 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
 	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
-		null,
-	);
-	const [apiKeyError, setApiKeyError] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
 	const [listNameError, setListNameError] = useState(false);
@@ -87,12 +93,8 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [newMapListName, setNewMapListName] = useState<string>("");
-	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-	const [maplistNameError, setMapListNameError] = useState(false);
 	const [greenArrowList, setGreenArrowList] = useState<GreenArrowList[]>([]);
-	const [customFieldsList, setCustomFieldsList] = useState([
+	const CUSTOM_FIELDS = [
 		{ type: "Gender", value: "gender" },
 		{ type: "Company Name", value: "company_name" },
 		{ type: "Company Domain", value: "company_domain" },
@@ -121,7 +123,31 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		{ type: "URL Visited", value: "url_visited" },
 		{ type: "Time on site", value: "time_on_site" },
 		{ type: "DPV Code", value: "dpv_code" },
-	]);
+		{ type: "Visited Date", value: "visited_date" },
+	];
+
+	const excludedFields = useMemo(
+		() =>
+			defaultRows
+				.map((row) => {
+					const matchedField = CUSTOM_FIELDS.find(
+						(field) => field.type === row.type,
+					);
+					return matchedField ? matchedField.value : "";
+				})
+				.filter(Boolean),
+		[],
+	);
+
+	const {
+		customFields,
+		customFieldsList,
+		handleAddField,
+		handleChangeField,
+		handleDeleteField,
+		canAddMore,
+		emailEntry,
+	} = useCustomFields(CUSTOM_FIELDS, data, false, excludedFields);
 
 	const emailsVariations = [
 		{ id: 1, type: "Personal Email", value: "Personal Email" },
@@ -132,6 +158,17 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		type: "business_email",
 		value: "Email",
 	});
+
+	useEffect(() => {
+		if (!emailEntry) return;
+
+		setActiveEmailVariation({
+			id: 1,
+			type: emailEntry.type,
+			value: emailEntry.value,
+			is_constant: false,
+		});
+	}, [emailEntry]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -155,38 +192,6 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		};
 	}, [selectedOption]);
 
-	const [customFields, setCustomFields] = useState<
-		{ type: string; value: string }[]
-	>([]);
-
-	useEffect(() => {
-		if (data?.data_map) {
-			setCustomFields(data?.data_map);
-		} else {
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-		}
-	}, [open]);
-
-	const handleAddField = () => {
-		setCustomFields([...customFields, { type: "", value: "" }]);
-	};
-
-	const handleDeleteField = (index: number) => {
-		setCustomFields(customFields.filter((_, i) => i !== index));
-	};
-
-	const handleChangeField = (index: number, field: string, value: string) => {
-		setCustomFields(
-			customFields.map((item, i) =>
-				i === index ? { ...item, [field]: value } : item,
-			),
-		);
-	};
 	const resetToDefaultValues = () => {
 		setLoading(false);
 		setValue("1");
@@ -200,17 +205,12 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		setTagName("");
 		setIsShrunk(false);
 		setIsDropdownOpen(false);
-		setOpenDropdownMaximiz(null);
-		setApiKeyError(false);
 		setTab2Error(false);
 		setIsDropdownValid(false);
 		setListNameError(false);
 		setTagNameError(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
-		setNewMapListName("");
-		setShowCreateMapForm(false);
-		setMapListNameError(false);
 	};
 
 	const getGreenArrowList = async () => {
@@ -226,7 +226,6 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 				(item: any) => item.list_name === data?.list_name,
 			);
 			if (foundItem) {
-				setUpdateKlaviuo(data.id);
 				setSelectedOption({
 					id: foundItem.id,
 					list_name: foundItem.list_name,
@@ -450,22 +449,6 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 	const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSelectedRadioValue(event.target.value);
 	};
-
-	interface Row {
-		id: number;
-		type: string;
-		value: string;
-		selectValue?: string;
-		canDelete?: boolean;
-	}
-
-	const defaultRows: Row[] = [
-		{ id: 2, type: "Phone number", value: "Phone number" },
-		{ id: 3, type: "First name", value: "First name" },
-		{ id: 4, type: "Second name", value: "Second name" },
-		{ id: 5, type: "Job Title", value: "Job Title" },
-		{ id: 6, type: "Location", value: "Location" },
-	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);
 
@@ -1642,96 +1625,19 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 											</Grid>
 										</Box>
 									))}
-									<Box sx={{ mb: 2 }}>
+									<Box>
 										{customFields.map((field, index) => (
-											<Grid
-												container
-												spacing={2}
-												alignItems="center"
-												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+											<CustomFieldRow
 												key={index}
-											>
-												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														select
-														fullWidth
-														variant="outlined"
-														label="Custom Field"
-														value={field.type}
-														onChange={(e) =>
-															handleChangeField(index, "type", e.target.value)
-														}
-														InputLabelProps={{
-															sx: dataSyncStyles.textFieldInputLabelStyles,
-														}}
-														InputProps={{
-															sx: dataSyncStyles.textFieldInputStyles,
-														}}
-													>
-														{customFieldsList.map((item) => (
-															<MenuItem
-																key={item.value}
-																value={item.value}
-																disabled={customFields.some(
-																	(f) => f.type === item.value,
-																)} // Дизейблим выбранные
-															>
-																{item.type}
-															</MenuItem>
-														))}
-													</TextField>
-												</Grid>
-												<Grid
-													item
-													xs="auto"
-													sm={1}
-													mb={2}
-													container
-													justifyContent="center"
-												>
-													<Image
-														src="/chevron-right-purple.svg"
-														alt="chevron-right-purple"
-														height={18}
-														width={18}
-													/>
-												</Grid>
-												<Grid item xs="auto" sm={5} mb={2}>
-													<TextField
-														fullWidth
-														variant="outlined"
-														value={field.value}
-														onChange={(e) =>
-															handleChangeField(index, "value", e.target.value)
-														}
-														placeholder="Enter value"
-														InputLabelProps={{
-															sx: dataSyncStyles.textFieldInputLabelStyles,
-														}}
-														InputProps={{
-															sx: dataSyncStyles.textFieldInputStyles,
-														}}
-													/>
-												</Grid>
-												<Grid
-													item
-													xs="auto"
-													mb={2}
-													sm={1}
-													container
-													justifyContent="center"
-												>
-													<IconButton onClick={() => handleDeleteField(index)}>
-														<Image
-															src="/trash-icon-filled.svg"
-															alt="trash-icon-filled"
-															height={18}
-															width={18}
-														/>
-													</IconButton>
-												</Grid>
-											</Grid>
+												field={field}
+												index={index}
+												customFields={customFields}
+												customFieldsList={customFieldsList}
+												handleChangeField={handleChangeField}
+												handleDeleteField={handleDeleteField}
+											/>
 										))}
+
 										<Box
 											sx={{
 												display: "flex",
@@ -1740,34 +1646,35 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 												mr: 6,
 											}}
 										>
-											<Button
-												onClick={handleAddField}
-												aria-haspopup="true"
-												sx={{
-													textTransform: "none",
-													border: "1px solid rgba(56, 152, 252, 1)",
-													borderRadius: "4px",
-													padding: "9px 16px",
-													minWidth: "auto",
-													"@media (max-width: 900px)": {
-														display: "none",
-													},
-												}}
-											>
-												<Typography
+											{canAddMore && (
+												<Button
+													onClick={handleAddField}
+													aria-haspopup="true"
 													sx={{
-														marginRight: "0.5em",
-														fontFamily: "var(--font-nunito)",
-														lineHeight: "22.4px",
-														fontSize: "16px",
-														textAlign: "left",
-														fontWeight: "500",
-														color: "rgba(56, 152, 252, 1)",
+														textTransform: "none",
+														border: "1px solid rgba(56, 152, 252, 1)",
+														borderRadius: "4px",
+														padding: "6px 12px",
+														minWidth: "auto",
+														"@media (max-width: 900px)": {
+															display: "none",
+														},
 													}}
 												>
-													Add
-												</Typography>
-											</Button>
+													<Typography
+														sx={{
+															fontFamily: "var(--font-nunito)",
+															lineHeight: "22.4px",
+															fontSize: "16px",
+															textAlign: "left",
+															fontWeight: "500",
+															color: "rgba(56, 152, 252, 1)",
+														}}
+													>
+														Add
+													</Typography>
+												</Button>
+											)}
 										</Box>
 									</Box>
 								</Box>

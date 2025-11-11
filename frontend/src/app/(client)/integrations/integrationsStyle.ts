@@ -37,7 +37,7 @@ export const integrationsStyle: { [key: string]: SxProps<Theme> } = {
 	tabHeading: {
 		textTransform: "none",
 		padding: "4px 10px",
-		pb: "10px",
+		pb: "0px",
 		flexGrow: 0,
 		minHeight: "auto",
 		minWidth: "auto",
