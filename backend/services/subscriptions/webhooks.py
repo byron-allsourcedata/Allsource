@@ -79,7 +79,7 @@ class SubscriptionWebhookService:
             self.standard_plan_service.move_to_standard_plan(
                 customer_id=customer_id,
                 subscription_id=stripe_subscription_id,
-                plan_period="standard_monthly",
+                plan_period="month",
             )
 
         else:
