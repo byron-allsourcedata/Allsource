@@ -76,64 +76,6 @@ class StripeService:
 
         return subscription
 
-    def create_pixel_plan_subscription(
-        self,
-        customer_id: str,
-        stripe_price_id: str,
-        two_week_amount_cents: int = 500,
-        currency: str = "usd",
-    ):
-        active_subs = stripe.Subscription.list(
-            customer=customer_id, status="active"
-        )
-        active_count = len(active_subs["data"])
-        if active_count >= 1:
-            return None
-
-        price = stripe.Price.retrieve(stripe_price_id)
-        product_id = price.get("product") if price else None
-
-        if not product_id:
-            prod = stripe.Product.create(name="Pixel plan (2-week)")
-            product_id = prod["id"]
-
-        unit_amount = (
-            price.get("unit_amount")
-            if price and price.get("unit_amount")
-            else two_week_amount_cents
-        )
-
-        new_price = stripe.Price.create(
-            unit_amount=unit_amount,
-            currency=currency,
-            recurring={"interval": "week", "interval_count": 2},
-            product=product_id,
-        )
-        price_id_to_use = new_price["id"]
-
-        customer = stripe.Customer.retrieve(
-            customer_id, expand=["invoice_settings.default_payment_method"]
-        )
-        default_pm = customer.get("invoice_settings", {}).get(
-            "default_payment_method"
-        )
-        if not default_pm:
-            pms = stripe.PaymentMethod.list(
-                customer=customer_id, type="card", limit=1
-            )
-            if pms and pms.get("data"):
-                default_pm = pms["data"][0]["id"]
-
-        subscription = stripe.Subscription.create(
-            customer=customer_id,
-            items=[{"price": price_id_to_use, "quantity": 1}],
-            collection_method="charge_automatically",
-            default_payment_method=default_pm,
-            expand=["latest_invoice.payment_intent"],
-        )
-
-        return subscription
-
     def create_standard_plan_subscription(
         self, customer_id: str, stripe_price_id: str
     ):
@@ -312,7 +254,6 @@ class StripeService:
     ) -> dict:
         result = {"success": False}
         try:
-            # Найти default payment method
             customer = stripe.Customer.retrieve(
                 customer_id, expand=["invoice_settings.default_payment_method"]
             )
@@ -351,11 +292,11 @@ class StripeService:
                 trial_end=trial_end_ts,
                 collection_method="charge_automatically",
                 expand=["latest_invoice.payment_intent"],
+                metadata={"type": ""},
             )
 
             cps = subscription.get("current_period_start")
             cpe = subscription.get("current_period_end")
-            # если cpe пуст, можно вычислить на основе trial_end
             plan_start = (
                 datetime.fromtimestamp(int(cps), tz=timezone.utc)
                 if cps

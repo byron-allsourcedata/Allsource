@@ -61,11 +61,6 @@ class PixelPlanService:
         # pixel_plan = self.plans.get_plan_by_alias("pixel")
         standart_monthly_plan = self.plans.get_plan_by_alias("standard_monthly")
 
-        # self.stripe.create_pixel_plan_subscription(
-        #     customer_id=customer_id,
-        #     stripe_price_id=pixel_plan.stripe_price_id,
-        # )
-
         res = self.stripe.create_pixel_plan_subscription_with_one_time_charge(
             customer_id=customer_id,
             future_plan_price_id=standart_monthly_plan.stripe_price_id,

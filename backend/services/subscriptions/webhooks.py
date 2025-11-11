@@ -48,7 +48,14 @@ class SubscriptionWebhookService:
         self.pixel_plan_service.move_to_pixel_plan(customer_id, subscription_id)
         save_payment_details_in_stripe(customer_id=customer_id)
 
-    def update_subscription_status(self, customer_id: str, status: str):
+    def update_subscription_status(
+        self,
+        customer_id: str,
+        status: str,
+        action_type="update",
+        stripe_subscription_id=None,
+    ):
+        print(action_type, stripe_subscription_id)
         subscription = (
             self.user_subscriptions_persistence.get_subscription_by_customer_id(
                 customer_id=customer_id
@@ -67,12 +74,24 @@ class SubscriptionWebhookService:
                 customer_id=customer_id,
                 stripe_price_id=record_subscription.stripe_price_id,
             )
-        self.user_subscriptions_persistence.install_payment_status(
-            customer_id=customer_id, status=status
-        )
+
+        if action_type == "create":
+            self.standard_plan_service.move_to_standard_plan(
+                customer_id=customer_id,
+                subscription_id=stripe_subscription_id,
+                plan_period="monthly",
+            )
+
+        else:
+            self.user_subscriptions_persistence.install_payment_status(
+                customer_id=customer_id, status=status
+            )
 
     def save_invoice_payment(self, event_type: str, event: dict):
         customer_id = event["data"]["object"]["customer"]
+        stripe_subscription_id = event["data"]["object"]["lines"]["data"]["0"][
+            "pricing"
+        ]["price_details"]["price"]
         self.invoice_service.save_invoice_payment(
             event_type=event_type, invoices_data=event
         )
@@ -81,7 +100,10 @@ class SubscriptionWebhookService:
             quantity=event["data"]["object"]["lines"]["data"][0]["quantity"],
         )
         self.update_subscription_status(
-            customer_id=customer_id, status=PaymentStatus.ACTIVE.value
+            customer_id=customer_id,
+            status=PaymentStatus.ACTIVE.value,
+            action_type="create" if stripe_subscription_id else "update",
+            stripe_subscription_id=stripe_subscription_id,
         )
         return "SUCCESS"
 
