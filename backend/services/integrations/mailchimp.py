@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, date
 from typing import Tuple
 
 import mailchimp_marketing as MailchimpMarketing
@@ -446,6 +446,12 @@ class MailchimpIntegrationsService:
 
     def sync_contacts_bulk(self, list_id: str, profiles_list: List[dict]):
         operations = []
+
+        def convert_dates(obj):
+            if isinstance(obj, (datetime, date)):
+                return obj.strftime("%m-%d-%Y")
+            return obj
+
         for profile in profiles_list:
             email = profile["email_address"]
             subscriber_hash = hashlib.md5(email.lower().encode()).hexdigest()
@@ -458,7 +464,7 @@ class MailchimpIntegrationsService:
                     "method": "PUT",
                     "path": f"/lists/{list_id}/members/{subscriber_hash}",
                     "operation_id": subscriber_hash,
-                    "body": json.dumps(props),
+                    "body": json.dumps(props, default=convert_dates),
                 }
             )
 
