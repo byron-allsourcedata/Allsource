@@ -110,10 +110,24 @@ class StripeService:
         )
         price_id_to_use = new_price["id"]
 
+        customer = stripe.Customer.retrieve(
+            customer_id, expand=["invoice_settings.default_payment_method"]
+        )
+        default_pm = customer.get("invoice_settings", {}).get(
+            "default_payment_method"
+        )
+        if not default_pm:
+            pms = stripe.PaymentMethod.list(
+                customer=customer_id, type="card", limit=1
+            )
+            if pms and pms.get("data"):
+                default_pm = pms["data"][0]["id"]
+
         subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{"price": price_id_to_use, "quantity": 1}],
             collection_method="charge_automatically",
+            default_payment_method=default_pm,
             expand=["latest_invoice.payment_intent"],
         )
 
