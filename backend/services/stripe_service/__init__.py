@@ -75,6 +75,26 @@ class StripeService:
 
         return subscription
 
+    def create_pixel_plan_subscription(
+        self, customer_id: str, stripe_price_id: str
+    ):
+        active_subs = stripe.Subscription.list(
+            customer=customer_id, status="active"
+        )
+        active_count = len(active_subs["data"])
+        if active_count >= 1:
+            return None
+
+        subscription = stripe.Subscription.create(
+            customer=customer_id,
+            items=[{"price": stripe_price_id, "quantity": 1}],
+            collection_method="charge_automatically",
+            expand=["latest_invoice.payment_intent"],
+            off_session=True,
+        )
+
+        return subscription
+
     def create_standard_plan_subscription(
         self, customer_id: str, stripe_price_id: str
     ):

@@ -54,10 +54,16 @@ class PixelPlanService:
         if not user:
             logger.error(f"User not found with customer_id: {customer_id}")
             return
-
         user_id = user.id
+
         self.user_persistence.set_has_credit_card(user_id)
         self.user_subscriptions.move_to_plan(user_id, "pixel")
+        pixel_plan = self.plans.get_plan_by_alias("pixel")
+
+        self.stripe.create_pixel_plan_subscription(
+            customer_id=customer_id,
+            stripe_price_id=pixel_plan.stripe_price_id,
+        )
 
         stripe_info = self.stripe.get_subscription_info(subscription_id)
         if stripe_info["status"] != "SUCCESS":
@@ -68,14 +74,7 @@ class PixelPlanService:
             return
 
         data = stripe_info["data"]
-        plan_start = data["plan_start"]
         plan_end = data["plan_end"]
-
-        self.user_subscriptions.add_subscription_with_dates(
-            user_id=user_id,
-            plan_start=plan_start,
-            plan_end=plan_end,
-        )
 
         logger.info(f"User {user_id} moved to pixel plan (until {plan_end})")
 
