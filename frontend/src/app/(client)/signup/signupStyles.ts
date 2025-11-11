@@ -48,7 +48,7 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		padding: "32px",
 		maxWidth: "464px",
 		height: "60vh",
-		minHeight: "601px",
+		minHeight: "621px",
 		"@media (max-width: 440px)": {
 			boxShadow: "0rem 0px 0px 0px #00000033",
 			border: "none",

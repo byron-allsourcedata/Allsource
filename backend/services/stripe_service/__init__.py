@@ -248,9 +248,7 @@ class StripeService:
         self,
         customer_id: str,
         future_plan_price_id: str,
-        one_time_amount_cents: int = 500,
         trial_days: int = 14,
-        currency: str = "usd",
     ) -> dict:
         result = {"success": False}
         try:
@@ -272,16 +270,6 @@ class StripeService:
                     "Customer has no saved payment method. Collect card via Checkout/Setup first."
                 )
                 return result
-
-            # pi = stripe.PaymentIntent.create(
-            #     amount=one_time_amount_cents,
-            #     currency=currency,
-            #     customer=customer_id,
-            #     payment_method=default_pm,
-            #     off_session=True,
-            #     confirm=True,
-            #     metadata={"purpose": "pixel_one_time_2weeks"},
-            # )
 
             trial_end_ts = int(time.time()) + int(trial_days) * 24 * 3600
 

@@ -58,13 +58,11 @@ class PixelPlanService:
 
         self.user_persistence.set_has_credit_card(user_id)
         self.user_subscriptions.move_to_plan(user_id, "pixel")
-        # pixel_plan = self.plans.get_plan_by_alias("pixel")
         standart_monthly_plan = self.plans.get_plan_by_alias("standard_monthly")
 
         res = self.stripe.create_pixel_plan_subscription_with_one_time_charge(
             customer_id=customer_id,
             future_plan_price_id=standart_monthly_plan.stripe_price_id,
-            one_time_amount_cents=500,
             trial_days=14,
         )
 
@@ -79,19 +77,6 @@ class PixelPlanService:
         logger.info(
             f"User {user_id} moved to pixel plan (trial until {plan_end}), subscription {subscription.get('id')}"
         )
-
-        # stripe_info = self.stripe.get_subscription_info(subscription_id)
-        # if stripe_info["status"] != "SUCCESS":
-        #     logger.error(
-        #         "Failed to retrieve subscription info from Stripe: "
-        #         + stripe_info.get("message", "")
-        #     )
-        #     return
-
-        # data = stripe_info["data"]
-        # plan_end = data["plan_end"]
-
-        # logger.info(f"User {user_id} moved to pixel plan (until {plan_end})")
 
         # self.stripe.create_shedule_payments(
         #     subscription_id=subscription_id,
