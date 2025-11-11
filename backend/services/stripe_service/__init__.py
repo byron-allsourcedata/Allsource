@@ -76,7 +76,11 @@ class StripeService:
         return subscription
 
     def create_pixel_plan_subscription(
-        self, customer_id: str, stripe_price_id: str
+        self,
+        customer_id: str,
+        stripe_price_id: str,
+        two_week_amount_cents: int = 500,
+        currency: str = "usd",
     ):
         active_subs = stripe.Subscription.list(
             customer=customer_id, status="active"
@@ -85,12 +89,32 @@ class StripeService:
         if active_count >= 1:
             return None
 
+        price = stripe.Price.retrieve(stripe_price_id)
+        product_id = price.get("product") if price else None
+
+        if not product_id:
+            prod = stripe.Product.create(name="Pixel plan (2-week)")
+            product_id = prod["id"]
+
+        unit_amount = (
+            price.get("unit_amount")
+            if price and price.get("unit_amount")
+            else two_week_amount_cents
+        )
+
+        new_price = stripe.Price.create(
+            unit_amount=unit_amount,
+            currency=currency,
+            recurring={"interval": "week", "interval_count": 2},
+            product=product_id,
+        )
+        price_id_to_use = new_price["id"]
+
         subscription = stripe.Subscription.create(
             customer=customer_id,
-            items=[{"price": stripe_price_id, "quantity": 1}],
+            items=[{"price": price_id_to_use, "quantity": 1}],
             collection_method="charge_automatically",
             expand=["latest_invoice.payment_intent"],
-            off_session=True,
         )
 
         return subscription
