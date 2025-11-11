@@ -28,7 +28,7 @@ import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
-import { useCustomFields } from "@/components/data-syncs/pixel-sync-data/useCustomFields";
+import { useCustomFields, Row } from "./pixel-sync-data/useCustomFields";
 import { CustomFieldRow } from "@/components/data-syncs/pixel-sync-data/CustomFieldRow";
 import { CUSTOM_FIELDS } from "./pixel-sync-data/customFields";
 
@@ -90,13 +90,6 @@ interface OnmisendDataSyncProps {
 	data?: any;
 	isEdit?: boolean;
 	boxShadow?: string;
-}
-interface Row {
-	id: number;
-	type: string;
-	value: string;
-	selectValue?: string;
-	canDelete?: boolean;
 }
 
 const defaultRows: Row[] = [

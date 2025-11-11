@@ -36,6 +36,8 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
+import { useCustomFields } from "./pixel-sync-data/useCustomFields";
+import { CustomFieldRow } from "./pixel-sync-data/CustomFieldRow";
 
 interface ConnectWebhookPopupProps {
 	open: boolean;
@@ -93,8 +95,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 	const [url, setUrl] = useState(data?.hook_url ?? "");
 	const [method, setMethod] = useState(data?.method ?? "GET");
 	const [error, setError] = useState(false);
-
-	const [customFieldsList, setCustomFieldsList] = useState([
+	const CUSTOM_FIELDS = [
 		{ type: "first_name", value: "first_name" },
 		{ type: "last_name", value: "last_name" },
 		{ type: "mobile_phone", value: "mobile_phone" },
@@ -123,7 +124,17 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 		{ type: "url_visited", value: "url_visited" },
 		{ type: "business_email", value: "business_email" },
 		{ type: "linkedin_url", value: "linkedin_url" },
-	]);
+		{ type: "visited_date", value: "visited_date" },
+	];
+
+	const {
+		customFields,
+		customFieldsList,
+		handleAddField,
+		handleChangeField,
+		handleDeleteField,
+		canAddMore,
+	} = useCustomFields(CUSTOM_FIELDS, data, false);
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
@@ -145,22 +156,6 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 			document.removeEventListener("mousedown", handleClickOutside);
 		};
 	}, [selectedOption]);
-
-	const [customFields, setCustomFields] = useState<
-		{ type: string; value: string }[]
-	>(data?.data_map ?? []);
-	useEffect(() => {
-		if (data?.data_map) {
-			setCustomFields(data?.data_map);
-		} else {
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-		}
-	}, [open]);
 
 	const handleUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = event.target.value;
@@ -190,21 +185,6 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 		}
 	};
 
-	const handleAddField = () => {
-		setCustomFields([...customFields, { type: "", value: "" }]);
-	};
-
-	const handleDeleteField = (index: number) => {
-		setCustomFields(customFields.filter((_, i) => i !== index));
-	};
-
-	const handleChangeField = (index: number, field: string, value: string) => {
-		setCustomFields(
-			customFields.map((item, i) =>
-				i === index ? { ...item, [field]: value } : item,
-			),
-		);
-	};
 	useEffect(() => {
 		if (open) {
 			return;
@@ -487,7 +467,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 							borderRadius: "4px",
 						}}
 					>
-						Save
+						Next
 					</Button>
 				);
 			case "3":
@@ -495,7 +475,13 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 					<Button
 						variant="contained"
 						onClick={handleSaveSync}
-						disabled={!selectedRadioValue.trim() || customFields.length == 0}
+						disabled={
+							!selectedRadioValue.trim() ||
+							customFields.length == 0 ||
+							newListName == "" ||
+							url == "" ||
+							error
+						}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -1229,213 +1215,55 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 												&nbsp;
 											</Grid>
 										</Grid>
-										<Box sx={{ mb: 2 }}>
+										<Box>
 											{customFields.map((field, index) => (
-												<Grid
-													container
-													spacing={2}
-													alignItems="center"
-													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+												<CustomFieldRow
 													key={index}
-												>
-													<Grid item xs="auto" sm={5} mb={2}>
-														<TextField
-															select
-															fullWidth
-															variant="outlined"
-															label="Custom Field"
-															value={field.type}
-															onChange={(e) =>
-																handleChangeField(index, "type", e.target.value)
-															}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "14px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-														>
-															{customFieldsList.map((item) => (
-																<MenuItem
-																	key={item.value}
-																	value={item.value}
-																	disabled={customFields.some(
-																		(f) => f.type === item.value,
-																	)} // Дизейблим выбранные
-																>
-																	{item.type}
-																</MenuItem>
-															))}
-														</TextField>
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														sm={1}
-														mb={2}
-														container
-														justifyContent="center"
-													>
-														<Image
-															src="/chevron-right-purple.svg"
-															alt="chevron-right-purple"
-															height={18}
-															width={18}
-														/>
-													</Grid>
-													<Grid item xs="auto" sm={5} mb={2}>
-														<TextField
-															fullWidth
-															variant="outlined"
-															value={field.value}
-															onChange={(e) =>
-																handleChangeField(
-																	index,
-																	"value",
-																	e.target.value,
-																)
-															}
-															placeholder="Enter value"
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "14px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
-																		},
-																},
-															}}
-														/>
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														mb={2}
-														sm={1}
-														container
-														justifyContent="center"
-													>
-														<IconButton
-															onClick={() => handleDeleteField(index)}
-															disabled={customFields.length === 1}
-														>
-															<DeleteIcon
-																sx={{
-																	color:
-																		customFields.length === 1
-																			? "grey.400"
-																			: "inherit",
-																}}
-															/>
-														</IconButton>
-													</Grid>
-												</Grid>
+													field={field}
+													index={index}
+													customFields={customFields}
+													customFieldsList={customFieldsList}
+													handleChangeField={handleChangeField}
+													handleDeleteField={handleDeleteField}
+												/>
 											))}
+
 											<Box
 												sx={{
 													display: "flex",
 													justifyContent: "flex-end",
-													mb: 2,
 													mr: 6,
 												}}
 											>
-												<Button
-													onClick={handleAddField}
-													aria-haspopup="true"
-													sx={{
-														textTransform: "none",
-														border: "1px solid rgba(56, 152, 252, 1)",
-														borderRadius: "4px",
-														padding: "9px 16px",
-														minWidth: "auto",
-														"@media (max-width: 900px)": {
-															display: "none",
-														},
-													}}
-												>
-													<Typography
+												{canAddMore && (
+													<Button
+														onClick={handleAddField}
+														aria-haspopup="true"
 														sx={{
-															marginRight: "0.5em",
-															fontFamily: "var(--font-nunito)",
-															lineHeight: "22.4px",
-															fontSize: "16px",
-															textAlign: "left",
-															fontWeight: "500",
-															color: "rgba(56, 152, 252, 1)",
+															textTransform: "none",
+															border: "1px solid rgba(56, 152, 252, 1)",
+															borderRadius: "4px",
+															padding: "6px 12px",
+															minWidth: "auto",
+															"@media (max-width: 900px)": {
+																display: "none",
+															},
 														}}
 													>
-														Add
-													</Typography>
-												</Button>
+														<Typography
+															sx={{
+																fontFamily: "var(--font-nunito)",
+																lineHeight: "22.4px",
+																fontSize: "16px",
+																textAlign: "left",
+																fontWeight: "500",
+																color: "rgba(56, 152, 252, 1)",
+															}}
+														>
+															Add
+														</Typography>
+													</Button>
+												)}
 											</Box>
 										</Box>
 									</Box>

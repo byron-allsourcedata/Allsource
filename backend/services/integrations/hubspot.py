@@ -1,6 +1,7 @@
+import asyncio
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Any, Tuple, Annotated
 from uuid import UUID
 
@@ -440,6 +441,7 @@ class HubspotIntegrationsService:
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
+                lead_user.first_visit_id,
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -648,6 +650,7 @@ class HubspotIntegrationsService:
         lead: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> str | dict[str | Any, str | None | Any]:
         if is_email_validation_enabled:
             first_email = await get_valid_email(
@@ -680,29 +683,39 @@ class HubspotIntegrationsService:
             "gender": getattr(lead, "gender", None),
         }
 
+        visited_date_field = next(
+            (f for f in data_map if f["type"] == "visited_date"), None
+        )
+
+        if visited_date_field:
+            visited_date = await asyncio.to_thread(
+                self.leads_persistence.get_visited_date, lead_visit_id
+            )
+            if visited_date:
+                profile[visited_date_field["value"]] = visited_date
+
+        # ✅ кастомные поля
         for field in data_map:
             t = field["type"]
             v = field["value"]
-            is_constant = field.get("is_constant")
 
-            if is_constant is True:
-                profile[t] = v
+            if t == "visited_date":
                 continue
 
             val = getattr(lead, t, None)
+
             if val is None:
                 continue
 
-            if isinstance(val, datetime):
-                val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
+            if isinstance(val, (datetime, date)):
+                val = val.isoformat()
 
             profile[v] = val
 
-        cleaned = {}
-        for k, v in profile.items():
-            if v in (None, ""):
-                continue
-            key = k.lower()[:100]
-            key = re.sub(r"[^a-z0-9_]", "_", key)
-            cleaned[key] = v
+        cleaned = {
+            re.sub(r"[^a-z0-9_]", "_", k.lower()[:100]): v
+            for k, v in profile.items()
+            if v not in (None, "")
+        }
+
         return cleaned

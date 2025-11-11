@@ -18,7 +18,7 @@ import {
 	SxProps,
 	Theme,
 } from "@mui/material";
-import React, { useState, useEffect, memo, useRef } from "react";
+import React, { useState, useEffect, memo, useRef, useCallback } from "react";
 import Image from "next/image";
 import axios, { AxiosError } from "axios";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -194,26 +194,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		return true;
 	};
 
+	const needsSyncRef = useRef(needsSync);
+	const isEditRef = useRef(isEdit);
+
 	useEffect(() => {
-		if (!needsSync) return;
+		needsSyncRef.current = needsSync;
+		isEditRef.current = isEdit;
+	}, [needsSync, isEdit]);
 
-		const pollingInterval = 2000; // in milliseconds
-		const intervalId = setInterval(() => {
-			if (!isLoading) {
-				handleIntegrationsSync();
-
-				if (!needsSync) {
-					return;
-				}
-			}
-		}, pollingInterval);
-
-		return () => {
-			clearInterval(intervalId);
-		};
-	}, [needsSync, isLoading]);
-
-	const handleIntegrationsSync = async () => {
+	const handleIntegrationsSync = useCallback(async () => {
 		try {
 			if (isFirstLoad) {
 				setIsLoading(true);
@@ -222,23 +211,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				setIsLoading(false);
 			}
 
-			let params = null;
-			if (service_name) {
-				params = {
-					service_name: service_name,
-				};
-			}
-			const response = await axiosInstance.get("/data-sync/sync", {
-				params: params,
-			});
-			const { length: count } = response.data;
+			const params = service_name ? { service_name } : null;
 
-			setAllData(response.data);
-			setTotalRows(count);
+			const { data } = await axiosInstance.get("/data-sync/sync", { params });
 
-			const contacts = response.data;
-			const isSynced = isAllContactsSynced(contacts);
-			if (isSynced) {
+			setAllData(data);
+			setTotalRows(data.length);
+
+			if (isAllContactsSynced(data)) {
 				setNeedsSync(false);
 			}
 		} catch (error) {
@@ -251,7 +231,21 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, [service_name, isFirstLoad]);
+
+	useEffect(() => {
+		const pollingInterval = 5000;
+
+		const id = setInterval(() => {
+			if (!needsSyncRef.current || isEditRef.current) return;
+
+			if (!isLoading) {
+				handleIntegrationsSync();
+			}
+		}, pollingInterval);
+
+		return () => clearInterval(id);
+	}, [isLoading, handleIntegrationsSync]);
 
 	const toSnakeCase = (service: string) => {
 		return service.split(" ").join("_").toLowerCase();
@@ -533,6 +527,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleMetaIconPopupClose = async () => {
 		setMetaIconPopupOpen(false);
 		setSelectedId(null);
+		setIsEdit(false);
 		try {
 			const response = await axiosInstance.get(
 				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
@@ -550,6 +545,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleMailchimpIconPopupClose = async () => {
 		setMailchimpIconPopupOpen(false);
 		setSelectedId(null);
+		setIsEdit(false);
 		try {
 			const response = await axiosInstance.get(
 				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
@@ -567,6 +563,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleInstantlyIconPopupClose = async () => {
 		setInstantlyIconPopupOpen(false);
 		setSelectedId(null);
+		setIsEdit(false);
 		try {
 			const response = await axiosInstance.get(
 				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
@@ -584,6 +581,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleGreenArrowIconPopupClose = async () => {
 		setGreenArrowIconPopupOpen(false);
 		setSelectedId(null);
+		setIsEdit(false);
 		try {
 			const response = await axiosInstance.get(
 				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
@@ -601,6 +599,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleOmnisendIconPopupClose = async () => {
 		setOmnisendIconPopupOpen(false);
 		setSelectedId(null);
+		setIsEdit(false);
 		try {
 			const response = await axiosInstance.get(
 				`/data-sync/sync?integrations_users_sync_id=${selectedId}`,
@@ -686,38 +685,47 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	);
 
 	const handleSendlaneIconPopupClose = () => {
+		setIsEdit(false);
 		setOpenSendlaneIconPopup(false);
 	};
 
 	const handleS3IconPopupClose = () => {
+		setIsEdit(false);
 		setOpenS3IconPopup(false);
 	};
 
 	const handleWebhookIconPopupClose = () => {
+		setIsEdit(false);
 		setOpenWebhookIconPopup(false);
 	};
 
 	const handleHubspotIconPopupClose = () => {
+		setIsEdit(false);
 		setOpenHubspotIconPopup(false);
 	};
 
 	const handleGoHighLevelIconPopupClose = () => {
+		setIsEdit(false);
 		setOpenGoHighLevelIconPopup(false);
 	};
 
 	const handleCustomerIoIconPopupClose = async () => {
+		setIsEdit(false);
 		setCustomerIoIconPopupOpen(false);
 	};
 
 	const handleSlackIconPopupClose = () => {
+		setIsEdit(false);
 		setOpenSlackIconPopup(false);
 	};
 
 	const handleGoogleADSIconPopupClose = () => {
+		setIsEdit(false);
 		setOpenGoogleADSIconPopup(false);
 	};
 
 	const handleLinkedinIconPopupClose = () => {
+		setIsEdit(false);
 		setOpenLinkedinIconPopup(false);
 	};
 

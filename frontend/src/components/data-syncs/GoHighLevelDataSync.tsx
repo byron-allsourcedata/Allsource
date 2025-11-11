@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
 	Drawer,
 	Box,
@@ -28,6 +28,9 @@ import { showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { Logo } from "@/components/ui/Logo";
+import { CUSTOM_FIELDS } from "./pixel-sync-data/customFields";
+import { useCustomFields, Row } from "./pixel-sync-data/useCustomFields";
+import { CustomFieldRow } from "./pixel-sync-data/CustomFieldRow";
 
 interface Data {
 	id: number;
@@ -43,11 +46,17 @@ interface GoHighLevelProps {
 	isEdit?: boolean;
 }
 
-interface CustomRow {
-	type: string;
-	value: string;
-	is_constant?: boolean;
-}
+const defaultRows: Row[] = [
+	{ id: 1, type: "Email", value: "Email" },
+	{ id: 2, type: "First Name", value: "First Name" },
+	{ id: 3, type: "Last Name", value: "Last Name" },
+	{ id: 4, type: "Address", value: "Address" },
+	{ id: 5, type: "Phone", value: "Phone" },
+	{ id: 6, type: "City", value: "City" },
+	{ id: 7, type: "State", value: "State" },
+	{ id: 8, type: "Gender", value: "Gender" },
+	{ id: 9, type: "Company Name", value: "Company Name" },
+];
 
 const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 	open,
@@ -57,6 +66,7 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 	isEdit,
 }) => {
 	const defaultRadioValue = "allContacts";
+	const [rows, setRows] = useState<Row[]>(defaultRows);
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = React.useState("1");
@@ -68,69 +78,27 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [customFieldsList, setCustomFieldsList] = useState([
-		{ type: "Company Domain", value: "company_domain" },
-		{ type: "Company SIC", value: "company_sic" },
-		{ type: "Company LinkedIn URL", value: "company_linkedin_url" },
-		{ type: "Company Revenue", value: "company_revenue" },
-		{ type: "Company Employee Count", value: "company_employee_count" },
-		{ type: "Net Worth", value: "net_worth" },
-		{ type: "Last Updated", value: "last_updated" },
-		{ type: "Personal Emails Last Seen", value: "personal_emails_last_seen" },
-		{ type: "Company Last Updated", value: "company_last_updated" },
-		{ type: "Job Title Last Updated", value: "job_title_last_updated" },
-		{ type: "Additional Personal Emails", value: "additional_personal_emails" },
-		{ type: "LinkedIn URL", value: "linkedin_url" },
-		{ type: "Married", value: "married" },
-		{ type: "Children", value: "children" },
-		{ type: "Income Range", value: "income_range" },
-		{ type: "Homeowner", value: "homeowner" },
-		{ type: "Seniority Level", value: "seniority_level" },
-		{ type: "Primary Industry", value: "primary_industry" },
-		{ type: "Work History", value: "work_history" },
-		{ type: "Education History", value: "education_history" },
-		{ type: "Company Description", value: "company_description" },
-		{ type: "Related Domains", value: "related_domains" },
-		{ type: "Social Connections", value: "social_connections" },
-		{ type: "DPV Code", value: "dpv_code" },
-	]);
-
-	const [customFields, setCustomFields] = useState<
-		{ type: string; value: string; is_constant?: boolean }[]
-	>(
-		data?.data_map ||
-			customFieldsList.map((field) => ({
-				type: field.value,
-				value: field.type,
-			})),
+	const excludedFields = useMemo(
+		() =>
+			defaultRows
+				.map((row) => {
+					const matchedField = CUSTOM_FIELDS.find(
+						(field) => field.type === row.type,
+					);
+					return matchedField ? matchedField.value : "";
+				})
+				.filter(Boolean),
+		[],
 	);
-	const extendedCustomFieldsList = [
-		{ value: "__constant__", type: "Constant field" },
-		...customFieldsList,
-	];
 
-	const handleAddField = () => {
-		setCustomFields([...customFields, { type: "", value: "" }]);
-	};
-
-	const handleDeleteField = (index: number) => {
-		setCustomFields(customFields.filter((_, i) => i !== index));
-	};
-
-	const handleChangeField = (
-		index: number,
-		key: keyof CustomRow,
-		value: string | boolean | undefined,
-	) => {
-		setCustomFields((prev) => {
-			const updated = [...prev];
-			updated[index] = {
-				...updated[index],
-				[key]: value,
-			};
-			return updated;
-		});
-	};
+	const {
+		customFields,
+		customFieldsList,
+		handleAddField,
+		handleChangeField,
+		handleDeleteField,
+		canAddMore,
+	} = useCustomFields(CUSTOM_FIELDS, data, false, excludedFields);
 
 	const resetToDefaultValues = () => {
 		setLoading(false);
@@ -316,28 +284,6 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 	const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSelectedRadioValue(event.target.value);
 	};
-
-	interface Row {
-		id: number;
-		type: string;
-		value: string;
-		selectValue?: string;
-		canDelete?: boolean;
-	}
-
-	const defaultRows: Row[] = [
-		{ id: 1, type: "Email", value: "Email" },
-		{ id: 2, type: "First Name", value: "First Name" },
-		{ id: 3, type: "Last Name", value: "Last Name" },
-		{ id: 4, type: "Address", value: "Address" },
-		{ id: 5, type: "Phone", value: "Phone" },
-		{ id: 6, type: "City", value: "City" },
-		{ id: 7, type: "State", value: "State" },
-		{ id: 8, type: "Gender", value: "Gender" },
-		{ id: 9, type: "Company Name", value: "Company Name" },
-	];
-
-	const [rows, setRows] = useState<Row[]>(defaultRows);
 
 	const handleMapListChange = (
 		id: number,
@@ -1190,302 +1136,50 @@ const GoHighLevelDataSync: React.FC<GoHighLevelProps> = ({
 										))}
 										<Box sx={{ mb: 2 }}>
 											{customFields.map((field, index) => (
-												<Grid
-													container
-													spacing={2}
-													alignItems="center"
-													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+												<CustomFieldRow
 													key={index}
-												>
-													<Grid item xs="auto" sm={5} mb={2}>
-														{field.is_constant ? (
-															<TextField
-																fullWidth
-																variant="outlined"
-																label="Constant Field Name"
-																value={field.type}
-																onChange={(e) =>
-																	handleChangeField(
-																		index,
-																		"type",
-																		e.target.value,
-																	)
-																}
-																placeholder="Enter field name"
-																error={
-																	field.is_constant &&
-																	!!field.type &&
-																	!isSafeFieldName(field.type)
-																}
-																InputLabelProps={{
-																	sx: {
-																		fontFamily: "var(--font-nunito)",
-																		fontSize: "13px",
-																		lineHeight: "16px",
-																		color: "rgba(17, 17, 19, 0.60)",
-																		top: "-5px",
-																		"&.Mui-focused": {
-																			color: "rgba(56, 152, 252, 1)",
-																			top: 0,
-																		},
-																		"&.MuiInputLabel-shrink": {
-																			top: 0,
-																		},
-																	},
-																}}
-																InputProps={{
-																	sx: {
-																		"&.MuiOutlinedInput-root": {
-																			height: "36px",
-																			"& .MuiOutlinedInput-input": {
-																				padding: "6.5px 8px",
-																				fontFamily: "var(--font-roboto)",
-																				color: "#202124",
-																				fontSize: "14px",
-																				fontWeight: "400",
-																				lineHeight: "20px",
-																			},
-																			"& .MuiOutlinedInput-notchedOutline": {
-																				borderColor: "#A3B0C2",
-																			},
-																			"&:hover .MuiOutlinedInput-notchedOutline":
-																				{
-																					borderColor: "#A3B0C2",
-																				},
-																			"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																				{
-																					borderColor: "rgba(56, 152, 252, 1)",
-																				},
-																		},
-																		"&+.MuiFormHelperText-root": {
-																			marginLeft: "0",
-																		},
-																	},
-																}}
-															/>
-														) : (
-															<TextField
-																select
-																fullWidth
-																variant="outlined"
-																label="Custom Field"
-																value={field.type}
-																onChange={(e) => {
-																	const selected = e.target.value;
-																	if (selected === "__constant__") {
-																		setCustomFields((prev) => {
-																			const updated = [...prev];
-																			updated[index] = {
-																				...updated[index],
-																				type: "",
-																				is_constant: true,
-																			};
-																			return updated;
-																		});
-																	} else {
-																		handleChangeField(index, "type", selected);
-																		handleChangeField(
-																			index,
-																			"is_constant",
-																			undefined,
-																		);
-																	}
-																}}
-																InputLabelProps={{
-																	sx: {
-																		fontFamily: "var(--font-nunito)",
-																		fontSize: "13px",
-																		lineHeight: "16px",
-																		color: "rgba(17, 17, 19, 0.60)",
-																		top: "-5px",
-																		"&.Mui-focused": {
-																			color: "rgba(56, 152, 252, 1)",
-																			top: 0,
-																		},
-																		"&.MuiInputLabel-shrink": {
-																			top: 0,
-																		},
-																	},
-																}}
-																InputProps={{
-																	sx: {
-																		"&.MuiOutlinedInput-root": {
-																			height: "36px",
-																			"& .MuiOutlinedInput-input": {
-																				padding: "6.5px 8px",
-																				fontFamily: "var(--font-roboto)",
-																				color: "#202124",
-																				fontSize: "14px",
-																				fontWeight: "400",
-																				lineHeight: "20px",
-																			},
-																			"& .MuiOutlinedInput-notchedOutline": {
-																				borderColor: "#A3B0C2",
-																			},
-																			"&:hover .MuiOutlinedInput-notchedOutline":
-																				{
-																					borderColor: "#A3B0C2",
-																				},
-																			"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																				{
-																					borderColor: "rgba(56, 152, 252, 1)",
-																				},
-																		},
-																		"&+.MuiFormHelperText-root": {
-																			marginLeft: "0",
-																		},
-																	},
-																}}
-																error={isDuplicate(field.type, index)}
-																helperText={
-																	isDuplicate(field.type, index)
-																		? "This field name already exists"
-																		: ""
-																}
-															>
-																{extendedCustomFieldsList.map((item) => (
-																	<MenuItem
-																		key={item.value}
-																		value={item.value}
-																		disabled={
-																			item.value !== "__constant__" &&
-																			customFields.some(
-																				(f) => f.type === item.value,
-																			)
-																		}
-																	>
-																		{item.type}
-																	</MenuItem>
-																))}
-															</TextField>
-														)}
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														sm={1}
-														mb={2}
-														container
-														justifyContent="center"
-													>
-														<Image
-															src="/chevron-right-purple.svg"
-															alt="chevron-right-purple"
-															height={18}
-															width={18}
-														/>
-													</Grid>
-													<Grid item xs="auto" sm={5} mb={2}>
-														<TextField
-															fullWidth
-															variant="outlined"
-															value={field.value}
-															onChange={(e) =>
-																handleChangeField(
-																	index,
-																	"value",
-																	e.target.value,
-																)
-															}
-															placeholder="Enter value"
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "14px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
-																		},
-																},
-															}}
-														/>
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														mb={2}
-														sm={1}
-														container
-														justifyContent="center"
-													>
-														<IconButton
-															onClick={() => handleDeleteField(index)}
-														>
-															<Image
-																src="/trash-icon-filled.svg"
-																alt="trash-icon-filled"
-																height={18}
-																width={18}
-															/>
-														</IconButton>
-													</Grid>
-												</Grid>
+													index={index}
+													field={field}
+													customFields={customFields}
+													customFieldsList={customFieldsList}
+													handleChangeField={handleChangeField}
+													handleDeleteField={handleDeleteField}
+												/>
 											))}
+
 											<Box
 												sx={{
 													display: "flex",
 													justifyContent: "flex-end",
-													mb: 2,
+													mb: 6,
 													mr: 6,
 												}}
 											>
-												<Button
-													onClick={handleAddField}
-													aria-haspopup="true"
-													sx={{
-														textTransform: "none",
-														border: "1px solid rgba(56, 152, 252, 1)",
-														borderRadius: "4px",
-														padding: "9px 16px",
-														minWidth: "auto",
-														"@media (max-width: 900px)": {
-															display: "none",
-														},
-													}}
-												>
-													<Typography
+												{canAddMore && (
+													<Button
+														onClick={handleAddField}
 														sx={{
-															marginRight: "0.5em",
-															fontFamily: "var(--font-nunito)",
-															lineHeight: "22.4px",
-															fontSize: "16px",
-															textAlign: "left",
-															fontWeight: "500",
-															color: "rgba(56, 152, 252, 1)",
+															textTransform: "none",
+															border: "1px solid rgba(56, 152, 252, 1)",
+															borderRadius: "4px",
+															padding: "6px 12px",
+															minWidth: "auto",
 														}}
 													>
-														Add
-													</Typography>
-												</Button>
+														<Typography
+															sx={{
+																fontFamily: "var(--font-nunito)",
+																lineHeight: "22.4px",
+																fontSize: "16px",
+																textAlign: "left",
+																fontWeight: "500",
+																color: "rgba(56, 152, 252, 1)",
+															}}
+														>
+															Add
+														</Typography>
+													</Button>
+												)}
 											</Box>
 										</Box>
 									</Box>

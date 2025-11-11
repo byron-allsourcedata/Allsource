@@ -36,3 +36,4 @@ class KlaviyoProfile(BaseModel):
     organization: tp.Optional[str] = None
     title: tp.Optional[str] = None
     location: tp.Optional[tp.Any] = None
+    visited_date: tp.Optional[str] = None

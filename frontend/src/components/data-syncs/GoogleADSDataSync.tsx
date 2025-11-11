@@ -533,6 +533,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 		{ id: 2, type: "Full name", value: "Full name" },
 		{ id: 3, type: "Phone", value: "Phone" },
 		{ id: 4, type: "Address", value: "Address" },
+		{ id: 5, type: "Visited Date", value: "Visited Date" },
 	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);

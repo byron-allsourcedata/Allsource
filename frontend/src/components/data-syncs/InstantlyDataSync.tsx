@@ -48,7 +48,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { LogoSmall } from "@/components/ui/Logo";
 import { dataSyncStyles } from "./dataSyncStyles";
-import { useCustomFields } from "./pixel-sync-data/useCustomFields";
+import { useCustomFields, Row } from "./pixel-sync-data/useCustomFields";
 import { CUSTOM_FIELDS } from "./pixel-sync-data/customFields";
 import { CustomFieldRow } from "./pixel-sync-data/CustomFieldRow";
 
@@ -64,14 +64,6 @@ type InstantlyList = {
 	id: string;
 	list_name: string;
 };
-
-interface Row {
-	id: number;
-	type: string;
-	value: string;
-	selectValue?: string;
-	canDelete?: boolean;
-}
 
 const defaultRows: Row[] = [
 	{ id: 2, type: "Phone number", value: "Phone number" },
@@ -91,7 +83,6 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = React.useState("1");
-	const [checked, setChecked] = useState(false);
 	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [selectedOption, setSelectedOption] = useState<InstantlyList | null>(
@@ -100,13 +91,9 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 	const [listName, setlistName] = useState<string | null>(data?.name ?? "");
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
-	const [tagName, setTagName] = useState<string>("");
 	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
 	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
-		null,
-	);
 	const [apiKeyError, setApiKeyError] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
@@ -116,10 +103,6 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [newMapListName, setNewMapListName] = useState<string>("");
-	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-	const [maplistNameError, setMapListNameError] = useState(false);
 	const [instantlyList, setInstantlyList] = useState<InstantlyList[]>([]);
 	const excludedFields = useMemo(
 		() =>
@@ -141,6 +124,7 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 		handleChangeField,
 		handleDeleteField,
 		canAddMore,
+		emailEntry,
 	} = useCustomFields(CUSTOM_FIELDS, data, false, excludedFields);
 
 	const emailsVariations = [
@@ -152,6 +136,17 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 		type: "business_email",
 		value: "Email",
 	});
+
+	useEffect(() => {
+		if (!emailEntry) return;
+
+		setActiveEmailVariation({
+			id: 1,
+			type: emailEntry.type,
+			value: emailEntry.value,
+			is_constant: false,
+		});
+	}, [emailEntry]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -178,17 +173,14 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 	const resetToDefaultValues = () => {
 		setLoading(false);
 		setValue("1");
-		setChecked(false);
 		setSelectedRadioValue("");
 		setAnchorEl(null);
 		setSelectedOption(null);
 		setlistName("");
 		setShowCreateForm(false);
 		setNewListName("");
-		setTagName("");
 		setIsShrunk(false);
 		setIsDropdownOpen(false);
-		setOpenDropdownMaximiz(null);
 		setApiKeyError(false);
 		setTab2Error(false);
 		setIsDropdownValid(false);
@@ -196,9 +188,6 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 		setTagNameError(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
-		setNewMapListName("");
-		setShowCreateMapForm(false);
-		setMapListNameError(false);
 	};
 
 	const getInstantlyList = async () => {
@@ -214,7 +203,6 @@ const ConnectInstantly: React.FC<ConnectInstantlyPopupProps> = ({
 				(item: any) => item.list_name === data?.list_name,
 			);
 			if (foundItem) {
-				setUpdateKlaviuo(data.id);
 				setSelectedOption({
 					id: foundItem.id,
 					list_name: foundItem.list_name,

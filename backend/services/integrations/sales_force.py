@@ -1,3 +1,4 @@
+import asyncio
 import csv
 import hashlib
 import io
@@ -457,6 +458,7 @@ class SalesForceIntegrationsService:
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
                 country_state_map,
+                lead_user.first_visit_id,
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -633,6 +635,7 @@ class SalesForceIntegrationsService:
         data_map: list,
         is_email_validation_enabled: bool,
         country_state_map: dict[str, str],
+        lead_visit_id: int,
     ) -> dict:
         if is_email_validation_enabled:
             first_email = await get_valid_email(
@@ -648,6 +651,10 @@ class SalesForceIntegrationsService:
             return first_email
 
         company_name = getattr(five_x_five_user, "company_name", "Undefined")
+
+        visited_date = await asyncio.to_thread(
+            self.leads_persistence.get_visited_date, lead_visit_id
+        )
 
         first_phone = get_valid_phone(five_x_five_user)
         phone_number = validate_and_format_phone(first_phone)
@@ -723,6 +730,7 @@ class SalesForceIntegrationsService:
             "NumberOfEmployees": company_employee_count,
             "AnnualRevenue": company_revenue,
             "Description": description,
+            "Visited Date": visited_date,
         }
 
     def _get_country_state_map_list(self):

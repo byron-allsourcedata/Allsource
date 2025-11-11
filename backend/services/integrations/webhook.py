@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from datetime import datetime, timedelta
@@ -203,6 +204,7 @@ class WebhookIntegrationService:
                 five_x_five_user=five_x_five_user,
                 data_map=integration_data_sync.data_map,
                 is_email_validation_enabled=is_email_validation_enabled,
+                lead_visit_id=lead_user.first_visit_id,
             )
             if data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -397,6 +399,7 @@ class WebhookIntegrationService:
         five_x_five_user: FiveXFiveUser,
         data_map,
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ):
         properties = {}
         validation_email = 2
@@ -479,6 +482,19 @@ class WebhookIntegrationService:
                         properties[mapping["value"]] = None
                     else:
                         properties[mapping["value"]] = result
+
+        if "visited_date" in mapped_fields:
+            visited_date = await asyncio.to_thread(
+                self.leads_persistence.get_visited_date, lead_visit_id
+            )
+
+            for mapping in data_map:
+                if mapping["type"] == "visited_date":
+                    properties[mapping["value"]] = (
+                        visited_date.strftime("%m-%d-%Y")
+                        if visited_date
+                        else None
+                    )
 
         if validation_email == 0:
             return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value

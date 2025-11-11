@@ -38,7 +38,7 @@ import { LogoSmall } from "@/components/ui/Logo";
 import { dataSyncStyles } from "./dataSyncStyles";
 import { integrationsStyle } from "@/app/(client)/integrations/integrationsStyle";
 import { CustomButton } from "../ui";
-import { useCustomFields } from "./pixel-sync-data/useCustomFields";
+import { useCustomFields, Row } from "./pixel-sync-data/useCustomFields";
 import { CustomFieldRow } from "./pixel-sync-data/CustomFieldRow";
 
 interface ConnectGreenArrowPopupProps {
@@ -53,14 +53,6 @@ type GreenArrowList = {
 	id: string;
 	list_name: string;
 };
-
-interface Row {
-	id: number;
-	type: string;
-	value: string;
-	selectValue?: string;
-	canDelete?: boolean;
-}
 
 const defaultRows: Row[] = [
 	{ id: 2, type: "Phone number", value: "Phone number" },
@@ -93,10 +85,6 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
 	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
-		null,
-	);
-	const [apiKeyError, setApiKeyError] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
 	const [listNameError, setListNameError] = useState(false);
@@ -105,10 +93,6 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [newMapListName, setNewMapListName] = useState<string>("");
-	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-	const [maplistNameError, setMapListNameError] = useState(false);
 	const [greenArrowList, setGreenArrowList] = useState<GreenArrowList[]>([]);
 	const CUSTOM_FIELDS = [
 		{ type: "Gender", value: "gender" },
@@ -162,6 +146,7 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		handleChangeField,
 		handleDeleteField,
 		canAddMore,
+		emailEntry,
 	} = useCustomFields(CUSTOM_FIELDS, data, false, excludedFields);
 
 	const emailsVariations = [
@@ -173,6 +158,17 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		type: "business_email",
 		value: "Email",
 	});
+
+	useEffect(() => {
+		if (!emailEntry) return;
+
+		setActiveEmailVariation({
+			id: 1,
+			type: emailEntry.type,
+			value: emailEntry.value,
+			is_constant: false,
+		});
+	}, [emailEntry]);
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
@@ -209,17 +205,12 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 		setTagName("");
 		setIsShrunk(false);
 		setIsDropdownOpen(false);
-		setOpenDropdownMaximiz(null);
-		setApiKeyError(false);
 		setTab2Error(false);
 		setIsDropdownValid(false);
 		setListNameError(false);
 		setTagNameError(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
-		setNewMapListName("");
-		setShowCreateMapForm(false);
-		setMapListNameError(false);
 	};
 
 	const getGreenArrowList = async () => {
@@ -235,7 +226,6 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 				(item: any) => item.list_name === data?.list_name,
 			);
 			if (foundItem) {
-				setUpdateKlaviuo(data.id);
 				setSelectedOption({
 					id: foundItem.id,
 					list_name: foundItem.list_name,
@@ -1635,7 +1625,7 @@ const GreenArrowDataSync: React.FC<ConnectGreenArrowPopupProps> = ({
 											</Grid>
 										</Box>
 									))}
-									<Box sx={{ mb: 2 }}>
+									<Box>
 										{customFields.map((field, index) => (
 											<CustomFieldRow
 												key={index}

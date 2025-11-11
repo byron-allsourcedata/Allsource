@@ -466,6 +466,7 @@ class InstantlyIntegrationsService:
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
+                lead_user.first_visit_id,
             )
 
             if mapped in (
@@ -565,11 +566,16 @@ class InstantlyIntegrationsService:
         five_x_five_user: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> dict | str:
-        for field in data_map:
-            if field["value"] == "Email":
-                chosen_email_variation = field["type"]
-                break
+        chosen_email_variation = next(
+            (field["type"] for field in data_map if field["value"] == "Email"),
+            None,
+        )
+
+        if not chosen_email_variation:
+            logging.info("Email field is not configured in data_map")
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         if is_email_validation_enabled:
             email_or_status = await get_valid_email(
@@ -589,24 +595,46 @@ class InstantlyIntegrationsService:
             return email_or_status
 
         email = email_or_status
-        phone = get_valid_phone(five_x_five_user)
-        return {
-            "email": email,
+
+        values_by_type = {
             "first_name": getattr(five_x_five_user, "first_name", None),
             "last_name": getattr(five_x_five_user, "last_name", None),
-            "phone": format_phone_number(phone),
+            "phone": format_phone_number(get_valid_phone(five_x_five_user)),
             "company_name": getattr(five_x_five_user, "company_name", None),
-            "custom_variables": {
-                field["value"]: (
-                    getattr(five_x_five_user, field["type"], None).isoformat()
-                    if isinstance(
-                        getattr(five_x_five_user, field["type"], None),
-                        (datetime, date),
-                    )
-                    else getattr(five_x_five_user, field["type"], None)
-                )
+            **{
+                field["type"]: getattr(five_x_five_user, field["type"], None)
                 for field in data_map
-                if field["value"] != "Email"
+            },
+        }
+
+        if any(field["type"] == "visited_date" for field in data_map):
+            values_by_type["visited_date"] = (
+                self.leads_persistence.get_visited_date(lead_visit_id)
+            )
+
+        custom_variables = {}
+        for field in data_map:
+            label = field["value"]
+            key = field["type"]
+
+            if label == "Email":
+                continue
+
+            val = values_by_type.get(key)
+
+            if isinstance(val, (datetime, date)):
+                val = val.isoformat()
+
+            custom_variables[label] = val
+
+        return {
+            "email": email,
+            "first_name": values_by_type["first_name"],
+            "last_name": values_by_type["last_name"],
+            "phone": values_by_type["phone"],
+            "company_name": values_by_type["company_name"],
+            "custom_variables": {
+                k: v for k, v in custom_variables.items() if v not in (None, "")
             },
         }
 

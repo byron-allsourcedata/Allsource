@@ -12,3 +12,4 @@ class GoogleAdsProfile(BaseModel):
     state: tp.Optional[str] = None
     address: tp.Optional[str] = None
     country_code: tp.Optional[str] = None
+    visited_date: tp.Optional[str] = None
