@@ -578,7 +578,7 @@ class GreenArrowIntegrationsService:
         if any(field["type"] == "visited_date" for field in data_map):
             values_by_type["visited_date"] = (
                 self.leads_persistence.get_visited_date(lead_visit_id)
-            )
+            ).strftime("%m-%d-%Y")
 
         custom_variables = {
             "First Name": values_by_type["first_name"],
