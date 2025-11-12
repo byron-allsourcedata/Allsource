@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 import time
 
@@ -66,7 +67,13 @@ class PixelPlanService:
         user_id = user.id
 
         self.user_persistence.set_has_credit_card(user_id)
-        self.user_subscriptions.move_to_plan(user_id, "pixel")
+        self.user_subscriptions.move_to_plan(
+            user_id=user_id,
+            plan_alias="pixel",
+            plan_end=datetime.fromtimestamp(
+                int(time.time()) + int(trial_days) * 24 * 3600
+            ),
+        )
         standart_monthly_plan = self.plans.get_plan_by_alias("standard_monthly")
 
         # res = self.stripe.create_pixel_plan_subscription_with_one_time_charge(
@@ -95,5 +102,15 @@ class PixelPlanService:
             current_period_end=int(time.time()) + int(trial_days) * 24 * 3600,
         )
 
-        if hasattr(res, "error"):
-            print(res.get("error"))
+        if not res.get("success"):
+            logger.error(
+                "Failed to create/modify schedule for subscription %s: %s",
+                subscription_id,
+                res.get("error"),
+            )
+        else:
+            logger.info(
+                "Schedule created/modified for subscription %s: %s",
+                subscription_id,
+                res.get("schedule_id"),
+            )
