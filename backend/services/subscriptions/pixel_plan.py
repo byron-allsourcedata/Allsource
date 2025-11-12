@@ -66,6 +66,8 @@ class PixelPlanService:
             return
         user_id = user.id
 
+        trial_days = 14
+
         self.user_persistence.set_has_credit_card(user_id)
         self.user_subscriptions.move_to_plan(
             user_id=user_id,
@@ -93,8 +95,6 @@ class PixelPlanService:
         # logger.info(
         #     f"User {user_id} moved to pixel plan (trial until {plan_end}), subscription {subscription.get('id')}"
         # )
-
-        trial_days = 14
 
         res = self.stripe.create_shedule_payments(
             subscription_id=subscription_id,
