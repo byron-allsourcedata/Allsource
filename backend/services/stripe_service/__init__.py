@@ -229,14 +229,26 @@ class StripeService:
                 "items": [{"price": future_plan_price_id, "quantity": 1}],
             }
 
-            schedule = stripe.SubscriptionSchedule.create(
-                from_subscription=subscription_id,
+            # schedule = stripe.SubscriptionSchedule.create(
+            #     from_subscription=subscription_id,
+            #     phases=[phase1, phase2],
+            #     end_behavior="release",
+            # )
+
+            created = stripe.SubscriptionSchedule.create(
+                from_subscription=subscription_id
+            )
+
+            schedule_id = created["id"]
+
+            updated = stripe.SubscriptionSchedule.modify(
+                schedule_id,
                 phases=[phase1, phase2],
                 end_behavior="release",
             )
-            schedule_id = schedule["id"]
+
             result["action"] = "created"
-            result["updated"] = dict(schedule)
+            result["updated"] = dict(updated)
             result["schedule_id"] = schedule_id
             result["success"] = True
         except Exception as e:
