@@ -212,6 +212,24 @@ class StripeService:
                     "No items found in subscription, using current_plan_price_id"
                 )
 
+            def to_ts(val):
+                if val is None:
+                    return None
+                # datetime
+                if isinstance(val, datetime):
+                    return int(val.timestamp())
+                # int/float
+                if isinstance(val, (int, float)):
+                    return int(val)
+                # string with digits or float-like
+                if isinstance(val, str):
+                    s = val.strip()
+                    try:
+                        return int(float(s))
+                    except Exception:
+                        return None
+                return None
+
             cps = subscription.get("current_period_start") or subscription.get(
                 "start_date"
             )
@@ -219,8 +237,8 @@ class StripeService:
                 "end_date"
             )
 
-            start_ts = int(cps) if cps else int(time.time())
-            end_ts = int(eps) if eps else int(time.time())
+            start_ts = to_ts(cps) or int(time.time())
+            end_ts = to_ts(eps) or int(time.time())
 
             if end_ts <= start_ts:
                 end_ts = start_ts + 1
