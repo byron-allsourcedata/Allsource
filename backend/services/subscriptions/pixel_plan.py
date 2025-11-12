@@ -99,7 +99,6 @@ class PixelPlanService:
         res = self.stripe.create_shedule_payments(
             subscription_id=subscription_id,
             future_plan_price_id=standart_monthly_plan.stripe_price_id,
-            current_period_end=int(time.time()) + int(trial_days) * 24 * 3600,
         )
 
         if not res.get("success"):

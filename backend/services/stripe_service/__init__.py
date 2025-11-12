@@ -192,7 +192,6 @@ class StripeService:
         self,
         subscription_id: str,
         future_plan_price_id: str,
-        current_period_end,
     ) -> dict:
         result = {"success": False}
         try:
@@ -213,16 +212,23 @@ class StripeService:
                     "No items found in subscription, using current_plan_price_id"
                 )
 
-            if isinstance(current_period_end, datetime):
-                current_period_end_ts = int(current_period_end.timestamp())
-            else:
-                current_period_end_ts = (
-                    int(current_period_end) if current_period_end else None
-                )
+            cps = subscription.get("current_period_start") or subscription.get(
+                "start_date"
+            )
+            eps = subscription.get("current_period_end") or subscription.get(
+                "end_date"
+            )
+
+            start_ts = int(cps) if cps else int(time.time())
+            end_ts = int(eps) if cps else int(time.time())
+
+            if end_ts <= start_ts:
+                end_ts = start_ts + 1
 
             phase1 = {
                 "items": phase1_items,
-                "end_date": current_period_end_ts,
+                "start_date": start_ts,
+                "end_date": end_ts,
             }
 
             phase2 = {
