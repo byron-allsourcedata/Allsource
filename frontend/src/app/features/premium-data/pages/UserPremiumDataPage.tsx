@@ -44,6 +44,7 @@ import { MetaPremiumSync } from "../drawers/MetaPremiumSync";
 import { useDialog } from "@/hooks/useDialog";
 import { PaymentDialog } from "../dialogs/payment-dialog/PaymentDialog";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 const Title = styled(Typography)`
     color: #202124;
@@ -214,7 +215,7 @@ export const UserPremiumDataPage: FC = () => {
 	let pageContent: ReactNode = null;
 
 	if (firstTimeLoading || premiumDataData == null) {
-		pageContent = <LinearProgress variant="indeterminate" />;
+		pageContent = <CustomizedProgressBar />;
 	} else if (premiumDataData == null || premiumDataData?.length === 0) {
 		pageContent = <UserPremiumSourceFirstTimeContent />;
 	} else {

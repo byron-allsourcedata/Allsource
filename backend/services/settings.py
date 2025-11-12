@@ -542,11 +542,11 @@ class SettingsService:
         elif user_subscription:
             is_active = user_subscription.status == "active"
 
-        delta = plan_end - plan_start
-        if hasattr(delta, "days") and delta.days == 14:
-            plan_name_display = "Pixel Plan"
-        else:
-            plan_name_display = plan_name
+        plan_name_display = plan_name
+        if plan_start and plan_end:
+            delta = plan_end - plan_start
+            if hasattr(delta, "days") and delta.days == 14:
+                plan_name_display = "Pixel Plan"
 
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
