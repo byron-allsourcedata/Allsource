@@ -17,14 +17,20 @@ import CustomButton from "@/components/ui/CustomButton";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { flagPixelPlan } from "@/services/payPixelPlan";
+import { useFlagPayPixelPlan } from "@/hooks/usePixelPlan";
 
 const PayPixelInstallationDrawer = () => {
 	const [open, setOpen] = useState(true);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
+	const isShowPayPixelDrawer = useFlagPayPixelPlan();
 
 	const handleClose = () => {
-		setOpen(false);
-		flagPixelPlan.set(false);
+		if (!isShowPayPixelDrawer.isCanClose) {
+			flagPixelPlan.set(true, false);
+		} else {
+			flagPixelPlan.set(false, true);
+			setOpen(false);
+		}
 	};
 
 	const redirectToCheckoutSession = async () => {

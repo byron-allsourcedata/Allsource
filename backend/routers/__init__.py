@@ -6,7 +6,7 @@ from routers import (
     users,
     pixel_installation,
     admin_customers,
-    dashboard,
+    analytics,
     sse_events,
     sources,
     smart_audiences,
@@ -50,7 +50,7 @@ main_router.include_router(admin_partner.router, prefix="/admin-partners")
 main_router.include_router(admin_assets.router, prefix="/admin-assets")
 main_router.include_router(admin_accounts.router, prefix="/admin-accounts")
 main_router.include_router(admin_payouts.router, prefix="/admin-payouts")
-main_router.include_router(dashboard.router, prefix="/dashboard")
+main_router.include_router(analytics.router, prefix="/analytics")
 main_router.include_router(audience.router, prefix="/audience")
 main_router.include_router(pixel_installation.router, prefix="/install-pixel")
 main_router.include_router(suppressions.router, prefix="/suppressions")

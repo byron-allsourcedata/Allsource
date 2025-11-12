@@ -5,7 +5,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { useNotification } from "../../../context/NotificationContext";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { SliderProvider } from "@/context/SliderContext";
 import SourcesImport from "@/app/(client)/sources/builder/page";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
@@ -123,7 +123,7 @@ const GetStarted: React.FC = () => {
 	const handleClickPixel = async () => {
 		const pixelInstallationPaid = await checkPixelInstallationPaid();
 		if (!pixelInstallationPaid) {
-			flagPixelPlan.set(true);
+			flagPixelPlan.set(true, true);
 			return;
 		}
 		setShowHeading(false);

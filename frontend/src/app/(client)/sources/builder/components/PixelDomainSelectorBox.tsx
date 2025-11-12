@@ -259,7 +259,7 @@ const PixelDomainSelectorBox: FC<PixelDomainSelectBlockProps> = ({
 											const pixelInstallationPaid =
 												await checkPixelInstallationPaid();
 											if (!pixelInstallationPaid) {
-												flagPixelPlan.set(true);
+												flagPixelPlan.set(true, true);
 												return;
 											}
 											e.stopPropagation();

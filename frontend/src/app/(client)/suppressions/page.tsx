@@ -11,9 +11,10 @@ import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { useNotification } from "../../../context/NotificationContext";
 import { showErrorToast } from "@/components/ToastNotification";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
 const centerContainerStyles = {
 	display: "flex",
@@ -106,6 +107,10 @@ const Suppressions: React.FC = () => {
 	};
 	useEffect(() => {
 		checkPixel();
+	}, []);
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
 	}, []);
 
 	if (loading) {

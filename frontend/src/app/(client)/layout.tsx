@@ -246,7 +246,8 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						onDismissNotification={handleDismissNotification}
 					/>
 					{isShowPayOneDollarDrawer && <OneDollarPopup />}
-					{isShowPayPixelDrawer && <PayPixelInstallationDrawer />}
+					{isShowPayPixelDrawer.flag && <PayPixelInstallationDrawer />}
+					{/* {isShowPayPixelDrawer && <PayPixelInstallationDrawer />} */}
 					<Box
 						sx={{
 							flexGrow: 1,
@@ -254,8 +255,9 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							flexDirection: "column",
 							minHeight: 0,
 							overflow: "hidden",
-							...(isShowPayOneDollarDrawer || isShowPayPixelDrawer
-								? { filter: "blur(12px)" }
+							...(isShowPayOneDollarDrawer || isShowPayPixelDrawer.flag
+								? // ...(isShowPayOneDollarDrawer || isShowPayPixelDrawer
+									{ filter: "blur(12px)" }
 								: {}),
 						}}
 					>

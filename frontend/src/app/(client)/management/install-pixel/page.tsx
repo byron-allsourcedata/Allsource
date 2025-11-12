@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import InstallPixelSection from "@/components/InstallPixelSection";
 import NotificationInfoBanner from "@/components/first-time-screens/NotificationInfoBanner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
 const InstallPixel: React.FC = () => {
 	const [bannerVisible, setBannerVisible] = useState(true);
@@ -15,6 +16,10 @@ const InstallPixel: React.FC = () => {
 	const onBack = () => {
 		router.push("/management");
 	};
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
+	}, []);
 
 	return (
 		<Box sx={{ ...managementStyle.mainContent }}>

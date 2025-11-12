@@ -611,7 +611,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 											const pixelInstallationPaid =
 												await checkPixelInstallationPaid();
 											if (!pixelInstallationPaid) {
-												flagPixelPlan.set(true);
+												flagPixelPlan.set(true, true);
+												// flagPixelPlan.set(true);
 												return;
 											}
 											handleNavigation("/get-started?pixel=true");
