@@ -246,9 +246,6 @@ class StripeService:
                     else None
                 )
 
-            # if end_ts <= start_ts:
-            #     end_ts = start_ts + 1
-
             phase1 = {
                 "items": phase1_items,
                 "start_date": start_ts,
@@ -258,12 +255,6 @@ class StripeService:
             phase2 = {
                 "items": [{"price": future_plan_price_id, "quantity": 1}],
             }
-
-            # schedule = stripe.SubscriptionSchedule.create(
-            #     from_subscription=subscription_id,
-            #     phases=[phase1, phase2],
-            #     end_behavior="release",
-            # )
 
             created = stripe.SubscriptionSchedule.create(
                 from_subscription=subscription_id
