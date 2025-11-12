@@ -192,7 +192,7 @@ class StripeService:
         self,
         subscription_id: str,
         future_plan_price_id: str,
-        current_period_end,
+        current_period_end_ts,
     ) -> dict:
         result = {"success": False}
         try:
@@ -237,11 +237,13 @@ class StripeService:
 
             start_ts = to_ts(cps) or int(time.time())
 
-            if isinstance(current_period_end, datetime):
-                current_period_end_ts = int(current_period_end.timestamp())
+            if isinstance(current_period_end_ts, datetime):
+                current_period_end_ts = int(current_period_end_ts.timestamp())
             else:
                 current_period_end_ts = (
-                    int(current_period_end) if current_period_end else None
+                    int(current_period_end_ts)
+                    if current_period_end_ts
+                    else None
                 )
 
             # if end_ts <= start_ts:
