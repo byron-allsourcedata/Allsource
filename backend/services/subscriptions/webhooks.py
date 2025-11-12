@@ -58,7 +58,6 @@ class SubscriptionWebhookService:
         action_type="update",
         stripe_subscription_id=None,
     ):
-        print(action_type, stripe_subscription_id)
         subscription = (
             self.user_subscriptions_persistence.get_subscription_by_customer_id(
                 customer_id=customer_id
