@@ -220,7 +220,7 @@ class StripeService:
             )
 
             start_ts = int(cps) if cps else int(time.time())
-            end_ts = int(eps) if cps else int(time.time())
+            end_ts = int(eps) if eps else int(time.time())
 
             if end_ts <= start_ts:
                 end_ts = start_ts + 1
