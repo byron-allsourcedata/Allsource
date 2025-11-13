@@ -77,6 +77,7 @@ class PixelPlanService:
             ),
         )
         standart_monthly_plan = self.plans.get_plan_by_alias("standard_monthly")
+        pixel_plan = self.plans.get_plan_by_alias("pixel")
 
         # res = self.stripe.create_pixel_plan_subscription_with_one_time_charge(
         #     customer_id=customer_id,
@@ -108,8 +109,10 @@ class PixelPlanService:
 
         res = self.stripe.create_shedule_payments(
             subscription_id=subscription_id,
+            current_plan_price_id=pixel_plan.stripe_price_id,
             future_plan_price_id=standart_monthly_plan.stripe_price_id,
             current_period_end_ts=data["plan_end"],
+            current_period_start_ts=data["plan_start"],
         )
 
         if not res.get("success"):

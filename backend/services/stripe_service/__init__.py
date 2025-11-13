@@ -191,51 +191,55 @@ class StripeService:
     def create_shedule_payments(
         self,
         subscription_id: str,
+        current_plan_price_id: str,
         future_plan_price_id: str,
         current_period_end_ts,
+        current_period_start_ts,
     ) -> dict:
         result = {"success": False}
         try:
-            subscription = stripe.Subscription.retrieve(subscription_id)
+            # subscription = stripe.Subscription.retrieve(subscription_id)
 
-            items = subscription.get("items", {}).get("data", []) or []
-            phase1_items = []
-            if items:
-                for itm in items:
-                    price_id = itm.get("price", {}).get("id")
-                    quantity = itm.get("quantity", 1)
-                    if price_id:
-                        phase1_items.append(
-                            {"price": price_id, "quantity": quantity}
-                        )
-            else:
-                result["error"] = (
-                    "No items found in subscription, using current_plan_price_id"
-                )
+            # items = subscription.get("items", {}).get("data", []) or []
+            # phase1_items = []
+            # if items:
+            #     for itm in items:
+            #         price_id = itm.get("price", {}).get("id")
+            #         quantity = itm.get("quantity", 1)
+            #         if price_id:
+            #             phase1_items.append(
+            #                 {"price": price_id, "quantity": quantity}
+            #             )
+            # else:
+            #     result["error"] = (
+            #         "No items found in subscription, using current_plan_price_id"
+            #     )
 
-            def to_ts(val):
-                if val is None:
-                    return None
-                # datetime
-                if isinstance(val, datetime):
-                    return int(val.timestamp())
-                # int/float
-                if isinstance(val, (int, float)):
-                    return int(val)
-                # string with digits or float-like
-                if isinstance(val, str):
-                    s = val.strip()
-                    try:
-                        return int(float(s))
-                    except Exception:
-                        return None
-                return None
+            phase1_items = [{"price": current_plan_price_id, "quantity": 1}]
 
-            cps = subscription.get("current_period_start") or subscription.get(
-                "start_date"
-            )
+            # def to_ts(val):
+            #     if val is None:
+            #         return None
+            #     # datetime
+            #     if isinstance(val, datetime):
+            #         return int(val.timestamp())
+            #     # int/float
+            #     if isinstance(val, (int, float)):
+            #         return int(val)
+            #     # string with digits or float-like
+            #     if isinstance(val, str):
+            #         s = val.strip()
+            #         try:
+            #             return int(float(s))
+            #         except Exception:
+            #             return None
+            #     return None
 
-            start_ts = to_ts(cps) or int(time.time())
+            # cps = subscription.get("current_period_start") or subscription.get(
+            #     "start_date"
+            # )
+
+            # start_ts = to_ts(cps) or int(time.time())
 
             if isinstance(current_period_end_ts, datetime):
                 current_period_end_ts = int(current_period_end_ts.timestamp())
@@ -246,9 +250,20 @@ class StripeService:
                     else None
                 )
 
+            if isinstance(current_period_start_ts, datetime):
+                current_period_start_ts = int(
+                    current_period_start_ts.timestamp()
+                )
+            else:
+                current_period_start_ts = (
+                    int(current_period_start_ts)
+                    if current_period_start_ts
+                    else None
+                )
+
             phase1 = {
                 "items": phase1_items,
-                "start_date": start_ts,
+                "start_date": current_period_start_ts,
                 "end_date": current_period_end_ts,
             }
 
