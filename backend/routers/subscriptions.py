@@ -258,8 +258,9 @@ async def checkout_completed(
         if subscription_id:
             try:
                 stripe_sub = stripe.Subscription.retrieve(
-                    subscription_id, expand=["items.data.price", "metadata"]
+                    subscription_id, expand=["items.data.price"]
                 )
+
                 sub_metadata = stripe_sub.get("metadata", {}) or {}
                 sub_type = sub_metadata.get("type")
 
