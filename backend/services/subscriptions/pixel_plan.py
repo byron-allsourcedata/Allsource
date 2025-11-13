@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 import logging
 import time
 
-from db_dependencies import Db
 from persistence.plans_persistence import PlansPersistence
 from resolver import injectable
 from services.stripe_service import StripeService
@@ -23,14 +22,12 @@ class PixelPlanService:
         users: UserPersistence,
         user_subscriptions: UserSubscriptionsService,
         user_persistence: UserPersistence,
-        db: Db,
     ):
         self.plans = plans
         self.stripe = stripe
         self.users = users
         self.user_subscriptions = user_subscriptions
         self.user_persistence = user_persistence
-        self.db = db
 
     def get_pixel_plan_payment_url(self, customer_id: str) -> str:
         alias = "pixel"
@@ -99,8 +96,6 @@ class PixelPlanService:
         # logger.info(
         #     f"User {user_id} moved to pixel plan (trial until {plan_end}), subscription {subscription.get('id')}"
         # )
-
-        self.db.commit()
 
         stripe_info = self.stripe.get_subscription_info(subscription_id)
         if stripe_info["status"] != "SUCCESS":
