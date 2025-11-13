@@ -19,7 +19,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { fetchUserData } from "@/services/meService";
 import PageWithLoader from "@/components/FirstLevelLoader";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 import { useUser } from "@/context/UserContext";
 import { Logo } from "@/components/ui/Logo";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
@@ -132,14 +132,14 @@ const Signin: React.FC = () => {
 				.then((response) => {
 					if (response.status === 200 && response.data.status === "ok") {
 						resolve();
-						flagStore.set(false);
+						flagOneDollarPlan.set(false);
 					} else {
-						flagStore.set(true);
+						flagOneDollarPlan.set(true);
 						resolve();
 					}
 				})
 				.catch(() => {
-					flagStore.set(true);
+					flagOneDollarPlan.set(true);
 				});
 		});
 	};

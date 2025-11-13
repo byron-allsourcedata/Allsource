@@ -549,6 +549,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 			value: "Visited URL (Which page user visited on the user website)",
 		},
 		{ id: 8, type: "Location", value: "Location" },
+		{ id: 9, type: "Visited Date", value: "Visited Date" },
 	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);

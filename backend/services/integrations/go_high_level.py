@@ -410,6 +410,7 @@ class GoHighLevelIntegrationsService:
                 location_id=user_integration.location_id,
                 access_token=access_token,
                 is_email_validation_enabled=is_email_validation_enabled,
+                lead_visit_id=lead_user.first_visit_id,
             )
             if contact_data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -447,7 +448,9 @@ class GoHighLevelIntegrationsService:
         location_id: str,
         access_token: str,
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> dict | str:
+        # Email validation
         if is_email_validation_enabled:
             first_email = await get_valid_email(
                 five_x_five_user, self.million_verifier_integrations
@@ -457,6 +460,7 @@ class GoHighLevelIntegrationsService:
 
         first_name = getattr(five_x_five_user, "first_name", None)
         last_name = getattr(five_x_five_user, "last_name", None)
+
         if not first_name or not last_name:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
@@ -466,8 +470,24 @@ class GoHighLevelIntegrationsService:
         ):
             return first_email
 
-        first_phone = get_valid_phone(five_x_five_user)
-        address_parts = get_valid_location(five_x_five_user)
+        values_by_type = {
+            "email": first_email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "gender": getattr(five_x_five_user, "gender", None),
+            "company_name": getattr(five_x_five_user, "company_name", None),
+            "phone": validate_and_format_phone(
+                get_valid_phone(five_x_five_user)
+            ),
+            "address1": get_valid_location(five_x_five_user)[0],
+            "city": get_valid_location(five_x_five_user)[1],
+            "state": get_valid_location(five_x_five_user)[2],
+            "visited_date": self.lead_persistence.get_visited_date(
+                lead_visit_id
+            )
+            if any(f["type"] == "visited_date" for f in data_map)
+            else None,
+        }
 
         profile = {
             "email": first_email,
@@ -475,34 +495,36 @@ class GoHighLevelIntegrationsService:
             "lastName": last_name,
             "name": f"{first_name} {last_name}",
             "country": "US",
-            "companyName": getattr(five_x_five_user, "company_name", None),
-            "address1": address_parts[0],
-            "phone": validate_and_format_phone(first_phone),
-            "city": address_parts[1],
-            "state": address_parts[2],
-            "gender": getattr(five_x_five_user, "gender", None),
+            "companyName": values_by_type["company_name"],
+            "address1": values_by_type["address1"],
+            "phone": values_by_type["phone"],
+            "city": values_by_type["city"],
+            "state": values_by_type["state"],
+            "gender": values_by_type["gender"],
             "tags": ["Customer"],
             "locationId": location_id,
         }
+
         custom_fields = []
         existing_fields = self.list_custom_fields(access_token, location_id)
 
         for field in data_map:
             t = field["type"]
-            key = field["value"]
-            is_constant = field["is_constant"]
+            target_key = field["value"]
 
-            if is_constant is True:
+            if field["is_constant"] is True:
+                value = field["value"]
                 field_name = t
-                val = key
             else:
-                field_name = key
-                val = getattr(five_x_five_user, t, None)
+                value = values_by_type.get(
+                    t, getattr(five_x_five_user, t, None)
+                )
+                field_name = target_key
 
-                if isinstance(val, datetime):
-                    val = val.strftime("%Y-%m-%dT%H:%M:%SZ")
+            if isinstance(value, datetime):
+                value = value.strftime("%Y-%m-%dT%H:%M:%SZ")
 
-            if val is None:
+            if not value:
                 continue
 
             if field_name not in existing_fields:
@@ -512,37 +534,24 @@ class GoHighLevelIntegrationsService:
                         location_id=location_id,
                         key=field_name,
                     )
-
-                    item = resp.get("customField")
-                    if item:
-                        existing_fields[field_name] = item
-                    else:
-                        # If the item cannot be retrieved, it may be because this key already exists.
-                        # This is why existing_fields should be refreshed.
-                        existing_fields = self.list_custom_fields(
-                            access_token, location_id
-                        )
-                        logging.error(
-                            f"Failed to create custom field: '{field_name}', Response: {resp}"
-                        )
+                    existing_fields[field_name] = resp.get("customField")
                 except Exception as e:
                     logging.error(
-                        f"Failed to create custom field '{field_name}', Exception: {e}"
+                        f"Failed to create custom field '{field_name}', {e}"
                     )
+                    continue
 
-            field_info = existing_fields.get(field_name)
-            if not field_info:
-                logging.error(f"Skipping unknown custom field: {field_name}")
-                continue
-
-            field_key = field_info["id"]
-            custom_fields.append({"id": field_key, "field_value": val})
+            custom_fields.append(
+                {
+                    "id": existing_fields[field_name]["id"],
+                    "field_value": value,
+                }
+            )
 
         if custom_fields:
             profile["customFields"] = custom_fields
 
-        cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
-        return cleaned
+        return {k: v for k, v in profile.items() if v not in (None, "")}
 
     def __mapped_member_into_list(
         self,

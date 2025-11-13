@@ -2,7 +2,7 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, date
 from typing import Tuple
 
 import mailchimp_marketing as MailchimpMarketing
@@ -408,6 +408,7 @@ class MailchimpIntegrationsService:
                 five_x_five_user,
                 integration_data_sync.data_map,
                 is_email_validation_enabled,
+                lead_user.first_visit_id,
             )
             if profile in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -445,6 +446,12 @@ class MailchimpIntegrationsService:
 
     def sync_contacts_bulk(self, list_id: str, profiles_list: List[dict]):
         operations = []
+
+        def convert_dates(obj):
+            if isinstance(obj, (datetime, date)):
+                return obj.strftime("%m-%d-%Y")
+            return obj
+
         for profile in profiles_list:
             email = profile["email_address"]
             subscriber_hash = hashlib.md5(email.lower().encode()).hexdigest()
@@ -457,7 +464,7 @@ class MailchimpIntegrationsService:
                     "method": "PUT",
                     "path": f"/lists/{list_id}/members/{subscriber_hash}",
                     "operation_id": subscriber_hash,
-                    "body": json.dumps(props),
+                    "body": json.dumps(props, default=convert_dates),
                 }
             )
 
@@ -646,16 +653,28 @@ class MailchimpIntegrationsService:
         five_x_five_user: FiveXFiveUser,
         data_map: list,
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ):
+        chosen_email_variation = None
+        for field in data_map:
+            if field["value"] == "Email":
+                chosen_email_variation = field["type"]
+                break
+
+        if not chosen_email_variation:
+            logging.info("Email field is not configured in data_map")
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
         if is_email_validation_enabled:
             email_or_status = await get_valid_email(
                 five_x_five_user,
                 self.million_verifier_integrations,
-                email_fields=["business_email"],
+                email_fields=[chosen_email_variation],
             )
         else:
             email_or_status = get_valid_email_without_million(
-                five_x_five_user, email_fields=["business_email"]
+                five_x_five_user,
+                email_fields=[chosen_email_variation],
             )
 
         if email_or_status in (
@@ -681,6 +700,8 @@ class MailchimpIntegrationsService:
             five_x_five_user.id
         )
 
+        visited_date = self.leads_persistence.get_visited_date(lead_visit_id)
+
         result = {
             "email_address": email,
             "phone_number": format_phone_number(first_phone),
@@ -694,6 +715,7 @@ class MailchimpIntegrationsService:
             "email_type": "text",
             "time_on_site": time_on_site,
             "url_visited": url_visited,
+            "visited_date": visited_date,
             "merge_fields": {
                 "FNAME": getattr(five_x_five_user, "first_name", None),
                 "LNAME": getattr(five_x_five_user, "last_name", None),

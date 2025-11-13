@@ -253,7 +253,6 @@ async def ensure_integration(
     integration_service: IntegrationService,
     db_session: Db,
     notification_persistence: NotificationPersistence,
-    user_persistence: UserPersistence,
 ):
     try:
         message_body = json.loads(message.body)
@@ -508,7 +507,6 @@ async def main():
             notification_persistence = await resolver.resolve(
                 NotificationPersistence
             )
-            user_persistence = await resolver.resolve(UserPersistence)
             with integration_service as int_service:
                 await queue.consume(
                     functools.partial(
@@ -516,7 +514,6 @@ async def main():
                         integration_service=int_service,
                         db_session=db_session,
                         notification_persistence=notification_persistence,
-                        user_persistence=user_persistence,
                     )
                 )
                 await asyncio.Future()

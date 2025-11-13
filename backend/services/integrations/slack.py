@@ -267,7 +267,9 @@ class SlackService:
         results = []
         for lead_user, five_x_five_user in user_data:
             user_text = await self.generate_user_text(
-                five_x_five_user, is_email_validation_enabled
+                five_x_five_user,
+                is_email_validation_enabled,
+                lead_user.first_visit_id,
             )
             if user_text in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -295,7 +297,10 @@ class SlackService:
         return results
 
     async def generate_user_text(
-        self, five_x_five_user: FiveXFiveUser, is_email_validation_enabled: bool
+        self,
+        five_x_five_user: FiveXFiveUser,
+        is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> str:
         if not five_x_five_user.linkedin_url:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
@@ -312,6 +317,8 @@ class SlackService:
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
             return first_email
+
+        visited_date = self.lead_persistence.get_visited_date(lead_visit_id)
 
         data = {
             "LinkedIn URL": five_x_five_user.linkedin_url,
@@ -330,6 +337,7 @@ class SlackService:
                 or five_x_five_user.professional_state
                 else None
             ),
+            "Visited date": visited_date,
         }
         user_text = "\n".join(
             [f"*{key}:* {value}" for key, value in data.items()]

@@ -3,7 +3,7 @@ type Listener = () => void;
 let flag = false;
 const listeners = new Set<Listener>();
 
-export const flagStore = {
+export const flagOneDollarPlan = {
 	get: () => flag,
 	set: (value: boolean) => {
 		flag = value;

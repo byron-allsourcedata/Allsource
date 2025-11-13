@@ -26,6 +26,7 @@ from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
 from persistence.user_persistence import UserDict
 from resolver import injectable
 from schemas.integrations.integrations import IntegrationCredentials, DataMap
@@ -36,7 +37,9 @@ from services.integrations.abstract_integration_service import (
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from services.integrations.million_verifier_exceptions import VerificationEmailException
+from services.integrations.million_verifier_exceptions import (
+    VerificationEmailException,
+)
 from utils import (
     validate_and_format_phone,
     get_valid_phone,
@@ -57,10 +60,12 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
         integrations_persistence: IntegrationsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
+        leads_persistence: LeadsPersistence,
     ):
         self.integrations_persistence = integrations_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
+        self.leads_persistence = leads_persistence
 
     def _get_api_token(self, user_integration: UserIntegration) -> str:
         return user_integration.access_token
@@ -193,7 +198,10 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
         for lead_user, fxf_user in user_data:
             try:
                 customer_io_traits = await self._map_lead(
-                    fxf_user, data_map, is_email_validation_enabled
+                    fxf_user,
+                    data_map,
+                    is_email_validation_enabled,
+                    lead_user.first_visit_id,
                 )
 
                 user_id = str(
@@ -250,6 +258,7 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
         fxf_user: FiveXFiveUser,
         data_map: list[DataMap],
         is_email_validation_enabled: bool,
+        lead_visit_id: int,
     ) -> dict:
         """
         Raises:
@@ -263,8 +272,13 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
                 fxf_user, self.million_verifier_integrations
             )
 
-            if email in (ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value):
-                raise VerificationEmailException(f"Failed to verify 5x5_user {fxf_user.id}")
+            if email in (
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ):
+                raise VerificationEmailException(
+                    f"Failed to verify 5x5_user {fxf_user.id}"
+                )
         else:
             email = self._get_email(fxf_user)
 
@@ -291,15 +305,31 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
 
         # Additional fields
         for data_map_item in data_map:
-            # Add constant fields to profile
+            field_name = data_map_item.type
+
             if data_map_item.is_constant:
-                truncated_name = data_map_item.type[:self.CONSTANT_FIELD_NAME_MAX_LENGTH]
-                truncated_value = data_map_item.value[:self.CONSTANT_FIELD_VALUE_MAX_LENGTH]
-                customer_io_traits[truncated_name] = truncated_value
-            else:
-                customer_io_traits[data_map_item.type] = fxf_user.__dict__[
-                    data_map_item.type
+                truncated_name = field_name[
+                    : self.CONSTANT_FIELD_NAME_MAX_LENGTH
                 ]
+                truncated_value = data_map_item.value[
+                    : self.CONSTANT_FIELD_VALUE_MAX_LENGTH
+                ]
+                customer_io_traits[truncated_name] = truncated_value
+                continue
+
+            if field_name == "visited_date":
+                visited_date = self.leads_persistence.get_visited_date(
+                    lead_visit_id
+                )
+                if visited_date:
+                    customer_io_traits[field_name] = visited_date.strftime(
+                        "%m-%d-%Y"
+                    )
+                continue
+
+            value = getattr(fxf_user, field_name, None)
+            if value is not None:
+                customer_io_traits[field_name] = value
 
         return customer_io_traits
 

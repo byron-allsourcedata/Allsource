@@ -43,7 +43,7 @@ import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSyne
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 
 const DataSync = () => {
 	const router = useRouter();

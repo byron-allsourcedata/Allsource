@@ -7,7 +7,7 @@ import {
 	VerticalStepper,
 } from "@/app/(client)/analytics/components/VerticalStepper";
 import PixelInstallation from "@/app/(client)/analytics/components/PixelInstallation";
-import VerifyPixelIntegration from "../components/VerifyPixelIntegration";
+import VerifyPixelIntegration from "./VerifyPixelIntegration";
 import RevenueTracking from "@/components/RevenueTracking";
 import CustomTooltip from "@/components/customToolTip";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -16,13 +16,14 @@ import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/analytics/components/DomainSelector";
 import { GetStartedHintsProvider } from "@/app/(client)/analytics/components/context/PixelInstallHintsContext";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
-type GettingStartedSectionProps = {
+type PixelInstallationSectionProps = {
 	addDomain?: boolean;
 	showStepper?: boolean;
 };
 
-const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
+const PixelInstallationSection: React.FC<PixelInstallationSectionProps> = ({
 	addDomain,
 	showStepper = true,
 }) => {
@@ -101,6 +102,11 @@ const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
 
 		handleRedirect();
 	}, []);
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
+	}, []);
+
 
 	useEffect(() => {
 		if (selectedDomain !== "") {
@@ -266,4 +272,4 @@ const GettingStartedSection: React.FC<GettingStartedSectionProps> = ({
 	);
 };
 
-export default GettingStartedSection;
+export default PixelInstallationSection;

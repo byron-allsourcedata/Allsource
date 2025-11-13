@@ -38,7 +38,7 @@ import CalendarPopup from "@/components/CustomCalendar";
 import { Paginator } from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import CompanyEmployees from "./CompanyEmployees";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
@@ -52,6 +52,7 @@ import { SelectedFilter } from "./schemas";
 import { usePagination } from "@/hooks/usePagination";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -135,6 +136,10 @@ const Leads: React.FC = () => {
 		return () => {
 			document.body.style.overflow = "auto";
 		};
+	}, []);
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
 	}, []);
 
 	const handleOpenPopup = (row: any) => {

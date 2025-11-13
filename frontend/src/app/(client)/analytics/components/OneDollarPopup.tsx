@@ -18,7 +18,7 @@ import CustomButton from "@/components/ui/CustomButton";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { usePathname, useRouter } from "next/navigation";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 
 const OneDollarPopup = () => {
 	const router = useRouter();
@@ -28,10 +28,7 @@ const OneDollarPopup = () => {
 
 	const handleClose = () => {
 		setOpen(false);
-		flagStore.set(false);
-		if (pathname === "/get-started") {
-			router.push("/get-started?pixel=true");
-		}
+		flagOneDollarPlan.set(false);
 	};
 
 	const redirectToCheckoutSession = async () => {

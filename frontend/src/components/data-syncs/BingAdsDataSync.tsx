@@ -83,19 +83,15 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 	const [anchorElCampaign, setAnchorElCampaign] = useState<null | HTMLElement>(
 		null,
 	);
-	const [selectedOption, setSelectedOption] = useState<AudienceList | null>(
-		{
-			audience_id: data?.list_id ?? "",
-			audience_name: data?.name ?? "",
-		} ?? null,
-	);
+	const [selectedOption, setSelectedOption] = useState<AudienceList | null>({
+		audience_id: data?.list_id ?? "",
+		audience_name: data?.name ?? "",
+	});
 	const [selectedOptionCampaign, setSelectedOptionCampaign] =
-		useState<CampaignList | null>(
-			{
-				campaign_id: data?.list_id ?? "",
-				campaign_name: data?.name ?? "",
-			} ?? null,
-		);
+		useState<CampaignList | null>({
+			campaign_id: data?.list_id ?? "",
+			campaign_name: data?.name ?? "",
+		});
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [showCreateFormCampaign, setShowCreateFormCampaign] =
 		useState<boolean>(false);
@@ -138,25 +134,21 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 	});
 	const { whitelabel } = useWhitelabel();
 
-	const [customersInfo, setCustomersInfo] = useState<Customers[]>(
-		[
-			{
-				customer_id: data?.customer_id ?? "",
-				customer_name: data?.customer_id ?? "",
-			},
-		] ?? [],
-	);
+	const [customersInfo, setCustomersInfo] = useState<Customers[]>([
+		{
+			customer_id: data?.customer_id ?? "",
+			customer_name: data?.customer_id ?? "",
+		},
+	]);
 
 	const [selectedAccountId, setSelectedAccountId] = useState<string>(
 		data?.customer_id ?? "",
 	);
 	const [listNameErrorMessage, setListNameErrorMessage] = useState("");
-	const [savedList, setSavedList] = useState<AudienceList | null>(
-		{
-			audience_id: data?.list_id ?? "",
-			audience_name: data?.name ?? "",
-		} ?? null,
-	);
+	const [savedList, setSavedList] = useState<AudienceList | null>({
+		audience_id: data?.list_id ?? "",
+		audience_name: data?.name ?? "",
+	});
 
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {

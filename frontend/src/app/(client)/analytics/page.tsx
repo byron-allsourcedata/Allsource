@@ -10,7 +10,7 @@ import dayjs from "dayjs";
 import { useNotification } from "../../../context/NotificationContext";
 import RevenueTracking from "@/components/RevenueTracking";
 import WelcomePopup from "./components/WelcomePopup";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 
@@ -139,6 +139,7 @@ const Dashboard: React.FC = () => {
 	}, [setShowSlider, router]);
 
 	const [tabIndex, setTabIndex] = useState(0);
+
 	useEffect(() => {
 		const fetchData = async () => {
 			let business_type = "b2b";
@@ -148,26 +149,22 @@ const Dashboard: React.FC = () => {
 				business_type = storedData.business_type;
 				setTypeBusiness(storedData.business_type);
 			}
-			if (business_type === "b2b") {
-				setTabIndex(1);
-			} else {
-				try {
-					// NEED TO FIX AND CHECK ANALYTICS DATA
-					setLoading(true);
-					const response = await axiosInstance.get("/dashboard/revenue");
+			try {
+				// NEED TO FIX AND CHECK ANALYTICS DATA
+				setLoading(true);
+				const response = await axiosInstance.get("/analytics/revenue");
+				setShowCharts(true);
+				if (
+					!response?.data.total_counts ||
+					!response?.data.total_counts.total_revenue
+				) {
 					setShowCharts(true);
-					if (
-						!response?.data.total_counts ||
-						!response?.data.total_counts.total_revenue
-					) {
-						setShowCharts(true);
-						setTabIndex(1);
-						return;
-					}
-				} catch (error) {
-				} finally {
-					setLoading(false);
+					setTabIndex(1);
+					return;
 				}
+			} catch (error) {
+			} finally {
+				setLoading(false);
 			}
 		};
 		fetchData();

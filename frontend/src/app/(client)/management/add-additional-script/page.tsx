@@ -21,6 +21,7 @@ import { PixelManagementItem } from "../page";
 import ScriptsPopup from "../components/ScriptsPopup";
 import { useSearchParams } from "next/navigation";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
 type Domain = {
 	id: number;
@@ -217,6 +218,10 @@ const AddAdditionalScript: React.FC = () => {
 			fetchData();
 		}
 	}, [parsedDomainId]);
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
+	}, []);
 
 	const { whitelabel } = useWhitelabel();
 

@@ -297,10 +297,10 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 
 	const defaultRows: Row[] = [
 		{ id: 1, type: "First Name", value: "First Name" },
-		{ id: 3, type: "Last Name", value: "Last Name" },
-		{ id: 4, type: "Email", value: "Email" },
-		{ id: 5, type: "Phone", value: "Phone" },
-		{ id: 6, type: "Company", value: "Company" },
+		{ id: 2, type: "Last Name", value: "Last Name" },
+		{ id: 3, type: "Email", value: "Email" },
+		{ id: 4, type: "Phone", value: "Phone" },
+		{ id: 5, type: "Company", value: "Company" },
 		{ id: 7, type: "Title", value: "Title" },
 		{ id: 8, type: "Industry", value: "Industry" },
 		{ id: 9, type: "LeadSource", value: "LeadSource" },
@@ -311,6 +311,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 		{ id: 14, type: "NumberOfEmployees", value: "NumberOfEmployees" },
 		{ id: 15, type: "AnnualRevenue", value: "AnnualRevenue" },
 		{ id: 16, type: "Description", value: "Description" },
+		{ id: 17, type: "Visited Date", value: "Visited Date" },
 	];
 
 	const [rows, setRows] = useState<Row[]>(defaultRows);

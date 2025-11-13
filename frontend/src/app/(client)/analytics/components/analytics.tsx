@@ -10,7 +10,7 @@ import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import CalendarPopup from "@/components/CustomCalendar";
 
-import GettingStartedSection from "@/components/GettingStartedSection";
+import PixelInstallationSection from "@/components/PixelInstallationSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import { TabPanel } from "./analytics/TabPanel";
 
@@ -365,7 +365,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
 								},
 							],
 						}}
-						Content={<GettingStartedSection />}
+						Content={<PixelInstallationSection />}
 						ContentStyleSX={{
 							display: "flex",
 							flexDirection: "column",

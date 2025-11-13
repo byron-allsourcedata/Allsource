@@ -1,5 +1,3 @@
-// signupStyles.ts
-import { red } from "@mui/material/colors";
 import { SxProps, Theme } from "@mui/system";
 
 export const signupStyles: { [key: string]: SxProps<Theme> } = {
@@ -9,18 +7,39 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		alignItems: "center",
 		justifyContent: "center",
 		minHeight: "100vh",
-		marginTop: "-80px",
 		"@media (max-width: 440px)": {
 			marginTop: "-60px",
 			padding: "0",
 		},
+	},
+	mainContainer: {
+		display: "grid",
+		width: "100%",
+		height: "100vh",
+		gridTemplateColumns: "30vw 1fr",
+		"@media (max-width: 900px)": {
+			gridTemplateColumns: "0 100%",
+		},
+
+		"@media (min-width: 1601px)": {
+			gridTemplateColumns: "25vw 1fr",
+		},
+	},
+	videoContainer: {
+		backgroundColor: "rgba(218, 235, 255, 1)",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		height: "100%",
+		position: "relative",
+		padding: 0,
 	},
 	container: {
 		display: "flex",
 		flexDirection: "column",
 		alignItems: "center",
 		justifyContent: "center",
-		margin: "0 auto",
+		margin: "auto auto",
 		position: "relative",
 		boxShadow: "0rem 0.2em 0.8em 0px #00000033",
 		borderRadius: "0.625rem",
@@ -28,19 +47,13 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
 		textAlign: "center",
 		padding: "32px",
 		maxWidth: "464px",
-		minHeight: "481px",
-		marginTop: "76px",
-		marginBottom: "76px",
+		height: "60vh",
+		minHeight: "621px",
 		"@media (max-width: 440px)": {
 			boxShadow: "0rem 0px 0px 0px #00000033",
 			border: "none",
 			padding: "0 20px 40px 20px",
-			marginTop: "0",
-			marginBottom: "0",
 			maxWidth: "100%",
-		},
-		"@media (max-width: 380px)": {
-			marginTop: "76px",
 		},
 	},
 	logoContainer: {

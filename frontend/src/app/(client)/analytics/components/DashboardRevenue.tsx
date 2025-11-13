@@ -103,7 +103,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 				const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
 
 				try {
-					const response = await axiosInstance.get("/dashboard/revenue", {
+					const response = await axiosInstance.get("/analytics/revenue", {
 						params: { from_date: fromUnix, to_date: toUnix },
 					});
 					const {
@@ -183,7 +183,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 			} else {
 				setLoading(true);
 				try {
-					const response = await axiosInstance.get("/dashboard/revenue");
+					const response = await axiosInstance.get("/analytics/revenue");
 					if (response.data) {
 						const {
 							total_revenue,

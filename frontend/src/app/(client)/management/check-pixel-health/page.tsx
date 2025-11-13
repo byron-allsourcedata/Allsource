@@ -6,9 +6,8 @@ import CustomToolTip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
-import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast } from "@/components/ToastNotification";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { SliderProvider } from "@/context/SliderContext";
 import {
 	AudienceSynergyPreview,
@@ -28,6 +27,7 @@ import { OpenInNewIcon } from "@/icon";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { PixelManagementItem } from "../page";
 import FeatureCardWithButton from "@/components/first-time-screens/FeatureCardWithButton";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
 const Management: React.FC = () => {
 	const [pixelData, setPixelData] = useState<PixelManagementItem[]>([]);
@@ -66,6 +66,10 @@ const Management: React.FC = () => {
 			window.open(newUrl, "_blank");
 		}
 	};
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
+	}, []);
 
 	return (
 		<Box sx={{ ...managementStyle.mainContent }}>

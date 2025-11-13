@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
@@ -16,6 +16,7 @@ import ManagementTable from "./components/ManagementTable";
 import { Domain } from "../analytics/components/DomainSelector";
 import { useSidebar } from "@/context/SidebarContext";
 import { fetchUserData } from "@/services/meService";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
 export type PixelKey =
 	| "is_view_product_installed"
@@ -69,6 +70,10 @@ const Management: React.FC = () => {
 			setLoading(false);
 		}
 	};
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
+	}, []);
 
 	const fetchData = async () => {
 		try {

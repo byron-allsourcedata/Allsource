@@ -1,7 +1,7 @@
 "use client";
 import axios from "axios";
 import { showErrorToast } from "@/components/ToastNotification";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 import { makeUseAxios, UseAxios } from "axios-hooks";
 
 const axiosInterceptorInstance = axios.create({
@@ -104,7 +104,7 @@ axiosInterceptorInstance.interceptors.response.use(
 							navigateTo("/privacy-policy");
 							break;
 						case "NEED_PAY_BASIC":
-							flagStore.set(true);
+							flagOneDollarPlan.set(true);
 							break;
 						case "PIXEL_INSTALLATION_NEEDED":
 							break;

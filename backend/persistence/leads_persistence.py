@@ -663,6 +663,15 @@ class LeadsPersistence:
 
         return (result.time_on_site, result.url_visited) if result else (0, 0)
 
+    def get_visited_date(self, lead_visit_id: int):
+        result = (
+            self.db.query(func.date(LeadsVisits.start_date).label("start_date"))
+            .filter(LeadsVisits.id == lead_visit_id)
+            .first()
+        )
+
+        return result.start_date if result else None
+
     def get_page_views_per_day(self, domain_id, start_date, end_date):
         query = (
             self.db.query(
@@ -915,20 +924,28 @@ class LeadsPersistence:
 
     def get_full_user_leads_by_ids(self, domain_id, leads_ids):
         result_query = (
-            self.db.query(LeadUser.id, FiveXFiveUser)
+            self.db.query(
+                LeadUser.id,
+                FiveXFiveUser,
+                LeadsVisits.start_date.label("first_visited_date"),
+            )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
+            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .filter(
                 LeadUser.domain_id == domain_id,
                 LeadUser.is_active.is_(True),
                 FiveXFiveUser.id.in_(leads_ids),
             )
+            .group_by(FiveXFiveUser.id, LeadUser.id, LeadsVisits.start_date)
             .all()
         )
 
         if not result_query:
             return None, None, {}
 
-        lead_user_ids, five_x_five_users = zip(*result_query)
+        lead_user_ids, five_x_five_users, first_visited_date = zip(
+            *result_query
+        )
         leads_requests = {}
 
         latest_page_time_subquery = (
@@ -1000,7 +1017,11 @@ class LeadsPersistence:
         )
 
         query = (
-            self.db.query(LeadUser.id, FiveXFiveUser)
+            self.db.query(
+                LeadUser.id,
+                FiveXFiveUser,
+                LeadsVisits.start_date.label("first_visited_date"),
+            )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(
                 FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id
@@ -1180,7 +1201,9 @@ class LeadsPersistence:
         if not result_query:
             return None, None, {}
 
-        lead_user_ids, five_x_five_users = zip(*result_query)
+        lead_user_ids, five_x_five_users, first_visited_date = zip(
+            *result_query
+        )
         leads_requests = {}
 
         latest_page_time_subquery = (

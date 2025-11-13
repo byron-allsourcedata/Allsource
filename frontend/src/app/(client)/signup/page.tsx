@@ -26,9 +26,10 @@ import { GoogleLogin } from "@react-oauth/google";
 import { fetchUserData } from "@/services/meService";
 import { usePrivacyPolicyContext } from "../../../context/PrivacyPolicyContext";
 import PageWithLoader from "@/components/FirstLevelLoader";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 import { useWhitelabel } from "@/app/features/whitelabel/contexts/WhitelabelContext";
 import { Logo } from "@/components/ui/Logo";
+import LottiePlayer from "./components/LottiePlayer";
 
 const UTM_STORAGE_KEY = "utm_params";
 
@@ -387,14 +388,14 @@ const Signup: React.FC = () => {
 				.then((response) => {
 					if (response.status === 200 && response.data.status === "ok") {
 						resolve();
-						flagStore.set(false);
+						flagOneDollarPlan.set(false);
 					} else {
-						flagStore.set(true);
+						flagOneDollarPlan.set(true);
 						resolve();
 					}
 				})
 				.catch(() => {
-					flagStore.set(true);
+					flagOneDollarPlan.set(true);
 				});
 		});
 	};
@@ -409,11 +410,13 @@ const Signup: React.FC = () => {
 	);
 
 	return (
-		<>
-			<Box sx={signupStyles.logoContainer}>
-				<Logo />
-			</Box>
-			<Box sx={signupStyles.mainContent}>
+		<Box sx={signupStyles.mainContent}>
+			<Box sx={signupStyles.mainContainer}>
+				<Box sx={signupStyles.videoContainer}>
+					{/* <Box sx={{ width: "100%", height: "100%" }}> */}
+					<LottiePlayer src="/animations/signup.json" />
+					{/* </Box> */}
+				</Box>
 				<Box sx={signupStyles.container}>
 					<Typography
 						variant="h4"
@@ -421,7 +424,7 @@ const Signup: React.FC = () => {
 						className="heading-text"
 						sx={signupStyles.title}
 					>
-						Create your {isClient ? whitelabel.brand_name : ""} account
+						Get Started with {isClient ? whitelabel.brand_name : ""}
 					</Typography>
 					<GoogleLogin
 						onSuccess={async (credentialResponse) => {
@@ -697,7 +700,7 @@ const Signup: React.FC = () => {
 									I accept the{" "}
 									<Link
 										sx={signupStyles.checkboxContentLink}
-										href="https://allforce.io/privacy-policy"
+										href="https://allsourcedata.io/privacy-policy"
 										color="primary"
 										target="_blank"
 										rel="noopener noreferrer"
@@ -723,9 +726,19 @@ const Signup: React.FC = () => {
 							sx={signupStyles.submitButton}
 							fullWidth
 						>
-							Get Started
+							START $5 TRIAL
 						</Button>
 					</Box>
+					<Typography
+						className="tab-heading"
+						sx={{
+							mt: 1,
+							textAlign: "left",
+						}}
+					>
+						Your card will be charged $5 today. After 14 days, $499/mo unless
+						canceled. Full refund if canceled within 14 days.
+					</Typography>
 					<Typography
 						variant="body2"
 						className="second-sub-title"
@@ -742,7 +755,7 @@ const Signup: React.FC = () => {
 					</Typography>
 				</Box>
 			</Box>
-		</>
+		</Box>
 	);
 };
 
