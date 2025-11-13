@@ -96,11 +96,20 @@ class PixelPlanService:
         #     f"User {user_id} moved to pixel plan (trial until {plan_end}), subscription {subscription.get('id')}"
         # )
 
+        stripe_info = self.stripe.get_subscription_info(subscription_id)
+        if stripe_info["status"] != "SUCCESS":
+            logger.error(
+                "Failed to retrieve subscription info from Stripe: "
+                + stripe_info.get("message", "")
+            )
+            return
+
+        data = stripe_info["data"]
+
         res = self.stripe.create_shedule_payments(
             subscription_id=subscription_id,
             future_plan_price_id=standart_monthly_plan.stripe_price_id,
-            current_period_end_ts=int(time.time())
-            + int(trial_days) * 24 * 3600,
+            current_period_end_ts=data["plan_end"],
         )
 
         if not res.get("success"):

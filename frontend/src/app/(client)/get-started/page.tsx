@@ -115,11 +115,6 @@ const GetStarted: React.FC = () => {
 		fetchData();
 	}, [pixel, source]);
 
-	useEffect(() => {
-		const storedPopup = localStorage.getItem("welcome_popup");
-		setWelcomePopup(storedPopup);
-	}, []);
-
 	const handleClickPixel = async () => {
 		const pixelInstallationPaid = await checkPixelInstallationPaid();
 		if (!pixelInstallationPaid) {
