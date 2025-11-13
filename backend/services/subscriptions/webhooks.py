@@ -103,6 +103,9 @@ class SubscriptionWebhookService:
         price_id = event["data"]["object"]["lines"]["data"][0]["pricing"][
             "price_details"
         ]["price"]
+        stripe_subscription_id = event["data"]["object"]["lines"]["data"][0][
+            "parent"
+        ]["subscription_item_details"]["subscription"]
 
         self.invoice_service.save_invoice_payment(
             event_type=event_type, invoices_data=event
@@ -115,6 +118,7 @@ class SubscriptionWebhookService:
             customer_id=customer_id,
             status=PaymentStatus.ACTIVE.value,
             price_id=price_id,
+            stripe_subscription_id=stripe_subscription_id,
         )
         self.db.commit()
         return "SUCCESS"
