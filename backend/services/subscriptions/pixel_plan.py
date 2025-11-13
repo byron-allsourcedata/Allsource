@@ -38,17 +38,6 @@ class PixelPlanService:
 
         price_id = plan.stripe_price_id
 
-        # session_url = self.stripe.create_checkout_session(
-        #     customer_id=customer_id,
-        #     price_id=price_id,
-        #     payment_intent_data={
-        #         "setup_future_usage": "off_session",
-        #     },
-        #     mode="payment",
-        #     metadata={"type": "upgrade_pixel_plan"},
-        #     success_url=StripeConfig.success_url,
-        # )
-
         session_url = self.stripe.create_checkout_session(
             customer_id=customer_id,
             price_id=price_id,
@@ -78,24 +67,6 @@ class PixelPlanService:
         )
         standart_monthly_plan = self.plans.get_plan_by_alias("standard_monthly")
         pixel_plan = self.plans.get_plan_by_alias("pixel")
-
-        # res = self.stripe.create_pixel_plan_subscription_with_one_time_charge(
-        #     customer_id=customer_id,
-        #     future_plan_price_id=standart_monthly_plan.stripe_price_id,
-        #     trial_days=14,
-        # )
-
-        # if not res.get("success"):
-        #     logger.error(
-        #         f"Failed to create pixel flow for user {user_id}: {res.get('error')}"
-        #     )
-        #     return
-
-        # subscription = res.get("subscription")
-        # plan_end = res.get("plan_end")
-        # logger.info(
-        #     f"User {user_id} moved to pixel plan (trial until {plan_end}), subscription {subscription.get('id')}"
-        # )
 
         stripe_info = self.stripe.get_subscription_info(subscription_id)
         if stripe_info["status"] != "SUCCESS":
@@ -127,3 +98,31 @@ class PixelPlanService:
                 subscription_id,
                 res.get("schedule_id"),
             )
+
+    def move_to_pixel_plan_without_shedule(
+        self, customer_id: str, subscription_id: str
+    ):
+        user = self.users.by_customer_id(customer_id)
+        if not user:
+            logger.error(f"User not found with customer_id: {customer_id}")
+            return
+        user_id = user.id
+
+        trial_days = 14
+
+        self.user_persistence.set_has_credit_card(user_id)
+        self.user_subscriptions.move_to_plan(
+            user_id=user_id,
+            plan_alias="pixel",
+            plan_end=datetime.fromtimestamp(
+                int(time.time()) + int(trial_days) * 24 * 3600
+            ),
+        )
+
+        stripe_info = self.stripe.get_subscription_info(subscription_id)
+        if stripe_info["status"] != "SUCCESS":
+            logger.error(
+                "Failed to retrieve subscription info from Stripe: "
+                + stripe_info.get("message", "")
+            )
+            return

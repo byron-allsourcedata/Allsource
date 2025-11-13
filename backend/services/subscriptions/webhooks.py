@@ -1,3 +1,4 @@
+from persistence.plans_persistence import PlansPersistence
 from enums import PaymentStatus
 from persistence.user_persistence import UserPersistence
 from persistence.user_subscriptions import UserSubscriptionsPersistence
@@ -24,6 +25,7 @@ class SubscriptionWebhookService:
         invoice_service: InvoiceService,
         standard_plan_service: StandardPlanService,
         pixel_plan_service: PixelPlanService,
+        plans_persistence: PlansPersistence,
         db: Db,
     ):
         self.user_persistence = user_persistence
@@ -33,6 +35,7 @@ class SubscriptionWebhookService:
         self.invoice_service = invoice_service
         self.stripe = stripe
         self.user_subscriptions_persistence = user_subscriptions_persistence
+        self.plans_persistence = plans_persistence
         self.db = db
 
     def move_to_basic_plan(self, customer_id: str):
@@ -55,7 +58,7 @@ class SubscriptionWebhookService:
         self,
         customer_id: str,
         status: str,
-        action_type="update",
+        price_id: str,
         stripe_subscription_id=None,
     ):
         subscription = (
@@ -77,13 +80,19 @@ class SubscriptionWebhookService:
                 stripe_price_id=record_subscription.stripe_price_id,
             )
 
-        if action_type == "create":
+        plan = self.plans_persistence.get_plan_by_price_id(price_id=price_id)
+
+        if plan.alias == "standard_monthly":
             self.standard_plan_service.move_to_standard_plan(
                 customer_id=customer_id,
                 subscription_id=stripe_subscription_id,
                 plan_period="month",
             )
-
+        elif plan.alias == "pixel":
+            self.pixel_plan_service.move_to_pixel_plan_without_shedule(
+                customer_id=customer_id,
+                subscription_id=stripe_subscription_id,
+            )
         else:
             self.user_subscriptions_persistence.install_payment_status(
                 customer_id=customer_id, status=status
@@ -91,9 +100,10 @@ class SubscriptionWebhookService:
 
     def save_invoice_payment(self, event_type: str, event: dict):
         customer_id = event["data"]["object"]["customer"]
-        stripe_subscription_id = event["data"]["object"]["lines"]["data"][0][
-            "parent"
-        ]["subscription_item_details"]["subscription"]
+        price_id = event["data"]["object"]["lines"]["data"]["pricing"][
+            "pricing_details"
+        ]["price"]
+
         self.invoice_service.save_invoice_payment(
             event_type=event_type, invoices_data=event
         )
@@ -104,8 +114,7 @@ class SubscriptionWebhookService:
         self.update_subscription_status(
             customer_id=customer_id,
             status=PaymentStatus.ACTIVE.value,
-            action_type="create" if stripe_subscription_id else "update",
-            stripe_subscription_id=stripe_subscription_id,
+            price_id=price_id,
         )
         self.db.commit()
         return "SUCCESS"

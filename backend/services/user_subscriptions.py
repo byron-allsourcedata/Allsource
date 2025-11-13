@@ -27,9 +27,7 @@ class UserSubscriptionsService:
         """Return False -> Failed(plan is not defined)
         Return True -> Success
         """
-        print("plan alias", plan_alias)
         plan = self.plans.get_plan_by_alias(plan_alias)
-        print("plan(id, alias)", plan.id, plan.alias)
         if not plan:
             logger.warning(f"{plan_alias} not found!")
             return False
@@ -41,7 +39,6 @@ class UserSubscriptionsService:
             user_id=user_id, subscription_id=user_subscription.id, plan=plan
         )
         self.db.flush()
-        # self.db.commit()
         return True
 
     def add_subscription_with_dates(
