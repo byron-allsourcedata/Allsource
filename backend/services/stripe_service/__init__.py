@@ -198,48 +198,7 @@ class StripeService:
     ) -> dict:
         result = {"success": False}
         try:
-            # subscription = stripe.Subscription.retrieve(subscription_id)
-
-            # items = subscription.get("items", {}).get("data", []) or []
-            # phase1_items = []
-            # if items:
-            #     for itm in items:
-            #         price_id = itm.get("price", {}).get("id")
-            #         quantity = itm.get("quantity", 1)
-            #         if price_id:
-            #             phase1_items.append(
-            #                 {"price": price_id, "quantity": quantity}
-            #             )
-            # else:
-            #     result["error"] = (
-            #         "No items found in subscription, using current_plan_price_id"
-            #     )
-
             phase1_items = [{"price": current_plan_price_id, "quantity": 1}]
-
-            # def to_ts(val):
-            #     if val is None:
-            #         return None
-            #     # datetime
-            #     if isinstance(val, datetime):
-            #         return int(val.timestamp())
-            #     # int/float
-            #     if isinstance(val, (int, float)):
-            #         return int(val)
-            #     # string with digits or float-like
-            #     if isinstance(val, str):
-            #         s = val.strip()
-            #         try:
-            #             return int(float(s))
-            #         except Exception:
-            #             return None
-            #     return None
-
-            # cps = subscription.get("current_period_start") or subscription.get(
-            #     "start_date"
-            # )
-
-            # start_ts = to_ts(cps) or int(time.time())
 
             if isinstance(current_period_end_ts, datetime):
                 current_period_end_ts = int(current_period_end_ts.timestamp())
