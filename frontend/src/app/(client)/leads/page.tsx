@@ -43,7 +43,7 @@ import PaginationComponent, {
 } from "@/components/PaginationComponent";
 import UnlockButton from "./UnlockButton";
 import { useNotification } from "@/context/NotificationContext";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import HintCard from "../components/HintCard";
 import { useLeadsHints } from "./context/LeadsHintsContext";
@@ -56,6 +56,7 @@ import { SmartCell } from "@/components/table";
 import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
+import { checkPixelInstallationPaid } from "@/services/checkPixelInstallPaid";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -120,6 +121,10 @@ const Leads: React.FC = () => {
 
 	useEffect(() => {
 		if (searchParams.get("pixel_installed")) setPixelPopup(true);
+	}, []);
+
+	useEffect(() => {
+		checkPixelInstallationPaid();
 	}, []);
 
 	const handleClosePixel = () => {

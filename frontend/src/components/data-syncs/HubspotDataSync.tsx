@@ -78,6 +78,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 		{ type: "address", value: "personal_address" },
 		{ type: "state", value: "personal_state" },
 		{ type: "zip", value: "personal_zip" },
+		{ type: "visited_date", value: "visited_date" },
 	]);
 	const [customFields, setCustomFields] = useState<
 		{ type: string; value: string; is_constant?: boolean }[]

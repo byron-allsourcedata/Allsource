@@ -11,6 +11,9 @@ from fastapi import (
 )
 from typing import Literal
 
+import stripe
+
+from persistence.plans_persistence import PlansPersistence
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -36,6 +39,7 @@ from services.plans import PlansService
 from services.subscriptions import SubscriptionService
 from services.subscriptions.basic import BasicPlanService
 from services.subscriptions.standard import StandardPlanService
+from services.subscriptions.pixel_plan import PixelPlanService
 from services.subscriptions.webhooks import SubscriptionWebhookService
 from services.webhook import WebhookService
 
@@ -99,6 +103,19 @@ async def upgrade_to_standard(
     customer_id = plans_service.get_customer_id(user)
     session_url = standard_plan_service.get_standard_plan_payment_url(
         customer_id=customer_id, interval=interval
+    )
+    return session_url
+
+
+@router.get("/pay-pixel-install")
+async def pay_pixel_install(
+    user: AuthUser,
+    pixel_installation_service: PixelPlanService,
+    plans_service: PlansService,
+):
+    customer_id = plans_service.get_customer_id(user)
+    session_url = pixel_installation_service.get_pixel_plan_payment_url(
+        customer_id=customer_id
     )
     return session_url
 
@@ -215,6 +232,7 @@ async def checkout_completed(
     request: fastRequest,
     db: Db,
     subscription_webhooks: SubscriptionWebhookService,
+    plans: PlansPersistence,
 ):
     event = await request.json()
     object_type = event["object"]
@@ -244,6 +262,12 @@ async def checkout_completed(
         elif checkout_type == "upgrade_standard":
             subscription_webhooks.move_to_standard_plan(
                 customer_id, subscription_id, plan_period
+            )
+            db.commit()
+            return "SUCCESS"
+        elif checkout_type == "upgrade_pixel_plan":
+            subscription_webhooks.move_to_pixel_plan(
+                customer_id, subscription_id
             )
             db.commit()
             return "SUCCESS"

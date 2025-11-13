@@ -16,7 +16,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomTooltip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import { WhitelabelSettingsPage } from "@/app/features/whitelabel/WhitelabelSettingsPage";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 
 const Settings: React.FC = () => {
 	const router = useRouter();

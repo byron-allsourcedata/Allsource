@@ -11,6 +11,7 @@ from dependencies import (
     check_user_authentication,
     get_notification_service,
     check_pixel_install_domain,
+    check_pixel_installation_paid,
 )
 from domains.auth.signup.service import SignupService
 from models.users_domains import UserDomains
@@ -102,6 +103,17 @@ def check_user_authorization(
     domain: UserDomains = Depends(check_pixel_install_domain),
 ):
     return {"status": "SUCCESS"}
+
+
+@router.get("/check-pixel-installation-paid")
+def check_pixel_installation_paid(
+    check_pixel_installation_paid: bool = Depends(
+        check_pixel_installation_paid
+    ),
+):
+    if check_pixel_installation_paid:
+        return {"status": "ok"}
+    return {"status": "error"}
 
 
 @router.post("/sign-up", response_model=UserSignUpFormResponse)

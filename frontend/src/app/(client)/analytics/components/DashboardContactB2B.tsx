@@ -82,11 +82,11 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 					const fromUnix = Math.floor(appliedDates.start.getTime() / 1000);
 					const toUnix = Math.floor(appliedDates.end.getTime() / 1000);
 
-					response = await axiosInstance.get("/dashboard/contact", {
+					response = await axiosInstance.get("/analytics/contact", {
 						params: { from_date: fromUnix, to_date: toUnix },
 					});
 				} else {
-					response = await axiosInstance.get("/dashboard/contact");
+					response = await axiosInstance.get("/analytics/contact");
 				}
 
 				const {

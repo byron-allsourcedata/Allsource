@@ -1087,7 +1087,6 @@ class UsersAuth:
             user_object
         )
 
-        print("authorization_data", authorization_data)
         if authorization_data["status"] == LoginStatus.PAYMENT_NEEDED:
             result = {
                 "status": authorization_data["status"].value,

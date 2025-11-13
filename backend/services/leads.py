@@ -323,6 +323,7 @@ class LeadsService:
                 "Primary industry",
                 "Followers",
                 "Company LinkedIn url",
+                "Visited Date",
                 "Page Visits",
                 "Page visits count",
                 "Time on site",
@@ -336,9 +337,12 @@ class LeadsService:
             else {}
         )
 
-        for five_x_five_user in result_five_x_five_users:
-            lead_user_id = five_x_five_user[0]
-            five_x_five_user = five_x_five_user[1]
+        for row in result_five_x_five_users:
+            lead_user_id = row[0]
+            five_x_five_user = row[1]
+            first_visited_date = (
+                row[2].strftime("%m/%d/%Y") if row[2] else "None"
+            )
             page_visits_count = 0
             max_spent_time = 0
             page_visits_info = []
@@ -419,6 +423,7 @@ class LeadsService:
                 five_x_five_user.primary_industry or "None",
                 five_x_five_user.social_connections or "None",
                 five_x_five_user.company_linkedin_url or "None",
+                first_visited_date,
                 page_visits_str,
                 page_visits_count,
                 time_in_minutes_and_seconds,

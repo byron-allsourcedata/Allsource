@@ -17,7 +17,7 @@ import { AxiosError } from "axios";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { DeleteOutlinedIcon } from "@/icon";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 
 interface Domain {
 	id: number;
@@ -70,7 +70,7 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
 			if (error instanceof AxiosError) {
 				if (error.response?.status === 403) {
 					if (error.response.data.status === "NEED_UPGRADE_PLAN") {
-						flagStore.set(true);
+						flagOneDollarPlan.set(true);
 						handleClose();
 						//setUpgradePlanPopup(true);
 					} else if (error.response.data.status === "NEED_BOOK_CALL") {

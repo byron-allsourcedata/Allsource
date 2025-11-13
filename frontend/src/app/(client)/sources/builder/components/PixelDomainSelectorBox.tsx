@@ -10,6 +10,7 @@ import { BorderLinearProgress } from "@/components/ui/progress-bars/BorderLinear
 import type { HintAction, HintStateMap } from "@/utils/hintsUtils";
 import { useRouter } from "next/navigation";
 import scrollToBlock from "@/utils/autoscroll";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	Box,
 	FormControl,
@@ -20,6 +21,7 @@ import {
 } from "@mui/material";
 import type { FC, ReactNode, RefObject } from "react";
 import { useSourcesBuilder } from "../../context/SourceBuilderContext";
+import { flagPixelPlan } from "@/services/payPixelPlan";
 
 export type SkeletonState = Record<BuilderKey, boolean>;
 
@@ -27,6 +29,7 @@ type PixelDomainSelectBlockProps = {
 	pixelInstalled: boolean;
 	isDomainSearchProcessing: boolean;
 	renderSkeleton: (key: BuilderKey) => ReactNode;
+	setLoading: (state: boolean) => void;
 	hintProps: HintsProps<BuilderKey>;
 };
 
@@ -40,6 +43,7 @@ const PixelDomainSelectorBox: FC<PixelDomainSelectBlockProps> = ({
 	pixelInstalled,
 	isDomainSearchProcessing,
 	renderSkeleton,
+	setLoading,
 	hintProps,
 }) => {
 	const { changeHint, hints, resetHints } = hintProps;
@@ -111,6 +115,21 @@ const PixelDomainSelectorBox: FC<PixelDomainSelectBlockProps> = ({
 			}
 		} catch (err) {
 			console.error("Error parsing `me` from sessionStorage:", err);
+		}
+	};
+
+	const checkPixelInstallationPaid = async () => {
+		setLoading(true);
+		try {
+			const response = await axiosInstance.get(
+				"/check-pixel-installation-paid",
+			);
+			if (response.status === 200 && response.data.status === "ok") {
+				return true;
+			}
+			return false;
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -236,7 +255,13 @@ const PixelDomainSelectorBox: FC<PixelDomainSelectBlockProps> = ({
 											borderBottom: "1px solid rgba(228, 228, 228, 1)",
 											cursor: "pointer",
 										}}
-										onClick={(e) => {
+										onClick={async (e) => {
+											const pixelInstallationPaid =
+												await checkPixelInstallationPaid();
+											if (!pixelInstallationPaid) {
+												flagPixelPlan.set(true, true);
+												return;
+											}
 											e.stopPropagation();
 											handlePixelInstall();
 										}}

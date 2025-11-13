@@ -17,7 +17,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import CustomButton from "@/components/ui/CustomButton";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { flagStore } from "@/services/oneDollar";
+import { flagOneDollarPlan } from "@/services/payOneDollarPlan";
 
 const OneDollarPopup = () => {
 	const [open, setOpen] = useState(true);
@@ -25,7 +25,7 @@ const OneDollarPopup = () => {
 
 	const handleClose = () => {
 		setOpen(false);
-		flagStore.set(false);
+		flagOneDollarPlan.set(false);
 	};
 
 	const redirectToCheckoutSession = async () => {

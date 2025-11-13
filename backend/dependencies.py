@@ -227,7 +227,6 @@ def check_user_authentication(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"status": "NOT_FOUND"},
         )
-
     team_owner_id = user.get("team_owner_id")
 
     if team_owner_id is not None:
@@ -451,6 +450,14 @@ def check_user_authorization_without_pixel(
         raise_forbidden({"status": auth_status.value})
 
     return user
+
+
+def check_pixel_installation_paid(
+    user: UserDict = Depends(check_user_authorization_without_pixel),
+):
+    if user is None or not user.get("current_subscription_id"):
+        return False
+    return True
 
 
 def check_team_admin(

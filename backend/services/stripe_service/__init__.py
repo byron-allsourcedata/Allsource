@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+import time
 
 try:
     from dateutil.relativedelta import relativedelta
@@ -137,6 +138,9 @@ class StripeService:
         if mode == "payment" and payment_intent_data:
             params["payment_intent_data"] = payment_intent_data
 
+        # if mode == "subscription":
+        #     params["subscription_data"] = {"metadata": metadata}
+
         session = stripe.checkout.Session.create(**params)
 
         return session.url
@@ -186,6 +190,132 @@ class StripeService:
             result["error"] = f"Error while charging: {str(e)}"
 
         return result
+
+    def create_shedule_payments(
+        self,
+        subscription_id: str,
+        current_plan_price_id: str,
+        future_plan_price_id: str,
+        current_period_end_ts,
+        current_period_start_ts,
+    ) -> dict:
+        result = {"success": False}
+        try:
+            phase1_items = [{"price": current_plan_price_id, "quantity": 1}]
+
+            if isinstance(current_period_end_ts, datetime):
+                current_period_end_ts = int(current_period_end_ts.timestamp())
+            else:
+                current_period_end_ts = (
+                    int(current_period_end_ts)
+                    if current_period_end_ts
+                    else None
+                )
+
+            if isinstance(current_period_start_ts, datetime):
+                current_period_start_ts = int(
+                    current_period_start_ts.timestamp()
+                )
+            else:
+                current_period_start_ts = (
+                    int(current_period_start_ts)
+                    if current_period_start_ts
+                    else None
+                )
+
+            phase1 = {
+                "items": phase1_items,
+                "start_date": current_period_start_ts,
+                "end_date": current_period_end_ts,
+            }
+
+            phase2 = {
+                "items": [{"price": future_plan_price_id, "quantity": 1}],
+            }
+
+            created = stripe.SubscriptionSchedule.create(
+                from_subscription=subscription_id
+            )
+
+            schedule_id = created["id"]
+
+            updated = stripe.SubscriptionSchedule.modify(
+                schedule_id,
+                phases=[phase1, phase2],
+                end_behavior="release",
+            )
+
+            result["action"] = "created"
+            result["updated"] = dict(updated)
+            result["schedule_id"] = schedule_id
+            result["success"] = True
+        except Exception as e:
+            result["error"] = f"Error while charging: {str(e)}"
+
+        return result
+
+    def create_pixel_plan_subscription_with_one_time_charge(
+        self,
+        customer_id: str,
+        future_plan_price_id: str,
+        trial_days: int = 14,
+    ) -> dict:
+        result = {"success": False}
+        try:
+            customer = stripe.Customer.retrieve(
+                customer_id, expand=["invoice_settings.default_payment_method"]
+            )
+            default_pm = customer.get("invoice_settings", {}).get(
+                "default_payment_method"
+            )
+            if not default_pm:
+                pms = stripe.PaymentMethod.list(
+                    customer=customer_id, type="card", limit=1
+                )
+                if pms and pms.get("data"):
+                    default_pm = pms["data"][0]["id"]
+
+            if not default_pm:
+                result["error"] = (
+                    "Customer has no saved payment method. Collect card via Checkout/Setup first."
+                )
+                return result
+
+            trial_end_ts = int(time.time()) + int(trial_days) * 24 * 3600
+
+            subscription = stripe.Subscription.create(
+                customer=customer_id,
+                items=[{"price": future_plan_price_id, "quantity": 1}],
+                default_payment_method=default_pm,
+                trial_end=trial_end_ts,
+                collection_method="charge_automatically",
+                expand=["latest_invoice.payment_intent"],
+                metadata={"type": ""},
+            )
+
+            cps = subscription.get("current_period_start")
+            cpe = subscription.get("current_period_end")
+            plan_start = (
+                datetime.fromtimestamp(int(cps), tz=timezone.utc)
+                if cps
+                else None
+            )
+            plan_end = (
+                datetime.fromtimestamp(int(cpe), tz=timezone.utc)
+                if cpe
+                else datetime.fromtimestamp(trial_end_ts, tz=timezone.utc)
+            )
+
+            result["success"] = True
+            result["subscription"] = dict(subscription)
+            result["subscription_id"] = subscription.get("id")
+            result["plan_start"] = plan_start
+            result["plan_end"] = plan_end
+            return result
+
+        except Exception as e:
+            result["error"] = str(e)
+            return result
 
     def get_subscription_info(self, subscription_id: str):
         try:

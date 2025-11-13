@@ -227,6 +227,7 @@ const SourcesImport: React.FC = () => {
 									pixelInstalled={!pixelNotInstalled}
 									isDomainSearchProcessing={isDomainSearchProcessing}
 									renderSkeleton={renderSkeleton}
+									setLoading={setLoading}
 									hintProps={{
 										changeHint: changeSourcesBuilderHint,
 										hints: sourcesBuilderHints,

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
 	Drawer,
 	Box,
@@ -23,6 +23,7 @@ import {
 	InputAdornment,
 	Grid,
 	LinearProgress,
+	Select,
 } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -34,6 +35,10 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import { Logo } from "@/components/ui/Logo";
+import { CUSTOM_FIELDS } from "./pixel-sync-data/customFields";
+import { useCustomFields, Row } from "./pixel-sync-data/useCustomFields";
+import { CustomFieldRow } from "./pixel-sync-data/CustomFieldRow";
+import { dataSyncStyles } from "./dataSyncStyles";
 
 interface ConnectMailChimpPopupProps {
 	open: boolean;
@@ -43,7 +48,7 @@ interface ConnectMailChimpPopupProps {
 	isEdit?: boolean;
 }
 
-type KlaviyoList = {
+type MailchimpList = {
 	id: string;
 	list_name: string;
 };
@@ -58,69 +63,78 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 	const { triggerSync } = useIntegrationContext();
 	const [loading, setLoading] = useState(false);
 	const [value, setValue] = React.useState("1");
-	const [checked, setChecked] = useState(false);
 	const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-	const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(
+	const [selectedOption, setSelectedOption] = useState<MailchimpList | null>(
 		null,
 	);
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [newListName, setNewListName] = useState<string>("");
-	const [tagName, setTagName] = useState<string>("");
 	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
 	const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-	const [openDropdown, setOpenDropdown] = useState<number | null>(null);
-	const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(
-		null,
-	);
-	const [apiKeyError, setApiKeyError] = useState(false);
 	const [tab2Error, setTab2Error] = useState(false);
 	const [isDropdownValid, setIsDropdownValid] = useState(false);
 	const [listNameError, setListNameError] = useState(false);
-	const [tagNameError, setTagNameError] = useState(false);
 	const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(
 		null,
 	);
 	const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-	const [newMapListName, setNewMapListName] = useState<string>("");
-	const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-	const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-	const [maplistNameError, setMapListNameError] = useState(false);
-	const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([]);
-	const [customFieldsList, setCustomFieldsList] = useState([
-		{ type: "Gender", value: "gender" },
-		{ type: "Company Name", value: "company_name" },
-		{ type: "Company Domain", value: "company_domain" },
-		{ type: "Company SIC", value: "company_sic" },
-		{ type: "Company LinkedIn URL", value: "company_linkedin_url" },
-		{ type: "Company Revenue", value: "company_revenue" },
-		{ type: "Company Employee Count", value: "company_employee_count" },
-		{ type: "Net Worth", value: "net_worth" },
-		{ type: "Last Updated", value: "last_updated" },
-		{ type: "Personal Emails Last Seen", value: "personal_emails_last_seen" },
-		{ type: "Company Last Updated", value: "company_last_updated" },
-		{ type: "Job Title Last Updated", value: "job_title_last_updated" },
-		{ type: "Age Min", value: "age_min" },
-		{ type: "Age Max", value: "age_max" },
-		{ type: "Additional Personal Emails", value: "additional_personal_emails" },
-		{ type: "LinkedIn URL", value: "linkedin_url" },
-		{ type: "Married", value: "married" },
-		{ type: "Children", value: "children" },
-		{ type: "Income Range", value: "income_range" },
-		{ type: "Homeowner", value: "homeowner" },
-		{ type: "Seniority Level", value: "seniority_level" },
-		{ type: "Department", value: "department" },
-		{ type: "Primary Industry", value: "primary_industry" },
-		{ type: "Work History", value: "work_history" },
-		{ type: "Education History", value: "education_history" },
-		{ type: "Company Description", value: "company_description" },
-		{ type: "Related Domains", value: "related_domains" },
-		{ type: "Social Connections", value: "social_connections" },
-		{ type: "URL Visited", value: "url_visited" },
-		{ type: "Time on site", value: "time_on_site" },
-		{ type: "DPV Code", value: "dpv_code" },
-	]);
+	const [mailchimpList, setMailchimpList] = useState<MailchimpList[]>([]);
+	const defaultRows: Row[] = [
+		{ id: 2, type: "Phone number", value: "Phone number" },
+		{ id: 3, type: "First name", value: "First name" },
+		{ id: 4, type: "Second name", value: "Second name" },
+		{ id: 5, type: "Job Title", value: "Job Title" },
+		{ id: 6, type: "Location", value: "Location" },
+	];
+
+	const [rows, setRows] = useState<Row[]>(defaultRows);
+	const excludedFields = useMemo(
+		() =>
+			defaultRows
+				.map((row) => {
+					const matchedField = CUSTOM_FIELDS.find(
+						(field) => field.type === row.type,
+					);
+					return matchedField ? matchedField.value : "";
+				})
+				.filter(Boolean),
+		[],
+	);
+
+	const {
+		customFields,
+		customFieldsList,
+		handleAddField,
+		handleChangeField,
+		handleDeleteField,
+		canAddMore,
+		emailEntry,
+	} = useCustomFields(CUSTOM_FIELDS, data, false, excludedFields);
+
+	const emailsVariations = [
+		{ id: 1, type: "Personal Email", value: "Personal Email" },
+		{ id: 1, type: "Business Email", value: "Business Email" },
+	];
+	const [activeEmailVariation, setActiveEmailVariation] = useState<Row>({
+		id: 1,
+		type: "business_email",
+		value: "Email",
+		is_constant: false,
+	});
+
+	useEffect(() => {
+		if (!emailEntry) return;
+
+		setActiveEmailVariation({
+			id: 1,
+			type: emailEntry.type,
+			value: emailEntry.value,
+			is_constant: false,
+		});
+	}, [emailEntry]);
+
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (
@@ -143,68 +157,27 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 		};
 	}, [selectedOption]);
 
-	const [customFields, setCustomFields] = useState<
-		{ type: string; value: string }[]
-	>([]);
-
-	useEffect(() => {
-		if (data?.data_map) {
-			setCustomFields(data?.data_map);
-		} else {
-			setCustomFields(
-				customFieldsList.map((field) => ({
-					type: field.value,
-					value: field.type,
-				})),
-			);
-		}
-	}, [open]);
-
-	const handleAddField = () => {
-		setCustomFields([...customFields, { type: "", value: "" }]);
-	};
-
-	const handleDeleteField = (index: number) => {
-		setCustomFields(customFields.filter((_, i) => i !== index));
-	};
-
-	const handleChangeField = (index: number, field: string, value: string) => {
-		setCustomFields(
-			customFields.map((item, i) =>
-				i === index ? { ...item, [field]: value } : item,
-			),
-		);
-	};
 	useEffect(() => {
 		if (open) {
 			return;
 		}
 		setLoading(false);
 		setValue("1");
-		setChecked(false);
 		setSelectedRadioValue("");
 		setAnchorEl(null);
 		setSelectedOption(null);
 		setShowCreateForm(false);
 		setNewListName("");
-		setTagName("");
 		setIsShrunk(false);
 		setIsDropdownOpen(false);
-		setOpenDropdown(null);
-		setOpenDropdownMaximiz(null);
-		setApiKeyError(false);
 		setTab2Error(false);
 		setIsDropdownValid(false);
 		setListNameError(false);
-		setTagNameError(false);
 		setDeleteAnchorEl(null);
 		setSelectedRowId(null);
-		setNewMapListName("");
-		setShowCreateMapForm(false);
-		setMapListNameError(false);
 	}, [open]);
 
-	const getKlaviyoList = async () => {
+	const getListInfo = async () => {
 		try {
 			setLoading(true);
 			const response = await axiosInstance.get("/integrations/sync/list/", {
@@ -212,12 +185,11 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 					service_name: "mailchimp",
 				},
 			});
-			setKlaviyoList(response.data);
+			setMailchimpList(response.data);
 			const foundItem = response.data?.find(
-				(item: any) => item.list_name === data?.name,
+				(item: any) => item.list_name === data?.list_name,
 			);
 			if (foundItem) {
-				setUpdateKlaviuo(data.id);
 				setSelectedOption({
 					id: foundItem.id,
 					list_name: foundItem.list_name,
@@ -231,7 +203,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 	};
 	useEffect(() => {
 		if (open) {
-			getKlaviyoList();
+			getListInfo();
 		}
 	}, [open]);
 
@@ -263,7 +235,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 
 	const handleSaveSync = async () => {
 		setLoading(true);
-		let list: KlaviyoList | null = null;
+		let list: MailchimpList | null = null;
 
 		try {
 			if (selectedOption && selectedOption.id === "-1") {
@@ -284,7 +256,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 							list_id: list?.id,
 							list_name: list?.list_name,
 							leads_type: selectedRadioValue,
-							data_map: customFields,
+							data_map: [activeEmailVariation, ...customFields],
 						},
 						{
 							params: {
@@ -304,7 +276,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 							list_id: list?.id,
 							list_name: list?.list_name,
 							leads_type: selectedRadioValue,
-							data_map: customFields,
+							data_map: [activeEmailVariation, ...customFields],
 						},
 						{
 							params: {
@@ -339,7 +311,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 
 	// Handle dropdown toggle specifically when clicking on the arrow
 	const handleDropdownToggle = (event: React.MouseEvent) => {
-		event.stopPropagation(); // Prevent triggering the input field click
+		event.stopPropagation();
 		setIsDropdownOpen((prev) => !prev);
 		setAnchorEl(textFieldRef.current);
 	};
@@ -352,20 +324,13 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 		setNewListName(""); // Clear new list name when closing
 	};
 
-	const handleMapClose = () => {
-		setValue("1");
-		setShowCreateMapForm(false);
-		setNewMapListName("");
-	};
-
-	const handleSelectOption = (value: KlaviyoList | string) => {
+	const handleSelectOption = (value: MailchimpList | string) => {
 		if (value === "createNew") {
 			setShowCreateForm((prev) => !prev);
 			if (!showCreateForm) {
 				setAnchorEl(textFieldRef.current);
 			}
 		} else if (isKlaviyoList(value)) {
-			// Проверка, является ли value объектом KlaviyoList
 			setSelectedOption({
 				id: value.id,
 				list_name: value.list_name,
@@ -378,7 +343,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 		}
 	};
 
-	const isKlaviyoList = (value: any): value is KlaviyoList => {
+	const isKlaviyoList = (value: any): value is MailchimpList => {
 		return (
 			value !== null &&
 			typeof value === "object" &&
@@ -408,16 +373,6 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 			}
 			handleClose();
 		}
-	};
-
-	const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-		setChecked(event.target.checked);
-	};
-
-	const label = { inputProps: { "aria-label": "Switch demo" } };
-
-	const handleChange = (event: React.SyntheticEvent, newValue: string) => {
-		setValue(newValue);
 	};
 
 	const klaviyoStyles = {
@@ -465,72 +420,6 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 		},
 	};
 
-	type HighlightConfig = {
-		[keyword: string]: { color?: string; fontWeight?: string }; // keyword as the key, style options as the value
-	};
-
-	const highlightText = (text: string, highlightConfig: HighlightConfig) => {
-		// Start with the whole text as a single part.
-		let parts: (string | JSX.Element)[] = [text];
-
-		// For each keyword, split the text and insert the highlighted part.
-		Object.keys(highlightConfig).forEach((keyword, keywordIndex) => {
-			const { color, fontWeight } = highlightConfig[keyword];
-			parts = parts.flatMap(
-				(part, partIndex) =>
-					// Only split if the part is a string and contains the keyword.
-					typeof part === "string" && part.includes(keyword)
-						? part.split(keyword).flatMap((segment, index, array) =>
-								index < array.length - 1
-									? [
-											segment,
-											<span
-												style={{
-													color: color || "inherit",
-													fontWeight: fontWeight || "normal",
-												}}
-												key={`highlight-${keywordIndex}-${partIndex}-${index}`}
-											>
-												{keyword}
-											</span>,
-										]
-									: [segment],
-							)
-						: [part], // Otherwise, just keep the part as is (could be JSX).
-			);
-		});
-
-		return <>{parts}</>; // Return the array wrapped in a fragment.
-	};
-
-	const instructions: any[] = [
-		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
-		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
-		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
-		// { id: 'unique-id-5', text: 'Click Create.' },
-		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.' },
-		// { id: 'unique-id-7', text: 'Click Connect.' },
-		// { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Allsource.' },
-		// { id: 'unique-id-9', text: 'Click Export.' },
-	];
-
-	// Define the keywords and their styles
-	const highlightConfig: HighlightConfig = {
-		Klaviyo: { color: "rgba(56, 152, 252, 1)", fontWeight: "500" }, // Blue and bold
-		Settings: { color: "#707071", fontWeight: "500" }, // Bold only
-		"Create Private API Key": { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Lists: { color: "#707071", fontWeight: "500" }, // Bold only
-		Profiles: { color: "#707071", fontWeight: "500" }, // Bold only
-		Metrics: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Events: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Templates: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Create: { color: "#707071", fontWeight: "500" }, // Blue and bold
-		"API Key": { color: "#707071", fontWeight: "500" }, // Blue and bold
-		Connect: { color: "#707071", fontWeight: "500" }, // Bold only
-		Export: { color: "#707071", fontWeight: "500" }, // Blue and bold
-	};
-
 	// Define buttons for each tab
 	const getButton = (tabValue: string) => {
 		switch (tabValue) {
@@ -573,7 +462,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 					<Button
 						variant="contained"
 						disabled={!isDropdownValid}
-						onClick={handleSaveSync}
+						onClick={handleNextTab}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -599,7 +488,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 							borderRadius: "4px",
 						}}
 					>
-						Save
+						Next
 					</Button>
 				);
 			case "3":
@@ -637,25 +526,6 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 		setSelectedRadioValue(event.target.value);
 	};
 
-	interface Row {
-		id: number;
-		type: string;
-		value: string;
-		selectValue?: string;
-		canDelete?: boolean;
-	}
-
-	const defaultRows: Row[] = [
-		{ id: 1, type: "Email", value: "Email" },
-		{ id: 2, type: "Phone number", value: "Phone number" },
-		{ id: 3, type: "First name", value: "First name" },
-		{ id: 4, type: "Second name", value: "Second name" },
-		{ id: 5, type: "Job Title", value: "Job Title" },
-		{ id: 6, type: "Location", value: "Location" },
-	];
-
-	const [rows, setRows] = useState<Row[]>(defaultRows);
-
 	const handleMapListChange = (
 		id: number,
 		field: "value" | "type",
@@ -684,32 +554,6 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 			setRows(rows.filter((row) => row.id !== selectedRowId));
 			handleDeleteClose();
 		}
-	};
-
-	// Add row function
-	const handleAddRow = () => {
-		const newRow: Row = {
-			id: Date.now(), // Unique ID for each new row
-			type: "",
-			value: "",
-			canDelete: true, // This new row can be deleted
-		};
-		setRows([...rows, newRow]);
-	};
-	const handleDropdownOpen = (id: number) => {
-		setOpenDropdown(id); // Set the open state for the current dropdown
-	};
-
-	const handleDropdownMaximizOpen = (id: number) => {
-		setOpenDropdownMaximiz(id);
-	};
-
-	const handleDropdownClose = () => {
-		setOpenDropdown(null); // Reset when dropdown closes
-	};
-
-	const handleDropdownMaximizClose = () => {
-		setOpenDropdownMaximiz(null);
 	};
 
 	const validateTab2 = () => {
@@ -913,7 +757,12 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 											className="tab-heading"
 											sx={klaviyoStyles.tabHeading}
 										/>
-										{/* <Tab label="Map data" value="3" className='tab-heading' sx={klaviyoStyles.tabHeading} /> */}
+										<Tab
+											label="Map data"
+											value="3"
+											className="tab-heading"
+											sx={klaviyoStyles.tabHeading}
+										/>
 									</TabList>
 								</Box>
 								<TabPanel value="1" sx={{ p: 0 }}>
@@ -1444,8 +1293,8 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 														)}
 
 														{/* Show static options */}
-														{klaviyoList &&
-															klaviyoList.map((klaviyo, option) => (
+														{mailchimpList &&
+															mailchimpList.map((klaviyo, option) => (
 																<MenuItem
 																	key={klaviyo.id}
 																	onClick={() => handleSelectOption(klaviyo)}
@@ -1563,6 +1412,93 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 												&nbsp;
 											</Grid>
 										</Grid>
+
+										<Box sx={{ mb: 2 }}>
+											<Grid
+												container
+												spacing={2}
+												alignItems="center"
+												sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+											>
+												{/* Left Input Field */}
+												<Grid item xs={5} sm={5}>
+													<FormControl fullWidth sx={{ height: "36px" }}>
+														<Select
+															value={
+																activeEmailVariation.type === "personal_emails"
+																	? "Personal Email"
+																	: "Business Email"
+															}
+															onChange={(e) => {
+																const type =
+																	e.target.value === "Personal Email"
+																		? "personal_emails"
+																		: "business_email";
+																setActiveEmailVariation({
+																	id: 1,
+																	type: type,
+																	value: "Email",
+																	is_constant: false,
+																});
+															}}
+															displayEmpty
+															inputProps={{
+																sx: dataSyncStyles.formControlInputStyles,
+															}}
+															sx={dataSyncStyles.formControlStyles}
+														>
+															{emailsVariations.map(
+																(item: Row, index: number) => (
+																	<MenuItem key={index} value={item.value}>
+																		{item.value}
+																	</MenuItem>
+																),
+															)}
+														</Select>
+													</FormControl>
+												</Grid>
+
+												{/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+												<Grid
+													item
+													xs={1}
+													sm={1}
+													container
+													justifyContent="center"
+												>
+													<Image
+														src="/chevron-right-purple.svg"
+														alt="chevron-right-purple"
+														height={18}
+														width={18}
+													/>
+												</Grid>
+
+												<Grid item xs={5} sm={5}>
+													<TextField
+														fullWidth
+														variant="outlined"
+														value={"Email"}
+														disabled={true}
+														InputLabelProps={{
+															sx: dataSyncStyles.textFieldInputLabelStyles,
+														}}
+														InputProps={{
+															sx: dataSyncStyles.textFieldInputStyles,
+														}}
+													/>
+												</Grid>
+
+												{/* Delete Icon */}
+												<Grid
+													item
+													xs={1}
+													sm={1}
+													container
+													justifyContent="center"
+												/>
+											</Grid>
+										</Box>
 
 										{defaultRows.map((row, index) => (
 											<Box key={row.id} sx={{ mb: 2 }}>
@@ -1856,216 +1792,60 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 												</Grid>
 											</Box>
 										))}
-										<Box sx={{ mb: 2 }}>
+										<Box>
 											{customFields.map((field, index) => (
-												<Grid
-													container
-													spacing={2}
-													alignItems="center"
-													sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+												<CustomFieldRow
 													key={index}
-												>
-													<Grid item xs="auto" sm={5} mb={2}>
-														<TextField
-															select
-															fullWidth
-															variant="outlined"
-															label="Custom Field"
-															value={field.type}
-															onChange={(e) =>
-																handleChangeField(index, "type", e.target.value)
-															}
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	"&.MuiOutlinedInput-root": {
-																		height: "36px",
-																		"& .MuiOutlinedInput-input": {
-																			padding: "6.5px 8px",
-																			fontFamily: "var(--font-roboto)",
-																			color: "#202124",
-																			fontSize: "14px",
-																			fontWeight: "400",
-																			lineHeight: "20px",
-																		},
-																		"& .MuiOutlinedInput-notchedOutline": {
-																			borderColor: "#A3B0C2",
-																		},
-																		"&:hover .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "#A3B0C2",
-																			},
-																		"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																			{
-																				borderColor: "rgba(56, 152, 252, 1)",
-																			},
-																	},
-																	"&+.MuiFormHelperText-root": {
-																		marginLeft: "0",
-																	},
-																},
-															}}
-														>
-															{customFieldsList.map((item) => (
-																<MenuItem
-																	key={item.value}
-																	value={item.value}
-																	disabled={customFields.some(
-																		(f) => f.type === item.value,
-																	)} // Дизейблим выбранные
-																>
-																	{item.type}
-																</MenuItem>
-															))}
-														</TextField>
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														sm={1}
-														mb={2}
-														container
-														justifyContent="center"
-													>
-														<Image
-															src="/chevron-right-purple.svg"
-															alt="chevron-right-purple"
-															height={18}
-															width={18}
-														/>
-													</Grid>
-													<Grid item xs="auto" sm={5} mb={2}>
-														<TextField
-															fullWidth
-															variant="outlined"
-															value={field.value}
-															onChange={(e) =>
-																handleChangeField(
-																	index,
-																	"value",
-																	e.target.value,
-																)
-															}
-															placeholder="Enter value"
-															InputLabelProps={{
-																sx: {
-																	fontFamily: "var(--font-nunito)",
-																	fontSize: "12px",
-																	lineHeight: "16px",
-																	color: "rgba(17, 17, 19, 0.60)",
-																	top: "-5px",
-																	"&.Mui-focused": {
-																		color: "rgba(56, 152, 252, 1)",
-																		top: 0,
-																	},
-																	"&.MuiInputLabel-shrink": {
-																		top: 0,
-																	},
-																},
-															}}
-															InputProps={{
-																sx: {
-																	height: "36px",
-																	"& .MuiOutlinedInput-input": {
-																		padding: "6.5px 8px",
-																		fontFamily: "var(--font-roboto)",
-																		color: "#202124",
-																		fontSize: "14px",
-																		fontWeight: "400",
-																		lineHeight: "20px",
-																	},
-																	"& .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&:hover .MuiOutlinedInput-notchedOutline": {
-																		borderColor: "#A3B0C2",
-																	},
-																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
-																		{
-																			borderColor: "rgba(56, 152, 252, 1)",
-																		},
-																},
-															}}
-														/>
-													</Grid>
-													<Grid
-														item
-														xs="auto"
-														mb={2}
-														sm={1}
-														container
-														justifyContent="center"
-													>
-														<IconButton
-															onClick={() => handleDeleteField(index)}
-														>
-															<Image
-																src="/trash-icon-filled.svg"
-																alt="trash-icon-filled"
-																height={18}
-																width={18}
-															/>
-														</IconButton>
-													</Grid>
-												</Grid>
+													field={field}
+													index={index}
+													customFields={customFields}
+													customFieldsList={customFieldsList}
+													handleChangeField={handleChangeField}
+													handleDeleteField={handleDeleteField}
+												/>
 											))}
+
 											<Box
 												sx={{
 													display: "flex",
 													justifyContent: "flex-end",
-													mb: 2,
 													mr: 6,
 												}}
 											>
-												<Button
-													onClick={handleAddField}
-													aria-haspopup="true"
-													sx={{
-														textTransform: "none",
-														border: "1px solid rgba(56, 152, 252, 1)",
-														borderRadius: "4px",
-														padding: "9px 16px",
-														minWidth: "auto",
-														"@media (max-width: 900px)": {
-															display: "none",
-														},
-													}}
-												>
-													<Typography
+												{canAddMore && (
+													<Button
+														onClick={handleAddField}
+														aria-haspopup="true"
 														sx={{
-															marginRight: "0.5em",
-															fontFamily: "var(--font-nunito)",
-															lineHeight: "22.4px",
-															fontSize: "16px",
-															textAlign: "left",
-															fontWeight: "500",
-															color: "rgba(56, 152, 252, 1)",
+															textTransform: "none",
+															border: "1px solid rgba(56, 152, 252, 1)",
+															borderRadius: "4px",
+															padding: "6px 12px",
+															minWidth: "auto",
+															"@media (max-width: 900px)": {
+																display: "none",
+															},
 														}}
 													>
-														Add
-													</Typography>
-												</Button>
+														<Typography
+															sx={{
+																fontFamily: "var(--font-nunito)",
+																lineHeight: "22.4px",
+																fontSize: "16px",
+																textAlign: "left",
+																fontWeight: "500",
+																color: "rgba(56, 152, 252, 1)",
+															}}
+														>
+															Add
+														</Typography>
+													</Button>
+												)}
 											</Box>
 										</Box>
 									</Box>
 								</TabPanel>
 							</TabContext>
-							{/* Button based on selected tab */}
 						</Box>
 					</Box>
 					<Box

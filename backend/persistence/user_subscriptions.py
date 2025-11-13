@@ -14,13 +14,22 @@ class UserSubscriptionsPersistence:
     def __init__(self, db: Db):
         self.db = db
 
-    def add(self, user_id: int, plan: SubscriptionPlan):
+    def add(
+        self,
+        user_id: int,
+        plan: SubscriptionPlan,
+        plan_end: datetime | None = None,
+    ):
         now = datetime.now(timezone.utc).replace(tzinfo=None)
+        if plan_end:
+            plan_end_final = plan_end
+        else:
+            plan_end_final = end_of_month(now)
         user_subscription = UserSubscriptions(
             user_id=user_id,
             plan_id=plan.id,
             plan_start=now,
-            plan_end=end_of_month(now),
+            plan_end=plan_end_final,
             price_id=plan.stripe_price_id,
             contact_credit_plan_id=plan.contact_credit_plan_id,
         )

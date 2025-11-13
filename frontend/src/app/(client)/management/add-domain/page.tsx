@@ -8,7 +8,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import InstallPixelSection from "@/components/InstallPixelSection";
 import NotificationInfoBanner from "@/components/first-time-screens/NotificationInfoBanner";
 import { useEffect, useState } from "react";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { DomainWithStat } from "../../components/PixelSubheader";
 
 const InstallPixel: React.FC = () => {

@@ -542,13 +542,19 @@ class SettingsService:
         elif user_subscription:
             is_active = user_subscription.status == "active"
 
+        plan_name_display = plan_name
+        # if plan_start and plan_end:
+        #     delta = plan_end - plan_start
+        #     if hasattr(delta, "days") and delta.days == 14:
+        #         plan_name_display = "Pixel Plan"
+
         subscription_details = SubscriptionDetails(
             billing_cycle=BillingCycle(
                 detail_type="billing_cycle",
                 plan_start=plan_start,
                 plan_end=plan_end,
             ),
-            plan_name=PlanName(detail_type="as_is", value=plan_name),
+            plan_name=PlanName(detail_type="as_is", value=plan_name_display),
             domains=LimitedDetail(
                 detail_type="limited",
                 limit_value=plan_limit_domain,

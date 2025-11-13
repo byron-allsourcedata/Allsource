@@ -5,7 +5,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { useNotification } from "../../../context/NotificationContext";
-import GettingStartedSection from "@/components/GettingStartedSection";
+import GettingStartedSection from "@/components/PixelInstallationSection";
 import { SliderProvider } from "@/context/SliderContext";
 import SourcesImport from "@/app/(client)/sources/builder/page";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
@@ -17,6 +17,7 @@ import {
 } from "@/components/first-time-screens";
 import ProgressBar from "@/components/ProgressBar";
 import { Column } from "@/components/Column";
+import { flagPixelPlan } from "@/services/payPixelPlan";
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -85,6 +86,21 @@ const GetStarted: React.FC = () => {
 			setLoading(false);
 		}
 	};
+	const checkPixelInstallationPaid = async () => {
+		setLoading(true);
+		try {
+			const response = await axiosInstance.get(
+				"/check-pixel-installation-paid",
+			);
+			if (response.status === 200 && response.data.status === "ok") {
+				return true;
+			}
+			return false;
+		} finally {
+			setLoading(false);
+		}
+	};
+
 	useEffect(() => {
 		const fetchData = async () => {
 			await checkPixel();
@@ -99,12 +115,12 @@ const GetStarted: React.FC = () => {
 		fetchData();
 	}, [pixel, source]);
 
-	useEffect(() => {
-		const storedPopup = localStorage.getItem("welcome_popup");
-		setWelcomePopup(storedPopup);
-	}, []);
-
-	const handleClick = () => {
+	const handleClickPixel = async () => {
+		const pixelInstallationPaid = await checkPixelInstallationPaid();
+		if (!pixelInstallationPaid) {
+			flagPixelPlan.set(true, true);
+			return;
+		}
 		setShowHeading(false);
 		const params = new URLSearchParams(searchParams.toString());
 		params.set("pixel", "true");
@@ -217,7 +233,9 @@ const GetStarted: React.FC = () => {
 										subtitle:
 											"It will automatically collect visitor information from your website.",
 										imageSrc: "/pixel.svg",
-										onClick: pixelInstalled ? undefined : () => handleClick(),
+										onClick: pixelInstalled
+											? undefined
+											: () => handleClickPixel(),
 										showRecommended: false,
 										showInstalled: pixelInstalled,
 										img_height: 120,
