@@ -101,7 +101,7 @@ class SubscriptionWebhookService:
     def save_invoice_payment(self, event_type: str, event: dict):
         customer_id = event["data"]["object"]["customer"]
         price_id = event["data"]["object"]["lines"]["data"][0]["pricing"][
-            "pricing_details"
+            "price_details"
         ]["price"]
 
         self.invoice_service.save_invoice_payment(
