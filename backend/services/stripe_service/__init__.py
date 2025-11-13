@@ -138,8 +138,8 @@ class StripeService:
         if mode == "payment" and payment_intent_data:
             params["payment_intent_data"] = payment_intent_data
 
-        if mode == "subscription":
-            params["subscription_data"] = {"metadata": metadata}
+        # if mode == "subscription":
+        #     params["subscription_data"] = {"metadata": metadata}
 
         session = stripe.checkout.Session.create(**params)
 

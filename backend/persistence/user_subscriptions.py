@@ -20,6 +20,7 @@ class UserSubscriptionsPersistence:
         plan: SubscriptionPlan,
         plan_end: datetime | None = None,
     ):
+        print("ADD FUNCTION(PLAN_ID, PLAN ALIAS)", plan.id, plan.alias)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         if plan_end:
             plan_end_final = plan_end
