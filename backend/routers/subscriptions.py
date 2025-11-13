@@ -11,6 +11,9 @@ from fastapi import (
 )
 from typing import Literal
 
+import stripe
+
+from persistence.plans_persistence import PlansPersistence
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -229,6 +232,7 @@ async def checkout_completed(
     request: fastRequest,
     db: Db,
     subscription_webhooks: SubscriptionWebhookService,
+    plans: PlansPersistence,
 ):
     event = await request.json()
     object_type = event["object"]
@@ -250,6 +254,56 @@ async def checkout_completed(
 
         checkout_type = metadata.get("type")
         plan_period = metadata.get("plan_period")
+
+        if subscription_id:
+            stripe_sub = stripe.Subscription.retrieve(
+                subscription_id, expand=["items.data.price", "metadata"]
+            )
+            sub_metadata = stripe_sub.get("metadata", {}) or {}
+            sub_type = sub_metadata.get("type")
+
+            # 2) или смотрим на фактический price id на подписке (items[0].price.id)
+            items = stripe_sub.get("items", {}).get("data", []) or []
+            price_id_on_sub = (
+                items[0].get("price", {}).get("id") if items else None
+            )
+
+            # получим ваши план-идентификаторы из service
+            pixel_price = plans.get_plan_by_alias("pixel").stripe_price_id
+            std_price = plans.get_plan_by_alias(
+                "standard_monthly"
+            ).stripe_price_id
+
+            # Решаем какая ветка: порядок приоритета — sub_metadata.type -> price_id -> session metadata
+            if (
+                sub_type == "upgrade_pixel_plan"
+                or price_id_on_sub == pixel_price
+            ):
+                subscription_webhooks.move_to_pixel_plan(
+                    customer_id, subscription_id
+                )
+                db.commit()
+                return "SUCCESS"
+            elif sub_type == "upgrade_standard" or price_id_on_sub == std_price:
+                subscription_webhooks.move_to_standard_plan(
+                    customer_id, subscription_id, plan_period
+                )
+                db.commit()
+                return "SUCCESS"
+            else:
+                # fallback на session metadata (на случай, если subscription.metadata пуст)
+                if checkout_type == "upgrade_pixel_plan":
+                    subscription_webhooks.move_to_pixel_plan(
+                        customer_id, subscription_id
+                    )
+                    db.commit()
+                    return "SUCCESS"
+                elif checkout_type == "upgrade_standard":
+                    subscription_webhooks.move_to_standard_plan(
+                        customer_id, subscription_id, plan_period
+                    )
+                    db.commit()
+                    return "SUCCESS"
 
         if checkout_type == "upgrade_basic":
             subscription_webhooks.move_to_basic_plan(customer_id)
