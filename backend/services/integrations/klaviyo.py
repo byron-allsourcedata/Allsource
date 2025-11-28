@@ -826,6 +826,7 @@ class KlaviyoIntegrationsService:
         visited_date = await asyncio.to_thread(
             self.leads_persistence.get_visited_date, lead_visit_id
         )
+        visited_date = visited_date.isoformat() if visited_date else None
 
         location = {
             "address1": getattr(five_x_five_user, "personal_address")
