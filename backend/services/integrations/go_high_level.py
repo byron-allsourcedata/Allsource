@@ -289,10 +289,31 @@ class GoHighLevelIntegrationsService:
         response = self.__handle_request(
             method="POST", url=url, json=contact_data, headers=headers
         )
-        if response.status_code in (200, 201, 202):
-            return ProccessDataSyncResult.SUCCESS.value
 
-        return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        try:
+            response_json = response.json()
+        except Exception:
+            response_json = response.text
+
+        logger.info(
+            "UpsertContact: status=%s, response=%s, sent_data=%s",
+            response.status_code,
+            response_json,
+            contact_data,
+        )
+
+        if response.status_code in (200, 201, 202):
+            return {
+                "status": ProccessDataSyncResult.SUCCESS.value,
+                "error": None,
+                "http_status": response.status_code,
+            }
+
+        return {
+            "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            "error": response_json,
+            "http_status": response.status_code,
+        }
 
     def list_custom_fields(self, access_token: str, location_id: str):
         url = f"https://services.leadconnectorhq.com/locations/{location_id}/customFields"
@@ -371,13 +392,17 @@ class GoHighLevelIntegrationsService:
             result = self.upsert_contact(
                 access_token=access_token, contact_data=contact_data
             )
+
             results.append(
                 {
                     "enrichment_user_asid": enrichment_user.asid,
-                    "status": result,
+                    "status": result["status"],
+                    "error": result["error"],
+                    "http_status": result["http_status"],
                 }
             )
-            if result in (
+
+            if result["status"] in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
             ):
