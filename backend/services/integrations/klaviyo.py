@@ -827,6 +827,8 @@ class KlaviyoIntegrationsService:
             self.leads_persistence.get_visited_date, lead_visit_id
         )
 
+        visited_date = visited_date.isoformat() if visited_date else None
+
         location = {
             "address1": getattr(five_x_five_user, "personal_address")
             or getattr(five_x_five_user, "company_address", None),
