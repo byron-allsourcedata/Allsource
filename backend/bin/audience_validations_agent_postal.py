@@ -236,14 +236,31 @@ async def process_rmq_message(
             db_session.flush()
 
         if verifications:
-            stmt = insert(AudiencePostalVerification).values(verifications)
-            stmt = stmt.on_conflict_do_update(
-                index_elements=["postal_code"],
-                set_={"is_verified": stmt.excluded.is_verified},
-            )
+            try:
+                unique_verifications = {}
+                for v in verifications:
+                    unique_verifications[v["postal_code"]] = v["is_verified"]
 
-            db_session.execute(stmt)
-            db_session.commit()
+                verifications = [
+                    {"postal_code": k, "is_verified": v}
+                    for k, v in unique_verifications.items()
+                ]
+
+                stmt = insert(AudiencePostalVerification).values(verifications)
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=["postal_code"],
+                    set_={"is_verified": stmt.excluded.is_verified},
+                )
+
+                db_session.execute(stmt)
+                db_session.commit()
+
+            except Exception as e:
+                logging.error(
+                    f"[DB ERROR] postal verification insert failed: {e}"
+                )
+                db_session.rollback()
+                raise
 
         logging.info(f"failed_ids len: {len(failed_ids)}")
 
