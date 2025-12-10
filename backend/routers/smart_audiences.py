@@ -6,6 +6,7 @@ from dependencies import (
     check_user_authorization_without_pixel,
     check_domain,
 )
+from models.audience_sources import target_schemas
 from services.audience_smarts import AudienceSmartsService
 from schemas.audience import (
     SmartsAudienceObjectResponse,

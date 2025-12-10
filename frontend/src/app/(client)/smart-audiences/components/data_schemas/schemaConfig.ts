@@ -1,3 +1,4 @@
+// schemaConfig.ts
 export type ServiceType =
 	| "hubspot"
 	| "mailchimp"
@@ -9,7 +10,13 @@ export type ServiceType =
 	| "sales_force"
 	| "go_high_level";
 
-export type UseCase = "email" | "postal" | "tele_marketing" | "generic";
+export type UseCase =
+	| "email"
+	| "postal"
+	| "tele_marketing"
+	| "generic"
+	| "meta"
+	| "google_ads";
 export type TargetSchema = "b2b" | "b2c" | "both";
 
 export type FieldType =
@@ -22,674 +29,631 @@ export type FieldType =
 	| "boolean";
 
 export interface FieldSpec {
-	key: string; // canonical key (used in data_map)
-	label: string; // shown to user
+	key: string;
+	label: string;
 	type?: FieldType;
 	is_constant?: boolean;
-	supportedTargets?: TargetSchema[]; // if absent => applicable to all
-	supportedUseCases?: UseCase[]; // if absent => applicable to all
-	defaultForServices?: ServiceType[]; // used only for default rows (optional)
-	requiredFor?: TargetSchema[]; // optional validation hint
+	supportedTargets?: TargetSchema[];
+	supportedUseCases?: UseCase[];
+	defaultForServices?: ServiceType[];
+	requiredFor?: TargetSchema[];
 	category?: "essential" | "enrichment";
+	isEmailField?: boolean;
+	isPhoneField?: boolean;
 }
 
-/* -------------------------
-   1) COMMON fields (always available)
-   ------------------------- */
-const commonFields: FieldSpec[] = [
-	{ key: "email", label: "Email", type: "email" },
-	{ key: "first_name", label: "First name", type: "string" },
-	{ key: "last_name", label: "Last name", type: "string" },
-];
-
-/* -------------------------
-   2) UseCase-specific fields
-   - postal: split into home vs business so we can pick by targetSchema
-   - email: extras
-   - tele_marketing: extras (job_title for B2B)
-   ------------------------- */
-
-/* -------------------------------------------
-   EMAIL Use Case
-------------------------------------------- */
-
-// const metaBoth: FieldSpec[] = [
-// 	// Essential
-// 	{ label: "Phone", key: "phone", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
-// 	{ label: "Gender", key: "gender", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
-// 	{ label: "Birth date", key: "birth_date", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
-// 	{ label: "State", key: "state", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
-// 	{ label: "City", key: "city", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
-// 	{ label: "Zip code", key: "zip_code", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["meta"], category: "essential", },
-// ]
-
-// const googleAdsBoth: FieldSpec[] = [
-// 	// Essential
-// 	{ label: "Phone", key: "phone", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
-// 	{ label: "State", key: "state", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
-// 	{ label: "City", key: "city", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
-// 	{ label: "Country code", key: "country_code", supportedTargets: ["b2b", "b2c", "both"], supportedUseCases: ["google_ads"], category: "essential", },
-// ]
-
-const emailB2B: FieldSpec[] = [
-	// Essential
+/* ============================
+   BASE DICTIONARY
+   ============================ */
+const baseFields: Record<
+	string,
 	{
-		key: "first_name",
-		label: "First Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "essential",
-	},
-	{
-		key: "last_name",
-		label: "Last Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "essential",
-	},
-	{
-		key: "business_email",
-		label: "Business Email",
-		type: "email",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "essential",
-	},
-	{
-		key: "current_company_name",
-		label: "Current Company Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "essential",
-	},
-	// Enrichment
-	{
-		key: "current_job_title",
-		label: "Job Title",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "department",
-		label: "Department",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "primary_industry",
-		label: "Industry",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "company_size",
-		label: "Company Size",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "business_country",
-		label: "Business Country",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "business_state",
-		label: "Business State",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "business_city",
-		label: "Business City",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "business_postal_code",
-		label: "Business Postal Code",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-];
-
-const emailB2C: FieldSpec[] = [
-	// Essential
-	{
-		key: "first_name",
-		label: "First Name",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "essential",
-	},
-	{
-		key: "last_name",
-		label: "Last Name",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "essential",
-	},
-	{
-		key: "personal_email",
+		label: string;
+		type?: FieldType;
+		is_constant?: boolean;
+		isEmailField?: boolean;
+		isPhoneField?: boolean;
+	}
+> = {
+	personal_email: {
 		label: "Personal Email",
 		type: "email",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "essential",
+		isEmailField: true,
 	},
-	// Enrichment
-	{
-		key: "gender",
-		label: "Gender",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
+	business_email: {
+		label: "Business Email",
+		type: "email",
+		isEmailField: true,
 	},
-	{
-		key: "age",
-		label: "Age",
-		type: "number",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "home_state",
-		label: "Home State",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "home_city",
-		label: "Home City",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "homeowner",
-		label: "Homeowner",
-		type: "boolean",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "income_range",
-		label: "Income Range",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-	{
-		key: "has_children",
-		label: "Has Children",
-		type: "boolean",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["email"],
-		category: "enrichment",
-	},
-];
 
-/* -------------------------------------------
-   TELEMARKETING Use Case
-------------------------------------------- */
-const teleB2B: FieldSpec[] = [
-	// Essential
-	{
-		key: "first_name",
-		label: "First Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "essential",
-	},
-	{
-		key: "last_name",
-		label: "Last Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "essential",
-	},
-	{
-		key: "phone_mobile1",
-		label: "Phone Mobile",
+	first_name: { label: "First Name", type: "string" },
+	last_name: { label: "Last Name", type: "string" },
+
+	phone: { label: "Phone", type: "phone", isPhoneField: true },
+	phone_mobile1: {
+		label: "Phone Mobile1",
 		type: "phone",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "essential",
+		isPhoneField: true,
 	},
-	{
-		key: "current_company_name",
-		label: "Current Company Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "essential",
-	},
-	// Enrichment
-	{
-		key: "current_job_title",
-		label: "Job Title",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "department",
-		label: "Department",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "primary_industry",
-		label: "Industry",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "company_size",
-		label: "Company Size",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "annual_sales",
-		label: "Annual Sales",
-		type: "number",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "business_state",
-		label: "Business State",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "business_city",
-		label: "Business City",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-];
-
-const teleB2C: FieldSpec[] = [
-	// Essential
-	{
-		key: "first_name",
-		label: "First Name",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "essential",
-	},
-	{
-		key: "last_name",
-		label: "Last Name",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "essential",
-	},
-	{
-		key: "phone_mobile1",
-		label: "Phone (Mobile 1)",
+	phone_mobile2: {
+		label: "Phone Mobile2",
 		type: "phone",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "essential",
+		isPhoneField: true,
 	},
-	// Enrichment
-	{
-		key: "phone_mobile2",
-		label: "Phone (Mobile 2)",
-		type: "phone",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "gender",
-		label: "Gender",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "age",
-		label: "Age",
-		type: "number",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "home_state",
-		label: "Home State",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "home_city",
-		label: "Home City",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "home_postal_code",
-		label: "Home Postal Code",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "homeowner",
-		label: "Homeowner",
-		type: "boolean",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "has_children",
-		label: "Has Children",
-		type: "boolean",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-	{
-		key: "income_range",
-		label: "Income Range",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["tele_marketing"],
-		category: "enrichment",
-	},
-];
 
-/* -------------------------------------------
-   POSTAL Use Case
-------------------------------------------- */
-const postalB2B: FieldSpec[] = [
-	{
-		key: "first_name",
-		label: "First Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "essential",
-	},
-	{
-		key: "last_name",
-		label: "Last Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "essential",
-	},
-	{
-		key: "current_company_name",
-		label: "Current Company Name",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "essential",
-	},
-	{
-		key: "business_postal_code",
-		label: "Business Postal Code",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "essential",
-	},
-	{
-		key: "current_job_title",
-		label: "Job Title",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "business_city",
-		label: "Business City",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "business_state",
-		label: "Business State",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "business_country",
-		label: "Business Country",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "department",
-		label: "Department",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "primary_industry",
-		label: "Industry",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "company_size",
-		label: "Company Size",
-		supportedTargets: ["b2b"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-];
+	gender: { label: "Gender" },
+	birth_date: { label: "Birth date", type: "date" },
+	age: { label: "Age", type: "number" },
 
-const postalB2C: FieldSpec[] = [
-	{
-		key: "first_name",
-		label: "First Name",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "essential",
-	},
-	{
-		key: "last_name",
-		label: "Last Name",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "essential",
-	},
-	{
-		key: "home_postal_code",
-		label: "Home Postal Code",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "essential",
-	},
-	{
-		key: "home_city",
-		label: "Home City",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "home_state",
-		label: "Home State",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "home_country",
-		label: "Home Country",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "gender",
-		label: "Gender",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "age",
-		label: "Age",
-		type: "number",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "homeowner",
-		label: "Homeowner",
-		type: "boolean",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "marital_status",
-		label: "Marital Status",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "income_range",
-		label: "Income Range",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-	{
-		key: "has_children",
-		label: "Has Children",
-		type: "boolean",
-		supportedTargets: ["b2c"],
-		supportedUseCases: ["postal"],
-		category: "enrichment",
-	},
-];
+	city: { label: "City" },
+	state: { label: "State" },
+	zip_code: { label: "Zip code" },
+	country_code: { label: "Country code" },
 
-/* -------------------------
-   4) Service-specific defaults (rows) — what appears as default rows for a service
-   ------------------------- */
-const serviceDefaults: Record<ServiceType, string[]> = {
-	default: ["email", "first_name", "last_name"],
-	CSV: ["first_name", "last_name", "email"],
-	mailchimp: ["email", "first_name", "last_name"],
+	home_city: { label: "Home City" },
+	home_state: { label: "Home State" },
+	home_postal_code: { label: "Home Postal Code" },
+	home_country: { label: "Home Country" },
+
+	business_city: { label: "Business City" },
+	business_state: { label: "Business State" },
+	business_postal_code: { label: "Business Postal Code" },
+	business_country: { label: "Business Country" },
+
+	current_company_name: { label: "Current Company Name" },
+	current_job_title: { label: "Job Title" },
+	department: { label: "Department" },
+	primary_industry: { label: "Industry" },
+	company_size: { label: "Company Size" },
+	annual_sales: { label: "Annual Sales", type: "number" },
+
+	homeowner: { label: "Homeowner", type: "boolean" },
+	has_children: { label: "Has Children", type: "boolean" },
+	income_range: { label: "Income Range" },
+	marital_status: { label: "Marital Status" },
+};
+
+/* ============================
+   RULES / MATRIX
+   ============================ */
+type RuleGroup = {
+	essential?: string[];
+	enrichment?: string[];
+};
+
+type UseCaseRules = {
+	b2b?: RuleGroup;
+	b2c?: RuleGroup;
+	both?: RuleGroup;
+};
+
+const rules: Record<UseCase, UseCaseRules> = {
+	email: {
+		b2b: {
+			essential: [
+				"first_name",
+				"last_name",
+				"business_email",
+				"current_company_name",
+			],
+			enrichment: [
+				"current_job_title",
+				"department",
+				"primary_industry",
+				"company_size",
+				// "business_country",
+				// "business_state",
+				// "business_city",
+				// "business_postal_code",
+			],
+		},
+		b2c: {
+			essential: ["first_name", "last_name", "personal_email"],
+			enrichment: [
+				"gender",
+				"age",
+				"home_state",
+				"home_city",
+				//"homeowner",
+				"income_range",
+				"has_children",
+			],
+		},
+	},
+
+	tele_marketing: {
+		b2b: {
+			essential: [
+				"first_name",
+				"last_name",
+				"phone_mobile1",
+				"current_company_name",
+			],
+			enrichment: [
+				"current_job_title",
+				"department",
+				"primary_industry",
+				"company_size",
+				"annual_sales",
+				"business_state",
+				"business_city",
+			],
+		},
+		b2c: {
+			essential: ["first_name", "last_name", "phone_mobile1"],
+			enrichment: [
+				"phone_mobile2",
+				"gender",
+				"age",
+				"home_state",
+				"home_city",
+				"home_postal_code",
+				"homeowner",
+				"has_children",
+				"income_range",
+			],
+		},
+	},
+
+	postal: {
+		b2b: {
+			essential: [
+				"first_name",
+				"last_name",
+				"current_company_name",
+				"business_postal_code",
+			],
+			enrichment: [
+				"current_job_title",
+				"business_city",
+				"business_state",
+				"business_country",
+				"department",
+				"primary_industry",
+				"company_size",
+			],
+		},
+		b2c: {
+			essential: ["first_name", "last_name", "home_postal_code"],
+			enrichment: [
+				"home_city",
+				"home_state",
+				"home_country",
+				"gender",
+				"age",
+				"homeowner",
+				"marital_status",
+				"income_range",
+				"has_children",
+			],
+		},
+	},
+
+	meta: {
+		both: {
+			essential: [
+				"phone_mobile1",
+				"gender",
+				"home_city",
+				"home_state",
+				"zip_code",
+			],
+		},
+	},
+	google_ads: {
+		both: {
+			essential: [
+				"phone_mobile1",
+				"gender",
+				"home_city",
+				"home_state",
+				"zip_code",
+			],
+		},
+	},
+
+	generic: {
+		both: {
+			essential: [],
+			enrichment: [],
+		},
+	},
+};
+
+/* ============================
+   SERVICE DEFAULTS
+   ============================ */
+const baseServiceDefaults: Record<ServiceType, string[]> = {
+	default: ["first_name", "last_name"],
+	mailchimp: ["first_name", "last_name"],
 	meta: [
-		"email",
 		"first_name",
 		"last_name",
-		"phone",
-		"city",
-		"state",
-		"birth_date",
+		"personal_email",
+		"business_email",
+		"phone_mobile1",
+		"gender", // Добавляем gender в defaults для meta
+		"home_city",
+		"home_state",
 		"zip_code",
 	],
 	google_ads: [
-		"email",
 		"first_name",
 		"last_name",
-		"phone",
-		"city",
-		"state",
+		"personal_email",
+		"business_email",
+		"phone_mobile1",
+		"gender", // Добавляем gender в defaults для google_ads
+		"home_city",
+		"home_state",
 		"country_code",
 	],
-	sales_force: ["email", "first_name", "last_name"],
-	hubspot: ["email", "first_name", "last_name"],
-	s3: ["email", "first_name", "last_name"],
-	go_high_level: ["email", "first_name", "last_name"],
+	sales_force: ["first_name", "last_name"],
+	hubspot: ["first_name", "last_name"],
+	s3: ["first_name", "last_name"],
+	go_high_level: ["first_name", "last_name"],
+	CSV: ["first_name", "last_name"],
 };
 
-/* -------------------------
+// Функция для получения defaults с учетом useCase и target
+function getServiceDefaults(
+	service: ServiceType,
+	useCase?: UseCase,
+	target?: TargetSchema,
+): string[] {
+	const base = baseServiceDefaults[service] || baseServiceDefaults["default"];
+
+	if (service === "CSV") {
+		// Проверяем useCase только если он определен
+		if (useCase) {
+			// Для CSV с meta или google_ads useCase
+			if (useCase === "meta") {
+				return baseServiceDefaults["meta"];
+			}
+			if (useCase === "google_ads") {
+				return baseServiceDefaults["google_ads"];
+			}
+		}
+
+		// Для CSV с другими useCase (email, postal, tele_marketing, generic)
+		switch (target) {
+			case "b2b":
+				return [...base, "business_email"];
+			case "b2c":
+				return [...base, "personal_email"];
+			case "both":
+				return [...base, "personal_email", "business_email"];
+			default:
+				return [...base, "personal_email"];
+		}
+	}
+
+	// Для meta useCase ВСЕГДА возвращаем meta defaults независимо от сервиса
+	if (useCase === "meta") {
+		return baseServiceDefaults["meta"]; // Возвращаем defaults для meta
+	}
+
+	// Для google_ads useCase ВСЕГДА возвращаем google_ads defaults
+	if (useCase === "google_ads") {
+		return baseServiceDefaults["google_ads"];
+	}
+
+	// Для meta сервиса всегда возвращаем meta defaults
+	if (service === "meta") {
+		return baseServiceDefaults["meta"];
+	}
+
+	// Для google_ads сервиса всегда возвращаем google_ads defaults
+	if (service === "google_ads") {
+		return baseServiceDefaults["google_ads"];
+	}
+
+	// Для CSV сервиса
+
+	// Для всех остальных сервисов добавляем email в зависимости от target и useCase
+	if (useCase && useCase !== "generic") {
+		const emailUsingUseCases: UseCase[] = ["email", "postal", "tele_marketing"];
+
+		if (emailUsingUseCases.includes(useCase)) {
+			switch (target) {
+				case "b2b":
+					return [...base, "business_email"];
+				case "b2c":
+					return [...base, "personal_email"];
+				case "both":
+					return [...base, "personal_email", "business_email"];
+				default:
+					return [...base, "personal_email"];
+			}
+		}
+	}
+
+	return base;
+}
+
+/* ============================
+   HELPERS
+   ============================ */
+function keyToSpec(
+	key: string,
+	opts?: {
+		supportedTargets?: TargetSchema[];
+		supportedUseCases?: UseCase[];
+		category?: "essential" | "enrichment";
+	},
+): FieldSpec {
+	const base = baseFields[key];
+	return {
+		key,
+		label: base?.label ?? prettifyKey(key),
+		type: base?.type,
+		is_constant: base?.is_constant,
+		isEmailField: base?.isEmailField,
+		isPhoneField: base?.isPhoneField,
+		supportedTargets: opts?.supportedTargets,
+		supportedUseCases: opts?.supportedUseCases,
+		category: opts?.category,
+	};
+}
+
+function prettifyKey(k: string) {
+	return k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+// Функция для фильтрации дублирующихся полей
+function filterDuplicateFields(
+	fields: FieldSpec[],
+	target?: TargetSchema,
+): FieldSpec[] {
+	const result: FieldSpec[] = [];
+	const seenKeys = new Set<string>();
+
+	for (const field of fields) {
+		const key = field.key;
+
+		// Для phone_mobile1 проверяем дублирование
+		if (field.isPhoneField && key === "phone_mobile1") {
+			if (!seenKeys.has(key)) {
+				seenKeys.add(key);
+				result.push(field);
+			}
+			continue;
+		}
+
+		// Для email полей применяем логику в зависимости от target
+		if (field.isEmailField) {
+			if (!seenKeys.has(key)) {
+				let shouldInclude = true;
+
+				if (target === "b2b" && key === "personal_email") {
+					shouldInclude = false;
+				}
+
+				if (target === "b2c" && key === "business_email") {
+					shouldInclude = false;
+				}
+
+				if (shouldInclude) {
+					seenKeys.add(key);
+					result.push(field);
+				}
+			}
+		} else if (!seenKeys.has(key)) {
+			seenKeys.add(key);
+			result.push(field);
+		}
+	}
+
+	return result;
+}
+
+// Функция для проверки, нужно ли учитывать target type
+function shouldIgnoreTarget(useCase: UseCase, service: ServiceType): boolean {
+	return (
+		useCase === "meta" ||
+		service === "meta" ||
+		useCase === "google_ads" ||
+		service === "google_ads"
+	);
+}
+
+function resolveFieldsFor(
+	useCase: UseCase,
+	target: TargetSchema,
+	service?: ServiceType,
+): FieldSpec[] {
+	const r = rules[useCase];
+	if (!r) return [];
+
+	// Для meta и google_ads всегда используем both группу, игнорируя target
+	if (shouldIgnoreTarget(useCase, service || "default") && r.both) {
+		const group = r.both;
+		const keys = [...(group.essential ?? []), ...(group.enrichment ?? [])];
+		return filterDuplicateFields(
+			keys.map((k) =>
+				keyToSpec(k, {
+					supportedTargets: ["both"],
+					supportedUseCases: [useCase],
+					category: group.essential?.includes(k) ? "essential" : "enrichment",
+				}),
+			),
+			"both",
+		);
+	}
+
+	const groups: RuleGroup[] = [];
+
+	if (target === "b2b") {
+		if (r.b2b) groups.push(r.b2b);
+	} else if (target === "b2c") {
+		if (r.b2c) groups.push(r.b2c);
+	} else if (target === "both") {
+		if (r.b2b) groups.push(r.b2b);
+		if (r.b2c) groups.push(r.b2c);
+	}
+
+	const out: FieldSpec[] = [];
+	for (const g of groups) {
+		const essential = g.essential ?? [];
+		const enrichment = g.enrichment ?? [];
+
+		for (const k of essential) {
+			out.push(
+				keyToSpec(k, {
+					supportedTargets: [target],
+					supportedUseCases: [useCase],
+					category: "essential",
+				}),
+			);
+		}
+		for (const k of enrichment) {
+			out.push(
+				keyToSpec(k, {
+					supportedTargets: [target],
+					supportedUseCases: [useCase],
+					category: "enrichment",
+				}),
+			);
+		}
+	}
+
+	return filterDuplicateFields(out, target);
+}
+
+/* ============================
    EXPORT: config + helpers
-   ------------------------- */
-
-const allUseCaseFields: Record<
-	UseCase,
-	{ b2b: FieldSpec[]; b2c: FieldSpec[] }
-> = {
-	email: { b2b: emailB2B, b2c: emailB2C },
-	tele_marketing: { b2b: teleB2B, b2c: teleB2C },
-	postal: { b2b: postalB2B, b2c: postalB2C },
-	generic: { b2b: [], b2c: [] },
-};
-
+   ============================ */
 export const schemaConfig = {
-	commonFields,
-	allUseCaseFields,
-	serviceDefaults,
+	allUseCaseFields: {} as Record<
+		UseCase,
+		{ b2b: FieldSpec[]; b2c: FieldSpec[] }
+	>,
+	serviceDefaults: baseServiceDefaults,
 };
+
+// Динамически заполняем allUseCaseFields
+const allUseCases: UseCase[] = [
+	"email",
+	"postal",
+	"tele_marketing",
+	"generic",
+	"meta",
+	"google_ads",
+];
+for (const useCase of allUseCases) {
+	schemaConfig.allUseCaseFields[useCase] = {
+		b2b: resolveFieldsFor(useCase, "b2b"),
+		b2c: resolveFieldsFor(useCase, "b2c"),
+	};
+}
 
 /**
  * Get merged available fields for given parameters.
- * - includes commonFields
- * - includes useCase fields (and for postal picks home/business based on target)
- * - includes target-specific fields (b2b / b2c / both)
- *
- * Deduplicates by key (first occurrence wins).
  */
 export function getAvailableFields(
 	service?: ServiceType,
 	useCase?: UseCase,
 	target?: TargetSchema,
-) {
-	const t = target ?? "both";
-	const u = useCase ?? "generic";
+): FieldSpec[] {
+	const t: TargetSchema = target ?? "both";
+	const u: UseCase = useCase ?? "generic";
+	const s: ServiceType = service || "default";
 
-	let fields: FieldSpec[] = [...commonFields];
-	const usecase = schemaConfig.allUseCaseFields[u];
+	const resolved = resolveFieldsFor(u, t, s);
 
-	if (usecase) {
-		if (t === "b2b") fields.push(...usecase.b2b);
-		else if (t === "b2c") fields.push(...usecase.b2c);
-		else fields.push(...usecase.b2b, ...usecase.b2c);
+	// Для meta и google_ads useCase НИКОГДА не добавляем email поля
+	if (u === "meta" || u === "google_ads") {
+		return resolved;
 	}
 
-	// deduplicate
-	const map = new Map<string, FieldSpec>();
-	for (const f of fields) if (!map.has(f.key)) map.set(f.key, f);
-	return Array.from(map.values());
+	// Для meta и google_ads сервисов тоже не добавляем email
+	if (s === "meta" || s === "google_ads") {
+		return resolved;
+	}
+
+	// Добавляем email поля для сервисов, которые их используют
+	if (service && useCase && useCase !== "generic") {
+		const emailUsingUseCases: UseCase[] = ["email", "postal", "tele_marketing"];
+
+		if (emailUsingUseCases.includes(useCase)) {
+			const hasPersonalEmail = resolved.some((f) => f.key === "personal_email");
+			const hasBusinessEmail = resolved.some((f) => f.key === "business_email");
+
+			if (target === "b2b" && !hasBusinessEmail) {
+				resolved.unshift(
+					keyToSpec("business_email", {
+						category: "essential",
+					}),
+				);
+			} else if (target === "b2c" && !hasPersonalEmail) {
+				resolved.unshift(
+					keyToSpec("personal_email", {
+						category: "essential",
+					}),
+				);
+			} else if (target === "both") {
+				if (!hasPersonalEmail) {
+					resolved.unshift(
+						keyToSpec("personal_email", {
+							category: "essential",
+						}),
+					);
+				}
+				if (!hasBusinessEmail) {
+					resolved.unshift(
+						keyToSpec("business_email", {
+							category: "essential",
+						}),
+					);
+				}
+			}
+		}
+	}
+
+	return resolved;
 }
 
 /**
- * Get rows (default mapping order) for service
+ * Get rows (default mapping order) for service with target consideration
  */
-export function getDefaultRowsForService(service?: ServiceType) {
-	const s = service ?? "default";
-	const keys =
-		schemaConfig.serviceDefaults[s] ?? schemaConfig.serviceDefaults["default"];
+export function getDefaultRowsForService(
+	service?: ServiceType,
+	useCase?: UseCase,
+	target?: TargetSchema,
+) {
+	const s: ServiceType = (service ?? "default") as ServiceType;
+	const keys = getServiceDefaults(s, useCase, target);
+
 	return keys.map((k) => {
-		const pretty = k
-			.replace(/_/g, " ")
-			.replace(/\b\w/g, (c) => c.toUpperCase());
+		const pretty = baseFields[k]?.label ?? prettifyKey(k);
 		return { key: k, label: pretty };
 	});
+}
+
+/**
+ * Получить обязательные поля для валидации
+ */
+export function getRequiredFields(
+	service: ServiceType,
+	useCase: UseCase,
+	target: TargetSchema,
+): string[] {
+	const fields = getAvailableFields(service, useCase, target);
+	const essentialFields = fields
+		.filter((f) => f.category === "essential")
+		.map((f) => f.key);
+
+	return essentialFields;
+}
+
+/**
+ * Проверяет, нужно ли игнорировать target type для данной комбинации
+ */
+export function shouldHideTargetSelector(
+	service: ServiceType,
+	useCase: UseCase,
+): boolean {
+	return shouldIgnoreTarget(useCase, service);
 }
 
 export default schemaConfig;

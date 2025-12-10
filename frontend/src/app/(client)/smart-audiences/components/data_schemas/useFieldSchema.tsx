@@ -1,18 +1,17 @@
 // useFieldSchema.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
-import schemaConfig, {
+import {
 	getAvailableFields,
 	getDefaultRowsForService,
 	FieldSpec,
 	ServiceType,
 	UseCase,
 	TargetSchema,
+	getRequiredFields, // добавлен новый экспорт
 } from "./schemaConfig";
 
 /**
  * Типы, совместимые с вашим существующим кодом
- * Row — используется в defaultRows / rows (id, type=label, value=key)
- * CustomRow — ваш RequestData.data_map item
  */
 export interface Row {
 	id: number;
@@ -20,6 +19,7 @@ export interface Row {
 	value: string; // canonical key (e.g. "email", "first_name")
 	selectValue?: string;
 	canDelete?: boolean;
+	required?: boolean; // новое поле: является ли поле обязательным
 }
 
 export interface CustomRow {
@@ -28,24 +28,21 @@ export interface CustomRow {
 	is_constant?: boolean;
 }
 
-/**
- * AvailableField shape — matches earlier code where extendedFieldsList items
- * had { value: key, type: label, is_constant }
- */
 export interface AvailableField {
 	value: string;
 	type: string;
 	is_constant?: boolean;
 	_spec?: FieldSpec;
+	required?: boolean; // новое поле: является ли поле обязательным
 }
 
 type UseFieldSchemaReturn = {
 	rows: Row[];
-	// теперь expose-им setter как React.Dispatch<SetStateAction> — позволяет prev => ... и прямые массивы
 	setRows: React.Dispatch<React.SetStateAction<Row[]>>;
 	customFields: CustomRow[];
 	setCustomFields: React.Dispatch<React.SetStateAction<CustomRow[]>>;
 	availableFields: AvailableField[];
+	requiredFields: string[]; // массив ключей обязательных полей
 	addCustomFieldByKey: (key: string) => void;
 	removeCustomFieldByIndex: (index: number) => void;
 	removeCustomFieldByKey: (key: string) => void;
@@ -60,6 +57,7 @@ type UseFieldSchemaReturn = {
 	hasAnyDuplicates: () => boolean;
 	buildDataMapForRequest: () => CustomRow[];
 	resetToDefaults: () => void;
+	validateRows: () => { isValid: boolean; missingFields: string[] };
 };
 
 /**
@@ -67,9 +65,9 @@ type UseFieldSchemaReturn = {
  * service / useCase / targetSchema и предоставляет утилиты для UI.
  */
 export function useFieldSchema(
-	activeService?: ServiceType,
-	useCase?: UseCase,
-	targetSchema?: TargetSchema,
+	targetSchema: TargetSchema,
+	useCase: UseCase,
+	activeService: ServiceType,
 	opts?: {
 		initialRows?: Row[] | null;
 		initialCustomFields?: CustomRow[] | null;
@@ -77,47 +75,73 @@ export function useFieldSchema(
 ): UseFieldSchemaReturn {
 	const nextId = useRef(1);
 
-	const specToRow = (spec: FieldSpec) => {
+	// Получаем обязательные поля для валидации
+	const requiredFields = useMemo(() => {
+		return getRequiredFields(activeService, useCase, targetSchema);
+	}, [activeService, useCase, targetSchema]);
+
+	// Конвертер FieldSpec -> Row
+	const specToRow = (spec: FieldSpec): Row => {
 		const id = nextId.current++;
-		return { id, type: spec.label, value: spec.key } as Row;
+		const isRequired = requiredFields.includes(spec.key);
+		return {
+			id,
+			type: spec.label,
+			value: spec.key,
+			required: isRequired,
+		} as Row;
 	};
 
+	// Конвертер FieldSpec -> AvailableField
 	const specToAvailable = (spec: FieldSpec): AvailableField => ({
 		value: spec.key,
 		type: spec.label,
 		is_constant: spec.is_constant,
 		_spec: spec,
+		required: requiredFields.includes(spec.key),
 	});
 
-	// use new helpers from schemaConfig
+	// Получаем доступные поля с учетом новой логики email полей
 	const mergedFieldSpecs = useMemo(() => {
-		// getAvailableFields returns deduplicated FieldSpec[] based on service/useCase/target
 		return getAvailableFields(activeService, useCase, targetSchema);
 	}, [activeService, useCase, targetSchema]);
 
 	const availableFields = useMemo(
 		() => mergedFieldSpecs.map(specToAvailable),
-		[mergedFieldSpecs],
+		[mergedFieldSpecs, requiredFields],
 	);
 
-	// initial rows: use getDefaultRowsForService which returns array of {key,label}
+	// Получаем начальные строки с учетом обязательных полей
+	// В useFieldSchema.tsx, в функции getInitialRowsForService:
 	const getInitialRowsForService = (svc?: ServiceType): Row[] => {
-		// If opts.initialRows provided, keep using those (caller choice)
-		if (opts?.initialRows) return opts.initialRows;
-		const defaults = getDefaultRowsForService(svc);
-		// defaults is array of { key, label } (see schemaConfig helper)
+		if (opts?.initialRows) {
+			return opts.initialRows.map((row) => ({
+				...row,
+				required: requiredFields.includes(row.value),
+			}));
+		}
+
+		// Передаем useCase в getDefaultRowsForService
+		const defaults = getDefaultRowsForService(svc, useCase, targetSchema);
 		nextId.current = 1;
-		return defaults.map((d) => ({
-			id: nextId.current++,
-			type: (d as any).label ?? d.key,
-			value: (d as any).key ?? d.key,
-		}));
+
+		return defaults.map((d) => {
+			const isRequired = requiredFields.includes(d.key);
+			return {
+				id: nextId.current++,
+				type: d.label,
+				value: d.key,
+				required: isRequired,
+			} as Row;
+		});
 	};
 
+	// Инициализация rows с учетом обязательных полей
 	const [rows, setRows] = useState<Row[]>(() =>
 		getInitialRowsForService(activeService),
 	);
 
+	// Построение initial custom fields
 	const buildInitialCustomFromAvailable = () => {
 		const rowKeys = new Set(rows.map((r) => r.value));
 		return availableFields
@@ -133,6 +157,7 @@ export function useFieldSchema(
 		() => opts?.initialCustomFields ?? buildInitialCustomFromAvailable(),
 	);
 
+	// Эффект для обновления при изменении параметров
 	useEffect(() => {
 		nextId.current = 1;
 		const newRows = getInitialRowsForService(activeService);
@@ -147,26 +172,90 @@ export function useFieldSchema(
 				is_constant: f.is_constant,
 			}));
 		setCustomFields(newCustom);
-		// intentionally depend on availableFields so rebuild when availableFields recalculates
-	}, [
-		activeService,
-		useCase,
-		targetSchema,
-		/* availableFields included via mergedFieldSpecs deps */ availableFields,
-	]);
+	}, [activeService, useCase, targetSchema, availableFields]);
 
-	// Utilities
+	// Функция валидации - проверяет, что все обязательные поля присутствуют
+	const validateRows = () => {
+		const currentRowKeys = new Set(rows.map((r) => r.value));
+		const missingFields = requiredFields.filter(
+			(field) => !currentRowKeys.has(field),
+		);
+
+		return {
+			isValid: missingFields.length === 0,
+			missingFields,
+		};
+	};
+
+	// Добавляем обязательное поле в rows если оно отсутствует
+	const ensureRequiredFieldsInRows = (
+		currentRows: Row[],
+		newRows: Row[],
+	): Row[] => {
+		const currentKeys = new Set(newRows.map((r) => r.value));
+		const missingRequired = requiredFields.filter(
+			(field) => !currentKeys.has(field),
+		);
+
+		if (missingRequired.length === 0) {
+			return newRows;
+		}
+
+		// Добавляем недостающие обязательные поля
+		const missingRows = missingRequired
+			.map((field) => {
+				const spec = mergedFieldSpecs.find((s) => s.key === field);
+				if (!spec) return null;
+
+				return {
+					id: nextId.current++,
+					type: spec.label,
+					value: field,
+					required: true,
+				} as Row;
+			})
+			.filter(Boolean) as Row[];
+
+		return [...newRows, ...missingRows];
+	};
+
+	// Обертываем setRows для автоматического добавления обязательных полей
+	const wrappedSetRows: React.Dispatch<React.SetStateAction<Row[]>> = (
+		action,
+	) => {
+		setRows((prev) => {
+			const newRows = typeof action === "function" ? action(prev) : action;
+			return ensureRequiredFieldsInRows(prev, newRows);
+		});
+	};
+
+	// Утилиты для работы с custom fields
 	const addCustomFieldByKey = (key: string) => {
 		const spec = mergedFieldSpecs.find((s) => s.key === key);
 		if (!spec) return;
-		setCustomFields((prev) => {
-			if (prev.some((c) => c.type === spec.key)) return prev;
-			if (rows.some((r) => r.value === spec.key)) return prev;
-			return [
-				...prev,
-				{ type: spec.key, value: spec.label, is_constant: spec.is_constant },
-			];
-		});
+
+		// Проверяем, является ли поле обязательным
+		const isRequired = requiredFields.includes(key);
+
+		// Если поле обязательное, добавляем его в rows
+		if (isRequired) {
+			wrappedSetRows((prev) => {
+				if (prev.some((r) => r.value === key)) return prev;
+				return [...prev, specToRow(spec)];
+			});
+			// Удаляем из custom fields если оно там есть
+			removeCustomFieldByKey(key);
+		} else {
+			// Для необязательных полей добавляем в custom fields
+			setCustomFields((prev) => {
+				if (prev.some((c) => c.type === key)) return prev;
+				if (rows.some((r) => r.value === key)) return prev;
+				return [
+					...prev,
+					{ type: spec.key, value: spec.label, is_constant: spec.is_constant },
+				];
+			});
+		}
 	};
 
 	const removeCustomFieldByIndex = (index: number) => {
@@ -220,11 +309,13 @@ export function useFieldSchema(
 	const resetToDefaults = () => {
 		nextId.current = 1;
 		const newRows = getInitialRowsForService(activeService);
-		setRows(newRows);
+		wrappedSetRows(newRows);
 		const rowKeys = new Set(newRows.map((r) => r.value));
 		setCustomFields(
 			availableFields
-				.filter((f) => !rowKeys.has(f.value))
+				.filter(
+					(f) => !rowKeys.has(f.value) && !requiredFields.includes(f.value),
+				)
 				.map((f) => ({
 					type: f.value,
 					value: f.type,
@@ -235,10 +326,11 @@ export function useFieldSchema(
 
 	return {
 		rows,
-		setRows,
+		setRows: wrappedSetRows,
 		customFields,
 		setCustomFields,
 		availableFields,
+		requiredFields,
 		addCustomFieldByKey,
 		removeCustomFieldByIndex,
 		removeCustomFieldByKey,
@@ -249,6 +341,7 @@ export function useFieldSchema(
 		hasAnyDuplicates,
 		buildDataMapForRequest,
 		resetToDefaults,
+		validateRows,
 	};
 }
 

@@ -83,6 +83,7 @@ class PersonRecord(BaseModel):
     business_state: Optional[str] = None
     company_size: Optional[str] = None
     home_state: Optional[str] = None
+    home_country: Optional[str] = None
     income_range: Optional[str] = None
     current_job_title: Optional[str] = None
     department: Optional[str] = None
