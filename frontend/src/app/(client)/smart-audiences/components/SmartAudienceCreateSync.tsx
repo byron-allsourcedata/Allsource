@@ -52,6 +52,7 @@ import GoHighLevelConnectPopup from "@/components/integrations/GoHighLevelIntegr
 import UserTip from "@/components/ui/tips/TipInsideDrawer";
 import CustomButton from "@/components/ui/CustomButton";
 import { Logo } from "@/components/ui/Logo";
+import { TargetSchema, UseCase } from "./data_schemas/schemaConfig";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -59,8 +60,8 @@ interface AudiencePopupProps {
 	updateSmartAudStatus: (id: string) => void;
 	integrationsList?: string[];
 	id?: string;
-	useCase?: string;
-	targetSchema?: string;
+	useCase: UseCase;
+	targetSchema: TargetSchema;
 	activeSegmentRecords?: number;
 	isDownloadAction: boolean;
 	setIsPageLoading: (state: boolean) => void;
@@ -353,11 +354,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		hasAnyDuplicates,
 		buildDataMapForRequest,
 		resetToDefaults,
-	} = useFieldSchema(
-		activeService as any,
-		useCase as any,
-		(targetSchema as any) ?? undefined,
-	);
+	} = useFieldSchema(targetSchema, useCase, activeService as any);
 
 	const extendedAvailableFields =
 		activeService === "hubspot"
@@ -553,7 +550,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const toSnakeCase = (name: string) => {
-		return name.toLowerCase().split(" ").join("_");
+		return name
+			.replace(/[()]/g, "") // только удаляем скобки, оставляем текст
+			.replace(/[^a-zA-Z0-9]+/g, "_") // всё остальное → _
+			.replace(/([a-z])([A-Z])/g, "$1_$2") // camelCase → snake_case
+			.toLowerCase()
+			.replace(/^_+|_+$/g, "") // удаляем _ в начале/конце
+			.replace(/_+/g, "_"); // схлопываем __
 	};
 
 	const handleActive = (service: string) => {
@@ -631,14 +634,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				sent_contacts: valueContactSync,
 				smart_audience_id: id,
 				data_map: [
-					...defaultRowsCSV.map((item) => ({
+					...rows.map((item) => ({
 						value: item.type,
 						type: toSnakeCase(item.type),
 					})),
 					...buildDataMapForRequest(),
 				].map((el) => ({ type: el.type, value: el.value })),
 			};
-			console.log(requestObj);
 			const response = await axiosInstance.post(
 				"/audience-smarts/download-persons",
 				requestObj,
@@ -1057,14 +1059,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 		go_high_level: handleCreateGoHighLevelOpen,
 		s3: handleCreateS3Open,
 	};
-	const excludedSalesforce = [
-		"phone",
-		"city",
-		"state",
-		"zip_code",
-		"postal_code",
-		"company",
-	];
 
 	const handleAddIntegration = async (service_name: string) => {
 		try {

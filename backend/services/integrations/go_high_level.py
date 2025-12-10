@@ -389,6 +389,21 @@ class GoHighLevelIntegrationsService:
                 location_id=user_integration.location_id,
             )
 
+            if contact_data is None:
+                logging.info(
+                    f"User {enrichment_user.asid}: INCORRECT_FORMAT (missing email or name)"
+                )
+
+                results.append(
+                    {
+                        "enrichment_user_asid": enrichment_user.asid,
+                        "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                        "error": "Missing required fields (email, first_name, last_name)",
+                        "http_status": None,
+                    }
+                )
+                continue
+
             result = self.upsert_contact(
                 access_token=access_token, contact_data=contact_data
             )

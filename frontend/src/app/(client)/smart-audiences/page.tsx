@@ -85,11 +85,12 @@ import ConfirmDialogPopover from "@/components/ui/popovers/ConfirmDialogPopover"
 import EditNamePopover from "@/components/ui/popovers/EditNamePopover";
 import MoreActionPopover from "@/components/ui/popovers/MoreActionPopover";
 import HoverPlatformNameTooltip from "@/components/ui/tooltips/PlatformIconWithNameInTooltip";
+import { TargetSchema, UseCase } from "./components/data_schemas/schemaConfig";
 
 interface Smarts {
 	id: string;
 	name: string;
-	use_case_alias: string;
+	use_case_alias: UseCase;
 	created_by: string;
 	created_at: Date;
 	total_records: number;
@@ -98,7 +99,7 @@ interface Smarts {
 	processed_active_segment_records: number;
 	status: string;
 	integrations: string[];
-	target_schema: string;
+	target_schema: TargetSchema;
 	n_a: boolean;
 	progress_info: SmartsProgress | null;
 	validation_mode: "all" | "any";
@@ -1976,22 +1977,24 @@ const SmartAudiences: React.FC = () => {
 										label="Smart Audience Name"
 									/>
 
-									<CreateSyncPopup
-										open={dataSyncPopupOpen}
-										id={selectedRowData?.id}
-										useCase={selectedRowData?.use_case_alias}
-										targetSchema={selectedRowData?.target_schema}
-										activeSegmentRecords={
-											selectedRowData?.n_a
-												? selectedRowData?.active_segment_records
-												: selectedRowData?.validated_records
-										}
-										onClose={handleDataSyncPopupClose}
-										integrationsList={selectedRowData?.integrations}
-										isDownloadAction={isDownloadAction}
-										updateSmartAudStatus={updateSmartAudStatus}
-										setIsPageLoading={setLoading}
-									/>
+									{selectedRowData && (
+										<CreateSyncPopup
+											open={dataSyncPopupOpen}
+											id={selectedRowData?.id}
+											useCase={selectedRowData.use_case_alias}
+											targetSchema={selectedRowData.target_schema}
+											activeSegmentRecords={
+												selectedRowData?.n_a
+													? selectedRowData?.active_segment_records
+													: selectedRowData?.validated_records
+											}
+											onClose={handleDataSyncPopupClose}
+											integrationsList={selectedRowData?.integrations}
+											isDownloadAction={isDownloadAction}
+											updateSmartAudStatus={updateSmartAudStatus}
+											setIsPageLoading={setLoading}
+										/>
+									)}
 									<FilterPopup
 										open={filterPopupOpen}
 										onClose={handleFilterPopupClose}

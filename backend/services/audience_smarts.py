@@ -651,6 +651,24 @@ class AudienceSmartsService:
     def download_persons(self, smart_audience_id, sent_contacts, data_map):
         types = [contact.type for contact in data_map]
         values = [contact.value for contact in data_map]
+
+        mapped_types = []
+        mapped_values = []
+
+        for t, v in zip(types, values):
+            if t == "birth_date":
+                mapped_types.extend(["birth_year", "birth_month", "birth_day"])
+                mapped_values.extend(["Birth Year", "Birth Month", "Birth Day"])
+            elif t == "zip_code":
+                mapped_types.append("zip_code5")
+                mapped_values.append("Zip Code")
+            else:
+                mapped_types.append(t)
+                mapped_values.append(v)
+
+        values = mapped_values
+        types = mapped_types
+
         leads = self.audience_smarts_persistence.get_persons_by_smart_aud_id(
             smart_audience_id, sent_contacts, types
         )
@@ -660,14 +678,28 @@ class AudienceSmartsService:
         writer.writerow(values)
 
         for lead in leads:
-            relevant_data = [
-                self.GENDER_MAPPDING.get(
-                    getattr(lead, field, ""), getattr(lead, field, "")
-                )
-                if field == "gender"
-                else getattr(lead, field, "")
-                for field in types
-            ]
+            relevant_data = []
+
+            for field in types:
+                if field == "birth_date":
+                    year = getattr(lead, "birth_year", None)
+                    month = getattr(lead, "birth_month", None)
+                    day = getattr(lead, "birth_day", None)
+
+                    if year and month and day:
+                        relevant_data.append(f"{year}-{month:02d}-{day:02d}")
+                    else:
+                        relevant_data.append("")
+                    continue
+
+                # gender mapping
+                if field == "gender":
+                    val = getattr(lead, field, "")
+                    relevant_data.append(self.GENDER_MAPPDING.get(val, val))
+                    continue
+
+                # default
+                relevant_data.append(getattr(lead, field, ""))
             writer.writerow(relevant_data)
 
         output.seek(0)
