@@ -643,7 +643,7 @@ class IntegrationsUserSyncPersistence:
                 == AudienceSmartValidation.audience_smart_person_id,
             )
             .filter(
-                AudienceSmartPerson.enrichment_user_id == enrichment_user_id
+                AudienceSmartPerson.enrichment_user_asid == enrichment_user_id
             )
             .limit(2)
             .all()
