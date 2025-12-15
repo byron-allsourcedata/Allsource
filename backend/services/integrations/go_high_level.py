@@ -295,13 +295,6 @@ class GoHighLevelIntegrationsService:
         except Exception:
             response_json = response.text
 
-        logger.info(
-            "UpsertContact: status=%s, response=%s, sent_data=%s",
-            response.status_code,
-            response_json,
-            contact_data,
-        )
-
         if response.status_code in (200, 201, 202):
             return {
                 "status": ProccessDataSyncResult.SUCCESS.value,
