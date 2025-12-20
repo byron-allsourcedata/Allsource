@@ -213,3 +213,4 @@ XlsxWriter==3.2.0
 yarl==1.9.4
 zeep==4.3.1
 zstandard==0.23.0
+asyncpg==0.31.0

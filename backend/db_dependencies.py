@@ -6,11 +6,13 @@ from clickhouse_connect.driver import Client
 from clickhouse_connect.driver import AsyncClient
 
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
 from config import ClickhouseConfig
 from config import ClickhouseInsertConfig
 from config.database import SessionLocal
+from config.database_async import AsyncSessionLocal
 from config.rmq_connection import RabbitMQConnection
 
 
@@ -23,6 +25,17 @@ def get_db():
 
 
 Db: TypeAlias = Annotated[Session, Depends(get_db)]
+
+
+async def get_async_db():
+    session: AsyncSession = AsyncSessionLocal()
+    try:
+        yield session
+    finally:
+        await session.close()
+
+
+AsyncDb: TypeAlias = Annotated[AsyncSession, Depends(get_async_db)]
 
 
 def get_clickhouse_db():
