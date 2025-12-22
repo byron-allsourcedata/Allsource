@@ -7,64 +7,102 @@ from enums import BaseEnum
 from models import UserDomains
 from schemas.leads import LeadsRequest
 from services.leads import LeadsService
+from services.leads_delivr import AsyncLeadsService
 
 router = APIRouter()
 
 
+# @router.get("")
+# async def get_leads(
+#     leads_service: LeadsService,
+#     domain: UserDomains = Depends(check_pixel_install_domain),
+#     page: int = Query(1, alias="page", ge=1, description="Page number"),
+#     per_page: int = Query(
+#         10, alias="per_page", ge=1, le=500, description="Items per page"
+#     ),
+#     from_date: int = Query(None, description="Start date in integer format"),
+#     to_date: int = Query(None, description="End date in integer format"),
+#     regions: str = Query(None, description="Comma-separated list of regions"),
+#     page_url: str = Query(None, description="Comma-separated list of pages"),
+#     page_visits: str = Query(None, description="Minimum number of page visits"),
+#     average_time_sec: str = Query(
+#         None, description="average time sec on the page"
+#     ),
+#     behavior_type: str = Query(None, description="funnel type stage"),
+#     status: str = Query(None, status="status type stage"),
+#     recurring_visits: str = Query(
+#         None, description="Minimum number of recurring visits"
+#     ),
+#     sort_by: str = Query(None, description="Field"),
+#     sort_order: str = Query(
+#         None, description="Field to sort by: 'asc' or 'desc'"
+#     ),
+#     search_query: str = Query(
+#         None,
+#         description="Search for email, first name, lastname and phone number",
+#     ),
+#     from_time: str = Query(None, description="Start time in integer format"),
+#     to_time: str = Query(None, description="End time in integer format"),
+#     timezone_offset: float = Query(
+#         0, description="timezone offset in integer format"
+#     ),
+# ):
+#     return leads_service.get_leads(
+#         domain=domain,
+#         sort_by=sort_by,
+#         sort_order=sort_order,
+#         page=page,
+#         per_page=per_page,
+#         status=status,
+#         from_date=from_date,
+#         to_date=to_date,
+#         regions=regions,
+#         page_visits=page_visits,
+#         average_time_sec=average_time_sec,
+#         behavior_type=behavior_type,
+#         recurring_visits=recurring_visits,
+#         search_query=search_query,
+#         from_time=from_time,
+#         to_time=to_time,
+#         timezone_offset=timezone_offset,
+#         page_url=page_url,
+#     )
+
+
 @router.get("")
 async def get_leads(
-    leads_service: LeadsService,
+    leads_service: AsyncLeadsService,
+    # domain → pixel_id
     domain: UserDomains = Depends(check_pixel_install_domain),
-    page: int = Query(1, alias="page", ge=1, description="Page number"),
-    per_page: int = Query(
-        10, alias="per_page", ge=1, le=500, description="Items per page"
+    # pagination
+    page: int = Query(1, ge=1, description="Page number"),
+    per_page: int = Query(50, ge=1, le=500, description="Items per page"),
+    # time filters
+    from_date: int | None = Query(
+        None, description="Start date (epoch seconds)"
     ),
-    from_date: int = Query(None, description="Start date in integer format"),
-    to_date: int = Query(None, description="End date in integer format"),
-    regions: str = Query(None, description="Comma-separated list of regions"),
-    page_url: str = Query(None, description="Comma-separated list of pages"),
-    page_visits: str = Query(None, description="Minimum number of page visits"),
-    average_time_sec: str = Query(
-        None, description="average time sec on the page"
-    ),
-    behavior_type: str = Query(None, description="funnel type stage"),
-    status: str = Query(None, status="status type stage"),
-    recurring_visits: str = Query(
-        None, description="Minimum number of recurring visits"
-    ),
-    sort_by: str = Query(None, description="Field"),
-    sort_order: str = Query(
-        None, description="Field to sort by: 'asc' or 'desc'"
-    ),
-    search_query: str = Query(
-        None,
-        description="Search for email, first name, lastname and phone number",
-    ),
-    from_time: str = Query(None, description="Start time in integer format"),
-    to_time: str = Query(None, description="End time in integer format"),
-    timezone_offset: float = Query(
-        0, description="timezone offset in integer format"
-    ),
+    to_date: int | None = Query(None, description="End date (epoch seconds)"),
+    # misc
+    timezone_offset: int = Query(0, description="Timezone offset in hours"),
 ):
-    return leads_service.get_leads(
-        domain=domain,
-        sort_by=sort_by,
-        sort_order=sort_order,
+    """
+    Async ClickHouse-based leads endpoint.
+
+    Flow:
+    domain → pixel_id
+           → leads_users (by pixel_id)
+           → leads_visits (latest visit)
+           → delivr_users (heavy table, joined last)
+    """
+
+    return await leads_service.get_leads(
+        pixel_id=domain.pixel_id,
         page=page,
         per_page=per_page,
-        status=status,
         from_date=from_date,
         to_date=to_date,
-        regions=regions,
-        page_visits=page_visits,
-        average_time_sec=average_time_sec,
-        behavior_type=behavior_type,
-        recurring_visits=recurring_visits,
-        search_query=search_query,
-        from_time=from_time,
-        to_time=to_time,
         timezone_offset=timezone_offset,
-        page_url=page_url,
+        require_visit_in_range=True,
     )
 
 

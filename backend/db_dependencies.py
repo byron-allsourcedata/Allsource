@@ -1,7 +1,6 @@
 from typing import Annotated, TypeAlias
 
 from aio_pika.abc import AbstractChannel, AbstractConnection
-import clickhouse_connect
 from clickhouse_connect.driver import Client
 from clickhouse_connect.driver import AsyncClient
 
