@@ -53,7 +53,6 @@ class LeadsToClickHouseMigrator:
             user.business_email,
             user.personal_emails,
             user.additional_personal_emails,
-            user.programmatic_business_emails,
         ]:
             if not raw:
                 continue
@@ -149,12 +148,8 @@ class LeadsToClickHouseMigrator:
                 result.append(
                     {
                         "five_x_five_user_id": owner.id if owner else None,
-                        "profile_pid_all": profile_pid_info[
-                            "profile_pid_all"
-                        ],  # Извлекаем profile_pid_all
-                        "company_id": profile_pid_info[
-                            "company_id"
-                        ],  # Извлекаем company_id
+                        "profile_pid_all": profile_pid_info["profile_pid_all"],
+                        "company_id": profile_pid_info["company_id"],
                     }
                 )
         unique_result = [dict(t) for t in {tuple(d.items()) for d in result}]
@@ -244,7 +239,7 @@ class LeadsToClickHouseMigrator:
                 visits.append(
                     Visit(
                         profile_pid_all=profile,
-                        pixel_id=uuid5(NAMESPACE_URL, pixel_id),
+                        pixel_id=pixel_id,
                         visit_id=visit_id,
                         page=page,
                         page_parameters=params,
@@ -263,6 +258,41 @@ class LeadsToClickHouseMigrator:
 
         return visits
 
+    async def preparate_and_insert_leads(self, lead_users, pixel_id):
+        five_x_five_user_ids = [
+            lead_user.five_x_five_user_id for lead_user in lead_users
+        ]
+        five_x_five_users = (
+            self.db_session.query(FiveXFiveUser)
+            .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
+            .all()
+        )
+        logger.info(f"five_x_five_users len {len(five_x_five_users)}")
+        etl_logger = logging.getLogger("delivr_sync")
+        try:
+            users_repo = LeadsUsersRepository(self.ch_session)
+            visits_repo = LeadsVisitsRepository(self.ch_session)
+            etl_logger.info("Fetching raw events for pixel_id=%s", pixel_id)
+            delivr_users = await self.find_delivr_by_emails(
+                five_x_five_users, "allsource_prod.delivr_users"
+            )
+            if delivr_users is empty:
+                return
+
+            await self.insert_leads_visits(
+                pixel_id,
+                delivr_users,
+                lead_users,
+                visits_repo,
+                users_repo,
+            )
+
+        except Exception:
+            etl_logger.exception("ETL run failed for pixel_id=%s", pixel_id)
+            raise
+        finally:
+            await self.ch_session.close()
+
     def _round_to_30_minutes(self, dt: datetime) -> datetime:
         minutes = dt.minute
         if minutes < 30:
@@ -271,6 +301,10 @@ class LeadsToClickHouseMigrator:
             rounded_minutes = 30
 
         return dt.replace(minute=rounded_minutes, second=0, microsecond=0)
+
+    def chunked(self, iterable, size):
+        for i in range(0, len(iterable), size):
+            yield iterable[i : i + size]
 
     async def insert_leads_visits(
         self, pixel_id, delivr_users, lead_users, visits_repo, users_repo
@@ -305,6 +339,7 @@ class LeadsToClickHouseMigrator:
         users = (
             self.db_session.query(Users)
             .where(
+                Users.email == "master-demo@maximiz.ai",
                 Users.current_subscription_id != None,
                 Users.data_provider_id != None,
             )
@@ -320,6 +355,7 @@ class LeadsToClickHouseMigrator:
                         UserDomains.user_id,
                         UserDomains.domain,
                         UserDomains.data_provider_id,
+                        UserDomains.pixel_id,
                     )
                 )
                 .where(UserDomains.user_id == user.id)
@@ -329,50 +365,18 @@ class LeadsToClickHouseMigrator:
                 lead_users = (
                     self.db_session.query(LeadUser)
                     .where(LeadUser.domain_id == user_domain.id)
+                    .order_by(LeadUser.created_at)
                     .all()
                 )
-                pixel_id = user_domain.data_provider_id
+                pixel_id = user_domain.pixel_id
+                if not pixel_id:
+                    pixel_id = uuid5(NAMESPACE_URL, user_domain.id)
+                    self.db_session.commit()
                 logger.info(f"lead_users len {len(lead_users)}")
-                five_x_five_user_ids = [
-                    lead_user.five_x_five_user_id for lead_user in lead_users
-                ]
                 if lead_users:
-                    five_x_five_users = (
-                        self.db_session.query(FiveXFiveUser)
-                        .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
-                        .all()
-                    )
-                    logger.info(
-                        f"five_x_five_users len {len(five_x_five_users)}"
-                    )
-                    etl_logger = logging.getLogger("delivr_sync")
-                    try:
-                        users_repo = LeadsUsersRepository(self.ch_session)
-                        visits_repo = LeadsVisitsRepository(self.ch_session)
-                        etl_logger.info(
-                            "Fetching raw events for pixel_id=%s", pixel_id
-                        )
-                        delivr_users = await self.find_delivr_by_emails(
-                            five_x_five_users, "allsource_prod.delivr_users"
-                        )
-                        if delivr_users is empty:
-                            continue
-
-                        await self.insert_leads_visits(
-                            pixel_id,
-                            delivr_users,
-                            lead_users,
-                            visits_repo,
-                            users_repo,
-                        )
-
-                    except Exception:
-                        etl_logger.exception(
-                            "ETL run failed for pixel_id=%s", pixel_id
-                        )
-                        raise
-                    finally:
-                        await self.ch_session.close()
+                    batch_size = 1000
+                    for batch in self.chunked(lead_users, batch_size):
+                        await self.preparate_and_insert_leads(batch, pixel_id)
 
         end_time = datetime.now()
         duration = end_time - start_time
