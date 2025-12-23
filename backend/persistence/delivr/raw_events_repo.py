@@ -39,7 +39,6 @@ class RawEventsRepository:
         )
 
         selects = []
-        print("parquet_paths", len(parquet_paths))
         for p in parquet_paths:
             selects.append(
                 f"""
@@ -72,9 +71,25 @@ class RawEventsRepository:
         FROM ({files_sql}) AS e
         """
 
-        events_rows = await self.ch.query(
-            sql_events, {"time_from": time_from, "time_to": time_to}
-        )
+        try:
+            events_rows = await self.ch.query(sql_events)
+        except Exception as exc:
+            msg = str(exc)
+
+            if (
+                "INCORRECT_DATA" in msg
+                or "ParquetV3BlockInputFormat" in msg
+                or "Row group 0 has <= 0 rows" in msg
+                or "FILE_DOESNT_EXIST" in msg
+            ):
+                logger.warning(
+                    "Skipping parquet files for pixel_id=%s due to invalid/missing parquet: %s",
+                    pixel_id,
+                    msg,
+                )
+                return []
+            raise
+
         emails = {r["hem"] for r in events_rows if r.get("hem")}
         users_map = {}
         if emails:

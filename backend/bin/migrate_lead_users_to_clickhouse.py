@@ -43,8 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 class LeadsToClickHouseMigrator:
-    def __init__(self, ch_session, db_session):
-        self.ch_session = ch_session
+    def __init__(self, db_session):
         self.db_session = db_session
 
     def _collect_emails_from_user(self, user: FiveXFiveUser) -> list[str]:
@@ -77,7 +76,10 @@ class LeadsToClickHouseMigrator:
         return list(emails)
 
     async def find_delivr_by_emails(
-        self, five_x_five_users: list[FiveXFiveUser], table_name: str
+        self,
+        five_x_five_users: list[FiveXFiveUser],
+        table_name: str,
+        ch_session,
     ):
         emails = []
         email_owner: dict[str, FiveXFiveUser] = {}
@@ -92,7 +94,7 @@ class LeadsToClickHouseMigrator:
             return []
         emails = list(set(emails))
 
-        existing = await self.ch_session.query(
+        existing = await ch_session.query(
             f"""
             SELECT *
             FROM {table_name}
@@ -269,12 +271,13 @@ class LeadsToClickHouseMigrator:
         )
         logger.info(f"five_x_five_users len {len(five_x_five_users)}")
         etl_logger = logging.getLogger("delivr_sync")
+        ch_session = await AsyncDelivrClickHouseClient().connect()
         try:
-            users_repo = LeadsUsersRepository(self.ch_session)
-            visits_repo = LeadsVisitsRepository(self.ch_session)
+            users_repo = LeadsUsersRepository(ch_session)
+            visits_repo = LeadsVisitsRepository(ch_session)
             etl_logger.info("Fetching raw events for pixel_id=%s", pixel_id)
             delivr_users = await self.find_delivr_by_emails(
-                five_x_five_users, "allsource_prod.delivr_users"
+                five_x_five_users, "allsource_prod.delivr_users", ch_session
             )
             if delivr_users is empty:
                 return
@@ -291,7 +294,7 @@ class LeadsToClickHouseMigrator:
             etl_logger.exception("ETL run failed for pixel_id=%s", pixel_id)
             raise
         finally:
-            await self.ch_session.close()
+            await ch_session.close()
 
     def _round_to_30_minutes(self, dt: datetime) -> datetime:
         minutes = dt.minute
@@ -326,7 +329,6 @@ class LeadsToClickHouseMigrator:
                 delivr_user["company_id"],
             )
             if visits:
-                print(visits)
                 users = aggregate_users(visits)
                 logger.info("Aggregated %d users", len(users))
                 await users_repo.insert_async(users)
@@ -338,11 +340,7 @@ class LeadsToClickHouseMigrator:
         start_time = datetime.now()
         users = (
             self.db_session.query(Users)
-            .where(
-                Users.email == "master-demo@maximiz.ai",
-                Users.current_subscription_id != None,
-                Users.data_provider_id != None,
-            )
+            .where(Users.email == "master-demo@maximiz.ai")
             .all()
         )
         for user in users:
@@ -370,13 +368,15 @@ class LeadsToClickHouseMigrator:
                 )
                 pixel_id = user_domain.pixel_id
                 if not pixel_id:
-                    pixel_id = uuid5(NAMESPACE_URL, user_domain.id)
+                    pixel_id = uuid5(NAMESPACE_URL, str(user_domain.id))
+                    user_domain.pixel_id = pixel_id
                     self.db_session.commit()
                 logger.info(f"lead_users len {len(lead_users)}")
                 if lead_users:
-                    batch_size = 1000
+                    batch_size = 500
                     for batch in self.chunked(lead_users, batch_size):
                         await self.preparate_and_insert_leads(batch, pixel_id)
+                        print("NEXT--------NEXT")
 
         end_time = datetime.now()
         duration = end_time - start_time
@@ -391,10 +391,7 @@ async def main():
     resolver = Resolver()
     try:
         db_session = await resolver.resolve(Db)
-        ch_session = await AsyncDelivrClickHouseClient().connect()
-        await LeadsToClickHouseMigrator(
-            ch_session=ch_session, db_session=db_session
-        ).run_migration()
+        await LeadsToClickHouseMigrator(db_session=db_session).run_migration()
     except Exception as err:
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
     finally:

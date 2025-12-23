@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid1
 from domains.leads.flags import (
     resolve_is_active,
     resolve_is_confirmed,
@@ -21,6 +21,7 @@ def aggregate_users(visits: list[Visit]) -> list[LeadUser]:
 
 def _init_user(v: Visit) -> LeadUser:
     return LeadUser(
+        id=uuid1(),
         pixel_id=v.pixel_id,
         profile_pid_all=v.profile_pid_all,
         company_id=v.company_id,

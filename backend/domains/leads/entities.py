@@ -32,6 +32,7 @@ class Visit:
 
 @dataclass
 class LeadUser:
+    id: UUID
     pixel_id: UUID
     profile_pid_all: str
 
