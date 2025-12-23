@@ -10,6 +10,7 @@ class LeadsUsersRepository:
         for u in users:
             payload.append(
                 {
+                    "id": u.id,
                     "pixel_id": u.pixel_id,
                     "profile_pid_all": u.profile_pid_all,
                     "company_id": u.company_id,
