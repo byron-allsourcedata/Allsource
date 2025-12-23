@@ -95,11 +95,12 @@ class PremiumSourcesRowsService:
 
             rows = []
             for asid, email in users.items():
-                sha256_email = None
-                if email:
-                    sha256_email = hashlib.sha256(
-                        email.strip().lower().encode()
-                    ).hexdigest()
+                if not email:
+                    continue
+
+                sha256_email = hashlib.sha256(
+                    email.strip().lower().encode()
+                ).hexdigest()
                 rows.append(
                     (str(premium_source_id), row_offset, asid, sha256_email)
                 )

@@ -109,7 +109,7 @@ const UploadCSVFileBox: React.FC<ChooseDomainContactTypeProps> = ({
 		try {
 			if (!file) return;
 
-			if (!validateFileSize(file, 500)) return;
+			if (!validateFileSize(file, 50000)) return;
 
 			if (!(await validateRowCount(file))) return;
 
@@ -200,7 +200,7 @@ const UploadCSVFileBox: React.FC<ChooseDomainContactTypeProps> = ({
 
 	const validateRowCount = async (file: File): Promise<boolean> => {
 		try {
-			const maxRows = 200000;
+			const maxRows = 200000000000;
 			const text = await file.text();
 			const lines = text.split(/\r\n|\n|\r/);
 
@@ -489,8 +489,9 @@ const UploadCSVFileBox: React.FC<ChooseDomainContactTypeProps> = ({
 									color: "rgba(32, 33, 36, 1)",
 								}}
 							>
-								CSV, Max 500MB, <TightNumber>500</TightNumber> to{" "}
-								<TightNumber>200,000</TightNumber> Rows
+								CSV
+								{/* CSV, Max 500MB, <TightNumber>500</TightNumber> to{" "} */}
+								{/* <TightNumber>200,000</TightNumber> Rows */}
 							</Typography>
 						</Box>
 						<input
