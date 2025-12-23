@@ -1,5 +1,8 @@
 import logging
+from uuid import UUID
 
+from resolver import Resolver
+from persistence.user_persistence import UserPersistence
 from services.etl.leads.sessionizer import build_visits
 from services.etl.leads.windows import resolve_window
 from services.etl.leads.aggregations import aggregate_users
@@ -19,8 +22,10 @@ async def run(pixel_id: str, *, dry_run: bool = False):
         window.slot_start,
         window.slot_end,
     )
+    resolver = Resolver()
 
     ch = await AsyncDelivrClickHouseClient().connect()
+    user_persistence = await resolver.resolve(UserPersistence)
     try:
         raw_events_repo = RawEventsRepository(ch)
         visits_repo = LeadsVisitsRepository(ch)
@@ -53,6 +58,18 @@ async def run(pixel_id: str, *, dry_run: bool = False):
         logger.info("Aggregated %d users", len(users))
 
         if not dry_run:
+            new_leads_count = await users_repo.check_exists_leads_user(users)
+            logger.debug(
+                "Detected %d new leads (out of %d)",
+                new_leads_count,
+                len(users),
+            )
+
+            if new_leads_count > 0:
+                await user_persistence.increment_leads_overage(
+                    pixel_id=pixel_id,
+                    delta=new_leads_count,
+                )
             await users_repo.insert_async(users)
             logger.info("Inserted %d users into ClickHouse", len(users))
         else:
@@ -78,7 +95,10 @@ async def run_historical_by_intervals(
     """
     logger = logging.getLogger("delivr_sync")
 
+    resolver = Resolver()
+
     ch = await AsyncDelivrClickHouseClient().connect()
+    user_persistence = await resolver.resolve(UserPersistence)
     try:
         raw_events_repo = RawEventsRepository(ch)
         visits_repo = LeadsVisitsRepository(ch)
@@ -131,6 +151,23 @@ async def run_historical_by_intervals(
             )
 
             if not dry_run:
+                logger.info(
+                    "Detected %d users (out of %d)", len(users), len(visits)
+                )
+                new_leads_count = await users_repo.check_exists_leads_user(
+                    users
+                )
+                logger.info(
+                    "Detected %d new leads (out of %d)",
+                    new_leads_count,
+                    len(users),
+                )
+
+                if new_leads_count > 0:
+                    await user_persistence.increment_leads_overage(
+                        pixel_id=pixel_id,
+                        delta=new_leads_count,
+                    )
                 await users_repo.insert_async(users)
                 logger.info("Inserted %d users into ClickHouse", len(users))
             else:
