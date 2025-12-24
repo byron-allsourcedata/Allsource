@@ -334,7 +334,7 @@ class LeadsToClickHouseMigrator:
                 users = aggregate_users(visits)
                 await users_repo.insert_async(users)
                 await visits_repo.insert_async(visits)
-                logger.info("Inserted %d visits into ClickHouse", len(visits))
+                logger.debug("Inserted %d visits into ClickHouse", len(visits))
 
     async def run_migration(self, email):
         logger.info("Запуск миграции лидов в ClickHouse")
@@ -357,6 +357,7 @@ class LeadsToClickHouseMigrator:
                 .all()
             )
             for user_domain in user_domains:
+                logger.info(f"domain_id {user_domain.id}")
                 lead_users = (
                     self.db_session.query(LeadUser)
                     .where(LeadUser.domain_id == user_domain.id)
@@ -371,8 +372,16 @@ class LeadsToClickHouseMigrator:
                 logger.info(f"lead_users len {len(lead_users)}")
                 if lead_users:
                     batch_size = 500
-                    for batch in self.chunked(lead_users, batch_size):
+                    total_leads = len(lead_users)
+                    for i, batch in enumerate(
+                        self.chunked(lead_users, batch_size)
+                    ):
+                        processed = (i + 1) * batch_size
+                        if processed > total_leads:
+                            processed = total_leads
+                        progress = (processed / total_leads) * 100
                         await self.preparate_and_insert_leads(batch, pixel_id)
+                        logger.info(f"Processing: {progress:.2f}% completed")
 
         end_time = datetime.now()
         duration = end_time - start_time
@@ -399,7 +408,7 @@ async def main(email):
 
 
 if __name__ == "__main__":
-    logger.info("Made in Slava")
+    logger.debug("Made in Slava")
     parser = argparse.ArgumentParser(description="Run migration with email.")
     parser.add_argument(
         "email", type=str, help="The email address to use for migration"
