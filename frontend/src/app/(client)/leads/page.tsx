@@ -913,7 +913,7 @@ const Leads: React.FC = () => {
 					background: "rgba(244, 252, 238, 1)",
 					color: "rgba(43, 91, 0, 1)",
 				};
-			case "view_product":
+			case "viewed_product":
 				return {
 					background: "rgba(254, 238, 236, 1)",
 					color: "rgba(244, 87, 69, 1)",
@@ -951,7 +951,7 @@ const Leads: React.FC = () => {
 		if (text === "visitor") {
 			return "Visitor";
 		}
-		if (text === "view_product") {
+		if (text === "viewed_product") {
 			return "View Product";
 		}
 		if (text === "product_added_to_cart") {
