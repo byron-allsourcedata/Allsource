@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 from collections import defaultdict
 import os
@@ -5,11 +6,8 @@ import sys
 import time
 import json
 from uuid import NAMESPACE_URL, uuid5
-import uuid
 from numpy import empty
-import pandas as pd
 from sqlalchemy import create_engine, true
-import sqlalchemy
 from sqlalchemy.orm import load_only
 import logging
 from datetime import datetime, timedelta
@@ -18,6 +16,7 @@ from datetime import datetime, timedelta
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+import urllib.parse
 from services.etl.leads.sessionizer import floor_to_slot, map_behavior_type
 from domains.leads.entities import Visit
 from persistence.delivr.client import AsyncDelivrClickHouseClient
@@ -223,7 +222,7 @@ class LeadsToClickHouseMigrator:
                 .where(LeadsVisits.id == evs[0][1]["visit_id"])
                 .first()
             )
-            event_type = leads_visit.behavior_type
+            event_type = lead_user.behavior_type
             ip = leads_visit.ip
 
             for i, (ts, e) in enumerate(evs):
@@ -234,9 +233,12 @@ class LeadsToClickHouseMigrator:
                     spent = 1
 
                 page = e.get("page_url", "")
-                params = json.dumps(
-                    e.get("page_parameters", {}), ensure_ascii=False
-                )
+                params = e.get("page_parameters", {})
+
+                if isinstance(params, str):
+                    params = dict(urllib.parse.parse_qsl(params))
+
+                params_json = json.dumps(params, ensure_ascii=False)
 
                 visits.append(
                     Visit(
@@ -244,12 +246,12 @@ class LeadsToClickHouseMigrator:
                         pixel_id=pixel_id,
                         visit_id=visit_id,
                         page=page,
-                        page_parameters=params,
+                        page_parameters=params_json,
                         requested_at=ts,
                         spent_time_sec=spent,
                         visit_start=visit_start,
                         visit_end=visit_end,
-                        behavior_type=map_behavior_type(event_type),
+                        behavior_type=event_type,
                         ip=ip,
                         pages_count=pages_count,
                         average_time_sec=average_time,
@@ -330,19 +332,14 @@ class LeadsToClickHouseMigrator:
             )
             if visits:
                 users = aggregate_users(visits)
-                logger.info("Aggregated %d users", len(users))
                 await users_repo.insert_async(users)
                 await visits_repo.insert_async(visits)
                 logger.info("Inserted %d visits into ClickHouse", len(visits))
 
-    async def run_migration(self):
+    async def run_migration(self, email):
         logger.info("Запуск миграции лидов в ClickHouse")
         start_time = datetime.now()
-        users = (
-            self.db_session.query(Users)
-            .where(Users.email == "master-demo@maximiz.ai")
-            .all()
-        )
+        users = self.db_session.query(Users).where(Users.email == email).all()
         for user in users:
             logger.info(f"name {user.email}")
             user_domains = (
@@ -376,7 +373,6 @@ class LeadsToClickHouseMigrator:
                     batch_size = 500
                     for batch in self.chunked(lead_users, batch_size):
                         await self.preparate_and_insert_leads(batch, pixel_id)
-                        print("NEXT--------NEXT")
 
         end_time = datetime.now()
         duration = end_time - start_time
@@ -387,11 +383,13 @@ class LeadsToClickHouseMigrator:
         logger.info("=" * 50)
 
 
-async def main():
+async def main(email):
     resolver = Resolver()
     try:
         db_session = await resolver.resolve(Db)
-        await LeadsToClickHouseMigrator(db_session=db_session).run_migration()
+        await LeadsToClickHouseMigrator(db_session=db_session).run_migration(
+            email
+        )
     except Exception as err:
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
     finally:
@@ -401,4 +399,12 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    logger.info("Made in Slava")
+    parser = argparse.ArgumentParser(description="Run migration with email.")
+    parser.add_argument(
+        "email", type=str, help="The email address to use for migration"
+    )
+
+    args = parser.parse_args()
+
+    asyncio.run(main(args.email))
