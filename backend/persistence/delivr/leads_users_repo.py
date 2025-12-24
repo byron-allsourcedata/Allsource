@@ -37,7 +37,7 @@ class LeadsUsersRepository:
             return
         payload = self._build_payload(users)
         await self.ch.insert_dicts(
-            "allsource_prod.leads_users",
+            "allsource_prod.leads_users_test",
             payload,
         )
 
