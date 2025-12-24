@@ -10,7 +10,7 @@ from domains.leads.entities import Visit
 def map_behavior_type(event_type: str) -> str:
     mapping = {
         "page_view": "visitor",
-        "click": "view_product",
+        "click": "viewed_product",
     }
     return mapping.get(event_type, "visitor")
 

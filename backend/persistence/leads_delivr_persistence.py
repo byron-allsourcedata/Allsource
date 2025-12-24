@@ -414,9 +414,7 @@ class LeadsPersistenceClickhouse:
         # Загрузка пользователей
         users = await self._load_users(params)
         if not users:
-            total_count = await self._get_total_count(params)
-            max_page = math.ceil(total_count / per_page) if per_page else 1
-            return [], total_count, max_page
+            return [], 0, 0
 
         # Загрузка дополнительных данных
         profile_ids = [u["profile_pid_all"] for u in users]
