@@ -336,10 +336,13 @@ class LeadsToClickHouseMigrator:
                 await visits_repo.insert_async(visits)
                 logger.debug("Inserted %d visits into ClickHouse", len(visits))
 
-    async def run_migration(self, email):
+    async def run_migration(self, emails):
         logger.info("Запуск миграции лидов в ClickHouse")
+        logger.info(f"emails {emails}")
         start_time = datetime.now()
-        users = self.db_session.query(Users).where(Users.email == email).all()
+        users = (
+            self.db_session.query(Users).where(Users.email.in_(emails)).all()
+        )
         for user in users:
             logger.info(f"name {user.email}")
             user_domains = (
@@ -392,13 +395,16 @@ class LeadsToClickHouseMigrator:
         logger.info("=" * 50)
 
 
-async def main(email):
+async def main(emails_str: str):
     resolver = Resolver()
     try:
+        emails = [email.strip() for email in emails_str.split(",")]
+
         db_session = await resolver.resolve(Db)
         await LeadsToClickHouseMigrator(db_session=db_session).run_migration(
-            email
+            emails
         )
+
     except Exception as err:
         logging.error(f"Unhandled Exception: {err}", exc_info=True)
     finally:
@@ -411,9 +417,10 @@ if __name__ == "__main__":
     logger.debug("Made in Slava")
     parser = argparse.ArgumentParser(description="Run migration with email.")
     parser.add_argument(
-        "email", type=str, help="The email address to use for migration"
+        "emails",
+        type=str,
+        help="Comma-separated email addresses: email1@example.com,email2@example.com",
     )
 
     args = parser.parse_args()
-
-    asyncio.run(main(args.email))
+    asyncio.run(main(args.emails))
