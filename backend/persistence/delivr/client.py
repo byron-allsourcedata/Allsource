@@ -87,8 +87,13 @@ class AsyncDelivrClickHouseClient:
 
     async def query(self, sql: str, params: dict | None = None) -> list[dict]:
         result = await self._client.query(sql, params or {})
-        cols = result.column_names
-        return [{c: v for c, v in zip(cols, row)} for row in result.result_rows]
+        if isinstance(result, list):
+            return result
+        else:
+            cols = result.column_names
+            return [
+                {c: v for c, v in zip(cols, row)} for row in result.result_rows
+            ]
 
     async def execute(self, sql: str, params: dict | None = None):
         return await self._client.command(sql, params or {})

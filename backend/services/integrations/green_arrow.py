@@ -6,6 +6,7 @@ import httpx
 from typing import Annotated, Any, List, Tuple
 from fastapi import Depends, HTTPException
 
+from domains.leads.entities import LeadUser, DelivrUser
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -21,6 +22,7 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
+from persistence.leads_delivr_persistence import LeadsPersistenceClickhouse
 from utils import (
     format_phone_number,
     get_http_client,
@@ -47,6 +49,7 @@ class GreenArrowIntegrationsService:
         domain_persistence: UserDomainsPersistence,
         integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
+        clickhouse_leads_persistence: LeadsPersistenceClickhouse,
         sync_persistence: IntegrationsUserSyncPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
         client: Annotated[httpx.Client, Depends(get_http_client)],
@@ -54,6 +57,7 @@ class GreenArrowIntegrationsService:
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
+        self.clickhouse_leads_persistence = clickhouse_leads_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
@@ -380,13 +384,17 @@ class GreenArrowIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        user_data: List[Tuple[LeadUser, DelivrUser]],
         is_email_validation_enabled: bool,
     ):
         profiles = []
         results = []
 
         for lead_user, five_x_five_user in user_data:
+            # print("LEAD USER", lead_user)
+            # print("-"* 120)
+            # print("FIVE X FIVE USER", five_x_five_user)
+
             profile_or_status = await self.__map_lead_to_green_arrow_contact(
                 five_x_five_user,
                 integration_data_sync.data_map,
@@ -532,10 +540,10 @@ class GreenArrowIntegrationsService:
 
     async def __map_lead_to_green_arrow_contact(
         self,
-        five_x_five_user: FiveXFiveUser,
+        five_x_five_user: DelivrUser,
         data_map: list,
         is_email_validation_enabled: bool,
-        lead_visit_id: int,
+        lead_visit_id: UUID,
     ) -> dict | str:
         chosen_email_variation = next(
             (field["type"] for field in data_map if field["value"] == "Email"),
@@ -577,7 +585,9 @@ class GreenArrowIntegrationsService:
 
         if any(field["type"] == "visited_date" for field in data_map):
             values_by_type["visited_date"] = (
-                self.leads_persistence.get_visited_date(lead_visit_id)
+                await self.clickhouse_leads_persistence.get_visited_date(
+                    lead_visit_id
+                )
             ).strftime("%m-%d-%Y")
 
         custom_variables = {

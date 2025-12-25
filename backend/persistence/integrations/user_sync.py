@@ -39,6 +39,83 @@ class IntegrationsUserSyncPersistence:
         self.db = db
         self.UNLIMITED = -1
 
+    # ---------------------------
+    # ClickHouse helpers
+    # ---------------------------
+    def _build_ch_where(self, leads_type: str | None) -> str:
+        base = "is_active = 1 AND is_confirmed = 1"
+        if not leads_type or leads_type == "allContacts":
+            return base
+        if leads_type == "visitor":
+            return (
+                base
+                + " AND behavior_type = 'visitor' AND is_converted_sales = 0"
+            )
+        if leads_type == "viewed_product":
+            return (
+                base
+                + " AND behavior_type = 'viewed_product' AND is_converted_sales = 0"
+            )
+        if leads_type == "converted_sales":
+            return base + " AND is_converted_sales = 1"
+        if leads_type == "abandoned_cart":
+            return (
+                base
+                + " AND behavior_type = 'product_added_to_cart' AND is_converted_sales = 0"
+            )
+        # Fallback to base for unknown types
+        return base
+
+    def _count_leads_in_clickhouse(
+        self, pixel_id: str | None, leads_type: str | None
+    ) -> int:
+        """Return count of leads from ClickHouse leads_users for given pixel and type.
+        On any error or missing pixel_id, returns 0.
+        """
+        if not pixel_id:
+            return 0
+        try:
+            from config.clickhouse import ClickhouseConfig
+            import clickhouse_connect
+
+            client = ClickhouseConfig.get_client()
+            where_tail = self._build_ch_where(leads_type)
+            table = f"{ClickhouseConfig.database}.leads_users"
+            sql = (
+                f"SELECT count() AS cnt FROM {table} "
+                "WHERE pixel_id = toUUID(%(pixel)s) AND " + where_tail
+            )
+            res = client.query(sql, {"pixel": str(pixel_id)})
+            # clickhouse_connect may return QueryResult or list
+            if hasattr(res, "first_row"):
+                row = res.first_row
+                return int(row[0]) if row and row[0] is not None else 0
+            elif isinstance(res, list) and res:
+                # list of dicts
+                val = (
+                    res[0].get("cnt") if isinstance(res[0], dict) else res[0][0]
+                )
+                return int(val or 0)
+            return 0
+        except Exception:
+            # Log at upper layer if needed; keep UI alive with zero
+            return 0
+
+    def _get_pixel_id_for_domain(self, domain_id: int | None) -> str | None:
+        if not domain_id:
+            return None
+        row = (
+            self.db.query(UserDomains.pixel_id)
+            .filter(UserDomains.id == domain_id)
+            .first()
+        )
+        if not row:
+            return None
+        try:
+            return str(row[0]) if row[0] is not None else None
+        except Exception:
+            return None
+
     def create_sync(self, data: dict) -> IntegrationUserSync:
         sync = IntegrationUserSync(**data)
         self.db.add(sync)
@@ -296,6 +373,7 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync.campaign_name,
                 IntegrationUserSync.hook_url,
                 IntegrationUserSync.method,
+                IntegrationUserSync.domain_id,  # for ClickHouse mapping
                 coalesce(all_synced_persons_query.c.all_contacts, 0).label(
                     "all_contacts"
                 ),
@@ -364,7 +442,10 @@ class IntegrationsUserSyncPersistence:
                     "integration_id": sync.integration_id,
                     "dataSync": sync.is_active,
                     "suppression": sync.is_with_suppression,
-                    "contacts": sync.all_contacts,
+                    "contacts": self._count_leads_in_clickhouse(
+                        self._get_pixel_id_for_domain(sync.domain_id),
+                        sync.leads_type,
+                    ),
                     "processed_contacts": sync.processed,
                     "successful_contacts": sync.successful_contacts,
                     "validation_contacts": sync.validation,
@@ -402,7 +483,10 @@ class IntegrationsUserSyncPersistence:
                 "integration_id": sync.integration_id,
                 "dataSync": sync.is_active,
                 "suppression": sync.is_with_suppression,
-                "contacts": sync.all_contacts,
+                "contacts": self._count_leads_in_clickhouse(
+                    self._get_pixel_id_for_domain(sync.domain_id),
+                    sync.leads_type,
+                ),
                 "processed_contacts": sync.processed,
                 "successful_contacts": sync.successful_contacts,
                 "validation_contacts": sync.validation,

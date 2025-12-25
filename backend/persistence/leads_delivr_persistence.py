@@ -653,3 +653,20 @@ class LeadsPersistenceClickhouse:
             filters.append("visit_start < %(to_dt)s")
 
         return " AND " + " AND ".join(filters) if filters else ""
+
+    async def get_visited_date(self, lead_visit_id: UUID) -> datetime | None:
+        sql = f"""
+            SELECT visit_start
+            FROM {self.visits_table}
+            WHERE visit_id = %(lead_visit_id)s
+            LIMIT 1
+        """
+
+        result = await self.click.query(
+            sql, {"lead_visit_id": str(lead_visit_id)}
+        )
+
+        if not result.result_rows:
+            return None
+
+        return result.result_rows[0][0]

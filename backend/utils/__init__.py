@@ -13,6 +13,7 @@ import regex
 
 from config.rmq_connection import publish_rabbitmq_message_with_channel
 from config.sentry import SentryConfig
+from domains.leads.entities import DelivrUser
 from enums import ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
 from services.integrations.million_verifier import (
@@ -62,8 +63,9 @@ def end_of_month(dt: datetime) -> datetime:
     )
 
 
+# TODO NEED TO REMOVE THIS, SWITCH TO MILLION VERIFIER
 async def get_valid_email(
-    user: FiveXFiveUser,
+    user: DelivrUser,
     million_verifier_integrations: MillionVerifierIntegrationsService,
     email_fields=[
         "business_email",

@@ -11,6 +11,7 @@ from sqlalchemy import (
     Index,
     event,
 )
+from sqlalchemy.dialects.postgresql import UUID
 
 from .base import Base, update_timestamps
 
@@ -39,11 +40,13 @@ class DataSyncImportedLead(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
+    # Legacy PG lead id (nullable for ClickHouse-sourced rows)
     lead_users_id = Column(
         BigInteger,
-        ForeignKey("leads_users.id", ondelete="CASCADE", onupdate="CASCADE"),
-        nullable=False,
+        nullable=True,
     )
+    # ClickHouse lead UUID (v1)
+    ch_lead_id = Column(UUID(as_uuid=True), nullable=True)
 
     __table_args__ = (
         Index(
@@ -62,6 +65,16 @@ class DataSyncImportedLead(Base):
             is_validation,
             status,
             unique=False,
+        ),
+        Index(
+            "data_sync_imported_leads_ch_lead_id_data_sync_id_idx",
+            ch_lead_id,
+            data_sync_id,
+            unique=True,
+        ),
+        Index(
+            "data_sync_imported_leads_ch_lead_id_idx",
+            ch_lead_id,
         ),
     )
 
