@@ -386,8 +386,8 @@ class LeadBuilder:
 class LeadsPersistenceClickhouse:
     def __init__(self, click: AsyncClickHouse):
         self.click = click
-        self.leads_table = "allsource_prod.leads_users"
-        self.visits_table = "allsource_prod.leads_visits"
+        self.leads_table = "allsource_prod.leads_users_test"
+        self.visits_table = "allsource_prod.leads_visits_test"
         self.delivr_table = ClickhouseConfig.delivr_table()
         self.formatter = DataFormatter()
         self.delivr_processor = DelivrDataProcessor()
