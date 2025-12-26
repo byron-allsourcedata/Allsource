@@ -256,242 +256,107 @@ class CompanyLeadsPersistenceClickhouse:
 
         return results, total_count, max_page
 
-    async def get_company_by_id(self, domain_id: int, company_id: int):
-        first_visit_subquery = (
-            self.db.query(
-                LeadUser.company_id,
-                func.min(LeadsVisits.start_date).label("visited_date"),
-            )
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .group_by(LeadUser.company_id)
-            .subquery()
+    async def get_company_by_id(self, pixel_id: str, company_id: str):
+        sql = f"""
+            SELECT 
+                lc.company_id as company_id,
+                lc.company_name as company_name,
+                lc.company_phones as company_phones,
+                lc.company_linkedin_url as company_linkedin_url,
+                COUNT(DISTINCT lu.profile_pid_all) as employees_visited,
+                MIN(lv.visit_start) as visited_date,
+                lc.company_revenue_range as company_revenue_range,
+                lc.company_employee_count_range as company_employee_count_range,
+                lc.company_country as company_country,
+                lc.company_industry as company_industry,
+                lc.company_domain as company_domain,
+                lc.company_zip_code as company_zip_code,
+                lc.company_description as company_description,
+                lc.company_city as company_city,
+                lc.company_state as company_state
+                
+            FROM {self.companies_table} lc
+            LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
+            LEFT JOIN {self.visits_table} lv ON lu.profile_pid_all = lv.profile_pid_all
+            WHERE lu.pixel_id = %(pixel_id)s AND lc.company_id = %(company_id)s
+            GROUP BY 
+                lc.company_id,
+                lc.company_name,
+                lc.company_phones,
+                lc.company_linkedin_url,
+                lc.company_revenue_range,
+                lc.company_employee_count_range,
+                lc.company_country,
+                lc.company_industry,
+                lc.company_domain,
+                lc.company_zip_code,
+                lc.company_description,
+                lc.company_city,
+                lc.company_state
+        """
+        result = await self.click_house.query(
+            sql, {"company_id": company_id, "pixel_id": pixel_id}
         )
-        number_of_employees = func.count(LeadUser.id).label(
-            "number_of_employees"
-        )
-        query = (
-            self.db.query(
-                LeadCompany.id,
-                LeadCompany.name,
-                LeadCompany.phone,
-                LeadCompany.linkedin_url,
-                number_of_employees,
-                first_visit_subquery.c.visited_date,
-                LeadCompany.revenue,
-                LeadCompany.employee_count,
-                LeadCompany.address,
-                LeadCompany.primary_industry,
-                LeadCompany.domain,
-                LeadCompany.zip,
-                LeadCompany.description,
-                FiveXFiveLocations.city,
-                States.state_name,
-                LeadCompany.last_updated,
-            )
-            .join(LeadUser, LeadUser.company_id == LeadCompany.id)
-            .outerjoin(
-                first_visit_subquery,
-                first_visit_subquery.c.company_id == LeadCompany.id,
-            )
-            .outerjoin(
-                FiveXFiveLocations,
-                FiveXFiveLocations.id == LeadCompany.five_x_five_location_id,
-            )
-            .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-            .filter(LeadUser.domain_id == domain_id)
-            .group_by(
-                LeadCompany.id,
-                first_visit_subquery.c.visited_date,
-                FiveXFiveLocations.city,
-                States.state_name,
-            )
-            .filter(LeadCompany.id == company_id)
-        )
+        results_list = list(result.named_results())
+        return results_list[0] if results_list else None
 
-        leads = query.first()
-        return leads
-
-    async def get_full_information_companies_by_filters(
-        self,
-        domain_id: int,
-        from_date: Optional[int] = None,
-        to_date: Optional[int] = None,
-        search_query: Optional[str] = None,
-        employee_visits: Optional[str] = None,
-        revenue_range: Optional[str] = None,
-        regions: Optional[str] = None,
-        employees_range: Optional[str] = None,
-        industry: Optional[str] = None,
-    ):
-        first_visit_subquery = (
-            self.db.query(
-                LeadUser.company_id,
-                func.min(LeadsVisits.start_date).label("visited_date"),
-            )
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .group_by(LeadUser.company_id)
-            .subquery()
-        )
-        number_of_employees = func.count(LeadUser.id).label(
-            "number_of_employees"
-        )
-
-        query = (
-            self.db.query(
-                LeadCompany.id,
-                LeadCompany.name,
-                LeadCompany.phone,
-                LeadCompany.linkedin_url,
-                number_of_employees,
-                first_visit_subquery.c.visited_date,
-                LeadCompany.revenue,
-                LeadCompany.employee_count,
-                LeadCompany.address,
-                LeadCompany.primary_industry,
-                LeadCompany.domain,
-                LeadCompany.zip,
-                LeadCompany.description,
-                FiveXFiveLocations.city,
-                States.state_name,
-                LeadCompany.last_updated,
-            )
-            .join(LeadUser, LeadUser.company_id == LeadCompany.id)
-            .join(
-                first_visit_subquery,
-                first_visit_subquery.c.company_id == LeadCompany.id,
-            )
-            .outerjoin(
-                FiveXFiveLocations,
-                FiveXFiveLocations.id == LeadCompany.five_x_five_location_id,
-            )
-            .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-            .filter(LeadUser.domain_id == domain_id)
-            .group_by(
-                LeadCompany.id,
-                first_visit_subquery.c.visited_date,
-                FiveXFiveLocations.city,
-                States.state_name,
-            )
-            .order_by(
-                asc(LeadCompany.name), desc(first_visit_subquery.c.visited_date)
-            )
-        )
-
-        if from_date and to_date:
-            start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
-            end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            query = query.filter(
-                and_(
-                    or_(
-                        and_(
-                            LeadsVisits.start_date == start_date.date(),
-                            LeadsVisits.start_time >= start_date.time(),
-                        ),
-                        and_(
-                            LeadsVisits.start_date == end_date.date(),
-                            LeadsVisits.start_time <= end_date.time(),
-                        ),
-                        and_(
-                            LeadsVisits.start_date > start_date.date(),
-                            LeadsVisits.start_date < end_date.date(),
-                        ),
-                    )
-                )
-            )
-
-        if employee_visits:
-            min_visits = int(employee_visits.rstrip("+"))
-            if employee_visits.endswith("+"):
-                query = query.having(number_of_employees >= min_visits)
+    async def get_full_information_companies_by_filters(self, params):
+        where_clause = await self.build_where_clause(params=params)
+        having_conditions = []
+        if params.get("employee_visits"):
+            if params.get("employee_visits") == "5+":
+                having_conditions.append("employees_visited >= 5")
             else:
-                query = query.having(number_of_employees == min_visits)
-
-        if revenue_range:
-            revenue_map = {
-                "Under 1M": "Under 1 Million",
-                "$1M - $5M": "1 Million to 5 Million",
-                "$5M - $10M": "5 Million to 10 Million",
-                "$10M - $25M": "10 Million to 25 Million",
-                "$25M - $50M": "25 Million to 50 Million",
-                "$50M - $100M": "50 Million to 100 Million",
-                "$100M - $250M": "100 Million to 250 Million",
-                "$250M - $500M": "250 Million to 500 Million",
-                "$500M - $1B": "500 Million to 1 Billion",
-                "$1 Billion +": "1 Billion and Over",
-            }
-
-            revenue = [
-                revenue_map.get(unquote(i.strip()), None)
-                for i in revenue_range.split(",")
-            ]
-
-            revenue_list = [e for e in revenue if e]
-            filters = []
-            if revenue_list:
-                filters.append(LeadCompany.revenue.in_(revenue_list))
-            if "unknown" in revenue_range:
-                filters.append(LeadCompany.revenue.is_(None))
-            if filters:
-                query = query.filter(or_(*filters))
-
-        if employees_range:
-            employees_map = {
-                "1-10": "1 to 10",
-                "11-25": "11 to 25",
-                "26-50": "26 to 50",
-                "51-100": "51 to 100",
-                "101-250": "101 to 250",
-                "251-500": "251 to 500",
-                "501-1000": "501 to 1000",
-                "1001-5000": "1001 to 5000",
-                "2001-5000": "2001 to 5000",
-                "5001-10000": "5001 to 10000",
-                "10000+": "10000+",
-            }
-
-            employees = [
-                employees_map.get(unquote(i.strip()), None)
-                for i in employees_range.split(",")
-            ]
-            employees_list = [e for e in employees if e]
-            filters = []
-            if employees_list:
-                filters.append(LeadCompany.employee_count.in_(employees_list))
-            if "unknown" in employees_range:
-                filters.append(LeadCompany.employee_count.is_(None))
-            if filters:
-                query = query.filter(or_(*filters))
-
-        if industry:
-            industries = [unquote(i.strip()) for i in industry.split(",")]
-            query = query.filter(LeadCompany.primary_industry.in_(industries))
-
-        if regions:
-            filters = []
-            region_list = regions.split(",")
-            for region_data in region_list:
-                region_data = region_data.split("-")
-                filters.append(
-                    FiveXFiveLocations.city.ilike(f"{region_data[0]}%")
+                having_conditions.append(
+                    "employees_visited == %(employee_visits)s"
                 )
 
-                if len(region_data) > 1 and region_data[1]:
-                    filters.append(
-                        States.state_name.ilike(f"{region_data[1]}%")
-                    )
+        having_clause = (
+            " AND ".join(having_conditions) if having_conditions else "1=1"
+        )
 
-            query = query.filter(or_(*filters))
-
-        if search_query:
-            filters = [
-                LeadCompany.name.ilike(f"{search_query}%"),
-                LeadCompany.phone.ilike(f"%{search_query.replace('+', '')}%"),
-            ]
-
-            query = query.filter(or_(*filters))
-
-        companies = query.limit(self.DOWNLOAD_LIMIT_ROWS).all()
-        return companies
+        sql = f"""
+            SELECT 
+                lc.company_id as company_id,
+                lc.company_name as company_name,
+                lc.company_phones as company_phones,
+                lc.company_linkedin_url as company_linkedin_url,
+                COUNT(DISTINCT lu.profile_pid_all) as employees_visited,
+                MIN(lv.visit_start) as visited_date,
+                lc.company_revenue_range as company_revenue_range,
+                lc.company_employee_count_range as company_employee_count_range,
+                lc.company_country as company_country,
+                lc.company_industry as company_industry,
+                lc.company_domain as company_domain,
+                lc.company_zip_code as company_zip_code,
+                lc.company_description as company_description,
+                lc.company_city as company_city,
+                lc.company_state as company_state
+                
+            FROM {self.companies_table} lc
+            LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
+            LEFT JOIN {self.visits_table} lv ON lu.profile_pid_all = lv.profile_pid_all
+            WHERE {where_clause}
+            GROUP BY 
+                lc.company_id,
+                lc.company_name,
+                lc.company_phones,
+                lc.company_linkedin_url,
+                lc.company_revenue_range,
+                lc.company_employee_count_range,
+                lc.company_country,
+                lc.company_industry,
+                lc.company_domain,
+                lc.company_zip_code,
+                lc.company_description,
+                lc.company_city,
+                lc.company_state,
+                lc.company_total_revenue,
+                lc.company_employee_count
+            HAVING {having_clause}
+        """
+        result = await self.click_house.query(sql, params)
+        return list[Dict[str, Any]](result.named_results())
 
     async def get_unique_primary_departments(
         self, company_id: str
@@ -504,26 +369,27 @@ class CompanyLeadsPersistenceClickhouse:
         LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
         WHERE lc.company_id = %(company_id)s
         AND du.department IS NOT NULL
+        AND du.department != ''
         ORDER BY du.department
         """
-        # try:
-        print("---")
-        print(query)
-        result = await self.click_house.query(query, {"company_id": company_id})
-        print(query)
-        rows = list[dict](result.named_results())
-        print(rows)
 
-        departments = []
-        for row in rows:
-            department = row["department"]
-            if department:
-                department = department.strip()
-                departments.append(department)
+        try:
+            result = await self.click_house.query(
+                query, {"company_id": company_id}
+            )
+            rows = list(result.named_results())
 
-        return departments
-        # except Exception:
-        #     return []
+            departments = []
+            for row in rows:
+                department = row.get("department")
+                if department:
+                    department = str(department).strip()
+                    departments.append(department)
+
+            return list[str](set[str](departments))
+        except Exception as e:
+            print(f"Error in get_unique_primary_departments: {e}")
+            return []
 
     async def get_uniq_primary_industry(self, pixel_id: UUID) -> List[str]:
         query = f"""
@@ -553,17 +419,93 @@ class CompanyLeadsPersistenceClickhouse:
         self, params: Dict[str, Any]
     ) -> int:
         where_clause = await self.build_where_clause(params=params)
+        having_conditions = []
+
+        if params.get("employee_visits"):
+            if params.get("employee_visits") == "5+":
+                having_conditions.append("employees_visited >= 5")
+            else:
+                having_conditions.append(
+                    "employees_visited = %(employee_visits)s"
+                )
+
+        having_clause = (
+            " AND ".join(having_conditions) if having_conditions else "1=1"
+        )
 
         sql = f"""
-            SELECT COUNT(DISTINCT lc.company_id) AS cnt 
-            FROM {self.companies_table} lc
-            INNER JOIN {self.users_table} lu ON lc.company_id = lu.company_id
-            WHERE {where_clause}
+            SELECT COUNT(*) as total_companies
+            FROM (
+                SELECT 
+                    lc.company_id,
+                    COUNT(DISTINCT lu.profile_pid_all) as employees_visited
+                FROM {self.companies_table} lc
+                INNER JOIN {self.users_table} lu ON lc.company_id = lu.company_id
+                WHERE {where_clause}
+                GROUP BY lc.company_id
+                HAVING {having_clause}
+            ) as filtered_companies
         """
 
         result = await self.click_house.query(sql, params)
-        row = list(result.named_results())[0]
-        return int(row["cnt"])
+        row = list(result.named_results())
+        if row and len(row) > 0:
+            return int(row[0].get("total_companies", 0))
+        return 0
+
+    async def get_unique_primary__job_titles(self, company_id):
+        query = f"""
+        SELECT 
+            lu.job_title
+        FROM leads_companies lc
+        LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
+        WHERE lc.company_id = %(company_id)s
+        ORDER BY lu.job_title
+        """
+        try:
+            result = await self.click_house.query(
+                query, {"company_id": company_id}
+            )
+            rows = list[dict](result.named_results())
+            print("----")
+            print(rows)
+            seniorities = []
+            for seniority in rows:
+                seniority = seniority["job_title"]
+                if seniority:
+                    seniority = seniority.strip()
+                    seniorities.append(seniority)
+
+            return seniorities
+        except Exception:
+            return []
+
+    async def get_unique_primary__seniorities(self, company_id):
+        query = f"""
+        SELECT 
+            lu.seniority_level
+        FROM leads_companies lc
+        LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
+        WHERE lc.company_id = %(company_id)s
+        ORDER BY lu.seniority_level
+        """
+        try:
+            result = await self.click_house.query(
+                query, {"company_id": company_id}
+            )
+            rows = list[dict](result.named_results())
+            print("----")
+            print(rows)
+            seniorities = []
+            for seniority in rows:
+                seniority = seniority["seniority_level"]
+                if seniority:
+                    seniority = seniority.strip()
+                    seniorities.append(seniority)
+
+            return seniorities
+        except Exception:
+            return []
 
     async def _prepare_params(
         self,

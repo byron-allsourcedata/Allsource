@@ -148,7 +148,7 @@ async def get_seniority(
     company_service: AsyncCompanyLeadsService,
     company_id: str,
 ):
-    return company_service.get_uniq_primary__seniorities(company_id)
+    return await company_service.get_uniq_primary__seniorities(company_id)
 
 
 @router.get("/{company_id}/job-titles")
@@ -156,7 +156,7 @@ async def get_seniority(
     company_service: AsyncCompanyLeadsService,
     company_id: str,
 ):
-    return company_service.get_uniq_primary__job_titles(company_id)
+    return await company_service.get_uniq_primary__job_titles(company_id)
 
 
 @router.get("/download-companies")
@@ -185,7 +185,7 @@ async def download_companies(
         description="Search for email, first name, lastname and phone number",
     ),
 ):
-    result = company_service.download_companies(
+    result = await company_service.download_companies(
         pixel_id=domain.pixel_id,
         company_id=company_id,
         from_date=from_date,

@@ -131,21 +131,43 @@ class AsyncCompanyLeadsService:
         pixel_id: str,
     ):
         if company_id:
-            company = self.company_persistence_service.get_company_by_id(
-                domain_id=self.domain.id, company_id=company_id
+            company = await self.company_leads_persistence.get_company_by_id(
+                pixel_id=pixel_id, company_id=company_id
             )
             companies = [company] if company else []
         else:
-            companies = self.company_persistence_service.get_full_information_companies_by_filters(
-                domain_id=self.domain.id,
-                from_date=from_date,
-                to_date=to_date,
-                search_query=search_query,
-                employee_visits=employee_visits,
-                revenue_range=revenue_range,
-                regions=regions,
-                employees_range=employees_range,
-                industry=industry,
+            adjusted_from_date = await self._adjust_timestamp_for_timezone(
+                from_date, 0
+            )
+            adjusted_to_date = await self._adjust_timestamp_for_timezone(
+                to_date, 0
+            )
+            parsed_employees_range = await self._parse_employees_range(
+                employees_range
+            )
+            parsed_revenue_range = await self.parse_revenue_ranges(
+                revenue_range
+            )
+            parsed_regions = await self._parse_regions(regions)
+            parsed_industry = await self._parse_industry(industry)
+            filter_params = {
+                "pixel_id": pixel_id,
+                "employees_range": parsed_employees_range,
+                "employee_visits": employee_visits,
+                "industry": parsed_industry,
+                "revenue_range": parsed_revenue_range,
+                "search_query": search_query,
+                "regions": parsed_regions,
+                "adjusted_from_date": adjusted_from_date,
+                "adjusted_to_date": adjusted_to_date,
+            }
+            filtered_params = {
+                key: value
+                for key, value in filter_params.items()
+                if value is not None
+            }
+            companies = await self.company_leads_persistence.get_full_information_companies_by_filters(
+                filtered_params
             )
 
         output = io.StringIO()
@@ -166,34 +188,49 @@ class AsyncCompanyLeadsService:
                 "Company description",
                 "City",
                 "State",
-                "Last company update",
             ]
         )
         for company in companies:
+            country = company.get("company_country", "")
+            city = company.get("company_city", "")
+            address = f"{country} {city}".strip()
             relevant_data = [
-                company.name or "None",
-                company.phone or "None",
-                company.linkedin_url or "None",
-                company.number_of_employees or "None",
-                company.visited_date or "None",
-                company.revenue or "None",
-                company.employee_count or "None",
-                company.address or "None",
-                company.primary_industry or "None",
-                company.domain or "None",
-                company.zip or "None",
-                company.description or "None",
-                company.city or "None",
-                company.state_name or "None",
-                company.last_updated or "None",
+                company.get("company_name") or "None",
+                company.get("company_phones") or "None",
+                company.get("company_linkedin_url") or "None",
+                company.get("employees_visited") or "None",
+                company.get("visited_date") or "None",
+                company.get("company_revenue_range") or "None",
+                company.get("company_employee_count_range") or "None",
+                address or "None",
+                company.get("company_industry") or "None",
+                company.get("company_domain") or "None",
+                company.get("company_zip_code") or "None",
+                company.get("company_description") or "None",
+                company.get("company_city") or "None",
+                company.get("company_state") or "None",
             ]
             writer.writerow(relevant_data)
 
         output.seek(0)
         return output
 
+    async def get_uniq_primary__job_titles(self, company_id):
+        job_titles = (
+            await self.company_leads_persistence.get_unique_primary__job_titles(
+                company_id
+            )
+        )
+        return job_titles
+
+    async def get_uniq_primary__seniorities(self, company_id):
+        seniorities = await self.company_leads_persistence.get_unique_primary__seniorities(
+            company_id
+        )
+        return seniorities
+
     async def get_uniq_primary__departments(self, company_id: str) -> List[str]:
-        company_id = company_id.strip
+        company_id = company_id.strip()
         if not company_id:
             return []
         print("1")

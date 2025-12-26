@@ -463,7 +463,7 @@ const Leads: React.FC = () => {
 				(filter) => filter.label === "Employee Visits",
 			)?.value;
 			if (employeeVisits) {
-				url += `&employee_visits=${encodeURIComponent(employeeVisits)}`;
+				params.push(`employee_visits=${encodeURIComponent(employeeVisits)}`);
 			}
 
 			const processMultiFilter = (label: string, paramName: string) => {
