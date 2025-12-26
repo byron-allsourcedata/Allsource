@@ -116,7 +116,7 @@ async def get_valid_email(
 
 
 def get_valid_email_without_million(
-    user: FiveXFiveUser,
+    user: DelivrUser,
     email_fields=[
         "business_email",
         "personal_emails",
