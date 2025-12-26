@@ -289,16 +289,30 @@ class LeadBuilder:
             visit_start, self.timezone_offset
         )
 
-        # Время проведенное
-        time_spent = (
-            combined.get("time_spent")
-            or combined.get("full_time_sec")
-            or combined.get("spent_time")
-            or combined.get("spent_time_sec")
-        )
+        # Время проведенное: суммарно по всем посещениям страниц в окне
+        if page_visits:
+            try:
+                time_spent = sum(
+                    int(p.get("spent_time_sec") or 0) for p in page_visits
+                )
+            except Exception:
+                time_spent = combined.get("time_spent") or combined.get(
+                    "full_time_sec"
+                )
+        else:
+            time_spent = (
+                combined.get("time_spent")
+                or combined.get("full_time_sec")
+                or combined.get("spent_time")
+                or combined.get("spent_time_sec")
+            )
 
-        # Количество страниц
-        pages_count = combined.get("pages_count") or combined.get("page_count")
+        # Количество страниц: число посещений в окне
+        pages_count = (
+            len(page_visits)
+            if page_visits
+            else (combined.get("pages_count") or combined.get("page_count"))
+        )
 
         # Форматирование телефонов
         mobile_phone = self.formatter.format_phone(
@@ -402,52 +416,297 @@ class LeadsPersistenceClickhouse:
         *,
         timezone_offset: int = 0,
         require_visit_in_range: bool = True,
+        # sorting
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+        # filters
+        behavior_type: str | None = None,
+        status: str | None = None,
+        regions: str | None = None,
+        page_url: str | None = None,
+        recurring_visits: str | None = None,
+        average_time_sec: str | None = None,
+        page_visits: str | None = None,
+        search_query: str | None = None,
+        from_time: str | None = None,
+        to_time: str | None = None,
     ) -> Tuple[List[Dict[str, Any]], int, int]:
         """
-        Возвращает отформатированный список лидов с пагинацией
+        Возвращает отформатированный список лидов с пагинацией и фильтрами.
         """
-        # Подготовка параметров запроса
         params = self._prepare_params(
             pixel_id, page, per_page, from_date, to_date, timezone_offset
         )
+        params.update(
+            {
+                "behavior_type": behavior_type,
+                "status": status,
+                "regions": regions,
+                "page_url": page_url,
+                "recurring_visits": recurring_visits,
+                "average_time_sec": average_time_sec,
+                "page_visits": page_visits,
+                "search_query": search_query,
+                "from_time": from_time,
+                "to_time": to_time,
+                "sort_by": sort_by,
+                "sort_order": sort_order,
+            }
+        )
 
-        # Загрузка пользователей
         users = await self._load_users(params)
         if not users:
             return [], 0, 0
 
-        # Загрузка дополнительных данных
         profile_ids = [u["profile_pid_all"] for u in users]
 
-        visits_map = await self._load_last_visits(profile_ids, params)
-        page_visits_map = await self._load_page_visits(profile_ids, params)
+        visits_map = await self._load_last_visits(pixel_id, profile_ids, params)
+        page_visits_map = await self._load_page_visits(
+            pixel_id, profile_ids, params
+        )
         delivr_data = await self._load_delivr_data(profile_ids)
 
-        # Получение общего количества
-        total_count = await self._get_total_count(params)
-        max_page = math.ceil(total_count / per_page) if per_page else 1
-
-        # Построение результатов
         builder = LeadBuilder(timezone_offset)
-        results = []
+        filtered: list[dict] = []
+
+        def _split_csv(val: str | None) -> list[str]:
+            if not val:
+                return []
+            return [x.strip().lower() for x in val.split(",") if x.strip()]
+
+        behavior_list = _split_csv(behavior_type)
+        status_list = _split_csv(status)
+        regions_list = _split_csv(regions)
+        url_tags = _split_csv(page_url)
+        recurring_list = _split_csv(recurring_visits)
+        time_spent_list = _split_csv(average_time_sec)
+        page_visits_list = _split_csv(page_visits)
+        q = (search_query or "").strip().lower()
+
+        def _time_bucket_ok(av: int | None) -> bool:
+            if av is None:
+                return not time_spent_list
+            conds = []
+            for b in time_spent_list:
+                if b in ("under_10", "under10", "<10"):
+                    conds.append(av < 10)
+                elif b in ("10-30_secs", "10_30", "10-30"):
+                    conds.append(10 <= av <= 30)
+                elif b in ("30-60_secs", "30_60", "30-60"):
+                    conds.append(30 <= av <= 60)
+                elif b in ("over_60", ">60", "over_60_secs"):
+                    conds.append(av > 60)
+            return any(conds) if conds else True
+
+        def _pages_bucket_ok(pc: int | None) -> bool:
+            if pc is None:
+                return not page_visits_list
+            conds = []
+            for b in page_visits_list:
+                if b in ("1_page", "1", "1_page(s)"):
+                    conds.append(pc == 1)
+                elif b in ("2_pages", "2"):
+                    conds.append(pc == 2)
+                elif b in ("3_pages", "3"):
+                    conds.append(pc == 3)
+                elif b in ("more_than_3_pages", ">3"):
+                    conds.append(pc > 3)
+            return any(conds) if conds else True
+
+        def _time_of_day_ok(dt: datetime | None) -> bool:
+            if not from_time and not to_time:
+                return True
+            if not dt:
+                return False
+            local = dt + timedelta(hours=timezone_offset)
+            hhmm = local.hour * 60 + local.minute
+
+            def _parse_hhmm(s: str) -> int:
+                h, m = s.split(":")
+                return int(h) * 60 + int(m)
+
+            start = _parse_hhmm(from_time) if from_time else 0
+            end = _parse_hhmm(to_time) if to_time else 24 * 60 - 1
+            return start <= hhmm <= end
 
         for user in users:
             profile_id = user["profile_pid_all"]
             visit = visits_map.get(profile_id)
             delivr = delivr_data.get(profile_id, {})
+            pv_list = page_visits_map.get(profile_id, [])
 
             if require_visit_in_range and not visit:
                 continue
+
+            # behavior_type filter — only when no status is provided
+            if behavior_list and not status_list:
+                if (
+                    user.get("behavior_type") or ""
+                ).lower() not in behavior_list:
+                    continue
+
+            # status/funnels — поддержка нескольких значений с логикой OR
+            if status_list:
+                bt = (user.get("behavior_type") or "").lower()
+                is_conv = int(user.get("is_converted_sales", 0) or 0)
+                # нормализуем алиасы
+                norm_status = [
+                    (
+                        "viewed_product"
+                        if s in ("view_product", "viewed_product")
+                        else s
+                    )
+                    for s in status_list
+                ]
+
+                def _status_match(s: str) -> bool:
+                    if s == "converted_sales":
+                        return is_conv == 1
+                    if s == "abandoned_cart":
+                        return bt == "product_added_to_cart" and is_conv == 0
+                    if s == "viewed_product":
+                        return bt == "viewed_product" and is_conv == 0
+                    if s == "visitor":
+                        return bt == "visitor" and is_conv == 0
+                    return False
+
+                if not any(_status_match(s) for s in norm_status):
+                    continue
+
+            # recurring
+            if recurring_list:
+                is_ret = int(user.get("is_returning_visitor", 0) or 0)
+                if "recurring" in recurring_list and is_ret != 1:
+                    continue
+                if (
+                    any(
+                        x in recurring_list
+                        for x in ("first_time", "not_recurring")
+                    )
+                    and is_ret != 0
+                ):
+                    continue
+
+            # regions filter (по delivr данным)
+            if regions_list:
+                region_pool = " ".join(
+                    str(delivr.get(k, ""))
+                    for k in (
+                        "personal_city",
+                        "personal_state",
+                        "personal_country",
+                        "company_city",
+                        "company_state",
+                        "company_zip",
+                    )
+                ).lower()
+                if not any(r in region_pool for r in regions_list):
+                    continue
+
+            # page_url contains any tag
+            if url_tags:
+                last_page = (visit or {}).get("page", "")
+                lp = str(last_page).lower()
+                if not any(tag in lp for tag in url_tags):
+                    continue
+
+            # Aggregate totals from page visits in the window
+            total_time = (
+                sum(int(p.get("spent_time_sec") or 0) for p in pv_list)
+                if pv_list
+                else None
+            )
+            total_pages = (
+                len(pv_list) if pv_list else (visit or {}).get("pages_count")
+            )
+
+            # time spent & page visits buckets
+            if not _time_bucket_ok(total_time):
+                continue
+            if not _pages_bucket_ok(total_pages):
+                continue
+
+            # time of day by last visit_start
+            if not _time_of_day_ok((visit or {}).get("visit_start")):
+                continue
+
+            # search query across delivr/user fields
+            if q:
+                searchable = " ".join(
+                    str(x or "")
+                    for x in (
+                        delivr.get("first_name"),
+                        delivr.get("last_name"),
+                        delivr.get("current_business_email"),
+                        delivr.get("company_name"),
+                        delivr.get("company_domain"),
+                        user.get("profile_pid_all"),
+                    )
+                ).lower()
+                if q not in searchable:
+                    continue
 
             lead = builder.build(
                 user_data=user,
                 visit_data=visit,
                 delivr_data=delivr,
-                page_visits=page_visits_map.get(profile_id, []),
+                page_visits=pv_list,
             )
-            results.append(lead.to_dict())
+            filtered.append(lead.to_dict())
 
-        return results, total_count, max_page
+        # Сортировка
+        reverse = (sort_order or "").lower() == "desc"
+        key_map = {
+            "updated_at": lambda d: d.get("updated_at"),
+            "created_at": lambda d: d.get("created_at"),
+            "total_visit_time": lambda d: d.get("time_spent") or 0,
+            "average_time_sec": lambda d: d.get("time_spent") or 0,
+            "pages_count": lambda d: (d.get("pages_count") or 0),
+        }
+        if sort_by in key_map:
+            try:
+                filtered.sort(key=key_map[sort_by], reverse=reverse)
+            except Exception:
+                pass
+        else:
+            # default by updated_at desc
+            try:
+                filtered.sort(key=key_map["updated_at"], reverse=True)
+            except Exception:
+                pass
+
+        # Определяем, есть ли продвинутые фильтры (которые применяются на Python-уровне)
+        advanced_filters = any(
+            [
+                bool(regions_list),
+                bool(url_tags),
+                bool(time_spent_list),
+                bool(page_visits_list),
+                bool(q),
+                bool(from_time),
+                bool(to_time),
+            ]
+        )
+
+        if not advanced_filters:
+            # Можно получить точный count из ClickHouse по тем же WHERE
+            total_count = await self._get_total_count(
+                params, require_visit_in_range
+            )
+        else:
+            # При наличии сложных фильтров считаем количество после пост-фильтрации
+            total_count = len(filtered)
+
+        start = max(0, (page - 1) * per_page)
+        end = start + per_page
+        # Avoid double pagination: when only SQL-side filters are used (not advanced_filters),
+        # we already applied LIMIT/OFFSET in ClickHouse, so return the current page as-is.
+        if not advanced_filters:
+            page_items = filtered
+        else:
+            page_items = filtered[start:end]
+        max_page = math.ceil(total_count / per_page) if per_page else 1
+        return page_items, total_count, max_page
 
     def _prepare_params(
         self,
@@ -475,31 +734,177 @@ class LeadsPersistenceClickhouse:
 
         return params
 
+    def _split_csv_lower(self, val: str | None) -> list[str]:
+        if not val:
+            return []
+        return [x.strip().lower() for x in str(val).split(",") if x.strip()]
+
+    def _build_sql_where(
+        self, params: Dict[str, Any]
+    ) -> tuple[str, Dict[str, Any]]:
+        """Собрать WHERE для ClickHouse по базовым фильтрам, совместимым с SQL.
+        Поддержка:
+          - pixel_id
+          - дата-диапазон по updated_at
+          - behavior_type (из параметра behavior_type)
+          - status: converted_sales, abandoned_cart, view_product/viewed_product, visitor
+          - recurring_visits: recurring / first_time|not_recurring
+        Возвращает (where_sql, sql_params)
+        """
+        clauses: list[str] = ["pixel_id = toUUID(%(pixel_id)s)"]
+        sql_params: Dict[str, Any] = {"pixel_id": params["pixel_id"]}
+
+        # Date window by updated_at
+        if params.get("from_dt") is not None:
+            clauses.append("updated_at >= %(from_dt)s")
+            sql_params["from_dt"] = params["from_dt"]
+        if params.get("to_dt") is not None:
+            clauses.append("updated_at < %(to_dt)s")
+            sql_params["to_dt"] = params["to_dt"]
+
+        # Behavior types (comma list) — apply ONLY when no status (funnels) provided
+        behavior_list = self._split_csv_lower(params.get("behavior_type"))
+        status_present = bool(self._split_csv_lower(params.get("status")))
+        if behavior_list and not status_present:
+            # Only allow known values
+            allowed = {"visitor", "viewed_product", "product_added_to_cart"}
+            b_list = [b for b in behavior_list if b in allowed]
+            if b_list:
+                # ClickHouse supports passing an Array(String) for IN
+                clauses.append("behavior_type IN %(behavior_arr)s")
+                sql_params["behavior_arr"] = b_list
+
+        # Status/funnels mapping
+        status_list_raw = self._split_csv_lower(params.get("status"))
+        # Normalize aliases
+        status_list = [
+            ("viewed_product" if s in ("view_product", "viewed_product") else s)
+            for s in status_list_raw
+        ]
+        status_clauses: list[str] = []
+        for s in status_list:
+            if s == "converted_sales":
+                status_clauses.append("(is_converted_sales = 1)")
+            elif s == "abandoned_cart":
+                status_clauses.append(
+                    "(behavior_type = 'product_added_to_cart' AND is_converted_sales = 0)"
+                )
+            elif s == "viewed_product":
+                status_clauses.append(
+                    "(behavior_type = 'viewed_product' AND is_converted_sales = 0)"
+                )
+            elif s == "visitor":
+                status_clauses.append(
+                    "(behavior_type = 'visitor' AND is_converted_sales = 0)"
+                )
+        if status_clauses:
+            clauses.append("(" + " OR ".join(status_clauses) + ")")
+
+        # Recurring
+        rec_list = self._split_csv_lower(params.get("recurring_visits"))
+        if rec_list:
+            if "recurring" in rec_list:
+                clauses.append("is_returning_visitor = 1")
+            elif any(x in rec_list for x in ("first_time", "not_recurring")):
+                clauses.append("is_returning_visitor = 0")
+
+        where_sql = " WHERE " + " AND ".join(clauses) if clauses else ""
+        return where_sql, sql_params
+
     async def _load_users(self, params: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Загрузка пользователей с пагинацией"""
+        """Loading users with pagination. SQL filters are applied (see _build_sql_where)."""
+        where_sql, sql_params = self._build_sql_where(params)
         sql = f"""
-            SELECT profile_pid_all, company_id, behavior_type, created_at, updated_at, is_active
+            SELECT 
+                profile_pid_all,
+                company_id,
+                behavior_type,
+                created_at,
+                updated_at,
+                is_active,
+                is_confirmed,
+                is_checked,
+                is_returning_visitor,
+                is_converted_sales,
+                total_visit,
+                average_visit_time,
+                total_visit_time
             FROM {self.leads_table}
-            WHERE pixel_id = %(pixel_id)s
+            FINAL
+            {where_sql}
             ORDER BY updated_at DESC
             LIMIT %(limit)s OFFSET %(offset)s
         """
-        result = await self.click.query(sql, params)
+        sql_params.update(
+            {
+                "limit": params.get("limit", 50),
+                "offset": params.get("offset", 0),
+            }
+        )
+        result = await self.click.query(sql, sql_params)
         return list(result.named_results())
 
-    async def _get_total_count(self, params: Dict[str, Any]) -> int:
-        """Получение общего количества записей"""
-        sql = f"""
-            SELECT count() AS cnt 
-            FROM {self.leads_table} 
-            WHERE pixel_id = %(pixel_id)s
+    async def _get_total_count(
+        self, params: Dict[str, Any], require_visit_in_range: bool
+    ) -> int:
+        """Получение общего количества записей.
+        Если require_visit_in_range=True и задан from/to, считаем по пересечению с визитами в окне.
+        Иначе считаем только по leads_users с теми же SQL-фильтрами.
         """
-        result = await self.click.query(sql, params)
-        row = list(result.named_results())[0]
-        return int(row["cnt"])
+        from_dt = params.get("from_dt")
+        to_dt = params.get("to_dt")
+        if require_visit_in_range and (
+            from_dt is not None or to_dt is not None
+        ):
+            # Build users WHERE without date (we'll filter by visits time window)
+            params_no_date = dict(params)
+            params_no_date["from_dt"] = None
+            params_no_date["to_dt"] = None
+            where_users_sql, users_params = self._build_sql_where(
+                params_no_date
+            )
+            # Build visits time filter
+            visit_clauses = ["pixel_id = toUUID(%(pixel_id)s)"]
+            visit_params: Dict[str, Any] = {"pixel_id": params["pixel_id"]}
+            if from_dt is not None:
+                visit_clauses.append("visit_start >= %(from_dt)s")
+                visit_params["from_dt"] = from_dt
+            if to_dt is not None:
+                visit_clauses.append("visit_start < %(to_dt)s")
+                visit_params["to_dt"] = to_dt
+            visits_where = " WHERE " + " AND ".join(visit_clauses)
+            sql = f"""
+                WITH v AS (
+                    SELECT DISTINCT profile_pid_all
+                    FROM {self.visits_table}
+                    {visits_where}
+                )
+                SELECT countDistinct(u.profile_pid_all) AS cnt
+                FROM {self.leads_table} u
+                FINAL
+                {where_users_sql}
+                INNER JOIN v USING(profile_pid_all)
+            """
+            # merge params
+            all_params = {**users_params, **visit_params}
+            result = await self.click.query(sql, all_params)
+            rows = list(result.named_results())
+            return int(rows[0].get("cnt", 0)) if rows else 0
+        else:
+            where_sql, sql_params = self._build_sql_where(params)
+            sql = f"""
+                SELECT count() AS cnt 
+                FROM {self.leads_table} 
+                {where_sql}
+            """
+            result = await self.click.query(sql, sql_params)
+            rows = list(result.named_results())
+            if not rows:
+                return 0
+            return int(rows[0].get("cnt", 0))
 
     async def _load_last_visits(
-        self, profile_ids: List[str], params: Dict[str, Any]
+        self, pixel_id: UUID, profile_ids: List[str], params: Dict[str, Any]
     ) -> Dict[str, Dict[str, Any]]:
         """Загрузка последних визитов"""
         if not profile_ids:
@@ -510,10 +915,11 @@ class LeadsPersistenceClickhouse:
         sql = f"""
             SELECT lv.*
             FROM {self.visits_table} lv
+            FINAL
             INNER JOIN (
                 SELECT profile_pid_all, max(visit_start) AS last_visit_start
                 FROM {self.visits_table}
-                WHERE profile_pid_all IN %(profile_list)s
+                WHERE pixel_id = toUUID(%(pixel_id)s) AND profile_pid_all IN %(profile_list)s
                 {time_filter}
                 GROUP BY profile_pid_all
             ) lvmax USING(profile_pid_all)
@@ -521,6 +927,7 @@ class LeadsPersistenceClickhouse:
         """
 
         query_params = {
+            "pixel_id": str(pixel_id),
             "profile_list": profile_ids,
             "from_dt": params.get("from_dt"),
             "to_dt": params.get("to_dt"),
@@ -532,7 +939,7 @@ class LeadsPersistenceClickhouse:
         return {v["profile_pid_all"]: v for v in visits}
 
     async def _load_page_visits(
-        self, profile_ids: List[str], params: Dict[str, Any]
+        self, pixel_id: UUID, profile_ids: List[str], params: Dict[str, Any]
     ) -> Dict[str, List[Dict[str, Any]]]:
         """Загрузка посещений страниц"""
         if not profile_ids:
@@ -543,11 +950,13 @@ class LeadsPersistenceClickhouse:
         sql = f"""
             SELECT profile_pid_all, page, spent_time_sec
             FROM {self.visits_table}
-            WHERE profile_pid_all IN %(profile_list)s
+            FINAL
+            WHERE pixel_id = toUUID(%(pixel_id)s) AND profile_pid_all IN %(profile_list)s 
             {time_filter}
         """
 
         query_params = {
+            "pixel_id": str(pixel_id),
             "profile_list": profile_ids,
             "from_dt": params.get("from_dt"),
             "to_dt": params.get("to_dt"),

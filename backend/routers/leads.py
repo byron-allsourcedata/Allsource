@@ -72,29 +72,48 @@ router = APIRouter()
 @router.get("")
 async def get_leads(
     leads_service: AsyncLeadsService,
-    # domain → pixel_id
     domain: UserDomains = Depends(check_pixel_install_domain),
     # pagination
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(50, ge=1, le=500, description="Items per page"),
-    # time filters
+    # sorting
+    sort_by: str | None = Query(None, description="Field to sort by"),
+    sort_order: str | None = Query(None, description="'asc' or 'desc'"),
+    # time filters (epoch seconds)
     from_date: int | None = Query(
         None, description="Start date (epoch seconds)"
     ),
     to_date: int | None = Query(None, description="End date (epoch seconds)"),
-    # misc
+    # additional filters (comma-separated strings from UI)
+    behavior_type: str | None = Query(
+        None, description="Comma-separated visitor types"
+    ),
+    status: str | None = Query(
+        None, description="Comma-separated lead statuses (funnels)"
+    ),
+    regions: str | None = Query(None, description="Comma-separated regions"),
+    page_url: str | None = Query(
+        None, description="Comma-separated page URL tags"
+    ),
+    recurring_visits: str | None = Query(
+        None, description="Comma-separated recurring flags"
+    ),
+    average_time_sec: str | None = Query(
+        None, description="Comma-separated time-spent buckets"
+    ),
+    page_visits: str | None = Query(
+        None, description="Comma-separated page-visit buckets"
+    ),
+    search_query: str | None = Query(None, description="Free text search"),
+    # time-of-day window
+    from_time: str | None = Query(None, description="From time HH:MM"),
+    to_time: str | None = Query(None, description="To time HH:MM"),
+    # tz offset
     timezone_offset: int = Query(0, description="Timezone offset in hours"),
 ):
     """
-    Async ClickHouse-based leads endpoint.
-
-    Flow:
-    domain → pixel_id
-           → leads_users (by pixel_id)
-           → leads_visits (latest visit)
-           → delivr_users (heavy table, joined last)
+    Async ClickHouse-based leads endpoint with rich filters.
     """
-
     return await leads_service.get_leads(
         pixel_id=domain.pixel_id,
         page=page,
@@ -103,6 +122,18 @@ async def get_leads(
         to_date=to_date,
         timezone_offset=timezone_offset,
         require_visit_in_range=True,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        behavior_type=behavior_type,
+        status=status,
+        regions=regions,
+        page_url=page_url,
+        recurring_visits=recurring_visits,
+        average_time_sec=average_time_sec,
+        page_visits=page_visits,
+        search_query=search_query,
+        from_time=from_time,
+        to_time=to_time,
     )
 
 

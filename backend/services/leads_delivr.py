@@ -57,11 +57,21 @@ class AsyncLeadsService:
         to_date=None,
         timezone_offset: int = 0,
         require_visit_in_range: bool = True,
+        # sorting
+        sort_by: str | None = None,
+        sort_order: str | None = None,
+        # filters
+        behavior_type: str | None = None,
+        status: str | None = None,
+        regions: str | None = None,
+        page_url: str | None = None,
+        recurring_visits: str | None = None,
+        average_time_sec: str | None = None,
+        page_visits: str | None = None,
+        search_query: str | None = None,
+        from_time: str | None = None,
+        to_time: str | None = None,
     ) -> Tuple[List[Dict[str, Any]], int, int]:
-        """
-        Async leads fetcher — теперь сервис только вызывает persistence.filter_leads
-        и возвращает уже подготовленные записи (форматированные).
-        """
         (
             leads,
             total_count,
@@ -74,5 +84,17 @@ class AsyncLeadsService:
             to_date=to_date,
             require_visit_in_range=require_visit_in_range,
             timezone_offset=timezone_offset,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            behavior_type=behavior_type,
+            status=status,
+            regions=regions,
+            page_url=page_url,
+            recurring_visits=recurring_visits,
+            average_time_sec=average_time_sec,
+            page_visits=page_visits,
+            search_query=search_query,
+            from_time=from_time,
+            to_time=to_time,
         )
         return leads, total_count, max_page

@@ -41,7 +41,7 @@ class LeadsUsersCHRepository:
             total_visit_time,
             company_id
         FROM allsource_prod.leads_users
-        WHERE pixel_id = %(pixel_id)s
+        WHERE pixel_id = toUUID(%(pixel_id)s)
           {where_last}
         ORDER BY id ASC
         LIMIT %(limit)s
