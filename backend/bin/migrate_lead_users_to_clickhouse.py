@@ -115,6 +115,7 @@ class LeadsToClickHouseMigrator:
                 OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(business_emails, []))
             """,
             {"emails": [e.lower() for e in emails]},
+            settings={"max_query_size": 5_000_000},
         )
 
         email_to_profile: dict[str, dict[str, str]] = {}

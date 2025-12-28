@@ -85,8 +85,17 @@ class AsyncDelivrClickHouseClient:
         except Exception:
             pass
 
-    async def query(self, sql: str, params: dict | None = None) -> list[dict]:
-        result = await self._client.query(sql, params or {})
+    async def query(
+        self,
+        sql: str,
+        params: dict | None = None,
+        settings: dict | None = None,
+    ) -> list[dict]:
+        result = await self._client.query(
+            sql,
+            params or {},
+            settings=settings or {},
+        )
         if isinstance(result, list):
             return result
         else:
