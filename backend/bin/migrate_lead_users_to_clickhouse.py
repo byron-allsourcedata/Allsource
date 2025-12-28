@@ -90,34 +90,23 @@ class LeadsToClickHouseMigrator:
         table_name: str,
         ch_session,
     ):
-        emails = []
+        EMAIL_CHUNK = 500
+
+        emails: list[str] = []
         email_owner: dict[str, FiveXFiveUser] = {}
+
         for user in five_x_five_users:
             for e in self._collect_emails_from_user(user):
-                if e not in email_owner:
-                    email_owner[e] = user
-                emails.append(e)
+                e_lc = e.lower()
+                if e_lc not in email_owner:
+                    email_owner[e_lc] = user
+                emails.append(e_lc)
 
         if not emails:
             logger.info("Нет email для поиска в ClickHouse")
             return []
-        emails = list(set(emails))
 
-        existing = await ch_session.query(
-            f"""
-            SELECT *
-            FROM {table_name}
-            WHERE
-                arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(emails, []))
-                OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(primary_contact_emails, []))
-                OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(valid_emails, []))
-                OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(personal_emails, []))
-                OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(business_emails, []))
-            """,
-            {"emails": [e.lower() for e in emails]},
-            settings={"max_query_size": 5_000_000},
-        )
-
+        emails_lc = list(set(emails))
         email_to_profile: dict[str, dict[str, str]] = {}
 
         def _row_has_email(row, email_lc: str) -> bool:
@@ -139,24 +128,41 @@ class LeadsToClickHouseMigrator:
                     return True
             return False
 
-        for row in existing:
-            profile = row.get("profile_pid_all")
-            company_id = row.get("company_id")
-            for e in emails:
-                el = e.lower()
-                if el in email_to_profile:
-                    continue
-                if _row_has_email(row, el):
-                    email_to_profile[el] = {
-                        "profile_pid_all": profile,
-                        "company_id": company_id,
-                    }
+        for i in range(0, len(emails_lc), EMAIL_CHUNK):
+            chunk = emails_lc[i : i + EMAIL_CHUNK]
+
+            rows = await ch_session.query(
+                f"""
+                SELECT *
+                FROM {table_name}
+                WHERE
+                    arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(emails, []))
+                    OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(primary_contact_emails, []))
+                    OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(valid_emails, []))
+                    OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(personal_emails, []))
+                    OR arrayExists(x -> lowerUTF8(toString(x)) IN %(emails)s, ifNull(business_emails, []))
+                """,
+                {"emails": chunk},
+            )
+
+            for row in rows:
+                profile = row.get("profile_pid_all")
+                company_id = row.get("company_id")
+
+                for e in chunk:
+                    if e in email_to_profile:
+                        continue
+                    if _row_has_email(row, e):
+                        email_to_profile[e] = {
+                            "profile_pid_all": profile,
+                            "company_id": company_id,
+                        }
 
         result = []
-        for e in emails:
+        for e in emails_lc:
             owner = email_owner.get(e)
-            profile_pid_info = email_to_profile.get(e.lower())
-            if profile_pid_info is not None:
+            profile_pid_info = email_to_profile.get(e)
+            if profile_pid_info:
                 result.append(
                     {
                         "five_x_five_user_id": owner.id if owner else None,
@@ -164,8 +170,8 @@ class LeadsToClickHouseMigrator:
                         "company_id": profile_pid_info["company_id"],
                     }
                 )
-        unique_result = [dict(t) for t in {tuple(d.items()) for d in result}]
-        return unique_result
+
+        return [dict(t) for t in {tuple(d.items()) for d in result}]
 
     def build_visits(
         self, pixel_id, lead_user, profile_pid_all, company_id
