@@ -98,9 +98,21 @@ class AsyncDelivrClickHouseClient:
     async def execute(self, sql: str, params: dict | None = None):
         return await self._client.command(sql, params or {})
 
-    async def insert_dicts(self, table: str, rows: list[dict]):
+    async def insert_dicts(
+        self,
+        table: str,
+        rows: list[dict],
+        settings: dict | None = None,
+    ):
         if not rows:
             return
+
         cols = list(rows[0].keys())
         data = [[r.get(c) for c in cols] for r in rows]
-        await self._client.insert(table, data, column_names=cols)
+
+        await self._client.insert(
+            table,
+            data,
+            column_names=cols,
+            settings=settings or {},
+        )

@@ -29,7 +29,9 @@ class LeadsVisitsRepository:
             )
         return payload
 
-    async def insert_async(self, visits: list[Visit]):
+    async def insert_async(
+        self, visits: list[Visit], settings: dict | None = None
+    ):
         """
         Insert visits without prior delete. We rely on scheduling (runs at :10 and :40 UTC)
         and slot-based filtering (visit_start within last closed 30-min slot) to avoid duplicates.
@@ -40,4 +42,5 @@ class LeadsVisitsRepository:
         await self.ch.insert_dicts(
             "allsource_prod.leads_visits",
             payload,
+            settings=settings,
         )

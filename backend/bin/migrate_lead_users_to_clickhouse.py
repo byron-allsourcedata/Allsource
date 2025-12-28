@@ -40,6 +40,16 @@ from resolver import Resolver
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+MAX_VISITS_BATCH = 10000
+MAX_USERS_BATCH = 5000
+
+
+SETTINGS = {
+    "async_insert": 1,
+    "wait_for_async_insert": 0,
+    "input_format_parallel_parsing": 1,
+}
+
 
 class LeadsToClickHouseMigrator:
     def __init__(self, db_session):
@@ -281,7 +291,7 @@ class LeadsToClickHouseMigrator:
             delivr_users = await self.find_delivr_by_emails(
                 five_x_five_users, "allsource_prod.delivr_users", ch_session
             )
-            if delivr_users is empty:
+            if not delivr_users:
                 return
 
             await self.insert_leads_visits(
@@ -314,6 +324,9 @@ class LeadsToClickHouseMigrator:
     async def insert_leads_visits(
         self, pixel_id, delivr_users, lead_users, visits_repo, users_repo
     ):
+        visits_buffer = []
+        users_buffer = []
+
         for delivr_user in delivr_users:
             lead_user = next(
                 (
@@ -324,17 +337,36 @@ class LeadsToClickHouseMigrator:
                 ),
                 None,
             )
+            if not lead_user:
+                continue
+
             visits = self.build_visits(
                 pixel_id,
                 lead_user,
                 delivr_user["profile_pid_all"],
                 delivr_user["company_id"],
             )
-            if visits:
-                users = aggregate_users(visits)
-                await users_repo.insert_async(users)
-                await visits_repo.insert_async(visits)
-                logger.debug("Inserted %d visits into ClickHouse", len(visits))
+            if not visits:
+                continue
+
+            users = aggregate_users(visits)
+
+            visits_buffer.extend(visits)
+            users_buffer.extend(users)
+
+            if len(visits_buffer) >= MAX_VISITS_BATCH:
+                await visits_repo.insert_async(visits_buffer, settings=SETTINGS)
+                visits_buffer.clear()
+
+            if len(users_buffer) >= MAX_USERS_BATCH:
+                await users_repo.insert_async(users_buffer, settings=SETTINGS)
+                users_buffer.clear()
+
+        if users_buffer:
+            await users_repo.insert_async(users_buffer, settings=SETTINGS)
+
+        if visits_buffer:
+            await visits_repo.insert_async(visits_buffer, settings=SETTINGS)
 
     async def run_migration(self, emails):
         logger.info("Запуск миграции лидов в ClickHouse")
@@ -374,17 +406,7 @@ class LeadsToClickHouseMigrator:
                     self.db_session.commit()
                 logger.info(f"lead_users len {len(lead_users)}")
                 if lead_users:
-                    batch_size = 500
-                    total_leads = len(lead_users)
-                    for i, batch in enumerate(
-                        self.chunked(lead_users, batch_size)
-                    ):
-                        processed = (i + 1) * batch_size
-                        if processed > total_leads:
-                            processed = total_leads
-                        progress = (processed / total_leads) * 100
-                        await self.preparate_and_insert_leads(batch, pixel_id)
-                        logger.info(f"Processing: {progress:.2f}% completed")
+                    await self.preparate_and_insert_leads(lead_users, pixel_id)
 
         end_time = datetime.now()
         duration = end_time - start_time

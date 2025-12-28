@@ -32,13 +32,16 @@ class LeadsUsersRepository:
             )
         return payload
 
-    async def insert_async(self, users: list[LeadUser]):
+    async def insert_async(
+        self, users: list[LeadUser], settings: dict | None = None
+    ):
         if not users:
             return
         payload = self._build_payload(users)
         await self.ch.insert_dicts(
             "allsource_prod.leads_users",
             payload,
+            settings=settings,
         )
 
     async def check_exists_leads_user(
