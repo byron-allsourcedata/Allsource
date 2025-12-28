@@ -107,6 +107,9 @@ class LeadsToClickHouseMigrator:
             return []
 
         emails_lc = list(set(emails))
+        logger.info(
+            f"Total unique emails to query in ClickHouse: {len(emails_lc)}"
+        )
         email_to_profile: dict[str, dict[str, str]] = {}
 
         def _row_has_email(row, email_lc: str) -> bool:
@@ -130,7 +133,9 @@ class LeadsToClickHouseMigrator:
 
         for i in range(0, len(emails_lc), EMAIL_CHUNK):
             chunk = emails_lc[i : i + EMAIL_CHUNK]
-
+            logger.info(
+                f"Querying ClickHouse for email chunk {i // EMAIL_CHUNK + 1}: {chunk}"
+            )
             rows = await ch_session.query(
                 f"""
                 SELECT *
@@ -170,7 +175,6 @@ class LeadsToClickHouseMigrator:
                         "company_id": profile_pid_info["company_id"],
                     }
                 )
-
         return [dict(t) for t in {tuple(d.items()) for d in result}]
 
     def build_visits(
@@ -288,6 +292,7 @@ class LeadsToClickHouseMigrator:
             .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
         )
+
         logger.info(f"five_x_five_users len {len(five_x_five_users)}")
         etl_logger = logging.getLogger("delivr_sync")
         ch_session = await AsyncDelivrClickHouseClient().connect()
@@ -297,6 +302,9 @@ class LeadsToClickHouseMigrator:
             etl_logger.info("Fetching raw events for pixel_id=%s", pixel_id)
             delivr_users = await self.find_delivr_by_emails(
                 five_x_five_users, "allsource_prod.delivr_users", ch_session
+            )
+            logger.info(
+                f"Found {len(delivr_users)} matching users in ClickHouse"
             )
             if not delivr_users:
                 return
@@ -363,17 +371,25 @@ class LeadsToClickHouseMigrator:
 
             if len(visits_buffer) >= MAX_VISITS_BATCH:
                 await visits_repo.insert_async(visits_buffer, settings=SETTINGS)
+                logger.info(
+                    f"Inserted {len(visits_buffer)} visits into ClickHouse"
+                )
                 visits_buffer.clear()
 
             if len(users_buffer) >= MAX_USERS_BATCH:
                 await users_repo.insert_async(users_buffer, settings=SETTINGS)
+                logger.info(
+                    f"Inserted {len(users_buffer)} users into ClickHouse"
+                )
                 users_buffer.clear()
 
         if users_buffer:
             await users_repo.insert_async(users_buffer, settings=SETTINGS)
+            logger.info(f"Inserted {len(users_buffer)} users (final batch)")
 
         if visits_buffer:
             await visits_repo.insert_async(visits_buffer, settings=SETTINGS)
+            logger.info(f"Inserted {len(visits_buffer)} visits (final batch)")
 
     async def run_migration(self, emails):
         logger.info("Запуск миграции лидов в ClickHouse")

@@ -61,7 +61,7 @@ class LeadUser:
 
 
 @dataclass
-class LeadUser:
+class LeadUserAdapter:
     id: UUID | None
     first_visit_id: UUID | None
 

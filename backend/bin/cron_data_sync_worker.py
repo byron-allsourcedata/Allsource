@@ -13,7 +13,7 @@ from clickhouse_connect.driver import AsyncClient
 from sqlalchemy import Row, update
 from typing import List, Tuple, Dict
 
-from domains.leads.entities import DelivrUser, LeadUser
+from domains.leads.entities import DelivrUser, LeadUserAdapter as LeadUser
 from persistence.delivr.leads_users_ch_repo import LeadsUsersCHRepository
 from persistence.delivr.delivr_users_ch_repo import DelivrUsersCHRepository
 

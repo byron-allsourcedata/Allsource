@@ -6,9 +6,8 @@ import httpx
 from typing import Annotated, Any, List, Tuple
 from fastapi import Depends, HTTPException
 
-from domains.leads.entities import LeadUser, DelivrUser
+from domains.leads.entities import LeadUserAdapter as LeadUser, DelivrUser
 from models.enrichment.enrichment_users import EnrichmentUser
-from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence

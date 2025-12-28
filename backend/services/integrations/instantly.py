@@ -23,7 +23,7 @@ from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
 )
-from domains.leads.entities import LeadUser, DelivrUser
+from domains.leads.entities import LeadUserAdapter as LeadUser, DelivrUser
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_delivr_persistence import LeadsPersistenceClickhouse
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
