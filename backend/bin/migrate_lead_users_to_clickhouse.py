@@ -131,10 +131,14 @@ class LeadsToClickHouseMigrator:
                     return True
             return False
 
+        total_chunks = (len(emails_lc) + EMAIL_CHUNK - 1) // EMAIL_CHUNK
+
         for i in range(0, len(emails_lc), EMAIL_CHUNK):
             chunk = emails_lc[i : i + EMAIL_CHUNK]
+            current_chunk = i // EMAIL_CHUNK + 1
             logger.info(
-                f"Querying ClickHouse for email chunk {i // EMAIL_CHUNK + 1}: {chunk}"
+                f"Querying ClickHouse for email chunk {current_chunk}/{total_chunks} "
+                f"({len(chunk)} emails in this chunk, total emails: {len(emails_lc)})"
             )
             rows = await ch_session.query(
                 f"""
