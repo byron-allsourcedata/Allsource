@@ -11,9 +11,9 @@ from db_dependencies import AsyncClickHouse
 from resolver import injectable
 
 DATABASE = "allsource_prod"
-LEADS_USERS = "leads_users_test"
+LEADS_USERS = "leads_users"
 LEADS_COMPANIES = "leads_companies"
-LEADS_VISITS = "leads_visits_test"
+LEADS_VISITS = "leads_visits"
 DELIVR_USERS = "delivr_users"
 
 
