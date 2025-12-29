@@ -88,7 +88,7 @@ async def get_employees(
     regions: str = Query(None, description="Company regions "),
     user=Depends(check_user_authorization_without_pixel),
 ):
-    return company_service.get_employees(
+    return await company_service.get_employees(
         company_id=company_id,
         sort_by=sort_by,
         sort_order=sort_order,
@@ -116,10 +116,10 @@ def get_employees(
 @router.get("/employees/{employee_id}")
 async def get_employees_by_id(
     company_service: AsyncCompanyLeadsService,
-    employee_id: int,
+    employee_id: str,
     company_id: str = Query(None),
 ):
-    return company_service.get_full_information_employee(
+    return await company_service.get_full_information_employee(
         company_id=company_id, employee_id=employee_id
     )
 
@@ -224,7 +224,7 @@ async def download_employees(
         description="Search for email, first name, lastname and phone number",
     ),
 ):
-    result = company_service.download_employees(
+    result = await company_service.download_employees(
         company_id=company_id,
         regions=regions,
         sort_by=sort_by,
@@ -247,10 +247,10 @@ async def download_employees(
 async def download_employee(
     company_service: AsyncCompanyLeadsService,
     _user: UnlimitedUser,
-    employee_id: int,
+    employee_id: str,
     company_id: str = Query(None),
 ):
-    result = company_service.download_employee(
+    result = await company_service.download_employee(
         company_id=company_id, employee_id=employee_id
     )
     if result:

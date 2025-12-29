@@ -1530,7 +1530,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 					</Box>
 
 					{/* Number of Employees */}
-					<Box sx={filterStyles.main_filter_form}>
+					{/* <Box sx={filterStyles.main_filter_form}>
 						<Box
 							sx={filterStyles.filter_form}
 							onClick={() => setIsNumberOfEmployeeOpen(!isNumberOfEmployeeOpen)}
@@ -1587,7 +1587,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 										<Grid item xs={6} key={range}>
 											{" "}
 											{/* xs=3 означает 1/4 ширины контейнера (12 колонок / 4 = 3) */}
-											<FormControlLabel
+					{/* <FormControlLabel
 												control={
 													<Checkbox
 														checked={
@@ -1627,7 +1627,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 								</Grid>
 							</Box>
 						</Collapse>
-					</Box>
+					</Box> */}
 
 					{/* Industry */}
 					<Box sx={filterStyles.main_filter_form}>

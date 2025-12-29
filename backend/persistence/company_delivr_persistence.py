@@ -1,5 +1,7 @@
 from datetime import datetime, timezone, timedelta
 import math
+import time
+from venv import logger
 from typing import Tuple, List, Dict, Any, Optional
 from uuid import UUID
 from dataclasses import dataclass
@@ -34,13 +36,10 @@ class CompanyLeadRecord:
     state: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
-        """Конвертация в словарь"""
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
 
 
 class DataFormatter:
-    """Класс для форматирования данных"""
-
     @staticmethod
     def to_dt(ts: int | float | datetime | None) -> Optional[datetime]:
         if ts is None:
@@ -358,26 +357,221 @@ class CompanyLeadsPersistenceClickhouse:
         result = await self.click_house.query(sql, params)
         return list[Dict[str, Any]](result.named_results())
 
+    async def filter_employees(
+        self,
+        sort_by: Optional[str] = None,
+        sort_order: str = "desk",
+        search_query: Optional[str] = None,
+        job_title: Optional[List[str]] = None,
+        department: Optional[List[str]] = None,
+        seniority: Optional[List[str]] = None,
+        regions: Optional[List[str]] = None,
+        page: Optional[int] = None,
+        per_page: Optional[int] = None,
+        *,
+        company_id: int,
+    ) -> Dict[str, Any]:
+        where_conditions = ["lc.company_id = %(company_id)s"]
+        params = {"company_id": company_id}
+
+        if search_query:
+            search_term = search_query.strip()
+            search_pattern = f"%{search_term}%"
+            params["search_pattern"] = search_pattern
+            where_conditions.append(
+                "(ilike(first_name, %(search_pattern)s) OR "
+                "(ilike(last_name, %(search_pattern)s) OR "
+                "arrayExists(x -> ilike(x, %(search_pattern)s), mobile_phones)) OR"
+                "arrayExists(x -> ilike(x, %(search_pattern)s), personal_emails)) OR"
+                "arrayExists(x -> ilike(x, %(search_pattern)s), business_emails))"
+            )
+
+        if job_title:
+            where_conditions.append("job_title IN %(job_title)s")
+            params["job_title"] = job_title
+
+        if department:
+            where_conditions.append("department IN %(department)s")
+            params["department"] = department
+
+        if seniority:
+            where_conditions.append("seniority_level IN %(seniority)s")
+            params["seniority"] = seniority
+
+        if regions:
+            employees_conditions = []
+            for i, region in enumerate[str](regions):
+                city = region.get("city", "").strip()
+                state = region.get("state", "").strip()
+                city_key = f"region_city_{i}"
+                state_key = f"region_state_{i}"
+                employees_conditions.append(
+                    f"(personal_city = %({city_key})s AND personal_state = %({state_key})s)"
+                )
+                params[city_key] = city
+                params[state_key] = state
+
+            if employees_conditions:
+                where_conditions.append(
+                    f"({' OR '.join(employees_conditions)})"
+                )
+
+        sort_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
+
+        sort_clause = (
+            f"du.last_name {sort_direction}, du.first_name {sort_direction}"
+        )
+
+        count = 0
+        max_page = 0
+        try:
+            if per_page:
+                count = await self._get_total_count(where_conditions, params)
+                max_page = (count + per_page - 1) // per_page
+
+            rows = await self._get_employees_data(
+                where_conditions=where_conditions,
+                params=params,
+                sort_clause=sort_clause,
+                page=page,
+                per_page=per_page,
+            )
+        except Exception as e:
+            logger.error(f"Error in filter_employees: {e}")
+            return [], 0, 0
+
+        return rows, count, max_page
+
+    async def _get_total_count(
+        self, where_conditions: List[str], params: Dict[str, Any]
+    ) -> int:
+        where_clause = " AND ".join(where_conditions)
+
+        count_query = f"""
+        SELECT COUNT(*) as total_count
+        FROM leads_companies lc
+        LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
+        WHERE {where_clause}
+        """
+
+        count_result = await self.click_house.query(count_query, params)
+        count_data = list(count_result.named_results())
+        return count_data[0]["total_count"] if count_data else 0
+
+    async def _get_employees_data(
+        self,
+        where_conditions: List[str],
+        params: Dict[str, Any],
+        sort_clause: str,
+        page: int,
+        per_page: Optional[int] = None,
+    ) -> List[Dict[str, Any]]:
+        where_clause = " AND ".join(where_conditions)
+
+        query = f"""
+        SELECT 
+            du.profile_pid_all as id,
+            du.first_name as first_name,
+            du.last_name as last_name,
+            du.mobile_phones as mobile_phones,
+            du.linkedin_url as linkedin_url,
+            du.personal_emails as personal_emails,
+            du.business_emails as business_emails,
+            du.seniority_level as seniority_level,
+            du.department as department,
+            du.job_title as job_title,
+            du.personal_city as personal_city,
+            du.personal_state as personal_state
+        FROM leads_companies lc
+        LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
+        WHERE {where_clause}
+        ORDER BY {sort_clause}
+        """
+
+        if per_page is not None:
+            offset = (page - 1) * per_page
+            query += f" LIMIT %(limit)s OFFSET %(offset)s"
+            params["limit"] = per_page
+            params["offset"] = offset
+
+        result = await self.click_house.query(query, params)
+
+        return list[dict](result.named_results())
+
+    async def get_full_information_employee(
+        self, company_id: str, employee_id: str
+    ) -> dict | None:
+        params = {"company_id": company_id, "employee_id": employee_id}
+
+        query = f"""
+        SELECT 
+            du.profile_pid_all as id,
+            du.first_name as first_name,
+            du.last_name as last_name,
+            du.mobile_phones as mobile_phones,
+            du.linkedin_url as linkedin_url,
+            du.personal_emails as personal_emails,
+            du.business_emails as business_emails,
+            du.seniority_level as seniority_level,
+            du.department as department,
+            du.job_title as job_title,
+            du.personal_city as personal_city,
+            du.personal_state as personal_state,
+            du.company_name as company_name,
+            du.company_city as company_city,
+            du.company_phones as company_phones,
+            du.company_description as company_description,
+            du.company_address as company_address,
+            du.company_zip_code as company_zip_code,
+            du.company_linkedin_url as company_linkedin_url,
+            du.personal_zip as personal_zip,
+            du.company_domain as company_domain,
+            du.personal_address as personal_address,
+            du.emails as other_personal_emails,
+            du.company_state as company_state,
+            du.personal_country as personal_country,
+            du.company_country as company_country
+        FROM leads_companies lc
+        LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
+        WHERE lc.company_id = %(company_id)s 
+        AND du.profile_pid_all = %(employee_id)s
+        LIMIT 1
+        """
+
+        try:
+            result = await self.click_house.query(query, params)
+            rows = list(result.named_results())
+
+            if not rows:
+                return None
+
+            return rows[0]
+
+        except Exception as e:
+            logger.error(f"Error in get_full_information_employee: {e}")
+            import traceback
+
+            traceback.print_exc()
+            return None
+
     async def get_unique_primary_departments(
         self, company_id: str
     ) -> List[str]:
-        print(self.delivr_users_table)
         query = f"""
         SELECT 
             du.department
-        FROM leads_companies lc
-        LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
-        WHERE lc.company_id = %(company_id)s
-        AND du.department IS NOT NULL
-        AND du.department != ''
+        FROM {self.delivr_users_table} du
+        WHERE du.company_id = %(company_id)s
+        GROUP BY du.department
         ORDER BY du.department
+        LIMIT 300
         """
 
         try:
             result = await self.click_house.query(
                 query, {"company_id": company_id}
             )
-            rows = list(result.named_results())
+            rows = list[dict](result.named_results())
 
             departments = []
             for row in rows:
@@ -386,9 +580,11 @@ class CompanyLeadsPersistenceClickhouse:
                     department = str(department).strip()
                     departments.append(department)
 
-            return list[str](set[str](departments))
+            return departments
         except Exception as e:
-            print(f"Error in get_unique_primary_departments: {e}")
+            logger.error(
+                f"Error getting departments for company {company_id}: {e}"
+            )
             return []
 
     async def get_uniq_primary_industry(self, pixel_id: UUID) -> List[str]:
@@ -399,6 +595,7 @@ class CompanyLeadsPersistenceClickhouse:
         LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
         WHERE lu.pixel_id = %(pixel_id)s
         ORDER BY lc.company_industry
+        LIMIT 300
         """
         try:
             result = await self.click_house.query(query, {"pixel_id": pixel_id})
@@ -412,7 +609,8 @@ class CompanyLeadsPersistenceClickhouse:
                     industries.append(industry)
 
             return industries
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error get_uniq_primary_industry: {e}")
             return []
 
     async def _get_total_companies_count_with_filters(
@@ -440,7 +638,8 @@ class CompanyLeadsPersistenceClickhouse:
                     lc.company_id,
                     COUNT(DISTINCT lu.profile_pid_all) as employees_visited
                 FROM {self.companies_table} lc
-                INNER JOIN {self.users_table} lu ON lc.company_id = lu.company_id
+                LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
+                LEFT JOIN {self.visits_table} lv ON lu.profile_pid_all = lv.profile_pid_all
                 WHERE {where_clause}
                 GROUP BY lc.company_id
                 HAVING {having_clause}
@@ -448,54 +647,53 @@ class CompanyLeadsPersistenceClickhouse:
         """
 
         result = await self.click_house.query(sql, params)
-        row = list(result.named_results())
+        row = list[dict](result.named_results())
         if row and len(row) > 0:
             return int(row[0].get("total_companies", 0))
         return 0
 
-    async def get_unique_primary__job_titles(self, company_id):
+    async def get_unique_primary__job_titles(self, company_id) -> List:
         query = f"""
         SELECT 
-            lu.job_title
-        FROM leads_companies lc
-        LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
-        WHERE lc.company_id = %(company_id)s
-        ORDER BY lu.job_title
+            du.job_title
+        FROM {self.delivr_users_table} du
+        WHERE du.company_id = %(company_id)s
+        GROUP BY du.job_title
+        ORDER BY du.job_title
+        LIMIT 300
         """
         try:
             result = await self.click_house.query(
                 query, {"company_id": company_id}
             )
             rows = list[dict](result.named_results())
-            print("----")
-            print(rows)
-            seniorities = []
-            for seniority in rows:
-                seniority = seniority["job_title"]
-                if seniority:
-                    seniority = seniority.strip()
-                    seniorities.append(seniority)
+            job_titles = []
+            for job_title in rows:
+                job_title = job_title["job_title"]
+                if job_title:
+                    job_title = job_title.strip()
+                    job_titles.append(job_title)
 
-            return seniorities
-        except Exception:
+            return job_titles
+        except Exception as e:
+            logger.error(f"Error get_unique_primary__job_titles: {e}")
             return []
 
-    async def get_unique_primary__seniorities(self, company_id):
+    async def get_unique_primary__seniorities(self, company_id) -> List:
         query = f"""
         SELECT 
-            lu.seniority_level
-        FROM leads_companies lc
-        LEFT JOIN {self.users_table} lu ON lc.company_id = lu.company_id
-        WHERE lc.company_id = %(company_id)s
-        ORDER BY lu.seniority_level
+            du.seniority_level
+        FROM {self.delivr_users_table} du
+        WHERE du.company_id = %(company_id)s
+        GROUP BY du.seniority_level
+        ORDER BY du.seniority_level
         """
+
         try:
             result = await self.click_house.query(
                 query, {"company_id": company_id}
             )
             rows = list[dict](result.named_results())
-            print("----")
-            print(rows)
             seniorities = []
             for seniority in rows:
                 seniority = seniority["seniority_level"]
@@ -504,7 +702,8 @@ class CompanyLeadsPersistenceClickhouse:
                     seniorities.append(seniority)
 
             return seniorities
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error get_unique_primary__seniorities: {e}")
             return []
 
     async def _prepare_params(
@@ -551,8 +750,6 @@ class CompanyLeadsPersistenceClickhouse:
         return params
 
     async def search_company(self, start_letter: str, pixel_id: UUID):
-        print(start_letter)
-        print(pixel_id)
         query = f"""
         SELECT 
             lc.company_name,
@@ -568,7 +765,6 @@ class CompanyLeadsPersistenceClickhouse:
         """
         start_letter = f"%{start_letter}%"
         params = {"pixel_id": pixel_id, "start_letter": start_letter}
-        print(query)
         result = await self.click_house.query(query, params)
         return result.result_rows
 
@@ -787,7 +983,6 @@ class CompanyLeadsPersistenceClickhouse:
     async def _load_companies(
         self, params: Dict[str, Any]
     ) -> List[Dict[str, Any]]:
-        """Загрузка компаний с пагинацией"""
         sql = f"""
             SELECT 
                 lc.company_id,
@@ -806,7 +1001,6 @@ class CompanyLeadsPersistenceClickhouse:
         return list(result.named_results())
 
     async def _get_total_companies_count(self, params: Dict[str, Any]) -> int:
-        """Получение общего количества компаний"""
         sql = f"""
             SELECT COUNT(DISTINCT lc.company_id) AS cnt 
             FROM {self.companies_table} lc
@@ -818,7 +1012,6 @@ class CompanyLeadsPersistenceClickhouse:
         return int(row["cnt"])
 
     def _build_time_filter(self, params: Dict[str, Any]) -> str:
-        """Построение фильтра по времени"""
         filters = []
         if params.get("from_dt"):
             filters.append("lv.visit_start >= %(from_dt)s")

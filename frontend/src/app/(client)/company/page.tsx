@@ -452,18 +452,18 @@ const Leads: React.FC = () => {
 				? Math.floor(appliedDates.end.getTime() / 1000)
 				: null;
 
-			let url = "/company/download-companies";
-			const params = [];
+			const params = new URLSearchParams();
 
 			if (startEpoch !== null && endEpoch !== null) {
-				params.push(`from_date=${startEpoch}&to_date=${endEpoch}`);
+				params.append("from_date", startEpoch.toString());
+				params.append("to_date", endEpoch.toString());
 			}
 
 			const employeeVisits = selectedFilters.find(
 				(filter) => filter.label === "Employee Visits",
 			)?.value;
 			if (employeeVisits) {
-				params.push(`employee_visits=${encodeURIComponent(employeeVisits)}`);
+				params.append("employee_visits", employeeVisits);
 			}
 
 			const processMultiFilter = (label: string, paramName: string) => {
@@ -471,7 +471,7 @@ const Leads: React.FC = () => {
 					(filter) => filter.label === label,
 				)?.value;
 				if (filter) {
-					url += `&${paramName}=${encodeURIComponent(filter?.split(", ").join(","))}`;
+					params.append(paramName, filter.split(", ").join(","));
 				}
 			};
 
@@ -484,11 +484,13 @@ const Leads: React.FC = () => {
 				(filter) => filter.label === "Search",
 			)?.value;
 			if (searchQuery) {
-				url += `&search_query=${encodeURIComponent(searchQuery)}`;
+				params.append("search_query", searchQuery);
 			}
 
-			if (params.length > 0) {
-				url += `?${params.join("&")}`;
+			let url = "/company/download-companies";
+			const queryString = params.toString();
+			if (queryString) {
+				url += `?${queryString}`;
 			}
 
 			const response = await axiosInstance.get(url, {
@@ -496,14 +498,14 @@ const Leads: React.FC = () => {
 			});
 
 			if (response.status === 200) {
-				const url = window.URL.createObjectURL(new Blob([response.data]));
+				const blobUrl = window.URL.createObjectURL(new Blob([response.data]));
 				const link = document.createElement("a");
-				link.href = url;
-				link.setAttribute("download", "data.csv");
+				link.href = blobUrl;
+				link.setAttribute("download", "companies.csv");
 				document.body.appendChild(link);
 				link.click();
 				document.body.removeChild(link);
-				window.URL.revokeObjectURL(url);
+				window.URL.revokeObjectURL(blobUrl);
 			} else {
 				console.error("Error downloading file:", response.statusText);
 			}

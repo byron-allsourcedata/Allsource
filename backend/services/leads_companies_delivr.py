@@ -1,4 +1,5 @@
 import csv
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import io
 from typing import Any, Dict, List, Optional, Tuple
@@ -8,6 +9,351 @@ from resolver import injectable
 from persistence.company_delivr_persistence import (
     CompanyLeadsPersistenceClickhouse,
 )
+
+
+@dataclass
+class EmployeeRecord:
+    id: str
+    first_name: str
+    last_name: str
+    mobile_phone: Optional[str]
+    linkedin_url: Optional[str]
+    personal_email: Optional[str]
+    business_email: Optional[str]
+    seniority: Optional[str]
+    department: Optional[str]
+    job_title: Optional[str]
+    city: Optional[str]
+    state: Optional[str]
+    is_unlocked: bool = True
+
+
+@dataclass
+class FullEmployeeRecord:
+    id: str
+    first_name: str
+    last_name: str
+    mobile_phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    personal_email: Optional[str] = None
+    business_email: Optional[str] = None
+    seniority: Optional[str] = None
+    department: Optional[str] = None
+    job_title: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    company_name: Optional[str] = None
+    company_city: Optional[str] = None
+    company_phone: Optional[str] = None
+    company_description: Optional[str] = None
+    company_address: Optional[str] = None
+    company_zip: Optional[str] = None
+    company_linkedin_url: Optional[str] = None
+    personal_zip: Optional[str] = None
+    company_domain: Optional[str] = None
+    personal_address: Optional[str] = None
+    other_personal_emails: Optional[str] = None
+    company_state: Optional[str] = None
+    is_unlocked: bool = True
+
+
+class DataFormatter:
+    @staticmethod
+    def process_field(field):
+        formatted_str = ""
+        status = field.get("visibility_status")
+        value = field.get("value")
+        if status == "visible":
+            return (
+                value.capitalize()
+                if isinstance(value, str) and "@" not in value
+                else value
+            )
+        return formatted_str
+
+    @staticmethod
+    def format_email_list(emails: str | None | list) -> str | None:
+        if not emails:
+            return None
+
+        if isinstance(emails, list):
+            email_list = emails
+
+        elif isinstance(emails, str):
+            emails_clean = emails.strip("[]")
+            if not emails_clean:
+                return None
+            email_list = [
+                email.strip()
+                for email in emails_clean.split(",")
+                if email.strip()
+            ]
+        else:
+            return None
+
+        valid_emails = [email for email in email_list if email]
+        if not valid_emails:
+            return None
+
+        return ", ".join(valid_emails)
+
+    @staticmethod
+    def get_field_with_status(field_value, is_unlocked):
+        if field_value is None:
+            return {"value": None, "visibility_status": "missing"}
+        if not is_unlocked:
+            return {"value": None, "visibility_status": "hidden"}
+        return {"value": field_value, "visibility_status": "visible"}
+
+    @staticmethod
+    def format_phone_list(phones: str | list | None) -> str | None:
+        if not phones:
+            return None
+
+        phone_list = []
+
+        if isinstance(phones, list):
+            phone_list = [str(phone) for phone in phones]
+        elif isinstance(phones, str):
+            phones = phones.strip()
+            if phones.startswith("[") and phones.endswith("]"):
+                phones = phones[1:-1].strip()
+
+            if phones:
+                phone_list = [phone.strip() for phone in phones.split(",")]
+
+        out = []
+        for raw in phone_list:
+            if not raw:
+                continue
+
+            p = raw.strip()
+
+            if p.endswith(".0"):
+                p = p[:-2]
+
+            if not p.startswith("+"):
+                p = f"+{p}"
+
+            out.append(p)
+
+        return ", ".join(out) if out else None
+
+
+class FullEmployeeBuilder:
+    """Строитель для полной информации о сотруднике"""
+
+    def __init__(self, state_dict: Optional[Dict] = None):
+        """
+        Args:
+            state_dict: Словарь для конвертации кодов штатов в названия
+        """
+        self.formatter = DataFormatter()
+        self.state_dict = state_dict or {}
+
+    async def build(self, employee_data: Dict[str, Any]) -> FullEmployeeRecord:
+        if not employee_data:
+            return None
+
+        return FullEmployeeRecord(
+            id=employee_data.get("id"),
+            first_name=employee_data.get("first_name"),
+            last_name=employee_data.get("last_name"),
+            mobile_phone=self.formatter.format_phone_list(
+                employee_data.get("mobile_phones")
+            ),
+            linkedin_url=employee_data.get("linkedin_url"),
+            personal_email=self.formatter.format_email_list(
+                employee_data.get("personal_emails")
+            ),
+            business_email=self.formatter.format_email_list(
+                employee_data.get("business_emails")
+            ),
+            seniority=employee_data.get("seniority_level"),
+            department=employee_data.get("department"),
+            job_title=employee_data.get("job_title"),
+            city=employee_data.get("personal_city"),
+            state=employee_data.get("personal_state"),
+            company_name=employee_data.get("company_name"),
+            company_city=employee_data.get("company_city"),
+            company_phone=self.formatter.format_phone_list(
+                employee_data.get("company_phones")
+            ),
+            company_description=employee_data.get("company_description"),
+            company_address=employee_data.get("company_address"),
+            company_zip=employee_data.get("company_zip_code"),
+            company_linkedin_url=employee_data.get("company_linkedin_url"),
+            personal_zip=employee_data.get("personal_zip"),
+            company_domain=employee_data.get("company_domain"),
+            personal_address=employee_data.get("personal_address"),
+            other_personal_emails=self.formatter.format_email_list(
+                employee_data.get("other_personal_emails")
+            ),
+            company_state=employee_data.get("company_state"),
+        )
+
+    async def build_to_dict(
+        self, employee_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        employee_record = await self.build(employee_data)
+
+        return {
+            "id": self.formatter.get_field_with_status(
+                employee_record.id, True
+            ),
+            "first_name": self.formatter.get_field_with_status(
+                employee_record.first_name, True
+            ),
+            "last_name": self.formatter.get_field_with_status(
+                employee_record.last_name, True
+            ),
+            "mobile_phone": self.formatter.get_field_with_status(
+                employee_record.mobile_phone, False
+            ),
+            "linkedin_url": self.formatter.get_field_with_status(
+                employee_record.linkedin_url, False
+            ),
+            "personal_email": self.formatter.get_field_with_status(
+                employee_record.personal_email, False
+            ),
+            "business_email": self.formatter.get_field_with_status(
+                employee_record.business_email, False
+            ),
+            "seniority": self.formatter.get_field_with_status(
+                employee_record.seniority, True
+            ),
+            "department": self.formatter.get_field_with_status(
+                employee_record.department, True
+            ),
+            "job_title": self.formatter.get_field_with_status(
+                employee_record.job_title, True
+            ),
+            "city": self.formatter.get_field_with_status(
+                employee_record.city, True
+            ),
+            "state": self.formatter.get_field_with_status(
+                employee_record.state, True
+            ),
+            "company_name": self.formatter.get_field_with_status(
+                employee_record.company_name, True
+            ),
+            "company_city": self.formatter.get_field_with_status(
+                employee_record.company_city, True
+            ),
+            "company_phone": self.formatter.get_field_with_status(
+                employee_record.company_phone, False
+            ),
+            "company_description": self.formatter.get_field_with_status(
+                employee_record.company_description, True
+            ),
+            "company_address": self.formatter.get_field_with_status(
+                employee_record.company_address, True
+            ),
+            "company_zip": self.formatter.get_field_with_status(
+                employee_record.company_zip, True
+            ),
+            "company_linkedin_url": self.formatter.get_field_with_status(
+                employee_record.company_linkedin_url, True
+            ),
+            "personal_zip": self.formatter.get_field_with_status(
+                employee_record.personal_zip, False
+            ),
+            "company_domain": self.formatter.get_field_with_status(
+                employee_record.company_domain, True
+            ),
+            "personal_address": self.formatter.get_field_with_status(
+                employee_record.personal_address, False
+            ),
+            "other_personal_emails": self.formatter.get_field_with_status(
+                employee_record.other_personal_emails, False
+            ),
+            "company_state": self.formatter.get_field_with_status(
+                employee_record.company_state, True
+            ),
+            "is_unlocked": self.formatter.get_field_with_status(False, True),
+        }
+
+
+class EmployeeBuilder:
+    """Строитель объектов EmployeeRecord"""
+
+    def __init__(self):
+        self.formatter = DataFormatter()
+
+    async def build(self, employee_data: Dict[str, Any]) -> EmployeeRecord:
+        return EmployeeRecord(
+            id=employee_data.get("id", ""),
+            first_name=str(employee_data.get("first_name", "")).strip(),
+            last_name=str(employee_data.get("last_name", "")).strip(),
+            mobile_phone=self.formatter.format_phone_list(
+                employee_data.get("mobile_phones")
+            ),
+            linkedin_url=employee_data.get("linkedin_url"),
+            personal_email=self.formatter.format_email_list(
+                employee_data.get("personal_emails")
+            ),
+            business_email=self.formatter.format_email_list(
+                employee_data.get("business_emails")
+            ),
+            seniority=employee_data.get("seniority_level"),
+            department=employee_data.get("department"),
+            job_title=employee_data.get("job_title"),
+            city=employee_data.get("personal_city"),
+            state=employee_data.get("personal_state"),
+            is_unlocked=True,
+        )
+
+    async def build_to_dict(
+        self, employee_data: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        employee_record = await self.build(employee_data)
+
+        return {
+            "id": self.formatter.get_field_with_status(
+                employee_record.id, True
+            ),
+            "first_name": self.formatter.get_field_with_status(
+                employee_record.first_name, True
+            ),
+            "last_name": self.formatter.get_field_with_status(
+                employee_record.last_name, True
+            ),
+            "mobile_phone": self.formatter.get_field_with_status(
+                employee_record.mobile_phone, False
+            ),
+            "linkedin_url": self.formatter.get_field_with_status(
+                employee_record.linkedin_url, False
+            ),
+            "personal_email": self.formatter.get_field_with_status(
+                employee_record.personal_email, False
+            ),
+            "business_email": self.formatter.get_field_with_status(
+                employee_record.business_email, False
+            ),
+            "seniority": self.formatter.get_field_with_status(
+                employee_record.seniority, True
+            ),
+            "department": self.formatter.get_field_with_status(
+                employee_record.department, True
+            ),
+            "job_title": self.formatter.get_field_with_status(
+                employee_record.job_title, True
+            ),
+            "city": self.formatter.get_field_with_status(
+                employee_record.city, True
+            ),
+            "state": self.formatter.get_field_with_status(
+                employee_record.state, True
+            ),
+            "is_unlocked": self.formatter.get_field_with_status(False, True),
+        }
+
+    async def build_batch(
+        self, employees_data: List[Dict[str, Any]] | []
+    ) -> List[Dict[str, Any]]:
+        return [
+            await self.build_to_dict(employee) for employee in employees_data
+        ]
 
 
 @injectable
@@ -35,21 +381,6 @@ class AsyncCompanyLeadsService:
             adjusted.strftime("%d.%m.%Y"),
             adjusted.strftime("%H:%M"),
         )
-
-    def _format_phone_list(self, phones: str | None) -> str | None:
-        if not phones:
-            return None
-
-        out: list[str] = []
-        for raw in phones.split(","):
-            p = raw.strip()
-            if p.endswith(".0"):
-                p = p[:-2]
-            if not p.startswith("+"):
-                p = f"+{p}"
-            out.append(p)
-
-        return ", ".join(out)
 
     # ---------------------------------------------------------
     # Public API
@@ -84,7 +415,7 @@ class AsyncCompanyLeadsService:
         )
         parsed_revenue_range = await self.parse_revenue_ranges(revenue_range)
         parsed_regions = await self._parse_regions(regions)
-        parsed_industry = await self._parse_industry(industry)
+        parsed_industry = await self.parse_comma_separated_list(industry)
         filter_params = {
             "pixel_id": pixel_id,
             "page": page,
@@ -149,7 +480,7 @@ class AsyncCompanyLeadsService:
                 revenue_range
             )
             parsed_regions = await self._parse_regions(regions)
-            parsed_industry = await self._parse_industry(industry)
+            parsed_industry = await self.parse_comma_separated_list(industry)
             filter_params = {
                 "pixel_id": pixel_id,
                 "employees_range": parsed_employees_range,
@@ -223,6 +554,188 @@ class AsyncCompanyLeadsService:
         )
         return job_titles
 
+    async def download_employees(
+        self,
+        company_id: str,
+        sort_by: Optional[str] = None,
+        sort_order: str = "desc",
+        regions: Optional[str] = None,
+        search_query: Optional[str] = None,
+        job_title: Optional[str] = None,
+        seniority: Optional[str] = None,
+        department: Optional[str] = None,
+    ):
+        employees_list, _, _ = await self.get_employees(
+            company_id=company_id,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            regions=regions,
+            search_query=search_query,
+            job_title=job_title,
+            seniority=seniority,
+            department=department,
+        )
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(
+            [
+                "First name",
+                "Last name",
+                "Mobile phone",
+                "Linkedin url",
+                "Personal email",
+                "Business email",
+                "Seniority",
+                "Department",
+                "Job title",
+                "City",
+                "State",
+            ]
+        )
+        self.formatter = DataFormatter()
+        for employee in employees_list:
+            writer.writerow(
+                [
+                    self.formatter.process_field(employee.get("first_name")),
+                    self.formatter.process_field(employee.get("last_name")),
+                    self.formatter.process_field(employee.get("mobile_phone")),
+                    self.formatter.process_field(employee.get("linkedin_url")),
+                    self.formatter.process_field(
+                        employee.get("personal_email")
+                    ),
+                    self.formatter.process_field(
+                        employee.get("business_email")
+                    ),
+                    self.formatter.process_field(employee.get("seniority")),
+                    self.formatter.process_field(employee.get("department")),
+                    self.formatter.process_field(employee.get("job_title")),
+                    self.formatter.process_field(employee.get("city")),
+                    self.formatter.process_field(employee.get("state")),
+                ]
+            )
+
+        output.seek(0)
+        return output
+
+    async def get_employees(
+        self,
+        sort_by: Optional[str] = None,
+        sort_order: str = "desk",
+        search_query: Optional[str] = None,
+        job_title: Optional[str] = None,
+        seniority: Optional[str] = None,
+        regions: Optional[str] = None,
+        department: Optional[str] = None,
+        page: Optional[int] = None,
+        per_page: Optional[int] = None,
+        *,
+        company_id: int,
+    ) -> Dict[str, Any]:
+        parsed_regions = await self._parse_regions(regions)
+        parsed_departments = await self.parse_comma_separated_list(department)
+        parsed_job_title = await self.parse_comma_separated_list(job_title)
+        parsed_seniority = await self.parse_comma_separated_list(seniority)
+        filter_params = {
+            "company_id": company_id,
+            "job_title": parsed_job_title,
+            "department": parsed_departments,
+            "seniority": parsed_seniority,
+            "page": page,
+            "sort_by": sort_by,
+            "search_query": search_query,
+            "regions": parsed_regions,
+            "sort_order": sort_order,
+            "per_page": per_page,
+        }
+        filtered_params = {
+            key: value
+            for key, value in filter_params.items()
+            if value is not None
+        }
+        (
+            employees,
+            count,
+            max_page,
+        ) = await self.company_leads_persistence.filter_employees(
+            **filtered_params
+        )
+
+        employee_builder = EmployeeBuilder()
+        employees_list = await employee_builder.build_batch(employees)
+
+        return employees_list, count, max_page
+
+    async def get_full_information_employee(
+        self, company_id, employee_id
+    ) -> Dict[str, Any]:
+        employee_data = (
+            await self.company_leads_persistence.get_full_information_employee(
+                company_id=company_id, employee_id=employee_id
+            )
+        )
+        full_employee_builder = FullEmployeeBuilder()
+        return await full_employee_builder.build_to_dict(
+            employee_data=employee_data
+        )
+
+    async def download_employee(self, employee_id, company_id):
+        employee = await self.get_full_information_employee(
+            company_id=company_id, employee_id=employee_id
+        )
+
+        headers_mapping = [
+            ("First name", "first_name"),
+            ("Last name", "last_name"),
+            ("Mobile phone", "mobile_phone"),
+            ("Linkedin url", "linkedin_url"),
+            ("Personal email", "personal_email"),
+            ("Business email", "business_email"),
+            ("Seniority", "seniority"),
+            ("Department", "department"),
+            ("Job title", "job_title"),
+            ("City", "city"),
+            ("State", "state"),
+            ("Company name", "company_name"),
+            ("Company city", "company_city"),
+            ("Company description", "company_description"),
+            ("Company address", "company_address"),
+            ("Company zip", "company_zip"),
+            ("Company linkedin url", "company_linkedin_url"),
+            ("Business email last seen", "business_email_last_seen"),
+            ("Personal email last seen", "personal_emails_last_seen"),
+            ("Personal zip", "personal_zip"),
+            ("Company last updated", "company_last_updated"),
+            ("Company domain", "company_domain"),
+            ("Personal address", "personal_address"),
+            ("Other personal emails", "other_personal_emails"),
+            ("Company state", "company_state"),
+        ]
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Column", "Value"])
+
+        for header, key in headers_mapping:
+            field = employee.get(
+                key, {"value": None, "visibility_status": "missing"}
+            )
+            value = field.get("value")
+            status = field.get("visibility_status", "missing")
+            formatted_value = ""
+
+            if status == "visible":
+                formatted_value = (
+                    value.capitalize()
+                    if isinstance(value, str) and "@" not in value
+                    else value
+                )
+
+            writer.writerow([header, formatted_value])
+
+        output.seek(0)
+        return output
+
     async def get_uniq_primary__seniorities(self, company_id):
         seniorities = await self.company_leads_persistence.get_unique_primary__seniorities(
             company_id
@@ -233,15 +746,12 @@ class AsyncCompanyLeadsService:
         company_id = company_id.strip()
         if not company_id:
             return []
-        print("1")
+
         departments = (
             await self.company_leads_persistence.get_unique_primary_departments(
                 company_id=company_id
             )
         )
-        print("2")
-        print("---")
-        print(departments)
         return departments
 
     async def get_uniq_primary_industry(self, pixel_id: UUID) -> List[str]:
@@ -281,16 +791,12 @@ class AsyncCompanyLeadsService:
         companies_data = await self.company_leads_persistence.search_company(
             start_letter=start_letter, pixel_id=pixel_id
         )
-        print("----")
-        print(companies_data)
+
         results = set()
         for company in companies_data:
             name, phones = company
 
-            print(f"Name: {name}, Phones: {phones}")
-
             if start_letter.isdecimal():
-                # Ищем среди телефонов
                 for phone in phones:
                     if phone and start_letter in phone:
                         results.add(phone)
@@ -299,32 +805,6 @@ class AsyncCompanyLeadsService:
                     results.add(name)
 
         return list(results)[:10]
-
-    async def get_company_lead_details(
-        self,
-        *,
-        company_id: str,
-        pixel_id: UUID,
-        timezone_offset: int = 0,
-    ) -> Dict[str, Any] | None:
-        """
-        Получение детальной информации о конкретной компании
-        """
-        # Получаем данные компании
-        companies, _, _ = await self.get_company_leads(
-            pixel_id=pixel_id,
-            page=1,
-            per_page=1,
-            timezone_offset=timezone_offset,
-            require_visits_in_range=False,
-        )
-
-        # Фильтруем по company_id
-        for company in companies:
-            if company.get("company_id") == company_id:
-                return company
-
-        return None
 
     async def _adjust_timestamp_for_timezone(
         self, timestamp: Optional[int], timezone_offset: int
@@ -348,7 +828,6 @@ class AsyncCompanyLeadsService:
         try:
             ranges = []
             for range_str in employees_range_str.split(","):
-                print(range_str)
                 if "-" in range_str:
                     min_str, max_str = range_str.split("-")
                     ranges.append({"min": int(min_str), "max": int(max_str)})
@@ -484,170 +963,22 @@ class AsyncCompanyLeadsService:
 
         return regions if regions else None
 
-    async def _parse_industry(self, industry_str: str) -> List[str] | None:
-        if not industry_str:
+    async def parse_comma_separated_list(
+        self, input_value: Any
+    ) -> List[str] | None:
+        """Принимает строку или список и возвращает очищенный список."""
+        if not input_value:
             return None
 
-        return [industry.strip() for industry in industry_str.split(",")]
-
-    async def get_company_employees(
-        self,
-        *,
-        company_id: str,
-        pixel_id: UUID,
-        timezone_offset: int = 0,
-    ) -> List[Dict[str, Any]]:
-        """
-        Получение списка сотрудников компании с их визитами
-        """
-        # Получаем детали компании
-        company_details = await self.get_company_lead_details(
-            company_id=company_id,
-            pixel_id=pixel_id,
-            timezone_offset=timezone_offset,
-        )
-
-        if not company_details:
-            return []
-
-        # Возвращаем сотрудников из деталей компании
-        return company_details.get("employees", [])
-
-    async def get_company_visits_stats(
-        self,
-        *,
-        company_id: str,
-        pixel_id: UUID,
-        from_date=None,
-        to_date=None,
-        timezone_offset: int = 0,
-    ) -> Dict[str, Any]:
-        """
-        Получение статистики визитов компании
-        """
-        # Получаем детали компании
-        company_details = await self.get_company_lead_details(
-            company_id=company_id,
-            pixel_id=pixel_id,
-            timezone_offset=timezone_offset,
-        )
-
-        if not company_details:
-            return {}
-
-        # Формируем статистику
-        stats = {
-            "company_id": company_id,
-            "company_name": company_details.get("company_name"),
-            "total_visits": company_details.get("total_visits", 0),
-            "unique_visitors": company_details.get("unique_visitors", 0),
-            "total_visitors": company_details.get("total_visitors", 0),
-            "pages_viewed_total": company_details.get("pages_viewed_total", 0),
-            "total_time_spent": company_details.get("total_time_spent", 0),
-            "first_visit": company_details.get("first_visit_date"),
-            "last_visit": company_details.get("last_visit_date"),
-            "employees_count": company_details.get("total_employees", 0),
-        }
-
-        return stats
-
-    async def get_company_contact_info(
-        self,
-        *,
-        company_id: str,
-        pixel_id: UUID,
-    ) -> Dict[str, Any]:
-        """
-        Получение контактной информации компании
-        """
-        # Получаем детали компании
-        company_details = await self.get_company_lead_details(
-            company_id=company_id,
-            pixel_id=pixel_id,
-            timezone_offset=0,  # Время не нужно для контактной информации
-        )
-
-        if not company_details:
-            return {}
-
-        # Формируем контактную информацию
-        contact_info = {
-            "company_id": company_id,
-            "company_name": company_details.get("company_name"),
-            "company_domain": company_details.get("company_domain"),
-            "company_phone": company_details.get("company_phone"),
-            "company_email": company_details.get("company_email"),
-            "company_linkedin_url": company_details.get("company_linkedin_url"),
-            "company_address": company_details.get("company_address"),
-            "company_city": company_details.get("company_city"),
-            "company_state": company_details.get("company_state"),
-            "company_zip": company_details.get("company_zip"),
-            "has_contact_info": company_details.get("has_contact_info", False),
-            "has_email": company_details.get("has_email", False),
-            "has_phone": company_details.get("has_phone", False),
-            "has_linkedin": company_details.get("has_linkedin", False),
-        }
-
-        return contact_info
-
-    async def get_top_companies_by_visits(
-        self,
-        *,
-        pixel_id: UUID,
-        limit: int = 10,
-        from_date=None,
-        to_date=None,
-        timezone_offset: int = 0,
-    ) -> List[Dict[str, Any]]:
-        """
-        Получение топ компаний по количеству визитов
-        """
-        # Используем основной метод с увеличенным per_page
-        companies, _, _ = await self.get_company_leads(
-            pixel_id=pixel_id,
-            page=1,
-            per_page=limit,
-            from_date=from_date,
-            to_date=to_date,
-            timezone_offset=timezone_offset,
-            require_visits_in_range=True,
-        )
-
-        # Сортируем по количеству визитов (если нужно)
-        companies_sorted = sorted(
-            companies, key=lambda x: x.get("total_visits", 0), reverse=True
-        )
-
-        # Возвращаем ограниченное количество
-        return companies_sorted[:limit]
-
-    async def get_companies(
-        self,
-        *,
-        pixel_id: UUID,
-        min_employees: int = 0,
-        max_employees: int = None,
-        timezone_offset: int = 0,
-    ) -> List[Dict[str, Any]]:
-        companies, _, _ = await self.get_company_leads(
-            pixel_id=pixel_id,
-            page=1,
-            per_page=1000,  # Большое значение для получения всех компаний
-            timezone_offset=timezone_offset,
-            require_visits_in_range=False,
-        )
-
-        # Фильтруем по количеству сотрудников
-        filtered_companies = []
-        for company in companies:
-            employees_count = company.get("total_employees", 0)
-
-            if employees_count < min_employees:
-                continue
-
-            if max_employees is not None and employees_count > max_employees:
-                continue
-
-            filtered_companies.append(company)
-
-        return company_list, count, max_page
+        if isinstance(input_value, str):
+            return [
+                item.strip() for item in input_value.split(",") if item.strip()
+            ]
+        elif isinstance(input_value, list):
+            return [
+                item.strip()
+                for item in input_value
+                if isinstance(item, str) and item.strip()
+            ]
+        else:
+            return [str(input_value).strip()]
