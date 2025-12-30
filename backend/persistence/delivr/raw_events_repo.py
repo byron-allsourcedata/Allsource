@@ -1,38 +1,43 @@
 import json
 import logging
+import re
 from datetime import datetime, timezone
+from pathlib import Path
+
 from config.clickhouse import ClickhouseConfig
+from services.etl.leads.windows import Window
+
+FILENAME_RE = re.compile(r"events_(\d+)_(\d+)\.parquet")
 
 
 class RawEventsRepository:
     def __init__(self, ch_client):
         self.ch = ch_client
 
-    def _build_day_paths(
-        self, pixel_id: str, time_from: datetime, time_to: datetime
-    ) -> list[str]:
-        d1 = time_from.astimezone(timezone.utc).date()
-        d2 = time_to.astimezone(timezone.utc).date()
-        days = {d1}
-        if d2 != d1:
-            days.add(d2)
+    def _build_parquet_paths(self, pixel_id: str, window: Window) -> list[str]:
+        slot_start_ms = int(window.slot_start.timestamp() * 1000)
+        slot_end_ms = int(window.slot_end.timestamp() * 1000)
+
+        mid = slot_start_ms + 15 * 60 * 1000
+
+        day = window.slot_start.date().isoformat()
+
         return [
-            f"downloaded/events/pixel_id={pixel_id}/day={d.isoformat()}/*.parquet"
-            for d in sorted(days)
+            f"downloaded/events/pixel_id={pixel_id}/day={day}/events_{slot_start_ms}_{mid}.parquet",
+            f"downloaded/events/pixel_id={pixel_id}/day={day}/events_{mid}_{slot_end_ms}.parquet",
         ]
 
     async def fetch_events_async(
         self,
         pixel_id: str,
-        time_from: datetime,
-        time_to: datetime,
+        window: Window,
         parquet_paths: list[str] | None = None,
     ) -> list[dict]:
         logger = logging.getLogger("delivr_sync")
         delivr_table = ClickhouseConfig.delivr_table()
 
         if parquet_paths is None:
-            parquet_paths = self._build_day_paths(pixel_id, time_from, time_to)
+            parquet_paths = self._build_parquet_paths(pixel_id, window)
 
         logger.debug(
             "Parquet paths for pixel_id=%s: %s", pixel_id, parquet_paths

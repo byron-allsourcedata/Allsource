@@ -32,11 +32,7 @@ async def run(pixel_id: str, *, dry_run: bool = False):
         users_repo = LeadsUsersRepository(ch)
 
         logger.info("Fetching raw events for pixel_id=%s", pixel_id)
-        events = await raw_events_repo.fetch_events_async(
-            pixel_id,
-            window.read_from,
-            window.read_to,
-        )
+        events = await raw_events_repo.fetch_events_async(pixel_id, window)
         logger.info("Fetched %d events", len(events))
 
         visits = build_visits(events)
