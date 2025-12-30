@@ -3,7 +3,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from typing import Any
 from dependencies import (
-    get_audience_insights_service,
     check_user_authorization_without_pixel,
 )
 from services.audience_insights import AudienceInsightsService

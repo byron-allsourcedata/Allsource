@@ -114,18 +114,10 @@ async def verify_signature(request: Request):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
 
 
-def get_audience_setting_persistence(db: Session = Depends(get_db)):
-    return AudienceSettingPersistence(db)
-
-
 def get_audience_sources_matched_persons_persistence(
     db: Session = Depends(get_db),
 ):
     return AudienceSourcesMatchedPersonsPersistence(db)
-
-
-def get_audience_smarts_persistence(db: Session = Depends(get_db)):
-    return AudienceSmartsPersistence(db)
 
 
 def get_partners_asset_persistence(
@@ -134,70 +126,14 @@ def get_partners_asset_persistence(
     return PartnersAssetPersistence(db)
 
 
-def get_million_verifier_persistence(db: Session = Depends(get_db)):
-    return MillionVerifierPersistence(db=db)
-
-
-def get_million_verifier_service(
-    million_verifier_persistence: MillionVerifierPersistence = Depends(
-        get_million_verifier_persistence
-    ),
-):
-    return MillionVerifierIntegrationsService(
-        million_verifier_persistence=million_verifier_persistence
-    )
-
-
 def get_company_persistence(db: Session = Depends(get_db)):
     return CompanyPersistence(db=db)
-
-
-def get_account_setup_persistence(db: Session = Depends(get_db)):
-    return AccountSetupPersistence(db=db)
 
 
 def get_suppression_persistence(
     db: Session = Depends(get_db),
 ) -> SuppressionPersistence:
     return SuppressionPersistence(db)
-
-
-def get_user_persistence_service(db: Session = Depends(get_db)):
-    return UserPersistence(db=db)
-
-
-def get_audience_insights_persistence(db: Session = Depends(get_db)):
-    return AudienceInsightsPersistence(db)
-
-
-def get_audience_persistence(db: Session = Depends(get_db)):
-    return AudiencePersistence(db=db)
-
-
-def get_lead_orders_persistence(
-    db: Session = Depends(get_db),
-) -> LeadsPersistence:
-    return LeadOrdersPersistence(db)
-
-
-def get_integrations_user_sync_persistence(
-    db: Session = Depends(get_db),
-) -> IntegrationsUserSyncPersistence:
-    return IntegrationsUserSyncPersistence(db)
-
-
-def get_epi_persistence(
-    db: Session = Depends(get_db),
-) -> ExternalAppsInstallationsPersistence:
-    return ExternalAppsInstallationsPersistence(db)
-
-
-def get_notification_persistence(db: Session = Depends(get_db)):
-    return NotificationPersistence(db)
-
-
-def get_lookalikes_persistence(db: Session = Depends(get_db)):
-    return AudienceLookalikesPersistence(db=db)
 
 
 def get_accounts_service(
@@ -210,10 +146,6 @@ def get_accounts_service(
         user_persistence=user_persistence,
         partner_persistence=partner_persistence,
     )
-
-
-def get_stripe_service():
-    return StripeService()
 
 
 def check_user_authentication(
@@ -314,20 +246,6 @@ def get_partners_assets_service(
     return PartnersAssetService(partners_asset_persistence, aws_service)
 
 
-def get_partners_service(
-    user_persistence: UserPersistence,
-    plans_persistence: PlansPersistence,
-    partners_persistence: PartnersPersistence,
-    send_grid_persistence: SendgridPersistence,
-):
-    return PartnersService(
-        partners_persistence=partners_persistence,
-        user_persistence=user_persistence,
-        send_grid_persistence=send_grid_persistence,
-        plans_persistence=plans_persistence,
-    )
-
-
 def get_user_authorization_status(user, users_auth_service: UsersAuth):
     status = users_auth_service.get_user_authorization_status_without_pixel(
         user
@@ -353,51 +271,6 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
 
 def raise_forbidden(detail: dict):
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
-
-
-def check_user_authorization(
-    Authorization: Annotated[str, Header()],
-    user_persistence_service: UserPersistence,
-    privacy_policy_service: PrivacyPolicyService,
-    users_auth_service: UsersAuth,
-) -> Token:
-    is_admin = is_user_admin(Authorization, user_persistence_service)
-    user = check_user_authentication(Authorization, user_persistence_service)
-    auth_status = get_user_authorization_status(user, users_auth_service)
-    exist_privacy_policy = privacy_policy_service.exist_user_privacy_policy(
-        user_id=user.get("id")
-    )
-
-    if auth_status == UserAuthorizationStatus.NEED_CONFIRM_EMAIL:
-        raise_forbidden(
-            {
-                "status": UserAuthorizationStatus.NEED_CONFIRM_EMAIL.value,
-            }
-        )
-
-    if not exist_privacy_policy and not is_admin:
-        raise_forbidden(
-            {"status": UserAuthorizationStatus.NEED_ACCEPT_PRIVACY_POLICY.value}
-        )
-
-    if auth_status == UserAuthorizationStatus.PAYMENT_NEEDED:
-        stripe_payment_url = get_stripe_payment_url(
-            user.get("customer_id"),
-            user.get("stripe_payment_url") or {},
-        )
-        raise_forbidden(
-            {
-                "status": auth_status.value,
-                "stripe_payment_url": stripe_payment_url,
-            }
-        )
-
-    if (
-        auth_status != UserAuthorizationStatus.SUCCESS
-        or auth_status != UserAuthorizationStatus.NEED_CHOOSE_PLAN
-    ):
-        raise_forbidden({"status": auth_status.value})
-    return user
 
 
 def check_user_authorization_without_pixel(
@@ -605,16 +478,6 @@ def get_domain_service(
     )
 
 
-def get_leads_service(
-    leads_persistence_service: LeadsPersistence,
-    user=Depends(check_user_authorization),
-    domain: UserDomains = Depends(check_pixel_install_domain),
-):
-    return LeadsService(
-        domain=domain, leads_persistence_service=leads_persistence_service
-    )
-
-
 def get_companies_service(
     domain: UserDomains = Depends(check_pixel_install_domain),
     companies_persistence_service: CompanyPersistence = Depends(
@@ -642,16 +505,6 @@ def get_dashboard_service(
     )
 
 
-def get_audience_insights_service(
-    audience_insights_persistence: AudienceInsightsPersistence = Depends(
-        get_audience_insights_persistence
-    ),
-):
-    return AudienceInsightsService(
-        insights_persistence_service=audience_insights_persistence
-    )
-
-
 def get_payouts_service(
     stripe_service: StripeService,
     partners_persistence: PartnersPersistence,
@@ -666,26 +519,6 @@ def get_payouts_service(
     )
 
 
-def get_settings_service(
-    user_domains_service: UserDomainsService,
-    plan_persistence: PlansPersistence,
-    user_persistence: UserPersistence,
-    subscription_service: SubscriptionService,
-    lead_persistence: LeadsPersistence,
-    send_grid_persistence: SendgridPersistence,
-    settings_persistence: SettingsPersistence,
-):
-    return SettingsService(
-        settings_persistence=settings_persistence,
-        plan_persistence=plan_persistence,
-        user_persistence=user_persistence,
-        send_grid_persistence=send_grid_persistence,
-        subscription_service=subscription_service,
-        user_domains_service=user_domains_service,
-        lead_persistence=lead_persistence,
-    )
-
-
 def get_suppression_service(
     leads_persistence: LeadsPersistence,
     suppression_persistence: SuppressionPersistence = Depends(
@@ -695,16 +528,6 @@ def get_suppression_service(
     return SuppressionService(
         suppression_persistence=suppression_persistence,
         leads_persistence=leads_persistence,
-    )
-
-
-def get_plans_service(
-    plans_persistence: PlansPersistence,
-    subscription_service: SubscriptionService,
-):
-    return PlansService(
-        plans_persistence=plans_persistence,
-        subscription_service=subscription_service,
     )
 
 

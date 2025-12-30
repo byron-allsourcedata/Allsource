@@ -20,7 +20,6 @@ from config.rmq_connection import (
 )
 from db_dependencies import Db
 from dependencies import (
-    get_plans_service,
     get_payments_service,
     get_webhook,
     check_user_authentication,

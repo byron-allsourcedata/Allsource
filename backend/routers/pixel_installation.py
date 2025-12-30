@@ -38,12 +38,13 @@ SECRET_PIXEL_KEY = os.getenv("SECRET_PIXEL_KEY")
 @router.get("/manually", response_model=ManualFormResponse)
 async def manual(
     pixel_installation_service: PixelInstallationService,
-    user: User = Depends(check_user_authorization_without_pixel),
+    user: dict = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
-    manual_result, pixel_client_id = pixel_installation_service.get_manual(
-        user, domain
-    )
+    (
+        manual_result,
+        pixel_client_id,
+    ) = await pixel_installation_service.get_pixel_script(user, domain)
     return ManualFormResponse(
         manual=manual_result, pixel_client_id=pixel_client_id
     )
@@ -61,7 +62,9 @@ async def send_pixel_code_in_email(
     receiver_name = receiver_email.split("@")[0]
 
     try:
-        pixel_mailing.send_normal_pixel_code(
+        await pixel_mailing.send_normal_pixel_code(
+            user=user,
+            domain=domain,
             user_data=MailingUserData(
                 email=receiver_email,
                 full_name=receiver_name,
@@ -105,12 +108,13 @@ async def google_tag(
 @router.get("/cms", response_model=ManualFormResponse)
 async def cms(
     pixel_installation_service: PixelInstallationService,
-    user: User = Depends(check_user_authorization_without_pixel),
+    user: dict = Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
-    manual_result, pixel_client_id = pixel_installation_service.get_manual(
-        user, domain
-    )
+    (
+        manual_result,
+        pixel_client_id,
+    ) = await pixel_installation_service.get_pixel_script(user, domain)
     return ManualFormResponse(
         manual=manual_result, pixel_client_id=pixel_client_id
     )

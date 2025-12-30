@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from typing_extensions import deprecated
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional, List
@@ -15,7 +17,7 @@ class EmailFormRequest(BaseModel):
 
 class ManualFormResponse(BaseModel):
     manual: str = Field(...)
-    pixel_client_id: str = Field(...)
+    pixel_client_id: UUID = Field(...)
 
 
 class PixelInstallationResponse(BaseModel):
