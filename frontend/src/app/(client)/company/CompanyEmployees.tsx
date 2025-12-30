@@ -50,6 +50,7 @@ import { useClampTableHeight } from "@/hooks/useClampTableHeight";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 import { usePagination } from "@/hooks/usePagination";
+import { CustomPlan } from "../settings/components/Subscription/CustomPlan";
 
 interface FetchDataParams {
 	sortBy?: string;
@@ -103,6 +104,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 		null,
 	);
 	const [departments, setDepartments] = React.useState<string[]>([]);
+	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
 	const [seniorities, setSeniorities] = React.useState<string[]>([]);
 	const [jobTitles, setJobTitles] = React.useState<string[]>([]);
 	const [employeeId, setEmployeeId] = useState<number | null>(null);
@@ -141,6 +143,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 	};
 
 	const isOpen = Boolean(anchorEl);
+
+	const handleCustomPlanPopupOpen = () => {
+		setCustomPlanPopupOpen(true);
+	};
 
 	const handleClosePopup = () => {
 		setOpenPopup(false);
@@ -245,8 +251,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 			return (
 				<UnlockButton
 					onClick={() => {
-						getStatusCredits(id);
-						setEmployeeId(id);
+						handleCustomPlanPopupOpen();
+						// getStatusCredits(id);
+						// setEmployeeId(id);
 					}}
 					label="Unlock contact"
 				/>
@@ -485,7 +492,13 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 
 			// Join all parameters into a single query string
 			if (params.length > 0) {
-				url += `${params.join("&")}`;
+				const queryString = params.join("&");
+
+				if (url.includes("?")) {
+					url += `&${queryString}`;
+				} else {
+					url += `?${queryString}`;
+				}
 			}
 
 			const response = await axiosInstance.get(url, { responseType: "blob" });
@@ -577,6 +590,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 	};
 
 	const capitalizeTableCell = (city: string) => {
+		if (typeof city !== "string") {
+			return city;
+		}
 		return city
 			?.split(" ")
 			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -693,18 +709,17 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 		{
 			key: "employee_name",
 			label: "Name",
+			sortable: true,
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
 		},
 		{
 			key: "personal_email",
 			label: "Personal Email",
-			sortable: true,
 			widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
 		},
 		{
 			key: "business_email",
 			label: "Business Email",
-			sortable: true,
 			widths: { width: "12vw", minWidth: "150px", maxWidth: "20vw" },
 		},
 		{
@@ -742,6 +757,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 	return (
 		<>
 			{loading && <CustomizedProgressBar />}
+			<CustomPlan
+				customPlanPopupOpen={customPlanPopupOpen}
+				setCustomPlanPopupOpen={setCustomPlanPopupOpen}
+			/>
 			<Box
 				sx={{
 					display: "flex",
@@ -1454,8 +1473,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 															>
 																{!row.is_unlocked?.value ? (
 																	<UnlockButton
-																		onClick={() =>
-																			getStatusCredits(row.id.value)
+																		onClick={
+																			() => handleCustomPlanPopupOpen()
+																			// getStatusCredits(row.id.value)
 																		}
 																		label="Unlock contact"
 																	/>
@@ -1526,11 +1546,11 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 																}}
 																tooltipOptions={{
 																	content:
-																		renderField(row.department, row.id.value) ||
+																		renderField(row.job_title, row.id.value) ||
 																		"--",
 																}}
 															>
-																{renderField(row.department, row.id.value)}
+																{renderField(row.job_title, row.id.value)}
 															</SmartCell>
 
 															{/* Seniority Column */}

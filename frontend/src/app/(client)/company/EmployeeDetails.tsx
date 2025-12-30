@@ -24,6 +24,7 @@ import CorporateFareRoundedIcon from "@mui/icons-material/CorporateFareRounded";
 import dayjs from "dayjs";
 import UnlockButton from "./UnlockButton";
 import { checkHasActivePlan } from "@/services/checkActivePlan";
+import { CustomPlan } from "../settings/components/Subscription/CustomPlan";
 
 interface PopupDetailsProps {
 	open: boolean;
@@ -93,6 +94,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 }) => {
 	const [popupData, setPopupData] = useState<any>();
 	const [processing, setProcessing] = useState(false);
+	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
 
 	const handleDownload = async () => {
 		try {
@@ -125,6 +127,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 		}
 	};
 
+	const handleCustomPlanPopupOpen = () => {
+		setCustomPlanPopupOpen(true);
+	};
+
 	const getStatusCredits = () => {
 		setProcessing(true);
 		updateEmployeeCallback(popupData.id.value);
@@ -135,7 +141,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 		callback: ((value: string) => string) | null = null,
 	) => {
 		if (data?.visibility_status === "hidden") {
-			return <UnlockButton onClick={getStatusCredits} label="Unlock contact" />;
+			// return <UnlockButton onClick={getStatusCredits} label="Unlock contact" />;
+			return (
+				<UnlockButton
+					onClick={handleCustomPlanPopupOpen}
+					label="Unlock contact"
+				/>
+			);
 		}
 		if (data?.visibility_status === "missing") {
 			return "--";
@@ -205,6 +217,10 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 
 	return (
 		<>
+			<CustomPlan
+				customPlanPopupOpen={customPlanPopupOpen}
+				setCustomPlanPopupOpen={setCustomPlanPopupOpen}
+			/>
 			<Backdrop
 				open={open}
 				onClick={() => {
@@ -437,7 +453,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 									{popupData?.mobile_phone.value ? (
 										!popupData?.is_unlocked.value ? (
 											<UnlockButton
-												onClick={getStatusCredits}
+												onClick={handleCustomPlanPopupOpen}
 												label="Unlock contact"
 											/>
 										) : (
@@ -601,7 +617,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 							>
 								{!popupData?.is_unlocked.value ? (
 									<UnlockButton
-										onClick={getStatusCredits}
+										onClick={handleCustomPlanPopupOpen}
 										label="Unlock contact"
 									/>
 								) : popupData?.linkedin_url.value ? (
