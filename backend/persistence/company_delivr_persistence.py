@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone, timedelta
 import math
 import time
@@ -236,12 +237,14 @@ class CompanyLeadsPersistenceClickhouse:
             regions,
             sort_order,
         )
+        companies, total_count = await asyncio.gather(
+            self._load_companies_with_filters(params),
+            self._get_total_companies_count_with_filters(params),
+        )
 
-        companies = await self._load_companies_with_filters(params)
         if not companies:
             return [], 0, 0
 
-        total_count = await self._get_total_companies_count_with_filters(params)
         max_page = math.ceil(total_count / per_page) if per_page else 1
 
         builder = CompanyLeadBuilder(timezone_offset)
@@ -425,17 +428,15 @@ class CompanyLeadsPersistenceClickhouse:
         count = 0
         max_page = 0
         try:
+            count, rows = await asyncio.gather(
+                self._get_total_count(where_conditions, params, per_page),
+                self._get_employees_data(
+                    where_conditions, params, sort_clause, page, per_page
+                ),
+            )
             if per_page:
-                count = await self._get_total_count(where_conditions, params)
                 max_page = (count + per_page - 1) // per_page
 
-            rows = await self._get_employees_data(
-                where_conditions=where_conditions,
-                params=params,
-                sort_clause=sort_clause,
-                page=page,
-                per_page=per_page,
-            )
         except Exception as e:
             logger.error(f"Error in filter_employees: {e}")
             return [], 0, 0
@@ -443,14 +444,19 @@ class CompanyLeadsPersistenceClickhouse:
         return rows, count, max_page
 
     async def _get_total_count(
-        self, where_conditions: List[str], params: Dict[str, Any]
+        self,
+        where_conditions: List[str],
+        params: Dict[str, Any],
+        per_page: Optional[int] = None,
     ) -> int:
+        if per_page is None:
+            return 0
         where_clause = " AND ".join(where_conditions)
 
         count_query = f"""
         SELECT COUNT(*) as total_count
         FROM leads_companies lc
-        LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
+        LEFT JOIN {self.delivr_users_table} du ON du.company_id = lc.company_id
         WHERE {where_clause}
         """
 
@@ -483,7 +489,7 @@ class CompanyLeadsPersistenceClickhouse:
             du.personal_city as personal_city,
             du.personal_state as personal_state
         FROM leads_companies lc
-        LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
+        LEFT JOIN {self.delivr_users_table} du ON du.company_id = lc.company_id
         WHERE {where_clause}
         ORDER BY {sort_clause}
         """
@@ -532,7 +538,7 @@ class CompanyLeadsPersistenceClickhouse:
             du.personal_country as personal_country,
             du.company_country as company_country
         FROM leads_companies lc
-        LEFT JOIN {self.delivr_users_table} du ON du.company_id_right = lc.company_id
+        LEFT JOIN {self.delivr_users_table} du ON du.company_id = lc.company_id
         WHERE lc.company_id = %(company_id)s 
         AND du.profile_pid_all = %(employee_id)s
         LIMIT 1

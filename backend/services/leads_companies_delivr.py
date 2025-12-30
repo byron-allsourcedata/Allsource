@@ -399,7 +399,7 @@ class AsyncCompanyLeadsService:
         industry: str = None,
         search_query: str = None,
         page: int = 1,
-        per_page: int = 50,
+        per_page: int = 10,
         from_date: int | None = None,
         to_date: int | None = None,
         timezone_offset: int = 0,
