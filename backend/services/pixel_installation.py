@@ -111,8 +111,17 @@ class PixelInstallationService:
     ) -> tuple[str, UUID]:
         pixel_id = await self._get_or_create_pixel_id(user, domain)
 
-        pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
-        custom_script = f'<script src="https://{pixel_script_domain}/pixel.js?pid={pixel_id}"></script>'
+        custom_script = f'''
+            <script type="text/javascript">
+            (function(s, p, i, c, e) {{
+                s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};
+                s[e].l = 1 * new Date();
+                var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
+                k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
+                s.pixelClientId = i;
+            }})(window, "https://allsource-data.s3.us-east-2.amazonaws.com/pixel_popup.js", "{pixel_id}", document, "script");
+            </script>
+        '''
 
         delivr_script = f'<script id="delivr-ai" src="https://cdn.pixel.datatagmanager.com/pixels/{pixel_id}/p.js" async></script>'
 
@@ -171,7 +180,7 @@ class PixelInstallationService:
         result = {"status": PixelStatus.INCORRECT_PROVIDER_ID.value}
         domain = (
             self.db.query(UserDomains)
-            .filter(UserDomains.data_provider_id == pixelClientId)
+            .filter(UserDomains.pixel_id == pixelClientId)
             .first()
         )
         if domain:
