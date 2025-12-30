@@ -915,7 +915,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 					</Box>
 
 					{/* Location */}
-					<Box sx={{ ...filterStyles.main_filter_form, mb: 15 }}>
+					{/* <Box sx={{ ...filterStyles.main_filter_form, mb: 15 }}>
 						<Box
 							sx={filterStyles.filter_form}
 							onClick={() => setIsRegionOpen(!isRegionOpen)}
@@ -1016,7 +1016,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 								</ListItem>
 							))}
 						</Collapse>
-					</Box>
+					</Box> */}
 
 					<Box
 						sx={{
