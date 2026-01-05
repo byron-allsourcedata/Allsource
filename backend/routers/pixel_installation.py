@@ -26,6 +26,7 @@ from schemas.pixel_installation import (
     ManualFormResponse,
     PixelInstallationResponse,
     DomainsListResponse,
+    PixelsResponse,
 )
 from schemas.domains import UpdateDomain
 from services.pixel_installation import PixelInstallationService
@@ -145,9 +146,19 @@ def get_verify_domains(
     return DomainsListResponse(domains=domain_list_name)
 
 
+@deprecated("use /verified-pixels instead")
 @router.get("/verified-data-providers", response_model=DataProvidersResponse)
 def get_verified_data_providers(
     _secret_key: SecretPixelKey, domain_service: UserDomainsService
 ):
     data_providers_ids = domain_service.get_verified_data_providers()
     return DataProvidersResponse(data_providers_ids=data_providers_ids)
+
+
+@router.get("/verified-pixels", response_model=PixelsResponse)
+def get_verified_pixels(
+    _secret_key: SecretPixelKey,
+    domain_service: UserDomainsService,
+):
+    pixel_ids = domain_service.get_verified_pixels()
+    return PixelsResponse(pixel_ids=pixel_ids)

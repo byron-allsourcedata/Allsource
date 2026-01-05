@@ -31,3 +31,7 @@ class DomainsListResponse(BaseModel):
 
 class DataProvidersResponse(BaseModel):
     data_providers_ids: list[str]
+
+
+class PixelsResponse(BaseModel):
+    pixel_ids: list[UUID]
