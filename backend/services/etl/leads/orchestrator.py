@@ -90,6 +90,7 @@ async def run_historical_by_intervals(
     Если parquet_paths передан, читаем именно эти файлы вместо автоматической генерации путей по дням.
     """
     logger = logging.getLogger("delivr_sync")
+    window = resolve_window()
 
     resolver = Resolver()
 
@@ -109,9 +110,8 @@ async def run_historical_by_intervals(
             )
 
             events = await raw_events_repo.fetch_events_async(
-                pixel_id,
-                time_from,
-                time_to,
+                pixel_id=pixel_id,
+                window=window,
                 parquet_paths=parquet_paths,
             )
             logger.info(
