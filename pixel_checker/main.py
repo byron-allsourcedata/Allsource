@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
             status_code=500, detail="Failed to fetch domains from external service"
         )
 
-    valid_dpid_cache = set(domains_list_response.data_providers_ids)
+    valid_dpid_cache = set(domains_list_response.pixel_ids)
     logger.info(f"Loaded {len(valid_dpid_cache)} domains into cache.")
     yield
     logger.info("Application shutdown.")
