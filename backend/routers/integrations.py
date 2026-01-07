@@ -220,7 +220,7 @@ async def get_list(
     domain: OptionalDomain,
     ad_account_id: str = Query(None),
     service_name: str = Query(...),
-    user=Depends(check_user_authorization_without_pixel)
+    user=Depends(check_user_authorization_without_pixel),
 ):
     async with integration_service as service:
         if domain is not None:
@@ -243,7 +243,6 @@ async def create_list(
     domain: OptionalDomain,
     service_name: str = Query(...),
     user=Depends(check_user_authorization_without_pixel),
-    
 ):
     async with integrations_service as service:
         service = getattr(service, service_name)
@@ -654,7 +653,8 @@ async def get_channels(
 ):
     async with integration_service as service:
         service = getattr(service, service_name)
-        return service.get_user_lists(domain.id, customer_id, user.get("id"))
+        domain_id = domain.id if domain else None
+        return service.get_user_lists(domain_id, customer_id, user.get("id"))
 
 
 @router.get("/get-campaigns")
