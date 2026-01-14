@@ -23,8 +23,17 @@ async def fetch_domains_with_secret() -> PixelsResponse | None:
             response.raise_for_status()
             data = response.json()
 
-            if isinstance(data, dict) and "pixel_ids" in data:
-                return PixelsResponse(pixel_ids=data["pixel_ids"])
+            payload = {}
+
+            if isinstance(data, dict):
+                if "pixel_ids" in data and data["pixel_ids"] is not None:
+                    payload["pixel_ids"] = [UUID(x) if not isinstance(x, UUID) else x for x in data["pixel_ids"]]
+
+                if "data_providers_ids" in data and data["data_providers_ids"] is not None:
+                    payload["data_providers_ids"] = [str(x) for x in data["data_providers_ids"]]
+
+                if payload:
+                    return PixelsResponse(**payload)
 
             logger.error(f"Unexpected response format: {data}")
             return None

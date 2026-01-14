@@ -160,5 +160,8 @@ def get_verified_pixels(
     _secret_key: SecretPixelKey,
     domain_service: UserDomainsService,
 ):
-    pixel_ids = domain_service.get_verified_pixels()
-    return PixelsResponse(pixel_ids=pixel_ids)
+    pixel_ids, data_provider_ids = domain_service.get_verified_pixels()
+    return PixelsResponse(
+        pixel_ids=pixel_ids,
+        data_providers_ids=data_provider_ids,
+    )

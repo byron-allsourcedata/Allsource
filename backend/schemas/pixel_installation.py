@@ -35,3 +35,4 @@ class DataProvidersResponse(BaseModel):
 
 class PixelsResponse(BaseModel):
     pixel_ids: list[UUID]
+    data_providers_ids: list[str]
