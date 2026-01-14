@@ -111,22 +111,12 @@ class PixelInstallationService:
         self, user: dict, domain: UserDomains
     ) -> tuple[str, UUID]:
         pixel_id = await self._get_or_create_pixel_id(user, domain)
-
-        custom_script = f'''
-            <script type="text/javascript">
-            (function(s, p, i, c, e) {{
-                s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};
-                s[e].l = 1 * new Date();
-                var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
-                k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
-                s.pixelClientId = i;
-            }})(window, "https://datatagmanager.s3.us-east-2.amazonaws.com/pixel_popup.js", "{pixel_id}", document, "script");
-            </script>
-        '''
-
+        pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
+        custom_script = f'<script src="https://{pixel_script_domain}/pixel.js?pid={pixel_id}"></script>'
+        popup_script = f'<script src="https://datatagmanager.s3.us-east-2.amazonaws.com/pixel_popup.js"></script>'
         delivr_script = f'<script id="datatagmanager-id" src="https://cdn.pixel.datatagmanager.com/pixels/{pixel_id}/p.js" async></script>'
 
-        combined_script = f"{custom_script}\n{delivr_script}"
+        combined_script = f"{popup_script}\n{custom_script}\n{delivr_script}"
 
         return combined_script, pixel_id
 
