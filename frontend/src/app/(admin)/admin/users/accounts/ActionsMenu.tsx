@@ -28,6 +28,8 @@ type Props = {
 	};
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
+	isEmailConfirmed?: boolean;
+	onEmailConfirmed?: (userId: number, user_status: string) => void;
 	isMaster: boolean;
 	isUserTab: boolean;
 	actionsLoading?: boolean;
@@ -45,6 +47,8 @@ export const ActionsMenu: React.FC<Props> = ({
 	user,
 	onPlanChanged,
 	isPartnerTab,
+	isEmailConfirmed,
+	onEmailConfirmed,
 	isMaster,
 	isUserTab,
 	actionsLoading,
@@ -124,6 +128,35 @@ export const ActionsMenu: React.FC<Props> = ({
 		}
 	};
 
+	const verifyUserEmail = async () => {
+		try {
+			const response = await axiosInstance.post("/admin/verify-user-email", {
+				user_id: userId
+			});
+
+			if (response.data?.success) {
+				showToast(response.data.message || "Successfully verify email");
+				return response.data.user_status;
+			} else {
+				showErrorToast(response.data.message || "Failed verify email");
+				return false;
+			}
+		} catch (error) {
+			showErrorToast("Error while verify email");
+			console.error("Error", error);
+			return false;
+		}
+	};
+
+	const handleVerifyEmail = async () => {
+		const user_status = await verifyUserEmail();
+
+		if (user_status && onEmailConfirmed) {
+			onEmailConfirmed(userId, user_status);
+		}
+		handleClose();
+	};
+
 	const onPlanClick = (plan: string) => {
 		const planMap: Record<string, string> = {
 			Basic: "basic",
@@ -185,7 +218,12 @@ export const ActionsMenu: React.FC<Props> = ({
 				MenuListProps={{ dense: true }}
 			>
 				{isUserTab ? (
-					<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+					<>
+						<MenuItem onClick={handleOpenPopover}>Change password</MenuItem>
+						{!isEmailConfirmed && (
+							<MenuItem onClick={handleVerifyEmail}>Verify email</MenuItem>
+						)}
+					</>
 				) : (
 					<>
 						{!isAccountTab && (
@@ -235,7 +273,7 @@ export const ActionsMenu: React.FC<Props> = ({
 				transformOrigin={{ vertical: "top", horizontal: "right" }}
 				MenuListProps={{
 					dense: true,
-					onMouseEnter: () => {},
+					onMouseEnter: () => { },
 					onMouseLeave: handleCloseSubmenu,
 				}}
 			>

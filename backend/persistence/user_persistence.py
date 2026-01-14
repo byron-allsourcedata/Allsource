@@ -633,6 +633,7 @@ class UserPersistence:
                 Users.created_at,
                 Users.last_login,
                 Users.role,
+                Users.is_email_confirmed,
                 Users.team_access_level,
                 Users.team_owner_id,
                 Users.leads_credits.label("credits_count"),
