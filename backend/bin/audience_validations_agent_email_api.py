@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import StaleDataError
 from dotenv import load_dotenv
 from services.exceptions import InsufficientCreditsError, MillionVerifierError
-from db_dependencies import Db
+from db_dependencies import Db, AsyncDb
 from resolver import Resolver
 from config.sentry import SentryConfig
 from models.audience_smarts import AudienceSmart
@@ -475,6 +475,7 @@ async def main():
             await channel.set_qos(prefetch_count=1)
 
             db_session = await resolver.resolve(Db)
+            async_session = await resolver.resolve(AsyncDb)
 
             audience_smarts_service = await resolver.resolve(
                 AudienceSmartsService
@@ -482,7 +483,7 @@ async def main():
             smart_validation_agent_service = await resolver.resolve(
                 SmartValidationAgent
             )
-            user_persistence = UserPersistence(db_session)
+            user_persistence = UserPersistence(db_session, async_session)
             million_verifier_service = await resolver.resolve(
                 MillionVerifierIntegrationsService
             )
