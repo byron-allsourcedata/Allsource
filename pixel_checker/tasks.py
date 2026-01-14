@@ -2,6 +2,7 @@ import logging
 
 from dotenv import load_dotenv
 import httpx
+from uuid import UUID
 
 from schemas import PixelsResponse, PixelInstallationRequest
 from utils import get_env, get_http_client
