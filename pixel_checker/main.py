@@ -5,6 +5,7 @@ import config
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from contextlib import asynccontextmanager
+from uuid import UUID
 
 from schemas import PixelInstallationRequest
 from tasks import fetch_external_data, fetch_domains_with_secret
@@ -24,7 +25,7 @@ async def lifespan(app: FastAPI):
             status_code=500, detail="Failed to fetch domains from external service"
         )
 
-    valid_dpid_cache = set(domains_list_response.data_providers_ids)
+    valid_dpid_cache = set(domains_list_response.pixel_ids)
     logger.info(f"Loaded {len(valid_dpid_cache)} domains into cache.")
     yield
     logger.info("Application shutdown.")
@@ -37,7 +38,7 @@ app = FastAPI(lifespan=lifespan)
 async def read_item(
     request: Request,
     background_tasks: BackgroundTasks,
-    pixel_client_id: str = Query(..., alias="dpid"),
+    pixel_client_id: UUID = Query(..., alias="pid"),
     need_reload_page: bool = Query(False, alias="need_reload_page"),
 ):
     try:
@@ -89,9 +90,6 @@ async def read_item(
                </svg>`;
 
         popup.innerHTML = `
-            <div style="text-align:center; padding-bottom:24px;">
-                <img src="https://app.allsourcedata.io/logo.svg" style="height:36px; width:auto;">
-            </div>
             <table style="width:100%; font-size:14px; border-collapse:collapse; margin:0;">
                 <tr>
                     <th style="border-bottom:1px solid #000; border-right:1px solid #000; padding-bottom:6px; width:50%; text-align:left;">SCRIPT</th>

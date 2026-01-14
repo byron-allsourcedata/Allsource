@@ -2,6 +2,7 @@ import hashlib
 import logging
 import os
 import re
+import uuid
 from typing import Optional
 
 from datetime import timezone
@@ -123,7 +124,7 @@ class PixelInstallationService:
             </script>
         '''
 
-        delivr_script = f'<script id="delivr-ai" src="https://cdn.pixel.datatagmanager.com/pixels/{pixel_id}/p.js" async></script>'
+        delivr_script = f'<script id="datatagmanager-id" src="https://cdn.pixel.datatagmanager.com/pixels/{pixel_id}/p.js" async></script>'
 
         combined_script = f"{custom_script}\n{delivr_script}"
 
@@ -178,9 +179,15 @@ class PixelInstallationService:
 
     def verify_and_mark_pixel(self, pixelClientId, url):
         result = {"status": PixelStatus.INCORRECT_PROVIDER_ID.value}
+
+        try:
+            pixel_uuid = uuid.UUID(pixelClientId)
+        except (ValueError, TypeError):
+            return {"status": PixelStatus.INCORRECT_PIXEL_ID.value}
+
         domain = (
             self.db.query(UserDomains)
-            .filter(UserDomains.pixel_id == pixelClientId)
+            .filter(UserDomains.pixel_id == pixel_uuid)
             .first()
         )
         if domain:

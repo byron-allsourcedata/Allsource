@@ -153,6 +153,12 @@ class GoogleAdsIntegrationsService:
         )
         return credential
 
+    def _resolve_credentials(self, domain_id: int | None, user_id: int):
+        if domain_id is None:
+            return self.get_smart_credentials(user_id)
+
+        return self.get_credentials(domain_id, user_id)
+
     def __save_integrations(
         self, access_token: str, domain_id: int, user: dict
     ):
@@ -1031,9 +1037,11 @@ class GoogleAdsIntegrationsService:
 
         return hashlib.sha256(s.encode()).hexdigest()
 
-    def get_user_lists(self, domain_id: int, customer_id: int, user_id: int):
+    def get_user_lists(
+        self, domain_id: int | None, customer_id: int, user_id: int
+    ):
         try:
-            credential = self.get_credentials(domain_id, user_id)
+            credential = self._resolve_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             googleads_service = client.get_service("GoogleAdsService")
             query = """

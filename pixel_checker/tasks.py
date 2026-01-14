@@ -3,7 +3,7 @@ import logging
 from dotenv import load_dotenv
 import httpx
 
-from schemas import DataProvidersResponse, PixelInstallationRequest
+from schemas import PixelsResponse, PixelInstallationRequest
 from utils import get_env, get_http_client
 
 load_dotenv()
@@ -13,21 +13,18 @@ logger = logging.getLogger(__name__)
 SECRET_PIXEL_KEY = get_env("SECRET_PIXEL_KEY")
 
 
-async def fetch_domains_with_secret() -> DataProvidersResponse | None:
+async def fetch_domains_with_secret() -> PixelsResponse | None:
     async with get_http_client() as client:
         try:
             response = await client.get(
-                "/api/install-pixel/verified-data-providers",
+                "/api/install-pixel/verified-pixels",
                 params={"secret_key": SECRET_PIXEL_KEY},
             )
             response.raise_for_status()
             data = response.json()
 
-            # replace with model.validate()
-            if isinstance(data, dict) and "data_providers_ids" in data:
-                return DataProvidersResponse(
-                    data_providers_ids=data["data_providers_ids"]
-                )
+            if isinstance(data, dict) and "pixel_ids" in data:
+                return PixelsResponse(pixel_ids=data["pixel_ids"])
 
             logger.error(f"Unexpected response format: {data}")
             return None

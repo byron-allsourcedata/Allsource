@@ -18,7 +18,7 @@ from sqlalchemy.orm.exc import StaleDataError
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from db_dependencies import Db
+from db_dependencies import Db, AsyncDb
 from resolver import Resolver
 from config.sentry import SentryConfig
 from utils import send_sse
@@ -312,8 +312,9 @@ async def main():
             smart_validation_agent_service = await resolver.resolve(
                 SmartValidationAgent
             )
+            async_session = await resolver.resolve(AsyncDb)
 
-            user_persistence = UserPersistence(db_session)
+            user_persistence = UserPersistence(db_session, async_session)
 
             queue = await channel.declare_queue(
                 name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
