@@ -119,7 +119,7 @@ class PixelInstallationService:
                 var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
                 k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
                 s.pixelClientId = i;
-            }})(window, "https://allsource-data.s3.us-east-2.amazonaws.com/pixel_popup.js", "{pixel_id}", document, "script");
+            }})(window, "https://datatagmanager.s3.us-east-2.amazonaws.com/pixel_popup.js", "{pixel_id}", document, "script");
             </script>
         '''
 
