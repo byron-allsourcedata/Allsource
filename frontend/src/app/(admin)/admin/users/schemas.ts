@@ -7,6 +7,7 @@ export interface UserData {
 	created_at: string;
 	status?: string;
 	is_trial?: boolean;
+	is_email_confirmed?: boolean;
 	last_login: string;
 	invited_by_email?: string;
 	subscription_plan?: string;

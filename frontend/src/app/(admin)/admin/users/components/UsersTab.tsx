@@ -55,6 +55,7 @@ interface TableBodyUserProps {
 	currentPage: number;
 	tableHeaders: TableHeaders[];
 	setLoading: (state: boolean) => void;
+	setData: any;
 	onPlanChanged: () => void;
 	isPartnerTab: boolean;
 	isMaster: boolean;
@@ -143,6 +144,7 @@ const TableHeader: React.FC<{
 };
 
 const TableBodyUsers: React.FC<TableBodyUserProps> = ({
+	setData,
 	data,
 	tableHeaders,
 	setLoading,
@@ -313,6 +315,16 @@ const TableBodyUsers: React.FC<TableBodyUserProps> = ({
 		if (text === "DATA_SYNCING") {
 			return "Data Syncing";
 		}
+	};
+
+	const onEmailConfirmed = (userId: number, user_status: string) => {
+		setData((prevData: UserData[]) =>
+			prevData.map(row =>
+				row.id === userId
+					? { ...row, status: user_status, is_email_confirmed: true }
+					: row
+			)
+		);
 	};
 
 	const renderCellContent = (key: string, row: UserData) => {
@@ -562,6 +574,8 @@ const TableBodyUsers: React.FC<TableBodyUserProps> = ({
 							isPartnerTab={isPartnerTab || row.is_partner}
 							isMaster={isMaster || row.is_master}
 							isUserTab={!isPartnerTab}
+							isEmailConfirmed={row.is_email_confirmed}
+							onEmailConfirmed={onEmailConfirmed}
 							actionsLoading={whitelabelActionsLoading}
 							whitelabelEnabled={row.whitelabel_settings_enabled}
 							enableWhitelabel={() =>
@@ -669,6 +683,7 @@ interface UsersTabProps {
 	rowsPerPageOptions?: number[];
 	totalCount: number;
 	userData: UserData[];
+	setUserData: any;
 	setPage: any;
 	page: number;
 	setLoading?: any;
@@ -687,6 +702,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
 	rowsPerPageOptions,
 	totalCount,
 	userData,
+	setUserData,
 	setPage,
 	page,
 	setRowsPerPage,
@@ -702,33 +718,33 @@ const UsersTab: React.FC<UsersTabProps> = ({
 }) => {
 	const tableHeaders = isPartnerTab
 		? [
-				{ key: "name", label: "Full name", sortable: false },
-				{ key: "email", label: "Email", sortable: false },
-				{ key: "join_date", label: "Join Date", sortable: true },
-				{ key: "last_login_date", label: "Last Login", sortable: true },
-				{ key: "invited_by", label: "Invited By", sortable: false },
-				{ key: "access_level", label: "Access Level", sortable: false },
-				{ key: "has_credit_card", label: "Has CC", sortable: true },
-				{ key: "premium_sources", label: "Premium Data", sortable: false },
-				{ key: "pixel_installed_count", label: "Pixel", sortable: false },
-				{ key: "contacts_count", label: "Contacts", sortable: true },
-				{ key: "sources_count", label: "Sources", sortable: false },
-				{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
-				{ key: "credits_count", label: "Credits", sortable: false },
-				{ key: "cost_leads_overage", label: "Revenue", sortable: true },
-				{ key: "status", label: "Status", sortable: false },
-				{ key: "subscription_plan", label: "Plan", sortable: false },
-				{ key: "actions", label: "Actions", sortable: false },
-			]
+			{ key: "name", label: "Full name", sortable: false },
+			{ key: "email", label: "Email", sortable: false },
+			{ key: "join_date", label: "Join Date", sortable: true },
+			{ key: "last_login_date", label: "Last Login", sortable: true },
+			{ key: "invited_by", label: "Invited By", sortable: false },
+			{ key: "access_level", label: "Access Level", sortable: false },
+			{ key: "has_credit_card", label: "Has CC", sortable: true },
+			{ key: "premium_sources", label: "Premium Data", sortable: false },
+			{ key: "pixel_installed_count", label: "Pixel", sortable: false },
+			{ key: "contacts_count", label: "Contacts", sortable: true },
+			{ key: "sources_count", label: "Sources", sortable: false },
+			{ key: "lookalikes_count", label: "Lookalikes", sortable: false },
+			{ key: "credits_count", label: "Credits", sortable: false },
+			{ key: "cost_leads_overage", label: "Revenue", sortable: true },
+			{ key: "status", label: "Status", sortable: false },
+			{ key: "subscription_plan", label: "Plan", sortable: false },
+			{ key: "actions", label: "Actions", sortable: false },
+		]
 		: [
-				{ key: "name", label: "Full name", sortable: false },
-				{ key: "email", label: "Email", sortable: false },
-				{ key: "join_date", label: "Join Date", sortable: true },
-				{ key: "last_login_date", label: "Last Login", sortable: true },
-				{ key: "invited_by", label: "Invited By", sortable: false },
-				{ key: "status", label: "Status", sortable: false },
-				{ key: "actions", label: "Actions", sortable: false },
-			];
+			{ key: "name", label: "Full name", sortable: false },
+			{ key: "email", label: "Email", sortable: false },
+			{ key: "join_date", label: "Join Date", sortable: true },
+			{ key: "last_login_date", label: "Last Login", sortable: true },
+			{ key: "invited_by", label: "Invited By", sortable: false },
+			{ key: "status", label: "Status", sortable: false },
+			{ key: "actions", label: "Actions", sortable: false },
+		];
 
 	const handlePageChange = (
 		event: React.MouseEvent<HTMLButtonElement> | null,
@@ -799,6 +815,7 @@ const UsersTab: React.FC<UsersTabProps> = ({
 								/>
 								<TableBodyUsers
 									data={userData}
+									setData={setUserData}
 									tableHeaders={tableHeaders}
 									setLoading={setLoading}
 									currentPage={page}

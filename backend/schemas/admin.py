@@ -17,6 +17,10 @@ class ChangePlanResponse(BaseModel):
     success: bool
     message: str
 
+class UserOperationResponse(BaseModel):
+    success: bool
+    message: str
+    user_status: str | None = None
 
 @dataclass
 class PartnersQueryParams:
