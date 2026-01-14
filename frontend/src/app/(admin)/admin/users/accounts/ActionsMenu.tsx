@@ -160,7 +160,7 @@ export const ActionsMenu: React.FC<Props> = ({
 	const onPlanClick = (plan: string) => {
 		const planMap: Record<string, string> = {
 			Basic: "basic",
-			Pro: "pro",
+			Pro: "pro_monthly",
 			"Smart Audience": "smart_audience_monthly",
 		};
 
@@ -176,7 +176,7 @@ export const ActionsMenu: React.FC<Props> = ({
 
 		const planMap: Record<string, string> = {
 			Basic: "basic",
-			Pro: "pro",
+			Pro: "pro_monthly",
 			"Smart Audience": "smart_audience_monthly",
 		};
 		const alias = planMap[selectedPlan];
