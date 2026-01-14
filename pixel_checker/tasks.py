@@ -49,10 +49,13 @@ async def fetch_domains_with_secret() -> PixelsResponse | None:
 
 
 async def fetch_external_data(request_data: PixelInstallationRequest) -> None:
+    data = request_data.dict()
+    if data["pixelClientId"] is not None:
+        data["pixelClientId"] = str(data["pixelClientId"])
     async with get_http_client() as client:
         response = await client.post(
             "/external_api/install-pixel/check-pixel-installed",
-            json=request_data.dict(),
+            json=data,
         )
         if response.status_code == 200:
             logger.info(
