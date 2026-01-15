@@ -196,7 +196,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 		workspaceId: string,
 	) => {
 		const triggerData = {
-			name: "All Pages Trigger for pixel script",
+			name: "All Pages Trigger for data tag manager pixel",
 			type: "pageview",
 			filter: [],
 		};
@@ -394,7 +394,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			);
 			let triggerId = findTriggerIdByName(
 				triggers,
-				"All Pages Trigger for pixel script",
+				"All Pages Trigger for data tag manager pixel",
 			);
 			if (!triggerId) {
 				triggerId = await createAllPagesTrigger(
@@ -409,7 +409,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			);
 			let pixelCode = manualResponse.data.manual;
 			const tagData = {
-				name: "Pixel script",
+				name: "Data tag manager pixel",
 				type: "html",
 				parameter: [
 					{
@@ -427,7 +427,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 
 				const existingTags = existingTagsResponse.data.tag || [];
 				const existingTag = existingTags.find(
-					(tag: any) => tag.name === "Pixel script",
+					(tag: any) => tag.name === "Data tag manager pixel",
 				);
 
 				if (existingTag?.tagId) {
@@ -572,7 +572,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			// );
 			// const tags = response.data.tag || [];
 			// const existingTag = tags.find(
-			//   (tag: any) => tag.name === "Allsource pixel script"
+			//   (tag: any) => tag.name === "Data tag manager pixel"
 			// );
 
 			//console.log(existingTag)
@@ -670,7 +670,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			<ConfirmDialog
 				open={openConfirm}
 				title="Confirmation of Google Tag deletion"
-				description="This Google Tag already has an active pixel. Reinstalling will remove the existing configuration and require event re-setup. Are you sure you want to proceed?"
+				description="This Google Tag already has an active data tag manager pixel. Reinstalling will remove the existing configuration and require event re-setup. Are you sure you want to proceed?"
 				onConfirm={handleConfirmDelete}
 				onCancel={handleCancelDelete}
 			/>
