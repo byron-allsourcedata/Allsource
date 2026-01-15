@@ -6,19 +6,23 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
+from uuid import UUID
 
 import httpx
 import requests
 import shopify
 from fastapi import HTTPException, status, Depends
 
+from config.domains import Domains
+from domains.aws.service import AwsService
+from services.pixel_installation import PixelInstallationService
 from db_dependencies import Db
 from enums import IntegrationsStatus, OauthShopify
 from enums import SourcePlatformEnum
 from integrations.shopify import ShopifyConfig
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
-from models.users import User
+from models.users import User, Users
 from models.users_domains import UserDomains
 from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
@@ -32,7 +36,6 @@ from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.shopify import ShopifyShopRedactForm
 from schemas.users import ShopifyPayloadModel
 from utils import get_http_client
-from ..aws import AWSService
 from ..delivr import DelivrClientAsync
 from ..jwt_service import create_access_token
 
@@ -46,8 +49,9 @@ class ShopifyIntegrationService:
         self,
         integration_persistence: IntegrationsPersistence,
         lead_persistence: LeadsPersistence,
+        pixel_installation_service: PixelInstallationService,
         lead_orders_persistence: LeadOrdersPersistence,
-        aws_service: AWSService,
+        aws_service: AwsService,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         delivr_api_service: DelivrClientAsync,
@@ -393,6 +397,44 @@ class ShopifyIntegrationService:
                 },
             )
 
+    async def _get_or_create_pixel_id(
+        self, user: dict, domain: UserDomains
+    ) -> UUID:
+        if domain is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"status": DomainStatus.DOMAIN_NOT_FOUND.value},
+            )
+
+        pixel_id = domain.pixel_id
+        if pixel_id is None:
+            project_id = user.get("delivr_project_id")
+            if project_id is None:
+                project_id = await self.delivr_api_service.create_project(
+                    company_name=user.get("company_name"),
+                    email=user.get("email"),
+                )
+                self.db.query(Users).filter(
+                    Users.id == user.get("id"),
+                ).update(
+                    {Users.delivr_project_id: project_id},
+                    synchronize_session=False,
+                )
+
+            pixel_id = await self.delivr_api_service.create_pixel(
+                project_id=project_id, domain=domain.domain
+            )
+            self.db.query(UserDomains).filter(
+                UserDomains.user_id == user.get("id"),
+                UserDomains.domain == domain.domain,
+            ).update(
+                {UserDomains.pixel_id: pixel_id},
+                synchronize_session=False,
+            )
+            self.db.commit()
+
+        return pixel_id
+
     async def __set_pixel(
         self,
         user: dict,
@@ -427,13 +469,26 @@ class ShopifyIntegrationService:
             )
             self.db.commit()
 
-        with open("../backend/data/js_pixels/shopify.js", "r") as file:
+        pixel_id = await self._get_or_create_pixel_id(user, domain)
+        pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
+
+        custom_script = f'<script src="https://{pixel_script_domain}/pixel.js?pid={pixel_id}"></script>'
+
+        combined_script = f"{custom_script}\n{delivr_script}"
+
+        with open("../backend/data/js_pixels/shopify_v2.js", "r") as file:
             shopify_js = file.read()
 
-        script_code = f"window.pixelClientId = '{pixel_id}';\n" + shopify_js
+        delivr_script = f"window.pixelClientId = '{pixel_id}';\n" + shopify_js
 
-        self.AWS.upload_string(script_code, f"shopify-pixel-code/{pixel_id}.js")
-        script_url = f"https://allsource-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{pixel_id}.js"
+        file_bytes = combined_script.encode("utf-8")
+
+        script_url = self.AWS.upload_file(
+            f"shopify-data-tag-manager-pixel/{pixel_id}.js",
+            combined_script,
+            content_type="application/javascript",
+            bucket_name="datatagmanager",
+        )
 
         url = f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags.json"
         headers = {

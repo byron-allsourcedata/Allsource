@@ -195,9 +195,6 @@
                </svg>`;
 
         popup.innerHTML = `
-            <div style="text-align:center; padding-bottom:24px;">
-                <img src="https://allsourcedev.io/logo.svg" style="height:36px; width:auto;">
-            </div>
             <table style="width:100%; font-size:14px; border-collapse:collapse; margin:0;">
                 <tr>
                     <th style="border-bottom:1px solid #000; border-right:1px solid #000; padding-bottom:6px; width:50%; text-align:left;">SCRIPT</th>

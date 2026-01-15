@@ -27,9 +27,10 @@ class AwsService:
         object_name: str,
         file_bytes: bytes,
         content_type: str = "application/octet-stream",
+        bucket_name: str = "allsource-data",
     ) -> str:
         _ = self.s3_client.put_object(
-            Bucket="allsource-data",
+            Bucket=bucket_name,
             Key=object_name,
             Body=file_bytes,
             ContentType=content_type,

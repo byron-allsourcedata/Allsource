@@ -2,92 +2,240 @@
     const pixelId = window.pixelClientId;
     if (!pixelId) return;
 
-    // Вставляем Delivr pixel
-    const delivrScript = document.createElement('script');
-    delivrScript.id = 'delivr-ai';
-    delivrScript.src = `https://cdn.pixel.datatagmanager.com/pixels/${pixelId}/p.js`;
-    delivrScript.async = true;
-    document.body.appendChild(delivrScript);
+    const script_popup = document.createElement('script');
+    script_popup.id = 'script_popup';
+    script_popup.src = 'https://datatagmanager.s3.us-east-2.amazonaws.com/pixel_popup.js';
+    script_popup.async = true;
+    
+    script_popup.onerror = function() {
+        console.warn('Failed to load pixel_popup.js');
+    };
+    
+    document.body.appendChild(script_popup);
 
-    function checkPixelInstalled(pixelId, apiUrl) {
-        if (!apiUrl) return Promise.resolve(null);
+    const eventQueue = [];
+    let isSDKReady = false;
 
-        return fetch(`${apiUrl}/external_api/install-pixel/check-pixel-installed`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pixelClientId: pixelId, url: window.location.href })
-        })
-        .then(response => response.ok ? response.json() : null)
-        .catch(error => {
-            console.error('Pixel check error:', error);
-            return null;
+    function sendEvent(eventType, eventData) {
+        const payload = {
+            event_type: eventType,
+            event_data: {
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                custom_data: {
+                    ...eventData,
+                    pixelPuid: pixelId,
+                },
+            },
+        };
+
+        if (isSDKReady && window.PixelSDK?.sendData) {
+            window.PixelSDK.sendData(payload);
+        } else {
+            eventQueue.push(payload);
+        }
+    }
+
+    const script = document.createElement('script');
+    script.id = 'delivr-ai';
+    script.src = `https://cdn.pixel.datatagmanager.com/pixels/${pixelId}/p.js`;
+    script.async = true;
+    
+    script.onload = () => {
+        const checkInterval = setInterval(() => {
+            if (window.PixelSDK && window.PixelSDK.sendData) {
+                clearInterval(checkInterval);
+                isSDKReady = true;
+                
+                while (eventQueue.length > 0) {
+                    const queuedPayload = eventQueue.shift();
+                    window.PixelSDK.sendData(queuedPayload);
+                }
+            }
+        }, 100);
+        
+        setTimeout(() => clearInterval(checkInterval), 10000);
+    };
+    
+    script.onerror = (err) => {
+        console.error('Failed to load PixelSDK:', err);
+    };
+    
+    document.body.appendChild(script);
+
+    let cartEventCalled = false;
+    let productViewedEventCalled = false;
+    let productData = null;
+    
+    const productUrl = location.protocol + '//' + location.host + location.pathname.replace(/\/$/, '');
+
+    if (productUrl.includes("/products/")) {
+        fetch(productUrl + '.js')
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                productData = data;
+            })
+            .catch(err => {
+                console.debug('Failed to load product data:', err);
+            });
+    }
+
+    function getProductData(item = null) {
+        if (!productData) return null;
+        
+        let currentProductData = productData;
+        
+        if (item) {
+            if (item.items && Array.isArray(item.items)) {
+                currentProductData = item.items[0];
+            } else {
+                currentProductData = item;
+            }
+        }
+        
+        const productInfo = {
+            name: currentProductData.title,
+            product_id: currentProductData.id,
+            product_url: productUrl,
+            price: currentProductData.price,
+            image_url: getImageUrl(currentProductData),
+            currency: window.Shopify?.currency?.active
+        };
+
+        if (currentProductData.variant_id) {
+            productInfo.product_id = currentProductData.product_id || productInfo.product_id;
+            productInfo.VariantID = currentProductData.variant_id;
+            productInfo.Variant = currentProductData.title || currentProductData.variant_title;
+        } else {
+            const variantId = new URLSearchParams(window.location.search).get('variant');
+            if (variantId) {
+                const variant = currentProductData.variants?.find(v => 
+                    v.id.toString() === variantId || v.id === Number(variantId)
+                );
+                if (variant) {
+                    productInfo.price = variant.price;
+                    productInfo.VariantID = variant.id;
+                    productInfo.Variant = variant.name;
+                    
+                    const variantImage = getImageUrl(currentProductData, variantId);
+                    if (variantImage) {
+                        productInfo.image_url = variantImage;
+                    }
+                }
+            }
+        }
+
+        return productInfo;
+    }
+
+    function getImageUrl(product = productData, variantId = null) {
+        if (!product) return null;
+        
+        // Базовое изображение продукта
+        if (product.featured_image) {
+            if (typeof product.featured_image === 'string') {
+                return product.featured_image;
+            } else if (product.featured_image.url) {
+                return product.featured_image.url;
+            }
+        }
+        
+        if (variantId) {
+            const variant = product.variants?.find(v => 
+                v.id.toString() === variantId || v.id === Number(variantId)
+            );
+            return variant?.featured_image?.src || null;
+        }
+        
+        return null;
+    }
+
+    const addedToCartHandler = function (item) {
+        if (!cartEventCalled && productData) {
+            const itemAdded = getProductData(item);
+            if (itemAdded) {
+                sendEvent('product_added_to_cart', itemAdded);
+                cartEventCalled = true;
+                
+                setTimeout(() => {
+                    cartEventCalled = false;
+                }, 5000);
+            }
+        }
+    };
+
+    const viewedProductHandler = function () {
+        if (productData && !productViewedEventCalled) {
+            const itemAdded = getProductData();
+            if (itemAdded) {
+                sendEvent('viewed_product', itemAdded);
+                productViewedEventCalled = true;
+            }
+        }
+    };
+
+    const checkoutCompletedHandler = function (detail) {
+        if (detail) {
+            sendEvent('checkout_completed', detail);
+        }
+    };
+
+    if (productUrl.includes("/products/")) {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(viewedProductHandler, 2000);
+        });
+        
+        window.addEventListener('load', () => {
+            if (!productViewedEventCalled) {
+                setTimeout(viewedProductHandler, 1000);
+            }
         });
     }
 
-    function createPopup({ success, message, domain_url }) {
-        const popup = document.createElement("div");
-        popup.className = "popup";
-
-        const icon = success
-            ? `<img src="https://jsstore.s3-us-west-2.amazonaws.com/circle-check.png" style="width:18px;">`
-            : `<svg width="18" height="18" viewBox="0 0 24 24" fill="red" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 6L6 18M6 6l12 12" stroke="red" stroke-width="2" stroke-linecap="round"/>
-               </svg>`;
-
-        popup.innerHTML = `
-            <div style="text-align:center; padding-bottom:24px;">
-                <img src="https://allsourcedev.io/logo.svg" style="height:36px; width:auto;">
-            </div>
-            <table style="width:100%; font-size:14px; border-collapse:collapse; margin:0;">
-                <tr>
-                    <th style="border-bottom:1px solid #000; border-right:1px solid #000; padding-bottom:6px; width:50%; text-align:left;">SCRIPT</th>
-                    <th style="border-bottom:1px solid #000; padding-bottom:6px; text-align:center;">FOUND</th>
-                </tr>
-                <tr>
-                    <td style="border-right:1px solid #000; color:#1F2C48; height:32px; text-align:left; padding:4px; background:#fff;">Delivr Pixel</td>
-                    <td style="text-align:center; padding:4px; background:#fff;">${icon}</td>
-                </tr>
-            </table>
-            ${!success ? `<div style="color: #d00; margin-top: 16px; font-size: 14px; text-align: center;">${message}</div>` : ""}
-            ${domain_url ? `
-                <div style="text-align:right; margin-top:30px;">
-                    <a href="${domain_url}" style="background-color:#3898FC; color:#fff; text-decoration:none; padding:8px 16px; font-size:14px; border-radius:4px; display:inline-block; min-height:25px; line-height:25px;">
-                        Go back
-                    </a>
-                </div>
-            ` : ""}
-        `;
-
-        Object.assign(popup.style, {
-            position: "fixed",
-            top: "1rem",
-            right: "1rem",
-            backgroundColor: "#fff",
-            color: "#4d505a",
-            borderRadius: "8px",
-            font: "600 16px Arial, sans-serif",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
-            border: "1px solid #ccc",
-            width: "400px",
-            zIndex: "9999",
-            padding: "1rem",
-            cursor: "pointer"
-        });
-
-        document.body.appendChild(popup);
-    }
-
-    const apiUrl = new URLSearchParams(window.location.search).get('api');
-    const domain_url = new URLSearchParams(window.location.search).get('domain_url');
-
-    checkPixelInstalled(pixelId, apiUrl).then(res => {
-        if (!res) return;
-
-        const pixelInstalled = res.status === 'PIXEL_CODE_INSTALLED';
-        createPopup({
-            success: pixelInstalled,
-            message: pixelInstalled ? '' : 'Pixel ID does not match!',
-            domain_url: domain_url ? domain_url : null
-        });
-    });
+    (function (ns, originalFetch) {
+        ns.fetch = function (...args) {
+            const response = originalFetch.apply(this, args);
+            
+            response.then(async (res) => {
+                if (!res.ok) return;
+                
+                try {
+                    const clonedResponse = res.clone();
+                    
+                    if (clonedResponse.url?.startsWith(window.location.origin + '/cart/add.js')) {
+                        if (!location.pathname.includes("/cart")) {
+                            const data = await clonedResponse.json();
+                            if (data) {
+                                addedToCartHandler(data);
+                            }
+                        }
+                    }
+                    
+                    if (clonedResponse.url?.includes('graphql?operationName=PollForReceipt')) {
+                        try {
+                            const data = await clonedResponse.json();
+                            const receipt = data?.data?.receipt;
+                            
+                            if (receipt) {
+                                checkoutCompletedHandler({
+                                    platform_order_id: receipt.id,
+                                    total_price: receipt.paymentDetails?.paymentAmount?.amount,
+                                    currency: receipt.paymentDetails?.paymentAmount?.currencyCode,
+                                    platform_created_at: Date.now(),
+                                });
+                            }
+                        } catch (error) {
+                            console.debug('Failed to parse checkout response');
+                        }
+                    }
+                } catch (error) {
+                }
+            });
+            
+            return response;
+        };
+    })(window, window.fetch);
 })();
