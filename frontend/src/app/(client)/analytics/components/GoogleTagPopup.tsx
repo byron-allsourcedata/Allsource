@@ -196,7 +196,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 		workspaceId: string,
 	) => {
 		const triggerData = {
-			name: "All Pages Trigger for Allsource pixel script",
+			name: "All Pages Trigger for pixel script",
 			type: "pageview",
 			filter: [],
 		};
@@ -347,8 +347,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			const commitResponse = await axios.post(
 				`https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}:create_version`,
 				{
-					name: "Allsource: Auto Commit and Publish",
-					notes: "Allsource: Automatically committed and published via API",
+					name: "Auto Commit and Publish",
+					notes: "Automatically committed and published via API",
 				},
 				{ headers: { Authorization: `Bearer ${accessToken}` } },
 			);
@@ -394,7 +394,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			);
 			let triggerId = findTriggerIdByName(
 				triggers,
-				"All Pages Trigger for Allsource pixel script",
+				"All Pages Trigger for pixel script",
 			);
 			if (!triggerId) {
 				triggerId = await createAllPagesTrigger(
@@ -409,7 +409,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			);
 			let pixelCode = manualResponse.data.manual;
 			const tagData = {
-				name: "Allsource pixel script",
+				name: "Pixel script",
 				type: "html",
 				parameter: [
 					{
@@ -427,7 +427,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 
 				const existingTags = existingTagsResponse.data.tag || [];
 				const existingTag = existingTags.find(
-					(tag: any) => tag.name === "Allsource pixel script",
+					(tag: any) => tag.name === "Pixel script",
 				);
 
 				if (existingTag?.tagId) {
