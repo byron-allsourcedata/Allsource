@@ -707,6 +707,48 @@ class LeadsPersistenceClickhouse:
             page_items = filtered[start:end]
         max_page = math.ceil(total_count / per_page) if per_page else 1
         return page_items, total_count, max_page
+    
+
+    async def get_leads_data_by_ids(
+        self,
+        pixel_id: UUID,
+        leads_ids: List,
+        timezone_offset: int = 0,
+    ) -> Tuple[List[Dict[str, Any]], int, int]:
+        params = {
+            "pixel_id": str(pixel_id),
+            "leads_ids": leads_ids
+        }
+        users = await self._load_users(params)
+        if not users:
+            return [], 0, 0
+
+        profile_ids = [u["profile_pid_all"] for u in users]
+
+        visits_map = await self._load_last_visits(pixel_id, profile_ids, params)
+        page_visits_map = await self._load_page_visits(
+            pixel_id, profile_ids, params
+        )
+        delivr_data = await self._load_delivr_data(profile_ids)
+
+        builder = LeadBuilder(timezone_offset)
+        filtered: list[dict] = []
+
+        for user in users:
+            profile_id = user["profile_pid_all"]
+            visit = visits_map.get(profile_id)
+            delivr = delivr_data.get(profile_id, {})
+            pv_list = page_visits_map.get(profile_id, [])
+
+            lead = builder.build(
+                user_data=user,
+                visit_data=visit,
+                delivr_data=delivr,
+                page_visits=pv_list,
+            )
+            filtered.append(lead.to_dict())
+
+        return filtered
 
     def _prepare_params(
         self,
@@ -761,6 +803,11 @@ class LeadsPersistenceClickhouse:
         if params.get("to_dt") is not None:
             clauses.append("updated_at < %(to_dt)s")
             sql_params["to_dt"] = params["to_dt"]
+        
+        if params.get("leads_ids") is not None:
+            if isinstance(params["leads_ids"], (list, tuple)) and params["leads_ids"]:
+                clauses.append("profile_pid_all IN %(leads_ids)s")
+                sql_params["leads_ids"] = tuple(params["leads_ids"])
 
         # Behavior types (comma list) — apply ONLY when no status (funnels) provided
         behavior_list = self._split_csv_lower(params.get("behavior_type"))
