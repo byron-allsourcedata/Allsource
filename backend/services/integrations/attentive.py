@@ -69,7 +69,7 @@ class AttentiveIntegrationsService:
             return False
         return True
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         api_key = credentials.attentive.api_key

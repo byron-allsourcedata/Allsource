@@ -6,12 +6,16 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
+from uuid import UUID
 
 import httpx
 import requests
 import shopify
 from fastapi import HTTPException, status, Depends
 
+from services.pixel_installation import PixelInstallationService
+from config.domains import Domains
+from domains.aws.service import AwsService
 from db_dependencies import Db
 from enums import IntegrationsStatus, OauthShopify
 from enums import SourcePlatformEnum
@@ -32,7 +36,6 @@ from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.shopify import ShopifyShopRedactForm
 from schemas.users import ShopifyPayloadModel
 from utils import get_http_client
-from ..aws import AWSService
 from ..delivr import DelivrClientAsync
 from ..jwt_service import create_access_token
 
@@ -47,7 +50,8 @@ class ShopifyIntegrationService:
         integration_persistence: IntegrationsPersistence,
         lead_persistence: LeadsPersistence,
         lead_orders_persistence: LeadOrdersPersistence,
-        aws_service: AWSService,
+        aws_service: AwsService,
+        pixel_installation: PixelInstallationService,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         delivr_api_service: DelivrClientAsync,
@@ -61,6 +65,7 @@ class ShopifyIntegrationService:
         )
         self.delivr_api_service = delivr_api_service
         self.client = client
+        self.pixel_installation = pixel_installation
         self.db = db
         self.AWS = aws_service
         self.REQUIRED_SCOPES: set[str] = {
@@ -400,40 +405,23 @@ class ShopifyIntegrationService:
         credentials: IntegrationCredentials,
     ):
         self.__check_scopes(credentials)
+        pixel_id = await self.pixel_installation.get_or_create_pixel_id(
+            user, domain.domain
+        )
+        pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
+        custom_script = f"https://{pixel_script_domain}/pixel.js?pid={pixel_id}"
 
-        project_id = user.get("delivr_project_id")
-        if not project_id:
-            project_id = await self.delivr_api_service.create_project(
-                domain.domain
-            )
-            self.db.query(User).filter(
-                User.id == user.get("id"),
-            ).update(
-                {User.delivr_project_id: project_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-
-        pixel_id = domain.pixel_id
-        if not pixel_id:
-            pixel_id = await self.delivr_api_service.create_pixel(
-                project_id, domain.domain
-            )
-            self.db.query(UserDomains).filter(
-                UserDomains.id == domain.id,
-            ).update(
-                {UserDomains.pixel_id: pixel_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-
-        with open("../backend/data/js_pixels/shopify.js", "r") as file:
+        with open("../backend/data/js_pixels/shopify_v2.js", "r") as file:
             shopify_js = file.read()
 
-        script_code = f"window.pixelClientId = '{pixel_id}';\n" + shopify_js
+        delivr_script = f"window.pixelClientId = '{pixel_id}';\n" + shopify_js
 
-        self.AWS.upload_string(script_code, f"shopify-pixel-code/{pixel_id}.js")
-        script_url = f"https://allsource-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{pixel_id}.js"
+        script_url = self.AWS.upload_file(
+            object_name=f"shopify-data-tag-manager-pixel/{pixel_id}.js",
+            file_bytes=delivr_script,
+            content_type="application/javascript",
+            bucket_name="datatagmanager",
+        )
 
         url = f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags.json"
         headers = {
@@ -457,7 +445,9 @@ class ShopifyIntegrationService:
                 )
 
         script_data = {"script_tag": {"event": "onload", "src": script_url}}
+        script_data2 = {"script_tag": {"event": "onload", "src": custom_script}}
         self.__handle_request("POST", url, headers=headers, json=script_data)
+        self.__handle_request("POST", url, headers=headers, json=script_data2)
 
         return {"message": "Pixel successfully installed", "pixel_id": pixel_id}
 
@@ -683,7 +673,7 @@ class ShopifyIntegrationService:
         )
         return response.json().get("customers")
 
-    def add_integration(
+    async def add_integration(
         self,
         credentials: IntegrationCredentials,
         domain,
@@ -713,7 +703,7 @@ class ShopifyIntegrationService:
                 },
             )
         if not domain.is_pixel_installed:
-            self.__set_pixel(user, domain, credentials)
+            await self.__set_pixel(user, domain, credentials)
         self.__save_integration(
             credentials.shopify.shop_domain,
             credentials.shopify.access_token,

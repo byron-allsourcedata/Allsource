@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 import requests
 from typing_extensions import deprecated
 
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from config.domains import Domains
 from enums import BaseEnum, SendgridTemplate, PixelStatus, DomainStatus
 from models.users import Users
@@ -23,7 +24,6 @@ from db_dependencies import Db
 from resolver import injectable
 from schemas.pixel_installation import PixelInstallationResponse
 from services.delivr import DelivrClientAsync
-from services.pixel_management import PixelManagementService
 from utils import normalize_url
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.sendgrid import SendgridHandler
@@ -37,12 +37,10 @@ class PixelInstallationService:
         self,
         db: Db,
         send_grid_persistence_service: SendgridPersistence,
-        pixel_management_service: PixelManagementService,
         delivr_api_service: DelivrClientAsync,
     ):
         self.db = db
         self.send_grid_persistence_service = send_grid_persistence_service
-        self.pixel_management_service = pixel_management_service
         self.delivr_api_service = delivr_api_service
 
     @deprecated("Migrate to Delivr, use method _get_or_create_pixel_id instead")
@@ -69,48 +67,10 @@ class PixelInstallationService:
 
         return client_id
 
-    async def _get_or_create_pixel_id(
-        self, user: dict, domain: UserDomains
-    ) -> UUID:
-        if domain is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"status": DomainStatus.DOMAIN_NOT_FOUND.value},
-            )
-
-        pixel_id = domain.pixel_id
-        if pixel_id is None:
-            project_id = user.get("delivr_project_id")
-            if project_id is None:
-                project_id = await self.delivr_api_service.create_project(
-                    company_name=user.get("company_name"),
-                    email=user.get("email"),
-                )
-                self.db.query(Users).filter(
-                    Users.id == user.get("id"),
-                ).update(
-                    {Users.delivr_project_id: project_id},
-                    synchronize_session=False,
-                )
-
-            pixel_id = await self.delivr_api_service.create_pixel(
-                project_id=project_id, domain=domain.domain
-            )
-            self.db.query(UserDomains).filter(
-                UserDomains.user_id == user.get("id"),
-                UserDomains.domain == domain.domain,
-            ).update(
-                {UserDomains.pixel_id: pixel_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-
-        return pixel_id
-
     async def get_pixel_script(
         self, user: dict, domain: UserDomains
     ) -> tuple[str, UUID]:
-        pixel_id = await self._get_or_create_pixel_id(user, domain)
+        pixel_id = await self.get_or_create_pixel_id(user, domain)
         pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
         custom_script = f'<script src="https://{pixel_script_domain}/pixel.js?pid={pixel_id}"></script>'
         popup_script = f'''
@@ -220,3 +180,41 @@ class PixelInstallationService:
 
         installed_flag = bool(row[0])
         return PixelInstallationResponse(pixel_installation=installed_flag)
+
+    async def get_or_create_pixel_id(
+        self, user: dict, domain: UserDomains
+    ) -> UUID:
+        if domain is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"status": DomainStatus.DOMAIN_NOT_FOUND.value},
+            )
+
+        pixel_id = domain.pixel_id
+        if pixel_id is None:
+            project_id = user.get("delivr_project_id")
+            if project_id is None:
+                project_id = await self.delivr_api_service.create_project(
+                    company_name=user.get("company_name"),
+                    email=user.get("email"),
+                )
+                self.db.query(Users).filter(
+                    Users.id == user.get("id"),
+                ).update(
+                    {Users.delivr_project_id: project_id},
+                    synchronize_session=False,
+                )
+
+            pixel_id = await self.delivr_api_service.create_pixel(
+                project_id=project_id, domain=domain.domain
+            )
+            self.db.query(UserDomains).filter(
+                UserDomains.user_id == user.get("id"),
+                UserDomains.domain == domain.domain,
+            ).update(
+                {UserDomains.pixel_id: pixel_id},
+                synchronize_session=False,
+            )
+            self.db.commit()
+
+        return pixel_id

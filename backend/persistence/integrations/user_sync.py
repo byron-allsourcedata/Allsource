@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 from sqlalchemy import func, desc, select
 from sqlalchemy.orm import Session, aliased

@@ -67,7 +67,6 @@ class AdminCustomersService:
         dashboard_audience_persistence: DashboardAudiencePersistence,
         admin_persistence: AdminPersistence,
         domain_persistence: UserDomainsPersistence,
-        integration_service: IntegrationService,
     ):
         self.db = db
         self.user_subscription_service = user_subscription_service
@@ -80,7 +79,6 @@ class AdminCustomersService:
         self.dashboard_audience_persistence = dashboard_audience_persistence
         self.admin_persistence = admin_persistence
         self.domain_persistence = domain_persistence
-        self.integration_service = integration_service
 
     def get_admin_users(
         self,
@@ -657,7 +655,7 @@ class AdminCustomersService:
             .first()
         )
         return user_object
-    
+
     def verify_user_email(self, user_id: int) -> str | None:
         try:
             self.user_persistence.email_confirmed(user_id)
@@ -666,7 +664,7 @@ class AdminCustomersService:
             if not users:
                 logger.error(f"User {user_id} not found")
                 return None
-                
+
             user = users[0]
             return user.user_status
         except Exception as e:

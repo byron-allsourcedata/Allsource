@@ -223,7 +223,7 @@ class S3IntegrationService:
 
         return [bucket["Name"] for bucket in lists.get("Buckets", [])]
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         domain_id = None if domain is None else domain.id

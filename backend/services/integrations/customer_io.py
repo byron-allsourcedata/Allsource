@@ -83,7 +83,7 @@ class CustomerIoIntegrationsService(AbstractIntegrationService):
 
         return client
 
-    def add_integration(
+    async def add_integration(
         self,
         credentials: IntegrationCredentials,
         domain: UserDomains,

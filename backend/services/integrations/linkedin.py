@@ -172,7 +172,7 @@ class LinkedinIntegrationsService:
     #     response = self.__handle_request(method='POST', url="https://login.microsoftonline.com/common/oauth2/v2.0/token", data=data, headers=headers)
     #     return response.json()["access_token"]
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         domain_id = domain.id if domain else None

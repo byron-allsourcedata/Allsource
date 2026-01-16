@@ -159,7 +159,7 @@ class InstantlyIntegrationsService:
             integration_data
         )
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         api_key = credentials.instantly.api_key
