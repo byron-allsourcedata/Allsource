@@ -13,6 +13,7 @@ import requests
 import shopify
 from fastapi import HTTPException, status, Depends
 
+from services.pixel_installation import PixelInstallationService
 from config.domains import Domains
 from domains.aws.service import AwsService
 from db_dependencies import Db
@@ -50,6 +51,7 @@ class ShopifyIntegrationService:
         lead_persistence: LeadsPersistence,
         lead_orders_persistence: LeadOrdersPersistence,
         aws_service: AwsService,
+        pixel_installation: PixelInstallationService,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         delivr_api_service: DelivrClientAsync,
@@ -63,6 +65,7 @@ class ShopifyIntegrationService:
         )
         self.delivr_api_service = delivr_api_service
         self.client = client
+        self.pixel_installation = pixel_installation
         self.db = db
         self.AWS = aws_service
         self.REQUIRED_SCOPES: set[str] = {
@@ -402,8 +405,8 @@ class ShopifyIntegrationService:
         credentials: IntegrationCredentials,
     ):
         self.__check_scopes(credentials)
-        pixel_id = await self.integrations_user_sync_persistence.get_or_create_pixel_id(
-            user, domain, self.delivr_api_service
+        pixel_id = await self.pixel_installation.get_or_create_pixel_id(
+            user, domain.domain
         )
         pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
         custom_script = f"https://{pixel_script_domain}/pixel.js?pid={pixel_id}"

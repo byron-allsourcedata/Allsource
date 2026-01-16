@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import count, coalesce
 from sqlalchemy.sql import and_, or_
 
-from services.delivr import DelivrClientAsync
 from db_dependencies import Db
 from enums import (
     SourcePlatformEnum,
@@ -715,47 +714,6 @@ class IntegrationsUserSyncPersistence:
             .filter(IntegrationUserSync.id == sync_id)
             .first()
         )
-
-    async def get_or_create_pixel_id(
-        self,
-        user: dict,
-        domain: UserDomains,
-        delivr_api_service: DelivrClientAsync,
-    ) -> UUID:
-        if domain is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"status": DomainStatus.DOMAIN_NOT_FOUND.value},
-            )
-
-        pixel_id = domain.pixel_id
-        if pixel_id is None:
-            project_id = user.get("delivr_project_id")
-            if project_id is None:
-                project_id = await delivr_api_service.create_project(
-                    company_name=user.get("company_name"),
-                    email=user.get("email"),
-                )
-                self.db.query(Users).filter(
-                    Users.id == user.get("id"),
-                ).update(
-                    {Users.delivr_project_id: project_id},
-                    synchronize_session=False,
-                )
-
-            pixel_id = await delivr_api_service.create_pixel(
-                project_id=project_id, domain=domain.domain
-            )
-            self.db.query(UserDomains).filter(
-                UserDomains.user_id == user.get("id"),
-                UserDomains.domain == domain.domain,
-            ).update(
-                {UserDomains.pixel_id: pixel_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-
-        return pixel_id
 
     def get_verified_email_and_phone(self, enrichment_user_id):
         rows = (
