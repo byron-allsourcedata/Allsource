@@ -190,7 +190,7 @@ class GoHighLevelIntegrationsService:
         )
         return sync
 
-    def add_integration(
+    async def add_integration(
         self,
         credentials: IntegrationCredentials,
         domain: UserDomains,

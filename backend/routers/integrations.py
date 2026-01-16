@@ -153,7 +153,7 @@ async def create_integration(
             raise HTTPException(
                 status_code=404, detail=f"Service {service_name} not found"
             )
-        return service.add_integration(
+        return await service.add_integration(
             credentials=credentials, domain=domain, user=user
         )
 

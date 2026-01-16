@@ -15,14 +15,13 @@ from fastapi import HTTPException, status, Depends
 
 from config.domains import Domains
 from domains.aws.service import AwsService
-from services.pixel_installation import PixelInstallationService
 from db_dependencies import Db
 from enums import IntegrationsStatus, OauthShopify
 from enums import SourcePlatformEnum
 from integrations.shopify import ShopifyConfig
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
-from models.users import User, Users
+from models.users import User
 from models.users_domains import UserDomains
 from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
@@ -49,7 +48,6 @@ class ShopifyIntegrationService:
         self,
         integration_persistence: IntegrationsPersistence,
         lead_persistence: LeadsPersistence,
-        pixel_installation_service: PixelInstallationService,
         lead_orders_persistence: LeadOrdersPersistence,
         aws_service: AwsService,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
@@ -397,44 +395,6 @@ class ShopifyIntegrationService:
                 },
             )
 
-    async def _get_or_create_pixel_id(
-        self, user: dict, domain: UserDomains
-    ) -> UUID:
-        if domain is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"status": DomainStatus.DOMAIN_NOT_FOUND.value},
-            )
-
-        pixel_id = domain.pixel_id
-        if pixel_id is None:
-            project_id = user.get("delivr_project_id")
-            if project_id is None:
-                project_id = await self.delivr_api_service.create_project(
-                    company_name=user.get("company_name"),
-                    email=user.get("email"),
-                )
-                self.db.query(Users).filter(
-                    Users.id == user.get("id"),
-                ).update(
-                    {Users.delivr_project_id: project_id},
-                    synchronize_session=False,
-                )
-
-            pixel_id = await self.delivr_api_service.create_pixel(
-                project_id=project_id, domain=domain.domain
-            )
-            self.db.query(UserDomains).filter(
-                UserDomains.user_id == user.get("id"),
-                UserDomains.domain == domain.domain,
-            ).update(
-                {UserDomains.pixel_id: pixel_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-
-        return pixel_id
-
     async def __set_pixel(
         self,
         user: dict,
@@ -442,50 +402,20 @@ class ShopifyIntegrationService:
         credentials: IntegrationCredentials,
     ):
         self.__check_scopes(credentials)
-
-        project_id = user.get("delivr_project_id")
-        if not project_id:
-            project_id = await self.delivr_api_service.create_project(
-                domain.domain
-            )
-            self.db.query(User).filter(
-                User.id == user.get("id"),
-            ).update(
-                {User.delivr_project_id: project_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-
-        pixel_id = domain.pixel_id
-        if not pixel_id:
-            pixel_id = await self.delivr_api_service.create_pixel(
-                project_id, domain.domain
-            )
-            self.db.query(UserDomains).filter(
-                UserDomains.id == domain.id,
-            ).update(
-                {UserDomains.pixel_id: pixel_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-
-        pixel_id = await self._get_or_create_pixel_id(user, domain)
+        pixel_id = await self.integrations_user_sync_persistence.get_or_create_pixel_id(
+            user, domain, self.delivr_api_service
+        )
         pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
-
-        custom_script = f'<script src="https://{pixel_script_domain}/pixel.js?pid={pixel_id}"></script>'
-
-        combined_script = f"{custom_script}\n{delivr_script}"
+        custom_script = f"https://{pixel_script_domain}/pixel.js?pid={pixel_id}"
 
         with open("../backend/data/js_pixels/shopify_v2.js", "r") as file:
             shopify_js = file.read()
 
         delivr_script = f"window.pixelClientId = '{pixel_id}';\n" + shopify_js
 
-        file_bytes = combined_script.encode("utf-8")
-
         script_url = self.AWS.upload_file(
-            f"shopify-data-tag-manager-pixel/{pixel_id}.js",
-            combined_script,
+            object_name=f"shopify-data-tag-manager-pixel/{pixel_id}.js",
+            file_bytes=delivr_script,
             content_type="application/javascript",
             bucket_name="datatagmanager",
         )
@@ -512,7 +442,9 @@ class ShopifyIntegrationService:
                 )
 
         script_data = {"script_tag": {"event": "onload", "src": script_url}}
+        script_data2 = {"script_tag": {"event": "onload", "src": custom_script}}
         self.__handle_request("POST", url, headers=headers, json=script_data)
+        self.__handle_request("POST", url, headers=headers, json=script_data2)
 
         return {"message": "Pixel successfully installed", "pixel_id": pixel_id}
 
@@ -738,7 +670,7 @@ class ShopifyIntegrationService:
         )
         return response.json().get("customers")
 
-    def add_integration(
+    async def add_integration(
         self,
         credentials: IntegrationCredentials,
         domain,
@@ -768,7 +700,7 @@ class ShopifyIntegrationService:
                 },
             )
         if not domain.is_pixel_installed:
-            self.__set_pixel(user, domain, credentials)
+            await self.__set_pixel(user, domain, credentials)
         self.__save_integration(
             credentials.shopify.shop_domain,
             credentials.shopify.access_token,

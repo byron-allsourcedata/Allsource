@@ -36,10 +36,10 @@ class AwsService:
             ContentType=content_type,
         )
 
-        return self.get_file_url(object_name)
+        return self.get_file_url(object_name, bucket_name)
 
-    def get_file_url(self, object_key: str) -> str:
-        return f"https://{self.BUCKET_NAME}.s3.amazonaws.com/{object_key}"
+    def get_file_url(self, object_key: str, bucket_name: str) -> str:
+        return f"https://{bucket_name}.s3.amazonaws.com/{object_key}"
 
     def presign_upload_url(
         self, bucket_name: str, object_name: str, max_bytes: int
