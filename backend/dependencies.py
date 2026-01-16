@@ -328,8 +328,8 @@ def check_user_authorization_without_pixel(
 def check_pixel_installation_paid(
     user: UserDict = Depends(check_user_authorization_without_pixel),
 ):
-    if user is None or not user.get("current_subscription_id"):
-        return False
+    # if user is None or not user.get("current_subscription_id"):
+    #     return False
     return True
 
 
