@@ -1,35 +1,12 @@
 "use client";
 import { Box, Typography, Tabs, Tab, Button } from "@mui/material";
-import { Suspense, useEffect, useState } from "react";
+import { useState } from "react";
 import { payoutsStyle } from "./payoutsStyle";
 import CustomTooltip from "@/components/customToolTip";
-import ProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
-import axiosInstance from "@/axios/axiosInterceptorInstance";
 import PayoutsOverview from "./PayoutsOverview";
 import PayoutsPartners from "./PayoutsPartners";
 import PayoutsMasterPartners from "./PayoutsMasterPartners";
-
-const centerContainerStyles = {
-	display: "flex",
-	flexDirection: "column",
-	justifyContent: "center",
-	alignItems: "center",
-	border: "1px solid rgba(235, 235, 235, 1)",
-	borderRadius: 2,
-	padding: 3,
-	boxSizing: "border-box",
-	mt: 10,
-	width: "100%",
-	textAlign: "center",
-	flex: 1,
-	"& img": {
-		width: "auto",
-		height: "auto",
-		maxWidth: "100%",
-	},
-};
 
 interface TabPanelProps {
 	children?: React.ReactNode;
@@ -72,12 +49,6 @@ const Payouts: React.FC = () => {
 	const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
 		setTabIndex(newIndex);
 	};
-	const [loading, setLoading] = useState(false);
-	const [status, setStatus] = useState("");
-
-	if (loading) {
-		return <ProgressBar />;
-	}
 
 	return (
 		<Box sx={payoutsStyle.mainContent}>
@@ -286,12 +257,4 @@ const Payouts: React.FC = () => {
 	);
 };
 
-const PayoutsPage: React.FC = () => {
-	return (
-		<Suspense fallback={<ProgressBar />}>
-			<Payouts />
-		</Suspense>
-	);
-};
-
-export default PayoutsPage;
+export default Payouts;
