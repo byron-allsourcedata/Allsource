@@ -406,7 +406,7 @@ class ShopifyIntegrationService:
     ):
         self.__check_scopes(credentials)
         pixel_id = await self.pixel_installation.get_or_create_pixel_id(
-            user, domain.domain
+            user, domain
         )
         pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
         custom_script = f"https://{pixel_script_domain}/pixel.js?pid={pixel_id}"
