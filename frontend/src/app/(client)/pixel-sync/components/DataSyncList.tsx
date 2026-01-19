@@ -24,6 +24,7 @@ import axios, { AxiosError } from "axios";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import KlaviyoDataSync from "@/components/data-syncs/KlaviyoDataSync";
 import SalesForceDataSync from "@/components/data-syncs/SalesForceDataSync";
 import MetaDataSync from "@/components/data-syncs/MetaDataSync";
@@ -70,6 +71,7 @@ import CustomerIoDataSync from "@/components/data-syncs/CustomerIoDataSync";
 import HubspotIntegrationPopup from "@/components/integrations/HubspotIntegration";
 import { useZohoChatToggle } from "@/hooks/useZohoChatToggle";
 import { filterDefaultPaginationOptions } from "@/utils/pagination";
+
 import PlatformIconWithNameInTooltip from "@/components/ui/tooltips/PlatformIconWithNameInTooltip";
 import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
 
@@ -998,7 +1000,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "data_sync",
 			label: "No of Contacts",
-			widths: { width: "120px", minWidth: "120px", maxWidth: "12vw" },
+			widths: { width: "100px", minWidth: "100px", maxWidth: "10vw" },
 		},
 		{
 			key: "validation_contacts",
@@ -1369,7 +1371,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.contacts?.toLocaleString("en-US")}
+												<Typography
+													className="table-data"
+													sx={{ textAlign: "center" }}
+												>
+													{row.contacts?.toLocaleString("en-US")}
+												</Typography>
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1434,23 +1441,70 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													row.validation_contacts?.toLocaleString("en-US")
 												)}
 											</SmartCell>
-											<SmartCell
-												cellOptions={{
-													sx: {
-														position: "relative",
-													},
-												}}
-												tooltipOptions={{
-													content:
-														row.active_segments === -1
-															? "unlimit"
-															: new Intl.NumberFormat("en-US").format(
-																	row.active_segments,
-																) || "--",
-												}}
-											>
-												{row.synced_contacts?.toLocaleString("en-US")}
-											</SmartCell>
+											{(() => {
+												const invalidContacts =
+													(row.processed_contacts || 0) -
+													(row.synced_contacts || 0);
+												const hasInvalid = invalidContacts > 0;
+
+												return (
+													<SmartCell
+														cellOptions={{
+															sx: {
+																position: "relative",
+															},
+														}}
+														tooltipOptions={{
+															always: hasInvalid,
+															content: hasInvalid ? (
+																<Box
+																	sx={{
+																		display: "flex",
+																		flexDirection: "column",
+																	}}
+																>
+																	<Typography
+																		sx={{ fontSize: 12, fontWeight: 500 }}
+																	>
+																		Not all contacts were synced
+																	</Typography>
+																	<Typography sx={{ fontSize: 12 }}>
+																		{invalidContacts} contact(s) were skipped
+																		due to invalid data (missing business /
+																		personal email or incorrect date)
+																	</Typography>
+																</Box>
+															) : null,
+														}}
+													>
+														<Typography
+															className="table-data"
+															sx={{
+																textAlign: "center",
+																alignItems: "start",
+																display: "flex",
+																justifyContent: "center",
+																gap: "4px",
+															}}
+														>
+															{row.synced_contacts?.toLocaleString("en-US") ||
+																"--"}
+															{hasInvalid && (
+																<Box
+																	component="span"
+																	sx={{
+																		fontSize: 14,
+																		color: "#f59e0b",
+																	}}
+																>
+																	<InfoOutlinedIcon fontSize="inherit" />
+																</Box>
+															)}
+														</Typography>
+													</SmartCell>
+												);
+											})()}
+
 											<SmartCell
 												cellOptions={{
 													sx: {

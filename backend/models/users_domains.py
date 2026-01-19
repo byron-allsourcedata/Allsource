@@ -13,6 +13,7 @@ from sqlalchemy import (
     Sequence,
     Integer,
 )
+from sqlalchemy.dialects.postgresql.base import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base import Base
@@ -65,6 +66,7 @@ class UserDomains(Base):
     is_email_validation_enabled = Column(
         Boolean, nullable=False, server_default=text("true")
     )
+    pixel_id = Column(UUID, nullable=True)
 
     __table_args__ = (
         Index(

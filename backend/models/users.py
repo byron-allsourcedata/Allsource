@@ -144,6 +144,9 @@ class Users(Base):
     """
     are whitelabel settings enabled and showing for that account
     """
+    delivr_project_id: Mapped[str | None] = mapped_column(
+        VARCHAR(64), nullable=True
+    )
 
     random_seed: Column[int] = Column(
         Integer, nullable=False, server_default=text("42")

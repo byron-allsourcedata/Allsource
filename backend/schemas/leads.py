@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class LeadsRequest(BaseModel):
-    leads_ids: List[int] = None
+    leads_ids: List[str] = None
 
 
 class ChargeCreditInfo(BaseModel):

@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timedelta
 
 from domains.pixel.mailing.schemas import MailingUserData, ManualPixelRequest
+from models import UserDomains
 from resolver import injectable
 from enums import SendgridTemplate
 
@@ -29,7 +30,6 @@ class MailingPixelService:
         users: UsersService,
         pixel_code_mailing: PixelCodeMailingService,
         installation: PixelInstallationService,
-        manual_pixel: ManualPixelService,
         repo: SendgridPersistence,
         domains: UserDomainsService,
         send_grid_persistence_service: SendgridPersistence,
@@ -39,14 +39,16 @@ class MailingPixelService:
         self.pixel_code_mailing = pixel_code_mailing
         self.installation = installation
         self.repo = repo
-        self.manual_pixel = manual_pixel
         self.domains = domains
         self.pixel_management_service = pixel_management_service
         self.send_grid_persistence_service = send_grid_persistence_service
 
-    def get_manual_pixel_code(self, domain_id: int) -> str:
-        data_provider_id = self.domains.ensure_data_provider_id(domain_id)
-        pixel_code = self.manual_pixel.get_manual_pixel_code(data_provider_id)
+    async def get_manual_pixel_code(
+        self, user: dict, domain: UserDomains
+    ) -> str:
+        pixel_code, pixel_id = await self.installation.get_pixel_script(
+            user=user, domain=domain
+        )
         return pixel_code
 
     def can_send_pixel_email(self, pixel_code_sent_at: datetime | None):
@@ -61,8 +63,10 @@ class MailingPixelService:
 
         return True
 
-    def send_normal_pixel_code(
+    async def send_normal_pixel_code(
         self,
+        user: dict,
+        domain: UserDomains,
         user_data: MailingUserData,
         manual_pixel_req: ManualPixelRequest,
     ):
@@ -81,9 +85,7 @@ class MailingPixelService:
         if not self.can_send_pixel_email(pixel_code_last_sent):
             raise WaitMailTimeoutException()
 
-        pixel_code = self.get_manual_pixel_code(
-            domain_id=manual_pixel_req.domain_id,
-        )
+        pixel_code = await self.get_manual_pixel_code(user=user, domain=domain)
 
         template_id = self.repo.get_template_by_alias(
             SendgridTemplate.SEND_PIXEL_CODE_TEMPLATE.value

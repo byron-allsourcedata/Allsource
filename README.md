@@ -1,4 +1,4 @@
-# MAXIMIZ
+# ALLSOURCE
 
 
 ## Downloads
@@ -17,7 +17,7 @@ To get started with the project, you will need to install several dependencies.
 2. **Setting PYTHONPATH:**
 
    ```bash
-   export PYTHONPATH=/path/to/project/maximiz/backend/
+   export PYTHONPATH=/path/to/project/allsource/backend/
    ```
 
    or
@@ -29,7 +29,7 @@ To get started with the project, you will need to install several dependencies.
 3. **Running the Project:**
    
    ```bash
-   cd maximiz/backend/
+   cd allsource/backend/
    uvicorn app.main:app --uds ../dev_backend.sock
    ```
 

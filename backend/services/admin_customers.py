@@ -67,7 +67,6 @@ class AdminCustomersService:
         dashboard_audience_persistence: DashboardAudiencePersistence,
         admin_persistence: AdminPersistence,
         domain_persistence: UserDomainsPersistence,
-        integration_service: IntegrationService,
     ):
         self.db = db
         self.user_subscription_service = user_subscription_service
@@ -80,7 +79,6 @@ class AdminCustomersService:
         self.dashboard_audience_persistence = dashboard_audience_persistence
         self.admin_persistence = admin_persistence
         self.domain_persistence = domain_persistence
-        self.integration_service = integration_service
 
     def get_admin_users(
         self,
@@ -446,6 +444,7 @@ class AdminCustomersService:
                     "full_name": full_name,
                     "created_at": created_at,
                     "last_login": last_login,
+                    "is_email_confirmed": user.is_email_confirmed,
                     "status": base_user.user_status,
                     "is_trial": self.plans_persistence.get_trial_status_by_user_id(
                         base_user.id
@@ -656,6 +655,21 @@ class AdminCustomersService:
             .first()
         )
         return user_object
+
+    def verify_user_email(self, user_id: int) -> str | None:
+        try:
+            self.user_persistence.email_confirmed(user_id)
+
+            users = self.user_persistence.get_customers_by_ids([user_id])
+            if not users:
+                logger.error(f"User {user_id} not found")
+                return None
+
+            user = users[0]
+            return user.user_status
+        except Exception as e:
+            logger.error(f"Failed to verify email for user {user_id}: {e}")
+            return None
 
     def create_subscription_for_partner(self, user: Users):
         if not user.current_subscription_id:

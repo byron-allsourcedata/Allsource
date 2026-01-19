@@ -2,8 +2,9 @@ import logging
 
 from dotenv import load_dotenv
 import httpx
+from uuid import UUID
 
-from schemas import DataProvidersResponse, PixelInstallationRequest
+from schemas import PixelsResponse, PixelInstallationRequest
 from utils import get_env, get_http_client
 
 load_dotenv()
@@ -13,21 +14,27 @@ logger = logging.getLogger(__name__)
 SECRET_PIXEL_KEY = get_env("SECRET_PIXEL_KEY")
 
 
-async def fetch_domains_with_secret() -> DataProvidersResponse | None:
+async def fetch_domains_with_secret() -> PixelsResponse | None:
     async with get_http_client() as client:
         try:
             response = await client.get(
-                "/api/install-pixel/verified-data-providers",
+                "/api/install-pixel/verified-pixels",
                 params={"secret_key": SECRET_PIXEL_KEY},
             )
             response.raise_for_status()
             data = response.json()
 
-            # replace with model.validate()
-            if isinstance(data, dict) and "data_providers_ids" in data:
-                return DataProvidersResponse(
-                    data_providers_ids=data["data_providers_ids"]
-                )
+            payload = {}
+
+            if isinstance(data, dict):
+                if "pixel_ids" in data and data["pixel_ids"] is not None:
+                    payload["pixel_ids"] = [UUID(x) if not isinstance(x, UUID) else x for x in data["pixel_ids"]]
+
+                if "data_providers_ids" in data and data["data_providers_ids"] is not None:
+                    payload["data_providers_ids"] = [str(x) for x in data["data_providers_ids"]]
+
+                if payload:
+                    return PixelsResponse(**payload)
 
             logger.error(f"Unexpected response format: {data}")
             return None
@@ -42,10 +49,13 @@ async def fetch_domains_with_secret() -> DataProvidersResponse | None:
 
 
 async def fetch_external_data(request_data: PixelInstallationRequest) -> None:
+    data = request_data.dict()
+    if data["pixelClientId"] is not None:
+        data["pixelClientId"] = str(data["pixelClientId"])
     async with get_http_client() as client:
         response = await client.post(
             "/external_api/install-pixel/check-pixel-installed",
-            json=request_data.dict(),
+            json=data,
         )
         if response.status_code == 200:
             logger.info(

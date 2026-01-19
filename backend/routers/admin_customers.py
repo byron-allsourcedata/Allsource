@@ -4,6 +4,7 @@ from schemas.admin import (
     ChangePlanResponse,
     ChangeRequestBody,
     PartnersQueryParams,
+    UserOperationResponse,
 )
 from services.admin_customers import AdminCustomersService
 from dependencies import check_user_admin
@@ -289,6 +290,21 @@ def change_email_validation(
         )
     return ChangePlanResponse(success=False, message="Plan update failed")
 
+@router.post("/verify-user-email", response_model=UserOperationResponse)
+def verify_user_email(
+    request: UpdateUserRequest,
+    admin_customers_service: AdminCustomersService,
+    user: dict = Depends(check_user_admin),
+):
+    user_status = admin_customers_service.verify_user_email(
+        user_id=request.user_id
+    )
+
+    if user_status:
+        return UserOperationResponse(
+            success=True, message="Verify email successfully", user_status=user_status
+        )
+    return UserOperationResponse(success=False, message="Verify email failed")
 
 @router.put("/user")
 def update_user(

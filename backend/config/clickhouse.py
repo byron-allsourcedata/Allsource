@@ -33,3 +33,7 @@ class ClickhouseConfig:
     @classmethod
     def users_table(cls):
         return f"{cls.database}.enrichment_users"
+
+    @classmethod
+    def delivr_table(cls):
+        return f"{cls.database}.delivr_users"

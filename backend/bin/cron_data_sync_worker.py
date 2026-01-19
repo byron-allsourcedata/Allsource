@@ -9,11 +9,16 @@ from collections import Counter
 from datetime import datetime, timezone
 from typing import Any
 
+from clickhouse_connect.driver import AsyncClient
 from sqlalchemy import Row, update
+from typing import List, Tuple, Dict
+
+from domains.leads.entities import DelivrUser, LeadUserAdapter as LeadUser
+from persistence.delivr.leads_users_ch_repo import LeadsUsersCHRepository
+from persistence.delivr.delivr_users_ch_repo import DelivrUsersCHRepository
 
 from models import UserDomains
-
-# from pprint import pprint
+from persistence.delivr.client import AsyncDelivrClickHouseClient
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -33,7 +38,6 @@ from enums import (
     NotificationTitles,
 )
 from models.data_sync_imported_leads import DataSyncImportedLead
-from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.five_x_five_users import FiveXFiveUser
@@ -41,7 +45,6 @@ from sqlalchemy.orm import Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
-from persistence.user_persistence import UserPersistence
 from db_dependencies import Db
 from dependencies import (
     NotificationPersistence,
@@ -65,7 +68,10 @@ def setup_logging(level):
 
 def check_correct_data_sync(
     pixel_sync_id: int, pixel_sync_imported_ids: list[int], session: Session
-) -> tuple[Any, list[Row[tuple[Any]]]] | None:
+) -> tuple[Any, list[Row[tuple[Any]]], list[Row[tuple[Any]]]] | None:
+    """Validate integration/sync and fetch imported rows split by PG and CH.
+    Returns: (integration_data, pg_rows, ch_rows)
+    """
     integration_data = (
         session.query(UserIntegration, IntegrationUserSync)
         .join(
@@ -83,15 +89,25 @@ def check_correct_data_sync(
         logging.info("Pixel sync not found or Sync status is False")
         return None
 
-    result = (
+    pg_rows = (
         session.query(DataSyncImportedLead.lead_users_id.label("lead_users_id"))
         .filter(
             DataSyncImportedLead.id.in_(pixel_sync_imported_ids),
             DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
+            DataSyncImportedLead.lead_users_id.isnot(None),
         )
         .all()
     )
-    return integration_data, result
+    ch_rows = (
+        session.query(DataSyncImportedLead.ch_lead_id.label("ch_lead_id"))
+        .filter(
+            DataSyncImportedLead.id.in_(pixel_sync_imported_ids),
+            DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
+            DataSyncImportedLead.ch_lead_id.isnot(None),
+        )
+        .all()
+    )
+    return integration_data, pg_rows, ch_rows
 
 
 def get_domain_is_email_validation_enabled(
@@ -103,7 +119,7 @@ def get_domain_is_email_validation_enabled(
     """
 
     if not domain_id:
-        return False  # Безопасно возвращаем False
+        return False
 
     result = (
         session.query(UserDomains.is_email_validation_enabled)
@@ -114,18 +130,107 @@ def get_domain_is_email_validation_enabled(
     return bool(result[0]) if result else False
 
 
-def get_lead_attributes(session, lead_user_ids):
-    five_x_five_users = (
-        session.query(LeadUser, FiveXFiveUser)
-        .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-        .filter(LeadUser.id.in_(lead_user_ids))
-        .all()
-    )
-    if five_x_five_users:
-        leads = five_x_five_users
-        return leads
-    else:
+def _first_or_none(arr) -> str | None:
+    if not arr:
         return None
+    try:
+        return arr[0]
+    except Exception:
+        return None
+
+
+def _join_list(arr) -> str | None:
+    if not arr:
+        return None
+    try:
+        vals = [str(x) for x in arr if x]
+        return ", ".join(vals) if vals else None
+    except Exception:
+        return None
+
+
+async def get_lead_attributes_clickhouse(
+    ch_client: AsyncClient, ch_lead_ids: List[str]
+) -> List[Tuple[LeadUser, DelivrUser]]:
+    if not ch_lead_ids:
+        return []
+    # Wrap repos
+    ch = AsyncDelivrClickHouseClient()
+    ch._client = ch_client  # reuse existing connection
+    leads_repo = LeadsUsersCHRepository(ch)
+    delivr_repo = DelivrUsersCHRepository(ch)
+
+    # 1) id -> profile_pid_all, first_visit_id
+    id_map = await leads_repo.fetch_by_ids(ch_lead_ids)
+    if not id_map:
+        return []
+
+    profile_pids = [
+        r["profile_pid_all"]
+        for r in id_map.values()
+        if r.get("profile_pid_all")
+    ]
+
+    # 2) fetch delivr details by profile_pid_all
+    delivr_map = await delivr_repo.fetch_by_profile_pids(profile_pids)
+
+    results: List[Tuple[LeadUser, DelivrUser]] = []
+    for ch_id in ch_lead_ids:
+        meta = id_map.get(str(ch_id))
+        if not meta:
+            continue
+        pid = meta.get("profile_pid_all")
+        d = delivr_map.get(pid, {})
+
+        fu = DelivrUser(
+            first_name=str(d.get("first_name")).capitalize(),
+            last_name=str(d.get("last_name")).capitalize(),
+            business_email=_first_or_none(d.get("business_emails")),
+            business_email_last_seen=_first_or_none(
+                d.get("business_email_last_seen")
+            ),
+            programmatic_business_emails=_join_list(d.get("business_emails")),
+            mobile_phone=_first_or_none(d.get("mobile_phones")),
+            direct_number=_first_or_none(d.get("direct_numbers")),
+            personal_phone=_first_or_none(d.get("personal_phones")),
+            linkedin_url=d.get("linkedin_url"),
+            personal_address=d.get("personal_address"),
+            personal_address_2=d.get("personal_address_2"),
+            personal_city=d.get("personal_city"),
+            personal_state=d.get("personal_state"),
+            personal_zip=d.get("personal_zip"),
+            personal_emails=_join_list(d.get("personal_emails")),
+            gender=d.get("gender"),
+            children=d.get("has_children"),
+            income_range=d.get("income_range_lc"),
+            net_worth=d.get("net_worth"),
+            homeowner=d.get("is_homeowner"),
+            job_title=d.get("job_title"),
+            seniority_level=d.get("seniority_level"),
+            department=d.get("department"),
+            company_name=d.get("company_name"),
+            company_domain=d.get("company_domain"),
+            company_phone=_join_list(d.get("company_phones")),
+            company_sic=_join_list(d.get("company_sic")),
+            company_address=d.get("company_address"),
+            company_city=d.get("company_city"),
+            company_state=d.get("company_state"),
+            company_zip=d.get("company_zip"),
+            company_linkedin_url=d.get("company_linkedin_url"),
+            company_revenue=str(d.get("company_total_revenue"))
+            if d.get("company_total_revenue") is not None
+            else None,
+            company_employee_count=d.get("company_employee_count"),
+            primary_industry=d.get("company_industry"),
+        )
+        lu = LeadUser(
+            id=ch_id,
+            first_visit_id=str(meta.get("first_visit_id"))
+            if meta.get("first_visit_id")
+            else None,
+        )
+        results.append((lu, fu))
+    return results
 
 
 def update_users_integrations(
@@ -208,6 +313,43 @@ def bulk_update_imported_leads(
     session.commit()
 
 
+def bulk_update_imported_leads_ch(
+    session: Session,
+    updates: list[dict],
+    integration_data_sync: IntegrationUserSync,
+    user_integration: UserIntegration,
+):
+    """Bulk status update for ClickHouse-sourced records by ch_lead_id."""
+    for update_item in updates:
+        stmt = (
+            update(DataSyncImportedLead)
+            .where(
+                DataSyncImportedLead.ch_lead_id == update_item["lead_id"],
+                DataSyncImportedLead.data_sync_id == integration_data_sync.id,
+            )
+            .values(
+                status=update_item["status"],
+                updated_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            )
+        )
+        session.execute(stmt)
+
+    has_success = any(
+        u["status"] == ProccessDataSyncResult.SUCCESS.value for u in updates
+    )
+
+    if has_success:
+        integration_data_sync.last_sync_date = get_utc_aware_date()
+        if not integration_data_sync.sync_status:
+            integration_data_sync.sync_status = True
+
+        if user_integration.is_failed:
+            user_integration.is_failed = False
+            user_integration.error_message = None
+
+    session.commit()
+
+
 async def send_error_msg(
     user_id: int,
     service_name: str,
@@ -252,6 +394,7 @@ async def ensure_integration(
     message: IncomingMessage,
     integration_service: IntegrationService,
     db_session: Db,
+    ch_client: AsyncClient,
     notification_persistence: NotificationPersistence,
 ):
     try:
@@ -269,9 +412,9 @@ async def ensure_integration(
         if not check_data:
             await message.ack()
             return
-        integration_data, lead_user_data = check_data
+        integration_data, pg_rows, ch_rows = check_data
 
-        if not lead_user_data:
+        if not pg_rows and not ch_rows:
             logging.info(f"data sync empty for {data_sync_id}")
             await message.ack()
             return
@@ -296,9 +439,18 @@ async def ensure_integration(
             "instantly": integration_service.instantly,
             "green_arrow": integration_service.green_arrow,
         }
-        lead_user_ids = [t.lead_users_id for t in lead_user_data]
+        # Build PG and CH id lists
+        pg_lead_user_ids = [row.lead_users_id for row in pg_rows]
+        ch_lead_ids = [str(row.ch_lead_id) for row in ch_rows]
+
         service = service_map.get(service_name)
-        leads = get_lead_attributes(db_session, lead_user_ids)
+        # ClickHouse leads
+        leads_ch = await get_lead_attributes_clickhouse(ch_client, ch_lead_ids)
+        # Combine preserving PG first, then CH (order inside each preserved)
+        leads = []
+        if leads_ch:
+            leads.extend(leads_ch)
+
         is_email_validation_enabled = get_domain_is_email_validation_enabled(
             domain_id=data_sync.domain_id, session=db_session
         )
@@ -446,15 +598,55 @@ async def ensure_integration(
                         await message.ack()
                         return
 
-            bulk_update_imported_leads(
-                session=db_session,
-                updates=[
-                    {"lead_id": r["lead_id"], "status": r["status"]}
-                    for r in results
-                ],
-                integration_data_sync=data_sync,
-                user_integration=user_integration,
+            # Split updates into PG vs CH buckets based on id membership
+            updates_pg = []
+            updates_ch = []
+            pg_id_set = (
+                set(int(x) for x in pg_lead_user_ids)
+                if pg_lead_user_ids
+                else set()
             )
+            ch_id_set = (
+                set(str(x) for x in ch_lead_ids) if ch_lead_ids else set()
+            )
+            for r in results:
+                lead_id_val = r.get("lead_id")
+                if lead_id_val is None:
+                    continue
+                if isinstance(lead_id_val, int) and lead_id_val in pg_id_set:
+                    updates_pg.append(
+                        {"lead_id": lead_id_val, "status": r["status"]}
+                    )
+                else:
+                    lead_id_str = str(lead_id_val)
+                    if lead_id_str in ch_id_set:
+                        updates_ch.append(
+                            {"lead_id": lead_id_str, "status": r["status"]}
+                        )
+                    elif lead_id_val in pg_id_set:
+                        updates_pg.append(
+                            {"lead_id": lead_id_val, "status": r["status"]}
+                        )
+                    else:
+                        # Unknown id; skip with debug
+                        logging.debug(
+                            f"Skip update for unknown lead_id={lead_id_val}"
+                        )
+
+            if updates_pg:
+                bulk_update_imported_leads(
+                    session=db_session,
+                    updates=updates_pg,
+                    integration_data_sync=data_sync,
+                    user_integration=user_integration,
+                )
+            if updates_ch:
+                bulk_update_imported_leads_ch(
+                    session=db_session,
+                    updates=updates_ch,
+                    integration_data_sync=data_sync,
+                    user_integration=user_integration,
+                )
 
             logging.info(f"Processed message for service: {service_name}")
             await message.ack()
@@ -492,6 +684,7 @@ async def main():
         rabbitmq_connection = None
         db_session = None  # ✅ объявляем до try
         integration_service = None
+        ch = await AsyncDelivrClickHouseClient().connect()
         try:
             rabbitmq_connection = RabbitMQConnection()
             connection = await rabbitmq_connection.connect()
@@ -513,6 +706,7 @@ async def main():
                         ensure_integration,
                         integration_service=int_service,
                         db_session=db_session,
+                        ch_client=ch,
                         notification_persistence=notification_persistence,
                     )
                 )

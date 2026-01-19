@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
 
@@ -13,7 +14,8 @@ from sqlalchemy.sql import (
 )
 from sqlalchemy.orm import aliased
 
-from db_dependencies import Db
+from config import ClickhouseConfig
+from db_dependencies import Db, AsyncClickHouse, AsyncDb
 from enums import AudienceSmartStatuses, UserStatusInAdmin, DataSyncType
 from models import Users
 from models.audience_lookalikes import AudienceLookalikes
@@ -35,8 +37,11 @@ from resolver import injectable
 
 @injectable
 class DashboardAudiencePersistence:
-    def __init__(self, db: Db):
+    def __init__(self, db: Db, clickhouse: AsyncClickHouse, async_db: AsyncDb):
         self.db = db
+        self.clickhouse = clickhouse
+        self.async_db = async_db
+        self.clickhouse_config = ClickhouseConfig()
 
     def get_sources_overview(
         self, user_id
@@ -278,92 +283,138 @@ class DashboardAudiencePersistence:
                 "query": self.db.query(
                     func.sum(Users.overage_leads_count).label("count")
                 ).filter(*user_filters),
-                "key": "overage_sum"
-            }
+                "key": "overage_sum",
+            },
         ]
 
         return queries
 
-    def get_dashboard_audience_data(
+    def to_pg_naive_utc(self, dt: datetime) -> datetime:
+        if dt.tzinfo is None:
+            return dt
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+
+    async def _get_user_pixel_ids(self, user_id: int) -> list[str]:
+        stmt = select(UserDomains.pixel_id).where(
+            UserDomains.user_id == user_id,
+            UserDomains.is_pixel_installed.is_(True),
+            UserDomains.pixel_id.isnot(None),
+        )
+
+        result = await self.async_db.execute(stmt)
+        pixel_ids = result.scalars().all()
+        return [str(pid) for pid in pixel_ids if pid]
+
+    async def _get_pixel_contacts_count_ch(
+        self, pixel_ids: list[str], from_dt: datetime, to_dt: datetime
+    ) -> int:
+        if not pixel_ids:
+            return 0
+
+        sql = f"""
+            SELECT count()
+            FROM {ClickhouseConfig.database}.leads_users
+            WHERE toString(pixel_id) IN %(pids)s
+              AND updated_at BETWEEN %(from)s AND %(to)s
+        """
+
+        try:
+            res = await self.clickhouse.query(
+                sql, {"pids": pixel_ids, "from": from_dt, "to": to_dt}
+            )
+
+            if not res.first_row:
+                return 0
+            return int(res.first_row[0] or 0)
+
+        except Exception:
+            return 0
+
+    async def _audience_sources_count(
+        self, user_id: int, from_dt, to_dt
+    ) -> int:
+        from_dt = self.to_pg_naive_utc(from_dt)
+        to_dt = self.to_pg_naive_utc(to_dt)
+
+        stmt = select(func.count(AudienceSource.id)).where(
+            AudienceSource.user_id == user_id,
+            AudienceSource.created_at.between(from_dt, to_dt),
+        )
+
+        res = await self.async_db.execute(stmt)
+        return int(res.scalar_one() or 0)
+
+    async def _audience_lookalikes_count(self, user_id, from_dt, to_dt):
+        from_dt = self.to_pg_naive_utc(from_dt)
+        to_dt = self.to_pg_naive_utc(to_dt)
+
+        stmt = select(func.count(AudienceLookalikes.id)).where(
+            AudienceLookalikes.user_id == user_id,
+            AudienceLookalikes.created_date.between(from_dt, to_dt),
+        )
+        res = await self.async_db.execute(stmt)
+        return int(res.scalar_one() or 0)
+
+    async def _audience_smart_count(self, user_id, from_dt, to_dt):
+        from_dt = self.to_pg_naive_utc(from_dt)
+        to_dt = self.to_pg_naive_utc(to_dt)
+
+        stmt = select(func.count(AudienceSmart.id)).where(
+            AudienceSmart.user_id == user_id,
+            AudienceSmart.created_at.between(from_dt, to_dt),
+        )
+        res = await self.async_db.execute(stmt)
+        return int(res.scalar_one() or 0)
+
+    async def _audience_sync_count(self, user_id, from_dt, to_dt):
+        from_dt = self.to_pg_naive_utc(from_dt)
+        to_dt = self.to_pg_naive_utc(to_dt)
+
+        stmt = (
+            select(func.count(IntegrationUserSync.id))
+            .join(
+                UserIntegration,
+                UserIntegration.id == IntegrationUserSync.integration_id,
+            )
+            .where(
+                UserIntegration.user_id == user_id,
+                IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value,
+                IntegrationUserSync.created_at.between(from_dt, to_dt),
+            )
+        )
+        res = await self.async_db.execute(stmt)
+        return int(res.scalar_one() or 0)
+
+    async def get_dashboard_audience_data(
         self, *, from_date: int, to_date: int, user_id: int
     ):
         from_dt = datetime.fromtimestamp(from_date, tz=timezone.utc)
         to_dt = datetime.fromtimestamp(to_date, tz=timezone.utc)
 
-        queries = [
-            {
-                "query": self.db.query(func.count(LeadUser.id).label("count"))
-                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-                .filter(
-                    and_(
-                        LeadUser.user_id == user_id,
-                        or_(
-                            and_(
-                                LeadsVisits.start_date == from_dt.date(),
-                                LeadsVisits.start_time >= from_dt.time(),
-                            ),
-                            and_(
-                                LeadsVisits.end_date == to_dt.date(),
-                                LeadsVisits.end_time <= to_dt.time(),
-                            ),
-                            and_(
-                                LeadsVisits.start_date > from_dt.date(),
-                                LeadsVisits.start_date < to_dt.date(),
-                            ),
-                        ),
-                    )
-                ),
-                "key": "pixel_contacts",
-            },
-            {
-                "query": self.db.query(
-                    func.count(AudienceSource.id).label("count")
-                ).filter(
-                    AudienceSource.user_id == user_id,
-                    AudienceSource.created_at >= from_dt,
-                    AudienceSource.created_at <= to_dt,
-                ),
-                "key": "sources_count",
-            },
-            {
-                "query": self.db.query(
-                    func.count(AudienceLookalikes.id).label("count")
-                ).filter(
-                    AudienceLookalikes.user_id == user_id,
-                    AudienceLookalikes.created_date >= from_dt,
-                    AudienceLookalikes.created_date <= to_dt,
-                ),
-                "key": "lookalike_count",
-            },
-            {
-                "query": self.db.query(
-                    func.count(AudienceSmart.id).label("count")
-                ).filter(
-                    AudienceSmart.user_id == user_id,
-                    AudienceSmart.created_at >= from_dt,
-                    AudienceSmart.created_at <= to_dt,
-                ),
-                "key": "smart_count",
-            },
-            {
-                "query": self.db.query(
-                    func.count(IntegrationUserSync.id).label("count")
-                )
-                .join(
-                    UserIntegration,
-                    UserIntegration.id == IntegrationUserSync.integration_id,
-                )
-                .filter(
-                    UserIntegration.user_id == user_id,
-                    IntegrationUserSync.sync_type
-                    == DataSyncType.AUDIENCE.value,
-                    IntegrationUserSync.created_at >= from_dt,
-                    IntegrationUserSync.created_at <= to_dt,
-                ),
-                "key": "sync_count",
-            },
-        ]
-        return queries
+        pixel_ids = await self._get_user_pixel_ids(user_id)
+
+        pixel_contacts_task = self._get_pixel_contacts_count_ch(
+            pixel_ids, from_dt, to_dt
+        )
+
+        sources_count = await self._audience_sources_count(
+            user_id, from_dt, to_dt
+        )
+        lookalike_count = await self._audience_lookalikes_count(
+            user_id, from_dt, to_dt
+        )
+        smart_count = await self._audience_smart_count(user_id, from_dt, to_dt)
+        sync_count = await self._audience_sync_count(user_id, from_dt, to_dt)
+
+        pixel_contacts = await pixel_contacts_task
+
+        return {
+            "pixel_contacts": pixel_contacts,
+            "sources_count": sources_count,
+            "lookalike_count": lookalike_count,
+            "smart_count": smart_count,
+            "sync_count": sync_count,
+        }
 
     def get_user_domains(self, user_id: int) -> list[str]:
         return [
@@ -376,28 +427,98 @@ class DashboardAudiencePersistence:
             .all()
         ]
 
-    def get_contacts_for_pixel_contacts_statistics(self, *, user_id: int):
+    async def get_contacts_for_pixel_contacts_statistics(self, user_id: int):
+        """
+        ClickHouse-based contacts statistics for the last 24 hours per domain.
+        Returns list of tuples: (domain, behavior_type, count_converted_sales, lead_count)
+
+        Logic:
+        - For the given user, fetch all installed domains with non-null pixel_id from PostgreSQL.
+        - In ClickHouse, aggregate leads from allsource_prod.leads_users filtered by these pixel_ids
+          and time window (updated_at >= now-24h). Group by pixel_id and behavior_type and compute:
+            * count_converted_sales = sum(is_converted_sales)
+            * lead_count = count()
+        - Map pixel_id back to domain name and return rows.
+
+        Note: We use updated_at as the recency indicator for leads_users.
+        """
+
         twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=24)
-        return (
-            self.db.query(
-                UserDomains.domain,
-                LeadUser.behavior_type,
-                func.sum(
-                    case((LeadUser.is_converted_sales == True, 1), else_=0)
-                ).label("count_converted_sales"),
-                func.count(LeadUser.id).label("lead_count"),
-            )
-            .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .join(UserDomains, UserDomains.id == LeadUser.domain_id)
+
+        # 1) Resolve user's domains and their pixel_ids from PostgreSQL
+        domain_rows = (
+            self.db.query(UserDomains.domain, UserDomains.pixel_id)
             .filter(
                 and_(
-                    LeadUser.user_id == user_id,
-                    LeadsVisits.start_date >= twenty_four_hours_ago.date(),
+                    UserDomains.user_id == user_id,
+                    UserDomains.is_pixel_installed.is_(True),
+                    UserDomains.pixel_id.isnot(None),
                 )
             )
-            .group_by(UserDomains.domain, LeadUser.behavior_type)
             .all()
         )
+        if not domain_rows:
+            return []
+
+        pixel_to_domain: dict[str, str] = {}
+        pixel_ids: list[str] = []
+        for domain, pid in domain_rows:
+            if pid is None:
+                continue
+            try:
+                pid_str = str(pid)
+            except Exception:
+                continue
+            pixel_to_domain[pid_str] = domain
+            pixel_ids.append(pid_str)
+
+        if not pixel_ids:
+            return []
+
+        # 2) Query ClickHouse for aggregated stats
+        sql = f"""
+            SELECT
+                toString(pixel_id) AS pixel_id,
+                coalesce(behavior_type, '') AS behavior_type,
+                sum(toUInt64(is_converted_sales)) AS count_converted_sales,
+                count() AS lead_count
+            FROM {self.clickhouse_config.database}.leads_users
+            WHERE toString(pixel_id) IN %(pids)s
+              AND updated_at >= %(since)s
+            GROUP BY pixel_id, behavior_type
+        """
+        try:
+            res = await self.clickhouse.query(
+                sql, {"pids": pixel_ids, "since": twenty_four_hours_ago}
+            )
+        except Exception:
+            return []
+
+        # clickhouse_connect returns QueryResult; support both dict rows and tuples
+        rows = []
+        if hasattr(res, "named_results"):
+            rows = list(res.named_results())
+        elif isinstance(res, list):
+            rows = res
+
+        out: list[tuple[str, str, int, int]] = []
+        for r in rows:
+            if isinstance(r, dict):
+                pid = r.get("pixel_id")
+                behavior = r.get("behavior_type") or ""
+                conv = int(r.get("count_converted_sales") or 0)
+                cnt = int(r.get("lead_count") or 0)
+            else:
+                pid, behavior, conv, cnt = r
+                behavior = behavior or ""
+                conv = int(conv or 0)
+                cnt = int(cnt or 0)
+            domain = pixel_to_domain.get(str(pid))
+            if not domain:
+                continue
+            out.append((domain, behavior, conv, cnt))
+
+        return out
 
     def get_last_sources_and_lookalikes(
         self, *, user_id: int, limit=5, smart_audiences: List[AudienceSmart]

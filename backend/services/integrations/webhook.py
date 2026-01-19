@@ -132,7 +132,7 @@ class WebhookIntegrationService:
 
         return IntegrationsStatus.SUCCESS
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         domain_id = domain.id if domain else None

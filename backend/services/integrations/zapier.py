@@ -64,7 +64,7 @@ class ZapierIntegrationService:
         self.integration_persistence.create_integration(integration)
         return integration
 
-    def add_integrations(self, domain):
+    async def add_integrations(self, domain):
         domain_id = None if domain is None else domain.id
         credentials = self.get_credentials(domain_id)
         if credentials:

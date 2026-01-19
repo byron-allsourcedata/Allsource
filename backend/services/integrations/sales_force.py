@@ -280,7 +280,7 @@ class SalesForceIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         domain_id = None if domain is None else domain.id

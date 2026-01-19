@@ -17,14 +17,15 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
-from models import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
 )
+from domains.leads.entities import LeadUserAdapter as LeadUser, DelivrUser
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_delivr_persistence import LeadsPersistenceClickhouse
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from resolver import injectable
 from schemas.integrations.integrations import *
@@ -52,6 +53,7 @@ class InstantlyIntegrationsService:
         domain_persistence: UserDomainsPersistence,
         integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
+        clickhouse_leads_persistence: LeadsPersistenceClickhouse,
         sync_persistence: IntegrationsUserSyncPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
@@ -59,6 +61,7 @@ class InstantlyIntegrationsService:
         self.integrations_persistence = integrations_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.leads_persistence = leads_persistence
+        self.clickhouse_leads_persistence = clickhouse_leads_persistence
         self.sync_persistence = sync_persistence
         self.client = requests.Session()
 
@@ -156,7 +159,7 @@ class InstantlyIntegrationsService:
             integration_data
         )
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         api_key = credentials.instantly.api_key
@@ -347,104 +350,11 @@ class InstantlyIntegrationsService:
                 self.integrations_persistence.db.commit()
             return ProccessDataSyncResult.UNEXPECTED_ERROR.value
 
-    # async def process_data_sync_lead(
-    #     self,
-    #     user_integration: UserIntegration,
-    #     integration_data_sync: IntegrationUserSync,
-    #     user_data: List[Tuple[LeadUser, FiveXFiveUser]],
-    #     is_email_validation_enabled: bool,
-    #     requests_limit_per_minute: int = 60,
-    # ):
-    #     interval = 60.0 / float(
-    #         max(1, requests_limit_per_minute)
-    #     )  # seconds between requests
-    #     results = []
-
-    #     list_id = (
-    #         integration_data_sync.list_id
-    #         if integration_data_sync.list_id
-    #         else None
-    #     )
-
-    #     for lead_user, five_x_five_user in user_data:
-    #         mapped = await self.__map_lead_to_instantly_contact(
-    #             five_x_five_user,
-    #             integration_data_sync.data_map,
-    #             is_email_validation_enabled,
-    #         )
-
-    #         if mapped in (
-    #             ProccessDataSyncResult.INCORRECT_FORMAT.value,
-    #             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-    #             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-    #         ):
-    #             results.append({"lead_id": lead_user.id, "status": mapped})
-    #             # throttle between iterations anyway
-    #             await asyncio.sleep(interval)
-    #             continue
-
-    #         payload = dict(mapped)
-    #         if list_id:
-    #             payload["list_id"] = list_id
-
-    #         ok, info = await asyncio.to_thread(
-    #             self.create_lead_single, payload, user_integration
-    #         )
-    #         logging.info(f"[PROCESS] success={ok} | status={info}")
-
-    #         if ok:
-    #             results.append(
-    #                 {
-    #                     "lead_id": lead_user.id,
-    #                     "status": ProccessDataSyncResult.SUCCESS.value,
-    #                 }
-    #             )
-    #         else:
-    #             if info == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
-    #                 results.append(
-    #                     {
-    #                         "lead_id": lead_user.id,
-    #                         "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-    #                     }
-    #                 )
-    #                 idx = user_data.index((lead_user, five_x_five_user))
-    #                 remaining = user_data[idx + 1 :]
-    #                 for future_lead, _ in remaining:
-    #                     results.append(
-    #                         {
-    #                             "lead_id": future_lead.id,
-    #                             "status": ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-    #                         }
-    #                     )
-    #                 return results
-    #             elif (
-    #                 info
-    #                 == ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value
-    #             ):
-    #                 results.append(
-    #                     {
-    #                         "lead_id": lead_user.id,
-    #                         "status": ProccessDataSyncResult.INCORRECT_FORMAT.value,
-    #                     }
-    #                 )
-    #             else:
-    #                 results.append(
-    #                     {
-    #                         "lead_id": lead_user.id,
-    #                         "status": ProccessDataSyncResult.PLATFORM_VALIDATION_FAILED.value,
-    #                     }
-    #                 )
-
-    #         # throttle to respect requests_limit_per_minute
-    #         # await asyncio.sleep(interval)
-
-    #     return results
-
     async def process_data_sync_lead(
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        user_data: List[Tuple[LeadUser, DelivrUser]],
         is_email_validation_enabled: bool,
         wait_between_batches: float = 10.0,
     ):
@@ -563,10 +473,10 @@ class InstantlyIntegrationsService:
 
     async def __map_lead_to_instantly_contact(
         self,
-        five_x_five_user: FiveXFiveUser,
+        five_x_five_user: DelivrUser,
         data_map: list,
         is_email_validation_enabled: bool,
-        lead_visit_id: int,
+        lead_visit_id: UUID,
     ) -> dict | str:
         chosen_email_variation = next(
             (field["type"] for field in data_map if field["value"] == "Email"),
@@ -609,8 +519,10 @@ class InstantlyIntegrationsService:
 
         if any(field["type"] == "visited_date" for field in data_map):
             values_by_type["visited_date"] = (
-                self.leads_persistence.get_visited_date(lead_visit_id)
-            )
+                await self.clickhouse_leads_persistence.get_visited_date(
+                    lead_visit_id
+                )
+            ).strftime("%m-%d-%Y")
 
         custom_variables = {}
         for field in data_map:

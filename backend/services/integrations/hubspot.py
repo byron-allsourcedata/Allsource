@@ -16,7 +16,7 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
-from models import FiveXFiveUser, LeadUser
+from domains.leads.entities import LeadUserAdapter as LeadUser, DelivrUser
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -25,6 +25,7 @@ from persistence.integrations.integrations_persistence import (
     IntegrationsPersistence,
 )
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_delivr_persistence import LeadsPersistenceClickhouse
 from persistence.leads_persistence import LeadsPersistence
 from resolver import injectable
 from schemas.integrations.integrations import DataMap
@@ -43,6 +44,21 @@ from utils import (
     to_snake_case,
 )
 
+HUBSPOT_TYPE_MAP = {
+    "string": ("string", "text"),
+    "text": ("string", "text"),
+    "email": ("string", "text"),
+    "url": ("string", "text"),
+    "number": ("number", "number"),
+    "int": ("number", "number"),
+    "float": ("number", "number"),
+    "bool": ("bool", "booleancheckbox"),
+    "boolean": ("bool", "booleancheckbox"),
+    "datetime": ("datetime", "date"),
+    "date": ("date", "date"),
+    "phone": ("phone_number", "phonenumber"),
+}
+
 
 @injectable
 class HubspotIntegrationsService:
@@ -52,12 +68,14 @@ class HubspotIntegrationsService:
         integrations_persistence: IntegrationsPersistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
+        clickhouse_leads_persistence: LeadsPersistenceClickhouse,
         client: Annotated[httpx.Client, Depends(get_http_client)],
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
+        self.clickhouse_leads_persistence = clickhouse_leads_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
@@ -149,20 +167,23 @@ class HubspotIntegrationsService:
         access_token: str,
         name: str,
         label: str,
+        field_type: str,
         object_type: str = "contacts",
-        group_name: str = "contactinformation",
-        field_type: str = "text",
-        type_: str = "string",
     ):
-        name_snake = to_snake_case(name)
-        url = f"https://api.hubapi.com/crm/v3/properties/{object_type}"
+        hs_type, hs_field_type = HUBSPOT_TYPE_MAP.get(
+            field_type, ("string", "text")
+        )
+
         payload = {
-            "name": name_snake,
+            "name": name,
             "label": label,
-            "groupName": group_name,
-            "type": type_,  # internal type: string, number, datetime
-            "fieldType": field_type,  # visual input: text, number, date
+            "type": hs_type,
+            "fieldType": hs_field_type,
+            "groupName": "contactinformation",
+            "formField": False,
         }
+
+        url = f"https://api.hubapi.com/crm/v3/properties/{object_type}"
 
         resp = await self.__async_handle_request(
             method="POST",
@@ -170,13 +191,11 @@ class HubspotIntegrationsService:
             access_token=access_token,
             json=payload,
         )
+
         if resp.status_code not in (200, 201):
             logging.warning(
-                "Failed to create property '%s': %s",
-                name,
-                resp.text,
+                "Failed to create property '%s': %s", name, resp.text
             )
-        return resp
 
     async def ensure_custom_properties_exist(
         self,
@@ -184,9 +203,6 @@ class HubspotIntegrationsService:
         data_map: list[dict],
         object_type: str = "contacts",
     ):
-        """
-        Создаёт недостающие custom-поля в HubSpot для полей из data_map с is_constant=True.
-        """
         url = f"https://api.hubapi.com/crm/v3/properties/{object_type}"
         resp = await self.__async_handle_request(
             method="GET", url=url, access_token=access_token
@@ -203,17 +219,18 @@ class HubspotIntegrationsService:
         }
 
         for field in data_map:
-            if not field.get("is_constant"):
+            name = field.get("type")
+            if not name:
                 continue
 
-            name = field["type"]
             if name in existing_properties:
                 continue
 
             await self.create_custom_property(
                 access_token=access_token,
                 name=name,
-                label=name.replace("_", " ").title(),
+                label=field.get("value", name.replace("_", " ").title()),
+                field_type="datetime" if name.endswith("_date") else "string",
                 object_type=object_type,
             )
 
@@ -288,7 +305,7 @@ class HubspotIntegrationsService:
             return True
         return False
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         domain_id = domain.id if domain else None
@@ -380,8 +397,10 @@ class HubspotIntegrationsService:
         integration_data_sync: IntegrationUserSync,
         enrichment_users: List[EnrichmentUser],
         target_schema: str = None,
-        validations: dict = {},
+        validations=None,
     ):
+        if validations is None:
+            validations = {}
         profiles = []
         results = []
         for enrichment_user in enrichment_users:
@@ -427,7 +446,7 @@ class HubspotIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        user_data: List[Tuple[LeadUser, FiveXFiveUser]],
+        user_data: List[Tuple[LeadUser, DelivrUser]],
         is_email_validation_enabled: bool,
     ):
         await self.ensure_custom_properties_exist(
@@ -647,10 +666,10 @@ class HubspotIntegrationsService:
 
     async def __mapped_profile_lead(
         self,
-        lead: FiveXFiveUser,
+        lead: DelivrUser,
         data_map: list,
         is_email_validation_enabled: bool,
-        lead_visit_id: int,
+        lead_visit_id: UUID,
     ) -> str | dict[str | Any, str | None | Any]:
         if is_email_validation_enabled:
             first_email = await get_valid_email(
@@ -688,34 +707,29 @@ class HubspotIntegrationsService:
         )
 
         if visited_date_field:
-            visited_date = await asyncio.to_thread(
-                self.leads_persistence.get_visited_date, lead_visit_id
+            visited_date = (
+                await self.clickhouse_leads_persistence.get_visited_date(
+                    lead_visit_id
+                )
             )
             if visited_date:
-                profile[visited_date_field["value"]] = visited_date
+                profile["visited_date"] = visited_date.strftime("%Y-%m-%d")
 
-        # ✅ кастомные поля
+        # custom fields
         for field in data_map:
             t = field["type"]
-            v = field["value"]
 
             if t == "visited_date":
                 continue
 
             val = getattr(lead, t, None)
-
             if val is None:
                 continue
 
             if isinstance(val, (datetime, date)):
-                val = val.isoformat()
+                val = val.strftime("%Y-%m-%d")
 
-            profile[v] = val
+            profile[t] = val
 
-        cleaned = {
-            re.sub(r"[^a-z0-9_]", "_", k.lower()[:100]): v
-            for k, v in profile.items()
-            if v not in (None, "")
-        }
-
+        cleaned = {k: v for k, v in profile.items() if v not in (None, "")}
         return cleaned

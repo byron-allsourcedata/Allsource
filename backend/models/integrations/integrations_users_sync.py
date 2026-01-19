@@ -16,6 +16,7 @@ from sqlalchemy import (
     Sequence,
 )
 from sqlalchemy.dialects.postgresql import ENUM
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 
 from models.base import Base
 from models.enrichment.enrichment_users import EnrichmentUser
@@ -69,6 +70,8 @@ class IntegrationUserSync(Base):
         ForeignKey("leads_users.id", ondelete="CASCADE"),
         nullable=True,
     )
+    # ClickHouse progress pointer (UUID v1 from allsource_prod.leads_users.id)
+    last_sent_ch_lead_id = Column(PG_UUID(as_uuid=True), nullable=True)
     method = Column(String(8), nullable=True)
     customer_id = Column(VARCHAR, nullable=True)
     result_file_url = Column(String(256), nullable=True)
@@ -93,5 +96,9 @@ class IntegrationUserSync(Base):
             "integrations_users_sync_created_at_sync_type_idx",
             created_at,
             sync_type,
+        ),
+        Index(
+            "integrations_users_sync_last_sent_ch_lead_id_idx",
+            last_sent_ch_lead_id,
         ),
     )

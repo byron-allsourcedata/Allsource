@@ -236,7 +236,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						NotificationData={latestNotification}
 						onDismissNotification={handleDismissNotification}
 					/>
-					{isShowPayPixelDrawer.flag && <PayPixelInstallationDrawer />}
+					{/* {isShowPayPixelDrawer.flag && <PayPixelInstallationDrawer />} */}
 					<Box
 						sx={{
 							flexGrow: 1,
@@ -244,7 +244,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 							flexDirection: "column",
 							minHeight: 0,
 							overflow: "hidden",
-							...(isShowPayPixelDrawer.flag ? { filter: "blur(12px)" } : {}),
+							// ...(isShowPayPixelDrawer.flag ? { filter: "blur(12px)" } : {}),
 						}}
 					>
 						<PixelSubheader />

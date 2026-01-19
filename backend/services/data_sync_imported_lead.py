@@ -73,3 +73,30 @@ class DataSyncImportedService:
             "service_name": user_integrations_service_name,
         }
         await self.send_leads_to_data_sync_queue(processed_lead=processed_lead)
+
+    async def save_and_send_data_imported_leads_ch(
+        self,
+        ch_lead_ids: list[str],
+        data_sync: IntegrationUserSync,
+        user_integrations_service_name: str,
+        users_id: int | None,
+    ):
+        """Same as save_and_send_data_imported_leads but for ClickHouse ids (UUID v1)."""
+        is_validation = (
+            self.user_persistence.get_domain_is_email_validation_enabled(
+                domain_id=data_sync.domain_id,
+            )
+        )
+        data_sync_imported_ids = await self.data_sync_imported_persistence.save_data_imported_leads_ch(
+            ch_lead_ids=ch_lead_ids,
+            is_validation=is_validation,
+            data_sync=data_sync,
+            user_integrations_service_name=user_integrations_service_name,
+        )
+        processed_lead = {
+            "data_sync_id": data_sync.id,
+            "data_sync_imported_ids": data_sync_imported_ids,
+            "users_id": users_id,
+            "service_name": user_integrations_service_name,
+        }
+        await self.send_leads_to_data_sync_queue(processed_lead=processed_lead)
