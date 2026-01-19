@@ -117,14 +117,14 @@ class IntegrationsUserSyncPersistence:
         except Exception:
             return None
 
-    def create_sync(self, data: dict) -> IntegrationUserSync:
+    def create_sync(self, *, data: dict) -> IntegrationUserSync:
         sync = IntegrationUserSync(**data)
         self.db.add(sync)
         self.db.commit()
         return sync
 
     def edit_sync(
-        self, data: dict, integrations_users_sync_id: int
+        self, *, config_params: dict=None, data: dict, integrations_users_sync_id: int
     ) -> IntegrationUserSync:
         self.try_reset_error(integrations_users_sync_id)
         sync = (
@@ -135,8 +135,10 @@ class IntegrationsUserSyncPersistence:
         if sync:
             for key, value in data.items():
                 setattr(sync, key, value)
+            if config_params:   
+                setattr(sync, "config_params", config_params)
             self.db.commit()
-        return sync
+        return sync 
 
     def delete_sync(self, domain_id, list_id):
         sync = (

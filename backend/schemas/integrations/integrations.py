@@ -158,6 +158,7 @@ class SyncCreate(BaseModel):
     leads_type: LeadsType = LeadsType.ALL_CONTACTS
     data_map: Optional[List[DataMap]] = None
     campaign: Optional[Campaign] = None
+    config_params: Optional[dict] = None
 
 
 class SyncRequest(BaseModel):

@@ -62,6 +62,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 	const [selectedOption, setSelectedOption] = useState<string | null>(
 		data?.name ?? null,
 	);
+	const [pathPrefix, setPathPrefix] = useState(data?.path_prefix ?? "");
 	const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
 	const [isShrunk, setIsShrunk] = useState<boolean>(false);
 	const textFieldRef = useRef<HTMLDivElement>(null);
@@ -192,6 +193,9 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 					{
 						integrations_users_sync_id: data.id,
 						list_name: list,
+						config_params: {
+							path_prefix: pathPrefix,
+						},
 						leads_type: selectedRadioValue,
 						data_map: customFields,
 					},
@@ -216,6 +220,9 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 						list_name: list,
 						leads_type: selectedRadioValue,
 						data_map: customFields,
+						config_params: {
+							path_prefix: pathPrefix,
+						},
 					},
 					{
 						params: {
@@ -251,6 +258,11 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 		event.stopPropagation(); // Prevent triggering the input field click
 		setIsDropdownOpen((prev) => !prev);
 		setAnchorEl(textFieldRef.current);
+	};
+
+	const handlePathPrefixChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const value = event.target.value;
+		setPathPrefix(value);
 	};
 
 	// Handle menu close
@@ -361,7 +373,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 					<Button
 						variant="contained"
 						disabled={!isDropdownValid && !data}
-						onClick={handleNextTab}
+						onClick={handleSaveSync}
 						sx={{
 							backgroundColor: "rgba(56, 152, 252, 1)",
 							fontFamily: "var(--font-nunito)",
@@ -648,12 +660,12 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 										className="tab-heading"
 										sx={klaviyoStyles.tabHeading}
 									/>
-									<Tab
+									{/* <Tab
 										label="Map data"
 										value="3"
 										className="tab-heading"
 										sx={klaviyoStyles.tabHeading}
-									/>
+									/> */}
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -927,7 +939,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 													size="small"
 													fullWidth
 													label={
-														selectedOption ? "" : "Select or Create new list"
+														selectedOption ? "" : "Select Bucket"
 													}
 													InputLabelProps={{
 														shrink: selectedOption ? false : isShrunk,
@@ -1031,7 +1043,30 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 														))}
 												</Menu>
 											</Box>
+
+											
 										</ClickAwayListener>
+										<Box>
+
+											<TextField
+										label="Path Prefix"
+										variant="outlined"
+										fullWidth
+										margin="normal"
+										//error={''}
+										//helperText={invalid_api_key ? "Invalid Secret Key" : ""}
+										value={pathPrefix}
+										onChange={handlePathPrefixChange}
+										InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
+										InputProps={{
+											sx: {
+												...klaviyoStyles.formInput,
+												borderColor: 
+													"inherit",
+											},
+										}}
+									/>
+											</Box>
 									</Box>
 								</Box>
 							</TabPanel>

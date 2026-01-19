@@ -83,6 +83,7 @@ class IntegrationUserSync(Base):
     )
     campaign_id = Column(VARCHAR, nullable=True)
     campaign_name = Column(VARCHAR, nullable=True)
+    config_params = Column(JSON, nullable=True)
 
     __table_args__ = (
         Index("integrations_users_sync_created_at_idx", created_at),
