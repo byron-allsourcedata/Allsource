@@ -40,8 +40,8 @@ class DashboardAudienceService:
             "has_valid": len(sources_list) > 0 or count_domains > 0,
         }
 
-    def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
-        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(
+    async def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
+        results = await self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(
             user_id=user.get("id")
         )
         domains = self.dashboard_persistence.get_user_domains(
@@ -75,24 +75,25 @@ class DashboardAudienceService:
 
         return result_array
 
-    def get_audience_dashboard_data(
+    async def get_audience_dashboard_data(
         self, *, from_date: int, to_date: int, user: dict
     ):
-        total_counts = {}
-        dashboard_audience_data = (
-            self.dashboard_persistence.get_dashboard_audience_data(
-                from_date=from_date, to_date=to_date, user_id=user.get("id")
+        dashboard_counts = (
+            await self.dashboard_persistence.get_dashboard_audience_data(
+                from_date=from_date,
+                to_date=to_date,
+                user_id=user.get("id"),
             )
         )
-        daily_data = self.get_contacts_for_pixel_contacts_statistics(user=user)
 
-        for result in dashboard_audience_data:
-            key = result["key"]
-            query = result["query"]
-            count = query.scalar()
-            total_counts[key] = count or 0
+        daily_data = await self.get_contacts_for_pixel_contacts_statistics(
+            user=user
+        )
 
-        return {"total_counts": total_counts, "pixel_contacts": daily_data}
+        return {
+            "total_counts": dashboard_counts,
+            "pixel_contacts": daily_data,
+        }
 
     def merge_and_sort(self, *, datasets: list[tuple], limit: int):
         combined = []

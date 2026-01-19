@@ -726,10 +726,10 @@ const Signup: React.FC = () => {
 							sx={signupStyles.submitButton}
 							fullWidth
 						>
-							START $5 TRIAL
+							Get Started
 						</Button>
 					</Box>
-					<Typography
+					{/* <Typography
 						className="tab-heading"
 						sx={{
 							mt: 1,
@@ -738,7 +738,7 @@ const Signup: React.FC = () => {
 					>
 						Your card will be charged $5 today. After 14 days, $499/mo unless
 						canceled. Full refund if canceled within 14 days.
-					</Typography>
+					</Typography> */}
 					<Typography
 						variant="body2"
 						className="second-sub-title"

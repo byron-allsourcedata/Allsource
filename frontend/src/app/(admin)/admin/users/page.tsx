@@ -53,6 +53,7 @@ export interface UserData {
 	last_login: string;
 	invited_by_email?: string;
 	subscription_plan?: string;
+	is_email_confirmed?: boolean;
 	role: string[];
 	team_access_level: string[];
 	team_owner_id: number | null;
@@ -770,6 +771,7 @@ const Users: React.FC = () => {
 							rowsPerPageOptions={rowsPerPageOptions}
 							totalCount={totalCount}
 							userData={userData}
+							setUserData={setUserData}
 							setPage={setPage}
 							page={page}
 							setRowsPerPage={setRowsPerPage}
@@ -805,6 +807,7 @@ const Users: React.FC = () => {
 							rowsPerPageOptions={rowsPerPageOptions}
 							totalCount={totalCount}
 							userData={userData}
+							setUserData={setUserData}
 							setPage={setPage}
 							page={page}
 							setRowsPerPage={setRowsPerPage}
@@ -824,6 +827,7 @@ const Users: React.FC = () => {
 							rowsPerPageOptions={rowsPerPageOptions}
 							totalCount={totalCount}
 							userData={userData}
+							setUserData={setUserData}
 							setPage={setPage}
 							page={page}
 							setRowsPerPage={setRowsPerPage}
@@ -843,6 +847,7 @@ const Users: React.FC = () => {
 							rowsPerPageOptions={rowsPerPageOptions}
 							totalCount={totalCount}
 							userData={userData}
+							setUserData={setUserData}
 							setPage={setPage}
 							page={page}
 							setRowsPerPage={setRowsPerPage}

@@ -153,6 +153,12 @@ class GoogleAdsIntegrationsService:
         )
         return credential
 
+    def _resolve_credentials(self, domain_id: int | None, user_id: int):
+        if domain_id is None:
+            return self.get_smart_credentials(user_id)
+
+        return self.get_credentials(domain_id, user_id)
+
     def __save_integrations(
         self, access_token: str, domain_id: int, user: dict
     ):
@@ -208,7 +214,7 @@ class GoogleAdsIntegrationsService:
         )
         return sync
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         domain_id = domain.id if domain else None
@@ -816,10 +822,12 @@ class GoogleAdsIntegrationsService:
             ad_user_data_consent,
             ad_personalization_consent,
         )
+        logger.info(f"[Google Ads] Created data job {data_job_resource}")
 
         operations = self.get_hashed_emails_data_job_operations(
             client, hashed_emails
         )
+        logger.info(f"[Google Ads] Prepared {len(operations)} user operations")
 
         self.add_operations_to_data_job_and_run(
             client, data_job_resource, operations
@@ -906,9 +914,13 @@ class GoogleAdsIntegrationsService:
         request.operations.extend(operations)
         request.enable_partial_failure = True
 
-        _ = offline_user_data_job_service_client.add_offline_user_data_job_operations(
+        response = offline_user_data_job_service_client.add_offline_user_data_job_operations(
             request=request
         )
+        if response.partial_failure_error:
+            logger.error("Partial failures occurred while adding operations:")
+            for error in response.partial_failure_error.details:
+                logger.error(error)
         logger.debug("Successfully added offline user data job operations")
 
         _ = offline_user_data_job_service_client.run_offline_user_data_job(
@@ -940,21 +952,33 @@ class GoogleAdsIntegrationsService:
     def create_operation(
         self, client: GoogleAdsClient, hashed_email: str
     ) -> OfflineUserDataJobOperation:
-        user_id = self.create_user_identifier(client, hashed_email)
+        user_identifier: UserIdentifier = client.get_type("UserIdentifier")
+        user_identifier.hashed_email = hashed_email
+
         user_data: UserData = client.get_type("UserData")
-        # user_data.user_identifiers.append(user_id)
+        user_data.user_identifiers.append(user_identifier)
+
         operation: OfflineUserDataJobOperation = client.get_type(
             "OfflineUserDataJobOperation"
         )
-
         operation.create = user_data
-
-        # operation.create.consent. = user_data.consent
-        # operation.create.transaction_attribute = user_data.transaction_attribute
-        # operation.create.user_attribute = user_data.user_attribute
-        # operation.create.user_identifiers.append(user_id)
-
         return operation
+
+        # user_id = self.create_user_identifier(client, hashed_email)
+        # user_data: UserData = client.get_type("UserData")
+        # # user_data.user_identifiers.append(user_id)
+        # operation: OfflineUserDataJobOperation = client.get_type(
+        #     "OfflineUserDataJobOperation"
+        # )
+        #
+        # operation.create = user_data
+        #
+        # # operation.create.consent. = user_data.consent
+        # # operation.create.transaction_attribute = user_data.transaction_attribute
+        # # operation.create.user_attribute = user_data.user_attribute
+        # # operation.create.user_identifiers.append(user_id)
+
+        # return operation
 
     def build_offline_user_data_job_operations(
         self, client: GoogleAdsClient, profiles: List[GoogleAdsProfile]
@@ -1031,9 +1055,11 @@ class GoogleAdsIntegrationsService:
 
         return hashlib.sha256(s.encode()).hexdigest()
 
-    def get_user_lists(self, domain_id: int, customer_id: int, user_id: int):
+    def get_user_lists(
+        self, domain_id: int | None, customer_id: int, user_id: int
+    ):
         try:
-            credential = self.get_credentials(domain_id, user_id)
+            credential = self._resolve_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
             googleads_service = client.get_service("GoogleAdsService")
             query = """
@@ -1153,3 +1179,51 @@ class GoogleAdsIntegrationsService:
                 "status": IntegrationsStatus.CREDENTIALS_INVALID.value,
                 "message": str(IntegrationsStatus.CREDENTIALS_INVALID.value),
             }
+
+    ### CHECK WORK
+    def check_user_list_size(
+        self, client: GoogleAdsClient, customer_id: str, user_list_id: str
+    ):
+        googleads_service = client.get_service("GoogleAdsService")
+        query = f"""
+            SELECT
+              user_list.size_for_display,
+              user_list.match_rate_percentage
+            FROM user_list
+            WHERE user_list.id = {user_list_id}
+        """
+        response = googleads_service.search(
+            customer_id=customer_id, query=query
+        )
+        for row in response:
+            logger.info(
+                f"[Google Ads] List size: {row.user_list.size_for_display}"
+            )
+            logger.info(
+                f"[Google Ads] Match rate: {row.user_list.match_rate_percentage}"
+            )
+
+    def poll_job_status(self, client: GoogleAdsClient, job_resource_name: str):
+        googleads_service = client.get_service("GoogleAdsService")
+        query = f"""
+            SELECT
+              offline_user_data_job.status,
+              offline_user_data_job.failure_reason,
+              offline_user_data_job.metadata.match_rate_range
+            FROM offline_user_data_job
+            WHERE offline_user_data_job.resource_name = '{job_resource_name}'
+        """
+        response = googleads_service.search(
+            customer_id=job_resource_name.split("/")[1], query=query
+        )
+
+        for row in response:
+            logger.info(
+                f"[Google Ads] Job status: {row.offline_user_data_job.status.name}"
+            )
+            logger.info(
+                f"[Google Ads] Failure reason: {row.offline_user_data_job.failure_reason}"
+            )
+            logger.info(
+                f"[Google Ads] Match rate range: {row.offline_user_data_job.metadata.match_rate_range}"
+            )

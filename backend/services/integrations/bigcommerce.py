@@ -209,7 +209,7 @@ class BigcommerceIntegrationsService:
                 detail={"status": IntegrationsStatus.CREATE_IS_FAILED.value},
             )
 
-    def add_integration(
+    async def add_integration(
         self, credentials: IntegrationCredentials, domain, user: dict
     ):
         eai = self.eai_persistence.get_epi_by_filter_one(

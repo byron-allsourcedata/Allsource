@@ -27,18 +27,19 @@ class AwsService:
         object_name: str,
         file_bytes: bytes,
         content_type: str = "application/octet-stream",
+        bucket_name: str = "allsource-data",
     ) -> str:
         _ = self.s3_client.put_object(
-            Bucket="allsource-data",
+            Bucket=bucket_name,
             Key=object_name,
             Body=file_bytes,
             ContentType=content_type,
         )
 
-        return self.get_file_url(object_name)
+        return self.get_file_url(object_name, bucket_name)
 
-    def get_file_url(self, object_key: str) -> str:
-        return f"https://{self.BUCKET_NAME}.s3.amazonaws.com/{object_key}"
+    def get_file_url(self, object_key: str, bucket_name: str) -> str:
+        return f"https://{bucket_name}.s3.amazonaws.com/{object_key}"
 
     def presign_upload_url(
         self, bucket_name: str, object_name: str, max_bytes: int

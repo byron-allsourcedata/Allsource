@@ -18,7 +18,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts_persons import AudienceSmartPerson
 from config.sentry import SentryConfig
-from db_dependencies import Db
+from db_dependencies import Db, AsyncDb
 from resolver import Resolver
 from persistence.user_persistence import UserPersistence
 from services.audience_smarts import AudienceSmartsService
@@ -258,8 +258,8 @@ async def main():
             await channel.set_qos(prefetch_count=1)
 
             db_session = await resolver.resolve(Db)
-
-            user_persistence = UserPersistence(db_session)
+            async_session = await resolver.resolve(AsyncDb)
+            user_persistence = UserPersistence(db_session, async_session)
             audience_smarts_service = await resolver.resolve(
                 AudienceSmartsService
             )

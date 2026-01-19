@@ -17,7 +17,7 @@ async def get_all_sources(
 
 
 @router.get("")
-def get_contact(
+async def get_contact(
     dashboard_service: DashboardAudienceService,
     from_date: int = Query(
         int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp()),
@@ -39,7 +39,7 @@ def get_contact(
     ),
     user=Depends(check_user_authorization_without_pixel),
 ):
-    return dashboard_service.get_audience_dashboard_data(
+    return await dashboard_service.get_audience_dashboard_data(
         from_date=from_date, to_date=to_date, user=user
     )
 

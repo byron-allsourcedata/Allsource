@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from collections import defaultdict
+from uuid import UUID
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -12,16 +13,11 @@ from db_dependencies import Db
 from resolver import Resolver
 from services.data_sync_imported_lead import DataSyncImportedService
 from services.leads import LeadsService
-from models import Users
 from config.sentry import SentryConfig
 from config.rmq_connection import (
-    publish_rabbitmq_message_with_channel,
     RabbitMQConnection,
 )
-from sqlalchemy import and_, or_
 from dotenv import load_dotenv
-from models.leads_visits import LeadsVisits
-from sqlalchemy.orm import Session
 from datetime import datetime, timezone, timedelta
 from enums import (
     DataSyncImportedStatus,
@@ -30,13 +26,14 @@ from enums import (
     DataSyncType,
 )
 from utils import get_utc_aware_date
-from models.leads_users_added_to_cart import LeadsUsersAddedToCart
-from models.leads_users_ordered import LeadsUsersOrdered
 from models.users_domains import UserDomains
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.data_sync_imported_leads import DataSyncImportedLead
 from models.leads_users import LeadUser
+
+from persistence.delivr.client import AsyncDelivrClickHouseClient
+from persistence.delivr.leads_users_ch_repo import LeadsUsersCHRepository
 
 load_dotenv()
 
@@ -50,14 +47,6 @@ def setup_logging(level):
         level=level,
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
-
-async def send_leads_to_queue(channel, processed_lead):
-    await publish_rabbitmq_message_with_channel(
-        channel=channel,
-        queue_name=CRON_DATA_SYNC_LEADS,
-        message_body=processed_lead,
     )
 
 
@@ -105,118 +94,6 @@ def update_data_sync_integration(session, data_sync_id):
     session.commit()
 
 
-def fetch_leads_by_domain(
-    session: Session, domain_id, limit, last_sent_lead_id, data_sync_leads_type
-):
-    current_date_time = datetime.now(timezone.utc)
-    past_time = current_date_time - timedelta(hours=2)
-    past_date = past_time.date()
-    past_time = past_time.time()
-    if last_sent_lead_id is None:
-        last_sent_lead_id = 0
-
-    query = (
-        session.query(
-            LeadUser.id.label("id"),
-            LeadUser.user_id.label("user_id"),
-            LeadUser.five_x_five_user_id.label("five_x_five_user_id"),
-        )
-        .join(UserDomains, UserDomains.id == LeadUser.domain_id)
-        .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-        .join(
-            IntegrationUserSync, IntegrationUserSync.domain_id == UserDomains.id
-        )
-        .filter(
-            LeadUser.domain_id == domain_id,
-            IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
-            LeadUser.id > last_sent_lead_id,
-            LeadUser.is_active == True,
-            UserDomains.is_enable == True,
-            (LeadsVisits.start_date < past_date)
-            | (
-                LeadsVisits.start_date == past_date
-                and LeadsVisits.start_time <= past_time
-            ),
-            LeadUser.is_confirmed == True,
-        )
-    )
-
-    if data_sync_leads_type != "allContacts":
-        if data_sync_leads_type == "converted_sales":
-            query = (
-                query.outerjoin(
-                    LeadsUsersAddedToCart,
-                    LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
-                )
-                .outerjoin(
-                    LeadsUsersOrdered,
-                    LeadsUsersOrdered.lead_user_id == LeadUser.id,
-                )
-                .filter(
-                    or_(
-                        and_(
-                            LeadUser.behavior_type != "product_added_to_cart",
-                            LeadUser.is_converted_sales == True,
-                        ),
-                        and_(
-                            LeadUser.is_converted_sales == True,
-                            LeadsUsersOrdered.ordered_at.isnot(None),
-                            LeadsUsersAddedToCart.added_at
-                            < LeadsUsersOrdered.ordered_at,
-                        ),
-                    )
-                )
-            )
-
-        elif data_sync_leads_type == "viewed_product":
-            query = query.filter(
-                and_(
-                    LeadUser.behavior_type == "viewed_product",
-                    LeadUser.is_converted_sales == False,
-                )
-            )
-
-        elif data_sync_leads_type == "visitor":
-            query = query.filter(
-                and_(
-                    LeadUser.behavior_type == "visitor",
-                    LeadUser.is_converted_sales == False,
-                )
-            )
-
-        elif data_sync_leads_type == "abandoned_cart":
-            query = (
-                query.outerjoin(
-                    LeadsUsersAddedToCart,
-                    LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
-                )
-                .outerjoin(
-                    LeadsUsersOrdered,
-                    LeadsUsersOrdered.lead_user_id == LeadUser.id,
-                )
-                .filter(
-                    and_(
-                        LeadUser.behavior_type == "product_added_to_cart",
-                        LeadUser.is_converted_sales == False,
-                        LeadsUsersAddedToCart.added_at.isnot(None),
-                        or_(
-                            LeadsUsersAddedToCart.added_at
-                            > LeadsUsersOrdered.ordered_at,
-                            and_(
-                                LeadsUsersOrdered.ordered_at.is_(None),
-                                LeadsUsersAddedToCart.added_at.isnot(None),
-                            ),
-                        ),
-                    )
-                )
-            )
-    result = (
-        query.distinct(LeadUser.id).order_by(LeadUser.id).limit(limit).all()
-    )
-
-    return result or []
-
-
 def update_last_sent_lead(session, data_sync_id, last_lead_id):
     session.query(IntegrationUserSync).filter(
         IntegrationUserSync.id == data_sync_id
@@ -224,11 +101,11 @@ def update_last_sent_lead(session, data_sync_id, last_lead_id):
     session.commit()
 
 
-def update_data_sync_imported_leads(session, status, data_sync_id):
-    session.db.query(DataSyncImportedLead).filter(
-        DataSyncImportedLead.id == data_sync_id
-    ).update({"status": status})
-    session.db.commit()
+def update_last_sent_ch_lead(session, data_sync_id, last_ch_lead_id):
+    session.query(IntegrationUserSync).filter(
+        IntegrationUserSync.id == data_sync_id
+    ).update({IntegrationUserSync.last_sent_ch_lead_id: last_ch_lead_id})
+    session.commit()
 
 
 def get_previous_imported_leads(session, data_sync_id):
@@ -305,41 +182,116 @@ async def process_user_integrations(
             if not data_sync.is_active:
                 continue
 
+            # 1) Re-import pending PG leads (legacy path)
             lead_users = get_previous_imported_leads(db_session, data_sync.id)
 
-            data_sync_limit = user_integration.limit
-            if data_sync_limit - len(lead_users) > 0:
+            # 2) Determine remaining quota from integration limit
+            data_sync_limit = int(user_integration.limit or 0)
+            remaining = max(0, data_sync_limit - len(lead_users))
+
+            # 3) Use legacy PG source only if there is remaining capacity (backward-compat)
+            if remaining > 0 and data_sync.leads_type:
                 additional_leads = leads_service.data_sync_leads_type(
                     domain_id=data_sync.domain_id,
-                    limit=data_sync_limit - len(lead_users),
+                    limit=remaining,
                     leads_type=data_sync.leads_type,
                     last_sent_lead_id=data_sync.last_sent_lead_id,
                 )
                 lead_users.extend(additional_leads)
+                remaining = max(0, data_sync_limit - len(lead_users))
 
+            # 4) ClickHouse source (preferred): fetch by pixel_id ordered by UUIDv1 id
+            # Resolve pixel_id for the domain
+            pixel_id_row = (
+                db_session.query(UserDomains.pixel_id)
+                .filter(UserDomains.id == data_sync.domain_id)
+                .first()
+            )
+            ch_inserted = 0
+            max_ch_id = None
+            if pixel_id_row and pixel_id_row[0] is not None and remaining > 0:
+                pixel_id_val = str(pixel_id_row[0])
+                try:
+                    ch = await AsyncDelivrClickHouseClient().connect()
+                    ch_repo = LeadsUsersCHRepository(ch)
+
+                    # Re-import pending CH leads (status=SENT)
+                    prev_ch_ids = [
+                        str(row[0])
+                        for row in db_session.query(
+                            DataSyncImportedLead.ch_lead_id
+                        )
+                        .filter(
+                            DataSyncImportedLead.data_sync_id == data_sync.id,
+                            DataSyncImportedLead.status
+                            == DataSyncImportedStatus.SENT.value,
+                            DataSyncImportedLead.ch_lead_id.isnot(None),
+                        )
+                        .all()
+                    ]
+
+                    # Fetch next page from ClickHouse leads_users
+                    next_rows = await ch_repo.fetch_next_by_pixel(
+                        pixel_id=pixel_id_val,
+                        last_id=data_sync.last_sent_ch_lead_id,
+                        limit=remaining,
+                    )
+                    next_ch_ids = [str(r["id"]) for r in next_rows]
+                    if next_ch_ids:
+                        # Maintain progression pointer on the largest id
+                        max_ch_id = next_ch_ids[-1]
+
+                    # Combine reimports + new
+                    ch_ids_to_send = prev_ch_ids + next_ch_ids
+
+                    if ch_ids_to_send:
+                        logging.info(
+                            f"Pixel sync {data_sync.id} CH leads to enqueue: prev={len(prev_ch_ids)} new={len(next_ch_ids)}"
+                        )
+                        await data_sync_imported_service.save_and_send_data_imported_leads_ch(
+                            ch_lead_ids=ch_ids_to_send,
+                            data_sync=data_sync,
+                            user_integrations_service_name=user_integration.service_name,
+                            users_id=user_integration.user_id,
+                        )
+                except Exception as ex:
+                    logging.error(
+                        f"Pixel sync {data_sync.id} ClickHouse fetch/insert failed: {ex}",
+                        exc_info=True,
+                    )
+
+            # 5) Update progress pointers
             update_data_sync_integration(db_session, data_sync.id)
 
-            if not lead_users:
-                logging.info(f"Pixel sync {data_sync.id} Lead users empty")
-                continue
-
-            logging.info(
-                f"Pixel sync {data_sync.id} lead users len = {len(lead_users)}"
-            )
-            lead_users = sorted(lead_users, key=lambda x: x.id)
-
-            await data_sync_imported_service.save_and_send_data_imported_leads(
-                lead_users=lead_users,
-                data_sync=data_sync,
-                user_integrations_service_name=user_integration.service_name,
-            )
-
-            last_lead_id = lead_users[-1].id
-            if last_lead_id:
+            # Legacy PG queueing if any
+            if lead_users:
                 logging.info(
-                    f"Pixel sync {data_sync.id} last_lead_id = {last_lead_id}"
+                    f"Pixel sync {data_sync.id} PG lead users len = {len(lead_users)}"
                 )
-                update_last_sent_lead(db_session, data_sync.id, last_lead_id)
+                lead_users = sorted(lead_users, key=lambda x: x.id)
+
+                await data_sync_imported_service.save_and_send_data_imported_leads(
+                    lead_users=lead_users,
+                    data_sync=data_sync,
+                    user_integrations_service_name=user_integration.service_name,
+                )
+
+                last_lead_id = lead_users[-1].id
+                if last_lead_id:
+                    logging.info(
+                        f"Pixel sync {data_sync.id} last_lead_id = {last_lead_id}"
+                    )
+                    update_last_sent_lead(
+                        db_session, data_sync.id, last_lead_id
+                    )
+                    update_data_sync_integration(db_session, data_sync.id)
+
+            # Update CH progression after enqueue
+            if max_ch_id:
+                logging.info(
+                    f"Pixel sync {data_sync.id} last_sent_ch_lead_id = {max_ch_id}"
+                )
+                update_last_sent_ch_lead(db_session, data_sync.id, max_ch_id)
                 update_data_sync_integration(db_session, data_sync.id)
 
 

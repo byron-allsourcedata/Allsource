@@ -78,7 +78,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 
 	const handleDownload = async () => {
 		const requestBody = {
-			leads_ids: lead.id ? [lead.id] : [],
+			leads_ids: lead.profile_pid_all ? [lead.profile_pid_all] : [],
 		};
 		try {
 			const response = await axiosInstance.post(

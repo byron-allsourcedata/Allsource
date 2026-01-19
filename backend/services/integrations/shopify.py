@@ -6,12 +6,16 @@ import logging
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
+from uuid import UUID
 
 import httpx
 import requests
 import shopify
 from fastapi import HTTPException, status, Depends
 
+from services.pixel_installation import PixelInstallationService
+from config.domains import Domains
+from domains.aws.service import AwsService
 from db_dependencies import Db
 from enums import IntegrationsStatus, OauthShopify
 from enums import SourcePlatformEnum
@@ -32,7 +36,7 @@ from schemas.integrations.shopify import ShopifyCustomer, ShopifyOrderAPI
 from schemas.integrations.shopify import ShopifyShopRedactForm
 from schemas.users import ShopifyPayloadModel
 from utils import get_http_client
-from ..aws import AWSService
+from ..delivr import DelivrClientAsync
 from ..jwt_service import create_access_token
 
 logging.basicConfig(level=logging.INFO)
@@ -46,9 +50,11 @@ class ShopifyIntegrationService:
         integration_persistence: IntegrationsPersistence,
         lead_persistence: LeadsPersistence,
         lead_orders_persistence: LeadOrdersPersistence,
-        aws_service: AWSService,
+        aws_service: AwsService,
+        pixel_installation: PixelInstallationService,
         integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
         client: Annotated[httpx.Client, Depends(get_http_client)],
+        delivr_api_service: DelivrClientAsync,
         db: Db,
     ):
         self.integration_persistence = integration_persistence
@@ -57,7 +63,9 @@ class ShopifyIntegrationService:
         self.integrations_user_sync_persistence = (
             integrations_user_sync_persistence
         )
+        self.delivr_api_service = delivr_api_service
         self.client = client
+        self.pixel_installation = pixel_installation
         self.db = db
         self.AWS = aws_service
         self.REQUIRED_SCOPES: set[str] = {
@@ -390,59 +398,58 @@ class ShopifyIntegrationService:
                 },
             )
 
-    def __set_pixel(
-        self, user_id: int, domain: int, credentials: IntegrationCredentials
+    async def __set_pixel(
+        self,
+        user: dict,
+        domain: UserDomains,
+        credentials: IntegrationCredentials,
     ):
         self.__check_scopes(credentials)
-        client_id = domain.data_provider_id
-        if client_id is None:
-            client_id = hashlib.sha256(
-                (str(domain.id) + os.getenv("SECRET_SALT")).encode()
-            ).hexdigest()
-            self.db.query(UserDomains).filter(
-                UserDomains.user_id == user_id,
-                UserDomains.domain == domain.domain,
-            ).update(
-                {UserDomains.data_provider_id: client_id},
-                synchronize_session=False,
-            )
-            self.db.commit()
-        with open("../backend/data/js_pixels/shopify.js", "r") as file:
-            existing_script_code = file.read()
+        pixel_id = await self.pixel_installation.get_or_create_pixel_id(
+            user, domain
+        )
+        pixel_script_domain = Domains.PIXEL_SCRIPT_DOMAIN
+        custom_script = f"https://{pixel_script_domain}/pixel.js?pid={pixel_id}"
 
-        script_shopify = (
-            f"window.pixelClientId = '{client_id}';\n" + existing_script_code
+        with open("../backend/data/js_pixels/shopify_v2.js", "r") as file:
+            shopify_js = file.read()
+
+        delivr_script = f"window.pixelClientId = '{pixel_id}';\n" + shopify_js
+
+        script_url = self.AWS.upload_file(
+            object_name=f"shopify-data-tag-manager-pixel/{pixel_id}.js",
+            file_bytes=delivr_script,
+            content_type="application/javascript",
+            bucket_name="datatagmanager",
         )
-        self.AWS.upload_string(
-            script_shopify, f"shopify-pixel-code/{client_id}.js"
-        )
-        script_event_url = f"https://allsource-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js"
+
         url = f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags.json"
-
         headers = {
             "X-Shopify-Access-Token": credentials.shopify.access_token,
             "Content-Type": "application/json",
         }
-        scrips_list = self.__handle_request("GET", url, headers=headers)
-        if not scrips_list or scrips_list.status_code == 401:
+
+        scripts_list = self.__handle_request("GET", url, headers=headers)
+        if not scripts_list or scripts_list.status_code == 401:
             raise HTTPException(
                 status_code=403,
                 detail={"status": IntegrationsStatus.CREDENTIALS_INVALID.value},
             )
-        for script in scrips_list.json().get("script_tags"):
-            if "shopify-pixel-code" in script.get("src"):
+
+        for script in scripts_list.json().get("script_tags", []):
+            if "shopify-pixel-code" in script.get("src", ""):
                 self.__handle_request(
                     "DELETE",
                     f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json",
                     headers=headers,
                 )
-        script_event_data = {
-            "script_tag": {"event": "onload", "src": script_event_url}
-        }
-        self.__handle_request(
-            "POST", url, headers=headers, json=script_event_data
-        )
-        return {"message": "Successfully"}
+
+        script_data = {"script_tag": {"event": "onload", "src": script_url}}
+        script_data2 = {"script_tag": {"event": "onload", "src": custom_script}}
+        self.__handle_request("POST", url, headers=headers, json=script_data)
+        self.__handle_request("POST", url, headers=headers, json=script_data2)
+
+        return {"message": "Pixel successfully installed", "pixel_id": pixel_id}
 
     def __get_customers(self, shop_domain: str, access_token: str):
         url = f"{shop_domain}/admin/api/2023-07/customers.json"
@@ -666,7 +673,7 @@ class ShopifyIntegrationService:
         )
         return response.json().get("customers")
 
-    def add_integration(
+    async def add_integration(
         self,
         credentials: IntegrationCredentials,
         domain,
@@ -696,7 +703,7 @@ class ShopifyIntegrationService:
                 },
             )
         if not domain.is_pixel_installed:
-            self.__set_pixel(user.get("id"), domain, credentials)
+            await self.__set_pixel(user, domain, credentials)
         self.__save_integration(
             credentials.shopify.shop_domain,
             credentials.shopify.access_token,

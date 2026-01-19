@@ -5,6 +5,7 @@ import config
 from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from contextlib import asynccontextmanager
+from uuid import UUID
 
 from schemas import PixelInstallationRequest
 from tasks import fetch_external_data, fetch_domains_with_secret
@@ -12,18 +13,21 @@ from utils import get_domain_from_headers
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+valid_pid_cache: set[UUID] = set()
 valid_dpid_cache: set[str] = set()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global valid_dpid_cache
+    global valid_pid_cache
     domains_list_response = await fetch_domains_with_secret()
     if domains_list_response is None:
         raise HTTPException(
             status_code=500, detail="Failed to fetch domains from external service"
         )
 
+    valid_pid_cache = set(domains_list_response.pixel_ids)
     valid_dpid_cache = set(domains_list_response.data_providers_ids)
     logger.info(f"Loaded {len(valid_dpid_cache)} domains into cache.")
     yield
@@ -37,17 +41,25 @@ app = FastAPI(lifespan=lifespan)
 async def read_item(
     request: Request,
     background_tasks: BackgroundTasks,
-    pixel_client_id: str = Query(..., alias="dpid"),
+    pixel_client_id: UUID | None = Query(None, alias="pid"),
+    data_provider_id: str | None = Query(None, alias="dpid"),
     need_reload_page: bool = Query(False, alias="need_reload_page"),
 ):
     try:
         referer = request.headers.get("Referer")
         origin = request.headers.get("Origin")
 
-        domain_to_check = get_domain_from_headers(referer, origin)
+        has_pid = pixel_client_id is not None
 
-        found_in_cache = pixel_client_id in valid_dpid_cache
-        if domain_to_check and not found_in_cache:
+        if has_pid:
+            found = pixel_client_id in valid_pid_cache
+        elif data_provider_id is not None:
+            found = data_provider_id in valid_dpid_cache
+        else:
+            raise HTTPException(400, "pid or dpid must be provided")
+
+        domain_to_check = get_domain_from_headers(referer, origin)
+        if domain_to_check and not found:
             logger.info(
                 f"Data provider {pixel_client_id} not found in cache. Domain name: {domain_to_check}. fetching external data..."
             )
@@ -59,17 +71,20 @@ async def read_item(
                     need_reload_page=need_reload_page,
                 ),
             )
-            valid_dpid_cache.add(pixel_client_id)
+            if has_pid:
+                valid_pid_cache.add(pixel_client_id)
+            else:
+                valid_dpid_cache.add(data_provider_id)
             logger.info(
-                f"Added {domain_to_check} with data provider id '{pixel_client_id}' to referer_cache"
+                f"Added {domain_to_check} to cache (PID={pixel_client_id}, DPID={data_provider_id})"
             )
-        elif found_in_cache:
+        elif found:
             logger.info(
-                f"Domain {domain_to_check} with data provider id '{pixel_client_id}' already in cache, skipping external request"
+                f"Domain {domain_to_check} already verified (PID={pixel_client_id}, DPID={data_provider_id}), skipping external request"
             )
         elif not domain_to_check:
             logger.warning(
-                f"Domain name is not provided in 'Referer' or 'Origin' headers for data provider id '{pixel_client_id}'"
+                f"Domain name is not provided in 'Referer' or 'Origin' headers for pixel id '{pixel_client_id}'"
             )
 
         popup_call = (
@@ -89,9 +104,6 @@ async def read_item(
                </svg>`;
 
         popup.innerHTML = `
-            <div style="text-align:center; padding-bottom:24px;">
-                <img src="https://app.allsourcedata.io/logo.svg" style="height:36px; width:auto;">
-            </div>
             <table style="width:100%; font-size:14px; border-collapse:collapse; margin:0;">
                 <tr>
                     <th style="border-bottom:1px solid #000; border-right:1px solid #000; padding-bottom:6px; width:50%; text-align:left;">SCRIPT</th>
@@ -137,7 +149,7 @@ async def read_item(
             + popup_call
         )
 
-        if found_in_cache:
+        if found:
             js_content = "let _ = 0;"
         return PlainTextResponse(
             content=js_content, media_type="application/javascript"

@@ -1,26 +1,29 @@
-from typing import Optional
+from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
 
+from models import UserDomains
+from services.leads_companies_delivr import AsyncCompanyLeadsService
 from fastapi import APIRouter, Depends, Query
 from starlette.responses import StreamingResponse
 
 from auth_dependencies import UnlimitedUser
 from dependencies import (
-    get_companies_service,
+    check_pixel_install_domain,
     check_user_authorization_without_pixel,
 )
 from enums import BaseEnum
-from schemas.companies import CompaniesRequest
-from services.companies import CompanyService
 
 router = APIRouter()
 
 
 @router.get("")
 async def get_companies(
+    company_service: AsyncCompanyLeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     user=Depends(check_user_authorization_without_pixel),
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
-        10, alias="per_page", ge=1, le=500, description="Items per page"
+        10, alias="per_page", ge=1, description="Items per page"
     ),
     from_date: int = Query(None, description="Start date in integer format"),
     to_date: int = Query(None, description="End date in integer format"),
@@ -44,9 +47,9 @@ async def get_companies(
         None, description="Number of employees who visited the site"
     ),
     industry: str = Query(None, description="Company industry "),
-    company_service: CompanyService = Depends(get_companies_service),
-):
-    return company_service.get_companies(
+) -> Tuple[List[Dict[str, Any]], int, int]:
+    return await company_service.get_company_leads(
+        pixel_id=domain.pixel_id,
         sort_by=sort_by,
         sort_order=sort_order,
         page=page,
@@ -65,6 +68,7 @@ async def get_companies(
 
 @router.get("/employess")
 async def get_employees(
+    company_service: AsyncCompanyLeadsService,
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
         10, alias="per_page", ge=1, le=500, description="Items per page"
@@ -77,15 +81,14 @@ async def get_employees(
         None,
         description="Search for email, first name, lastname and phone number",
     ),
-    company_id: int = Query(None),
+    company_id: str = Query(None),
     job_title: str = Query(None),
     department: str = Query(None),
     seniority: str = Query(None),
     regions: str = Query(None, description="Company regions "),
     user=Depends(check_user_authorization_without_pixel),
-    company_service: CompanyService = Depends(get_companies_service),
 ):
-    return company_service.get_employees(
+    return await company_service.get_employees(
         company_id=company_id,
         sort_by=sort_by,
         sort_order=sort_order,
@@ -101,9 +104,9 @@ async def get_employees(
 
 @router.get("/employee")
 def get_employees(
-    company_id: int = Query(None),
+    company_service: AsyncCompanyLeadsService,
+    company_id: str = Query(None),
     id: int = Query(None),
-    company_service: CompanyService = Depends(get_companies_service),
 ):
     return company_service.get_employee_by_id(
         company_id=company_id, employee_id=id
@@ -112,50 +115,56 @@ def get_employees(
 
 @router.get("/employees/{employee_id}")
 async def get_employees_by_id(
-    employee_id: int,
-    company_id: int = Query(None),
-    company_service: CompanyService = Depends(get_companies_service),
+    company_service: AsyncCompanyLeadsService,
+    employee_id: str,
+    company_id: str = Query(None),
 ):
-    return company_service.get_full_information_employee(
+    return await company_service.get_full_information_employee(
         company_id=company_id, employee_id=employee_id
     )
 
 
 @router.get("/industry")
 async def get_industry(
-    company_service: CompanyService = Depends(get_companies_service),
-):
-    return company_service.get_uniq_primary_industry()
+    company_service: AsyncCompanyLeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
+) -> List[str]:
+    return await company_service.get_uniq_primary_industry(
+        pixel_id=domain.pixel_id
+    )
 
 
 @router.get("/{company_id}/departments")
 async def get_department(
-    company_id: int,
-    company_service: CompanyService = Depends(get_companies_service),
-):
-    return company_service.get_uniq_primary__departments(company_id)
+    company_service: AsyncCompanyLeadsService, company_id: str
+) -> List[str]:
+    return await company_service.get_uniq_primary__departments(
+        company_id=company_id
+    )
 
 
 @router.get("/{company_id}/seniorities")
 async def get_seniority(
-    company_id: int,
-    company_service: CompanyService = Depends(get_companies_service),
+    company_service: AsyncCompanyLeadsService,
+    company_id: str,
 ):
-    return company_service.get_uniq_primary__seniorities(company_id)
+    return await company_service.get_uniq_primary__seniorities(company_id)
 
 
 @router.get("/{company_id}/job-titles")
 async def get_seniority(
-    company_id: int,
-    company_service: CompanyService = Depends(get_companies_service),
+    company_service: AsyncCompanyLeadsService,
+    company_id: str,
 ):
-    return company_service.get_uniq_primary__job_titles(company_id)
+    return await company_service.get_uniq_primary__job_titles(company_id)
 
 
 @router.get("/download-companies")
 async def download_companies(
+    company_service: AsyncCompanyLeadsService,
     _user: UnlimitedUser,
-    company_id: Optional[int] = Query(None),
+    domain: UserDomains = Depends(check_pixel_install_domain),
+    company_id: Optional[str] = Query(None),
     from_date: Optional[int] = Query(
         None, description="Start date in integer format"
     ),
@@ -175,9 +184,9 @@ async def download_companies(
         None,
         description="Search for email, first name, lastname and phone number",
     ),
-    company_service: CompanyService = Depends(get_companies_service),
 ):
-    result = company_service.download_companies(
+    result = await company_service.download_companies(
+        pixel_id=domain.pixel_id,
         company_id=company_id,
         from_date=from_date,
         to_date=to_date,
@@ -199,8 +208,9 @@ async def download_companies(
 
 @router.get("/download-employees")
 async def download_employees(
+    company_service: AsyncCompanyLeadsService,
     _user: UnlimitedUser,
-    company_id: int = Query(None),
+    company_id: str = Query(None),
     job_title: str = Query(None),
     department: str = Query(None),
     seniority: str = Query(None),
@@ -213,9 +223,8 @@ async def download_employees(
         None,
         description="Search for email, first name, lastname and phone number",
     ),
-    company_service: CompanyService = Depends(get_companies_service),
 ):
-    result = company_service.download_employees(
+    result = await company_service.download_employees(
         company_id=company_id,
         regions=regions,
         sort_by=sort_by,
@@ -236,12 +245,12 @@ async def download_employees(
 
 @router.get("/download-employee/{employee_id}")
 async def download_employee(
+    company_service: AsyncCompanyLeadsService,
     _user: UnlimitedUser,
-    employee_id: int,
-    company_id: int = Query(None),
-    company_service: CompanyService = Depends(get_companies_service),
+    employee_id: str,
+    company_id: str = Query(None),
 ):
-    result = company_service.download_employee(
+    result = await company_service.download_employee(
         company_id=company_id, employee_id=employee_id
     )
     if result:
@@ -255,15 +264,21 @@ async def download_employee(
 
 @router.get("/search-location")
 async def search_location(
+    company_service: AsyncCompanyLeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     start_letter: str = Query(..., min_length=3),
-    company_service: CompanyService = Depends(get_companies_service),
 ):
-    return company_service.search_location(start_letter)
+    return await company_service.search_location(
+        start_letter, pixel_id=domain.pixel_id
+    )
 
 
 @router.get("/search-contact")
 async def search_contact(
+    company_service: AsyncCompanyLeadsService,
+    domain: UserDomains = Depends(check_pixel_install_domain),
     start_letter: str = Query(..., min_length=3),
-    company_service: CompanyService = Depends(get_companies_service),
 ):
-    return company_service.search_company(start_letter)
+    return await company_service.search_company(
+        start_letter=start_letter, pixel_id=domain.pixel_id
+    )

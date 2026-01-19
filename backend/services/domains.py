@@ -1,10 +1,11 @@
 import hashlib
-from typing import List
+from typing import List, Tuple
 from typing_extensions import deprecated
 
 from fastapi import HTTPException
 import uuid
 import os
+from uuid import UUID
 from config.util import getenv
 from enums import SubscriptionStatus
 from models import Users
@@ -110,6 +111,21 @@ class UserDomainsService:
             if domain.data_provider_id is not None
         ]
         return data_provider_ids
+
+    def get_verified_pixels(self) -> Tuple[list[UUID], list[str]]:
+        domains = self.domain_persistence.get_verify_domains()
+
+        pixel_ids = [
+            domain.pixel_id for domain in domains if domain.pixel_id is not None
+        ]
+
+        data_provider_ids = [
+            domain.data_provider_id
+            for domain in domains
+            if domain.data_provider_id is not None
+        ]
+
+        return pixel_ids, data_provider_ids
 
     def pixel_installed_anywhere(self, user):
         domains = self.domain_persistence.get_domains_by_user(user.get("id"))

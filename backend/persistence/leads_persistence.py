@@ -2,6 +2,7 @@ import logging
 import math
 from datetime import datetime, timedelta, timezone
 from typing import List
+from uuid import UUID
 
 import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select, case
@@ -663,7 +664,7 @@ class LeadsPersistence:
 
         return (result.time_on_site, result.url_visited) if result else (0, 0)
 
-    def get_visited_date(self, lead_visit_id: int):
+    def get_visited_date(self, lead_visit_id: UUID):
         result = (
             self.db.query(func.date(LeadsVisits.start_date).label("start_date"))
             .filter(LeadsVisits.id == lead_visit_id)

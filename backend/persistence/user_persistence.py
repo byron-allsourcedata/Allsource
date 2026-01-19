@@ -9,7 +9,7 @@ from sqlalchemy import func, desc, asc, or_, and_, select, update, case, text
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import case as caseSQl, literal_column
 
-from db_dependencies import Db
+from db_dependencies import Db, AsyncDb
 from enums import (
     TeamsInvitationStatus,
     SignUpStatus,
@@ -61,8 +61,9 @@ class UserDict(TypedDict):
 class UserPersistence:
     UNLIMITED_CREDITS = -1
 
-    def __init__(self, db: Db):
+    def __init__(self, db: Db, async_db: AsyncDb):
         self.db = db
+        self.async_db = async_db
 
     def set_reset_password_sent_now(self, user_id: int):
         send_message_expiration_time = datetime.now()
@@ -96,6 +97,25 @@ class UserPersistence:
         if user and user.leads_credits != self.UNLIMITED_CREDITS:
             user.leads_credits = user.leads_credits - 1
             self.db.commit()
+
+    async def increment_leads_overage(self, pixel_id: str, delta: int) -> None:
+        if delta <= 0:
+            return
+
+        subquery = (
+            select(UserDomains.user_id)
+            .where(UserDomains.pixel_id == pixel_id)
+            .limit(1)
+        )
+
+        stmt = (
+            update(Users)
+            .where(Users.id.in_(subquery))
+            .values(overage_leads_count=Users.overage_leads_count + delta)
+        )
+
+        await self.async_db.execute(stmt)
+        await self.async_db.commit()
 
     def get_team_members(self, user_id: int):
         users = (
@@ -613,6 +633,7 @@ class UserPersistence:
                 Users.created_at,
                 Users.last_login,
                 Users.role,
+                Users.is_email_confirmed,
                 Users.team_access_level,
                 Users.team_owner_id,
                 Users.leads_credits.label("credits_count"),
