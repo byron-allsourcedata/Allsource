@@ -44,7 +44,6 @@ class DashboardAudienceService:
         results = await self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(
             user_id=user.get("id")
         )
-        print("results", results)
         domains = self.dashboard_persistence.get_user_domains(
             user_id=user.get("id")
         )
